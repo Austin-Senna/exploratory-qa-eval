@@ -1,0 +1,63 @@
+{
+  "question": "In Los Angeles Police Department report that occurred in the year (within 2011-2016) that has the highest total passenger count across Los Angeles International Airport (LAX) terminals, which geo area had the most robbery arrests? For that area, identify the most common crime code and report how many incidents of that code occurred in the year (within 2020-2022) that has the highest total subway ridership in MTA. Please return only the count in the format [Answer].",
+  "answer": "1046",
+  "nodes": {
+    "1": {
+      "source": "datagov/los-angeles-international-airport-passenger-traffic-by-terminal/files/rows.txt",
+      "fact": "Summing Passenger_Count by year (from ReportPeriod) across all terminals and categories for 2011-2016, the highest total is 2016 with 80921651 passengers.",
+      "subquestion": "Which year from 2011-2016 has the highest total passenger count across Los Angeles International Airport (LAX) terminals? (Convert ReportPeriod to Year; sum Passenger_Count by Year; select the maximum.)",
+      "answer": "2016"
+    },
+    "2": {
+      "source": "datagov/mta-daily-ridership-data-beginning-2020/files/rows.txt",
+      "fact": "Summing Subways: Total Estimated Ridership by year (from Date) for 2020-2022, the maximum total is 1012505879 in 2022.",
+      "subquestion": "Which year from 2020-2022 has the highest total subway ridership in MTA? (Use Date to derive year; sum Subways: Total Estimated Ridership by year and select the maximum.)",
+      "answer": "2022"
+    },
+    "3": {
+      "source": "datagov/arrest-data-from-2010-to-2019/v1/files/rows.csv",
+      "fact": "In 2016 arrest data, the area with the most Robbery arrests is Southwest, and the largest Robbery-arrest count recorded by a single area is 245.",
+      "subquestion": "In <node_1 answer> arrest data, which area has the most Robbery arrests? And what is that maximum number of Robbery arrests?",
+      "answer": "Southwest, 245"
+    },
+    "4": {
+      "source": "datagov/crime-data-from-2010-to-2019/v1/files/rows.csv",
+      "fact": "In 2016 crime data for Southwest, the most common crime description is BATTERY - SIMPLE ASSAULT.",
+      "subquestion": "In <node_1 answer> crime data, within area <node_3 answer>, which crime description is most common?",
+      "answer": "BATTERY - SIMPLE ASSAULT"
+    },
+    "5": {
+      "source": "datagov/crime-data-from-2020-to-present/v1/files/rows.csv",
+      "fact": "In 2022, Southwest recorded 1,046 incidents with crime description BATTERY - SIMPLE ASSAULT.",
+      "subquestion": "In <node_2 answer> crime data, how many incidents of <node_4 answer> occurred in area <node_3 answer>?",
+      "answer": "1046"
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=2, data.gov year derivation - nodes 1-2):",
+    "  Node 1: Year with highest LAX passenger count (2011-2016) -> 2016",
+    "  Node 2: Year with highest MTA subway ridership (2020-2022) -> 2022",
+    "  Derived years: 2016 and 2022",
+    "",
+    "HOP 2 (d=1): 2016 LAPD area with most robbery arrests",
+    "  Node 3: Southwest (245 arrests)",
+    "  Result: Southwest",
+    "",
+    "HOP 3 (d=1): Most common crime in Southwest 2016",
+    "  Node 4: BATTERY - SIMPLE ASSAULT",
+    "  Result: BATTERY - SIMPLE ASSAULT",
+    "",
+    "HOP 4 (d=1): Count of BATTERY - SIMPLE ASSAULT in Southwest for 2022",
+    "  Node 5: 2022 -> 1046 incidents",
+    "  Result: 1046",
+    "",
+    "Final answer: 1046"
+  ],
+  "datasets_used": [
+    "los-angeles-international-airport-passenger-traffic-by-terminal",
+    "mta-daily-ridership-data-beginning-2020",
+    "arrest-data-from-2010-to-2019",
+    "crime-data-from-2010-to-2019",
+    "crime-data-from-2020-to-present"
+  ]
+}

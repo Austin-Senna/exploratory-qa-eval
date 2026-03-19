@@ -1,0 +1,20 @@
+{
+  "question": "Which year from 2011-2015 has the lowest number of births to unmarried females ages 15-19 in the United States? Your response should be in the format [Answer].",
+  "answer": "2015",
+  "practical_motivation": "A demographic analyst wants the lowest annual count of unmarried teen births in the early 2010s.",
+  "nodes": {
+    "1": {
+      "source": "datagov/nchs-births-to-unmarried-women-by-age-group-united-states/files/rows.txt",
+      "fact": "Filtering to Age Group = \"15-19 years\" for 2011-2015, the minimum Number of Births is 204043 in 2015.",
+      "subquestion": "Which year from 2011-2015 has the lowest number of births to unmarried females ages 15-19 in the United States? (Filter Age Group == \"15-19 years\"; select the minimum Number of Births.)",
+      "answer": "2015"
+    }
+  },
+  "reasoning_chain": [
+    "Node 1: Which year from 2011-2015 has the lowest number of births to unmarried females ages 15-19? (Filter Age Group == \"15-19 years\"; select the minimum Number of Births.) The answer is 2015.",
+    "Final answer: 2015"
+  ],
+  "datasets_used": [
+    "nchs-births-to-unmarried-women-by-age-group-united-states"
+  ]
+}

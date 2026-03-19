@@ -1,0 +1,42 @@
+{
+  "question": "What was the total student enrollment for the school year starting in two years before the year (within 2017-2022) that has the highest total daily census records from Allegheny County Jail for the school district in the most populous city of Whitman County (2020 census)? Only report the number in `Number` format. Your response should be in the format [Answer].",
+  "answer": "2941",
+  "nodes": {
+    "1": {
+      "source": "datagov/allegheny-county-jail-daily-census/files/66cdcd57-6c92-4aaa-8800-0ed9d8f03e22.txt",
+      "fact": "Counting records by year from census_date for 2017-2022, the maximum total is 1202002 in 2019.",
+      "subquestion": "Which year from 2017-2022 has the highest total daily census records from Allegheny County Jail? (Use census_date to derive year; count records by year and select the maximum.)",
+      "answer": "2019"
+    },
+    "2": {
+      "source": "wikipedia/Pullman,_Washington/content.txt",
+      "fact": "According to the Wikipedia article for Pullman, Washington, Pullman is the most populous city in Whitman County as of the 2020 census.",
+      "subquestion": "What is the most populous city in Whitman County, Washington according to the 2020 census?",
+      "answer": "Pullman"
+    },
+    "3": {
+      "source": "datagov/report-card-enrollment-2017-18-school-year/files/rows.txt",
+      "fact": "According to the Washington Report Card Enrollment Data for the school year starting in <node_1 answer - 2>, Pullman School District (in Whitman County) had 2,941 total students enrolled for All Grades.",
+      "subquestion": "What is the total student enrollment for the school year starting in <node_1 answer - 2> for the school district in <node_2 answer>? (DistrictName=Pullman School District; GradeLevel=All Grades; column=All Students.)",
+      "answer": "2941"
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=1, data.gov year derivation - node 1):",
+    "  Node 1: Year with highest Allegheny County Jail daily census records (2017-2022) -> 2019",
+    "  Derived school year: 2017-18 (starting in 2019-2=2017)",
+    "",
+    "HOP 2 (d=1, Wikipedia - node 2):",
+    "  Node 2: Most populous city in Whitman County (2020 census) -> Pullman",
+    "",
+    "HOP 3 (d=1, data.gov - node 3 depends on nodes 1 and 2):",
+    "  Node 3: Pullman School District enrollment 2017-18 -> 2,941",
+    "",
+    "Final answer: 2941"
+  ],
+  "datasets_used": [
+    "allegheny-county-jail-daily-census",
+    "Pullman,_Washington",
+    "report-card-enrollment-2017-18-school-year"
+  ]
+}

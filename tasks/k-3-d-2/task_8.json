@@ -1,0 +1,35 @@
+{
+  "question": "I am conducting a study on the northernmost boroughs of New York City. With respect to this borough, I want to compute the yearly shooting/complaint ratio. That is, the number of complaints on the most common offense over the year, divided by the total number of shooting incidents occured of the same year reported by NYPD. Report the yearly shooting/complaint for 2023 and round to the closest integer. Your response should be in the format [Answer].",
+  "answer": "42",
+  "nodes": {
+    "1": {
+      "source": "wikipedia/The_Bronx/content.txt",
+      "fact": "The Bronx article states that The Bronx is the northernmost of the five boroughs of New York City.",
+      "subquestion": "Which New York City borough is described as the northernmost of the five boroughs?",
+      "answer": "BRONX"
+    },
+    "2": {
+      "source": "datagov/nypd-complaint-data-historic/v1/files/rows.csv",
+      "fact": "In 2023 NYPD complaint data for the BRONX, the most common offense description has 18,613 complaints.",
+      "subquestion": "In 2023 NYPD complaint data, within borough <node_1 answer>, how many complaints were filed for the most common offense description (OFNS_DESC)?",
+      "answer": "18613"
+    },
+    "3": {
+      "source": "datagov/nypd-shooting-incident-data-historic/v1/files/rows.csv",
+      "fact": "In 2023 NYPD shooting incident data, the BRONX recorded 439 shooting incidents.",
+      "subquestion": "In 2023 NYPD shooting incident data, how many shooting incidents occurred in borough <node_1 answer>?",
+      "answer": "439"
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=1, nodes 1): Northernmost NYC borough → BRONX",
+    "HOP 2 (d=1, nodes 2): BRONX 2023: most common offense complaints → 18613; shooting incidents → 439",
+    "HOP 3 (d=1, nodes 3): 18613 / 439 ≈ 42",
+    "Final answer: 42"
+  ],
+  "datasets_used": [
+    "The_Bronx",
+    "nypd-complaint-data-historic",
+    "nypd-shooting-incident-data-historic"
+  ]
+}

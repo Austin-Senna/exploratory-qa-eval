@@ -1,0 +1,41 @@
+{
+  "question": "For the largest airport in Pittsburgh, which destination airport code had the most scheduled seats in March of the year (within 2017-2022) that has the highest total daily census records from Allegheny County Jail? Return the airport code only. Your response should be in the format [Answer].",
+  "answer": "ATL",
+  "nodes": {
+    "1": {
+      "source": "datagov/allegheny-county-jail-daily-census/files/66cdcd57-6c92-4aaa-8800-0ed9d8f03e22.txt",
+      "fact": "Counting records by year from census_date for 2017-2022, the maximum total is 1202002 in 2019.",
+      "subquestion": "Which year from 2017-2022 has the highest total daily census records from Allegheny County Jail? (Use census_date to derive year; count records by year and select the maximum.)",
+      "answer": "2019"
+    },
+    "2": {
+      "source": "wikipedia/Pittsburgh/content.txt",
+      "fact": "Pittsburgh International Airport is the largest airport in Pittsburgh.",
+      "subquestion": "What is the largest airport in Pittsburgh?",
+      "answer": "Pittsburgh International Airport"
+    },
+    "3": {
+      "source": "datagov/pittsburgh-international-airport-scheduled-passenger-traffic/files/pittsburgh-international-traffic-report-march-2019.txt",
+      "fact": "In the March <node_1 answer> Pittsburgh International scheduled traffic report, Atlanta (ATL) has 44,912 total seats, the highest of any destination (next highest is Chicago O'Hare with 35,699).",
+      "subquestion": "For the largest airport in Pittsburgh, which destination airport code had the most scheduled seats in March <node_1 answer>?",
+      "answer": "ATL"
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=1, data.gov year derivation - node 1):",
+    "  Node 1: Year with highest Allegheny County Jail daily census records (2017-2022) -> 2019",
+    "",
+    "HOP 2 (d=1, Wikipedia - node 2):",
+    "  Node 2: Pittsburgh's largest airport -> Pittsburgh International Airport",
+    "",
+    "HOP 3 (d=1, data.gov - node 3 depends on nodes 1 and 2):",
+    "  Node 3: March 2019 scheduled seats -> ATL has the most",
+    "",
+    "Final answer: ATL"
+  ],
+  "datasets_used": [
+    "allegheny-county-jail-daily-census",
+    "Pittsburgh",
+    "pittsburgh-international-airport-scheduled-passenger-traffic"
+  ]
+}

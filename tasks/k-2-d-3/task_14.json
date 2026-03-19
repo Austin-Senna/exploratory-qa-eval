@@ -1,0 +1,57 @@
+{
+  "question": "Find the only 4-digit year that appears in all three lists: (1) years mentioned exactly 5 times in the ESI-VI10 Jost Van Dyke U.K. Virgin Islands 2000 environmental sensitivity index Map 4 records, (2) years mentioned at least 3 times in the USGS Eastern Florida coastal topography first surface report following Hurricane Jeanne 2004, and (3) years mentioned between 5 and 6 times (inclusive) in the Agrihan Island IKONOS imagery data for the Northern Mariana Islands. Using that year, identify the host city for Olympic table tennis venues. Return the city name only. Your response should be in the format [Answer].",
+  "answer": "Athens",
+  "nodes": {
+    "1": {
+      "source": "datagov/esi-vi10-jost-van-dyke-u-k-virgin-islands-2000-environmental-sensitivity-index-map4/files/esi_download.txt",
+      "fact": "The distinct 4-digit years mentioned exactly 5 times are ['1981', '1986', '1994', '2004'].",
+      "subquestion": "Which distinct 4-digit years are mentioned exactly 5 times? Return the full set as a list.",
+      "answer": [
+        "1981",
+        "1986",
+        "1994",
+        "2004"
+      ]
+    },
+    "2": {
+      "source": "datagov/eaarl-coastal-topography-eastern-florida-post-hurricane-jeanne-2004-first-surface/files/USGS.b3a3e000-23e9-435e-85f6-f16c5a42dd86.txt",
+      "fact": "The distinct 4-digit years mentioned at least 3 times are ['2004', '2009'].",
+      "subquestion": "Which distinct 4-digit years are mentioned at least 3 times? Return the full set as a list.",
+      "answer": [
+        "2004",
+        "2009"
+      ]
+    },
+    "3": {
+      "source": "datagov/agrihan-island-ikonos-imagery-ikonos-imagery-for-the-northern-mariana-islands-2001-20031/files/39234.txt",
+      "fact": "The distinct 4-digit years mentioned between 5 and 6 times (inclusive) are ['2004', '2017'].",
+      "subquestion": "Which distinct 4-digit years are mentioned between 5 and 6 times (inclusive)? Return the full set as a list.",
+      "answer": [
+        "2004",
+        "2017"
+      ]
+    },
+    "4": {
+      "source": "wikipedia/List_of_Olympic_venues_in_table_tennis/content.txt",
+      "fact": "The only year shared by the three year lists is 2004. In the list of Olympic venues in ping pong, the Games entry for 2004 lists the host city as Athens.",
+      "subquestion": "In the list of Olympic venues in ping pong, focus on the Games entry whose 4-digit year is the only year that appears in each of <node_1 answer>, <node_2 answer>, and <node_3 answer>. From that Games entry, return the host city name (the part after the year, stopping before any comma or parenthesis).",
+      "answer": "Athens"
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=3, data.gov - nodes 1-3):",
+    "  Nodes 1-3: Year lists -> intersection yields a single year",
+    "",
+    "HOP 2 (d=1, Wikipedia - node 4 depends on hop 1):",
+    "  Node 4: Olympic venues for that year -> host city",
+    "",
+    "Final answer: Athens"
+  ],
+  "verdict": "pass",
+  "datasets_used": [
+    "esi-vi10-jost-van-dyke-u-k-virgin-islands-2000-environmental-sensitivity-index-map4",
+    "eaarl-coastal-topography-eastern-florida-post-hurricane-jeanne-2004-first-surface",
+    "agrihan-island-ikonos-imagery-ikonos-imagery-for-the-northern-mariana-islands-2001-20031",
+    "List_of_Olympic_venues_in_table_tennis"
+  ]
+}

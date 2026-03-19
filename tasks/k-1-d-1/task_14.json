@@ -1,0 +1,20 @@
+{
+  "question": "Which year from 2005-2010 has the highest suicide death rate for all persons? Your response should be in the format [Answer].",
+  "answer": "2010",
+  "practical_motivation": "A mental health researcher wants to identify the peak year of suicide rates in the late 2000s.",
+  "nodes": {
+    "1": {
+      "source": "datagov/death-rates-for-suicide-by-sex-race-hispanic-origin-and-age-united-states-020c1/files/rows.txt",
+      "fact": "Filtering to STUB_NAME = \"Total\" and STUB_LABEL = \"All persons\", the highest average suicide death rate in 2005-2010 occurs in 2010 at 12.25.",
+      "subquestion": "Which year from 2005-2010 has the highest suicide death rate for all persons? (Filter STUB_NAME == \"Total\" and STUB_LABEL == \"All persons\"; average ESTIMATE by YEAR; select the maximum.)",
+      "answer": "2010"
+    }
+  },
+  "reasoning_chain": [
+    "Node 1: Filter to total population, average ESTIMATE by YEAR (2005-2010), and select the maximum; the peak year is 2010.",
+    "Final answer: 2010"
+  ],
+  "datasets_used": [
+    "death-rates-for-suicide-by-sex-race-hispanic-origin-and-age-united-states-020c1"
+  ]
+}

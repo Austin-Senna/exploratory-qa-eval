@@ -1,0 +1,124 @@
+{
+  "question": "Across the fiscal year starting in the 2017-2022 year with the highest total Charter flight passengers over Los Angeles international airports through 2023, which Missouri state agency stayed in the top five for professional services spending and also had the highest average employee count? In its headquarters city, a historically Black university was founded. Who founded that university? Return the name only. Your response should be in the format [Answer].",
+  "answer": "James Milton Turner",
+  "nodes": {
+    "1": {
+      "source": "datagov/los-angeles-international-airport-passenger-count-by-carrier-type/files/rows.txt",
+      "fact": "Filtering FlightType = \"Charter\" and summing Passenger_Count by year for 2017-2022, the maximum total is 25993 in 2021.",
+      "subquestion": "Which year from 2017-2022 has the highest total Charter flight passengers over Los Angeles international airports?",
+      "answer": "2021"
+    },
+    "2": {
+      "source": "datagov/2021-state-expenditures/v1/files/rows.csv",
+      "fact": "According to Missouri state expenditure data for fiscal year <node_1 answer>, the top 5 agencies by Professional Services spending were: SOCIAL SERVICES, CORRECTIONS, PUBLIC SAFETY, TRANSPORTATION, and ELEMENTARY AND SECONDARY EDUCATION.",
+      "subquestion": "Which Missouri state agencies were in the top 5 for professional services spending in <node_1 answer>?",
+      "answer": [
+        "SOCIAL SERVICES",
+        "CORRECTIONS",
+        "PUBLIC SAFETY",
+        "TRANSPORTATION",
+        "ELEMENTARY AND SECONDARY EDUCATION"
+      ]
+    },
+    "3": {
+      "source": "datagov/2022-state-expenditures/v1/files/rows.csv",
+      "fact": "According to Missouri state expenditure data for fiscal year 2022, the top 5 agencies by Professional Services spending were: SOCIAL SERVICES, CORRECTIONS, TRANSPORTATION, PUBLIC SAFETY, and ELEMENTARY AND SECONDARY EDUCATION.",
+      "subquestion": "Which Missouri state agencies were in the top 5 for professional services spending in 2022?",
+      "answer": [
+        "SOCIAL SERVICES",
+        "CORRECTIONS",
+        "TRANSPORTATION",
+        "PUBLIC SAFETY",
+        "ELEMENTARY AND SECONDARY EDUCATION"
+      ]
+    },
+    "4": {
+      "source": "datagov/2023-state-expenditures/v1/files/rows.csv",
+      "fact": "According to Missouri state expenditure data for fiscal year 2023, the top 5 agencies by Professional Services spending were: CORRECTIONS, SOCIAL SERVICES, TRANSPORTATION, OFFICE OF ADMINISTRATION, and MENTAL HEALTH.",
+      "subquestion": "Which Missouri state agencies were in the top 5 for professional services spending in 2023?",
+      "answer": [
+        "CORRECTIONS",
+        "SOCIAL SERVICES",
+        "TRANSPORTATION",
+        "OFFICE OF ADMINISTRATION",
+        "MENTAL HEALTH"
+      ]
+    },
+    "5": {
+      "source": "datagov/2021-state-employee-pay/v1/files/rows.csv",
+      "fact": "According to Missouri state employee pay data for calendar year <node_1 answer>, among the agencies in the intersection, CORRECTIONS had 12,530 employees.",
+      "subquestion": "Among the agencies in the intersection, which had the highest average employee count in <node_1 answer>?",
+      "answer": {
+        "CORRECTIONS": 12530,
+        "SOCIAL SERVICES": 8362,
+        "TRANSPORTATION": 7170
+      }
+    },
+    "6": {
+      "source": "datagov/2022-state-employee-pay/v1/files/rows.csv",
+      "fact": "According to Missouri state employee pay data for calendar year 2022, CORRECTIONS had 12,380 employees.",
+      "subquestion": "Among the agencies in the intersection, which had the highest average employee count in 2022?",
+      "answer": {
+        "CORRECTIONS": 12380,
+        "SOCIAL SERVICES": 8723,
+        "TRANSPORTATION": 6917
+      }
+    },
+    "7": {
+      "source": "datagov/2023-state-employee-pay/v1/files/rows.csv",
+      "fact": "According to Missouri state employee pay data for calendar year 2023, CORRECTIONS had 13,107 employees. Computing averages: CORRECTIONS avg = 12,672. CORRECTIONS has the highest average.",
+      "subquestion": "Among the agencies in the intersection, which had the highest average employee count in 2023?",
+      "answer": "CORRECTIONS"
+    },
+    "8": {
+      "source": "wikipedia/Missouri_Department_of_Corrections/content.txt",
+      "fact": "The Missouri Department of Corrections has its headquarters in Missouri's capital of Jefferson City.",
+      "subquestion": "What city is the headquarters of CORRECTIONS located in?",
+      "answer": "Jefferson City"
+    },
+    "9": {
+      "source": "wikipedia/Jefferson_City,_Missouri/content.txt",
+      "fact": "Jefferson City is home to Lincoln University, a public historically Black university founded in 1866.",
+      "subquestion": "What is the historically Black university located in Jefferson City?",
+      "answer": "Lincoln University"
+    },
+    "10": {
+      "source": "wikipedia/Lincoln_University_(Missouri)/content.txt",
+      "fact": "Lincoln University was founded by James Milton Turner.",
+      "subquestion": "Who founded Lincoln University?",
+      "answer": "James Milton Turner"
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=1, data.gov year derivation - node 1):",
+    "  Node 1: LA Charter passengers -> Highest 2017-2022 is 2021",
+    "",
+    "HOP 2 (d=3, professional services spending 2021-2023 - nodes 2-4):",
+    "  Intersection: {CORRECTIONS, SOCIAL SERVICES, TRANSPORTATION}",
+    "",
+    "HOP 3 (d=3, employee counts 2021-2023 - nodes 5-7):",
+    "  Result: Missouri Department of Corrections has highest average",
+    "",
+    "HOP 4 (d=1, Missouri Department of Corrections - node 8):",
+    "  Node 8: Headquarters city -> Jefferson City",
+    "",
+    "HOP 5 (d=1, Jefferson City - node 9):",
+    "  Node 9: Lincoln University is the historically Black university",
+    "",
+    "HOP 6 (d=1, Lincoln University - node 10):",
+    "  Node 10: Founded by James Milton Turner",
+    "  Final answer: James Milton Turner"
+  ],
+  "datasets_used": [
+    "los-angeles-international-airport-passenger-count-by-carrier-type",
+    "2021-state-expenditures",
+    "2022-state-expenditures",
+    "2023-state-expenditures",
+    "2021-state-employee-pay",
+    "2022-state-employee-pay",
+    "2023-state-employee-pay",
+    "Missouri_Department_of_Corrections",
+    "Jefferson_City,_Missouri",
+    "Lincoln_University_(Missouri)"
+  ]
+}

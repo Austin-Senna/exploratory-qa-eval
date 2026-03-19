@@ -1,0 +1,112 @@
+{
+  "question": "Among Texas counties that ranked in the top five for average capital outlay spending across the four fiscal years from one year before the year (within 2017-2022) that has the highest average daily inmate population in the Allegheny County Jail census through two years after that year, which two counties had the highest average state prison releases across the two fiscal years from that year through one year after? List the county names (no 'County' suffix) in alphabetical order separated by `, `. Your response should be in the format [Answer].",
+  "answer": "Dallas, Harris",
+  "nodes": {
+    "1": {
+      "source": "datagov/allegheny-county-jail-daily-census/files/rows.txt",
+      "fact": "Filtering the Allegheny County Jail daily census data by year (from Date) for 2017-2022, the year with the highest average daily inmate population (_Count) is 2019 with an average of approximately 2572.",
+      "subquestion": "Which year from 2017-2022 has the highest average daily inmate population in the Allegheny County Jail census? (Derive year from Date; compute average _Count by year and select the maximum.)",
+      "answer": "2019"
+    },
+    "2": {
+      "source": "datagov/texas-state-expenditures-by-county-2018/files/rows.txt",
+      "fact": "In the FY <node_1 answer - 1> Texas State Expenditures by County dataset, the top 5 counties by Capital Outlay total were: Harris ($1,303,630,847.30), Dallas ($838,316,444.65), Travis ($427,160,745.36), Montgomery ($424,383,088.05), and Bexar ($269,462,082.97).",
+      "subquestion": "Which Texas counties were in the top 5 by average Capital Outlay expenditures across FY <node_1 answer - 1> to FY <node_1 answer + 2>? (Filter for this node: Fiscal Year == <node_1 answer - 1>; Major Spending Category contains 'CAPITAL OUTLAY' (including 'HIGHWAY CONSTRUCTION-CAPITAL OUTLAY'); non-empty County; sum Amount by County.)",
+      "answer": {
+        "Harris": 1303630847.3,
+        "Dallas": 838316444.65,
+        "Travis": 427160745.36,
+        "Montgomery": 424383088.05,
+        "Bexar": 269462082.97
+      }
+    },
+    "3": {
+      "source": "datagov/texas-state-expenditures-by-county-2019/files/rows.txt",
+      "fact": "In the FY <node_1 answer> Texas State Expenditures by County dataset, the top 5 counties by Capital Outlay total were: Harris ($1,391,779,835.06), Dallas ($827,510,409.80), Travis ($614,936,080.37), Montgomery ($416,744,287.28), and Bexar ($302,940,592.72).",
+      "subquestion": "Which Texas counties were in the top 5 by average Capital Outlay expenditures across FY <node_1 answer - 1> to FY <node_1 answer + 2>? (Filter for this node: Fiscal Year == <node_1 answer>; Major Spending Category contains 'CAPITAL OUTLAY' (including 'HIGHWAY CONSTRUCTION-CAPITAL OUTLAY'); non-empty County; sum Amount by County.)",
+      "answer": {
+        "Harris": 1391779835.06,
+        "Dallas": 827510409.8,
+        "Travis": 614936080.37,
+        "Montgomery": 416744287.28,
+        "Bexar": 302940592.72
+      }
+    },
+    "4": {
+      "source": "datagov/texas-state-expenditures-by-county-2020/files/rows.txt",
+      "fact": "In the FY <node_1 answer + 1> Texas State Expenditures by County dataset, the top 5 counties by Capital Outlay total were: Harris ($1,663,151,150.96), Dallas ($1,324,261,419.12), Travis ($821,945,717.49), Montgomery ($612,813,968.49), and Bexar ($494,340,352.72).",
+      "subquestion": "Which Texas counties were in the top 5 by average Capital Outlay expenditures across FY <node_1 answer - 1> to FY <node_1 answer + 2>? (Filter for this node: Fiscal Year == <node_1 answer + 1>; Major Spending Category contains 'CAPITAL OUTLAY' (including 'HIGHWAY CONSTRUCTION-CAPITAL OUTLAY'); non-empty County; sum Amount by County.)",
+      "answer": {
+        "Harris": 1663151150.96,
+        "Dallas": 1324261419.12,
+        "Travis": 821945717.49,
+        "Montgomery": 612813968.49,
+        "Bexar": 494340352.72
+      }
+    },
+    "5": {
+      "source": "datagov/texas-state-expenditures-by-county-2021/files/rows.txt",
+      "fact": "In the FY <node_1 answer + 2> Texas State Expenditures by County dataset, the top 5 counties by Capital Outlay total were: Harris ($1,741,663,003.68), Dallas ($1,171,406,639.17), Travis ($774,601,022.23), Montgomery ($705,433,711.03), and Bexar ($596,386,366.99).",
+      "subquestion": "Which Texas counties were in the top 5 by average Capital Outlay expenditures across FY <node_1 answer - 1> to FY <node_1 answer + 2>? (Filter for this node: Fiscal Year == <node_1 answer + 2>; Major Spending Category contains 'CAPITAL OUTLAY' (including 'HIGHWAY CONSTRUCTION-CAPITAL OUTLAY'); non-empty County; sum Amount by County.)",
+      "answer": {
+        "Harris": 1741663003.68,
+        "Dallas": 1171406639.17,
+        "Travis": 774601022.23,
+        "Montgomery": 705433711.03,
+        "Bexar": 596386366.99
+      }
+    },
+    "6": {
+      "source": "datagov/texas-department-of-criminal-justice-releases-fy-2019/files/rows.txt",
+      "fact": "In the FY <node_1 answer> TDCJ Releases dataset, release counts for the top Capital Outlay counties were: Harris 9,029; Dallas 5,355; Bexar 4,545; Travis 1,857; Montgomery 1,315.",
+      "subquestion": "Among the counties from hop 1, which two had the highest average TDCJ releases across FY <node_1 answer> to FY <node_1 answer + 1>? (Filter for this node: count rows by County; County normalized to uppercase; restrict to Harris/Dallas/Bexar/Travis/Montgomery.)",
+      "answer": {
+        "Harris": 9029,
+        "Dallas": 5355,
+        "Bexar": 4545,
+        "Travis": 1857,
+        "Montgomery": 1315
+      }
+    },
+    "7": {
+      "source": "datagov/texas-department-of-criminal-justice-releases-fy-2020/files/rows.txt",
+      "fact": "In the FY <node_1 answer + 1> TDCJ Releases dataset, release counts for the top Capital Outlay counties were: Harris 7,059; Dallas 4,540; Bexar 3,917; Travis 1,596; Montgomery 1,250.",
+      "subquestion": "Among the counties from hop 1, which two had the highest average TDCJ releases across FY <node_1 answer> to FY <node_1 answer + 1>? (Filter for this node: count rows by County; County normalized to uppercase; restrict to Harris/Dallas/Bexar/Travis/Montgomery.)",
+      "answer": {
+        "Harris": 7059,
+        "Dallas": 4540,
+        "Bexar": 3917,
+        "Travis": 1596,
+        "Montgomery": 1250
+      }
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=1, data.gov year derivation - node 1):",
+    "  Node 1: Year with highest average daily inmate population in Allegheny County Jail (2017-2022) -> 2019",
+    "  Derived year ranges: FY2018-FY2021 (node_1 answer - 1 to node_1 answer + 2), FY2019-FY2020 (node_1 answer to node_1 answer + 1)",
+    "",
+    "HOP 2 (d=4, Texas Capital Outlay expenditures by county FY2018-FY2021 - nodes 2-5):",
+    "  Node 2: FY2018 Capital Outlay totals (top 5 counties)",
+    "  Node 3: FY2019 Capital Outlay totals (top 5 counties)",
+    "  Node 4: FY2020 Capital Outlay totals (top 5 counties)",
+    "  Node 5: FY2021 Capital Outlay totals (top 5 counties)",
+    "  Aggregation: average across FY2018-2021 -> top five counties are Harris, Dallas, Travis, Montgomery, Bexar",
+    "",
+    "HOP 3 (d=2, Texas TDCJ Releases FY2019-FY2020 - nodes 6-7):",
+    "  Node 6: FY2019 releases for those counties",
+    "  Node 7: FY2020 releases for those counties",
+    "  Aggregation: average releases across FY2019-2020 -> highest two are Harris and Dallas",
+    "",
+    "Final answer: Dallas, Harris"
+  ],
+  "datasets_used": [
+    "allegheny-county-jail-daily-census",
+    "texas-state-expenditures-by-county-2018",
+    "texas-state-expenditures-by-county-2019",
+    "texas-state-expenditures-by-county-2020",
+    "texas-state-expenditures-by-county-2021",
+    "texas-department-of-criminal-justice-releases-fy-2019",
+    "texas-department-of-criminal-justice-releases-fy-2020"
+  ]
+}

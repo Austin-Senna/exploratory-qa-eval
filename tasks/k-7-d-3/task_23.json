@@ -1,0 +1,123 @@
+{
+  "question": "Find the Texas counties that rank in the top five for capital-outlay spending in each year from the year from 2017-2022 that has the highest total gasoline/gasohol sales across U.S. states to the year from 2017-2022 that has the lowest total ridership reported by the Rochester Genesee Regional Transportation Authority. From those counties, use fiscal year 2021 state prison releases to identify the county with the highest number of releases. From that county, find its county seat city, then identify the NASA center in that city and the person it is named after. Finally, identify the Texas ranch named after that person in retirement. Answer with the ranch name only. Your response should be in the format [Answer].",
+  "answer": "LBJ Ranch",
+  "nodes": {
+    "1": {
+      "source": "datagov/monthly-motor-fuel-sales-reported-by-states-selected-data-from-fhwa-monthly-motor-fuel-rep/files/rows.txt",
+      "fact": "Filtering fuel_type = \"Gasoline/gasohol\" and summing value by year (from date) for 2017-2022, the maximum total is 294719877886 in 2019.",
+      "subquestion": "Which year from 2017-2022 has the highest total gasoline/gasohol sales? (Filter fuel_type == \"Gasoline/gasohol\"; derive year from date; sum value by year and select the maximum.)",
+      "answer": "2019"
+    },
+    "2": {
+      "source": "datagov/rochester-genesee-regional-transportation-authority-rgrta-rider-volumes-beginning-2006/files/rows.txt",
+      "fact": "Summing Ridership across all subsidiaries by Year for 2017-2022, the minimum total is 7778388 in 2021.",
+      "subquestion": "Which year from 2017-2022 has the lowest total ridership reported by the Rochester Genesee Regional Transportation Authority? (Sum Ridership by Year across all subsidiaries and select the minimum.)",
+      "answer": "2021"
+    },
+    "3": {
+      "source": "datagov/texas-state-expenditures-by-county-2019/files/rows.txt",
+      "fact": "In Texas fiscal year 2019, the top 5 counties by total CAPITAL OUTLAY spending are ['Harris', 'Travis', 'Dallas', 'Hardin', 'Bexar'].",
+      "subquestion": "In Texas fiscal year 2019 expenditure data, which counties are in the top 5 by total CAPITAL OUTLAY spending? Return the 5 county names.",
+      "answer": [
+        "Harris",
+        "Travis",
+        "Dallas",
+        "Hardin",
+        "Bexar"
+      ]
+    },
+    "4": {
+      "source": "datagov/texas-state-expenditures-by-county-2020/files/rows.txt",
+      "fact": "In Texas fiscal year 2020, the top 5 counties by total CAPITAL OUTLAY spending are ['Travis', 'Harris', 'Dallas', 'Bexar', 'Grayson'].",
+      "subquestion": "In Texas fiscal year 2020 expenditure data, which counties are in the top 5 by total CAPITAL OUTLAY spending? Return the 5 county names.",
+      "answer": [
+        "Travis",
+        "Harris",
+        "Dallas",
+        "Bexar",
+        "Grayson"
+      ]
+    },
+    "5": {
+      "source": "datagov/texas-state-expenditures-by-county-2021/files/rows.txt",
+      "fact": "In Texas fiscal year 2021, the top 5 counties by total CAPITAL OUTLAY spending are ['Harris', 'Travis', 'Dallas', 'Bexar', 'Guadalupe'].",
+      "subquestion": "In Texas fiscal year 2021 expenditure data, which counties are in the top 5 by total CAPITAL OUTLAY spending? Return the 5 county names.",
+      "answer": [
+        "Harris",
+        "Travis",
+        "Dallas",
+        "Bexar",
+        "Guadalupe"
+      ]
+    },
+    "6": {
+      "source": "datagov/texas-department-of-criminal-justice-releases-fy-2021/files/rows.txt",
+      "fact": "The counties that are in the intersection of the three top-5 lists are {Harris, Travis, Dallas, Bexar}. In Texas Department of Criminal Justice releases for FY2021, the release counts for these four counties are: Harris = 5210, Dallas = 3565, Bexar = 3236, Travis = 1036. The highest is Harris.",
+      "subquestion": "Consider the counties that appear in each of <node_3 answer>, <node_4 answer>, and <node_5 answer>. In Texas Department of Criminal Justice releases for FY2021, which of those counties has the highest number of releases?",
+      "answer": "Harris"
+    },
+    "7": {
+      "source": "wikipedia/Harris_County,_Texas/content.txt",
+      "fact": "The county seat of Harris County, Texas is Houston.",
+      "subquestion": "What city is the county seat of <node_6 answer> County, Texas?",
+      "answer": "Houston"
+    },
+    "8": {
+      "source": "wikipedia/Houston/content.txt",
+      "fact": "Houston is home to the Lyndon B. Johnson Space Center.",
+      "subquestion": "What NASA center is located in <node_7 answer>?",
+      "answer": "Johnson Space Center"
+    },
+    "9": {
+      "source": "wikipedia/Johnson_Space_Center/content.txt",
+      "fact": "The Lyndon B. Johnson Space Center was named in honor of Lyndon B. Johnson.",
+      "subquestion": "The NASA center <node_8 answer> is named in honor of which person?",
+      "answer": "Lyndon B. Johnson"
+    },
+    "10": {
+      "source": "wikipedia/Lyndon_B._Johnson/content.txt",
+      "fact": "Lyndon B. Johnson retired to his Texas ranch commonly called the LBJ Ranch.",
+      "subquestion": "After leaving office, what is the commonly used name of the Texas ranch where <node_9 answer> retired?",
+      "answer": "LBJ Ranch"
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=2, data.gov year derivation - nodes 1-2):",
+    "  Node 1: Year with highest gasoline sales (2017-2022) -> 2019",
+    "  Node 2: Year with lowest ridership (2017-2022) -> 2021",
+    "  Range: 2019-2021",
+    "",
+    "HOP 2 (d=3, Texas capital outlay 2019-2021 - nodes 3-5):",
+    "  Identify the top five Texas counties for CAPITAL OUTLAY spending in FY2019, FY2020, and FY2021.",
+    "",
+    "HOP 3 (d=1, prison releases - node 6):",
+    "  Intersect those three lists, then use FY2021 Texas Department of Criminal Justice release counts to pick the county with the most releases (Harris).",
+    "",
+    "HOP 4 (d=1, Wikipedia - node 7):",
+    "  Find the county seat of Harris County, Texas (Houston).",
+    "",
+    "HOP 5 (d=1, Wikipedia - node 8):",
+    "  Identify the NASA center located in Houston (Johnson Space Center).",
+    "",
+    "HOP 6 (d=1, Wikipedia - node 9):",
+    "  Identify the person the Johnson Space Center is named after (Lyndon B. Johnson).",
+    "",
+    "HOP 7 (d=1, Wikipedia - node 10):",
+    "  Identify the commonly used name of Lyndon B. Johnson's Texas ranch (LBJ Ranch).",
+    "",
+    "Final answer: LBJ Ranch."
+  ],
+  "verdict": "pass",
+  "datasets_used": [
+    "monthly-motor-fuel-sales-reported-by-states-selected-data-from-fhwa-monthly-motor-fuel-rep",
+    "rochester-genesee-regional-transportation-authority-rgrta-rider-volumes-beginning-2006",
+    "Harris_County,_Texas",
+    "Houston",
+    "Johnson_Space_Center",
+    "Lyndon_B._Johnson",
+    "texas-state-expenditures-by-county-2019",
+    "texas-state-expenditures-by-county-2020",
+    "texas-state-expenditures-by-county-2021",
+    "texas-department-of-criminal-justice-releases-fy-2021"
+  ]
+}

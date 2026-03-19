@@ -1,0 +1,32 @@
+{
+  "question": "Albany is in which county, and what was that county's 2018 violent crime rate per 100,000 population? Only report the numeric rate. Your response should be in the format [Answer].",
+  "answer": "359.8",
+  "nodes": {
+    "1": {
+      "source": "wikipedia/Albany,_New_York/content.txt",
+      "fact": "Albany is the capital city of the U.S. state of New York, and the county seat of Albany County.",
+      "subquestion": "What county is Albany, New York located in?",
+      "answer": "Albany County"
+    },
+    "2": {
+      "source": "datagov/index-violent-property-and-firearm-rates-by-county-beginning-1990/files/rows.txt",
+      "fact": "According to the NY index crimes dataset, Albany County had a violent crime rate of 359.8 per 100,000 population in 2018.",
+      "subquestion": "What was the violent crime rate per 100,000 population in 2018 for <node_1 answer>?",
+      "answer": "359.8"
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=1, Wikipedia - node 1):",
+    "  Node 1: Albany is in Albany County",
+    "",
+    "HOP 2 (d=1, data.gov - node 2 depends on hop 1):",
+    "  Node 2: Albany County 2018 violent crime rate -> 359.8",
+    "",
+    "Final answer: 359.8"
+  ],
+  "verdict": "pass",
+  "datasets_used": [
+    "Albany,_New_York",
+    "index-violent-property-and-firearm-rates-by-county-beginning-1990"
+  ]
+}

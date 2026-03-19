@@ -1,0 +1,58 @@
+{
+  "question": "Starting with the year (within 2013-2018) with the highest NYC PM2.5 concentration, focusing on the state where Yakima is located, identify the county with the highest number of graduates across all cohorts in the 2019-20 school year. Determine how many public schools were listed in that county during 2018–19. Within the same county, identify the school district that had the most graduates across all cohorts in that derived year's school year (YYYY-YY+1), and obtain that district's graduates-across-all-cohorts total for the following school year. Subtract the county's 2018–19 public school count from that district's total. Your response should be in the format [Answer].",
+  "answer": "8511",
+  "nodes": {
+    "1": {
+      "source": "datagov/new-york-city-air-quality/files/rows.txt",
+      "fact": "For 2013-2018, highest NYC PM2.5 concentration is in 2017.",
+      "subquestion": "Which year from 2013-2018 has highest NYC PM2.5?",
+      "answer": "2017"
+    },
+    "2": {
+      "source": "wikipedia/Yakima,_Washington/content.txt",
+      "fact": "Yakima is in Washington state.",
+      "subquestion": "Which state is Yakima in?",
+      "answer": "Washington"
+    },
+    "3": {
+      "source": "datagov/report-card-graduation-2019-20/files/rows.txt",
+      "fact": "In WA 2019-20, King County has most graduates (74,220).",
+      "subquestion": "Which WA county has most graduates in 2019-20?",
+      "answer": "King"
+    },
+    "4": {
+      "source": "datagov/public-school-locations-2018-19-42360/files/data-F2nGlG.txt",
+      "fact": "King County WA 2018-19: 522 public schools.",
+      "subquestion": "Public schools in King County WA 2018-19?",
+      "answer": "522"
+    },
+    "5": {
+      "source": "datagov/report-card-graduation-2017-18/files/rows.txt",
+      "fact": "In King County 2017-18, Seattle SD has most graduates (8,717).",
+      "subquestion": "Which King County district has most graduates in <node_1 answer>-18?",
+      "answer": "Seattle School District No. 1"
+    },
+    "6": {
+      "source": "datagov/report-card-graduation-2018-19/files/rows.txt",
+      "fact": "Seattle SD 2018-19 graduates: 9,033. 9033-522=8511.",
+      "subquestion": "Seattle SD graduates in 2018-19?",
+      "answer": "9033"
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=1): NYC PM2.5 highest 2013-2018 is 2017",
+    "HOP 2 (d=1): Yakima → Washington",
+    "HOP 3 (d=1): WA 2019-20 most graduates → King County",
+    "HOP 4 (d=1): King County 2018-19 public schools → 522",
+    "HOP 5 (d=2): King County 2017-18 most graduates → Seattle SD; 2018-19 → 9033; 9033-522=8511",
+    "Final answer: 8511"
+  ],
+  "datasets_used": [
+    "new-york-city-air-quality",
+    "Yakima,_Washington",
+    "report-card-graduation-2019-20",
+    "public-school-locations-2018-19-42360",
+    "report-card-graduation-2017-18",
+    "report-card-graduation-2018-19"
+  ]
+}

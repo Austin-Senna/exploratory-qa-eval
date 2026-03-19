@@ -1,0 +1,32 @@
+{
+  "question": "What percentage of the population aged 65 or older in 2022 was in the Texas county that contains McAllen? Only report the percentage in `Number` format (e.g., 12.3). Your response should be in the format [Answer].",
+  "answer": "12.3",
+  "nodes": {
+    "1": {
+      "source": "wikipedia/McAllen,_Texas/content.txt",
+      "fact": "According to the Wikipedia article for McAllen, Texas: 'McAllen is a city in Hidalgo County in the Rio Grande Valley of the southern tip of the U.S. state of Texas.'",
+      "subquestion": "Which Texas county is McAllen located in?",
+      "answer": "Hidalgo County"
+    },
+    "2": {
+      "source": "datagov/aps-1-1-texas-adult-populations-at-risk-by-county-region-fy2013-fy2022/files/rows.txt",
+      "fact": "According to the Texas Adult Populations at Risk by County data, in 2022, Hidalgo County had 12.3% of its population aged 65 and older.",
+      "subquestion": "What percentage of the population was aged 65 and older in 2022 in <node_1 answer>?",
+      "answer": "12.3"
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=1, Wikipedia - node 1):",
+    "  Node 1: McAllen is in Hidalgo County",
+    "",
+    "HOP 2 (d=1, data.gov - node 2 depends on node 1):",
+    "  Node 2: Hidalgo County population aged 65+ in 2022 -> 12.3%",
+    "",
+    "Final answer: 12.3"
+  ],
+  "verdict": "pass",
+  "datasets_used": [
+    "McAllen,_Texas",
+    "aps-1-1-texas-adult-populations-at-risk-by-county-region-fy2013-fy2022"
+  ]
+}

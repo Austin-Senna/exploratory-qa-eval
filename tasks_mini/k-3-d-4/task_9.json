@@ -1,0 +1,131 @@
+{
+  "question": "Which original Texas county is also in the top five for average capital outlay spending from 2018 to 2021? Among those counties, which one had the lowest average criminal releases across 2019 and 2020? Return the county name only. Your response should be in the format [Answer].",
+  "answer": "Bexar County",
+  "nodes": {
+    "1": {
+      "source": "wikipedia/List_of_counties_in_Texas/content.txt",
+      "fact": "The Republic of Texas created 23 original counties in 1836: Austin, Bastrop, Bexar, Brazoria, Colorado, Fayette, Goliad, Gonzales, Harris, Jackson, Jasper, Jefferson, Liberty, Matagorda, Milam, Nacogdoches, Red River, Refugio, Sabine, San Augustine, San Patricio, Shelby, and Victoria.",
+      "subquestion": "Which counties were among the original 23 counties of Texas?",
+      "answer": [
+        "Austin",
+        "Bastrop",
+        "Bexar",
+        "Brazoria",
+        "Colorado",
+        "Fayette",
+        "Goliad",
+        "Gonzales",
+        "Harris",
+        "Jackson",
+        "Jasper",
+        "Jefferson",
+        "Liberty",
+        "Matagorda",
+        "Milam",
+        "Nacogdoches",
+        "Red River",
+        "Refugio",
+        "Sabine",
+        "San Augustine",
+        "San Patricio",
+        "Shelby",
+        "Victoria"
+      ]
+    },
+    "2": {
+      "source": "datagov/texas-state-expenditures-by-county-2018/files/rows.txt",
+      "fact": "In the 2018 Texas State Expenditures by County dataset, the top 5 counties by Capital Outlay total were: Harris ($1,303,630,847.30), Dallas ($838,316,444.65), Travis ($427,160,745.36), Montgomery ($424,383,088.05), and Bexar ($269,462,082.97).",
+      "subquestion": "Which Texas counties were in the top 5 by average Capital Outlay expenditures across 2018-2021? (Filter for this node: Fiscal Year == 2018; Major Spending Category contains 'CAPITAL OUTLAY' (including 'HIGHWAY CONSTRUCTION-CAPITAL OUTLAY'); non-empty County; sum Amount by County.)",
+      "answer": {
+        "Harris": 1303630847.3,
+        "Dallas": 838316444.65,
+        "Travis": 427160745.36,
+        "Montgomery": 424383088.05,
+        "Bexar": 269462082.97
+      }
+    },
+    "3": {
+      "source": "datagov/texas-state-expenditures-by-county-2019/files/rows.txt",
+      "fact": "In the 2019 Texas State Expenditures by County dataset, the top 5 counties by Capital Outlay total were: Harris ($1,391,779,835.06), Dallas ($827,510,409.80), Travis ($614,936,080.37), Montgomery ($416,744,287.28), and Bexar ($302,940,592.72).",
+      "subquestion": "Which Texas counties were in the top 5 by average Capital Outlay expenditures across 2018-2021? (Filter for this node: Fiscal Year == 2019; Major Spending Category contains 'CAPITAL OUTLAY' (including 'HIGHWAY CONSTRUCTION-CAPITAL OUTLAY'); non-empty County; sum Amount by County.)",
+      "answer": {
+        "Harris": 1391779835.06,
+        "Dallas": 827510409.8,
+        "Travis": 614936080.37,
+        "Montgomery": 416744287.28,
+        "Bexar": 302940592.72
+      }
+    },
+    "4": {
+      "source": "datagov/texas-state-expenditures-by-county-2020/files/rows.txt",
+      "fact": "In the 2020 Texas State Expenditures by County dataset, the top 5 counties by Capital Outlay total were: Harris ($1,663,151,150.96), Dallas ($1,324,261,419.12), Travis ($821,945,717.49), Montgomery ($612,813,968.49), and Bexar ($494,340,352.72).",
+      "subquestion": "Which Texas counties were in the top 5 by average Capital Outlay expenditures across 2018-2021? (Filter for this node: Fiscal Year == 2020; Major Spending Category contains 'CAPITAL OUTLAY' (including 'HIGHWAY CONSTRUCTION-CAPITAL OUTLAY'); non-empty County; sum Amount by County.)",
+      "answer": {
+        "Harris": 1663151150.96,
+        "Dallas": 1324261419.12,
+        "Travis": 821945717.49,
+        "Montgomery": 612813968.49,
+        "Bexar": 494340352.72
+      }
+    },
+    "5": {
+      "source": "datagov/texas-state-expenditures-by-county-2021/files/rows.txt",
+      "fact": "In the 2021 Texas State Expenditures by County dataset, the top 5 counties by Capital Outlay total were: Harris ($1,741,663,003.68), Dallas ($1,171,406,639.17), Travis ($774,601,022.23), Montgomery ($705,433,711.03), and Bexar ($596,386,366.99).",
+      "subquestion": "Which Texas counties were in the top 5 by average Capital Outlay expenditures across 2018-2021? (Filter for this node: Fiscal Year == 2021; Major Spending Category contains 'CAPITAL OUTLAY' (including 'HIGHWAY CONSTRUCTION-CAPITAL OUTLAY'); non-empty County; sum Amount by County.)",
+      "answer": {
+        "Harris": 1741663003.68,
+        "Dallas": 1171406639.17,
+        "Travis": 774601022.23,
+        "Montgomery": 705433711.03,
+        "Bexar": 596386366.99
+      }
+    },
+    "6": {
+      "source": "datagov/texas-department-of-criminal-justice-releases-fy-2019/files/rows.txt",
+      "fact": "In the 2019 Texas Department of Criminal Justice releases dataset, Harris County had 9,029 releases and Bexar County had 4,545 releases.",
+      "subquestion": "For the counties in <intersection of node_1 and aggregation of nodes 2-5>, what were the Texas Department of Criminal Justice release counts in 2019 and 2020? (Filter for this node: County in {Harris, Bexar}; count rows by County.)",
+      "answer": {
+        "Harris": 9029,
+        "Bexar": 4545
+      }
+    },
+    "7": {
+      "source": "datagov/texas-department-of-criminal-justice-releases-fy-2020/files/rows.txt",
+      "fact": "In the 2020 Texas Department of Criminal Justice releases dataset, Harris County had 7,059 releases and Bexar County had 3,917 releases.",
+      "subquestion": "For the counties in <intersection of node_1 and aggregation of nodes 2-5>, what were the Texas Department of Criminal Justice release counts in 2019 and 2020? (Filter for this node: County in {Harris, Bexar}; count rows by County.)",
+      "answer": {
+        "Harris": 7059,
+        "Bexar": 3917
+      }
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=1, Wikipedia List_of_counties_in_Texas - node 1):",
+    "  Node 1: Original 23 counties include Bexar and Harris among others",
+    "",
+    "HOP 2 (d=4, Texas Capital Outlay expenditures by county 2018-2021 - nodes 2-5):",
+    "  Node 2: 2018 top 5 -> Harris, Dallas, Travis, Montgomery, Bexar",
+    "  Node 3: 2019 top 5 -> Harris, Dallas, Travis, Montgomery, Bexar",
+    "  Node 4: 2020 top 5 -> Harris, Dallas, Travis, Montgomery, Bexar",
+    "  Node 5: 2021 top 5 -> Harris, Dallas, Travis, Montgomery, Bexar",
+    "  Result: {Harris, Dallas, Travis, Montgomery, Bexar}",
+    "  Intersection with original 23 -> {Harris, Bexar}",
+    "",
+    "HOP 3 (d=2, TDCJ releases FY2019-FY2020 - nodes 6-7):",
+    "  Node 6: 2019 releases -> Harris 9,029; Bexar 4,545",
+    "  Node 7: 2020 releases -> Harris 7,059; Bexar 3,917",
+    "  Average releases: Harris 8,044; Bexar 4,231",
+    "  Lowest average releases: Bexar County",
+    "  Final answer: Bexar County"
+  ],
+  "verdict": "pass",
+  "datasets_used": [
+    "List_of_counties_in_Texas",
+    "texas-state-expenditures-by-county-2018",
+    "texas-state-expenditures-by-county-2019",
+    "texas-state-expenditures-by-county-2020",
+    "texas-state-expenditures-by-county-2021",
+    "texas-department-of-criminal-justice-releases-fy-2019",
+    "texas-department-of-criminal-justice-releases-fy-2020"
+  ]
+}

@@ -1,0 +1,51 @@
+{
+  "question": "Compare the NYC boroughs represented by Leroy Comrie and Domenic Recchia. Using 2019 NYCHA SYEP enrollment, choose the borough with the higher count and report the representative\u2019s birth year. Only report the year in `YYYY` format. Your response should be in the format [Answer].",
+  "answer": "1959",
+  "nodes": {
+    "1": {
+      "source": "wikipedia/Leroy_Comrie/content.txt",
+      "fact": "Leroy George Comrie Jr. represents district 14 in the New York State Senate, which comprises neighborhoods within the borough of Queens.",
+      "subquestion": "Which borough in the most populous city of that state did Leroy Comrie represent?",
+      "answer": "Queens"
+    },
+    "2": {
+      "source": "wikipedia/Domenic_Recchia/content.txt",
+      "fact": "Domenic Michael Recchia Jr. formerly represented the 47th district of the New York City Council, which included areas of Bensonhurst, Brighton Beach, Coney Island, and Gravesend in south Brooklyn.",
+      "subquestion": "Which borough in the most populous city of that state did Domenic Recchia represent?",
+      "answer": "Brooklyn"
+    },
+    "3": {
+      "source": "datagov/summer-youth-employment-program-syep-for-nycha-residents-by-borough-local-law-163/v1/files/rows.csv",
+      "fact": "In 2019, Brooklyn had 3,889 NYCHA residents enrolled in SYEP while Queens had 1,019 enrollees. Brooklyn (3,889) had more enrollees than Queens (1,019).",
+      "subquestion": "Which borough had more NYCHA residents enrolled in SYEP in 2019: Queens (<node_1 answer>) or Brooklyn (<node_2 answer>)? (Filter: Year == 2019; compare 'Were accepted and enrolled' for Queens vs Brooklyn.)",
+      "answer": "Brooklyn"
+    },
+    "4": {
+      "source": "wikipedia/Domenic_Recchia/content.txt",
+      "fact": "Domenic Michael Recchia Jr. was born on July 25, 1959.",
+      "subquestion": "In what year was Domenic Recchia (the candidate representing <node_3 answer>) born?",
+      "answer": "1959"
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=2, Wikipedia - nodes 1-2):",
+    "  Node 1: Leroy Comrie -> borough of Queens",
+    "  Node 2: Domenic Recchia -> borough of Brooklyn",
+    "  Result: {Queens, Brooklyn}",
+    "",
+    "HOP 2 (d=1, data.gov comparative - node 3):",
+    "  Node 3: NYCHA SYEP 2019 enrollment -> Brooklyn (3,889) vs Queens (1,019)",
+    "  Comparative: Brooklyn has more -> Domenic Recchia",
+    "",
+    "HOP 3 (d=1, Wikipedia - node 4):",
+    "  Node 4: Domenic Recchia birth year -> 1959",
+    "",
+    "Final answer: 1959"
+  ],
+  "verdict": "pass",
+  "datasets_used": [
+    "Domenic_Recchia",
+    "Leroy_Comrie",
+    "summer-youth-employment-program-syep-for-nycha-residents-by-borough-local-law-163"
+  ]
+}

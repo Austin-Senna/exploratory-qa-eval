@@ -1,0 +1,120 @@
+{
+  "question": "Starting with the year over 2013-2018 with the highest US gasoline sales revenue and extending 2 years back to form a range, identify Texas cities with diabetes prevalence above 12% in each year during that range. Among those with 2020 population under 100,000, find the city that borders both of them. Which Texas county contains that city? Your response should be in the format [Answer].",
+  "answer": "Hidalgo County",
+  "nodes": {
+    "1": {
+      "source": "datagov/eia-us-states-weekly-motor-gasoline-sales/files/rows.txt",
+      "fact": "For 2013-2018, highest gasoline sales is in 2018.",
+      "subquestion": "Which year from 2013-2018 has highest gasoline sales?",
+      "answer": "2018"
+    },
+    "2": {
+      "source": "datagov/500-cities-city-level-data-gis-friendly-format-2016-release/files/rows.txt",
+      "fact": "10 Texas cities had diabetes >12% in 2016.",
+      "subquestion": "Which TX cities had diabetes >12% in <node_1 answer>-2?",
+      "answer": [
+        "Beaumont",
+        "Brownsville",
+        "Corpus Christi",
+        "Edinburg",
+        "El Paso",
+        "Laredo",
+        "McAllen",
+        "Mission",
+        "Pharr",
+        "San Antonio"
+      ]
+    },
+    "3": {
+      "source": "datagov/500-cities-city-level-data-gis-friendly-format-2017-release/files/rows.txt",
+      "fact": "12 Texas cities had diabetes >12% in 2017.",
+      "subquestion": "Which TX cities had diabetes >12% in <node_1 answer>-1?",
+      "answer": [
+        "Baytown",
+        "Beaumont",
+        "Brownsville",
+        "Corpus Christi",
+        "Edinburg",
+        "El Paso",
+        "Houston",
+        "Laredo",
+        "McAllen",
+        "Mission",
+        "Pharr",
+        "San Antonio"
+      ]
+    },
+    "4": {
+      "source": "datagov/500-cities-city-level-data-gis-friendly-format-2018-release/files/rows.txt",
+      "fact": "12 Texas cities had diabetes >12% in 2018. Intersection: Beaumont, Brownsville, Corpus Christi, El Paso, Laredo, McAllen, Mission, Pharr, San Antonio.",
+      "subquestion": "Which TX cities had diabetes >12% in <node_1 answer>?",
+      "answer": [
+        "Beaumont",
+        "Brownsville",
+        "Corpus Christi",
+        "El Paso",
+        "Houston",
+        "Laredo",
+        "Longview",
+        "McAllen",
+        "Mission",
+        "Pharr",
+        "San Antonio",
+        "Tyler"
+      ]
+    },
+    "5": {
+      "source": "datagov/2020-census-redistricting-data-all-texas-places/files/rows.txt",
+      "fact": "Mission 85,778 and Pharr 79,715 under 100k.",
+      "subquestion": "Which from intersection have pop <100k?",
+      "answer": [
+        "Mission",
+        "Pharr"
+      ]
+    },
+    "6": {
+      "source": "wikipedia/Pharr,_Texas/content.txt",
+      "fact": "Pharr borders McAllen, Edinburg, San Juan, Hidalgo.",
+      "subquestion": "Which cities border Pharr?",
+      "answer": [
+        "McAllen",
+        "Edinburg",
+        "San Juan",
+        "Hidalgo"
+      ]
+    },
+    "7": {
+      "source": "wikipedia/Mission,_Texas/content.txt",
+      "fact": "Mission borders McAllen, Palmhurst, Palmview.",
+      "subquestion": "Which cities border Mission?",
+      "answer": [
+        "McAllen",
+        "Palmhurst",
+        "Palmview"
+      ]
+    },
+    "8": {
+      "source": "wikipedia/McAllen,_Texas/content.txt",
+      "fact": "McAllen is in Hidalgo County.",
+      "subquestion": "Which county contains the city that borders both?",
+      "answer": "Hidalgo County"
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=1): Gasoline sales highest 2013-2018 is 2018",
+    "HOP 2 (d=3): Diabetes prevalence 2016-2018 intersection",
+    "HOP 3 (d=2): Pop <100k + bordering cities",
+    "HOP 4 (d=1): McAllen in Hidalgo County",
+    "Final answer: Hidalgo County"
+  ],
+  "datasets_used": [
+    "eia-us-states-weekly-motor-gasoline-sales",
+    "500-cities-city-level-data-gis-friendly-format-2016-release",
+    "500-cities-city-level-data-gis-friendly-format-2017-release",
+    "500-cities-city-level-data-gis-friendly-format-2018-release",
+    "2020-census-redistricting-data-all-texas-places",
+    "Pharr,_Texas",
+    "Mission,_Texas",
+    "McAllen,_Texas"
+  ]
+}

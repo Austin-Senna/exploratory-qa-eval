@@ -1,0 +1,63 @@
+{
+  "question": "Let Y be the program fiscal year (within 2017–2022) with the highest total federal share obligated for funded projects under the Hazard Mitigation Assistance grant programs. Using the census from Y, Mission and Pharr are the under‑100,000 cities among Beaumont, Brownsville, Corpus Christi, El Paso, Laredo, McAllen, Mission, Pharr, and San Antonio. Which city borders both Mission and Pharr? Return the city name only. Your response should be in the format [Answer].",
+  "answer": "McAllen",
+  "nodes": {
+    "1": {
+      "source": "datagov/hazard-mitigation-assistance-projects/files/HazardMitigationAssistanceProjects.txt",
+      "fact": "Summing federalShareObligated by programFy for 2017-2022, the maximum total is 48932227.55 in 2020.",
+      "subquestion": "Which program fiscal year from 2017-2022 has the highest total federal share obligated for funded projects under the Hazard Mitigation Assistance grant programs? (Sum federalShareObligated by programFy and select the maximum.)",
+      "answer": "2020"
+    },
+    "2": {
+      "source": "datagov/2020-census-redistricting-data-all-texas-places/files/rows.txt",
+      "fact": "According to the <node_1 answer> Census Redistricting Data for All Texas Places, the following Census populations (POP100 field) are recorded for the listed cities: Beaumont (115,282), Brownsville (186,738), Corpus Christi (317,863), El Paso (678,815), Laredo (255,205), McAllen (142,210), Mission (85,778), Pharr (79,715), and San Antonio (1,434,625). Only Mission and Pharr have populations under 100,000.",
+      "subquestion": "From the <node_1 answer> Census Texas places data, which of these cities have population under 100,000: Beaumont, Brownsville, Corpus Christi, El Paso, Laredo, McAllen, Mission, Pharr, San Antonio?",
+      "answer": [
+        "Mission",
+        "Pharr"
+      ]
+    },
+    "3": {
+      "source": "wikipedia/Pharr,_Texas/content.txt",
+      "fact": "According to the Wikipedia article for Pharr, Texas, the city 'borders McAllen to the west, Edinburg to the north, San Juan to the east, and Hidalgo to the southwest.'",
+      "subquestion": "Which cities border Pharr, Texas?",
+      "answer": [
+        "McAllen",
+        "Edinburg",
+        "San Juan",
+        "Hidalgo"
+      ]
+    },
+    "4": {
+      "source": "wikipedia/Mission,_Texas/content.txt",
+      "fact": "According to the Wikipedia article for Mission, Texas, the city borders 'McAllen to the east, Palmhurst to the north, and Palmview to the west.'",
+      "subquestion": "Which cities border Mission, Texas?",
+      "answer": [
+        "McAllen",
+        "Palmhurst",
+        "Palmview"
+      ]
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=1, data.gov year derivation - node 1):",
+    "  Node 1: Program fiscal year with highest hazard mitigation federal share obligated (2017-2022) -> 2020",
+    "  Derived census year: 2020 (direct)",
+    "",
+    "HOP 2 (d=1, data.gov filter - node 2 depends on node 1):",
+    "  Node 2: 2020 Census populations for the listed cities -> under 100,000: Mission, Pharr",
+    "",
+    "HOP 3 (d=2, Wikipedia intersection - nodes 3-4 depend on hop 2 cities):",
+    "  Node 3: Pharr borders -> McAllen, Edinburg, San Juan, Hidalgo",
+    "  Node 4: Mission borders -> McAllen, Palmhurst, Palmview",
+    "  Intersection -> McAllen",
+    "",
+    "Final answer: McAllen"
+  ],
+  "datasets_used": [
+    "hazard-mitigation-assistance-projects",
+    "2020-census-redistricting-data-all-texas-places",
+    "Pharr,_Texas",
+    "Mission,_Texas"
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "question": "Which county seats correspond to the top two non-NYC New York counties by total mental health service recipients in 2017-2018? List the city names in alphabetical order separated by `, `. Your response should be in the format [Answer].",
+  "answer": "Buffalo, Rochester",
+  "nodes": {
+    "1": {
+      "source": "datagov/county-mental-health-profiles-phase-2-beginning-2014/files/rows.txt",
+      "fact": "According to the NY mental health profiles dataset (2017-2018), excluding NYC counties, the top 2 NY counties by total mental health service recipients are Erie County (83,049 recipients) and Monroe County (74,299 recipients).",
+      "subquestion": "Which non-NYC NY counties are in the top 2 by total mental health service recipients (2017-2018)? (Filter for this node: Service Year in {2017, 2018}; group by County Label; sum Count of Recipients by Rate Code Group and County; exclude NYC counties {Bronx, Kings, New York, Queens, Richmond}; rank by total; keep top 2.)",
+      "answer": [
+        "Erie County",
+        "Monroe County"
+      ]
+    },
+    "2": {
+      "source": "wikipedia/Erie_County,_New_York/content.txt",
+      "fact": "The county seat of Erie County, New York is Buffalo.",
+      "subquestion": "What is the county seat of each county (from hop 1)?",
+      "answer": "Buffalo"
+    },
+    "3": {
+      "source": "wikipedia/Monroe_County,_New_York/content.txt",
+      "fact": "The county seat of Monroe County, New York is Rochester.",
+      "subquestion": "What is the county seat of each county (from hop 1)?",
+      "answer": "Rochester"
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=1, data.gov - node 1):",
+    "  Node 1: Top 2 non-NYC counties by mental health recipients (2017-2018) -> Erie County, Monroe County",
+    "",
+    "HOP 2 (d=2, Wikipedia - nodes 2-3 depend on hop 1):",
+    "  Node 2: Erie County seat -> Buffalo",
+    "  Node 3: Monroe County seat -> Rochester",
+    "",
+    "Final answer: Buffalo, Rochester"
+  ],
+  "verdict": "pass",
+  "datasets_used": [
+    "county-mental-health-profiles-phase-2-beginning-2014",
+    "Erie_County,_New_York",
+    "Monroe_County,_New_York"
+  ]
+}

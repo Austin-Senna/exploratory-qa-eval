@@ -1,0 +1,71 @@
+{
+  "question": "I'm tracking crime patterns in Washington, D.C. starting with the ward that contains Adams Morgan. After identifying the most common offense in that ward in 2017, determine which ward had the highest number of incidents for that specific offense in the year (within 2017-2019) with the lowest total annual average daily traffic count for all New York State Routes and roads. For that ward, identify the most frequent crime committed in 2019, and tell me the total number of such incidents recorded in 2020. Only report the total number in your response. Your response should be in the format [Answer].",
+  "answer": "10926",
+  "nodes": {
+    "1": {
+      "source": "wikipedia/Adams_Morgan/content.txt",
+      "fact": "Adams Morgan is part of Ward 1 of Washington, D.C.",
+      "subquestion": "Adams Morgan is part of which ward of Washington, D.C.?",
+      "answer": "1"
+    },
+    "2": {
+      "source": "datagov/crime-incidents-in-2017/v1/files/data.csv",
+      "fact": "Filter to WARD = 1 in 2017 and group by OFFENSE; the most common offense is THEFT F/AUTO (1,934; no tie observed). This identifies the top offense in that ward.",
+      "subquestion": "In 2017, within Ward <node_1 answer>, which offense is most common?",
+      "answer": "THEFT F/AUTO"
+    },
+    "3": {
+      "source": "datagov/annual-average-daily-traffic-aadt-beginning-1977/files/rows.txt",
+      "fact": "Summing Count by Year for 2017-2019, the minimum total is 73796464 in 2018.",
+      "subquestion": "Which year from 2017-2019 has the lowest total annual average daily traffic count for all New York State Routes and roads?",
+      "answer": "2018"
+    },
+    "4": {
+      "source": "datagov/crime-incidents-in-2018/v1/files/data.csv",
+      "fact": "Filter to OFFENSE = 'THEFT F/AUTO' in 2018 and group by WARD; Ward 2 has the most incidents (2,289; no tie observed). This identifies the top ward for that offense.",
+      "subquestion": "In <node_3 answer>, which ward has the most <node_2 answer> incidents?",
+      "answer": "2"
+    },
+    "5": {
+      "source": "datagov/crime-incidents-in-2019/v1/files/data.csv",
+      "fact": "Filter to WARD = <node_4 answer> in 2019 and group by OFFENSE; THEFT/OTHER is most common (4,118; no tie observed). This identifies the top offense in that ward.",
+      "subquestion": "In 2019, within Ward <node_4 answer>, which offense is most common?",
+      "answer": "THEFT/OTHER"
+    },
+    "6": {
+      "source": "datagov/crime-incidents-in-2020/v1/files/data.csv",
+      "fact": "Filter to OFFENSE = <node_5 answer> in 2020; count incidents; the total is 10,926. This provides the 2020 incident count for that offense.",
+      "subquestion": "In 2020, how many incidents had OFFENSE = <node_5 answer>?",
+      "answer": "10926"
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=1, Wikipedia - node 1):",
+    "  Node 1: Wikipedia -> Adams Morgan is part of Ward 1 of Washington, D.C.",
+    "",
+    "HOP 2 (d=1, data.gov - node 2 depends on node 1):",
+    "  Node 2: Crime incidents 2017 within Ward 1 -> Top offense is THEFT F/AUTO (1,934 incidents)",
+    "",
+    "HOP 3 (d=1, data.gov year derivation - node 3):",
+    "  Node 3: NY AADT data -> Lowest total traffic count (2017-2019) is 2018",
+    "",
+    "HOP 4 (d=1, data.gov - node 4 depends on nodes 2 and 3):",
+    "  Node 4: Crime incidents 2018 for THEFT F/AUTO -> Top ward is 2 (2,289 incidents)",
+    "",
+    "HOP 5 (d=1, data.gov - node 5 depends on node 4):",
+    "  Node 5: Crime incidents 2019 within Ward 2 -> Top offense is THEFT/OTHER (4,118 incidents)",
+    "",
+    "HOP 6 (d=1, data.gov - node 6 depends on node 5):",
+    "  Node 6: Crime incidents 2020 for THEFT/OTHER -> 10,926 total incidents",
+    "",
+    "Final answer: 10926"
+  ],
+  "datasets_used": [
+    "Adams_Morgan",
+    "crime-incidents-in-2017",
+    "annual-average-daily-traffic-aadt-beginning-1977",
+    "crime-incidents-in-2018",
+    "crime-incidents-in-2019",
+    "crime-incidents-in-2020"
+  ]
+}

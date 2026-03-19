@@ -1,0 +1,61 @@
+{
+  "question": "I am researching the capital of Texas. In 2023, which police sector had the highest number of searches? Within that specific sector, which council district saw the most computer-aided dispatch incidents? Finally, for the sector that had the most use-of-force incidents in that council district, how many total complaints were filed in 2024? Only report the number of complaints. Your response should be in the format [Answer].",
+  "answer": "71",
+  "nodes": {
+    "1": {
+      "source": "wikipedia/Austin,_Texas/content.txt",
+      "fact": "Austin is the capital of Texas.",
+      "subquestion": "What city is the capital of Texas?",
+      "answer": "Austin"
+    },
+    "2": {
+      "source": "datagov/apd-searches-by-type/v1/files/rows.csv",
+      "fact": "Filter to Occurred Year = 2023 and exclude Sector = 'Unknown'; group by Sector and count searches; Charlie has the highest count (445; no tie observed). This identifies the top search sector for 2023.",
+      "subquestion": "In <node_1 answer> search entries for 2023, excluding Sector = 'Unknown', which sector has the most searches?",
+      "answer": "Charlie"
+    },
+    "3": {
+      "source": "datagov/apd-computer-aided-dispatch-incidents/v1/files/rows.csv",
+      "fact": "Filter to Response Year = 2023 and Sector = <node_2 answer>; group by Council District and count incidents; district 1 has the highest count (21,038; no tie observed). This identifies the top council district within that sector.",
+      "subquestion": "In 2023 CAD incidents within sector <node_2 answer>, which council district has the most incidents?",
+      "answer": "1"
+    },
+    "4": {
+      "source": "datagov/apd-use-of-force/v1/files/rows.csv",
+      "fact": "Filter to Occurred Date year = 2023 and Council District = <node_3 answer>; group by Sector and count incidents; Charlie has the highest count (269; no tie observed). This identifies the top sector for that district.",
+      "subquestion": "In 2023 use-of-force entries within council district <node_3 answer>, which sector has the most incidents?",
+      "answer": "Charlie"
+    },
+    "5": {
+      "source": "datagov/apd-complaints-by-sector/v1/files/rows.csv",
+      "fact": "Filter to Occurred Year = 2024 and Sector = <node_4 answer>; sum Total Complaints; the total is 71. This provides the complaint count for that sector.",
+      "subquestion": "In 2024 complaints-by-sector data, what is the total number of complaints for sector <node_4 answer>?",
+      "answer": "71"
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=1, Wikipedia - node 1):",
+    "  Node 1: Wikipedia -> Austin is the capital of Texas",
+    "",
+    "HOP 2 (d=1, data.gov - node 2 depends on node 1):",
+    "  Node 2: APD searches 2023 -> Top sector (excluding Unknown) is Charlie (445 searches)",
+    "",
+    "HOP 3 (d=1, data.gov - node 3 depends on node 2):",
+    "  Node 3: APD CAD incidents 2023 within Charlie -> Top council district is 1 (21,038 incidents)",
+    "",
+    "HOP 4 (d=1, data.gov - node 4 depends on node 3):",
+    "  Node 4: APD use-of-force 2023 within district 1 -> Top sector is Charlie (269 incidents)",
+    "",
+    "HOP 5 (d=1, data.gov - node 5 depends on node 4):",
+    "  Node 5: APD complaints 2024 for sector Charlie -> 71 total complaints",
+    "",
+    "Final answer: 71"
+  ],
+  "datasets_used": [
+    "Austin,_Texas",
+    "apd-complaints-by-sector",
+    "apd-computer-aided-dispatch-incidents",
+    "apd-searches-by-type",
+    "apd-use-of-force"
+  ]
+}

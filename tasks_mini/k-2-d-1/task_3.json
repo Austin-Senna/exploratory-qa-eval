@@ -1,0 +1,32 @@
+{
+  "question": "What was the 2017-18 total student enrollment for the school district in the most populous city of Whitman County (2020 census)? Only report the number in `Number` format. Your response should be in the format [Answer].",
+  "answer": "2941",
+  "nodes": {
+    "1": {
+      "source": "wikipedia/Pullman,_Washington/content.txt",
+      "fact": "According to the Wikipedia article for Pullman, Washington, Pullman is the most populous city in Whitman County as of the 2020 census.",
+      "subquestion": "What is the most populous city in Whitman County, Washington according to the 2020 census?",
+      "answer": "Pullman"
+    },
+    "2": {
+      "source": "datagov/report-card-enrollment-2017-18-school-year/files/rows.txt",
+      "fact": "According to the Washington Report Card Enrollment Data 2017-18, Pullman School District (in Whitman County) had 2,941 total students enrolled for All Grades.",
+      "subquestion": "What is the 2017-18 total student enrollment for the school district in <node_1 answer>? (DistrictName=Pullman School District; GradeLevel=All Grades; column=All Students.)",
+      "answer": "2941"
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=1, Wikipedia - node 1):",
+    "  Node 1: Most populous city in Whitman County (2020 census) -> Pullman",
+    "",
+    "HOP 2 (d=1, data.gov - node 2 depends on node 1):",
+    "  Node 2: Pullman School District enrollment 2017-18 -> 2,941",
+    "",
+    "Final answer: 2941"
+  ],
+  "verdict": "pass",
+  "datasets_used": [
+    "Pullman,_Washington",
+    "report-card-enrollment-2017-18-school-year"
+  ]
+}

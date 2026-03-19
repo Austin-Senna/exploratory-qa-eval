@@ -1,0 +1,94 @@
+{
+  "question": "Identify the 4-digit year that appears in all three of these lists: (1) years mentioned exactly 7 times in the 2010 impaired estuary records (file data-Fa40pK), (2) years mentioned once in the 2020 Walton-Smith station 55 records (file sSyUBK), and (3) years mentioned once in the 2020 Walton-Smith station 63 records (file 6uY8u5). Using this shared year, find the host city for that year's Games entry in the list of Olympic badminton venues. Count how many times this city name appears in the list of Olympic tennis venues and call this count M. Let r be the remainder of M divided by 5, plus 1. In the Milan Linate Airport data, let t be 1 plus the number of distinct month names (January through December) mentioned at least r times. Next, using the Walton-Smith CTD records from December 2014 (Stn 57 1b), let A be the number of distinct month names mentioned exactly t times. Using the Deepwater CTD records (dataset 00498005), let B be the number of distinct 4-digit years mentioned exactly t times. Calculate P as the number of distinct 4-digit years mentioned at least (A + B + 1) times in the Deepwater CTD records (dataset 00369659). Calculate Q as the number of distinct 4-digit years mentioned at least t times in the Walton-Smith CTD records (Stn V1 from May 2022). Finally, provide the product of P and Q.",
+  "answer": 16,
+  "nodes": {
+    "1": {
+      "source": "datagov/impaired-estuary-2010-2fdbd/files/data-Fa40pK.txt",
+      "fact": "The distinct 4-digit years mentioned exactly 7 times are ['2000', '2001', '2025'].",
+      "subquestion": "Which distinct 4-digit years are mentioned exactly 7 times? Return the full set as a list.",
+      "answer": [
+        "2000",
+        "2001",
+        "2025"
+      ]
+    },
+    "2": {
+      "source": "datagov/walton-smith-ctd-ws20279-ws20279_ws20278_stn_55-2020-10-11-25-35n-81-198w1/files/WS20279_WS20279_WS20278_Stn_55-sSyUBK.txt",
+      "fact": "The distinct 4-digit years mentioned exactly 1 times are ['1851', '1876', '2000', '2018'].",
+      "subquestion": "Which distinct 4-digit years are mentioned exactly 1 times? Return the full set as a list.",
+      "answer": [
+        "1851",
+        "1876",
+        "2000",
+        "2018"
+      ]
+    },
+    "3": {
+      "source": "datagov/walton-smith-ctd-ws20231-ws20231_sta_63-2020-08-22-25-1697n-81-216w1/files/WS20231_WS20231_STA_63-6uY8u5.txt",
+      "fact": "The distinct 4-digit years mentioned exactly 1 times are ['1851', '1876', '2000', '2018', '2019'].",
+      "subquestion": "Which distinct 4-digit years are mentioned exactly 1 times? Return the full set as a list.",
+      "answer": [
+        "1851",
+        "1876",
+        "2000",
+        "2018",
+        "2019"
+      ]
+    },
+    "4": {
+      "source": "wikipedia/List_of_Olympic_venues_in_badminton/content.txt",
+      "fact": "The only year shared by the three year lists is 2000. In the list of Olympic venues in badminton, the Games entry for 2000 lists the host city as Sydney.",
+      "subquestion": "In the list of Olympic venues in badminton, focus on the Games entry whose 4-digit year is the only year that appears in each of <node_1 answer>, <node_2 answer>, and <node_3 answer>. From that Games entry, return the host city name (the part after the year, stopping before any comma or parenthesis).",
+      "answer": "Sydney"
+    },
+    "5": {
+      "source": "wikipedia/List_of_Olympic_venues_in_tennis/content.txt",
+      "fact": "In the list of Olympic venues in tennis, the city name Sydney appears 1 times.",
+      "subquestion": "In the list of Olympic venues in tennis, how many times does the city name <node_4 answer> appear?",
+      "answer": 1
+    },
+    "6": {
+      "source": "wikipedia/Milan_Linate_Airport/content.txt",
+      "fact": "In Milan Linate Airport, r = (1 mod 5) + 1 = 2. There are 4 distinct month names mentioned at least r times, so t = 5.",
+      "subquestion": "Let r be the remainder when dividing <node_5 answer> by 5, plus 1. Let t be 1 plus the number of distinct month names (January-December) that are mentioned at least r times. What is t?",
+      "answer": 5
+    },
+    "7": {
+      "source": "datagov/walton-smith-ctd-ws1418-ws1418_57-1b-2014-12-04-25-3495n-81-3343w1/files/WS1418_WS1418_57_1b-fzlMNQ.txt",
+      "fact": "There are 0 distinct month names mentioned exactly 5 times.",
+      "subquestion": "How many distinct month names (January-December) are mentioned exactly <node_6 answer> times?",
+      "answer": 0
+    },
+    "8": {
+      "source": "datagov/deepwater-ctd-00498005-bdo-nc-22-25n-95-02w-1967-02-252/files/deepwater_00498005_bdo-T5HJUz.txt",
+      "fact": "There are 0 distinct 4-digit years mentioned exactly 5 times.",
+      "subquestion": "How many distinct 4-digit years are mentioned exactly <node_6 answer> times?",
+      "answer": 0
+    },
+    "9": {
+      "source": "datagov/deepwater-ctd-00369659-bdo-nc-24-63n-84-67w-1962-02-242/files/deepwater_00369659_bdo-hP8X32.txt",
+      "fact": "There are 8 distinct 4-digit years mentioned at least 1 times.",
+      "subquestion": "How many distinct 4-digit years are mentioned at least (<node_7 answer> + <node_8 answer> + 1) times?",
+      "answer": 8
+    },
+    "10": {
+      "source": "datagov/walton-smith-ctd-ws22141-ws22141_ws22141_stn-v1-2022-05-24-27-1065n-82-4775w1/files/WS22141_WS22141_WS22141_Stn_V1-hRFfHL.txt",
+      "fact": "There are 2 distinct 4-digit years mentioned at least 5 times.",
+      "subquestion": "How many distinct 4-digit years are mentioned at least <node_6 answer> times?",
+      "answer": 2
+    }
+  },
+  "reasoning_chain": [
+    "Node 1: derive the first year list.",
+    "Node 2: derive the second year list.",
+    "Node 3: derive the third year list.",
+    "Node 4 depends on nodes 1-3: intersect the three lists to get year Y, then read the host city for that Games entry.",
+    "Node 5 depends on node 4: count host-city name occurrences in a second Olympic-venues list.",
+    "Node 6 depends on node 5: compute t from month-name counts using r = (M mod 5) + 1.",
+    "Node 7 depends on node 6: count month names mentioned exactly t times.",
+    "Node 8 depends on node 6: count 4-digit years mentioned exactly t times.",
+    "Node 9 depends on nodes 7-8: count 4-digit years mentioned at least (A + B + 1) times.",
+    "Node 10 depends on node 6: count 4-digit years mentioned at least t times.",
+    "Final answer: 8 * 2 = 16."
+  ]
+}

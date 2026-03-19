@@ -1,0 +1,20 @@
+{
+  "question": "Which year from 2011-2016 has the highest total passenger count across Los Angeles International Airport (LAX) terminals? Your response should be in the format [Answer].",
+  "answer": "2016",
+  "practical_motivation": "An airport operations analyst wants to identify the busiest year at LAX in the early 2010s.",
+  "nodes": {
+    "1": {
+      "source": "datagov/los-angeles-international-airport-passenger-traffic-by-terminal/files/rows.txt",
+      "fact": "Summing Passenger_Count by year (from ReportPeriod) across all terminals and categories for 2011-2016, the highest total is 2016 with 80921651 passengers.",
+      "subquestion": "Which year from 2011-2016 has the highest total passenger count across Los Angeles International Airport (LAX) terminals? (Convert ReportPeriod to Year; sum Passenger_Count by Year; select the maximum.)",
+      "answer": "2016"
+    }
+  },
+  "reasoning_chain": [
+    "Node 1: Which year from 2011-2016 has the highest total passenger count? (Convert ReportPeriod to Year; sum Passenger_Count by Year; select the maximum.) The answer is 2016.",
+    "Final answer: 2016"
+  ],
+  "datasets_used": [
+    "los-angeles-international-airport-passenger-traffic-by-terminal"
+  ]
+}

@@ -1,0 +1,88 @@
+{
+  "question": "Identify the private in-person school founded by Sal Khan, then the city and county where it is located. Using school district office listings for that city and county, determine the two-digit state FIPS code. In that state, find the counties that rank in the top three for public schools, private schools, and school district offices; among their intersection, what is the highest postsecondary institution count? Only report the number. Your response should be in the format [Answer].",
+  "answer": "206",
+  "nodes": {
+    "1": {
+      "source": "wikipedia/Sal_Khan/content.txt",
+      "fact": "Salman \"Sal\" Khan is also the founder of Khan Lab School, a private in-person school in Mountain View, California.",
+      "subquestion": "Sal Khan is also the founder of what private in-person school in Mountain View, California?",
+      "answer": "Khan Lab School"
+    },
+    "2": {
+      "source": "wikipedia/Khan_Lab_School/content.txt",
+      "fact": "Khan Lab School is an independent school in Mountain View, California.",
+      "subquestion": "In what city is <node_1 answer> located?",
+      "answer": "Mountain View"
+    },
+    "3": {
+      "source": "wikipedia/Mountain_View,_California/content.txt",
+      "fact": "Mountain View is a city in Santa Clara County, California, United States.",
+      "subquestion": "<node_2 answer> is a city in which county?",
+      "answer": "Santa Clara County"
+    },
+    "4": {
+      "source": "datagov/school-district-office-locations-current-d848f/files/nces::school-district-office-locations-current-1.txt",
+      "fact": "In the school district office listings, there are 2 entry(ies) with CITY='Mountain View' and NMCNTY='Santa Clara County', and they all use the same two-digit state FIPS code (STFIP): 06.",
+      "subquestion": "In the school district office listings, entries with CITY='<node_2 answer>' and NMCNTY='<node_3 answer>' share what two-digit state FIPS code (STFIP)?",
+      "answer": "06"
+    },
+    "5": {
+      "source": "datagov/public-school-locations-current-23297/files/data-oyCYxF.txt",
+      "fact": "For STFIP=06, the 3 counties with the most public schools are: Los Angeles County (2249); San Diego County (769); Orange County (639). The next county is San Bernardino County (577), so the cut is unique.",
+      "subquestion": "For STFIP='<node_4 answer>', which 3 county names have the most public schools? Return the county names separated by '; '.",
+      "answer": "Los Angeles County; San Diego County; Orange County"
+    },
+    "6": {
+      "source": "datagov/private-school-locations-current-f7d96/files/data-FGgJBu.txt",
+      "fact": "For STFIP=06, the 3 counties with the most private schools are: Los Angeles County (745); Orange County (245); San Diego County (179). The next county is Santa Clara County (172), so the cut is unique.",
+      "subquestion": "For STFIP='<node_4 answer>', which 3 county names have the most private schools? Return the county names separated by '; '.",
+      "answer": "Los Angeles County; Orange County; San Diego County"
+    },
+    "7": {
+      "source": "datagov/school-district-office-locations-2022-23/files/data-8V0eVK.txt",
+      "fact": "For STFIP=06, the 3 counties with the most school district offices are: Los Angeles County (419); San Diego County (163); San Bernardino County (86). The next county is Santa Clara County (85), so the cut is unique.",
+      "subquestion": "For STFIP='<node_4 answer>', which 3 county names have the most school district offices? Return the county names separated by '; '.",
+      "answer": "Los Angeles County; San Diego County; San Bernardino County"
+    },
+    "8": {
+      "source": "datagov/postsecondary-school-locations-2022-23/files/data-sh56Ar.txt",
+      "fact": "Using the intersection of A, B, and C, the candidate counties are: Los Angeles County, San Diego County. Postsecondary counts within that set are: Los Angeles County (206); San Diego County (71). Los Angeles County is strictly highest.",
+      "subquestion": "Let A be the set of counties in <node_5 answer>, B be the set of counties in <node_6 answer>, and C be the set of counties in <node_7 answer>. Consider the intersection of A, B, and C. Among those counties, what is the highest postsecondary institution count in STFIP='<node_4 answer>'? Answer with the number only.",
+      "answer": "206"
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=1, Wikipedia Sal_Khan - node 1):",
+    "  Node 1: Salman \"Sal\" Khan is also the founder of Khan Lab School, a private in-person school in Mountain View, California.",
+    "",
+    "HOP 2 (d=1, Wikipedia Khan_Lab_School - node 2):",
+    "  Node 2: Khan Lab School is an independent school in Mountain View, California.",
+    "",
+    "HOP 3 (d=1, Wikipedia Mountain_View,_California - node 3):",
+    "  Node 3: Mountain View is a city in Santa Clara County, California, United States.",
+    "",
+    "HOP 4 (d=1, State FIPS lookup - node 4):",
+    "  Node 4: CITY='Mountain View' and NMCNTY='Santa Clara County' share STFIP 06.",
+    "",
+    "HOP 5 (d=3, County top counts - nodes 5-7):",
+    "  Node 5: For STFIP=06, the top 3 counties by public schools are Los Angeles, San Diego, and Orange.",
+    "  Node 6: For STFIP=06, the top 3 counties by private schools are Los Angeles, Orange, and San Diego.",
+    "  Node 7: For STFIP=06, the top 3 counties by school district offices are Los Angeles, San Diego, and San Bernardino.",
+    "",
+    "HOP 6 (d=4, Postsecondary selection - node 8):",
+    "  Node 8: The intersection yields Los Angeles and San Diego; postsecondary counts are 206 and 71, so the highest count is 206.",
+    "",
+    "Final answer: 206"
+  ],
+  "verdict": "pass",
+  "datasets_used": [
+    "Sal_Khan",
+    "Khan_Lab_School",
+    "Mountain_View,_California",
+    "school-district-office-locations-current-d848f",
+    "public-school-locations-current-23297",
+    "private-school-locations-current-f7d96",
+    "school-district-office-locations-2022-23",
+    "postsecondary-school-locations-2022-23"
+  ]
+}

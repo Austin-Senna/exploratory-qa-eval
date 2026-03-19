@@ -1,0 +1,47 @@
+{
+  "question": "Which county seat belongs to the California county that has 2015 PSI 27 ObsRate >= 19 and Shape__Area >= 3,000,000,000? Return the city name only. Your response should be in the format [Answer].",
+  "answer": "San Jose",
+  "nodes": {
+    "1": {
+      "source": "datagov/hospitalization-counts-and-rates-of-selected-adverse-hospital-events-by-california-county-67a4a/files/ca-oshpd-adveventhospitalizationspsi-county2005-2015q3.txt",
+      "fact": "For 2015 PSI 27 (Perioperative Hemorrhage or Hematoma), ObsRate values are Alameda 18.84, San Francisco 19.15, and Santa Clara 20.31. The counties with ObsRate >= 19 are San Francisco and Santa Clara.",
+      "subquestion": "Which California counties have ObsRate >= 19 for PSI 27 (Perioperative Hemorrhage or Hematoma) in 2015?",
+      "answer": [
+        "San Francisco",
+        "Santa Clara"
+      ]
+    },
+    "2": {
+      "source": "datagov/california-county-boundaries-bd0f6/files/California_County_Boundaries_9101614255844818638.txt",
+      "fact": "In the California county boundaries data, Shape__Area values for the hop 2 counties are Alameda 3402787058.96094, San Francisco 438635888.980469, and Santa Clara 5341596055.52344. The counties with Shape__Area >= 3000000000 are Alameda and Santa Clara.",
+      "subquestion": "Which California counties have Shape__Area >= 3000000000 in the county boundaries data?",
+      "answer": [
+        "Alameda",
+        "Santa Clara"
+      ]
+    },
+    "3": {
+      "source": "wikipedia/Santa_Clara_County,_California/content.txt",
+      "fact": "The county seat and largest city of Santa Clara County is San Jose.",
+      "subquestion": "What is the county seat of the county that meets both the PSI 27 ObsRate >= 19 and Shape__Area >= 3,000,000,000 criteria?",
+      "answer": "San Jose"
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=2, data.gov - nodes 1-2):",
+    "  Node 1: PSI 27 ObsRate >= 19 (2015) -> San Francisco, Santa Clara",
+    "  Node 2: Shape__Area >= 3,000,000,000 -> Alameda, Santa Clara",
+    "  Intersection -> Santa Clara",
+    "",
+    "HOP 2 (d=1, Wikipedia - node 3 depends on hop 1):",
+    "  Node 3: Santa Clara County seat -> San Jose",
+    "",
+    "Final answer: San Jose"
+  ],
+  "verdict": "pass",
+  "datasets_used": [
+    "hospitalization-counts-and-rates-of-selected-adverse-hospital-events-by-california-county-67a4a",
+    "california-county-boundaries-bd0f6",
+    "Santa_Clara_County,_California"
+  ]
+}

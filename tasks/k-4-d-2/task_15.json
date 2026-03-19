@@ -1,0 +1,84 @@
+{
+  "question": "Among Willacy, Comal, Atascosa, and Victoria counties in Texas, keep those with at least one abuse/neglect-related child fatality and at least three non-abuse/neglect child fatality investigations between 2018 and 2022. From the remaining counties, find the one that is both in the top two for 2021 model-based drug poisoning death rates and in the bottom two for 2016 age-adjusted rate categories. Identify that county's seat and then the river the seat lies along. Return the river name only. Your response should be in the format [Answer].",
+  "answer": "Guadalupe River",
+  "nodes": {
+    "1": {
+      "source": "datagov/ocs-1-1-abuse-neglect-related-texas-child-fatalities-fy2013-fy2022/files/rows.txt",
+      "fact": "From 2018-2022 abuse/neglect-related child fatalities, county counts were: Willacy 2, Comal 5, Atascosa 0, Victoria 6. Counties with at least 1 fatality were Willacy, Comal, and Victoria.",
+      "subquestion": "Among Willacy, Comal, Atascosa, and Victoria counties, which had at least 1 abuse/neglect-related child fatality (2018-2022)? (Filter for this node: Fiscal Year in 2018-2022; group by County; sum Abuse Neglect Fatalities.)",
+      "answer": [
+        "Willacy County",
+        "Comal County",
+        "Victoria County"
+      ]
+    },
+    "2": {
+      "source": "datagov/ocs-1-2-non-abuse-neglect-related-texas-child-fatality-investigations-fy2013-fy2022/files/rows.txt",
+      "fact": "From 2018-2022 non-abuse/neglect child fatality investigations, county counts were: Willacy 3, Comal 16, Atascosa 6, Victoria 11. Counties with at least 3 investigations were Willacy, Comal, Atascosa, and Victoria.",
+      "subquestion": "Among Willacy, Comal, Atascosa, and Victoria counties, which had at least 3 non-abuse/neglect child fatality investigations (2018-2022)? (Filter for this node: Fiscal Year in 2018-2022; group by County; sum Non-Abuse/Neglect Fatalities Investigated.)",
+      "answer": [
+        "Willacy County",
+        "Comal County",
+        "Atascosa County",
+        "Victoria County"
+      ]
+    },
+    "3": {
+      "source": "datagov/nchs-drug-poisoning-mortality-by-county-united-states/files/rows.txt",
+      "fact": "In the 2021 drug poisoning mortality data for Texas, model-based death rates were: Comal County 19.21235, Victoria County 19.51998, Willacy County 10.24776. The two highest rates are Victoria and Comal.",
+      "subquestion": "Among the counties from hop 1, which two had the highest model-based drug poisoning death rates in 2021? (Filter for this node: Year == 2021; State == Texas; County in {Comal County, TX, Victoria County, TX, Willacy County, TX}; use Model-based Death Rate.)",
+      "answer": [
+        "Victoria County",
+        "Comal County"
+      ]
+    },
+    "4": {
+      "source": "datagov/nchs-drug-poisoning-mortality-by-county-united-states-20278/files/rows.txt",
+      "fact": "In the 2016 drug poisoning mortality data for Texas, estimated age-adjusted death rate categories were: Comal County 14-15.9, Victoria County 10-11.9, Willacy County 6-7.9. The two lowest categories are Willacy and Victoria.",
+      "subquestion": "Among the counties from hop 1, which two had the lowest age-adjusted drug poisoning death rate categories in 2016? (Filter for this node: Year == 2016; State == Texas; County in {Comal County, TX, Victoria County, TX, Willacy County, TX}; use Estimated Age-adjusted Death Rate, 16 Categories (in ranges).)",
+      "answer": [
+        "Willacy County",
+        "Victoria County"
+      ]
+    },
+    "5": {
+      "source": "wikipedia/Victoria_County,_Texas/content.txt",
+      "fact": "Victoria County's county seat is Victoria.",
+      "subquestion": "What is the county seat of the county identified in hop 2? (Lookup: county seat statement in the Victoria County, Texas article.)",
+      "answer": "Victoria"
+    },
+    "6": {
+      "source": "wikipedia/Victoria,_Texas/content.txt",
+      "fact": "Victoria lies along and just to the east of the Guadalupe River.",
+      "subquestion": "What river does the city from hop 3 lie along and just to the east of? (Lookup: Victoria, Texas article location description.)",
+      "answer": "Guadalupe River"
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=2, Texas child fatality datasets - nodes 1-2):",
+    "  Node 1: Abuse/neglect fatalities 2018-2022 -> >=1: {Willacy, Comal, Victoria}",
+    "  Node 2: Non-abuse/neglect investigations 2018-2022 -> >=3: {Willacy, Comal, Atascosa, Victoria}",
+    "  Intersection -> {Willacy, Comal, Victoria}",
+    "",
+    "HOP 2 (d=2, drug poisoning mortality - nodes 3-4):",
+    "  Node 3: 2021 model-based death rates -> highest two {Victoria, Comal}",
+    "  Node 4: 2016 age-adjusted categories -> lowest two {Willacy, Victoria}",
+    "  Intersection -> {Victoria}",
+    "",
+    "HOP 3 (d=1, Victoria County Wikipedia - node 5):",
+    "  Node 5: Victoria County seat -> Victoria",
+    "",
+    "HOP 4 (d=1, Victoria Wikipedia - node 6):",
+    "  Node 6: Victoria lies along the Guadalupe River",
+    "  Final answer: Guadalupe River"
+  ],
+  "verdict": "pass",
+  "datasets_used": [
+    "Victoria_County,_Texas",
+    "Victoria,_Texas",
+    "ocs-1-1-abuse-neglect-related-texas-child-fatalities-fy2013-fy2022",
+    "ocs-1-2-non-abuse-neglect-related-texas-child-fatality-investigations-fy2013-fy2022",
+    "nchs-drug-poisoning-mortality-by-county-united-states",
+    "nchs-drug-poisoning-mortality-by-county-united-states-20278"
+  ]
+}

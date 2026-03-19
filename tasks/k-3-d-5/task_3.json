@@ -1,0 +1,138 @@
+{
+  "question": "What is the name of an elementary school in New York whose location includes Clinton Hill and neighborhoods adjacent to it, has a special education kindergarten class of average class size <= 10 each year and the fewest average violent incidents excluding 'Other Disruptive' between 2008 to 2011?. Your response should be in the format [Answer].",
+  "answer": "PS 056 Lewis H. Latimer",
+  "nodes": {
+    "1": {
+      "source": "wikipedia/Clinton_Hill,_Brooklyn/content.txt",
+      "fact": "Clinton Hill is bordered by Williamsburg to the northeast, Bedford-Stuyvesant to the east, Prospect Heights to the south/southwest, and Fort Greene to the west.",
+      "subquestion": "What are the neighborhoods adjacent to and including Clinton Hill?",
+      "answer": [
+        "Clinton Hill",
+        "Bedford-Stuyvesant",
+        "Fort Greene",
+        "Prospect Heights",
+        "Williamsburg"
+      ]
+    },
+    "2": {
+      "source": "datagov/2013-2014-school-locations/v1/files/rows.csv",
+      "fact": "Elementary schools in Clinton Hill (BK69): PS 003, PS 011, PS 056, PS 270. In Bedford/Bedford-Stuyvesant (BK75): PS 054, PS 256. In Fort Greene (BK68): PS 020, PS 046, PS 067. In Prospect Heights (BK64): PS 009, PS 316. In Williamsburg (BK72): PS 016.",
+      "subquestion": "Which elementary schools are located in <node_1 answer>?",
+      "answer": [
+        "PS 003",
+        "PS 009",
+        "PS 011",
+        "PS 046",
+        "PS 056",
+        "PS 067",
+        "PS 270",
+        "..."
+      ]
+    },
+    "3": {
+      "source": "datagov/2008-09-class-size-school-level-detail/v1/files/rows.csv",
+      "fact": "Special education kindergarten class sizes in 2008-09 for schools in <node_2 answer>: PS 003 (8.5), PS 009 (9.0), PS 011 (9.3), PS 016 (8.5), PS 020 (8.5), PS 046 (7.5), PS 054 (7.0), PS 056 (7.7), PS 067 (8.0), PS 256 (8.5), PS 270 (7.7), PS 316 (11.7).",
+      "subquestion": "Which schools from <node_2 answer> had kindergarten class size <= 10 in 2008-09?",
+      "answer": [
+        "PS 003",
+        "PS 009",
+        "PS 011",
+        "PS 046",
+        "PS 056",
+        "PS 067",
+        "PS 270",
+        "..."
+      ]
+    },
+    "4": {
+      "source": "datagov/2009-2010-class-size-school-level-detail/v1/files/rows.csv",
+      "fact": "Special education kindergarten class sizes in 2009-10 for schools in <node_2 answer>: PS 003 (9.5), PS 009 (9.0), PS 011 (9.5), PS 016 (8.3), PS 020 (9.0), PS 046 (11.0), PS 054 (8.0), PS 056 (9.3), PS 067 (8.0), PS 256 (8.3), PS 270 (10.0), PS 316 (6.5).",
+      "subquestion": "Which schools from <node_2 answer> had kindergarten class size <= 10 in 2009-10?",
+      "answer": [
+        "PS 003",
+        "PS 009",
+        "PS 011",
+        "PS 046",
+        "PS 056",
+        "PS 067",
+        "PS 270",
+        "..."
+      ]
+    },
+    "5": {
+      "source": "datagov/2010-2011-class-size-school-level-detail/v1/files/rows.csv",
+      "fact": "Special education kindergarten class sizes in 2010-11 for schools in <node_2 answer>: PS 003 (7.5), PS 009 (10.7), PS 011 (9.0), PS 016 (10.3), PS 020 (11.0), PS 046 (7.5), PS 054 (7.0), PS 056 (7.5), PS 067 (11.0), PS 256 (7.8), PS 270 (7.0).",
+      "subquestion": "Which schools from <node_2 answer> had kindergarten class size <= 10 in 2010-11?",
+      "answer": [
+        "PS 003 The Bedford Village",
+        "PS 011 Purvis J. Behan",
+        "PS 046 Edward C. Blum",
+        "PS 054 Samuel C. Barnes",
+        "PS 056 Lewis H. Latimer",
+        "PS 256 Benjamin Banneker",
+        "PS 270 Johann DeKalb"
+      ]
+    },
+    "6": {
+      "source": "datagov/2008-2009-vadir-incidents/v1/files/rows.csv",
+      "fact": "VADIR incidents (excluding 'Other Disruptive') in 2008-09 for schools in <intersection of node_3, node_4, node_5>: PS 003 (7), PS 011 (24), PS 054 (15), PS 056 (2), PS 256 (2), PS 270 (4).",
+      "subquestion": "How many VADIR incidents did each school in <intersection of node_3, node_4, node_5> have in 2008-09?",
+      "answer": {
+        "PS 003 The Bedford Village": 7,
+        "PS 009 Teunis G. Bergen": 13,
+        "PS 011 Purvis J. Behan": 24,
+        "PS 046 Edward C. Blum": 22,
+        "PS 056 Lewis H. Latimer": 2,
+        "PS 067 Charles A. Dorsey": 7,
+        "PS 270 Johann DeKalb": 4
+      }
+    },
+    "7": {
+      "source": "datagov/2009-2010-vadir-incidents/v1/files/rows.csv",
+      "fact": "VADIR incidents (excluding 'Other Disruptive') in 2009-10 for schools in <intersection of node_3, node_4, node_5>: PS 003 (6), PS 011 (15), PS 054 (7), PS 056 (2), PS 256 (13), PS 270 (5).",
+      "subquestion": "How many VADIR incidents did each school in <intersection of node_3, node_4, node_5> have in 2009-10?",
+      "answer": {
+        "PS 003 The Bedford Village": 6,
+        "PS 009 Teunis G. Bergen": 5,
+        "PS 011 Purvis J. Behan": 15,
+        "PS 046 Edward C. Blum": 13,
+        "PS 056 Lewis H. Latimer": 2,
+        "PS 067 Charles A. Dorsey": 3,
+        "PS 270 Johann DeKalb": 5
+      }
+    },
+    "8": {
+      "source": "datagov/2010-2011-vadir-incidents/v1/files/rows.csv",
+      "fact": "VADIR incidents (excluding 'Other Disruptive') in 2010-11 for schools in <intersection of node_3, node_4, node_5>: PS 003 (12), PS 011 (22), PS 054 (9), PS 056 (5), PS 256 (7), PS 270 (4).",
+      "subquestion": "How many VADIR incidents did each school in <intersection of node_3, node_4, node_5> have in 2010-11?",
+      "answer": {
+        "PS 003 The Bedford Village": 12,
+        "PS 009 Teunis G. Bergen": 4,
+        "PS 011 Purvis J. Behan": 22,
+        "PS 046 Edward C. Blum": 15,
+        "PS 056 Lewis H. Latimer": 5,
+        "PS 067 Charles A. Dorsey": 10,
+        "PS 270 Johann DeKalb": 4
+      }
+    }
+  },
+  "reasoning_chain": [
+    "Node 1: Get neighborhoods adjacent to Clinton Hill → {Clinton Hill, Bedford-Stuyvesant, Fort Greene, Prospect Heights, Williamsburg}",
+    "Node 2 depends on node 1: Find elementary schools in those neighborhoods → 12 schools",
+    "Nodes 3,4,5 depend on node 2: Check which schools have class size <= 10 each year",
+    "Intersection of <node_3>, <node_4>, <node_5>: Schools meeting class size criterion ALL 3 years → {PS 003, PS 009, PS 011, PS 046, PS 056, PS 067, PS 270}",
+    "Nodes 6,7,8 depend on intersection: Get VADIR counts for those 6 schools",
+    "Superlative on <node_6>, <node_7>, <node_8>: Sum VADIR, find minimum → PS 056 (9), PS 270 (13), PS 256 (22), PS 003 (25), PS 054 (31), PS 011 (61)",
+    "Final answer: PS 056 Lewis H. Latimer (fewest VADIR incidents with 9 total)"
+  ],
+  "datasets_used": [
+    "2008-09-class-size-school-level-detail",
+    "2008-2009-vadir-incidents",
+    "2009-2010-class-size-school-level-detail",
+    "2009-2010-vadir-incidents",
+    "2010-2011-class-size-school-level-detail",
+    "2010-2011-vadir-incidents",
+    "2013-2014-school-locations",
+    "Clinton_Hill,_Brooklyn"
+  ]
+}

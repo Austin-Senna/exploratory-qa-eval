@@ -1,0 +1,95 @@
+{
+  "question": "Find the only 4-digit year that satisfies these three criteria: (1) it appears exactly once in the Ada Vamoosa Aquifer records between 1983 and 2099 inclusive, (2) it appears at least twice in the Walton-Smith station 56b data up to 2024 inclusive, and (3) it appears at least three times in the Deepwater station 92g1309 records. Identify the host city for that year's Games in the list of Olympic curling venues and count how many times that city appears in the list of Olympic venues for cross-country skiing; call this count M. Calculate r as the remainder of M divided by 5, plus 1. In the biography of Li Xuerui, let t be 1 plus the number of distinct month names (January through December) mentioned at least r times. Next, using the Florida Bay sportfish records, let A be the number of distinct month names mentioned exactly t times. Using the Enid Terrace Aquifer records, let B be the number of distinct 4-digit years mentioned exactly t times. Let P be the number of distinct 4-digit years mentioned at least (A + B + 1) times in the TCA plume boundaries records. Let Q be the number of distinct 4-digit years mentioned at least t times in the Walton-Smith station 57b records. Finally, determine the absolute difference between P and Q.",
+  "answer": 9,
+  "nodes": {
+    "1": {
+      "source": "datagov/ada-vamoosa-aquifer/files/USGS.5681246d-85d2-47fc-9cd7-0b483432604e.txt",
+      "fact": "The distinct 4-digit years from 1983 to 2099 (inclusive) mentioned exactly 1 times are ['1983', '1989', '1992', '1995', '2015'].",
+      "subquestion": "Which distinct 4-digit years from 1983 to 2099 (inclusive) are mentioned exactly 1 times? Return the full set as a list.",
+      "answer": [
+        "1983",
+        "1989",
+        "1992",
+        "1995",
+        "2015"
+      ]
+    },
+    "2": {
+      "source": "datagov/walton-smith-ctd-ws17086-ws17086_ws17086stn56b-2017-03-30-25-3513n-81-226w1/files/WS17086_WS17086_WS17086Stn56b-0e87Be.txt",
+      "fact": "The distinct 4-digit years up to 2024 (inclusive) mentioned at least 2 times are ['1970', '1992', '2015', '2017', '2024'].",
+      "subquestion": "Which distinct 4-digit years up to 2024 (inclusive) are mentioned at least 2 times? Return the full set as a list.",
+      "answer": [
+        "1970",
+        "1992",
+        "2015",
+        "2017",
+        "2024"
+      ]
+    },
+    "3": {
+      "source": "datagov/deepwater-ctd-92g1309-ctd-nc-25-02n-87-76w-1992-10-29/files/deepwater_92g1309_ctd-9ztCyl.txt",
+      "fact": "The distinct 4-digit years mentioned at least 3 times are ['1968', '1992', '2002'].",
+      "subquestion": "Which distinct 4-digit years are mentioned at least 3 times? Return the full set as a list.",
+      "answer": [
+        "1968",
+        "1992",
+        "2002"
+      ]
+    },
+    "4": {
+      "source": "wikipedia/List_of_Olympic_venues_in_curling/content.txt",
+      "fact": "The only year shared by the three year lists is 1992. In the list of Olympic venues in curling, the Games entry for 1992 lists the host city as Albertville.",
+      "subquestion": "In the list of Olympic venues in curling, focus on the Games entry whose 4-digit year is the only year that appears in each of <node_1 answer>, <node_2 answer>, and <node_3 answer>. From that Games entry, return the host city name (the part after the year, stopping before any comma or parenthesis).",
+      "answer": "Albertville"
+    },
+    "5": {
+      "source": "wikipedia/List_of_Olympic_venues_in_cross-country_skiing/content.txt",
+      "fact": "In the list of Olympic venues in cross-country skiing, the city name Albertville appears 1 times.",
+      "subquestion": "In the list of Olympic venues in cross-country skiing, how many times does the city name <node_4 answer> appear?",
+      "answer": 1
+    },
+    "6": {
+      "source": "wikipedia/Li_Xuerui/content.txt",
+      "fact": "In Li Xuerui, r = (1 mod 5) + 1 = 2. There are 0 distinct month names mentioned at least r times, so t = 1.",
+      "subquestion": "Let r be the remainder when dividing <node_5 answer> by 5, plus 1. Let t be 1 plus the number of distinct month names (January-December) that are mentioned at least r times. What is t?",
+      "answer": 1
+    },
+    "7": {
+      "source": "datagov/juvenile-sportfish-monitoring-in-florida-bay-everglades-national-park-data-20162/files/2016JuvenileSportfishNOAA_DATA_Mean_v0_0-x7gbMD.txt",
+      "fact": "There are 3 distinct month names mentioned exactly 1 times.",
+      "subquestion": "How many distinct month names (January-December) are mentioned exactly <node_6 answer> times?",
+      "answer": 3
+    },
+    "8": {
+      "source": "datagov/digital-data-sets-that-describe-aquifer-characteristics-of-the-enid-isolated-terrace-aquif/files/USGS.306054ab-51c5-4fce-9f26-2cd159529d35.txt",
+      "fact": "There are 4 distinct 4-digit years mentioned exactly 1 times.",
+      "subquestion": "How many distinct 4-digit years are mentioned exactly <node_6 answer> times?",
+      "answer": 4
+    },
+    "9": {
+      "source": "datagov/112-tca-plume-boundaries/files/5ebbea8282ce25b5136186d7.txt",
+      "fact": "There are 2 distinct 4-digit years mentioned at least 8 times.",
+      "subquestion": "How many distinct 4-digit years are mentioned at least (<node_7 answer> + <node_8 answer> + 1) times?",
+      "answer": 2
+    },
+    "10": {
+      "source": "datagov/walton-smith-ctd-ws16319-ws16319_ws16319stn57b-2016-11-17-25-3502n-81-2628w1/files/WS16319_WS16319_WS16319Stn57b-sIEQY8.txt",
+      "fact": "There are 11 distinct 4-digit years mentioned at least 1 times.",
+      "subquestion": "How many distinct 4-digit years are mentioned at least <node_6 answer> times?",
+      "answer": 7
+    }
+  },
+  "reasoning_chain": [
+    "Node 1: derive the first year list.",
+    "Node 2: derive the second year list.",
+    "Node 3: derive the third year list.",
+    "Node 4 depends on nodes 1-3: intersect the three lists to get year Y, then read the host city for that Games entry.",
+    "Node 5 depends on node 4: count host-city name occurrences in a second Olympic-venues list.",
+    "Node 6 depends on node 5: compute t from month-name counts using r = (M mod 5) + 1.",
+    "Node 7 depends on node 6: count month names mentioned exactly t times.",
+    "Node 8 depends on node 6: count 4-digit years mentioned exactly t times.",
+    "Node 9 depends on nodes 7-8: count 4-digit years mentioned at least (A + B + 1) times.",
+    "Node 10 depends on node 6: count 4-digit years mentioned at least t times.",
+    "Final answer: |2 - 11| = 9."
+  ]
+}

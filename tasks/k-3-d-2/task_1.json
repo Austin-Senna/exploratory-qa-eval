@@ -1,0 +1,50 @@
+{
+  "question": "Can you tell me the population of the largest city in the Idaho county reported in the 2020 census that had between 90 and 110 U.S. Department of Veterans Affairs disability compensation recipients in 2023 AND had between 88 and 92 recipients in 2019?. Your response should be in the format [Answer].",
+  "answer": "2643",
+  "nodes": {
+    "1": {
+      "source": "datagov/fy-2023-disability-compensation-recipients-by-county/v1/files/rows.csv",
+      "fact": "In FY 2023, four Idaho counties had between 90 and 110 VA disability compensation recipients: Bear Lake County (94), Caribou County (106), Power County (108), and Lewis County (109).",
+      "subquestion": "Which Idaho counties had between 90 and 110 VA disability compensation recipients in FY 2023?",
+      "answer": [
+        "Bear Lake County",
+        "Caribou County",
+        "Power County",
+        "Lewis County"
+      ]
+    },
+    "2": {
+      "source": "datagov/fy-2019-disability-pension-recipient-by-county/v1/files/rows.csv",
+      "fact": "In FY 2019, two Idaho counties had between 88 and 92 VA disability compensation recipients: Bear Lake County (89) and Custer County (90).",
+      "subquestion": "Which Idaho counties had between 88 and 92 VA disability compensation recipients in FY 2019?",
+      "answer": [
+        "Bear Lake County",
+        "Custer County"
+      ]
+    },
+    "3": {
+      "source": "wikipedia/Bear_Lake_County,_Idaho/content.txt",
+      "fact": "Montpelier is the largest city in Bear Lake County, Idaho, while Paris serves as the county seat.",
+      "subquestion": "What is the largest city in <intersection of node_1, node_2>?",
+      "answer": "Montpelier"
+    },
+    "4": {
+      "source": "wikipedia/Montpelier,_Idaho/content.txt",
+      "fact": "As of the 2020 United States census, Montpelier, Idaho had a population of 2,643. The city is the largest community in the Bear Lake Valley.",
+      "subquestion": "What was the population of <node_3 answer> in the 2020 census?",
+      "answer": "2643"
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=1, nodes 1): Idaho counties with 90-110 VA recipients in 2023 → {Bear Lake, Caribou, Power, Lewis}; Idaho counties with 88-92 VA recipients in 2019 → {Bear Lake, Custer}",
+    "HOP 2 (d=1, nodes 2): Intersection → Bear Lake County; largest city → Montpelier",
+    "HOP 3 (d=1, nodes 3): 2020 census population of Montpelier → 2643",
+    "Final answer: 2643"
+  ],
+  "datasets_used": [
+    "Bear_Lake_County,_Idaho",
+    "Montpelier,_Idaho",
+    "fy-2019-disability-pension-recipient-by-county",
+    "fy-2023-disability-compensation-recipients-by-county"
+  ]
+}

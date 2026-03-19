@@ -1,0 +1,160 @@
+{
+  "question": "What percentage of the population in the county containing the city that borders both of the Texas cities with above 12% diabetes rates between 2016 and 2019 was aged 65 or older in 2022? (These cities had populations under 100,000 in 2020.). Your response should be in the format [Answer].",
+  "answer": "12.3",
+  "nodes": {
+    "1": {
+      "source": "datagov/500-cities-city-level-data-gis-friendly-format-2016-release/files/rows.txt",
+      "fact": "In the CDC 500 Cities 2016 release, 10 Texas cities had diabetes prevalence above 12%: Beaumont, Brownsville, Corpus Christi, Edinburg, El Paso, Laredo, McAllen, Mission, Pharr, and San Antonio.",
+      "subquestion": "Which Texas cities had diabetes prevalence above 12% in the CDC 500 Cities 2016 release?",
+      "answer": [
+        "Beaumont",
+        "Brownsville",
+        "Corpus Christi",
+        "Edinburg",
+        "El Paso",
+        "Laredo",
+        "McAllen",
+        "Mission",
+        "Pharr",
+        "San Antonio"
+      ]
+    },
+    "2": {
+      "source": "datagov/500-cities-city-level-data-gis-friendly-format-2017-release/files/rows.txt",
+      "fact": "In the CDC 500 Cities 2017 release, 12 Texas cities had diabetes prevalence above 12%: Baytown, Beaumont, Brownsville, Corpus Christi, Edinburg, El Paso, Houston, Laredo, McAllen, Mission, Pharr, and San Antonio.",
+      "subquestion": "Which Texas cities had diabetes prevalence above 12% in the CDC 500 Cities 2017 release?",
+      "answer": [
+        "Baytown",
+        "Beaumont",
+        "Brownsville",
+        "Corpus Christi",
+        "Edinburg",
+        "El Paso",
+        "Houston",
+        "Laredo",
+        "McAllen",
+        "Mission",
+        "Pharr",
+        "San Antonio"
+      ]
+    },
+    "3": {
+      "source": "datagov/500-cities-city-level-data-gis-friendly-format-2018-release/files/rows.txt",
+      "fact": "In the CDC 500 Cities 2018 release, 12 Texas cities had diabetes prevalence above 12%: Beaumont, Brownsville, Corpus Christi, El Paso, Houston, Laredo, Longview, McAllen, Mission, Pharr, San Antonio, and Tyler.",
+      "subquestion": "Which Texas cities had diabetes prevalence above 12% in the CDC 500 Cities 2018 release?",
+      "answer": [
+        "Beaumont",
+        "Brownsville",
+        "Corpus Christi",
+        "El Paso",
+        "Houston",
+        "Laredo",
+        "Longview",
+        "McAllen",
+        "Mission",
+        "Pharr",
+        "San Antonio",
+        "Tyler"
+      ]
+    },
+    "4": {
+      "source": "datagov/500-cities-city-level-data-gis-friendly-format-2019-release/files/rows.txt",
+      "fact": "In the CDC 500 Cities 2019 release, 13 Texas cities had diabetes prevalence above 12%: Beaumont, Brownsville, Corpus Christi, Edinburg, El Paso, Laredo, Longview, McAllen, Mission, Pharr, San Antonio, Tyler, and Waco.",
+      "subquestion": "Which Texas cities had diabetes prevalence above 12% in the CDC 500 Cities 2019 release?",
+      "answer": [
+        "Beaumont",
+        "Brownsville",
+        "Corpus Christi",
+        "Edinburg",
+        "El Paso",
+        "Laredo",
+        "Longview",
+        "McAllen",
+        "Mission",
+        "Pharr",
+        "San Antonio",
+        "Tyler",
+        "Waco"
+      ]
+    },
+    "5": {
+      "source": "datagov/2020-census-redistricting-data-all-texas-places/files/rows.txt",
+      "fact": "According to the 2020 Census Redistricting Data for All Texas Places, the following 2020 Census populations (POP100 field) are recorded for the 9 cities from the intersection: Beaumont (115,282), Brownsville (186,738), Corpus Christi (317,863), El Paso (678,815), Laredo (255,205), McAllen (142,210), Mission (85,778), Pharr (79,715), and San Antonio (1,434,625). Only Mission and Pharr have populations under 100,000.",
+      "subquestion": "Which cities from <intersection of nodes 1-4: Beaumont, Brownsville, Corpus Christi, El Paso, Laredo, McAllen, Mission, Pharr, San Antonio> had population under 100,000 in the 2020 Census?",
+      "answer": [
+        "Mission",
+        "Pharr"
+      ]
+    },
+    "6": {
+      "source": "wikipedia/Pharr,_Texas/content.txt",
+      "fact": "According to the Wikipedia article for Pharr, Texas, the city 'borders McAllen to the west, Edinburg to the north, San Juan to the east, and Hidalgo to the southwest.'",
+      "subquestion": "Which cities border <city from node 5: Pharr>?",
+      "answer": [
+        "McAllen",
+        "Edinburg",
+        "San Juan",
+        "Hidalgo"
+      ]
+    },
+    "7": {
+      "source": "wikipedia/Mission,_Texas/content.txt",
+      "fact": "According to the Wikipedia article for Mission, Texas, the city borders 'McAllen to the east, Palmhurst to the north, and Palmview to the west.'",
+      "subquestion": "Which cities border <city from node 5: Mission>?",
+      "answer": [
+        "McAllen",
+        "Palmhurst",
+        "Palmview"
+      ]
+    },
+    "8": {
+      "source": "wikipedia/McAllen,_Texas/content.txt",
+      "fact": "According to the Wikipedia article for McAllen, Texas: 'McAllen is a city in Hidalgo County in the Rio Grande Valley of the southern tip of the U.S. state of Texas.' McAllen is the most populous city in Hidalgo County, though the county seat is Edinburg.",
+      "subquestion": "Which Texas county is <intersection of nodes 6-7: McAllen> located in?",
+      "answer": "Hidalgo County"
+    },
+    "9": {
+      "source": "datagov/aps-1-1-texas-adult-populations-at-risk-by-county-region-fy2013-fy2022/files/rows.txt",
+      "fact": "According to the Texas Adult Populations at Risk by County data, in 2022, Hidalgo County had 12.3% of its population aged 65 and older.",
+      "subquestion": "What percentage of the population was aged 65 and older in 2022 in <county from node 8: Hidalgo County>?",
+      "answer": "12.3"
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=4, CDC 500 Cities diabetes data 2016-2019 - nodes 1-4):",
+    "  Node 1: TX cities with diabetes > 12% in 2016 release -> 10 cities",
+    "  Node 2: TX cities with diabetes > 12% in 2017 release -> 12 cities",
+    "  Node 3: TX cities with diabetes > 12% in 2018 release -> 12 cities (Edinburg dropped, Longview/Tyler added)",
+    "  Node 4: TX cities with diabetes > 12% in 2019 release -> 13 cities (Edinburg returned, Waco added)",
+    "  Intersection of nodes 1-4: Cities meeting criterion all 4 years -> 9 cities (Beaumont, Brownsville, Corpus Christi, El Paso, Laredo, McAllen, Mission, Pharr, San Antonio)",
+    "",
+    "HOP 2 (d=1, 2020 Census Texas Places - node 5):",
+    "  Node 5: Filter 9-city intersection by 2020 Census pop < 100k -> Mission (85,778) and Pharr (79,715)",
+    "  Result: 2 cities remaining (Mission, Pharr)",
+    "",
+    "HOP 3 (d=2, Wikipedia adjacent cities - nodes 6-7):",
+    "  Node 6 (Wikipedia Pharr,_Texas): Cities bordering Pharr -> McAllen, Edinburg, San Juan, Hidalgo",
+    "  Node 7 (Wikipedia Mission,_Texas): Cities bordering Mission -> McAllen, Palmhurst, Palmview",
+    "  Intersection: City that borders BOTH Pharr and Mission -> McAllen",
+    "",
+    "HOP 4 (d=1, Wikipedia McAllen,_Texas - node 8):",
+    "  Node 8: McAllen is in Hidalgo County, Texas (most populous city in the county)",
+    "",
+    "HOP 5 (d=1, data.gov Texas Adult Populations at Risk - node 9):",
+    "  Node 9: Hidalgo County had 12.3% of population aged 65 and older in 2022",
+    "",
+    "Final answer: 12.3 (percentage of Hidalgo County population aged 65+ in 2022)"
+  ],
+  "verdict": "pass",
+  "datasets_used": [
+    "2020-census-redistricting-data-all-texas-places",
+    "500-cities-city-level-data-gis-friendly-format-2016-release",
+    "500-cities-city-level-data-gis-friendly-format-2017-release",
+    "500-cities-city-level-data-gis-friendly-format-2018-release",
+    "500-cities-city-level-data-gis-friendly-format-2019-release",
+    "McAllen,_Texas",
+    "Mission,_Texas",
+    "Pharr,_Texas",
+    "aps-1-1-texas-adult-populations-at-risk-by-county-region-fy2013-fy2022"
+  ]
+}

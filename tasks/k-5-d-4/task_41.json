@@ -1,0 +1,97 @@
+{
+  "question": "Starting with the year across 2011-2016 in which the lowest death rate for ages 55-64 and extending 3 years forward to form a range, among Eastern Washington counties that border Idaho and had 2020 population under 300,000, identify the one where school districts consistently achieved at least 68% English language arts performance for all students and all grades during that range. What is the most populous city in that county according to the 2020 census? Your response should be in the format [Answer].",
+  "answer": "Pullman",
+  "nodes": {
+    "1": {
+      "source": "datagov/death-rates-by-age-groups/files/death_rates_by_age_groups.txt",
+      "fact": "For 2011-2016, lowest death rate ages 55-64 is in 2014.",
+      "subquestion": "Which year from 2011-2016 has lowest death rate for ages 55-64?",
+      "answer": "2014"
+    },
+    "2": {
+      "source": "datagov/report-card-assessment-data-2014-15-school-year/files/rows.txt",
+      "fact": "21 school districts had ELA ≥68% including districts in Whitman and Spokane.",
+      "subquestion": "Which WA districts had ELA ≥68% in <node_1 answer>-<node_1 answer>+1 school year?",
+      "answer": [
+        "Colfax School District (Whitman)",
+        "St. John School District (Whitman)",
+        "Freeman School District (Spokane)"
+      ]
+    },
+    "3": {
+      "source": "datagov/report-card-assessment-data-2015-16-school-year/files/rows.txt",
+      "fact": "77 school districts had ELA ≥68%.",
+      "subquestion": "Which WA districts had ELA ≥68% in <node_1 answer>+1 school year?",
+      "answer": [
+        "Pullman School District (Whitman)",
+        "Colfax School District (Whitman)",
+        "St. John School District (Whitman)"
+      ]
+    },
+    "4": {
+      "source": "datagov/report-card-assessment-data-2016-17-school-year/files/rows.txt",
+      "fact": "67 school districts had ELA ≥68%.",
+      "subquestion": "Which WA districts had ELA ≥68% in <node_1 answer>+2 school year?",
+      "answer": [
+        "Pullman School District (Whitman)",
+        "Colfax School District (Whitman)",
+        "St. John School District (Whitman)"
+      ]
+    },
+    "5": {
+      "source": "datagov/report-card-assessment-data-2017-18-school-year/files/rows.txt",
+      "fact": "56 school districts had ELA ≥68%. Whitman and Spokane counties have consistent districts.",
+      "subquestion": "Which WA districts had ELA ≥68% in <node_1 answer>+3 school year?",
+      "answer": [
+        "Pullman School District (Whitman)",
+        "Colfax School District (Whitman)",
+        "St. John School District (Whitman)"
+      ]
+    },
+    "6": {
+      "source": "wikipedia/Eastern_Washington/content.txt",
+      "fact": "Whitman and Spokane are Eastern WA counties.",
+      "subquestion": "Which counties from the consistent districts are in Eastern WA?",
+      "answer": [
+        "Whitman",
+        "Spokane"
+      ]
+    },
+    "7": {
+      "source": "wikipedia/Whitman_County,_Washington/content.txt",
+      "fact": "Whitman borders Idaho (Latah County, Idaho), population 47,973.",
+      "subquestion": "Which borders Idaho with pop <300k?",
+      "answer": "Whitman County: borders Idaho, pop 47,973"
+    },
+    "8": {
+      "source": "wikipedia/Spokane_County,_Washington/content.txt",
+      "fact": "Spokane borders Idaho but pop is 539,339 (over 300k).",
+      "subquestion": "Does Spokane qualify?",
+      "answer": "Spokane: borders Idaho but pop 539,339 exceeds 300k"
+    },
+    "9": {
+      "source": "wikipedia/Pullman,_Washington/content.txt",
+      "fact": "Pullman is most populous city in Whitman County (2020 census).",
+      "subquestion": "What is most populous city in Whitman County?",
+      "answer": "Pullman"
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=1): Death rate lowest 2011-2016 is 2014",
+    "HOP 2 (d=4): WA ELA performance 2014-2018 intersection",
+    "HOP 3 (d=2): Eastern WA + Idaho border + pop filters",
+    "HOP 4 (d=1): Pullman most populous in Whitman",
+    "Final answer: Pullman"
+  ],
+  "datasets_used": [
+    "death-rates-by-age-groups",
+    "report-card-assessment-data-2014-15-school-year",
+    "report-card-assessment-data-2015-16-school-year",
+    "report-card-assessment-data-2016-17-school-year",
+    "report-card-assessment-data-2017-18-school-year",
+    "Eastern_Washington",
+    "Whitman_County,_Washington",
+    "Spokane_County,_Washington",
+    "Pullman,_Washington"
+  ]
+}

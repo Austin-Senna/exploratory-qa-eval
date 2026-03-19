@@ -1,0 +1,43 @@
+{
+  "question": "Among Bexar, El Paso, Hidalgo, and Montgomery counties, which have population under 900,000 in the census of two years before the year (within 2015-2023) that has the highest total number of drug overdose deaths across U.S. states using December 12 month-ending values and excluding the U.S. total and are not in the Houston metropolitan area? List the county names in alphabetical order separated by `, `. Your response should be in the format [Answer].",
+  "answer": "El Paso, Hidalgo",
+  "nodes": {
+    "1": {
+      "source": "datagov/vsrr-provisional-drug-overdose-death-counts/files/rows.txt",
+      "fact": "In the VSRR provisional drug overdose death counts dataset (December 12 month-ending values for 2015-2023, excluding the US aggregate), 2022 has the highest total across states at 109,413.",
+      "subquestion": "Which year from 2015-2023 has the highest total number of drug overdose deaths across U.S. states, using December 12 month-ending values and excluding the U.S. total? (Filter Indicator == \"Number of Drug Overdose Deaths\", Period == \"12 month-ending\", Month == \"December\", exclude State == \"US\"; sum Data Value by Year; choose the maximum.)",
+      "answer": "2022"
+    },
+    "2": {
+      "source": "datagov/2020-census-redistricting-data-all-texas-counties/files/rows.txt",
+      "fact": "According to the <node_1 answer - 2> Census Redistricting Data for Texas counties, among {Bexar, El Paso, Hidalgo, Montgomery}: El Paso had population 865,657, Hidalgo had 870,781, and Montgomery had 620,443 (all under 900,000), while Bexar had 2,009,324 (over 900,000).",
+      "subquestion": "Among Bexar, El Paso, Hidalgo, and Montgomery counties, which have <node_1 answer - 2> census population under 900,000?",
+      "answer": ["El Paso", "Hidalgo", "Montgomery"]
+    },
+    "3": {
+      "source": "wikipedia/Montgomery_County,_Texas/content.txt",
+      "fact": "According to the Wikipedia article for Montgomery County, Texas, \"Montgomery County is part of the Houston–The Woodlands–Sugar Land metropolitan statistical area.\"",
+      "subquestion": "Among <node_2 answer>, which counties are NOT in the Houston metropolitan area?",
+      "answer": ["El Paso", "Hidalgo"]
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=1, data.gov year derivation - node 1):",
+    "  Node 1: Year with highest drug overdose deaths (2015-2023) -> 2022",
+    "  Derived census year: 2020 (2022-2)",
+    "",
+    "HOP 2 (d=1, data.gov - node 2 depends on node 1):",
+    "  Node 2: 2020 population under 900,000 -> El Paso, Hidalgo, Montgomery",
+    "",
+    "HOP 3 (d=1, Wikipedia - node 3 depends on node 2):",
+    "  Node 3: Montgomery is in the Houston metro -> exclude Montgomery",
+    "  Result: El Paso, Hidalgo",
+    "",
+    "Final answer: El Paso, Hidalgo"
+  ],
+  "datasets_used": [
+    "vsrr-provisional-drug-overdose-death-counts",
+    "2020-census-redistricting-data-all-texas-counties",
+    "Montgomery_County,_Texas"
+  ]
+}

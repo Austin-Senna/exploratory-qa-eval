@@ -1,0 +1,141 @@
+{
+  "question": "Among agencies appearing in the top 20 for total January parking-violation fine amounts in each year from the year (within 2017-2022) with the highest total gasoline/gasohol sales across U.S. states to two years later, and that are U.S. national law-enforcement bodies, which agency had the highest average number of January moving violations across those years? Return the agency name only. Your response should be in the format [Answer].",
+  "answer": "UNITED STATES PARK POLICE",
+  "nodes": {
+    "1": {
+      "source": "datagov/monthly-motor-fuel-sales-reported-by-states-selected-data-from-fhwa-monthly-motor-fuel-rep/files/rows.txt",
+      "fact": "Filtering fuel_type = \"Gasoline/gasohol\" and summing value by year (from date) for 2017-2022, the maximum total is 294719877886 in 2019.",
+      "subquestion": "Which year from 2017-2022 has the highest total gasoline/gasohol sales across U.S. states? (Filter fuel_type == \"Gasoline/gasohol\"; derive year from date; sum value by year and select the maximum.)",
+      "answer": "2019"
+    },
+    "2": {
+      "source": "datagov/parking-violations-issued-in-january-2019/v1/files/rows.csv",
+      "fact": "According to the January <node_1 answer> DC parking violations dataset, the top 20 issuing agencies by total fine amount were: DEPARTMENT OF PUBLIC WORKS ($4,954,065.00), METROPOLITAN POLICE DPT-DISTRICT 2 ($77,631.00), METROPOLITAN POLICE DPT-DISTRICT 1 ($63,915.00), METROPOLITAN POLICE DPT-DISTRICT 4 ($59,570.00), METROPOLITAN POLICE DPT-DISTRICT 5 ($47,620.00), METROPOLITAN POLICE DPT-DISTRICT 7 ($47,050.00), D.C. HOUSING AUTHORITY ($45,080.00), METROPOLITAN POLICE DPT-DISTRICT 3 ($44,695.00), METROPOLITAN POLICE DPT-DISTRICT 6 ($28,595.00), SPECIAL OPERATION DIV & TRAFFIC DIV ($20,030.00), UNITED STATES CAPITOL POLICE ($15,230.00), METRO POLICE ($12,690.00), DDOT ($12,095.00), PROTECTIVE SERVICES DEPT (DC GOVT) ($9,760.00), SPECIAL INSPECTION DIVISION ($5,550.00), MPD RESERVE CORPS ($4,620.00), UNVRSTY OF THE D.C. SECURITY POLICE ($3,510.00), TAXI COMMISSION ($2,700.00), US. SECRET SERVICE UNIFORM DIVISION ($2,695.00), and UNITED STATES PARK POLICE ($2,245.00).",
+      "subquestion": "Which agencies were in the top 20 for total January parking-violation fine amount in <node_1 answer>? (Filter for this node: group by ISSUING_AGENCY_NAME; sum FINE_AMOUNT; rank desc; take top 20.)",
+      "answer": [
+        "DEPARTMENT OF PUBLIC WORKS",
+        "METROPOLITAN POLICE DPT-DISTRICT 2",
+        "METROPOLITAN POLICE DPT-DISTRICT 1",
+        "METROPOLITAN POLICE DPT-DISTRICT 4",
+        "METROPOLITAN POLICE DPT-DISTRICT 5",
+        "METROPOLITAN POLICE DPT-DISTRICT 7",
+        "D.C. HOUSING AUTHORITY",
+        "METROPOLITAN POLICE DPT-DISTRICT 3",
+        "METROPOLITAN POLICE DPT-DISTRICT 6",
+        "SPECIAL OPERATION DIV & TRAFFIC DIV",
+        "UNITED STATES CAPITOL POLICE",
+        "METRO POLICE",
+        "DDOT",
+        "PROTECTIVE SERVICES DEPT (DC GOVT)",
+        "SPECIAL INSPECTION DIVISION",
+        "MPD RESERVE CORPS",
+        "UNVRSTY OF THE D.C. SECURITY POLICE",
+        "TAXI COMMISSION",
+        "US. SECRET SERVICE UNIFORM DIVISION",
+        "UNITED STATES PARK POLICE"
+      ]
+    },
+    "3": {
+      "source": "datagov/parking-violations-issued-in-january-2020/v1/files/rows.csv",
+      "fact": "According to the January <node_1 answer + 1> DC parking violations dataset, the top 20 issuing agencies by total fine amount were: DEPARTMENT OF PUBLIC WORKS ($6,756,190.00), METROPOLITAN POLICE DPT-DISTRICT 2 ($114,810.00), D.C. HOUSING AUTHORITY ($77,480.00), METROPOLITAN POLICE DPT-DISTRICT 6 ($77,190.00), METROPOLITAN POLICE DPT-DISTRICT 7 ($61,545.00), METROPOLITAN POLICE DPT-DISTRICT 4 ($56,485.00), DDOT ($48,580.00), METROPOLITAN POLICE DPT-DISTRICT 3 ($46,520.00), METROPOLITAN POLICE DPT-DISTRICT 1 ($46,310.00), METROPOLITAN POLICE DPT-DISTRICT 5 ($42,185.00), METRO POLICE ($42,180.00), SPECIAL OPERATION DIV & TRAFFIC DIV ($24,190.00), UNITED STATES PARK POLICE ($15,585.00), UNITED STATES CAPITOL POLICE ($7,595.00), TAXI COMMISSION ($7,370.00), SPECIAL INSPECTION DIVISION ($6,500.00), PROTECTIVE SERVICES DEPT (DC GOVT) ($4,575.00), US. SECRET SERVICE UNIFORM DIVISION ($2,665.00), BOLLING AFB ($1,840.00), and US. GOVERNMENT PRINTING OFFICE ($1,550.00).",
+      "subquestion": "Which agencies were in the top 20 for total January parking-violation fine amount in <node_1 answer + 1>? (Filter for this node: group by ISSUING_AGENCY_NAME; sum FINE_AMOUNT; rank desc; take top 20.)",
+      "answer": [
+        "DEPARTMENT OF PUBLIC WORKS",
+        "METROPOLITAN POLICE DPT-DISTRICT 2",
+        "D.C. HOUSING AUTHORITY",
+        "METROPOLITAN POLICE DPT-DISTRICT 6",
+        "METROPOLITAN POLICE DPT-DISTRICT 7",
+        "METROPOLITAN POLICE DPT-DISTRICT 4",
+        "DDOT",
+        "METROPOLITAN POLICE DPT-DISTRICT 3",
+        "METROPOLITAN POLICE DPT-DISTRICT 1",
+        "METROPOLITAN POLICE DPT-DISTRICT 5",
+        "METRO POLICE",
+        "SPECIAL OPERATION DIV & TRAFFIC DIV",
+        "UNITED STATES PARK POLICE",
+        "UNITED STATES CAPITOL POLICE",
+        "TAXI COMMISSION",
+        "SPECIAL INSPECTION DIVISION",
+        "PROTECTIVE SERVICES DEPT (DC GOVT)",
+        "US. SECRET SERVICE UNIFORM DIVISION",
+        "BOLLING AFB",
+        "US. GOVERNMENT PRINTING OFFICE"
+      ]
+    },
+    "4": {
+      "source": "datagov/parking-violations-issued-in-january-2021/v1/files/rows.csv",
+      "fact": "According to the January <node_1 answer + 2> DC parking violations dataset, the top 20 issuing agencies by total fine amount were: DEPARTMENT OF PUBLIC WORKS ($1,055,060.00), METROPOLITAN POLICE DPT-DISTRICT 7 ($87,685.00), METROPOLITAN POLICE DPT-DISTRICT 3 ($66,435.00), METROPOLITAN POLICE DPT-DISTRICT 6 ($44,730.00), METROPOLITAN POLICE DPT-DISTRICT 1 ($38,955.00), METROPOLITAN POLICE DPT-DISTRICT 2 ($32,930.00), METROPOLITAN POLICE DPT-DISTRICT 4 ($28,740.00), METROPOLITAN POLICE DPT-DISTRICT 5 ($24,440.00), SPECIAL OPERATION DIV & TRAFFIC DIV ($16,725.00), D.C. HOUSING AUTHORITY ($16,695.00), UNITED STATES PARK POLICE ($6,340.00), METRO POLICE ($3,515.00), TAXI COMMISSION ($2,650.00), UNITED STATES CAPITOL POLICE ($1,970.00), MPD RESERVE CORPS ($1,750.00), US. SECRET SERVICE UNIFORM DIVISION ($795.00), PROTECTIVE SERVICES DEPT (DC GOVT) ($750.00), DPT. OF GENERAL SERVICES GUARDS ($555.00), US. GOVERNMENT PRINTING OFFICE ($500.00), and OTHER ($325.00).",
+      "subquestion": "Which agencies were in the top 20 for total January parking-violation fine amount in <node_1 answer + 2>? (Filter for this node: group by ISSUING_AGENCY_NAME; sum FINE_AMOUNT; rank desc; take top 20.)",
+      "answer": [
+        "DEPARTMENT OF PUBLIC WORKS",
+        "METROPOLITAN POLICE DPT-DISTRICT 7",
+        "METROPOLITAN POLICE DPT-DISTRICT 3",
+        "METROPOLITAN POLICE DPT-DISTRICT 6",
+        "METROPOLITAN POLICE DPT-DISTRICT 1",
+        "METROPOLITAN POLICE DPT-DISTRICT 2",
+        "METROPOLITAN POLICE DPT-DISTRICT 4",
+        "METROPOLITAN POLICE DPT-DISTRICT 5",
+        "SPECIAL OPERATION DIV & TRAFFIC DIV",
+        "D.C. HOUSING AUTHORITY",
+        "UNITED STATES PARK POLICE",
+        "METRO POLICE",
+        "TAXI COMMISSION",
+        "UNITED STATES CAPITOL POLICE",
+        "MPD RESERVE CORPS",
+        "US. SECRET SERVICE UNIFORM DIVISION",
+        "PROTECTIVE SERVICES DEPT (DC GOVT)",
+        "DPT. OF GENERAL SERVICES GUARDS",
+        "US. GOVERNMENT PRINTING OFFICE",
+        "OTHER"
+      ]
+    },
+    "5": {
+      "source": "datagov/moving-violations-issued-in-january-2019/v1/files/rows.csv",
+      "fact": "According to the January <node_1 answer> DC moving violations dataset, for the hop 1 intersection agencies (UNITED STATES PARK POLICE, UNITED STATES CAPITOL POLICE, US. SECRET SERVICE UNIFORM DIVISION), the moving-violation counts were: UNITED STATES PARK POLICE (103), UNITED STATES CAPITOL POLICE (176), US. SECRET SERVICE UNIFORM DIVISION (145).",
+      "subquestion": "Among the hop 1 intersection agencies that are U.S. national law-enforcement bodies (United States Park Police, United States Capitol Police, and U.S. Secret Service Uniform Division), what were their moving violation counts in <node_1 answer>? (Filter for this node: ISSUING_AGENCY_NAME in {UNITED STATES PARK POLICE, UNITED STATES CAPITOL POLICE, US. SECRET SERVICE UNIFORM DIVISION}; count rows by ISSUING_AGENCY_NAME.)",
+      "answer": {
+        "UNITED STATES PARK POLICE": 103,
+        "UNITED STATES CAPITOL POLICE": 176,
+        "US. SECRET SERVICE UNIFORM DIVISION": 145
+      }
+    },
+    "6": {
+      "source": "datagov/moving-violations-issued-in-january-2020/v1/files/rows.csv",
+      "fact": "According to the January <node_1 answer + 1> DC moving violations dataset, for the hop 1 intersection agencies (UNITED STATES PARK POLICE, UNITED STATES CAPITOL POLICE, US. SECRET SERVICE UNIFORM DIVISION), the moving-violation counts were: UNITED STATES PARK POLICE (204), UNITED STATES CAPITOL POLICE (139), US. SECRET SERVICE UNIFORM DIVISION (118).",
+      "subquestion": "Among the hop 1 intersection agencies that are U.S. national law-enforcement bodies (United States Park Police, United States Capitol Police, and U.S. Secret Service Uniform Division), what were their moving violation counts in <node_1 answer + 1>? (Filter for this node: ISSUING_AGENCY_NAME in {UNITED STATES PARK POLICE, UNITED STATES CAPITOL POLICE, US. SECRET SERVICE UNIFORM DIVISION}; count rows by ISSUING_AGENCY_NAME.)",
+      "answer": {
+        "UNITED STATES PARK POLICE": 204,
+        "UNITED STATES CAPITOL POLICE": 139,
+        "US. SECRET SERVICE UNIFORM DIVISION": 118
+      }
+    },
+    "7": {
+      "source": "datagov/moving-violations-issued-in-january-2021/v1/files/rows.csv",
+      "fact": "According to the January <node_1 answer + 2> DC moving violations dataset, for the hop 1 intersection agencies (UNITED STATES PARK POLICE, UNITED STATES CAPITOL POLICE, US. SECRET SERVICE UNIFORM DIVISION), the moving-violation counts were: UNITED STATES PARK POLICE (71), UNITED STATES CAPITOL POLICE (30), US. SECRET SERVICE UNIFORM DIVISION (32). Averages across years: UNITED STATES PARK POLICE (126.0), UNITED STATES CAPITOL POLICE (115.0), US. SECRET SERVICE UNIFORM DIVISION (98.33). UNITED STATES PARK POLICE has the highest average.",
+      "subquestion": "Among the hop 1 intersection agencies that are U.S. national law-enforcement bodies (United States Park Police, United States Capitol Police, and U.S. Secret Service Uniform Division), what were their moving violation counts in <node_1 answer + 2>? (Filter for this node: ISSUING_AGENCY_NAME in {UNITED STATES PARK POLICE, UNITED STATES CAPITOL POLICE, US. SECRET SERVICE UNIFORM DIVISION}; count rows by ISSUING_AGENCY_NAME.)",
+      "answer": "UNITED STATES PARK POLICE"
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=1, data.gov year derivation - node 1):",
+    "  Node 1: Year with highest gasoline/gasohol sales (2017-2022) -> 2019",
+    "  Derived year range: 2019-2021 (node_1 answer to node_1 answer + 2)",
+    "",
+    "HOP 2 (d=3, data.gov - nodes 2-4):",
+    "  Nodes 2-4: Top-20 January parking-fine agencies 2019\u20132021 -> intersection; keep national law-enforcement bodies",
+    "",
+    "HOP 3 (d=3, data.gov - nodes 5-7 depend on hop 2):",
+    "  Nodes 5-7: January moving violations 2019\u20132021 -> highest average is UNITED STATES PARK POLICE",
+    "",
+    "Final answer: UNITED STATES PARK POLICE"
+  ],
+  "datasets_used": [
+    "monthly-motor-fuel-sales-reported-by-states-selected-data-from-fhwa-monthly-motor-fuel-rep",
+    "parking-violations-issued-in-january-2019",
+    "parking-violations-issued-in-january-2020",
+    "parking-violations-issued-in-january-2021",
+    "moving-violations-issued-in-january-2019",
+    "moving-violations-issued-in-january-2020",
+    "moving-violations-issued-in-january-2021"
+  ]
+}

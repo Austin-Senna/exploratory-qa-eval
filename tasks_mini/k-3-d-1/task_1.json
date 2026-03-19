@@ -1,0 +1,46 @@
+{
+  "question": "I'm trying to estimate how many taser-use incidents per century Austin has using 2023 data. Find the Austin Police Department sector (excluding Unknown) with the most searches, then within that sector find the council district with the most dispatch-system incident records in 2023. Count the 2023 incidents in that district where officers applied force and tasers were used, then use Austin's incorporation year to compute the average per century. Please return only the rounded integer in the format [Answer]. Your response should be in the format [Answer].",
+  "answer": "32",
+  "nodes": {
+    "1": {
+      "source": "wikipedia/Austin,_Texas/content.txt",
+      "fact": "The Austin, Texas article states that Austin was founded in 1839.",
+      "subquestion": "According to the Austin, Texas article, in what year was Austin founded?",
+      "answer": "1839"
+    },
+    "2": {
+      "source": "datagov/apd-searches-by-type/v1/files/rows.csv",
+      "fact": "In 2023 APD searches-by-type data (excluding Unknown), the sector with the most searches is Charlie (445; no ties observed within scope).",
+      "subquestion": "In 2023 APD searches-by-type data (excluding Sector = \"Unknown\"), which sector has the most searches?",
+      "answer": "Charlie"
+    },
+    "3": {
+      "source": "datagov/apd-computer-aided-dispatch-incidents/v1/files/rows.csv",
+      "fact": "In 2023 APD computer-aided-dispatch incidents data, within sector Charlie, council district 1 has the most incidents (21038; no ties observed within scope).",
+      "subquestion": "In 2023 APD computer-aided-dispatch incidents data, within sector <node_2 answer>, which council district has the most incidents?",
+      "answer": "1"
+    },
+    "4": {
+      "source": "datagov/apd-use-of-force/v1/files/rows.csv",
+      "fact": "In 2023 APD use-of-force data, council district 1 has 59 incidents with Used Taser(s) > 0.",
+      "subquestion": "In 2023 APD use-of-force data, how many incidents with Used Taser(s) > 0 occurred in council district <node_3 answer>?",
+      "answer": "59"
+    }
+  },
+  "reasoning_chain": [
+    "Node 1: Austin founding year -> 1839.",
+    "Node 2: 2023 APD sector with the most searches (excluding Unknown) -> Charlie (445).",
+    "Node 3 depends on node 2: In 2023 CAD incidents, within sector Charlie, the council district with the most incidents -> 1 (21038).",
+    "Node 4 depends on node 3: In 2023 APD use-of-force data, incidents in council district 1 with Used Taser(s) > 0 = 59.",
+    "Compute Austin age in 2023: 2023 - 1839 = 184 years = 1.84 centuries.",
+    "Compute incidents per century: 59 / 1.84 ≈ 32.07.",
+    "Round to nearest whole number: 32.",
+    "Final answer: 32"
+  ],
+  "datasets_used": [
+    "Austin,_Texas",
+    "apd-computer-aided-dispatch-incidents",
+    "apd-searches-by-type",
+    "apd-use-of-force"
+  ]
+}

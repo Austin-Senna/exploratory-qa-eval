@@ -1,0 +1,53 @@
+{
+  "question": "Find the county seats of the two non\u2011NYC New York counties with the highest total mental health service recipients during the two\u2011year window starting two years before the year (within 2017\u20132022) with the highest total daily census records from Allegheny County Jail. List the city names in alphabetical order separated by `, `. Your response should be in the format [Answer].",
+  "answer": "Buffalo, Rochester",
+  "nodes": {
+    "1": {
+      "source": "datagov/allegheny-county-jail-daily-census/files/66cdcd57-6c92-4aaa-8800-0ed9d8f03e22.txt",
+      "fact": "Counting records by year from census_date for 2017-2022, the maximum total is 1202002 in 2019.",
+      "subquestion": "Which year from 2017-2022 has the highest total daily census records from Allegheny County Jail? (Use census_date to derive year; count records by year and select the maximum.)",
+      "answer": "2019"
+    },
+    "2": {
+      "source": "datagov/county-mental-health-profiles-phase-2-beginning-2014/files/rows.txt",
+      "fact": "According to the NY mental health profiles dataset (<node_1 answer - 2> and <node_1 answer - 1>), excluding NYC counties, the top 2 NY counties by total mental health service recipients are Erie County (83,049 recipients) and Monroe County (74,299 recipients).",
+      "subquestion": "Which non-NYC NY counties are in the top 2 by total mental health service recipients (<node_1 answer - 2> to <node_1 answer - 1>)? (Filter: Service Year in {<node_1 answer - 2>, <node_1 answer - 1>}; group by County Label; sum Count of Recipients by Rate Code Group and County; exclude NYC counties; rank by total; keep top 2.)",
+      "answer": [
+        "Erie County",
+        "Monroe County"
+      ]
+    },
+    "3": {
+      "source": "wikipedia/Erie_County,_New_York/content.txt",
+      "fact": "The county seat of Erie County, New York is Buffalo.",
+      "subquestion": "What is the county seat of each county (from hop 2)?",
+      "answer": "Buffalo"
+    },
+    "4": {
+      "source": "wikipedia/Monroe_County,_New_York/content.txt",
+      "fact": "The county seat of Monroe County, New York is Rochester.",
+      "subquestion": "What is the county seat of each county (from hop 2)?",
+      "answer": "Rochester"
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=1, data.gov year derivation - node 1):",
+    "  Node 1: Year with highest Allegheny County Jail daily census records (2017-2022) -> 2019",
+    "  Derived years: 2017-2018 (2019-2 to 2019-1)",
+    "",
+    "HOP 2 (d=1, data.gov - node 2 depends on node 1):",
+    "  Node 2: Top 2 non-NYC counties by mental health recipients (2017-2018) -> Erie County, Monroe County",
+    "",
+    "HOP 3 (d=2, Wikipedia - nodes 3-4 depend on hop 2):",
+    "  Node 3: Erie County seat -> Buffalo",
+    "  Node 4: Monroe County seat -> Rochester",
+    "",
+    "Final answer: Buffalo, Rochester"
+  ],
+  "datasets_used": [
+    "allegheny-county-jail-daily-census",
+    "county-mental-health-profiles-phase-2-beginning-2014",
+    "Erie_County,_New_York",
+    "Monroe_County,_New_York"
+  ]
+}

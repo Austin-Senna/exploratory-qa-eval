@@ -1,0 +1,37 @@
+{
+  "question": "A flood-preparedness planner is categorizing segments of the river that flows past the south side of Vermont’s capital and near the state house. After identifying this city and the river, determine the town where that river is said to rise. Looking at Vermont's stream-impairment records, how many entries mention the river's name but exclude the name of that source town?",
+  "answer": "48",
+  "nodes": {
+    "1": {
+      "source": "wikipedia/List_of_capitals_in_the_United_States/content.txt",
+      "fact": "The capital city of Vermont is Montpelier.",
+      "subquestion": "What is the capital city of Vermont?",
+      "answer": "Montpelier"
+    },
+    "2": {
+      "source": "wikipedia/Montpelier,_Vermont/content.txt",
+      "fact": "In Montpelier, the Winooski River flows by the south side of the city and passes near the state house.",
+      "subquestion": "What river is described as flowing by the south side of <node_1 answer> and passing near the state house?",
+      "answer": "Winooski River"
+    },
+    "3": {
+      "source": "wikipedia/Winooski_River/content.txt",
+      "fact": "Winooski River is described as rising in the town of Cabot in Washington County.",
+      "subquestion": "In what town is <node_2 answer> described as rising?",
+      "answer": "Cabot"
+    },
+    "4": {
+      "source": "datagov/303d-streams-river-79452/files/data.txt",
+      "fact": "In the Vermont stream-impairment record, 48 features have a Name that contains \"Winooski River\" but does not contain \"Cabot\".",
+      "subquestion": "In a Vermont stream-impairment record, how many features have a Name that contains <node_2 answer> but does not contain <node_3 answer>?",
+      "answer": "48"
+    }
+  },
+  "reasoning_chain": [
+    "Node 1: Identify the capital city of Vermont \u2192 Montpelier.",
+    "Node 2 depends on node 1: Identify the river described as flowing by the south side of Montpelier and passing near the state house \u2192 Winooski River.",
+    "Node 3 depends on node 2: Identify the town where the Winooski River is described as rising \u2192 Cabot.",
+    "Node 4 depends on nodes 2 and 3: Count how many Vermont stream-impairment features have a Name containing \u201cWinooski River\u201d but not \u201cCabot\u201d \u2192 48.",
+    "Final answer: 48."
+  ]
+}

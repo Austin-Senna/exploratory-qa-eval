@@ -1,0 +1,43 @@
+{
+  "question": "In 2019 data reported by the Los Angeles Police Department, find the geo area with the most violations of moving traffic arrests. Then, find that area's numeric Area ID, and the most common 2019 crime description for that Area ID. Using 2020-present crime data for the same Area ID, find the 2020 incident count for that description, then in 2021 identify the crime description whose incident count is the smallest value exceeding that 2020 count and report that 2021 count as your final answer. Your response should be in the format [Answer].",
+  "answer": "915",
+  "nodes": {
+    "1": {
+      "source": "datagov/arrest-data-from-2010-to-2019/v1/files/rows.csv",
+      "fact": "In 2019, the area with the most arrests in the charge group \"Moving Traffic Violations\" is Van Nuys (455 arrests).",
+      "subquestion": "In 2019 arrest data, which area has the most arrests in the charge group \"Moving Traffic Violations\"?",
+      "answer": "Van Nuys"
+    },
+    "2": {
+      "source": "datagov/lapd-ripa-ab-953-stop-incident-details-from-7-1-2018-to-present/v1/files/rows.csv",
+      "fact": "In the LAPD RIPA stop-incident records, the area name Van Nuys corresponds to Area ID 9.",
+      "subquestion": "In the LAPD stop-incident records collected under California's RIPA program, what Area ID corresponds to area name <node_1 answer> (answer as an integer)?",
+      "answer": "9"
+    },
+    "3": {
+      "source": "datagov/crime-data-from-2010-to-2019/v1/files/rows.csv",
+      "fact": "In 2019 crime data for AREA = 9, the most common crime description is THEFT OF IDENTITY (807 incidents).",
+      "subquestion": "In 2019 crime data, within Area ID <node_2 answer>, which crime description is most common?",
+      "answer": "THEFT OF IDENTITY"
+    },
+    "4": {
+      "source": "datagov/crime-data-from-2020-to-present/v1/files/rows.csv",
+      "fact": "In 2020 crime data for AREA = 9, there were 761 incidents with crime description THEFT OF IDENTITY. In 2021 crime data for AREA = 9, the smallest incident count that is still greater than 761 is 915, corresponding to VEHICLE - STOLEN (unique within scope).",
+      "subquestion": "Using the 2020\u2013present crime data for Area ID <node_2 answer>, in 2021 what is the incident count of the crime description whose count is the closest value above the 2020 incident count for crime description <node_3 answer>?",
+      "answer": "915"
+    }
+  },
+  "reasoning_chain": [
+    "Node 1: In 2019 arrest data, Van Nuys has the most Moving Traffic Violations arrests.",
+    "Node 2 depends on node 1: In the LAPD RIPA stop-incident records, Van Nuys corresponds to Area ID 9.",
+    "Node 3 depends on node 2: In 2019 crime data for Area ID 9, the most common crime description is THEFT OF IDENTITY.",
+    "Node 4 depends on node 3: In 2020\u2013present crime data for Area ID 9, THEFT OF IDENTITY incidents in 2020 = 761, and the smallest 2021 description count greater than 761 is 915.",
+    "Final answer: 915"
+  ],
+  "datasets_used": [
+    "arrest-data-from-2010-to-2019",
+    "crime-data-from-2010-to-2019",
+    "crime-data-from-2020-to-present",
+    "lapd-ripa-ab-953-stop-incident-details-from-7-1-2018-to-present"
+  ]
+}

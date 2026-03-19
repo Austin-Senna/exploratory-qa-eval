@@ -1,0 +1,79 @@
+{
+  "question": "Starting with the period beginning in the year in 2011-2016 that saw the lowest number of births in United States and ending 4 years later, identify the year with the highest solar generation capacity. For that year, find the highest quarterly solar installation (kW) and the largest single-source electricity generation value (GWh). Identify the electricity sector sales figure (GWh) closest to that electricity generation value. Calculate the following threshold: the sector sales plus the generation value plus 10 times the solar installation value. Count how many fiscal years had agricultural transfer taxes exceeding this threshold. Add that count to 1980 to determine a target year. Finally, in that target year, how many electricity sectors had sales (in TBtu) exceeding 1/1000th of the sector sales figure identified earlier? Your response should be in the format [Answer].",
+  "answer": "2",
+  "nodes": {
+    "1": {
+      "source": "datagov/nchs-births-and-general-fertility-rates-united-states/files/rows.txt",
+      "fact": "For 2011-2016, the minimum Birth Number occurs in 2013 at 3932181.",
+      "subquestion": "Which year from 2011-2016 has the lowest number of births in United States?",
+      "answer": "2013"
+    },
+    "2": {
+      "source": "datagov/renewable-energy-generation-capacity-2006-2017/files/rows.txt",
+      "fact": "Between 2013 and 2017 (inclusive), the year with the highest Solar (MW) renewable generation capacity is 2017 (371.1), with no tie for highest in that range.",
+      "subquestion": "Between <node_1 answer> and <node_1 answer>+4 (inclusive), which year has the highest Solar (MW) renewable generation capacity?",
+      "answer": "2017"
+    },
+    "3": {
+      "source": "datagov/dwp-quarterly-cumulative-in-basin-solar-installments/files/rows.txt",
+      "fact": "Within calendar year 2017, the maximum quarterly \"In-Basin Solar Installed (kW)\" is 10199 (at Q4-2017), with no tie for maximum within that year.",
+      "subquestion": "Within calendar year <node_2 answer>, what is the maximum quarterly value of \"In-Basin Solar Installed (kW)\"?",
+      "answer": "10199"
+    },
+    "4": {
+      "source": "datagov/electric-generation-by-fuel-type-gwh-beginning-1960/files/rows.txt",
+      "fact": "In 2017, the largest single fuel-type electricity-generation value is 51627.0 GWh (Natural Gas), with no tie for largest.",
+      "subquestion": "In year <node_2 answer>, what is the largest single fuel-type electricity-generation value (in GWh)?",
+      "answer": "51627"
+    },
+    "5": {
+      "source": "datagov/electricity-sales-by-sector-gwh-beginning-1980-1f109/files/rows.txt",
+      "fact": "In 2017, Residential electricity sales are 49081 GWh, which is the unique closest sector sales value to 51627 GWh (absolute difference 2546).",
+      "subquestion": "In year <node_2 answer>, among the four electricity-sales sectors (Residential, Commercial, Industrial, Transportation), what is the sector sales value (in GWh) that is closest to <node_4 answer>?",
+      "answer": "49081"
+    },
+    "6": {
+      "source": "datagov/agricultural-transfer-tax/files/rows.txt",
+      "fact": "Let threshold = 49081 + 10*10199 + 51627 = 202698. There are 32 fiscal years with tax collected strictly greater than 202698.",
+      "subquestion": "Define threshold = (<node_5 answer>) + 10*(<node_3 answer>) + (<node_4 answer>). In the agricultural transfer-tax series, how many fiscal years have tax collected strictly greater than threshold?",
+      "answer": "32"
+    },
+    "7": {
+      "source": "datagov/electricity-sales-by-sector-tbtu-beginning-1980/files/rows.txt",
+      "fact": "Let yearZ = 1980 + 32 = 2012 and threshold = 49081/1000 = 49.081. In 2012, exactly 2 sectors have electricity sales (TBtu) strictly greater than 49.081.",
+      "subquestion": "Let C = <node_6 answer> and define yearZ = 1980 + C. In yearZ, how many sectors (Residential, Commercial, Industrial, Transportation) have electricity sales (in TBtu) strictly greater than (<node_5 answer> / 1000)?",
+      "answer": "2"
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=1, data.gov year derivation - node 1):",
+    "  Node 1: US births lowest 2011-2016 is 2013",
+    "",
+    "HOP 2 (d=1, node 2):",
+    "  Node 2: the solar-capacity peak year (2013–2017) is 2017.",
+    "",
+    "HOP 3 (d=1, node 3):",
+    "  Node 3: within 2017, the maximum quarterly installed value is Q = 10199.",
+    "",
+    "HOP 4 (d=1, node 4):",
+    "  Node 4: in 2017, the largest fuel-type generation value is G = 51627.",
+    "",
+    "HOP 5 (d=1, node 5):",
+    "  Node 5: in 2017, the sector sales value closest to G is S = 49081.",
+    "",
+    "HOP 6 (d=1, nodes 6-7):",
+    "  Node 6: threshold = S + 10*Q + G = 202698; the count of fiscal years with tax collected above threshold is C = 32.",
+    "  Node 7: yearZ = 1980 + 32 = 2012; threshold = S/1000 = 49.081; the number of TBtu sectors above threshold in 2012 is 2.",
+    "",
+    "Final answer: 2"
+  ],
+  "datasets_used": [
+    "nchs-births-and-general-fertility-rates-united-states",
+    "renewable-energy-generation-capacity-2006-2017",
+    "dwp-quarterly-cumulative-in-basin-solar-installments",
+    "electric-generation-by-fuel-type-gwh-beginning-1960",
+    "electricity-sales-by-sector-gwh-beginning-1980-1f109",
+    "agricultural-transfer-tax",
+    "electricity-sales-by-sector-tbtu-beginning-1980"
+  ]
+}

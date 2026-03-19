@@ -1,0 +1,103 @@
+{
+  "question": "Which Chicago department codes appear in the top five for ordinance appropriations in each year from two years before the year (within 2017-2022) with the highest total Charter flight passengers over Los Angeles international airports through that year, and also have nonzero total budgeted amounts in the Budget Ordinance Positions and Salaries data across those years? List the department codes in ascending order separated by `, `. Your response should be in the format [Answer].",
+  "answer": "50, 57, 85",
+  "nodes": {
+    "1": {
+      "source": "datagov/los-angeles-international-airport-passenger-count-by-carrier-type/files/rows.txt",
+      "fact": "Filtering FlightType = \"Charter\" and summing Passenger_Count by year (from ReportPeriod) for 2017-2022, the maximum total is 25993 in 2021.",
+      "subquestion": "Which year from 2017-2022 has the highest total Charter flight passengers over Los Angeles international airports? (Filter FlightType == \"Charter\"; derive year from ReportPeriod; sum Passenger_Count by year and select the maximum.)",
+      "answer": "2021"
+    },
+    "2": {
+      "source": "datagov/budget-2019-budget-ordinance-appropriations/v1/files/rows.csv",
+      "fact": "According to the <node_1 answer - 2> Chicago Budget Ordinance Appropriations dataset, the top 5 departments by total ordinance amount were: 99 FINANCE GENERAL ($4,947,717,643.00), 57 CPD ($1,656,002,057.00), 85 AVIATION ($911,289,787.00), 59 CFD ($652,282,316.00), and 50 DFSS ($633,571,744.00).",
+      "subquestion": "Which department numbers were in the top 5 by total ordinance appropriation in <node_1 answer - 2>? (Filter for this node: group by DEPARTMENT NUMBER; sum ORDINANCE (AMOUNT $); rank desc; take top 5.)",
+      "answer": [
+        99,
+        57,
+        85,
+        59,
+        50
+      ]
+    },
+    "3": {
+      "source": "datagov/budget-2020-budget-ordinance-appropriations/v1/files/rows.csv",
+      "fact": "According to the <node_1 answer - 1> Chicago Budget Ordinance Appropriations dataset, the top 5 departments by total ordinance amount were: 99 FINANCE GENERAL ($5,914,554,145.00), 57 CPD ($1,762,078,349.00), 85 AVIATION ($871,219,092.00), 50 DFSS ($686,392,402.00), and 59 CFD ($674,228,297.00).",
+      "subquestion": "Which department numbers were in the top 5 by total ordinance appropriation in <node_1 answer - 1>? (Filter for this node: group by DEPARTMENT NUMBER; sum ORDINANCE (AMOUNT $); rank desc; take top 5.)",
+      "answer": [
+        99,
+        57,
+        85,
+        50,
+        59
+      ]
+    },
+    "4": {
+      "source": "datagov/budget-2021-budget-ordinance-appropriations/v1/files/rows.csv",
+      "fact": "According to the <node_1 answer> Chicago Budget Ordinance Appropriations dataset, the top 5 departments by total ordinance amount were: 99 FINANCE GENERAL ($5,681,317,598.00), 57 CPD ($1,698,735,503.00), 85 CDA ($1,141,154,450.00), 50 DFSS ($780,489,814.00), and 84 CDOT ($770,356,074.00).",
+      "subquestion": "Which department numbers were in the top 5 by total ordinance appropriation in <node_1 answer>? (Filter for this node: group by DEPARTMENT NUMBER; sum ORDINANCE (AMOUNT $); rank desc; take top 5.)",
+      "answer": [
+        99,
+        57,
+        85,
+        50,
+        84
+      ]
+    },
+    "5": {
+      "source": "datagov/budget-2019-budget-ordinance-positions-and-salaries/v1/files/rows.csv",
+      "fact": "According to the <node_1 answer - 2> Chicago Budget Ordinance Positions and Salaries dataset, total budgeted amounts for the hop 1 department numbers were: 57 ($1,293,487,079.00), 85 ($144,020,555.00), 50 ($42,342,535.00), and 99 ($0.00; no rows for that department code).",
+      "subquestion": "For the department numbers (from hop 1), what were the total budgeted amounts in the Budget Ordinance Positions and Salaries dataset for <node_1 answer - 2>? (Filter for this node: DEPARTMENT CODE in hop 1 intersection {99, 57, 85, 50}; sum TOTAL BUDGETED AMOUNT by DEPARTMENT CODE.)",
+      "answer": {
+        "50": 42342535.0,
+        "57": 1293487079.0,
+        "85": 144020555.0,
+        "99": 0.0
+      }
+    },
+    "6": {
+      "source": "datagov/budget-2020-budget-ordinance-positions-and-salaries/v1/files/rows.csv",
+      "fact": "According to the <node_1 answer - 1> Chicago Budget Ordinance Positions and Salaries dataset, total budgeted amounts for the hop 1 department numbers were: 57 ($1,308,621,421.00), 85 ($159,362,510.00), 50 ($42,996,687.00), and 99 ($0.00; no rows for that department code).",
+      "subquestion": "For the department numbers (from hop 1), what were the total budgeted amounts in the Budget Ordinance Positions and Salaries dataset for <node_1 answer - 1>? (Filter for this node: DEPARTMENT CODE in hop 1 intersection {99, 57, 85, 50}; sum TOTAL BUDGETED AMOUNT by DEPARTMENT CODE.)",
+      "answer": {
+        "50": 42996687.0,
+        "57": 1308621421.0,
+        "85": 159362510.0,
+        "99": 0.0
+      }
+    },
+    "7": {
+      "source": "datagov/budget-2021-budget-ordinance-positions-and-salaries/v1/files/rows.csv",
+      "fact": "According to the <node_1 answer> Chicago Budget Ordinance Positions and Salaries dataset, total budgeted amounts for the hop 1 department numbers were: 57 ($1,277,019,448.00), 85 ($158,941,618.00), 50 ($43,046,519.00), and 99 ($0.00; no rows for that department code).",
+      "subquestion": "For the department numbers (from hop 1), what were the total budgeted amounts in the Budget Ordinance Positions and Salaries dataset for <node_1 answer>? (Filter for this node: DEPARTMENT CODE in hop 1 intersection {99, 57, 85, 50}; sum TOTAL BUDGETED AMOUNT by DEPARTMENT CODE.)",
+      "answer": {
+        "50": 43046519.0,
+        "57": 1277019448.0,
+        "85": 158941618.0,
+        "99": 0.0
+      }
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=1, data.gov year derivation - node 1):",
+    "  Node 1: Year with highest LAX Charter passengers (2017-2022) -> 2021",
+    "  Derived year range: 2019-2021 (node_1 answer - 2 to node_1 answer)",
+    "",
+    "HOP 2 (d=3, data.gov - nodes 2-4):",
+    "  Nodes 2-4: Top 5 ordinance-appropriation department codes 2019\u20132021 -> intersection {99, 57, 85, 50}",
+    "",
+    "HOP 3 (d=3, data.gov - nodes 5-7 depend on hop 2):",
+    "  Nodes 5-7: Nonzero totals across 2019\u20132021 -> {57, 85, 50}",
+    "",
+    "Final answer: 50, 57, 85"
+  ],
+  "datasets_used": [
+    "los-angeles-international-airport-passenger-count-by-carrier-type",
+    "budget-2019-budget-ordinance-appropriations",
+    "budget-2020-budget-ordinance-appropriations",
+    "budget-2021-budget-ordinance-appropriations",
+    "budget-2019-budget-ordinance-positions-and-salaries",
+    "budget-2020-budget-ordinance-positions-and-salaries",
+    "budget-2021-budget-ordinance-positions-and-salaries"
+  ]
+}

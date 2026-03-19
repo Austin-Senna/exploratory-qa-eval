@@ -1,0 +1,122 @@
+{
+  "question": "Consider Harris, Travis, Dallas, and Bexar counties. Determine which of these consistently ranked in the statewide top five for offender releases from the Department of Criminal Justice from the fiscal year starting in the 2017-2022 year that had the highest total daily census records from Allegheny County Jail to 2021. Among those, compute the average annual intake counts from the Department of Criminal Justice over those years and identify the county with the highest average. Its county seat has been home to a National Basketball Association franchise since 1971. Who founded that franchise? Return the name only. Your response should be in the format [Answer].",
+  "answer": "Robert Breitbard",
+  "nodes": {
+    "1": {
+      "source": "datagov/allegheny-county-jail-daily-census/files/66cdcd57-6c92-4aaa-8800-0ed9d8f03e22.txt",
+      "fact": "Counting records by year from census_date for 2017-2022, the maximum total is 1202002 in 2019.",
+      "subquestion": "Which year from 2017-2022 has the highest total daily census records from Allegheny County Jail?",
+      "answer": "2019"
+    },
+    "2": {
+      "source": "datagov/texas-department-of-criminal-justice-releases-fy-2019/v1/files/rows.csv",
+      "fact": "According to Texas Department of Criminal Justice release data for fiscal year <node_1 answer>, the overall top 5 counties by releases were Harris (9,029), Dallas (5,355), Tarrant (4,769), Bexar (4,545), and Hidalgo (1,861). Among Harris, Travis, Dallas, and Bexar, the ones in the top 5 were Harris, Dallas, and Bexar.",
+      "subquestion": "In fiscal year <node_1 answer>, among Harris, Travis, Dallas, and Bexar counties, which were in the overall top 5 for releases from the Department of Criminal Justice?",
+      "answer": [
+        "Harris",
+        "Dallas",
+        "Bexar"
+      ]
+    },
+    "3": {
+      "source": "datagov/texas-department-of-criminal-justice-releases-fy-2020/v1/files/rows.csv",
+      "fact": "According to Texas Department of Criminal Justice release data for fiscal year 2020, the overall top 5 counties by releases were Harris (7,059), Dallas (4,540), Tarrant (4,450), Bexar (3,917), and Travis (1,596). Among Harris, Travis, Dallas, and Bexar, all four were in the top 5.",
+      "subquestion": "In fiscal year 2020, among Harris, Travis, Dallas, and Bexar counties, which were in the overall top 5 for releases from the Department of Criminal Justice?",
+      "answer": [
+        "Harris",
+        "Dallas",
+        "Bexar",
+        "Travis"
+      ]
+    },
+    "4": {
+      "source": "datagov/texas-department-of-criminal-justice-releases-fy-2021/v1/files/rows.csv",
+      "fact": "According to Texas Department of Criminal Justice release data for fiscal year 2021, the overall top 5 counties by releases were Harris (5,210), Dallas (3,565), Tarrant (3,252), Bexar (3,236), and Hidalgo (1,147). Among Harris, Travis, Dallas, and Bexar, the ones in the top 5 were Harris, Dallas, and Bexar.",
+      "subquestion": "In fiscal year 2021, among Harris, Travis, Dallas, and Bexar counties, which were in the overall top 5 for releases from the Department of Criminal Justice?",
+      "answer": [
+        "Harris",
+        "Dallas",
+        "Bexar"
+      ]
+    },
+    "5": {
+      "source": "datagov/texas-department-of-criminal-justice-receives-fy-2019/v1/files/rows.csv",
+      "fact": "According to Texas Department of Criminal Justice intake data for fiscal year <node_1 answer>, among the hop 1 counties: Harris had 7,874 intakes, Dallas had 4,660, and Bexar had 4,457.",
+      "subquestion": "In fiscal year <node_1 answer>, what were the intake counts from the Department of Criminal Justice for the counties from hop 1?",
+      "answer": {
+        "Harris": 7874,
+        "Dallas": 4660,
+        "Bexar": 4457
+      }
+    },
+    "6": {
+      "source": "datagov/texas-department-of-criminal-justice-receives-fy-2020/v1/files/rows.csv",
+      "fact": "According to Texas Department of Criminal Justice intake data for fiscal year 2020, among the hop 1 counties: Harris had 3,840 intakes, Dallas had 2,519, and Bexar had 2,420.",
+      "subquestion": "In fiscal year 2020, what were the intake counts from the Department of Criminal Justice for the counties from hop 1?",
+      "answer": {
+        "Harris": 3840,
+        "Dallas": 2519,
+        "Bexar": 2420
+      }
+    },
+    "7": {
+      "source": "datagov/texas-department-of-criminal-justice-receives-fy-2021/v1/files/rows.csv",
+      "fact": "According to Texas Department of Criminal Justice intake data for fiscal year 2021, among the hop 1 counties: Harris had 4,652 intakes, Dallas had 3,520, and Bexar had 2,822.",
+      "subquestion": "In fiscal year 2021, what were the intake counts from the Department of Criminal Justice for the counties from hop 1?",
+      "answer": {
+        "Harris": 4652,
+        "Dallas": 3520,
+        "Bexar": 2822
+      }
+    },
+    "8": {
+      "source": "wikipedia/Harris_County,_Texas/content.txt",
+      "fact": "Harris County is the most populous county in Texas and the third-most populous in the United States. The county seat is Houston, which is also the largest city in Texas and the fourth-largest city in the United States.",
+      "subquestion": "What city is the county seat of the county from hop 2?",
+      "answer": "Houston"
+    },
+    "9": {
+      "source": "wikipedia/Houston/content.txt",
+      "fact": "The Houston Rockets are a National Basketball Association franchise based in the city since 1971.",
+      "subquestion": "Which National Basketball Association franchise is based in the city from hop 3 and has been there since 1971?",
+      "answer": "Houston Rockets"
+    },
+    "10": {
+      "source": "wikipedia/Houston_Rockets/content.txt",
+      "fact": "The Rockets were founded in 1967 in San Diego by Robert Breitbard.",
+      "subquestion": "Who founded the Houston Rockets?",
+      "answer": "Robert Breitbard"
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=1, data.gov year derivation - node 1):",
+    "  Node 1: Allegheny County Jail census -> Highest 2017-2022 is 2019",
+    "",
+    "HOP 2 (d=3): From Harris, Travis, Dallas, and Bexar, keep the counties that are in the statewide top 5 for releases in 2019-2021",
+    "  Node 2 (2019): {Harris, Dallas, Bexar}",
+    "  Node 3 (2020): {Harris, Dallas, Bexar, Travis}",
+    "  Node 4 (2021): {Harris, Dallas, Bexar}",
+    "  Intersection: {Harris, Dallas, Bexar}",
+    "HOP 3 (d=3): For those counties, gather intake counts from the Department of Criminal Justice for 2019-2021 and compute averages",
+    "  Node 5 (2019): Harris=7874, Dallas=4660, Bexar=4457",
+    "  Node 6 (2020): Harris=3840, Dallas=2519, Bexar=2420",
+    "  Node 7 (2021): Harris=4652, Dallas=3520, Bexar=2822",
+    "  Averages: Harris=5455.3 > Dallas=3566.3 > Bexar=3233.0 -> Result: Harris County",
+    "HOP 4 (d=1): Find county seat of the hop 2 county -> Houston",
+    "HOP 5 (d=1): Find the NBA franchise based in that city since 1971 -> Houston Rockets",
+    "HOP 6 (d=1): Find who founded the Rockets -> Robert Breitbard",
+    "Final answer: Robert Breitbard"
+  ],
+  "datasets_used": [
+    "allegheny-county-jail-daily-census",
+    "Harris_County,_Texas",
+    "Houston",
+    "Houston_Rockets",
+    "texas-department-of-criminal-justice-receives-fy-2019",
+    "texas-department-of-criminal-justice-receives-fy-2020",
+    "texas-department-of-criminal-justice-receives-fy-2021",
+    "texas-department-of-criminal-justice-releases-fy-2019",
+    "texas-department-of-criminal-justice-releases-fy-2020",
+    "texas-department-of-criminal-justice-releases-fy-2021"
+  ]
+}

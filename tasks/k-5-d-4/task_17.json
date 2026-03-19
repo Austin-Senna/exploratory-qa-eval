@@ -1,0 +1,130 @@
+{
+  "question": "Starting with the year over 2017-2022 that saw the highest average annual PM2.5 mean in New York City and extending 3 years forward, consider engineering firms that consistently ranked in the top 20 Washington State contractors by contract count annually during that range. Among those founded after 1914 that have no current NY State construction manager projects, identify the firm based in a city founded through land cession negotiations. In what year was the Native American interpreter born who helped negotiate that land cession? Your response should be in the format [Answer].",
+  "answer": "1825",
+  "nodes": {
+    "1": {
+      "source": "datagov/air-quality/files/rows.txt",
+      "fact": "Filtering to Name = 'Fine particles (PM 2.5)', Measure = 'Mean', and Time Period containing 'Annual Average' for 2017-2022, the highest average Data Value is 7.74113475177305 in 2017.",
+      "subquestion": "Which year from 2017-2022 in New York City has the highest average annual PM2.5 mean?",
+      "answer": "2017"
+    },
+    "2": {
+      "source": "datagov/agency-contracts-fiscal-year-2017/files/rows.txt",
+      "fact": "In fiscal year 2017, the top 20 Washington State contractors by contract count included HDR Engineering, Inc. (rank #8), Jacobs Engineering Group, Inc. (rank #14), and HNTB Corporation (rank #15).",
+      "subquestion": "Which contractors ranked in the top 20 by contract count in Washington State agency contracts in fiscal year <node_1 answer>?",
+      "answer": [
+        "HDR Engineering, Inc.",
+        "Jacobs Engineering Group, Inc.",
+        "HNTB Corporation"
+      ]
+    },
+    "3": {
+      "source": "datagov/agency-contracts-fiscal-year-2018/files/rows.txt",
+      "fact": "In fiscal year 2018, the top 20 Washington State contractors by contract count included Jacobs Engineering Group, Inc. (rank #2), HDR Engineering, Inc. (rank #5), and HNTB Corporation (rank #6).",
+      "subquestion": "Which contractors ranked in the top 20 by contract count in Washington State agency contracts in fiscal year <node_1 answer>+1?",
+      "answer": [
+        "Jacobs Engineering Group, Inc.",
+        "HDR Engineering, Inc.",
+        "HNTB Corporation"
+      ]
+    },
+    "4": {
+      "source": "datagov/agency-contracts-fiscal-year-2019/files/rows.txt",
+      "fact": "In fiscal year 2019, the top 20 Washington State contractors by contract count included Jacobs Engineering Group, Inc. (rank #13), HDR Engineering, Inc. (rank #15), and HNTB Corporation (rank #19).",
+      "subquestion": "Which contractors ranked in the top 20 by contract count in Washington State agency contracts in fiscal year <node_1 answer>+2?",
+      "answer": [
+        "Jacobs Engineering Group, Inc.",
+        "HDR Engineering, Inc.",
+        "HNTB Corporation"
+      ]
+    },
+    "5": {
+      "source": "datagov/agency-contracts-fiscal-year-2020/files/rows.txt",
+      "fact": "In fiscal year 2020, the top 20 Washington State contractors by contract count included HDR Engineering, Inc. (rank #5), HNTB Corporation (rank #10), and Jacobs Engineering Group, Inc. (rank #14).",
+      "subquestion": "Which contractors ranked in the top 20 by contract count in Washington State agency contracts in fiscal year <node_1 answer>+3?",
+      "answer": [
+        "HDR Engineering, Inc.",
+        "HNTB Corporation",
+        "Jacobs Engineering Group, Inc."
+      ]
+    },
+    "6": {
+      "source": "wikipedia/HDR,_Inc./content.txt",
+      "fact": "HDR, Inc. is an American design and engineering company based in Omaha, Nebraska. In 1917, the Henningson Engineering Company started as a civil engineering firm in Omaha.",
+      "subquestion": "For HDR Engineering (one of the contractors in the intersection of nodes 2-5), where is it based and in what year did the company start?",
+      "answer": "Omaha, Nebraska; 1917"
+    },
+    "7": {
+      "source": "wikipedia/Jacobs_Solutions/content.txt",
+      "fact": "Jacobs Engineering was founded in 1947, by Joseph J. Jacobs.",
+      "subquestion": "For Jacobs Engineering Group, in what year was it founded?",
+      "answer": "1947"
+    },
+    "8": {
+      "source": "wikipedia/HNTB/content.txt",
+      "fact": "HNTB Corporation is an American architectural and infrastructure design firm. Founded in 1914 in Kansas City, Missouri.",
+      "subquestion": "For HNTB Corporation, in what year was it founded?",
+      "answer": "1914"
+    },
+    "9": {
+      "source": "datagov/active-construction-projects/files/rows.txt",
+      "fact": "As of the March 2023 NY State active construction projects snapshot, Jacobs Project Management Co. served as Construction Manager on 3 projects. Neither HDR Engineering nor HNTB Corporation appear as Construction Manager on any projects.",
+      "subquestion": "Of the three engineering contractors in the intersection, which have zero NY State construction manager projects?",
+      "answer": [
+        "HDR Engineering, Inc.",
+        "HNTB Corporation"
+      ]
+    },
+    "10": {
+      "source": "wikipedia/Omaha,_Nebraska/content.txt",
+      "fact": "Omaha's pioneer period began in 1854, when the city was founded along the Missouri River. Logan Fontenelle, an interpreter for the Omaha Tribe, was important during the United States negotiations with Omaha leaders in 1853-1854 about ceding land to the United States prior to settlement.",
+      "subquestion": "In the city where HDR is based (Omaha), which Native American interpreter helped negotiate the land cession?",
+      "answer": "Logan Fontenelle"
+    },
+    "11": {
+      "source": "wikipedia/Logan_Fontenelle/content.txt",
+      "fact": "Logan Fontenelle (May 6, 1825 – July 16, 1855) was a trader of Omaha and French ancestry who served as an interpreter during the 1853-1854 land cession negotiations.",
+      "subquestion": "In what year was <node_10 answer> born?",
+      "answer": "1825"
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=1, data.gov year derivation - node 1):",
+    "  Node 1: NYC PM2.5 highest 2017-2022 is 2017",
+    "",
+    "HOP 2 (d=4, data.gov agency contracts - nodes 2-5):",
+    "  Node 2: Top 20 contractors in WA State FY 2017 -> includes HDR, Jacobs, HNTB",
+    "  Node 3: Top 20 contractors in WA State FY 2018 -> includes HDR, Jacobs, HNTB",
+    "  Node 4: Top 20 contractors in WA State FY 2019 -> includes HDR, Jacobs, HNTB",
+    "  Node 5: Top 20 contractors in WA State FY 2020 -> includes HDR, Jacobs, HNTB",
+    "  Intersection: {Jacobs Engineering, HNTB Corporation, HDR Engineering}",
+    "",
+    "HOP 3 (d=4, company founding/NY projects - nodes 6-9):",
+    "  Node 6: HDR based in Omaha, started 1917",
+    "  Node 7: Jacobs founded in 1947",
+    "  Node 8: HNTB founded in 1914",
+    "  Node 9: Zero NY CM projects -> {HDR, HNTB}",
+    "  Founded after 1914 AND zero CM projects -> {HDR Engineering}",
+    "",
+    "HOP 4 (d=1, Wikipedia Omaha - node 10):",
+    "  Node 10: Logan Fontenelle helped negotiate land cession",
+    "",
+    "HOP 5 (d=1, Wikipedia Logan Fontenelle - node 11):",
+    "  Node 11: Logan Fontenelle was born in 1825",
+    "",
+    "Final answer: 1825"
+  ],
+  "datasets_used": [
+    "air-quality",
+    "agency-contracts-fiscal-year-2017",
+    "agency-contracts-fiscal-year-2018",
+    "agency-contracts-fiscal-year-2019",
+    "agency-contracts-fiscal-year-2020",
+    "HDR,_Inc.",
+    "Jacobs_Solutions",
+    "HNTB",
+    "active-construction-projects",
+    "Omaha,_Nebraska",
+    "Logan_Fontenelle"
+  ]
+}

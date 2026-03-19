@@ -1,0 +1,71 @@
+{
+  "question": "I'm researching crime trends starting in the D.C. ward that contains the NoMa neighborhood. What was the most frequent offense there in 2018? Then, identify which ward saw the highest number of that specific crime in 2019. For that new ward, find its most common offense in the year (within 2017-2022) with the lowest total traffic volume reported by the New York City Department of Transportation, and tell me the total number of incidents of that offense recorded across the city in 2021. Only report the total number in your response. Your response should be in the format [Answer].",
+  "answer": "10890",
+  "nodes": {
+    "1": {
+      "source": "wikipedia/NoMa/content.txt",
+      "fact": "NoMa is a neighborhood in Ward 6 of Washington, D.C.",
+      "subquestion": "NoMa is a neighborhood in which Washington, D.C. ward?",
+      "answer": "6"
+    },
+    "2": {
+      "source": "datagov/crime-incidents-in-2018/v1/files/data.csv",
+      "fact": "Filter to WARD = 6 in 2018 and group by OFFENSE; the most common offense is THEFT/OTHER (2,238; no tie observed). This identifies the top offense in that ward.",
+      "subquestion": "In 2018, within Ward <node_1 answer>, which offense is most common?",
+      "answer": "THEFT/OTHER"
+    },
+    "3": {
+      "source": "datagov/crime-incidents-in-2019/v1/files/data.csv",
+      "fact": "Filter to OFFENSE = 'THEFT/OTHER' in 2019 and group by WARD; Ward 2 has the most incidents (4,118; no tie observed). This identifies the top ward for that offense.",
+      "subquestion": "In 2019, which ward has the most <node_2 answer> incidents?",
+      "answer": "2"
+    },
+    "4": {
+      "source": "datagov/automated-traffic-volume-counts/files/rows.txt",
+      "fact": "Summing Vol by Yr for 2017-2022, the minimum total is 4497946 in 2020.",
+      "subquestion": "Which year from 2017-2022 has the lowest total traffic volume reported by the New York City Department of Transportation?",
+      "answer": "2020"
+    },
+    "5": {
+      "source": "datagov/crime-incidents-in-2020/v1/files/data.csv",
+      "fact": "Filter to WARD = <node_3 answer> in 2020 and group by OFFENSE; THEFT/OTHER is most common (2,443; no tie observed). This identifies the top offense in that ward.",
+      "subquestion": "In <node_4 answer>, within Ward <node_3 answer>, which offense is most common?",
+      "answer": "THEFT/OTHER"
+    },
+    "6": {
+      "source": "datagov/crime-incidents-in-2021/v1/files/data.csv",
+      "fact": "Filter to OFFENSE = <node_5 answer> in 2021; count incidents; the total is 10,890. This provides the 2021 incident count for that offense.",
+      "subquestion": "In 2021, how many incidents had OFFENSE = <node_5 answer>?",
+      "answer": "10890"
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=1, Wikipedia - node 1):",
+    "  Node 1: Wikipedia -> NoMa is a neighborhood in Ward 6 of Washington, D.C.",
+    "",
+    "HOP 2 (d=1, data.gov - node 2 depends on node 1):",
+    "  Node 2: Crime incidents 2018 within Ward 6 -> Top offense is THEFT/OTHER (2,238 incidents)",
+    "",
+    "HOP 3 (d=1, data.gov - node 3 depends on node 2):",
+    "  Node 3: Crime incidents 2019 for THEFT/OTHER -> Top ward is 2 (4,118 incidents)",
+    "",
+    "HOP 4 (d=1, data.gov year derivation - node 4):",
+    "  Node 4: NYC automated traffic volume data -> Lowest traffic volume (2017-2022) is 2020",
+    "",
+    "HOP 5 (d=1, data.gov - node 5 depends on nodes 3 and 4):",
+    "  Node 5: Crime incidents 2020 within Ward 2 -> Top offense is THEFT/OTHER (2,443 incidents)",
+    "",
+    "HOP 6 (d=1, data.gov - node 6 depends on node 5):",
+    "  Node 6: Crime incidents 2021 for THEFT/OTHER -> 10,890 total incidents",
+    "",
+    "Final answer: 10890"
+  ],
+  "datasets_used": [
+    "NoMa",
+    "crime-incidents-in-2018",
+    "crime-incidents-in-2019",
+    "automated-traffic-volume-counts",
+    "crime-incidents-in-2020",
+    "crime-incidents-in-2021"
+  ]
+}

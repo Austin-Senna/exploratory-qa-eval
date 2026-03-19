@@ -1,0 +1,93 @@
+{
+  "question": "First, find the only 4-digit year common to these three lists: (1) years up to 2020 mentioned exactly once in the greater white-fronted goose predicted habitat data (CWHR), (2) years mentioned exactly three times in the Deepwater CTD records, and (3) years mentioned exactly once in the C-HARM 2-day forecast 2018-2022 data. Identify the host city for that year's Games in the list of Olympic luge venues. Next, count how many times that city name appears in the list of Olympic biathlon venues and call this count M. Calculate r as the remainder of M divided by 5, plus 1. In the History of RNA Biology article, find t, which is 1 plus the number of distinct month names mentioned at least r times. Now, using the Alaska infrastructure corridors records, let A be the number of distinct month names mentioned exactly t times. Using the Dauphin Island habitat records, let B be the number of distinct 4-digit years mentioned exactly t times. Finally, calculate the absolute difference between: (1) the number of distinct 4-digit years mentioned at least (A + B + 1) times in the Badlands vegetation composition and management data, and (2) the number of distinct 4-digit years mentioned at least t times in the Kalamazoo River between Trowbridge Dam and Allegan reaches records.",
+  "answer": 7,
+  "nodes": {
+    "1": {
+      "source": "datagov/greater-white-fronted-goose-predicted-habitat-cwhr-b070-ds2050-5cf27/files/CWHR.txt",
+      "fact": "The distinct 4-digit years up to 2020 (inclusive) mentioned exactly 1 times are ['1995', '2002', '2005', '2007', '2019'].",
+      "subquestion": "Which distinct 4-digit years up to 2020 (inclusive) are mentioned exactly 1 times? Return the full set as a list.",
+      "answer": [
+        "1995",
+        "2002",
+        "2005",
+        "2007",
+        "2019"
+      ]
+    },
+    "2": {
+      "source": "datagov/deepwater-ctd-5_06_054-ctd-nc-26-23n-92-83w-1993-05-311/files/deepwater_5_06_054_ctd-zYzfMg.txt",
+      "fact": "The distinct 4-digit years mentioned exactly 3 times are ['1993', '2002'].",
+      "subquestion": "Which distinct 4-digit years are mentioned exactly 3 times? Return the full set as a list.",
+      "answer": [
+        "1993",
+        "2002"
+      ]
+    },
+    "3": {
+      "source": "datagov/c-harm-v1-2-day-forecast-pseudo-nitzschia-cellular-domoic-acid-and-particular-domoic-2018-2022/files/charmForecast2day-eLoyuw.txt",
+      "fact": "The distinct 4-digit years mentioned exactly 1 times are ['2002', '2008', '2009', '2011'].",
+      "subquestion": "Which distinct 4-digit years are mentioned exactly 1 times? Return the full set as a list.",
+      "answer": [
+        "2002",
+        "2008",
+        "2009",
+        "2011"
+      ]
+    },
+    "4": {
+      "source": "wikipedia/List_of_Olympic_venues_in_luge/content.txt",
+      "fact": "The only year shared by the three year lists is 2002. In the list of Olympic venues in luge, the Games entry for 2002 lists the host city as Salt Lake City.",
+      "subquestion": "In the list of Olympic venues in luge, focus on the Games entry whose 4-digit year is the only year that appears in each of <node_1 answer>, <node_2 answer>, and <node_3 answer>. From that Games entry, return the host city name (the part after the year, stopping before any comma or parenthesis).",
+      "answer": "Salt Lake City"
+    },
+    "5": {
+      "source": "wikipedia/List_of_Olympic_venues_in_biathlon/content.txt",
+      "fact": "In the list of Olympic venues in biathlon, the city name Salt Lake City appears 1 times.",
+      "subquestion": "In the list of Olympic venues in biathlon, how many times does the city name <node_4 answer> appear?",
+      "answer": 1
+    },
+    "6": {
+      "source": "wikipedia/History_of_RNA_biology/content.txt",
+      "fact": "In History of RNA biology, r = (1 mod 5) + 1 = 2. There are 1 distinct month names mentioned at least r times, so t = 2.",
+      "subquestion": "Let r be the remainder when dividing <node_5 answer> by 5, plus 1. Let t be 1 plus the number of distinct month names (January-December) that are mentioned at least r times. What is t?",
+      "answer": 1
+    },
+    "7": {
+      "source": "datagov/high-resolution-lidar-data-for-infrastructure-corridors-healy-quadrangle-alaska25/files/22722.txt",
+      "fact": "There are 1 distinct month names mentioned exactly 2 times.",
+      "subquestion": "How many distinct month names (January-December) are mentioned exactly <node_6 answer> times?",
+      "answer": 0
+    },
+    "8": {
+      "source": "datagov/modeling-barrier-island-habitats-using-landscape-position-information-for-dauphin-island-a/files/USGS.5c978f74e4b0b8a7f62884e5.txt",
+      "fact": "There are 4 distinct 4-digit years mentioned exactly 2 times.",
+      "subquestion": "How many distinct 4-digit years are mentioned exactly <node_6 answer> times?",
+      "answer": 2
+    },
+    "9": {
+      "source": "datagov/vegetation-composition-and-management-action-data-2015-2020-from-experimental-plots-at-bad/files/USGS.61044863d34ef8d705604825.txt",
+      "fact": "There are 4 distinct 4-digit years mentioned at least 6 times.",
+      "subquestion": "How many distinct 4-digit years are mentioned at least (<node_7 answer> + <node_8 answer> + 1) times?",
+      "answer": 6
+    },
+    "10": {
+      "source": "datagov/channel-hydrogeomorphic-units-for-kalamazoo-river-reference-reaches-between-trowbridge-dam/files/USGS.65b7045ad34e36a39045b1c0.txt",
+      "fact": "There are 11 distinct 4-digit years mentioned at least 2 times.",
+      "subquestion": "How many distinct 4-digit years are mentioned at least <node_6 answer> times?",
+      "answer": 14
+    }
+  },
+  "reasoning_chain": [
+    "Node 1: derive the first year list.",
+    "Node 2: derive the second year list.",
+    "Node 3: derive the third year list.",
+    "Node 4 depends on nodes 1-3: intersect the three lists to get year Y, then read the host city for that Games entry.",
+    "Node 5 depends on node 4: count host-city name occurrences in a second Olympic-venues list.",
+    "Node 6 depends on node 5: compute t from month-name counts using r = (M mod 5) + 1.",
+    "Node 7 depends on node 6: count month names mentioned exactly t times.",
+    "Node 8 depends on node 6: count 4-digit years mentioned exactly t times.",
+    "Node 9 depends on nodes 7-8: count 4-digit years mentioned at least (A + B + 1) times.",
+    "Node 10 depends on node 6: count 4-digit years mentioned at least t times.",
+    "Final answer: |6 - 14| = 8."
+  ]
+}

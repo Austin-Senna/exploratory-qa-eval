@@ -1,0 +1,121 @@
+{
+  "original_question": "A 'year mention' means any standalone 4-digit number from 1600 to 2099, counted every time it appears. From the first five year lists, find the only year Y that appears in all five. Let S be the sum of the five list lengths. In Environmental, social and governance, compute r = ((M + S) mod 5) + 1 where M is the number of times Y is mentioned. In Unilever, let B be the number of distinct years mentioned at least r times, and set u = (B mod 10) + 1. In Circular economy, let C be the number of distinct years mentioned exactly u times. Let t be max(1, C). In the next part compute D (years mentioned at least t times). In the following part compute E (years mentioned at least (D + r + 1) times). In the final part, return the number of distinct years mentioned exactly max(1, E) times. Answer as: [integer].",
+  "question": "I'm working on a data analysis project and need your help looking through several reports. First, identify 4-digit years (1600–2099) in these five sources: 1) IT contracts report (at least 2139 mentions), 2) Connecticut business filing history (2016–2019, at least 108 mentions), 3) PPP loans in Los Angeles (2016–2018, at least 53 mentions), 4) CBP water quality monitoring (2016–2019, exactly 5 times), and 5) Maryland solid waste land management records (2013–2016, at least 48 times). Please identify the single year shared by all five lists and calculate the total sum of the lengths of those five lists. Next, in the 'Environmental, social and governance' article, count how many times that common year appears. Use that count and the total list sum to find the remainder when divided by 5, then add 1 to get a value 'r'. In the 'Unilever' article, find B, the number of distinct years that appear at least 'r' times, and set u = (B mod 10) + 1. Then, in 'Circular economy', find C, the number of years that appear exactly u times. Let t = max(1, C). Use this result to find how many years in the 2020 Brooke County topological records appear at least t times and let this be D. Then, compute E, the number of distinct years mentioned at least (D + r + 1) times in the District government agency data to find a final threshold. Using that threshold (or 1 if the threshold is 0), tell me how many years in the hazardous waste manifest dataset are mentioned exactly that many times.",
+  "answer": 10,
+  "nodes": {
+    "1": {
+      "source": "datagov/it-contracts-report-2019/files/rows.txt",
+      "fact": "The distinct 4-digit calendar years (1600–2099) that are mentioned at least 2139 times are ['2016', '2017', '2018', '2019'].",
+      "subquestion": "Which distinct 4-digit calendar years (1600–2099) are mentioned at least 2139 times? Return the full set as a list.",
+      "answer": [
+        "2016",
+        "2017",
+        "2018",
+        "2019"
+      ]
+    },
+    "2": {
+      "source": "datagov/connecticut-business-registry-business-filing-history/files/data.txt",
+      "fact": "The distinct 4-digit calendar years from 2016 to 2019 (inclusive) that are mentioned at least 108 times are ['2016', '2017', '2018', '2019'].",
+      "subquestion": "Which distinct 4-digit calendar years from 2016 to 2019 (inclusive) are mentioned at least 108 times? Return the full set as a list.",
+      "answer": [
+        "2016",
+        "2017",
+        "2018",
+        "2019"
+      ]
+    },
+    "3": {
+      "source": "datagov/ppp-loans-in-the-city-of-los-angeles/files/data.txt",
+      "fact": "The distinct 4-digit calendar years from 2016 to 2018 (inclusive) that are mentioned at least 53 times are ['2016', '2017', '2018'].",
+      "subquestion": "Which distinct 4-digit calendar years from 2016 to 2018 (inclusive) are mentioned at least 53 times? Return the full set as a list.",
+      "answer": [
+        "2016",
+        "2017",
+        "2018"
+      ]
+    },
+    "4": {
+      "source": "datagov/cbp-water-quality-monitoring-subset-1984-2018-wt5-1/files/cbp-water-quality-database-1984-present.txt",
+      "fact": "The distinct 4-digit calendar years from 2016 to 2019 (inclusive) that are mentioned exactly 5 times are ['2016', '2017', '2018', '2019'].",
+      "subquestion": "Which distinct 4-digit calendar years from 2016 to 2019 (inclusive) are mentioned exactly 5 times? Return the full set as a list.",
+      "answer": [
+        "2016",
+        "2017",
+        "2018",
+        "2019"
+      ]
+    },
+    "5": {
+      "source": "datagov/maryland-department-of-the-environment-land-management-administration-lma-solid-waste-prog-49e99/files/rows.txt",
+      "fact": "The distinct 4-digit calendar years from 2013 to 2016 (inclusive) that are mentioned at least 48 times are ['2013', '2014', '2015', '2016'].",
+      "subquestion": "Which distinct 4-digit calendar years from 2013 to 2016 (inclusive) are mentioned at least 48 times? Return the full set as a list.",
+      "answer": [
+        "2013",
+        "2014",
+        "2015",
+        "2016"
+      ]
+    },
+    "6": {
+      "source": "wikipedia/Environmental,_social_and_governance/content.txt",
+      "fact": "The only year shared by the five year lists is 2016. In Environmental, social and governance, 2016 appears 0 times, the five list-lengths sum to 19, and r = ((0 + 19) mod 5) + 1 = 5.",
+      "subquestion": "Using the five year lists <node_1 answer>, <node_2 answer>, <node_3 answer>, <node_4 answer>, and <node_5 answer>, find the only 4-digit year that appears in all five lists (call it Y). Let S be the sum of the five list lengths. In Environmental, social and governance, count how many times Y is mentioned (M). Compute r = ((M + S) mod 5) + 1. What is r?",
+      "answer": 5
+    },
+    "7": {
+      "source": "wikipedia/Unilever/content.txt",
+      "fact": "In Unilever, with r = 5, there are 13 distinct 4-digit years (1600–2099) that appear at least r times.",
+      "subquestion": "In Unilever, how many distinct 4-digit years (1600–2099) appear at least <node_6 answer> times?",
+      "answer": 13
+    },
+    "8": {
+      "source": "wikipedia/Circular_economy/content.txt",
+      "fact": "In Circular economy, with u = (13 mod 10) + 1 = 4, there are 0 distinct 4-digit years (1600–2099) that appear exactly u times.",
+      "subquestion": "Let u = (<node_7 answer> mod 10) + 1. In Circular economy, how many distinct 4-digit years (1600–2099) appear exactly u times?",
+      "answer": 0
+    },
+    "9": {
+      "source": "datagov/tiger-line-shapefile-2020-county-brooke-county-wv-topological-faces-polygons-with-all-geocodes/files/tl_2020_faces.shp.ea.iso.txt",
+      "fact": "With t = max(1, 0) = 1, there are 4 distinct 4-digit years (1600–2099) that appear at least t times.",
+      "subquestion": "Let t = max(1, <node_8 answer>). How many distinct 4-digit calendar years (1600–2099) appear at least t times?",
+      "answer": 4
+    },
+    "10": {
+      "source": "datagov/district-government-agencies/files/data.txt",
+      "fact": "With threshold = 4 + 5 + 1 = 10, there are 0 distinct 4-digit years (1600–2099) that appear at least threshold times.",
+      "subquestion": "Let threshold = <node_9 answer> + <node_6 answer> + 1. How many distinct 4-digit calendar years (1600–2099) appear at least threshold times?",
+      "answer": 0
+    },
+    "11": {
+      "source": "datagov/hazardous-waste-manifest-data-ct-1984-2008/files/data.txt",
+      "fact": "With v = max(1, 0) = 1, there are 10 distinct 4-digit years (1600–2099) that appear exactly v times.",
+      "subquestion": "Let v = max(1, <node_10 answer>). How many distinct 4-digit calendar years (1600–2099) appear exactly v times?",
+      "answer": 10
+    }
+  },
+  "reasoning_chain": [
+    "Node 1–5: each yields a year list defined by its year-list condition.",
+    "Node 6 depends on nodes 1–5: intersect the five lists to get the unique shared year Y; let S be the sum of the five list lengths; count Y in the first Wikipedia entry as M; compute r = ((M + S) mod 5) + 1.",
+    "Node 7 depends on node 6: count distinct years with frequency ≥ r in the second Wikipedia entry (B).",
+    "Node 8 depends on node 7: with u = (B mod 10) + 1, count distinct years with frequency = u in the third Wikipedia entry (C).",
+    "Node 9 depends on node 8: with t = max(1, C), count distinct years with frequency ≥ t (D).",
+    "Node 10 depends on nodes 6 and 9: with threshold = D + r + 1, count distinct years with frequency ≥ threshold (E).",
+    "Node 11 depends on node 10: with v = max(1, E), count distinct years with frequency = v.",
+    "Final answer: 10."
+  ],
+  "verdict": "pass",
+  "datasets_used": [
+    "it-contracts-report-2019",
+    "connecticut-business-registry-business-filing-history",
+    "ppp-loans-in-the-city-of-los-angeles",
+    "cbp-water-quality-monitoring-subset-1984-2018-wt5-1",
+    "maryland-department-of-the-environment-land-management-administration-lma-solid-waste-prog-49e99",
+    "Environmental,_social_and_governance",
+    "Unilever",
+    "Circular_economy",
+    "tiger-line-shapefile-2020-county-brooke-county-wv-topological-faces-polygons-with-all-geocodes",
+    "district-government-agencies",
+    "hazardous-waste-manifest-data-ct-1984-2008"
+  ]
+}

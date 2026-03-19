@@ -1,0 +1,52 @@
+{
+  "question": "In the year before the program fiscal year (within 2017-2022) that has the highest total federal share obligated for funded projects under the Hazard Mitigation Assistance grant programs, find the geo area where the Los Angeles Police Department has reported the most Homicide arrests, then identify the most common crime code in that area of the same year, and report the number of incidents of that crime code that occurred in the same area in 2021. Your response should be in the format [Answer].",
+  "answer": "1740",
+  "nodes": {
+    "1": {
+      "source": "datagov/hazard-mitigation-assistance-projects/files/HazardMitigationAssistanceProjects.txt",
+      "fact": "Summing federalShareObligated by programFy for 2017-2022, the maximum total is 48932227.55 in 2020.",
+      "subquestion": "Which program fiscal year from 2017-2022 has the highest total federal share obligated for funded projects under the Hazard Mitigation Assistance grant programs? (Sum federalShareObligated by programFy and select the maximum.)",
+      "answer": "2020"
+    },
+    "2": {
+      "source": "datagov/arrest-data-from-2010-to-2019/v1/files/rows.csv",
+      "fact": "In <node_1 answer - 1>, the area with the most Homicide arrests is 77th Street (22 arrests).",
+      "subquestion": "In <node_1 answer - 1> arrest data, which area has the most Homicide arrests?",
+      "answer": "77th Street"
+    },
+    "3": {
+      "source": "datagov/crime-data-from-2010-to-2019/v1/files/rows.csv",
+      "fact": "In <node_1 answer - 1> crime data for 77th Street, the most common crime description is VEHICLE - STOLEN (1333 incidents).",
+      "subquestion": "In <node_1 answer - 1> crime data, within area <node_2 answer>, which crime description is most common?",
+      "answer": "VEHICLE - STOLEN"
+    },
+    "4": {
+      "source": "datagov/crime-data-from-2020-to-present/v1/files/rows.csv",
+      "fact": "In 2021 crime data, 77th Street has 1740 incidents with crime description VEHICLE - STOLEN.",
+      "subquestion": "In 2021 crime data, how many incidents of <node_3 answer> occurred in area <node_2 answer>?",
+      "answer": "1740"
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=1, data.gov year derivation - node 1):",
+    "  Node 1: FEMA Hazard Mitigation data -> Highest federal share obligated (2017-2022) is 2020",
+    "  Derived year: 2019 (2020-1) for nodes 2,3",
+    "",
+    "HOP 2 (d=1, data.gov - node 2 depends on node 1):",
+    "  Node 2: LAPD arrest data <node_1 answer - 1> -> 77th Street has most Homicide arrests (22)",
+    "",
+    "HOP 3 (d=1, data.gov - node 3 depends on nodes 1 and 2):",
+    "  Node 3: LAPD crime data <node_1 answer - 1> for 77th Street -> Most common description is VEHICLE - STOLEN (1333 incidents)",
+    "",
+    "HOP 4 (d=1, data.gov - node 4 depends on nodes 2 and 3):",
+    "  Node 4: LAPD crime data 2021 for 77th Street -> VEHICLE - STOLEN incidents = 1740",
+    "",
+    "Final answer: 1740"
+  ],
+  "datasets_used": [
+    "hazard-mitigation-assistance-projects",
+    "arrest-data-from-2010-to-2019",
+    "crime-data-from-2010-to-2019",
+    "crime-data-from-2020-to-present"
+  ]
+}

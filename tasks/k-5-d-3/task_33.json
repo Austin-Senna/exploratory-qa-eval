@@ -1,0 +1,46 @@
+{
+  "original_question": "A utilities analyst is linking several small signals. First, find the calendar year when the share of DWP power sourced from coal is lowest. In that same calendar year, find the largest quarterly value of “In-Basin Solar Installed (kW)”; call it Q. Define yearY = (coal-min year) + floor(Q/1000). In yearY, count how many energy-storage projects have Energy Storage System Size (kWac) strictly greater than Q/100; call this count N. In fiscal year FYNN (two digits; use a leading 0 if needed), record the agricultural transfer tax collected. Finally, define yearZ = 2000 + floor((tax collected)/10000). In yearZ, count how many agriculture-preservation programs have acreage strictly greater than (Q/100) + N. Answer as: [integer].",
+  "question": "Perform a multi-stage data audit linking energy and agricultural records. First, find the year with the lowest coal share in DWP power and identify the highest quarterly solar installation (kW) from that year. Use the thousands digit of that solar value to offset the original year, and in the resulting year, count energy storage projects larger than 1% of the solar capacity. Treat this count as a fiscal year identifier (e.g., 21 represents FY21) to retrieve the agricultural transfer tax. Finally, calculating a target year by adding the tax (scaled down by 10,000) to 2000, count how many agriculture preservation programs in that year had acreage exceeding the sum of the storage project count and 1% of the solar capacity.",
+  "answer": "6",
+  "nodes": {
+    "1": {
+      "source": "datagov/dwp-power-sourced-from-coal-chart/files/rows.txt",
+      "fact": "From 2008–2012, the lowest percent of DWP power sourced from coal occurs in 2012 (33%), and no other year is tied for lowest.",
+      "subquestion": "Which year has the lowest percent of DWP power sourced from coal?",
+      "answer": "2012"
+    },
+    "2": {
+      "source": "datagov/dwp-quarterly-cumulative-in-basin-solar-installments/files/rows.txt",
+      "fact": "Within calendar year 2012, the maximum quarterly “In-Basin Solar Installed (kW)” is 8258 (at Q1-2012), with no tie for maximum within that year.",
+      "subquestion": "Within calendar year <node_1 answer>, what is the maximum quarterly value of “In-Basin Solar Installed (kW)”?",
+      "answer": "8258"
+    },
+    "3": {
+      "source": "datagov/all-statewide-energy-storage-projects/files/rows.txt",
+      "fact": "Let Q = 8258 and yearY = 2012 + floor(8258/1000) = 2020. In yearY, the number of energy-storage projects with Energy Storage System Size (kWac) strictly greater than 8258/100 = 82.58 is 21.",
+      "subquestion": "Let Q = <node_2 answer> and define yearY = <node_1 answer> + floor(Q/1000). In yearY, how many energy-storage projects have Energy Storage System Size (kWac) strictly greater than (Q/100)?",
+      "answer": "21"
+    },
+    "4": {
+      "source": "datagov/agricultural-transfer-tax/files/rows.txt",
+      "fact": "In fiscal year FY21, the agricultural transfer tax collected is 177080.0.",
+      "subquestion": "Let N = <node_3 answer>. In fiscal year FYNN (two digits), what is the agricultural transfer tax collected?",
+      "answer": "177080"
+    },
+    "5": {
+      "source": "datagov/agriculture-preservation-acreage-programs/files/rows.txt",
+      "fact": "Let yearZ = 2000 + floor(177080/10000) = 2017 and threshold = (8258/100) + 21 = 103.58. In 2017, there are 6 programs with acreage strictly greater than 103.58.",
+      "subquestion": "Let Q = <node_2 answer> and N = <node_3 answer>. Define yearZ = 2000 + floor((<node_4 answer> / 10000)). In yearZ, how many agriculture-preservation programs have acreage strictly greater than (Q/100) + N?",
+      "answer": "6"
+    }
+  },
+  "reasoning_chain": [
+    "Node 1: coal share is lowest in 2012.",
+    "Node 2 depends on node 1: within 2012, the maximum quarterly in-basin solar installed is Q = 8258 kW.",
+    "Node 3 depends on nodes 1–2: yearY = 2012 + floor(8258/1000) = 2020; in 2020, the number of projects with size > 8258/100 is N = 21.",
+    "Node 4 depends on node 3: FYNN = FY21 has tax collected 177080.",
+    "Node 5 depends on nodes 2–4: yearZ = 2000 + floor(177080/10000) = 2017; threshold is 8258/100 + 21 = 103.58; the count of programs above that threshold in 2017 is 6.",
+    "Final answer: 6"
+  ],
+  "verdict" : "pass"
+}

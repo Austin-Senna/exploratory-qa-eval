@@ -1,0 +1,20 @@
+{
+  "question": "Which year from 2011-2016 has the lowest number of births in United States? Your response should be in the format [Answer].",
+  "answer": "2013",
+  "practical_motivation": "A demographer wants the lowest total birth year in the early 2010s.",
+  "nodes": {
+    "1": {
+      "source": "datagov/nchs-births-and-general-fertility-rates-united-states/files/rows.txt",
+      "fact": "For 2011-2016, the minimum Birth Number occurs in 2013 at 3932181.",
+      "subquestion": "Which year from 2011-2016 has the lowest number of births in United States? (Use Birth Number and select the minimum.)",
+      "answer": "2013"
+    }
+  },
+  "reasoning_chain": [
+    "Node 1: Which year from 2011-2016 has the lowest number of births? (Use Birth Number and select the minimum.) The answer is 2013.",
+    "Final answer: 2013"
+  ],
+  "datasets_used": [
+    "nchs-births-and-general-fertility-rates-united-states"
+  ]
+}

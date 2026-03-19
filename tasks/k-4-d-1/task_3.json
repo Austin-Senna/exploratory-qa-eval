@@ -1,0 +1,42 @@
+{
+  "question": "I’m interested in the northernmost borough of New York City. Within that borough, identify the NYPD precinct with the most shooting cases in 2021. Then, for that same borough and precinct, count how many shooting cases in 2022 occurred in the same location-position category as the most common (non-null) location-position category in complaint incidents reported by NYPD in 2021. Only report the 2022 count. Your response should be in the format [Answer].",
+  "answer": "64",
+  "nodes": {
+    "1": {
+      "source": "wikipedia/The_Bronx/content.txt",
+      "fact": "The Bronx is described as the northernmost of New York City\u2019s five boroughs.",
+      "subquestion": "Which New York City borough is described as the northernmost of the five boroughs?",
+      "answer": "BRONX"
+    },
+    "2": {
+      "source": "datagov/nypd-shooting-incident-data-historic/v1/files/rows.csv",
+      "fact": "In 2021, within borough BRONX, precinct 44 recorded the most shooting incidents (no ties observed within scope).",
+      "subquestion": "In the 2021 NYPD shooting incident data, within borough <node_1 answer>, which precinct recorded the most shooting incidents?",
+      "answer": "44"
+    },
+    "3": {
+      "source": "datagov/nypd-complaint-data-historic/v1/files/rows.csv",
+      "fact": "In 2021, within borough BRONX and precinct 44, the most common non-null complaint LOC_OF_OCCUR_DESC is INSIDE (no ties observed within scope).",
+      "subquestion": "In the 2021 NYPD complaint data, within borough <node_1 answer> and precinct <node_2 answer>, which non-null location description (LOC_OF_OCCUR_DESC) is most common?",
+      "answer": "INSIDE"
+    },
+    "4": {
+      "source": "datagov/nypd-shooting-incident-data-historic/v1/files/rows.csv",
+      "fact": "In 2022, within borough BRONX, there were 64 shooting incidents with LOC_OF_OCCUR_DESC = INSIDE.",
+      "subquestion": "In the 2022 NYPD shooting incident data, within borough <node_1 answer>, how many shooting incidents occurred with LOC_OF_OCCUR_DESC = <node_3 answer>?",
+      "answer": "64"
+    }
+  },
+  "reasoning_chain": [
+    "Node 1: From Wikipedia, identify the borough described as the northernmost of NYC\u2019s five boroughs -> BRONX.",
+    "Node 2 depends on node 1: Using borough BRONX as the filter, find the 2021 shooting-incident precinct with the most incidents -> 44.",
+    "Node 3 depends on nodes 1 and 2: Using the same borough (BRONX) and precinct (44), switch to 2021 complaint data to select a concrete, checkable location context via the most common non-null LOC_OF_OCCUR_DESC -> INSIDE.",
+    "Node 4 depends on nodes 1 and 3: Carry that LOC_OF_OCCUR_DESC value (INSIDE) into the 2022 shooting-incident data for the same borough and count matching incidents -> 64.",
+    "Final answer: 64."
+  ],
+  "datasets_used": [
+    "The_Bronx",
+    "nypd-complaint-data-historic",
+    "nypd-shooting-incident-data-historic"
+  ]
+}

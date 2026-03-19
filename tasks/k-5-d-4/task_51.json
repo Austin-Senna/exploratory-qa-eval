@@ -1,0 +1,92 @@
+{
+  "question": "Starting with the year from 2011-2016 when the lowest US births per state and extending 1 year forward to form a range, across Texas counties consistently in the top five for total SSO lunch serves during that range, identify the two with the largest percentage decreases in CACFP day care reimbursements from 2018-2019 to 2020-2021. Pick the one with higher average child center enrollment across 2018-2020. What is the county seat? Your response should be in the format [Answer].",
+  "answer": "Brownsville",
+  "nodes": {
+    "1": {
+      "source": "datagov/natality-2007-2022/files/rows.txt",
+      "fact": "For 2011-2016, lowest US births is in 2016.",
+      "subquestion": "Which year from 2011-2016 has lowest US births?",
+      "answer": "2016"
+    },
+    "2": {
+      "source": "datagov/summer-meal-programs-seamless-summer-option-sso-meal-count-information-program-period-2016/files/rows.txt",
+      "fact": "Top 5 SSO lunch: Harris, Hidalgo, Dallas, Cameron, El Paso.",
+      "subquestion": "Top 5 SSO lunch counties in <node_1 answer>-<node_1 answer>+1 school year?",
+      "answer": [
+        "Harris",
+        "Hidalgo",
+        "Dallas",
+        "Cameron",
+        "El Paso"
+      ]
+    },
+    "3": {
+      "source": "datagov/summer-meal-programs-seamless-summer-option-sso-meal-count-information-program-period-2017/files/rows.txt",
+      "fact": "Top 5: Hidalgo, Harris, Dallas, Cameron, Bexar. Intersection: Harris, Hidalgo, Dallas, Cameron.",
+      "subquestion": "Top 5 SSO lunch counties in <node_1 answer>+1 school year?",
+      "answer": [
+        "Hidalgo",
+        "Harris",
+        "Dallas",
+        "Cameron",
+        "Bexar"
+      ]
+    },
+    "4": {
+      "source": "datagov/child-and-adult-care-food-programs-cacfp-day-care-homes-meal-reimbursement-program-ye-2018/files/rows.txt",
+      "fact": "2018-19 reimbursements: Hidalgo $1.2M, Cameron $392k.",
+      "subquestion": "CACFP reimbursements 2018-19 for intersection?",
+      "answer": {
+        "Hidalgo": 1202699.73,
+        "Cameron": 392489.51
+      }
+    },
+    "5": {
+      "source": "datagov/child-and-adult-care-food-programs-cacfp-day-care-homes-meal-reimbursement-program-ye-2020/files/rows.txt",
+      "fact": "2020-21: Hidalgo -19.26%, Cameron -15.92% (largest decreases).",
+      "subquestion": "Which had largest % decreases?",
+      "answer": [
+        "Hidalgo",
+        "Cameron"
+      ]
+    },
+    "6": {
+      "source": "datagov/child-and-adult-care-food-program-cacfp-child-centers-meal-reimbursement-program-year-2018/files/rows.txt",
+      "fact": "Cameron 7,620,183; Hidalgo 1,661,128.",
+      "subquestion": "Child center enrollment 2018-19?",
+      "answer": {
+        "Cameron": 7620183,
+        "Hidalgo": 1661128
+      }
+    },
+    "7": {
+      "source": "datagov/child-and-adult-care-food-program-cacfp-child-centers-meal-reimbursement-program-year-2019/files/rows.txt",
+      "fact": "Cameron avg higher -> Cameron County.",
+      "subquestion": "Which has higher average enrollment?",
+      "answer": "Cameron"
+    },
+    "8": {
+      "source": "wikipedia/Cameron_County,_Texas/content.txt",
+      "fact": "Cameron County's county seat is Brownsville.",
+      "subquestion": "What is Cameron County's county seat?",
+      "answer": "Brownsville"
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=1): US births lowest 2011-2016 is 2016",
+    "HOP 2 (d=2): SSO lunch 2016-2017 intersection",
+    "HOP 3 (d=2): CACFP largest decreases → Hidalgo, Cameron",
+    "HOP 4 (d=2): Cameron has higher enrollment → Brownsville",
+    "Final answer: Brownsville"
+  ],
+  "datasets_used": [
+    "natality-2007-2022",
+    "summer-meal-programs-seamless-summer-option-sso-meal-count-information-program-period-2016",
+    "summer-meal-programs-seamless-summer-option-sso-meal-count-information-program-period-2017",
+    "child-and-adult-care-food-programs-cacfp-day-care-homes-meal-reimbursement-program-ye-2018",
+    "child-and-adult-care-food-programs-cacfp-day-care-homes-meal-reimbursement-program-ye-2020",
+    "child-and-adult-care-food-program-cacfp-child-centers-meal-reimbursement-program-year-2018",
+    "child-and-adult-care-food-program-cacfp-child-centers-meal-reimbursement-program-year-2019",
+    "Cameron_County,_Texas"
+  ]
+}

@@ -1,0 +1,89 @@
+{
+  "question": "Starting with the year during 2017-2022 that saw the lowest RGRTA ridership and extending 3 years back, find the city where MoDOT's Southwest district is based and the highway born there. Between that highway's terminus cities, which had higher binge drinking in both 2016 and 2018? For that city, what is the 2025 starting salary for the department with highest overtime from 2014-2017? Your response should be in the format [Answer].",
+  "answer": "61782",
+  "nodes": {
+    "1": {
+      "source": "datagov/rgrta-ridership-fixed-route-system/files/rows.txt",
+      "fact": "For 2017-2022, lowest RGRTA ridership is in 2021.",
+      "subquestion": "Which year from 2017-2022 has lowest RGRTA ridership?",
+      "answer": "2021"
+    },
+    "2": {
+      "source": "wikipedia/Missouri_Department_of_Transportation/content.txt",
+      "fact": "Southwest district is in Springfield.",
+      "subquestion": "Where is MoDOT Southwest district?",
+      "answer": "Springfield"
+    },
+    "3": {
+      "source": "wikipedia/Springfield,_Missouri/content.txt",
+      "fact": "Route 66 runs Chicago to Los Angeles.",
+      "subquestion": "What highway was born in Springfield?",
+      "answer": [
+        "Chicago",
+        "Los Angeles"
+      ]
+    },
+    "4": {
+      "source": "datagov/500-cities-local-data-for-better-health-2016-release/files/rows.txt",
+      "fact": "Chicago 20.1% > LA 15.9%.",
+      "subquestion": "Which had higher binge drinking in 2016?",
+      "answer": "Chicago"
+    },
+    "5": {
+      "source": "datagov/500-cities-local-data-for-better-health-2018-release/files/rows.txt",
+      "fact": "Chicago 21.5% > LA 16.7%.",
+      "subquestion": "Which had higher in 2018?",
+      "answer": "Chicago"
+    },
+    "6": {
+      "source": "datagov/employee-overtime-and-supplemental-earnings-2014/files/rows.txt",
+      "fact": "Police had highest overtime.",
+      "subquestion": "Which department had highest overtime?",
+      "answer": "Police"
+    },
+    "7": {
+      "source": "datagov/employee-overtime-and-supplemental-earnings-2015/files/rows.txt",
+      "fact": "Police highest.",
+      "subquestion": "Highest in 2015?",
+      "answer": "Police"
+    },
+    "8": {
+      "source": "datagov/employee-overtime-and-supplemental-earnings-2016/files/rows.txt",
+      "fact": "Police highest.",
+      "subquestion": "Highest in 2016?",
+      "answer": "Police"
+    },
+    "9": {
+      "source": "datagov/employee-overtime-and-supplemental-earnings-2017/files/rows.txt",
+      "fact": "Police highest all years.",
+      "subquestion": "Highest in 2017?",
+      "answer": "Police"
+    },
+    "10": {
+      "source": "wikipedia/Chicago_Police_Department/content.txt",
+      "fact": "Starting salary in 2025 is $61,782.",
+      "subquestion": "What is 2025 starting salary?",
+      "answer": "61782"
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=1): RGRTA lowest 2017-2022 is 2021",
+    "HOP 2 (d=2): MoDOT Springfield -> Route 66",
+    "HOP 3 (d=2): Chicago higher binge drinking",
+    "HOP 4 (d=4): Police highest overtime",
+    "HOP 5 (d=1): $61,782 starting salary",
+    "Final answer: 61782"
+  ],
+  "datasets_used": [
+    "rgrta-ridership-fixed-route-system",
+    "Missouri_Department_of_Transportation",
+    "Springfield,_Missouri",
+    "500-cities-local-data-for-better-health-2016-release",
+    "500-cities-local-data-for-better-health-2018-release",
+    "employee-overtime-and-supplemental-earnings-2014",
+    "employee-overtime-and-supplemental-earnings-2015",
+    "employee-overtime-and-supplemental-earnings-2016",
+    "employee-overtime-and-supplemental-earnings-2017",
+    "Chicago_Police_Department"
+  ]
+}

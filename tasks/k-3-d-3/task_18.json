@@ -1,0 +1,101 @@
+{
+  "question": "Which Texas counties stayed in the top five for Capital Outlay spending in each year from two years before the year (within 2017-2022) with the lowest total ridership reported by the Rochester Genesee Regional Transportation Authority through that year, and also in the overall top five for TDCJ releases in each of those years? List the county names in alphabetical order separated by `, `. Your response should be in the format [Answer].",
+  "answer": "Bexar, Dallas, Harris",
+  "nodes": {
+    "1": {
+      "source": "datagov/rochester-genesee-regional-transportation-authority-rgrta-rider-volumes-beginning-2006/files/rows.txt",
+      "fact": "Summing Ridership across all subsidiaries by Year for 2017-2022, the minimum total is 7778388 in 2021.",
+      "subquestion": "Which year from 2017-2022 has the lowest total ridership reported by the Rochester Genesee Regional Transportation Authority? (Sum Ridership by Year across all subsidiaries and select the minimum.)",
+      "answer": "2021"
+    },
+    "2": {
+      "source": "datagov/texas-state-expenditures-by-county-2019/v1/files/rows.csv",
+      "fact": "According to Texas state expenditure data for fiscal year 2019 (<node_1 answer - 2>), the top 5 counties by Capital Outlay spending were: HARRIS ($222,408,956.01), TRAVIS ($130,659,552.92), DALLAS ($87,456,413.40), HARDIN ($44,254,637.81), and BEXAR ($32,102,175.63).",
+      "subquestion": "In fiscal year <node_1 answer - 2>, which Texas counties were in the top 5 for Capital Outlay spending? (Filter for this node: Major Spending Category == 'Capital Outlay'; group by County; sum Amount; normalize County to uppercase; rank desc; take top 5.)",
+      "answer": [
+        "Harris",
+        "Travis",
+        "Dallas",
+        "Hardin",
+        "Bexar"
+      ]
+    },
+    "3": {
+      "source": "datagov/texas-state-expenditures-by-county-2020/v1/files/rows.csv",
+      "fact": "According to Texas state expenditure data for fiscal year 2020 (<node_1 answer - 1>), the top 5 counties by Capital Outlay spending were: TRAVIS ($279,580,855.70), HARRIS ($182,107,791.26), DALLAS ($124,333,498.09), BEXAR ($96,531,261.46), and GRAYSON ($29,683,297.03).",
+      "subquestion": "In fiscal year <node_1 answer - 1>, which Texas counties were in the top 5 for Capital Outlay spending? (Filter for this node: Major Spending Category == 'Capital Outlay'; group by County; sum Amount; normalize County to uppercase; rank desc; take top 5.)",
+      "answer": [
+        "Travis",
+        "Harris",
+        "Dallas",
+        "Bexar",
+        "Grayson"
+      ]
+    },
+    "4": {
+      "source": "datagov/texas-state-expenditures-by-county-2021/v1/files/rows.csv",
+      "fact": "According to Texas state expenditure data for fiscal year 2021 (<node_1 answer>), the top 5 counties by Capital Outlay spending were: HARRIS ($339,910,977.18), TRAVIS ($171,854,028.76), DALLAS ($131,046,497.37), BEXAR ($104,956,196.72), and GUADALUPE ($49,356,346.09).",
+      "subquestion": "In fiscal year <node_1 answer>, which Texas counties were in the top 5 for Capital Outlay spending? (Filter for this node: Major Spending Category == 'Capital Outlay'; group by County; sum Amount; normalize County to uppercase; rank desc; take top 5.)",
+      "answer": [
+        "Harris",
+        "Travis",
+        "Dallas",
+        "Bexar",
+        "Guadalupe"
+      ]
+    },
+    "5": {
+      "source": "datagov/texas-department-of-criminal-justice-releases-fy-2019/v1/files/rows.csv",
+      "fact": "According to Texas DOC releases data for fiscal year 2019 (<node_1 answer - 2>), the overall top 5 counties by releases were Harris (9,029), Dallas (5,355), Tarrant (4,769), Bexar (4,545), and Hidalgo (1,861). Among the hop 1 counties, Harris, Dallas, and Bexar were in that top 5.",
+      "subquestion": "In fiscal year <node_1 answer - 2>, among the counties from hop 1, which were in the overall top 5 for DOC releases? (Filter for this node: count rows by County; normalize County to uppercase; rank desc; take top 5 overall; then keep counties in hop 1 list.)",
+      "answer": [
+        "Harris",
+        "Dallas",
+        "Bexar"
+      ]
+    },
+    "6": {
+      "source": "datagov/texas-department-of-criminal-justice-releases-fy-2020/v1/files/rows.csv",
+      "fact": "According to Texas DOC releases data for fiscal year 2020 (<node_1 answer - 1>), the overall top 5 counties by releases were Harris (7,059), Dallas (4,540), Tarrant (4,450), Bexar (3,917), and Travis (1,596). Among the hop 1 counties, Harris, Dallas, Bexar, and Travis were in that top 5.",
+      "subquestion": "In fiscal year <node_1 answer - 1>, among the counties from hop 1, which were in the overall top 5 for DOC releases? (Filter for this node: count rows by County; normalize County to uppercase; rank desc; take top 5 overall; then keep counties in hop 1 list.)",
+      "answer": [
+        "Harris",
+        "Dallas",
+        "Bexar",
+        "Travis"
+      ]
+    },
+    "7": {
+      "source": "datagov/texas-department-of-criminal-justice-releases-fy-2021/v1/files/rows.csv",
+      "fact": "According to Texas DOC releases data for fiscal year 2021 (<node_1 answer>), the overall top 5 counties by releases were Harris (5,210), Dallas (3,565), Tarrant (3,252), Bexar (3,236), and Hidalgo (1,147). Among the hop 1 counties, Harris, Dallas, and Bexar were in that top 5.",
+      "subquestion": "In fiscal year <node_1 answer>, among the counties from hop 1, which were in the overall top 5 for DOC releases? (Filter for this node: count rows by County; normalize County to uppercase; rank desc; take top 5 overall; then keep counties in hop 1 list.)",
+      "answer": [
+        "Harris",
+        "Dallas",
+        "Bexar"
+      ]
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=1, data.gov year derivation - node 1):",
+    "  Node 1: Year with lowest RGRTA ridership (2017-2022) -> 2021",
+    "  Derived year range: 2019-2021 (node_1 answer - 2 to node_1 answer)",
+    "",
+    "HOP 2 (d=3, data.gov - nodes 2-4):",
+    "  Nodes 2-4: Top 5 Capital Outlay counties 2019\u20132021 -> intersection {Harris, Travis, Dallas, Bexar}",
+    "",
+    "HOP 3 (d=3, data.gov - nodes 5-7 depend on hop 2):",
+    "  Nodes 5-7: Counties in top 5 DOC releases 2019\u20132021 -> intersection {Harris, Dallas, Bexar}",
+    "",
+    "Final answer: Bexar, Dallas, Harris"
+  ],
+  "datasets_used": [
+    "rochester-genesee-regional-transportation-authority-rgrta-rider-volumes-beginning-2006",
+    "texas-state-expenditures-by-county-2019",
+    "texas-state-expenditures-by-county-2020",
+    "texas-state-expenditures-by-county-2021",
+    "texas-department-of-criminal-justice-releases-fy-2019",
+    "texas-department-of-criminal-justice-releases-fy-2020",
+    "texas-department-of-criminal-justice-releases-fy-2021"
+  ]
+}

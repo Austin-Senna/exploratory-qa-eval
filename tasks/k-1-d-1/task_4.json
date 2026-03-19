@@ -1,0 +1,20 @@
+{
+  "question": "Which year from 2005-2010 has the highest average Bonus # in New York's lottery winning numbers? Your response should be in the format [Answer].",
+  "answer": "2005",
+  "practical_motivation": "A lottery analyst wants to see whether the bonus number distribution shifts year to year.",
+  "nodes": {
+    "1": {
+      "source": "datagov/lottery-ny-lotto-winning-numbers-beginning-2001/files/rows.txt",
+      "fact": "In the NY Lotto dataset, averaging Bonus # by draw year for 2005-2010, 2005 has the highest average at 33.59047619047619.",
+      "subquestion": "Which year from 2005-2010 has the highest average Bonus # in New York's lottery winning numbers? (Parse Draw Date to Year; compute the mean Bonus # by Year; select the maximum.)",
+      "answer": "2005"
+    }
+  },
+  "reasoning_chain": [
+    "Node 1: Compute the average Bonus # by year (2005-2010) and select the maximum; the peak year is 2005.",
+    "Final answer: 2005"
+  ],
+  "datasets_used": [
+    "lottery-ny-lotto-winning-numbers-beginning-2001"
+  ]
+}

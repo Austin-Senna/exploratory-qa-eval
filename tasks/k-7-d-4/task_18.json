@@ -1,0 +1,191 @@
+{
+  "question": "Find the Missouri state agency that ranked third in average spending from FY2007 to FY2010. Find the city the Southwest district of the agency is based and a highway that was born in the city. Between that highway's two terminus cities, which one had higher binge drinking rates in six years before the year (within 2020-2022) that has the highest total subway ridership in MTA and the year before the year (within 2017-2022) that has the highest total gasoline/gasohol sales across U.S. states? For that city, identify the department with the second-highest average overtime costs from 2014 to 2017 and state its founding year. Please return the year only. Your response should be in the format [Answer].",
+  "answer": "1858",
+  "nodes": {
+    "1": {
+      "source": "datagov/mta-daily-ridership-data-beginning-2020/files/rows.txt",
+      "fact": "Summing Subways: Total Estimated Ridership by year (from Date) for 2020-2022, the maximum total is 1012505879 in 2022.",
+      "subquestion": "Which year from 2020-2022 has the highest total subway ridership in MTA? (Use Date to derive year; sum Subways: Total Estimated Ridership by year and select the maximum.)",
+      "answer": "2022"
+    },
+    "2": {
+      "source": "datagov/monthly-motor-fuel-sales-reported-by-states-selected-data-from-fhwa-monthly-motor-fuel-rep/files/rows.txt",
+      "fact": "Filtering fuel_type = \"Gasoline/gasohol\" and summing value by year (from date) for 2017-2022, the maximum total is 294719877886 in 2019.",
+      "subquestion": "Which year from 2017-2022 has the highest total gasoline/gasohol sales across U.S. states? (Filter fuel_type == \"Gasoline/gasohol\"; derive year from date; sum value by year and select the maximum.)",
+      "answer": "2019"
+    },
+    "3": {
+      "source": "datagov/2007-state-expenditures/files/rows.txt",
+      "fact": "In FY2007 Missouri State Expenditures, the top 5 agencies by total expenditure were: SOCIAL SERVICES ($5,528,171,459.84), ELEMENTARY AND SECONDARY EDUCATION ($4,893,252,163.41), TRANSPORTATION ($1,922,237,354.88), HIGHER EDUCATION AND WORKFORCE DEV ($1,062,578,010.95), and MENTAL HEALTH ($759,892,459.14).",
+      "subquestion": "Which Missouri state agency had the 3rd highest average expenditure from FY2007-FY2010? (Filter for this node: Fiscal Year == 2007; group by Agency Name; sum Payments Total; rank by total; keep top 5.)",
+      "answer": {
+        "SOCIAL SERVICES": 5528171459.84,
+        "ELEMENTARY AND SECONDARY EDUCATION": 4893252163.41,
+        "TRANSPORTATION": 1922237354.88,
+        "HIGHER EDUCATION AND WORKFORCE DEV": 1062578010.95,
+        "MENTAL HEALTH": 759892459.14
+      }
+    },
+    "4": {
+      "source": "datagov/2008-state-expenditures/files/rows.txt",
+      "fact": "In FY2008 Missouri State Expenditures, the top 5 agencies by total expenditure were: SOCIAL SERVICES ($5,988,522,037.62), ELEMENTARY AND SECONDARY EDUCATION ($5,048,553,721.08), TRANSPORTATION ($1,786,534,604.37), HIGHER EDUCATION AND WORKFORCE DEV ($1,220,312,581.65), and MENTAL HEALTH ($813,799,778.73).",
+      "subquestion": "Which Missouri state agency had the 3rd highest average expenditure from FY2007-FY2010? (Filter for this node: Fiscal Year == 2008; group by Agency Name; sum Payments Total; rank by total; keep top 5.)",
+      "answer": {
+        "SOCIAL SERVICES": 5988522037.62,
+        "ELEMENTARY AND SECONDARY EDUCATION": 5048553721.08,
+        "TRANSPORTATION": 1786534604.37,
+        "HIGHER EDUCATION AND WORKFORCE DEV": 1220312581.65,
+        "MENTAL HEALTH": 813799778.73
+      }
+    },
+    "5": {
+      "source": "datagov/2009-state-expenditures/files/rows.txt",
+      "fact": "In FY2009 Missouri State Expenditures, the top 5 agencies by total expenditure were: SOCIAL SERVICES ($6,707,806,742.86), ELEMENTARY AND SECONDARY EDUCATION ($5,170,194,688.51), TRANSPORTATION ($2,000,940,522.19), HIGHER EDUCATION AND WORKFORCE DEV ($1,291,298,943.33), and MENTAL HEALTH ($877,438,429.19).",
+      "subquestion": "Which Missouri state agency had the 3rd highest average expenditure from FY2007-FY2010? (Filter for this node: Fiscal Year == 2009; group by Agency Name; sum Payments Total; rank by total; keep top 5.)",
+      "answer": {
+        "SOCIAL SERVICES": 6707806742.86,
+        "ELEMENTARY AND SECONDARY EDUCATION": 5170194688.51,
+        "TRANSPORTATION": 2000940522.19,
+        "HIGHER EDUCATION AND WORKFORCE DEV": 1291298943.33,
+        "MENTAL HEALTH": 877438429.19
+      }
+    },
+    "6": {
+      "source": "datagov/2010-state-expenditures/files/rows.txt",
+      "fact": "In FY2010 Missouri State Expenditures, the top 5 agencies by total expenditure were: SOCIAL SERVICES ($7,141,666,880.32), ELEMENTARY AND SECONDARY EDUCATION ($5,351,561,573.54), TRANSPORTATION ($2,144,139,919.08), HIGHER EDUCATION AND WORKFORCE DEV ($1,320,888,790.61), and MENTAL HEALTH ($921,056,914.52).",
+      "subquestion": "Which Missouri state agency had the 3rd highest average expenditure from FY2007-FY2010? (Filter for this node: Fiscal Year == 2010; group by Agency Name; sum Payments Total; rank by total; keep top 5.)",
+      "answer": {
+        "SOCIAL SERVICES": 7141666880.32,
+        "ELEMENTARY AND SECONDARY EDUCATION": 5351561573.54,
+        "TRANSPORTATION": 2144139919.08,
+        "HIGHER EDUCATION AND WORKFORCE DEV": 1320888790.61,
+        "MENTAL HEALTH": 921056914.52
+      }
+    },
+    "7": {
+      "source": "wikipedia/Missouri_Department_of_Transportation/content.txt",
+      "fact": "According to the Wikipedia article for Missouri Department of Transportation, 'MoDOT operates seven districts throughout the state: Northwest, based in St. Joseph; Northeast, based in Hannibal; Kansas City, based in Lee's Summit; Central, based in Jefferson City; St. Louis, based in Chesterfield; Southwest, based in Springfield; and Southeast, based in Sikeston.'",
+      "subquestion": "In which city is the Southwest district of the agency (from hop 2: TRANSPORTATION/MoDOT) based? (Lookup: find the district list and Southwest base city in the MoDOT article.)",
+      "answer": "Springfield"
+    },
+    "8": {
+      "source": "wikipedia/Springfield,_Missouri/content.txt",
+      "fact": "According to the Wikipedia article for Springfield, Missouri, 'Springfield's nicknames include \"Queen City of the Ozarks\" and \"The Birthplace of Route 66\"...Officially recognized as the birthplace of Route 66, it was in Springfield on April 30, 1926, that officials first proposed the name of the new Chicago-to-Los Angeles highway.'",
+      "subquestion": "What are the terminus cities of the highway that was born in the city (from hop 3: Springfield)? (Lookup: Springfield article line describing Route 66 as the Chicago-to-Los Angeles highway.)",
+      "answer": [
+        "Chicago",
+        "Los Angeles"
+      ]
+    },
+    "9": {
+      "source": "datagov/500-cities-local-data-for-better-health-2016-release/files/rows.txt",
+      "fact": "In the 500-Cities 2016 health data release, the binge drinking prevalence (city-level, crude) was: Chicago 20.1% and Los Angeles 15.9%. Chicago had higher binge drinking prevalence.",
+      "subquestion": "Which terminus city (from hop 4: Chicago or Los Angeles) had higher average binge drinking prevalence across the <node_1 answer - 6> and <node_2 answer - 1> 500-Cities health releases? (Filter for this node: Short_Question_Text == 'Binge Drinking'; GeographicLevel == 'City'; Data_Value_Type == 'Crude prevalence'; CityName in {Chicago, Los Angeles}; use Data_Value.)",
+      "answer": {
+        "Chicago": 20.1,
+        "Los Angeles": 15.9
+      }
+    },
+    "10": {
+      "source": "datagov/500-cities-local-data-for-better-health-2018-release/files/rows.txt",
+      "fact": "In the 500-Cities 2018 health data release, the binge drinking prevalence (city-level, crude) was: Chicago 21.5% and Los Angeles 16.7%. Chicago had higher binge drinking prevalence.",
+      "subquestion": "Which terminus city (from hop 4: Chicago or Los Angeles) had higher average binge drinking prevalence across the <node_1 answer - 6> and <node_2 answer - 1> 500-Cities health releases? (Filter for this node: Short_Question_Text == 'Binge Drinking'; GeographicLevel == 'City'; Data_Value_Type == 'Crude prevalence'; CityName in {Chicago, Los Angeles}; use Data_Value.)",
+      "answer": {
+        "Chicago": 21.5,
+        "Los Angeles": 16.7
+      }
+    },
+    "11": {
+      "source": "datagov/employee-overtime-and-supplemental-earnings-2014/files/rows.txt",
+      "fact": "In the 2014 Chicago Employee Overtime data, the top departments by total overtime were: Police ($101,460,132.24), Fire ($63,941,565.36), Water Management ($23,507,061.70). Fire had the 2nd highest.",
+      "subquestion": "Which city department had the 2nd highest total overtime from 2014-2017 in the city (from hop 5: Chicago)? (Filter for this node: group by DEPARTMENT NAME; sum TOTAL; rank by total; keep top departments.)",
+      "answer": {
+        "Police": 101460132.24,
+        "Fire": 63941565.36,
+        "Water Management": 23507061.7
+      }
+    },
+    "12": {
+      "source": "datagov/employee-overtime-and-supplemental-earnings-2015/files/rows.txt",
+      "fact": "In the 2015 Chicago Employee Overtime data, Fire had the 2nd highest overtime.",
+      "subquestion": "Which city department had the 2nd highest total overtime from 2014-2017 in the city (from hop 5: Chicago)?",
+      "answer": {
+        "Police": 116144553.32,
+        "Fire": 43847384.3,
+        "Water Management": 19954056.68
+      }
+    },
+    "13": {
+      "source": "datagov/employee-overtime-and-supplemental-earnings-2016/files/rows.txt",
+      "fact": "In the 2016 Chicago Employee Overtime data, Fire had the 2nd highest overtime.",
+      "subquestion": "Which city department had the 2nd highest total overtime from 2014-2017 in the city (from hop 5: Chicago)?",
+      "answer": {
+        "Police": 143032724.45,
+        "Fire": 50604010.67,
+        "Water Management": 21335912.52
+      }
+    },
+    "14": {
+      "source": "datagov/employee-overtime-and-supplemental-earnings-2017/files/rows.txt",
+      "fact": "In the 2017 Chicago Employee Overtime data, Fire had the 2nd highest overtime. Fire was consistently 2nd across all 4 years (2014-2017).",
+      "subquestion": "Which city department had the 2nd highest total overtime from 2014-2017 in the city (from hop 5: Chicago)?",
+      "answer": {
+        "Police": 156732988,
+        "Fire": 49571354,
+        "Water Management": 20049910
+      }
+    },
+    "15": {
+      "source": "wikipedia/Chicago_Fire_Department/content.txt",
+      "fact": "According to the Wikipedia article for Chicago Fire Department, 'The volunteer fire department was disestablished on August 2, 1858, when the city council passed the ordinance organizing the paid City of Chicago Fire Department.' The department was founded in 1858.",
+      "subquestion": "In what year was the department (from hop 6: Fire) founded? (Lookup: find the founding year statement in the Chicago Fire Department article.)",
+      "answer": "1858"
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=2, data.gov year derivation - nodes 1-2):",
+    "  Node 1: Year with highest MTA subway ridership (2020-2022) -> 2022; subtract 6 -> 2016",
+    "  Node 2: Year with highest gasoline/gasohol sales (2017-2022) -> 2019; subtract 1 -> 2018",
+    "  Derived years: 2016 and 2018",
+    "",
+    "HOP 2 (d=4, Missouri State Expenditures FY2007-FY2010 - nodes 3-6):",
+    "  Aggregation: TRANSPORTATION is 3rd highest by average expenditure",
+    "",
+    "HOP 3 (d=1, Wikipedia Missouri_Department_of_Transportation - node 7):",
+    "  Node 7: Southwest district is based in Springfield",
+    "",
+    "HOP 4 (d=1, Wikipedia Springfield,_Missouri - node 8):",
+    "  Node 8: Route 66 with termini Chicago and Los Angeles",
+    "",
+    "HOP 5 (d=2, 500-Cities Health Data 2016 and 2018 - nodes 9-10):",
+    "  Node 9: 2016 binge drinking - Chicago 20.1%, LA 15.9%",
+    "  Node 10: 2018 binge drinking - Chicago 21.5%, LA 16.7%",
+    "  Result: Chicago has higher binge drinking prevalence",
+    "",
+    "HOP 6 (d=4, Chicago Employee Overtime 2014-2017 - nodes 11-14):",
+    "  Fire is consistently #2 in all 4 years",
+    "  Result: Fire department",
+    "",
+    "HOP 7 (d=1, Wikipedia Chicago_Fire_Department - node 15):",
+    "  Node 15: Founded in 1858",
+    "",
+    "Final answer: 1858"
+  ],
+  "datasets_used": [
+    "mta-daily-ridership-data-beginning-2020",
+    "monthly-motor-fuel-sales-reported-by-states-selected-data-from-fhwa-monthly-motor-fuel-rep",
+    "2007-state-expenditures",
+    "2008-state-expenditures",
+    "2009-state-expenditures",
+    "2010-state-expenditures",
+    "500-cities-local-data-for-better-health-2016-release",
+    "500-cities-local-data-for-better-health-2018-release",
+    "Chicago_Fire_Department",
+    "Missouri_Department_of_Transportation",
+    "Springfield,_Missouri",
+    "employee-overtime-and-supplemental-earnings-2014",
+    "employee-overtime-and-supplemental-earnings-2015",
+    "employee-overtime-and-supplemental-earnings-2016",
+    "employee-overtime-and-supplemental-earnings-2017"
+  ]
+}

@@ -1,0 +1,127 @@
+{
+  "question": "Among NY counties with at least 65 bridges rated 'Poor', at least 50 fire departments, at least 100 bank ATMs, and at least 1.0 MW of operational renewable energy capacity, identify the counties that meet all criteria and their county seats. Between those counties, what is the higher number of violent crimes in 2021? Your response should be in the format [Answer].",
+  "answer": "3493",
+  "nodes": {
+    "1": {
+      "source": "datagov/bridge-conditions-nys-department-of-transportation/files/rows.txt",
+      "fact": "Per the NYS DOT Bridge Conditions dataset, NY counties with at least 65 bridges rated 'Poor': Ulster (84), Erie (82), Westchester (68), Orange (67).",
+      "subquestion": "Which NY counties have at least 65 bridges rated 'Poor' status?",
+      "answer": [
+        "Ulster County",
+        "Erie County",
+        "Westchester County",
+        "Orange County"
+      ]
+    },
+    "2": {
+      "source": "datagov/fire-department-directory-for-new-york-state/files/rows.txt",
+      "fact": "Per the NYS Fire Department Directory, NY counties with at least 50 fire departments: Suffolk (108), Erie (91), Nassau (70), Westchester (57), Onondaga (53), Orange (52), Ulster (51), Oneida (50).",
+      "subquestion": "Which NY counties have at least 50 fire departments?",
+      "answer": [
+        "Suffolk County",
+        "Erie County",
+        "Nassau County",
+        "Westchester County",
+        "Onondaga County",
+        "Orange County",
+        "Ulster County",
+        "Oneida County"
+      ]
+    },
+    "3": {
+      "source": "datagov/bank-owned-atm-locations-in-new-york-state/files/rows.txt",
+      "fact": "Per the NYS Bank-Owned ATM Locations dataset, NY counties with at least 100 bank ATMs: New York (676), Nassau (515), Suffolk (494), Queens (429), Kings (388), Westchester (335), Erie (244), Monroe (232), Onondaga (182), Bronx (158), Albany (148), Orange (128), Dutchess (125), Richmond (115). Ulster has only 76 ATMs.",
+      "subquestion": "Which NY counties have at least 100 bank ATMs?",
+      "answer": [
+        "New York County",
+        "Nassau County",
+        "Suffolk County",
+        "Queens County",
+        "Kings County",
+        "Westchester County",
+        "Erie County",
+        "Monroe County",
+        "Onondaga County",
+        "Bronx County",
+        "Albany County",
+        "Orange County",
+        "Dutchess County",
+        "Richmond County"
+      ]
+    },
+    "4": {
+      "source": "datagov/large-scale-renewable-projects-reported-by-nyserda-beginning-2004/files/rows.txt",
+      "fact": "Per the NYSERDA Large-Scale Renewable Projects dataset, NY counties with at least 1.0 MW of operational renewable energy capacity: Steuben (286.29), Chautauqua (185.90), Lewis (183.99), Livingston (177.00), Montgomery (130.00), Broome (111.80), Franklin (79.30), Schoharie (50.00), Washington (40.00), Saratoga (20.00), Albany (20.00), Cortland (20.00), Chenango (20.00), Schenectady (19.99), Erie (11.48), Jefferson (7.35), Westchester (2.64), Sullivan (2.18), Oswego (1.32). Orange has 0 MW operational capacity.",
+      "subquestion": "Which NY counties have at least 1.0 MW of operational renewable energy capacity?",
+      "answer": [
+        "Steuben County",
+        "Chautauqua County",
+        "Lewis County",
+        "Livingston County",
+        "Montgomery County",
+        "Broome County",
+        "Franklin County",
+        "Schoharie County",
+        "Washington County",
+        "Saratoga County",
+        "Albany County",
+        "Cortland County",
+        "Chenango County",
+        "Schenectady County",
+        "Erie County",
+        "Jefferson County",
+        "Westchester County",
+        "Sullivan County",
+        "Oswego County"
+      ]
+    },
+    "5": {
+      "source": "wikipedia/Erie_County,_New_York/content.txt",
+      "fact": "Erie County's county seat is Buffalo, which makes up about 28% of the county's population.",
+      "subquestion": "What is the county seat of Erie County (from <intersection of nodes 1-4>)?",
+      "answer": "Buffalo"
+    },
+    "6": {
+      "source": "wikipedia/Westchester_County,_New_York/content.txt",
+      "fact": "Westchester County's county seat is the city of White Plains.",
+      "subquestion": "What is the county seat of Westchester County (from <intersection of nodes 1-4>)?",
+      "answer": "White Plains"
+    },
+    "7": {
+      "source": "datagov/index-violent-property-and-firearm-rates-by-county-beginning-1990/files/rows.txt",
+      "fact": "According to the NY Index Crimes by County dataset for 2021, Erie County had 3,493 violent crimes while Westchester County had 1,520 violent crimes. Erie County (3,493) had more violent crimes than Westchester County (1,520).",
+      "subquestion": "Between the counties whose seats are <node_5 answer> and <node_6 answer>, what is the higher number of violent crimes in 2021?",
+      "answer": "3493"
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=4, data.gov intersection - nodes 1-4 all independent):",
+    "  Node 1: Bridge conditions - NY counties with >=65 Poor bridges -> {Ulster (84), Erie (82), Westchester (68), Orange (67)}",
+    "  Node 2: Fire departments - NY counties with >=50 fire depts -> {Suffolk (108), Erie (91), Nassau (70), Westchester (57), Onondaga (53), Orange (52), Ulster (51), Oneida (50)}",
+    "  Node 3: Bank ATMs - NY counties with >=100 ATMs -> {NY (676), Nassau (515), Suffolk (494), Queens (429), Kings (388), Westchester (335), Erie (244), Monroe (232), Onondaga (182), Bronx (158), Albany (148), Orange (128), Dutchess (125), Richmond (115)}",
+    "  Node 4: Renewable energy - NY counties with >=1.0 MW operational -> {Steuben (286.29), Chautauqua (185.90), Lewis (183.99), ..., Erie (11.48), ..., Westchester (2.64), ...}",
+    "  Intersection(1,2,3,4) -> {Erie, Westchester}",
+    "  Note: Ulster excluded by Node 3 (76 ATMs < 100) and Node 4 (0 MW renewable); Orange excluded by Node 4 (0 MW renewable)",
+    "",
+    "HOP 2 (d=2, Wikipedia - nodes 5-6 BOTH depend on Hop 1 intersection):",
+    "  Node 5: Erie County Wikipedia -> county seat is Buffalo",
+    "  Node 6: Westchester County Wikipedia -> county seat is White Plains",
+    "  Result: {Buffalo, White Plains} - the county seats of the two qualifying counties",
+    "",
+    "HOP 3 (d=1, data.gov comparative - node 7 compares both counties from SAME dataset):",
+    "  Node 7: Index crimes by county 2021 -> Erie (3,493) vs Westchester (1,520)",
+    "  Comparative: 3,493 > 1,520 -> higher number of violent crimes is 3,493",
+    "",
+    "Final answer: 3493"
+  ],
+  "verdict": "pass",
+  "datasets_used": [
+    "Erie_County,_New_York",
+    "Westchester_County,_New_York",
+    "bank-owned-atm-locations-in-new-york-state",
+    "bridge-conditions-nys-department-of-transportation",
+    "fire-department-directory-for-new-york-state",
+    "index-violent-property-and-firearm-rates-by-county-beginning-1990",
+    "large-scale-renewable-projects-reported-by-nyserda-beginning-2004"
+  ]
+}

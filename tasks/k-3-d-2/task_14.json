@@ -1,0 +1,43 @@
+{
+  "question": "For the city where the Colorado Department of Education is headquartered, what is the number of private schools in its core-based statistical area in school year 2021-2022 minus the number of district administrative offices in that CBSA in school year 2022-2023? . Your response should be in the format [Answer].",
+  "answer": "42",
+  "nodes": {
+    "1": {
+      "source": "wikipedia/Colorado_Department_of_Education/content.txt",
+      "fact": "The Colorado Department of Education is headquartered in Denver.",
+      "subquestion": "In which city is the Colorado Department of Education headquartered?",
+      "answer": "Denver"
+    },
+    "2": {
+      "source": "datagov/postsecondary-school-locations-current-5a74c/files/Postsecondary_School_Locations_Current_-3631565628879840217.txt",
+      "fact": "In school year 2022-2023, postsecondary institutions located in Denver are in CBSA 19740.",
+      "subquestion": "In school year 2022-2023, among postsecondary institutions located in the city of <node_1 answer>, what is the CBSA code?",
+      "answer": "19740"
+    },
+    "3": {
+      "source": "datagov/private-school-locations-current-f7d96/files/data-FGgJBu.txt",
+      "fact": "In school year 2021-2022, there are 51 private schools located in Denver in CBSA 19740.",
+      "subquestion": "In school year 2021-2022, how many private schools are located in the city of <node_1 answer> in CBSA <node_2 answer>?",
+      "answer": "51"
+    },
+    "4": {
+      "source": "datagov/school-district-office-locations-current-c8f9d/files/data-ghDEVP.txt",
+      "fact": "In school year 2022-2023, there are 9 school district offices located in Denver in CBSA 19740.",
+      "subquestion": "In school year 2022-2023, how many school district offices are located in the city of <node_1 answer> in CBSA <node_2 answer>?",
+      "answer": "9"
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=1, nodes 1): Colorado Dept of Education headquarters → Denver",
+    "HOP 2 (d=1, nodes 2): Postsecondary institutions in Denver → CBSA 19740",
+    "HOP 3 (d=1, nodes 3): Private schools in Denver CBSA 19740 2021-22 → 51; school district offices 2022-23 → 9; difference → 42",
+    "Final answer: 42"
+  ],
+  "verdict": "pass",
+  "datasets_used": [
+    "Colorado_Department_of_Education",
+    "postsecondary-school-locations-current-5a74c",
+    "private-school-locations-current-f7d96",
+    "school-district-office-locations-current-c8f9d"
+  ]
+}

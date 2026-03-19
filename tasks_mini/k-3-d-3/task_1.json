@@ -1,0 +1,82 @@
+{
+  "question": "For the NYC high school that ranked in the top 7 by overall score in all three school years: 2006-07 and 2009-11, find the neighborhood named after this high school. Finally report the New York village where the builder of the earliest constructed bridge that connects this neighborhood with the mainland is buried. Your response should be in the format [Answer].",
+  "answer": "Sleepy Hollow",
+  "nodes": {
+    "1": {
+      "source": "datagov/2006-2007-school-progress-report/v1/files/rows.csv",
+      "fact": "In 2006-07, the top 7 NYC high schools by overall score were: Manhattan Bridges (104.4), Bedford Academy (103.6), Marble Hill (98.13), Contemporary Arts (96.05), Bronx Aerospace (93.65), Eleanor Roosevelt (86.41), Bronx Academy of Letters (85.38).",
+      "subquestion": "Which high schools were in the top 7 by overall score in 2006-07?",
+      "answer": [
+        "Manhattan Bridges High School",
+        "Bedford Academy High School",
+        "Marble Hill High School for International Studies",
+        "High School for Contemporary Arts",
+        "Bronx Aerospace High School",
+        "Eleanor Roosevelt High School",
+        "Bronx Academy of Letters"
+      ]
+    },
+    "2": {
+      "source": "datagov/2009-2010-school-progress-report/v1/files/rows.csv",
+      "fact": "In 2009-10, the top 7 NYC high schools by overall score were: Theatre Arts Production Company (106.3), Brooklyn International (103.0), Williamsburg Prep (101.7), Marble Hill (100.5), Williamsburg Architecture (100.2), Manhattan Village Academy (96.6), Violin and Dance (95.8).",
+      "subquestion": "Which high schools were in the top 7 by overall score in 2009-10?",
+      "answer": [
+        "Theatre Arts Production Company School",
+        "Brooklyn International High School",
+        "Williamsburg Preparatory School",
+        "Marble Hill High School for International Studies",
+        "Williamsburg High School for Architecture and Design",
+        "Manhattan Village Academy",
+        "High School for Violin and Dance"
+      ]
+    },
+    "3": {
+      "source": "datagov/2010-2011-school-progress-report/v1/files/rows.csv",
+      "fact": "In 2010-11, the top 7 NYC high schools by overall score were: Brooklyn International (102.1), Manhattan Village Academy (99.0), It Takes a Village Academy (98.9), Williamsburg Architecture (94.5), Manhattan Bridges (90.4), Academy of Finance (89.5), Marble Hill (88.7).",
+      "subquestion": "Which high schools were in the top 7 by overall score in 2010-11?",
+      "answer": [
+        "Brooklyn International High School",
+        "Manhattan Village Academy",
+        "It Takes a Village Academy",
+        "Williamsburg High School for Architecture and Design",
+        "Manhattan Bridges High School",
+        "Academy of Finance and Enterprise",
+        "Marble Hill High School for International Studies"
+      ]
+    },
+    "4": {
+      "source": "wikipedia/Marble_Hill,_Manhattan/content.txt",
+      "fact": "King's Bridge was built in 1693 by Frederick Philipse, a Frisian-born merchant, at Marble Hill near what is now West 230th Street in the Bronx.",
+      "subquestion": "Who built the earliest constructed bridge that connects the neighborhood named after <intersection of node_1, node_2, node_3> with the mainland?",
+      "answer": "Frederick Philipse"
+    },
+    "5": {
+      "source": "wikipedia/Frederick_Philipse/content.txt",
+      "fact": "Frederick Philipse died in 1702 and is buried with his two wives in the crypt of the Old Dutch Church of Sleepy Hollow.",
+      "subquestion": "In which village is <node_4 answer> buried?",
+      "answer": "Sleepy Hollow"
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=3, NYC high school top-7 overall score - nodes 1-3):",
+    "  Node 1 (2006-07): Top 7 -> {Manhattan Bridges, Bedford Academy, Marble Hill, Contemporary Arts, Bronx Aerospace, Eleanor Roosevelt, Bronx Academy of Letters}",
+    "  Node 2 (2009-10): Top 7 -> {Theatre Arts Production Company, Brooklyn International, Williamsburg Prep, Marble Hill, Williamsburg Architecture, Manhattan Village, Violin and Dance}",
+    "  Node 3 (2010-11): Top 7 -> {Brooklyn International, Manhattan Village, It Takes a Village, Williamsburg Architecture, Manhattan Bridges, Academy of Finance, Marble Hill}",
+    "  Intersection(1,2,3) -> Marble Hill High School for International Studies",
+    "",
+    "HOP 2 (d=1, Wikipedia - node 4 depends on hop 1):",
+    "  Node 4: Earliest constructed bridge connecting Marble Hill to the mainland (King's Bridge, 1693) was built by Frederick Philipse",
+    "",
+    "HOP 3 (d=1, Wikipedia - node 5 depends on node 4):",
+    "  Node 5: Frederick Philipse is buried in Sleepy Hollow",
+    "",
+    "Final answer: Sleepy Hollow"
+  ],
+  "datasets_used": [
+    "2006-2007-school-progress-report",
+    "2009-2010-school-progress-report",
+    "2010-2011-school-progress-report",
+    "Frederick_Philipse",
+    "Marble_Hill,_Manhattan"
+  ]
+}

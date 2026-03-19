@@ -1,0 +1,43 @@
+{
+  "question": "For Michigan's capital city, what is the number of school district administrative offices in its core-based statistical area in school year 2022-2023 minus the number of private schools in that CBSA in school year 2021-2022? Your response should be in the format [Answer].",
+  "answer": "4",
+  "nodes": {
+    "1": {
+      "source": "wikipedia/Michigan/content.txt",
+      "fact": "The state capital of Michigan is Lansing.",
+      "subquestion": "What is the capital city of Michigan?",
+      "answer": "Lansing"
+    },
+    "2": {
+      "source": "datagov/postsecondary-school-locations-current-5a74c/files/Postsecondary_School_Locations_Current_-3631565628879840217.txt",
+      "fact": "In school year 2022-2023, postsecondary institutions located in Lansing are in CBSA 29620.",
+      "subquestion": "In school year 2022-2023, among postsecondary institutions located in the city of <node_1 answer>, what is the CBSA code?",
+      "answer": "29620"
+    },
+    "3": {
+      "source": "datagov/school-district-office-locations-current-c8f9d/files/data-ghDEVP.txt",
+      "fact": "In school year 2022-2023, there are 11 school district offices located in Lansing in CBSA 29620.",
+      "subquestion": "In school year 2022-2023, how many school district offices are located in the city of <node_1 answer> in CBSA <node_2 answer>?",
+      "answer": "11"
+    },
+    "4": {
+      "source": "datagov/private-school-locations-current-f7d96/files/data-FGgJBu.txt",
+      "fact": "In school year 2021-2022, there are 7 private schools located in Lansing in CBSA 29620.",
+      "subquestion": "In school year 2021-2022, how many private schools are located in the city of <node_1 answer> in CBSA <node_2 answer>?",
+      "answer": "7"
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=1, nodes 1): Michigan state capital → Lansing",
+    "HOP 2 (d=1, nodes 2): Postsecondary institutions in Lansing → CBSA 29620",
+    "HOP 3 (d=1, nodes 3): School district offices in Lansing CBSA 29620 2022-23 → 11; private schools 2021-22 → 7; difference → 4",
+    "Final answer: 4"
+  ],
+  "verdict": "pass",
+  "datasets_used": [
+    "Michigan",
+    "postsecondary-school-locations-current-5a74c",
+    "school-district-office-locations-current-c8f9d",
+    "private-school-locations-current-f7d96"
+  ]
+}

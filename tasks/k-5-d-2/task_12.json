@@ -1,0 +1,79 @@
+{
+  "question": "Erie County and Monroe County are the top two non-NYC New York counties by total mental health service recipients from 2017 to 2018. The county seat with the earlier incorporation date between these two is located at the terminus of a canal. What was the 2018 violent crime rate per 100,000 population in the county that contains the city at this canal's other terminus? Please return the numeric rate only. Your response should be in the format [Answer].",
+  "answer": "359.8",
+  "nodes": {
+    "1": {
+      "source": "wikipedia/Erie_County,_New_York/content.txt",
+      "fact": "The county seat of Erie County, New York is Buffalo.",
+      "subquestion": "What is the county seat of each of Erie County and Monroe County?",
+      "answer": "Buffalo"
+    },
+    "2": {
+      "source": "wikipedia/Monroe_County,_New_York/content.txt",
+      "fact": "The county seat of Monroe County, New York is Rochester.",
+      "subquestion": "What is the county seat of each of Erie County and Monroe County?",
+      "answer": "Rochester"
+    },
+    "3": {
+      "source": "wikipedia/Buffalo,_New_York/content.txt",
+      "fact": "Buffalo was selected as the terminus of the Erie Canal in 1825, which led to its incorporation in 1832.",
+      "subquestion": "When was each county seat (from hop 1) incorporated as a city?",
+      "answer": "1832"
+    },
+    "4": {
+      "source": "wikipedia/Rochester,_New_York/content.txt",
+      "fact": "Rochester was rechartered as a city in 1834.",
+      "subquestion": "When was each county seat (from hop 1) incorporated as a city?",
+      "answer": "1834"
+    },
+    "5": {
+      "source": "wikipedia/Erie_Canal/content.txt",
+      "fact": "The original Erie Canal was from Albany on the Hudson to Buffalo on Lake Erie, making Albany the eastern terminus.",
+      "subquestion": "What city is at the other terminus of the canal identified in hop 2 (the Erie Canal, where the older-incorporated city Buffalo is at the terminus)?",
+      "answer": "Albany"
+    },
+    "6": {
+      "source": "wikipedia/Albany,_New_York/content.txt",
+      "fact": "Albany is the capital city of the U.S. state of New York, and the county seat of Albany County.",
+      "subquestion": "What county is the city (from hop 3) in?",
+      "answer": "Albany County"
+    },
+    "7": {
+      "source": "datagov/index-violent-property-and-firearm-rates-by-county-beginning-1990/files/rows.txt",
+      "fact": "According to the NY index crimes dataset, Albany County had a violent crime rate of 359.8 per 100,000 population in 2018.",
+      "subquestion": "What was the violent crime rate per 100,000 population in 2018 for the county (from hop 4)? (Filter for this node: County == Albany; Year == 2018; read Violent Rate.)",
+      "answer": "359.8"
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=2): Find county seats of Erie County and Monroe County",
+    "  Node 1: Erie County -> Buffalo",
+    "  Node 2: Monroe County -> Rochester",
+    "  Result: {Buffalo, Rochester}",
+    "HOP 2 (d=2): Find incorporation years of those county seats and determine which is older; identify the canal",
+    "  Node 3: Buffalo -> Erie Canal terminus; incorporated 1832",
+    "  Node 4: Rochester -> incorporated 1834",
+    "  Comparison: 1832 < 1834 -> Buffalo is older",
+    "  Result: Buffalo is older; Erie Canal",
+    "HOP 3 (d=1): Find the eastern terminus of the Erie Canal from hop 2",
+    "  Node 5: Erie Canal -> other terminus is Albany",
+    "  Result: Albany",
+    "HOP 4 (d=1): Find what county Albany is in",
+    "  Node 6: Albany -> county seat of Albany County",
+    "  Result: Albany County",
+    "HOP 5 (d=1): Find violent crime rate for Albany County in 2018",
+    "  Node 7: Albany County -> 359.8 per 100,000 in 2018",
+    "  Result: 359.8",
+    "Final answer: 359.8"
+  ],
+  "verdict": "pass",
+  "datasets_used": [
+    "Erie_County,_New_York",
+    "Monroe_County,_New_York",
+    "Buffalo,_New_York",
+    "Rochester,_New_York",
+    "Erie_Canal",
+    "Albany,_New_York",
+    "index-violent-property-and-firearm-rates-by-county-beginning-1990"
+  ]
+}

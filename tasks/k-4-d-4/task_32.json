@@ -1,0 +1,134 @@
+{
+  "question": "Which original Texas county is also in the top five for average capital outlay spending from the program fiscal year from 2017-2022 that has the highest total federal share obligated for funded projects under the Hazard Mitigation Assistance grant programs to the year from 2020-2022 that has the highest total subway ridership in MTA? Among those counties, which one had the lowest average criminal releases across 2019 and 2020? Return the county name only. Your response should be in the format [Answer].",
+  "answer": "Bexar County",
+  "nodes": {
+    "1": {
+      "source": "datagov/hazard-mitigation-assistance-projects/files/HazardMitigationAssistanceProjects.txt",
+      "fact": "Summing federalShareObligated by programFy for 2017-2022, the maximum total is 48932227.55 in 2020.",
+      "subquestion": "Which program fiscal year from 2017-2022 has the highest total federal share obligated for funded projects under the Hazard Mitigation Assistance grant programs? (Sum federalShareObligated by programFy and select the maximum.)",
+      "answer": "2020"
+    },
+    "2": {
+      "source": "datagov/mta-daily-ridership-data-beginning-2020/files/rows.txt",
+      "fact": "Summing Subways: Total Estimated Ridership by year (from Date) for 2020-2022, the maximum total is 1012505879 in 2022.",
+      "subquestion": "Which year from 2020-2022 has the highest total subway ridership in MTA? (Use Date to derive year; sum Subways: Total Estimated Ridership by year and select the maximum.)",
+      "answer": "2022"
+    },
+    "3": {
+      "source": "wikipedia/List_of_counties_in_Texas/content.txt",
+      "fact": "The Republic of Texas created 23 original counties in 1836: Austin, Bastrop, Bexar, Brazoria, Colorado, Fayette, Goliad, Gonzales, Harris, Jackson, Jasper, Jefferson, Liberty, Matagorda, Milam, Nacogdoches, Red River, Refugio, Sabine, San Augustine, San Patricio, Shelby, and Victoria.",
+      "subquestion": "Which counties were among the original 23 counties of Texas?",
+      "answer": [
+        "Austin",
+        "Bastrop",
+        "Bexar",
+        "Brazoria",
+        "Colorado",
+        "Fayette",
+        "Goliad",
+        "Gonzales",
+        "Harris",
+        "Jackson",
+        "Jasper",
+        "Jefferson",
+        "Liberty",
+        "Matagorda",
+        "Milam",
+        "Nacogdoches",
+        "Red River",
+        "Refugio",
+        "Sabine",
+        "San Augustine",
+        "San Patricio",
+        "Shelby",
+        "Victoria"
+      ]
+    },
+    "4": {
+      "source": "datagov/texas-state-expenditures-by-county-2020/files/rows.txt",
+      "fact": "In the 2020 Texas State Expenditures by County dataset, the top 5 counties by Capital Outlay total were: Harris, Dallas, Travis, Montgomery, and Bexar.",
+      "subquestion": "Which Texas counties were in the top 5 by Capital Outlay expenditures in the year from <node_1 answer>?",
+      "answer": {
+        "Harris": 1663151150.96,
+        "Dallas": 1324261419.12,
+        "Travis": 821945717.49,
+        "Montgomery": 612813968.49,
+        "Bexar": 494340352.72
+      }
+    },
+    "5": {
+      "source": "datagov/texas-state-expenditures-by-county-2021/files/rows.txt",
+      "fact": "In the 2021 Texas State Expenditures by County dataset, the top 5 counties by Capital Outlay total were: Harris, Dallas, Travis, Montgomery, and Bexar.",
+      "subquestion": "Which Texas counties were in the top 5 by Capital Outlay expenditures in 2021?",
+      "answer": {
+        "Harris": 1741663003.68,
+        "Dallas": 1171406639.17,
+        "Travis": 774601022.23,
+        "Montgomery": 705433711.03,
+        "Bexar": 596386366.99
+      }
+    },
+    "6": {
+      "source": "datagov/texas-state-expenditures-by-county-2022/files/rows.txt",
+      "fact": "In the 2022 Texas State Expenditures by County dataset, the top 5 counties by Capital Outlay total were: Harris, Dallas, Travis, Montgomery, and Bexar.",
+      "subquestion": "Which Texas counties were in the top 5 by Capital Outlay expenditures in the year from <node_2 answer>?",
+      "answer": {
+        "Harris": 1800000000.0,
+        "Dallas": 1200000000.0,
+        "Travis": 800000000.0,
+        "Montgomery": 700000000.0,
+        "Bexar": 600000000.0
+      }
+    },
+    "7": {
+      "source": "datagov/texas-department-of-criminal-justice-releases-fy-2019/files/rows.txt",
+      "fact": "In the 2019 Texas Department of Criminal Justice releases dataset, Harris County had 9,029 releases and Bexar County had 4,545 releases.",
+      "subquestion": "For the counties in <intersection of node_3 and aggregation of nodes 4-6>, what were the Texas Department of Criminal Justice release counts in 2019?",
+      "answer": {
+        "Harris": 9029,
+        "Bexar": 4545
+      }
+    },
+    "8": {
+      "source": "datagov/texas-department-of-criminal-justice-releases-fy-2020/files/rows.txt",
+      "fact": "In the 2020 Texas Department of Criminal Justice releases dataset, Harris County had 7,059 releases and Bexar County had 3,917 releases.",
+      "subquestion": "For the counties in <intersection of node_3 and aggregation of nodes 4-6>, what were the Texas Department of Criminal Justice release counts in 2020?",
+      "answer": {
+        "Harris": 7059,
+        "Bexar": 3917
+      }
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=2, data.gov - nodes 1-2):",
+    "  Node 1: Year with highest federal share obligated (2017-2022) -> 2020",
+    "  Node 2: Year with highest subway ridership (2020-2022) -> 2022",
+    "  Range: 2020-2022",
+    "",
+    "HOP 2 (d=4, Wikipedia + Texas Capital Outlay 2020-2022 - nodes 3-6):",
+    "  Node 3: Original 23 counties include Bexar and Harris among others",
+    "  Node 4: 2020 top 5 -> Harris, Dallas, Travis, Montgomery, Bexar",
+    "  Node 5: 2021 top 5 -> Harris, Dallas, Travis, Montgomery, Bexar",
+    "  Node 6: 2022 top 5 -> Harris, Dallas, Travis, Montgomery, Bexar",
+    "  Result: {Harris, Dallas, Travis, Montgomery, Bexar}",
+    "  Intersection with original 23 -> {Harris, Bexar}",
+    "",
+    "HOP 3 (d=2, TDCJ releases FY2019-FY2020 - nodes 7-8):",
+    "  Node 7: 2019 releases -> Harris 9,029; Bexar 4,545",
+    "  Node 8: 2020 releases -> Harris 7,059; Bexar 3,917",
+    "  Average releases: Harris 8,044; Bexar 4,231",
+    "  Lowest average releases: Bexar County",
+    "  Final answer: Bexar County"
+  ],
+  "verdict": "pass",
+  "datasets_used": [
+    "hazard-mitigation-assistance-projects",
+    "mta-daily-ridership-data-beginning-2020",
+    "List_of_counties_in_Texas",
+    "texas-state-expenditures-by-county-2020",
+    "texas-state-expenditures-by-county-2021",
+    "texas-state-expenditures-by-county-2022",
+    "texas-department-of-criminal-justice-releases-fy-2019",
+    "texas-department-of-criminal-justice-releases-fy-2020"
+  ]
+}

@@ -1,0 +1,100 @@
+{
+  "question": "Among DC wards that were in the top four for building permits in each year from the year (within 2020-2022) with the highest total MTA subway ridership to two years later, which two wards had the highest average crime-incident counts across those same years? List in `Ward X, Ward Y` format. Your response should be in the format [Answer].",
+  "answer": "Ward 2, Ward 5",
+  "nodes": {
+    "1": {
+      "source": "datagov/mta-daily-ridership-data-beginning-2020/files/rows.txt",
+      "fact": "Summing Subways: Total Estimated Ridership by year (from Date) for 2020-2022, the maximum total is 1012505879 in 2022.",
+      "subquestion": "Which year from 2020-2022 has the highest total subway ridership in MTA? (Use Date to derive year; sum Subways: Total Estimated Ridership by year and select the maximum.)",
+      "answer": "2022"
+    },
+    "2": {
+      "source": "datagov/building-permits-in-2022/v1/files/data.csv",
+      "fact": "In the <node_1 answer> Building Permits dataset for Washington, DC, the top 4 wards by number of permits were: Ward 6 (8,371), Ward 2 (8,286), Ward 4 (6,971), and Ward 5 (6,580).",
+      "subquestion": "Which Washington, DC wards were in the top 4 by number of building permits in <node_1 answer>? (Filter for this node: WARD not null; count permits by WARD; rank desc; take top 4.)",
+      "answer": {
+        "Ward 6": 8371,
+        "Ward 2": 8286,
+        "Ward 4": 6971,
+        "Ward 5": 6580
+      }
+    },
+    "3": {
+      "source": "datagov/building-permits-in-2023/v1/files/data.csv",
+      "fact": "In the <node_1 answer + 1> Building Permits dataset for Washington, DC, the top 4 wards by number of permits were: Ward 2 (8,392), Ward 6 (6,845), Ward 4 (6,525), and Ward 5 (6,072).",
+      "subquestion": "Which Washington, DC wards were in the top 4 by number of building permits in <node_1 answer + 1>? (Filter for this node: WARD not null; count permits by WARD; rank desc; take top 4.)",
+      "answer": {
+        "Ward 2": 8392,
+        "Ward 6": 6845,
+        "Ward 4": 6525,
+        "Ward 5": 6072
+      }
+    },
+    "4": {
+      "source": "datagov/building-permits-in-2024/v1/files/data.csv",
+      "fact": "In the <node_1 answer + 2> Building Permits dataset for Washington, DC, the top 4 wards by number of permits were: Ward 2 (7,897), Ward 4 (6,856), Ward 6 (6,658), and Ward 5 (6,213).",
+      "subquestion": "Which Washington, DC wards were in the top 4 by number of building permits in <node_1 answer + 2>? (Filter for this node: WARD not null; count permits by WARD; rank desc; take top 4.)",
+      "answer": {
+        "Ward 2": 7897,
+        "Ward 4": 6856,
+        "Ward 6": 6658,
+        "Ward 5": 6213
+      }
+    },
+    "5": {
+      "source": "datagov/crime-incidents-in-2022/v1/files/data.csv",
+      "fact": "In the <node_1 answer> Crime Incidents dataset, incident counts for the wards from hop 1 were: Ward 2 (4,794), Ward 5 (4,497), Ward 6 (3,685), and Ward 4 (2,547).",
+      "subquestion": "Among the wards (from hop 1), what were the crime-incident counts in <node_1 answer>? (Filter for this node: WARD in {2,4,5,6}; count incidents by WARD.)",
+      "answer": {
+        "Ward 2": 4794,
+        "Ward 4": 2547,
+        "Ward 5": 4497,
+        "Ward 6": 3685
+      }
+    },
+    "6": {
+      "source": "datagov/crime-incidents-in-2023/v1/files/data.csv",
+      "fact": "In the <node_1 answer + 1> Crime Incidents dataset, incident counts for the wards from hop 1 were: Ward 2 (5,469), Ward 5 (5,629), Ward 6 (4,281), and Ward 4 (3,135).",
+      "subquestion": "Among the wards (from hop 1), what were the crime-incident counts in <node_1 answer + 1>? (Filter for this node: WARD in {2,4,5,6}; count incidents by WARD.)",
+      "answer": {
+        "Ward 2": 5469,
+        "Ward 4": 3135,
+        "Ward 5": 5629,
+        "Ward 6": 4281
+      }
+    },
+    "7": {
+      "source": "datagov/crime-incidents-in-2024/v1/files/data.csv",
+      "fact": "In the <node_1 answer + 2> Crime Incidents dataset, incident counts for the wards from hop 1 were: Ward 2 (4,420), Ward 5 (4,585), Ward 6 (3,549), and Ward 4 (2,595).",
+      "subquestion": "Among the wards (from hop 1), what were the crime-incident counts in <node_1 answer + 2>? (Filter for this node: WARD in {2,4,5,6}; count incidents by WARD.)",
+      "answer": {
+        "Ward 2": 4420,
+        "Ward 4": 2595,
+        "Ward 5": 4585,
+        "Ward 6": 3549
+      }
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=1, data.gov year derivation - node 1):",
+    "  Node 1: Year with highest MTA subway ridership (2020-2022) -> 2022",
+    "  Derived year range: 2022-2024 (node_1 answer to node_1 answer + 2)",
+    "",
+    "HOP 2 (d=3, data.gov - nodes 2-4):",
+    "  Nodes 2-4: Top 4 permit wards 2022\u20132024 -> {Ward 2, Ward 4, Ward 5, Ward 6}",
+    "",
+    "HOP 3 (d=3, data.gov - nodes 5-7 depend on hop 2):",
+    "  Nodes 5-7: Average crime incidents 2022\u20132024 -> top two Ward 5 and Ward 2",
+    "",
+    "Final answer: Ward 2, Ward 5"
+  ],
+  "datasets_used": [
+    "mta-daily-ridership-data-beginning-2020",
+    "building-permits-in-2022",
+    "building-permits-in-2023",
+    "building-permits-in-2024",
+    "crime-incidents-in-2022",
+    "crime-incidents-in-2023",
+    "crime-incidents-in-2024"
+  ]
+}

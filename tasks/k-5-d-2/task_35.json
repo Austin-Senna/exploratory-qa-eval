@@ -1,0 +1,58 @@
+{
+  "question": "Starting with the year in the 2011-2016 period when teen birth rates for ages 18-19 were lowest, and extending 2 years forward to form a range, what US city had the highest average age-adjusted adult obesity rate during that range? Then report the person who founded a company sold to JP Morgan to create the corporation that founded this city. Your response should be in the format [Answer].",
+  "answer": "Andrew Carnegie",
+  "nodes": {
+    "1": {
+      "source": "datagov/teen-birth-rates-by-age-groups/files/teen_birth_rates_by_age_groups.txt",
+      "fact": "For 2011-2016, lowest teen birth rate for ages 18-19 is in 2016.",
+      "subquestion": "Which year from 2011-2016 has lowest teen birth rate for 18-19?",
+      "answer": "2016"
+    },
+    "2": {
+      "source": "datagov/500-cities-local-data-for-better-health-2016-release/files/rows.txt",
+      "fact": "In 2016, top obesity rates: Dayton (47.2%), Gary (46.9%), Detroit (45.2%).",
+      "subquestion": "Top cities by obesity rate in <node_1 answer>?",
+      "answer": {"Dayton": 47.2, "Gary": 46.9, "Detroit": 45.2}
+    },
+    "3": {
+      "source": "datagov/500-cities-local-data-for-better-health-2018-release/files/rows.txt",
+      "fact": "In 2018: Gary (49.0%), Detroit (47.4%), Dayton (43.5%). Average: Gary 47.95% highest.",
+      "subquestion": "Top cities by obesity rate in <node_1 answer>+2?",
+      "answer": {"Gary": 49.0, "Detroit": 47.4, "Dayton": 43.5}
+    },
+    "4": {
+      "source": "wikipedia/Gary,_Indiana/content.txt",
+      "fact": "Gary was founded in 1906 by U.S. Steel Corporation.",
+      "subquestion": "What corporation founded Gary, Indiana?",
+      "answer": "U.S. Steel Corporation"
+    },
+    "5": {
+      "source": "wikipedia/U.S._Steel/content.txt",
+      "fact": "U.S. Steel was created by merging Carnegie Steel, Federal Steel, and National Steel.",
+      "subquestion": "Which company did JP Morgan merge to create U.S. Steel?",
+      "answer": "Carnegie Steel Company"
+    },
+    "6": {
+      "source": "wikipedia/Carnegie_Steel_Company/content.txt",
+      "fact": "Carnegie Steel Company was founded by Andrew Carnegie.",
+      "subquestion": "Who founded Carnegie Steel Company?",
+      "answer": "Andrew Carnegie"
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=1): Teen birth rate lowest 2011-2016 is 2016",
+    "HOP 2 (d=2): Obesity rates 2016 + 2018 → Gary highest average (47.95%)",
+    "HOP 3 (d=1): Gary founded by U.S. Steel Corporation",
+    "HOP 4 (d=1): U.S. Steel created from Carnegie Steel",
+    "HOP 5 (d=1): Carnegie Steel founded by Andrew Carnegie",
+    "Final answer: Andrew Carnegie"
+  ],
+  "datasets_used": [
+    "teen-birth-rates-by-age-groups",
+    "500-cities-local-data-for-better-health-2016-release",
+    "500-cities-local-data-for-better-health-2018-release",
+    "Gary,_Indiana",
+    "U.S._Steel",
+    "Carnegie_Steel_Company"
+  ]
+}

@@ -1,0 +1,65 @@
+{
+  "question": "Starting with the year (within 2013-2018) with the highest NYC PM2.5 concentration and extending 1 year forward to form a range, among New York counties outside of NYC, identify the top two by total mental health service recipients during that range. The county seat with the earlier incorporation date between these two is located at the terminus of a canal. What city is at the other terminus of that canal? Please return the city name only. Your response should be in the format [Answer].",
+  "answer": "Albany",
+  "nodes": {
+    "1": {
+      "source": "datagov/new-york-city-air-quality/files/rows.txt",
+      "fact": "For 2013-2018, highest NYC PM2.5 concentration is in 2017.",
+      "subquestion": "Which year from 2013-2018 has highest NYC PM2.5?",
+      "answer": "2017"
+    },
+    "2": {
+      "source": "datagov/county-mental-health-profiles-phase-2-beginning-2014/files/rows.txt",
+      "fact": "For 2017-2018, excluding NYC, top 2 by mental health recipients: Erie (83,049), Monroe (74,299).",
+      "subquestion": "Which non-NYC NY counties are top 2 by mental health recipients (<node_1 answer> to <node_1 answer>+1)?",
+      "answer": ["Erie County", "Monroe County"]
+    },
+    "3": {
+      "source": "wikipedia/Erie_County,_New_York/content.txt",
+      "fact": "Erie County seat is Buffalo.",
+      "subquestion": "What is the county seat of Erie County?",
+      "answer": "Buffalo"
+    },
+    "4": {
+      "source": "wikipedia/Monroe_County,_New_York/content.txt",
+      "fact": "Monroe County seat is Rochester.",
+      "subquestion": "What is the county seat of Monroe County?",
+      "answer": "Rochester"
+    },
+    "5": {
+      "source": "wikipedia/Buffalo,_New_York/content.txt",
+      "fact": "Buffalo was incorporated in 1832, terminus of Erie Canal.",
+      "subquestion": "When was Buffalo incorporated?",
+      "answer": "1832"
+    },
+    "6": {
+      "source": "wikipedia/Rochester,_New_York/content.txt",
+      "fact": "Rochester was incorporated in 1834.",
+      "subquestion": "When was Rochester incorporated?",
+      "answer": "1834"
+    },
+    "7": {
+      "source": "wikipedia/Erie_Canal/content.txt",
+      "fact": "Erie Canal runs from Buffalo to Albany.",
+      "subquestion": "What city is at the other terminus of the Erie Canal?",
+      "answer": "Albany"
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=1): NYC PM2.5 highest 2013-2018 is 2017",
+    "HOP 2 (d=1): Top 2 non-NYC mental health recipients 2017-2018 → Erie, Monroe",
+    "HOP 3 (d=2): County seats → Buffalo, Rochester",
+    "HOP 4 (d=2): Incorporation dates → Buffalo 1832, Rochester 1834; Buffalo older + Erie Canal",
+    "HOP 5 (d=1): Erie Canal other terminus → Albany",
+    "Final answer: Albany"
+  ],
+  "datasets_used": [
+    "new-york-city-air-quality",
+    "county-mental-health-profiles-phase-2-beginning-2014",
+    "Erie_County,_New_York",
+    "Monroe_County,_New_York",
+    "Buffalo,_New_York",
+    "Rochester,_New_York",
+    "Erie_Canal"
+  ]
+}

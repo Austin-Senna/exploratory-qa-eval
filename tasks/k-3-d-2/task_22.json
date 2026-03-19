@@ -1,0 +1,51 @@
+{
+  "question": "For the city where Orange County Public Schools is based, what is the number of public schools in its county in school year 2022-2023 minus the number of private schools in that county in school year 2021-2022? Your response should be in the format [Answer].",
+  "answer": "119",
+  "nodes": {
+    "1": {
+      "source": "wikipedia/Orange_County_Public_Schools/content.txt",
+      "fact": "Orange County Public Schools is based in downtown Orlando.",
+      "subquestion": "In which city is Orange County Public Schools based?",
+      "answer": "Orlando"
+    },
+    "2": {
+      "source": "datagov/postsecondary-school-locations-current-5a74c/files/Postsecondary_School_Locations_Current_-3631565628879840217.txt",
+      "fact": "In school year 2022-2023, postsecondary institutions located in Orlando are in Orange County (no other county name appears for Orlando).",
+      "subquestion": "In school year 2022-2023, among postsecondary institutions located in the city of <node_1 answer>, what is the county name?",
+      "answer": "Orange County"
+    },
+    "3": {
+      "source": "datagov/public-school-locations-current-23297/files/data-oyCYxF.txt",
+      "fact": "In school year 2022-2023, there are 219 public schools located in Orlando in Orange County.",
+      "subquestion": "In school year 2022-2023, how many public schools are located in the city of <node_1 answer> in <node_2 answer>?",
+      "answer": "219"
+    },
+    "4": {
+      "source": "datagov/private-school-locations-current-f7d96/files/data-FGgJBu.txt",
+      "fact": "In school year 2021-2022, there are 100 private schools located in Orlando in Orange County.",
+      "subquestion": "In school year 2021-2022, how many private schools are located in the city of <node_1 answer> in <node_2 answer>?",
+      "answer": "100"
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=1, nodes 1):",
+    "  Node 1: Orange County Public Schools is based in Orlando",
+    "",
+    "HOP 2 (d=1, nodes 2):",
+    "  Node 2: Postsecondary institutions located in Orlando (2022-2023) are in Orange County",
+    "",
+    "HOP 3 (d=2, nodes 3-4):",
+    "  Node 3: Public schools in Orlando (Orange County), 2022-2023 -> 219",
+    "  Node 4: Private schools in Orlando (Orange County), 2021-2022 -> 100",
+    "  Compute: 219 - 100 = 119",
+    "",
+    "Final answer: 119"
+  ],
+  "verdict": "pass",
+  "datasets_used": [
+    "Orange_County_Public_Schools",
+    "postsecondary-school-locations-current-5a74c",
+    "public-school-locations-current-23297",
+    "private-school-locations-current-f7d96"
+  ]
+}

@@ -1,0 +1,104 @@
+{
+  "question": "Starting with the year within the 2011-2016 window when the highest teen birth rate for females ages 15-19 in the United States and extending forward through 2017-18 school year, find Chicago elementary schools that (1) received top performance rating in that first school year, (2) showed above-average growth the next year, (3) were moderately organized the year after, and (4) showed above-average or far-above-average student growth in 2017-18. Among schools meeting all criteria and located in a community area with per capita income above $50K, in what year was the MLB team founded that plays in the stadium in that community area? Your response should be in the format [Answer].",
+  "answer": "1876",
+  "nodes": {
+    "1": {
+      "source": "datagov/nchs-birth-rates-for-females-by-age-group-united-states/files/rows.txt",
+      "fact": "Filtering to Age Group = '15-19 Years' for 2011-2016, the highest Birth Rate is in 2011 at 31.3.",
+      "subquestion": "Which year from 2011-2016 has the highest teen birth rate for females ages 15-19?",
+      "answer": "2011"
+    },
+    "2": {
+      "source": "datagov/chicago-public-schools-progress-report-cards-2011-2012/v1/files/rows.csv",
+      "fact": "In 2011-2012, 127 elementary schools had CPS Performance Policy Level 'Level 1', including Cleveland, Hawthorne, Poe, Reinberg.",
+      "subquestion": "Which elementary schools had top performance (Level 1) in <node_1 answer>-<node_1 answer>+1 school year?",
+      "answer": [
+        "Cleveland",
+        "Hawthorne",
+        "Poe",
+        "Reinberg"
+      ]
+    },
+    "3": {
+      "source": "datagov/chicago-public-schools-elementary-school-progress-report-card-2012-2013/v1/files/rows.csv",
+      "fact": "In 2012-2013, 230 schools had Growth Overall Level 'Above Average', including Cleveland, Hawthorne, Poe, Reinberg.",
+      "subquestion": "Which schools had above-average growth in <node_1 answer>+1-<node_1 answer>+2?",
+      "answer": [
+        "Cleveland",
+        "Hawthorne",
+        "Poe",
+        "Reinberg"
+      ]
+    },
+    "4": {
+      "source": "datagov/chicago-public-schools-elementary-school-progress-report-2013-2014/v1/files/rows.csv",
+      "fact": "In 2013-2014, 42 schools had My Voice, My School 'MODERATELY ORGANIZED', including Cleveland, Hawthorne, Poe, Reinberg.",
+      "subquestion": "Which schools were moderately organized in <node_1 answer>+2-<node_1 answer>+3?",
+      "answer": [
+        "Cleveland",
+        "Hawthorne",
+        "Poe",
+        "Reinberg"
+      ]
+    },
+    "5": {
+      "source": "datagov/chicago-public-schools-school-progress-reports-sy1718/v1/files/rows.csv",
+      "fact": "In 2017-18, 299 schools had Student_Growth_Rating 'ABOVE AVERAGE' or 'FAR ABOVE AVERAGE', including Cleveland, Hawthorne, Poe, Reinberg.",
+      "subquestion": "Which schools had above-average or far-above-average student growth in 2017-18?",
+      "answer": [
+        "Cleveland",
+        "Hawthorne",
+        "Poe",
+        "Reinberg"
+      ]
+    },
+    "6": {
+      "source": "datagov/chicago-public-schools-school-locations-sy1516/v1/files/rows.csv",
+      "fact": "Cleveland is in Irving Park, Hawthorne in Lake View, Poe in Pullman, Reinberg in Portage Park.",
+      "subquestion": "In which community areas are the four schools?",
+      "answer": {
+        "Cleveland": "Irving Park",
+        "Hawthorne": "Lake View",
+        "Poe": "Pullman",
+        "Reinberg": "Portage Park"
+      }
+    },
+    "7": {
+      "source": "datagov/census-data-selected-socioeconomic-indicators-in-chicago-2008-2012/v1/files/rows.csv",
+      "fact": "Per capita income: Irving Park $27,249, Lake View $60,058, Portage Park $24,336, Pullman $20,588. Only Lake View above $50K.",
+      "subquestion": "Which community area has per capita income above $50,000?",
+      "answer": "Lake View"
+    },
+    "8": {
+      "source": "wikipedia/Wrigley_Field/content.txt",
+      "fact": "Wrigley Field is in Lakeview and is home to the Chicago Cubs.",
+      "subquestion": "Which MLB team plays in Lake View?",
+      "answer": "Chicago Cubs"
+    },
+    "9": {
+      "source": "wikipedia/Chicago_Cubs/content.txt",
+      "fact": "The Chicago Cubs were established in 1876.",
+      "subquestion": "In what year was the Chicago Cubs established?",
+      "answer": "1876"
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=1, year derivation): Teen birth rate highest 2011-2016 is 2011",
+    "HOP 2 (d=4, CPS progress reports 2011-2018): Intersection -> {Cleveland, Hawthorne, Poe, Reinberg}",
+    "HOP 3 (d=2, locations + census): Lake View has income > $50K -> Hawthorne",
+    "HOP 4 (d=1): Wrigley Field in Lake View -> Chicago Cubs",
+    "HOP 5 (d=1): Cubs founded in 1876",
+    "Final answer: 1876"
+  ],
+  "datasets_used": [
+    "nchs-birth-rates-for-females-by-age-group-united-states",
+    "chicago-public-schools-progress-report-cards-2011-2012",
+    "chicago-public-schools-elementary-school-progress-report-card-2012-2013",
+    "chicago-public-schools-elementary-school-progress-report-2013-2014",
+    "chicago-public-schools-school-progress-reports-sy1718",
+    "chicago-public-schools-school-locations-sy1516",
+    "census-data-selected-socioeconomic-indicators-in-chicago-2008-2012",
+    "Wrigley_Field",
+    "Chicago_Cubs"
+  ]
+}

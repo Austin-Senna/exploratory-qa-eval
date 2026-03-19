@@ -1,0 +1,158 @@
+{
+  "question": "Among Texas cities with diabetes prevalence above 12% in each year from the year from 2011-2016 that has the highest total passenger count across Los Angeles International Airport to the year from 2017-2022 that has the highest total daily census records from Allegheny County Jail, which two had 2020 populations under 100,000, and which city borders both of them? Only report the city name. Your response should be in the format [Answer].",
+  "answer": "McAllen",
+  "nodes": {
+    "1": {
+      "source": "datagov/los-angeles-international-airport-passenger-traffic-by-terminal/files/rows.txt",
+      "fact": "Summing Passenger_Count by year (from ReportPeriod) across all terminals and categories for 2011-2016, the highest total is 2016 with 80921651 passengers.",
+      "subquestion": "Which year from 2011-2016 has the highest total passenger in Los Angeles international airports? (Convert ReportPeriod to Year; sum Passenger_Count by Year; select the maximum.)",
+      "answer": "2016"
+    },
+    "2": {
+      "source": "datagov/allegheny-county-jail-daily-census/files/66cdcd57-6c92-4aaa-8800-0ed9d8f03e22.txt",
+      "fact": "Counting records by year from census_date for 2017-2022, the maximum total is 1202002 in 2019.",
+      "subquestion": "Which year from 2017-2022 has the highest total daily census records from Allegheny County Jail? (Use census_date to derive year; count records by year and select the maximum.)",
+      "answer": "2019"
+    },
+    "3": {
+      "source": "datagov/500-cities-city-level-data-gis-friendly-format-2016-release/files/rows.txt",
+      "fact": "In the CDC 500 Cities 2016 release, 10 Texas cities had diabetes prevalence above 12%: Beaumont, Brownsville, Corpus Christi, Edinburg, El Paso, Laredo, McAllen, Mission, Pharr, and San Antonio.",
+      "subquestion": "Which Texas cities had diabetes prevalence above 12% in the year from <node_1 answer>?",
+      "answer": [
+        "Beaumont",
+        "Brownsville",
+        "Corpus Christi",
+        "Edinburg",
+        "El Paso",
+        "Laredo",
+        "McAllen",
+        "Mission",
+        "Pharr",
+        "San Antonio"
+      ]
+    },
+    "4": {
+      "source": "datagov/500-cities-city-level-data-gis-friendly-format-2017-release/files/rows.txt",
+      "fact": "In the CDC 500 Cities 2017 release, 12 Texas cities had diabetes prevalence above 12%.",
+      "subquestion": "Which Texas cities had diabetes prevalence above 12% in 2017?",
+      "answer": [
+        "Baytown",
+        "Beaumont",
+        "Brownsville",
+        "Corpus Christi",
+        "Edinburg",
+        "El Paso",
+        "Houston",
+        "Laredo",
+        "McAllen",
+        "Mission",
+        "Pharr",
+        "San Antonio"
+      ]
+    },
+    "5": {
+      "source": "datagov/500-cities-city-level-data-gis-friendly-format-2018-release/files/rows.txt",
+      "fact": "In the CDC 500 Cities 2018 release, 12 Texas cities had diabetes prevalence above 12%.",
+      "subquestion": "Which Texas cities had diabetes prevalence above 12% in 2018?",
+      "answer": [
+        "Beaumont",
+        "Brownsville",
+        "Corpus Christi",
+        "El Paso",
+        "Houston",
+        "Laredo",
+        "Longview",
+        "McAllen",
+        "Mission",
+        "Pharr",
+        "San Antonio",
+        "Tyler"
+      ]
+    },
+    "6": {
+      "source": "datagov/500-cities-city-level-data-gis-friendly-format-2019-release/files/rows.txt",
+      "fact": "In the CDC 500 Cities 2019 release, 13 Texas cities had diabetes prevalence above 12%.",
+      "subquestion": "Which Texas cities had diabetes prevalence above 12% in the year from <node_2 answer>?",
+      "answer": [
+        "Beaumont",
+        "Brownsville",
+        "Corpus Christi",
+        "Edinburg",
+        "El Paso",
+        "Laredo",
+        "Longview",
+        "McAllen",
+        "Mission",
+        "Pharr",
+        "San Antonio",
+        "Tyler",
+        "Waco"
+      ]
+    },
+    "7": {
+      "source": "datagov/2020-census-redistricting-data-all-texas-places/files/rows.txt",
+      "fact": "Only Mission (85,778) and Pharr (79,715) have populations under 100,000 among the intersection cities.",
+      "subquestion": "Which cities from <intersection of nodes 3-6> had population under 100,000 in the 2020 Census?",
+      "answer": [
+        "Mission",
+        "Pharr"
+      ]
+    },
+    "8": {
+      "source": "wikipedia/Pharr,_Texas/content.txt",
+      "fact": "According to the Wikipedia article for Pharr, Texas, the city 'borders McAllen to the west, Edinburg to the north, San Juan to the east, and Hidalgo to the southwest.'",
+      "subquestion": "Which cities border <city from node 7: Pharr>?",
+      "answer": [
+        "McAllen",
+        "Edinburg",
+        "San Juan",
+        "Hidalgo"
+      ]
+    },
+    "9": {
+      "source": "wikipedia/Mission,_Texas/content.txt",
+      "fact": "According to the Wikipedia article for Mission, Texas, the city borders 'McAllen to the east, Palmhurst to the north, and Palmview to the west.'",
+      "subquestion": "Which cities border <city from node 7: Mission>?",
+      "answer": [
+        "McAllen",
+        "Palmhurst",
+        "Palmview"
+      ]
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=2, data.gov - nodes 1-2):",
+    "  Node 1: Year with highest LAX passenger count (2011-2016) -> 2016",
+    "  Node 2: Year with highest jail census records (2017-2022) -> 2019",
+    "  Range: 2016-2019",
+    "",
+    "HOP 2 (d=4, CDC 500 Cities diabetes data 2016-2019 - nodes 3-6):",
+    "  Node 3: TX cities with diabetes > 12% in 2016 -> 10 cities",
+    "  Node 4: TX cities with diabetes > 12% in 2017 -> 12 cities",
+    "  Node 5: TX cities with diabetes > 12% in 2018 -> 12 cities",
+    "  Node 6: TX cities with diabetes > 12% in 2019 -> 13 cities",
+    "  Intersection of nodes 3-6 -> 9 cities",
+    "",
+    "HOP 3 (d=1, 2020 Census Texas Places - node 7):",
+    "  Node 7: Filter by 2020 Census pop < 100k -> Mission and Pharr",
+    "",
+    "HOP 4 (d=2, Wikipedia adjacent cities - nodes 8-9):",
+    "  Node 8: Cities bordering Pharr -> McAllen, Edinburg, San Juan, Hidalgo",
+    "  Node 9: Cities bordering Mission -> McAllen, Palmhurst, Palmview",
+    "  Intersection: City that borders BOTH -> McAllen",
+    "",
+    "Final answer: McAllen"
+  ],
+  "verdict": "pass",
+  "datasets_used": [
+    "los-angeles-international-airport-passenger-traffic-by-terminal",
+    "allegheny-county-jail-daily-census",
+    "2020-census-redistricting-data-all-texas-places",
+    "500-cities-city-level-data-gis-friendly-format-2016-release",
+    "500-cities-city-level-data-gis-friendly-format-2017-release",
+    "500-cities-city-level-data-gis-friendly-format-2018-release",
+    "500-cities-city-level-data-gis-friendly-format-2019-release",
+    "Mission,_Texas",
+    "Pharr,_Texas"
+  ]
+}

@@ -1,0 +1,114 @@
+{
+  "question": "Find the New York counties outside of NYC that had over 90 youth detention admissions in the year from 2011-2015 that has the lowest birth rate for unmarried females ages 15-19 in the United States, a jail census under 750 in 2021, and over 65,500 basic STAR tax exemptions in 2022. Between them, identify the county with the highest 2021 violent crime count. In what year was its county seat incorporated as a city?",
+  "answer": "1832",
+  "nodes": {
+    "1": {
+      "source": "datagov/nchs-birth-rates-for-unmarried-women-by-age-race-and-hispanic-origin-united-states/files/rows.txt",
+      "fact": "Filtering to Age Group = \"15-19 years\" and Race or Hispanic Origin = \"All Races\" for 2011-2015, the minimum Birth Rate is 20.2 in 2015.",
+      "subquestion": "Which year from 2011-2015 has the lowest birth rate for unmarried females ages 15-19? (Filter Age Group == \"15-19 years\" and Race or Hispanic Origin == \"All Races\"; select the minimum Birth Rate.)",
+      "answer": "2015"
+    },
+    "2": {
+      "source": "datagov/annual-youth-detention-admissions-by-county-beginning-2006/v1/files/rows.csv",
+      "fact": "In 2015, Erie County had 513 secure/mixed detention admissions, Monroe had 211, Westchester had 175, Onondaga had 146, and Nassau had 94. Five Non-NYC counties had over 90 admissions.",
+      "subquestion": "Which Non-NYC NY counties had over 90 youth detention secure/mixed admissions in the year from node 1 (2015)?",
+      "answer": [
+        "Erie County",
+        "Monroe County",
+        "Westchester County",
+        "Onondaga County",
+        "Nassau County"
+      ]
+    },
+    "3": {
+      "source": "datagov/jail-population-by-county-beginning-1997/v1/files/rows.csv",
+      "fact": "In 2021, Nassau County had 753 jail census, Monroe had 737, Suffolk had 698, Erie had 685, and Westchester had 671. Among counties in the dataset, Erie, Monroe, Westchester, Onondaga, and Suffolk had jail census under 750.",
+      "subquestion": "Which NY counties had jail census under 750 in 2021?",
+      "answer": [
+        "Erie County",
+        "Monroe County",
+        "Westchester County",
+        "Onondaga County",
+        "Suffolk County"
+      ]
+    },
+    "4": {
+      "source": "datagov/nys-school-tax-relief-star-reimbursement-by-county-beginning-levy-year-1998/v1/files/rows.csv",
+      "fact": "In 2022, Suffolk County had 159,258 basic STAR exemptions, Nassau had 145,988, Erie had 103,769, and Monroe had 77,704. Four Non-NYC counties had over 65,500 basic exemptions.",
+      "subquestion": "Which Non-NYC NY counties had over 65,500 basic STAR exemptions in 2022?",
+      "answer": [
+        "Suffolk County",
+        "Nassau County",
+        "Erie County",
+        "Monroe County"
+      ]
+    },
+    "5": {
+      "source": "wikipedia/Erie_County,_New_York/content.txt",
+      "fact": "Erie County's county seat is Buffalo, which makes up about 28% of the county's population.",
+      "subquestion": "What is the county seat of Erie County (from <intersection of nodes 2-4>)?",
+      "answer": "Buffalo"
+    },
+    "6": {
+      "source": "wikipedia/Monroe_County,_New_York/content.txt",
+      "fact": "Monroe County's county seat and largest city is Rochester.",
+      "subquestion": "What is the county seat of Monroe County (from <intersection of nodes 2-4>)?",
+      "answer": "Rochester"
+    },
+    "7": {
+      "source": "datagov/index-violent-property-and-firearm-rates-by-county-beginning-1990/v1/files/rows.csv",
+      "fact": "In 2021, Erie County had 3,493 violent crimes.",
+      "subquestion": "How many violent crimes did Erie County (the county whose seat is <node_5 answer>) have in 2021?",
+      "answer": "3493"
+    },
+    "8": {
+      "source": "datagov/index-crimes-by-county-and-agency-beginning-1990/v1/files/rows.csv",
+      "fact": "In 2021, Monroe County had 2,320 violent crimes (County Total row shows 15,074 index crimes with 2,320 violent).",
+      "subquestion": "How many violent crimes did Monroe County (the county whose seat is <node_6 answer>) have in 2021?",
+      "answer": "2320"
+    },
+    "9": {
+      "source": "wikipedia/Buffalo,_New_York/content.txt",
+      "fact": "Buffalo was selected as the terminus of the Erie Canal in 1825, which led to its incorporation as a city in 1832.",
+      "subquestion": "In what year was <comparative of nodes 7-8: Buffalo, the county seat of Erie which had higher violent crime (3,493 > 2,320)> incorporated as a city?",
+      "answer": "1832"
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=1, data.gov - node 1):",
+    "  Node 1: Year with lowest unmarried teen birth rate (2011-2015) -> 2015",
+    "",
+    "HOP 2 (d=3, data.gov intersection - nodes 2-4):",
+    "  Node 2: Youth detention 2015, Non-NYC counties with >90 admissions → {Erie, Monroe, Westchester, Onondaga, Nassau}",
+    "  Node 3: Jail census 2021, counties with <750 → {Erie, Monroe, Westchester, Onondaga, Suffolk, ...}",
+    "  Node 4: STAR exemptions 2022, Non-NYC counties with >65,500 → {Suffolk, Nassau, Erie, Monroe}",
+    "  Intersection -> {Erie, Monroe}",
+    "",
+    "HOP 3 (d=2, Wikipedia - nodes 5-6):",
+    "  Node 5: Erie County -> county seat is Buffalo",
+    "  Node 6: Monroe County -> county seat is Rochester",
+    "  Result: {Buffalo, Rochester}",
+    "",
+    "HOP 4 (d=2, data.gov comparative - nodes 7-8):",
+    "  Node 7: Erie County violent crimes 2021 → 3,493",
+    "  Node 8: Monroe County violent crimes 2021 → 2,320",
+    "  Comparative: 3,493 > 2,320 → Erie has higher violent crime → Buffalo selected",
+    "",
+    "HOP 5 (d=1, Wikipedia - node 9):",
+    "  Node 9: Buffalo incorporated as a city in 1832",
+    "",
+    "Final answer: 1832"
+  ],
+  "verdict": "pass",
+  "datasets_used": [
+    "Buffalo,_New_York",
+    "Erie_County,_New_York",
+    "Monroe_County,_New_York",
+    "annual-youth-detention-admissions-by-county-beginning-2006",
+    "index-crimes-by-county-and-agency-beginning-1990",
+    "index-violent-property-and-firearm-rates-by-county-beginning-1990",
+    "jail-population-by-county-beginning-1997",
+    "nchs-birth-rates-for-unmarried-women-by-age-race-and-hispanic-origin-united-states",
+    "nys-school-tax-relief-star-reimbursement-by-county-beginning-levy-year-1998"
+  ]
+}

@@ -1,0 +1,81 @@
+{
+  "question": "In the state with two-digit FIPS code 19, find the counties that rank in the top three for public schools, private schools, and school district offices. Among their intersection, select the county with the most postsecondary institutions. For that county, compute (public schools + district offices) - (private schools + postsecondary institutions). Only report the integer result. Your response should be in the format [Answer].",
+  "answer": "109",
+  "nodes": {
+    "1": {
+      "source": "datagov/public-school-locations-2018-19-42360/files/data-F2nGlG.txt",
+      "fact": "For STFIP=19, the 3 counties with the most public schools are: Polk County (130); Linn County (77); Scott County (52). The next county is Johnson County (40), so the cut is unique.",
+      "subquestion": "For STFIP='19', which 3 county names have the most public schools? Return the county names separated by '; '.",
+      "answer": "Polk County; Linn County; Scott County"
+    },
+    "2": {
+      "source": "datagov/private-school-locations-2017-18-f49f6/files/data-dqdQDP.txt",
+      "fact": "For STFIP=19, the 3 counties with the most private schools are: Polk County (19); Linn County (14); Sioux County (14). The next county is Dubuque County (13), so the cut is unique.",
+      "subquestion": "For STFIP='19', which 3 county names have the most private schools? Return the county names separated by '; '.",
+      "answer": "Polk County; Linn County; Sioux County"
+    },
+    "3": {
+      "source": "datagov/school-district-office-locations-2020-21-d8df0/files/data-UDaCeM.txt",
+      "fact": "For STFIP=19, the 3 counties with the most school district offices are: Linn County (12); Polk County (10); Pottawattamie County (8). The next county is Story County (7), so the cut is unique.",
+      "subquestion": "For STFIP='19', which 3 county names have the most school district offices? Return the county names separated by '; '.",
+      "answer": "Linn County; Polk County; Pottawattamie County"
+    },
+    "4": {
+      "source": "datagov/postsecondary-school-locations-2019-20-64b31/files/data-cbxYz6.txt",
+      "fact": "Using the intersection of C with the union of A and B, the candidate counties are: Linn County, Polk County. Postsecondary counts within that set are: Polk County (11); Linn County (7). Polk County is strictly highest.",
+      "subquestion": "Let A be the set of counties in <node_1 answer>, B be the set of counties in <node_2 answer>, and C be the set of counties in <node_3 answer>. Consider the intersection of C with the union of A and B. Among those counties, which single county has the most postsecondary institutions in STFIP='19'? Answer with the county name including the word 'County'.",
+      "answer": "Polk County"
+    },
+    "5": {
+      "source": "datagov/public-school-locations-2018-19-42360/files/data-F2nGlG.txt",
+      "fact": "For STFIP=19 and NMCNTY='Polk County', the public school count is 130.",
+      "subquestion": "How many public schools have NMCNTY='<node_4 answer>' and STFIP='19'?",
+      "answer": "130"
+    },
+    "6": {
+      "source": "datagov/private-school-locations-2017-18-f49f6/files/data-dqdQDP.txt",
+      "fact": "For STFIP=19 and NMCNTY='Polk County', the private school count is 19.",
+      "subquestion": "How many private schools have NMCNTY='<node_4 answer>' and STFIP='19'?",
+      "answer": "19"
+    },
+    "7": {
+      "source": "datagov/school-district-office-locations-current-c8f9d/files/data-ghDEVP.txt",
+      "fact": "For STFIP=19 and NMCNTY='Polk County', the school district office count is 12.",
+      "subquestion": "How many school district offices have NMCNTY='<node_4 answer>' and STFIP='19'?",
+      "answer": "12"
+    },
+    "8": {
+      "source": "datagov/postsecondary-school-locations-2017-18-fa280/files/data-7AG3Nw.txt",
+      "fact": "For STFIP=19 and NMCNTY='Polk County', the postsecondary institution count is 14.",
+      "subquestion": "How many postsecondary institutions have NMCNTY='<node_4 answer>' and STFIP='19'?",
+      "answer": "14"
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=3, County top counts - nodes 1-3):",
+    "  Node 1: For STFIP=19, the top 3 counties by public schools are Polk, Linn, and Scott.",
+    "  Node 2: For STFIP=19, the top 3 counties by private schools are Polk, Linn, and Sioux.",
+    "  Node 3: For STFIP=19, the top 3 counties by school district offices are Linn, Polk, and Pottawattamie.",
+    "",
+    "HOP 2 (d=4, Postsecondary selection - node 4):",
+    "  Node 4: The candidate counties are Linn and Polk; Polk County has the most postsecondary institutions (11).",
+    "",
+    "HOP 3 (d=4, County counts and arithmetic - nodes 5-8):",
+    "  Node 5: Polk County public schools = 130.",
+    "  Node 6: Polk County private schools = 19.",
+    "  Node 7: Polk County school district offices = 12.",
+    "  Node 8: Polk County postsecondary institutions = 14.",
+    "  Computation: (130 + 12) - (19 + 14) = 109.",
+    "",
+    "Final answer: 109"
+  ],
+  "verdict": "pass",
+  "datasets_used": [
+    "public-school-locations-2018-19-42360",
+    "private-school-locations-2017-18-f49f6",
+    "school-district-office-locations-2020-21-d8df0",
+    "postsecondary-school-locations-2019-20-64b31",
+    "school-district-office-locations-current-c8f9d",
+    "postsecondary-school-locations-2017-18-fa280"
+  ]
+}

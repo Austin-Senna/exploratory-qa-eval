@@ -1,0 +1,20 @@
+{
+  "question": "Which year from 2008-2010 has the lowest total MTA ridership? Your response should be in the format [Answer].",
+  "answer": "2008",
+  "practical_motivation": "A transit researcher wants to identify the lowest ridership year during the early recession period.",
+  "nodes": {
+    "1": {
+      "source": "datagov/mta-monthly-ridership-traffic-data-beginning-january-2008/files/rows.txt",
+      "fact": "Summing Ridership by year (from Month) for 2008-2010, 2008 has the lowest total at 309142204.",
+      "subquestion": "Which year from 2008-2010 has the lowest total MTA ridership? (Parse Month to Year; sum Ridership by Year; select the minimum.)",
+      "answer": "2008"
+    }
+  },
+  "reasoning_chain": [
+    "Node 1: Sum Ridership by year (2008-2010) and select the minimum; the lowest year is 2008.",
+    "Final answer: 2008"
+  ],
+  "datasets_used": [
+    "mta-monthly-ridership-traffic-data-beginning-january-2008"
+  ]
+}

@@ -1,0 +1,51 @@
+{
+  "question": "Starting with the year (within 2005-2012) with the lowest CTA bus ridership, a planner is reviewing impairment entries for a specific river that flows into the city home to the Slater Memorial Museum and helps form its harbor. Then, find the name of another river whose mouth is located at that specific river. Based on that derived year's inventory of impaired waters, how many entries for the primary river have a location description that specifically mentions this secondary river? Your response should be in the format [Answer].",
+  "answer": "1",
+  "nodes": {
+    "1": {
+      "source": "datagov/cta-ridership-daily-boarding-totals/files/rows.txt",
+      "fact": "For 2005-2012, lowest CTA bus ridership is in 2010.",
+      "subquestion": "Which year from 2005-2012 has lowest CTA bus ridership?",
+      "answer": "2010"
+    },
+    "2": {
+      "source": "wikipedia/Slater_Memorial_Museum/content.txt",
+      "fact": "Slater Memorial Museum is in Norwich, Connecticut.",
+      "subquestion": "What city is the Slater Memorial Museum in?",
+      "answer": "Norwich"
+    },
+    "3": {
+      "source": "wikipedia/Norwich,_Connecticut/content.txt",
+      "fact": "Quinebaug River flows into Norwich and helps form its harbor.",
+      "subquestion": "What river flows into <node_2 answer> and forms its harbor?",
+      "answer": "Quinebaug River"
+    },
+    "4": {
+      "source": "wikipedia/Moosup_River/content.txt",
+      "fact": "Moosup River has its mouth at the Quinebaug River.",
+      "subquestion": "What river has its mouth at <node_3 answer>?",
+      "answer": "Moosup River"
+    },
+    "5": {
+      "source": "datagov/impaired-river-2010-9f1ab/files/data.txt",
+      "fact": "1 feature has Quinebaug River name and Moosup River in location.",
+      "subquestion": "In <node_1 answer> impaired inventory, how many have <node_3 answer> and <node_4 answer>?",
+      "answer": "1"
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=1): CTA ridership lowest 2005-2012 is 2010",
+    "HOP 2 (d=1): Slater Memorial Museum → Norwich",
+    "HOP 3 (d=1): Norwich harbor → Quinebaug River",
+    "HOP 4 (d=1): Mouth at Quinebaug → Moosup River",
+    "HOP 5 (d=1): 2010 impaired with both → 1",
+    "Final answer: 1"
+  ],
+  "datasets_used": [
+    "cta-ridership-daily-boarding-totals",
+    "Slater_Memorial_Museum",
+    "Norwich,_Connecticut",
+    "Moosup_River",
+    "impaired-river-2010-9f1ab"
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "question": "Which year from 2005-2010 has the highest drug overdose death rate for all persons? Your response should be in the format [Answer].",
+  "answer": "2010",
+  "practical_motivation": "A public health analyst wants to pinpoint the peak year of overdose death rates in the late 2000s.",
+  "nodes": {
+    "1": {
+      "source": "datagov/drug-overdose-death-rates-by-drug-type-sex-age-race-and-hispanic-origin-united-states-3f72f/files/rows.txt",
+      "fact": "Filtering to STUB_NAME = \"Total\" and STUB_LABEL = \"All persons\", the highest average drug overdose death rate in 2005-2010 occurs in 2010 at 4.358333333333333.",
+      "subquestion": "Which year from 2005-2010 has the highest drug overdose death rate for all persons? (Filter STUB_NAME == \"Total\" and STUB_LABEL == \"All persons\"; average ESTIMATE by YEAR; select the maximum.)",
+      "answer": "2010"
+    }
+  },
+  "reasoning_chain": [
+    "Node 1: Filter to total population, average ESTIMATE by YEAR (2005-2010), and select the maximum; the peak year is 2010.",
+    "Final answer: 2010"
+  ],
+  "datasets_used": [
+    "drug-overdose-death-rates-by-drug-type-sex-age-race-and-hispanic-origin-united-states-3f72f"
+  ]
+}

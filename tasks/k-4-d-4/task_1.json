@@ -1,0 +1,94 @@
+{
+  "question": "Can you find the NYC elementary school that appears in the top 5 by environment category rating in at least three years from 2006-2010 and is located in the Bedford Neighborhood Tabulation Area? Please report the school day in the MM/DD format. Your response should be in the format [Answer].",
+  "answer": "10/28",
+  "nodes": {
+    "1": {
+      "source": "datagov/2006-2007-school-progress-report/files/rows.txt",
+      "fact": "After filtering to elementary schools and ranking by environment category score (ties broken by SCHOOL name Z-A), the top 5 in 2006-07 were: PS 034 OLIVER H PERRY (0.989), EARTH SCHOOL (0.985), PS 212 MIDTOWN WEST (0.951), PS 205 ALEXANDER GRAHAM BELL (0.943), PS 120 CARLOS TAPIA (0.919).",
+      "subquestion": "Which NYC elementary schools were in the top 5 by environment category score in 2006-07? (Filter SCHOOL LEVEL* contains 'Elementary'; break ties by SCHOOL name Z-A.)",
+      "answer": [
+        "PS 034 OLIVER H PERRY",
+        "EARTH SCHOOL",
+        "PS 212 MIDTOWN WEST",
+        "PS 205 ALEXANDER GRAHAM BELL",
+        "PS 120 CARLOS TAPIA"
+      ]
+    },
+    "2": {
+      "source": "datagov/2007-2008-school-progress-report/files/rows.txt",
+      "fact": "After filtering to elementary schools and ranking by environment category score (ties broken by SCHOOL name Z-A), the top 5 in 2007-08 were: P.S. 380 JOHN WAYNE ELEMENTARY (15.0), P.S. 172 BEACON SCHOOL OF EXCELLENCE (15.0), P.S. 120 CARLOS TAPIA (15.0), EXCELLENCE CHARTER SCHOOL OF BEDFORD STUYVESANT (15.0), P.S. 164 CAESAR RODNEY (14.9).",
+      "subquestion": "Which NYC elementary schools were in the top 5 by environment category score in 2007-08? (Filter SCHOOL LEVEL* contains 'Elementary'; break ties by SCHOOL name Z-A.)",
+      "answer": [
+        "P.S. 380 JOHN WAYNE ELEMENTARY",
+        "P.S. 172 BEACON SCHOOL OF EXCELLENCE",
+        "P.S. 120 CARLOS TAPIA",
+        "EXCELLENCE CHARTER SCHOOL OF BEDFORD STUYVESANT",
+        "P.S. 164 CAESAR RODNEY"
+      ]
+    },
+    "3": {
+      "source": "datagov/2008-2009-school-progress-report/files/rows.txt",
+      "fact": "After filtering to elementary schools and ranking by environment category score (ties broken by SCHOOL name Z-A), the top 5 in 2008-09 were: P.S. X307 - EAMES PLACE (15.0), P.S. 380 JOHN WAYNE ELEMENTARY (15.0), P.S. 254 (15.0), P.S. 172 BEACON SCHOOL OF EXCELLENCE (15.0), P.S. 157 BENJAMIN FRANKLIN (15.0).",
+      "subquestion": "Which NYC elementary schools were in the top 5 by environment category score in 2008-09? (Filter SCHOOL LEVEL* contains 'Elementary'; break ties by SCHOOL name Z-A.)",
+      "answer": [
+        "P.S. X307 - EAMES PLACE",
+        "P.S. 380 JOHN WAYNE ELEMENTARY",
+        "P.S. 254",
+        "P.S. 172 BEACON SCHOOL OF EXCELLENCE",
+        "P.S. 157 BENJAMIN FRANKLIN"
+      ]
+    },
+    "4": {
+      "source": "datagov/2009-2010-school-progress-report/files/rows.txt",
+      "fact": "After filtering to elementary schools and ranking by environment category score (ties broken by SCHOOL name Z-A), the top 5 in 2009-10 were: P.S. 380 John Wayne Elementary (15.0), P.S. 172 Beacon School of Excellence (15.0), Achievement First East New York School (15.0), Bronx Charter School for Excellence (14.8), P.S. 254 (14.1).",
+      "subquestion": "Which NYC elementary schools were in the top 5 by environment category score in 2009-10? (Filter SCHOOL LEVEL* contains 'Elementary'; break ties by SCHOOL name Z-A.)",
+      "answer": [
+        "P.S. 380 John Wayne Elementary",
+        "P.S. 172 Beacon School of Excellence",
+        "Achievement First East New York School",
+        "Bronx Charter School for Excellence",
+        "P.S. 254"
+      ]
+    },
+    "5": {
+      "source": "datagov/2006-2007-school-progress-report/files/rows.txt",
+      "fact": "From the top-5 lists in nodes 1-4, the only schools appearing in at least three of the four years are P.S. 380 John Wayne Elementary and P.S. 172 Beacon School of Excellence (both appear in 2007-08, 2008-09, and 2009-10).",
+      "subquestion": "Which schools appear in the top-5 lists in at least three of the four years from nodes 1-4?",
+      "answer": [
+        "P.S. 380 John Wayne Elementary",
+        "P.S. 172 Beacon School of Excellence"
+      ]
+    },
+    "6": {
+      "source": "datagov/2013-2014-school-locations/files/rows.txt",
+      "fact": "In the 2013-14 school locations data, P.S. 380 John Wayne Elementary has NTA_NAME 'Bedford' (NTA BK75), while P.S. 172 Beacon School of Excellence has NTA_NAME 'Sunset Park West' (NTA BK32). Therefore, the school from node 5 located in the Bedford NTA is P.S. 380 John Wayne Elementary.",
+      "subquestion": "Which school from node_5 is located in the Bedford NTA according to the 2013-14 school locations data?",
+      "answer": "P.S. 380 John Wayne Elementary"
+    },
+    "7": {
+      "source": "wikipedia/John_Wayne_Elementary_School/content.txt",
+      "fact": "John Wayne Elementary School Day is on October 28",
+      "subquestion": "What day is 380 John Wayne Elementary's school day? Answer in MM/DD format",
+      "answer": "10/28"
+    }
+  },
+  "reasoning_chain": [
+    "Node 1: Top 5 elementary schools by environment score in 2006-07 (tie-break by SCHOOL name Z-A) → {PS 034 OLIVER H PERRY, EARTH SCHOOL, PS 212 MIDTOWN WEST, PS 205 ALEXANDER GRAHAM BELL, PS 120 CARLOS TAPIA}",
+    "Node 2: Top 5 elementary schools by environment score in 2007-08 (tie-break by SCHOOL name Z-A) → {P.S. 380 JOHN WAYNE ELEMENTARY, P.S. 172 BEACON SCHOOL OF EXCELLENCE, P.S. 120 CARLOS TAPIA, EXCELLENCE CHARTER SCHOOL OF BEDFORD STUYVESANT, P.S. 164 CAESAR RODNEY}",
+    "Node 3: Top 5 elementary schools by environment score in 2008-09 (tie-break by SCHOOL name Z-A) → {P.S. X307 - EAMES PLACE, P.S. 380 JOHN WAYNE ELEMENTARY, P.S. 254, P.S. 172 BEACON SCHOOL OF EXCELLENCE, P.S. 157 BENJAMIN FRANKLIN}",
+    "Node 4: Top 5 elementary schools by environment score in 2009-10 (tie-break by SCHOOL name Z-A) → {P.S. 380 John Wayne Elementary, P.S. 172 Beacon School of Excellence, Achievement First East New York School, Bronx Charter School for Excellence, P.S. 254}",
+    "Node 5: Schools appearing in the top-5 lists in at least three of the four years → {P.S. 380 John Wayne Elementary, P.S. 172 Beacon School of Excellence}",
+    "Node 6: From node 5, select the school located in the Bedford NTA → P.S. 380 John Wayne Elementary",
+    "Node 7: John Wayne Elementary School Day is on October 28",
+    "Final answer: Bedford, England"
+  ],
+  "verdict": "pass",
+  "datasets_used": [
+    "2006-2007-school-progress-report",
+    "2007-2008-school-progress-report",
+    "2008-2009-school-progress-report",
+    "2009-2010-school-progress-report",
+    "2013-2014-school-locations",
+    "John_Wayne_Elementary_School"
+  ]
+}

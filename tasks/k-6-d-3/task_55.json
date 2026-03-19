@@ -1,0 +1,95 @@
+{
+  "question": "In the 2017-2019 year that had the lowest total annual average daily traffic count for all New York State Routes and roads, identify the U.S. jurisdictions that rank 6th in GDP per capita, 1st in unemployment insurance wage base (for the following year), and 1st in patents per capita, respectively. Among these three, determine which one has the highest percentage of STEM employment. For that specific jurisdiction, calculate the difference between the cost of 1 million kWh of industrial electricity (in dollars) and the per-capita federal grants received (from the prior year). Find the state with a per-capita personal income closest to this resulting number, and then count how many jurisdictions have a higher bachelor's degree attainment rate than that state. Your response should be in the format [Answer].",
+  "answer": "20",
+  "nodes": {
+    "1": {
+      "source": "datagov/annual-average-daily-traffic-aadt-beginning-1977/files/rows.txt",
+      "fact": "Summing Count by Year for 2017-2019, the minimum total is 73796464 in 2018.",
+      "subquestion": "Which year from 2017-2019 has the lowest total annual average daily traffic count for all New York State Routes and roads?",
+      "answer": "2018"
+    },
+    "2": {
+      "source": "datagov/choose-maryland-compare-states-economy/files/rows.txt",
+      "fact": "In the 2018 data, among U.S. states and Washington, D.C., California has the 6th-highest gross domestic product per capita at 68,803 dollars, with no tie at that rank.",
+      "subquestion": "In the <node_1 answer> data, among U.S. states and Washington, D.C., which jurisdiction has the 6th-highest gross domestic product per capita (in dollars)?",
+      "answer": "California"
+    },
+    "3": {
+      "source": "datagov/choose-maryland-compare-states-taxes/files/rows.txt",
+      "fact": "In the 2019 data, among U.S. states and Washington, D.C., Washington has the highest unemployment insurance taxable wage base at 49,800 dollars, with no tie for highest.",
+      "subquestion": "In the <node_1 answer>+1 data, among U.S. states and Washington, D.C., which jurisdiction has the highest unemployment insurance taxable wage base (in dollars)?",
+      "answer": "Washington"
+    },
+    "4": {
+      "source": "datagov/choose-maryland-compare-states-technology/files/rows.txt",
+      "fact": "In the 2018 data, among U.S. states and Washington, D.C., Massachusetts has the highest number of patents issued per 100,000 population at 104.4, with no tie for highest.",
+      "subquestion": "In the <node_1 answer> data, among U.S. states and Washington, D.C., which jurisdiction has the highest number of patents issued per 100,000 population?",
+      "answer": "Massachusetts"
+    },
+    "5": {
+      "source": "datagov/choose-maryland-compare-states-workforce/files/rows.txt",
+      "fact": "In the 2018 data, among California, Washington, and Massachusetts, Washington has the highest employment in STEM occupations at 9.2%, with no tie among those three jurisdictions.",
+      "subquestion": "In the <node_1 answer> data, among <node_2 answer>, <node_3 answer>, and <node_4 answer>, which jurisdiction has the highest employment in STEM occupations (%)?",
+      "answer": "Washington"
+    },
+    "6": {
+      "source": "datagov/choose-maryland-compare-states-utilities/files/rows.txt",
+      "fact": "In the 2018 data, for Washington, the average retail price per kWh, industrial, is 4.71 cents.",
+      "subquestion": "In the <node_1 answer> data, for jurisdiction <node_5 answer>, what is the average retail price per kWh, industrial (in cents)?",
+      "answer": "4.71"
+    },
+    "7": {
+      "source": "datagov/choose-maryland-compare-states-business-support/files/rows.txt",
+      "fact": "In FY 2017 data, for Washington, federal grants to state governments per capita are 1,854 dollars.",
+      "subquestion": "In FY <node_1 answer>-1 data, for jurisdiction <node_5 answer>, what are federal grants to state governments per capita (in dollars)?",
+      "answer": "1854"
+    },
+    "8": {
+      "source": "datagov/choose-maryland-compare-states-demographics/files/rows.txt",
+      "fact": "In the 2018 data, among U.S. states and Washington, D.C., North Carolina has per capita personal income of 46,117 dollars, and it is the unique closest value to T.",
+      "subquestion": "In the <node_1 answer> data, let T = (<node_6 answer> / 100) * 1,000,000 - <node_7 answer>. Among U.S. states and Washington, D.C., which jurisdiction has per capita personal income (in dollars) closest to T (use absolute difference)?",
+      "answer": "North Carolina"
+    },
+    "9": {
+      "source": "datagov/choose-maryland-compare-states-education/files/rows.txt",
+      "fact": "In the 2018 data, North Carolina has bachelor's degree attainment of 31.9%, and 20 U.S. jurisdictions (states and Washington, D.C.) have a strictly higher bachelor's degree attainment percentage.",
+      "subquestion": "In the <node_1 answer> data, how many U.S. jurisdictions (states and Washington, D.C.) have bachelor's degree attainment (%) strictly greater than the value for <node_8 answer>?",
+      "answer": "20"
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=1, data.gov year derivation - node 1):",
+    "  Node 1: NY AADT lowest 2017-2019 is 2018",
+    "",
+    "HOP 2 (d=3, nodes 2-4):",
+    "  Node 2: Identify the jurisdiction with the 6th-highest GDP per capita (California).",
+    "  Node 3: Identify the jurisdiction with the highest unemployment-insurance taxable wage base (Washington).",
+    "  Node 4: Identify the jurisdiction with the highest patents issued per 100,000 population (Massachusetts).",
+    "",
+    "HOP 3 (d=1, node 5):",
+    "  Node 5: Among those three jurisdictions, select the one with the highest employment in STEM occupations (%) (Washington).",
+    "",
+    "HOP 4 (d=2, nodes 6-7):",
+    "  Node 6: Retrieve Washington's industrial electricity price per kWh (4.71 cents).",
+    "  Node 7: Retrieve Washington's federal grants to state governments per capita (1854 dollars).",
+    "",
+    "HOP 5 (d=1, node 8):",
+    "  Node 8: Compute T = (4.71/100)*1,000,000 - 1854 = 45246 and find the jurisdiction whose per capita personal income is closest to T (North Carolina).",
+    "",
+    "HOP 6 (d=1, node 9):",
+    "  Node 9: Count jurisdictions with bachelor's degree attainment (%) strictly higher than North Carolina's value (20).",
+    "",
+    "Final answer: 20"
+  ],
+  "datasets_used": [
+    "annual-average-daily-traffic-aadt-beginning-1977",
+    "choose-maryland-compare-states-economy",
+    "choose-maryland-compare-states-taxes",
+    "choose-maryland-compare-states-technology",
+    "choose-maryland-compare-states-workforce",
+    "choose-maryland-compare-states-utilities",
+    "choose-maryland-compare-states-business-support",
+    "choose-maryland-compare-states-demographics",
+    "choose-maryland-compare-states-education"
+  ]
+}

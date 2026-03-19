@@ -1,0 +1,44 @@
+{
+  "question": "Can you tell me which has the greatest number of incidents in 2022 among (1) counts by division level for New Orleans Police Department cases where officers applied force, (2) the count of dispatch-system incident records from the Austin Police Department sector with the most searches (excluding Sector Unknown), and (3) the maximum count of incidents where officers applied force across Austin Police Department council districts? Report the greatest number. Your response should be in the format [Answer].",
+  "answer": "39004",
+  "nodes": {
+    "1": {
+      "source": "datagov/nopd-use-of-force-incidents/v1/files/rows.csv",
+      "subquestion": "In 2022 NOPD use-of-force data, what is the maximum incident count across division levels?",
+      "fact": "In 2022 NOPD use-of-force data, the maximum incident count across division levels is 92.",
+      "answer": "92"
+    },
+    "2": {
+      "source": "datagov/apd-searches-by-type/v1/files/rows.csv",
+      "subquestion": "In 2022 APD searches-by-type data, ignoring records where Sector is \"Unknown\", which sector has the most searches?",
+      "fact": "In 2022 APD searches-by-type data (ignoring Sector = \"Unknown\"), the sector with the most searches is Charlie (468 searches).",
+      "answer": "Charlie"
+    },
+    "3": {
+      "source": "datagov/apd-computer-aided-dispatch-incidents/v1/files/rows.csv",
+      "subquestion": "In 2022, within sector <node_2 answer>, how many incidents occurred?",
+      "fact": "In 2022 APD computer-aided-dispatch incidents data, sector Charlie recorded 39,004 incidents.",
+      "answer": "39004"
+    },
+    "4": {
+      "source": "datagov/apd-use-of-force/v1/files/rows.csv",
+      "subquestion": "In 2022 Austin use-of-force data, what is the maximum incident count across council districts?",
+      "fact": "In 2022 Austin use-of-force data, the maximum incident count across council districts is 1790.",
+      "answer": "1790"
+    }
+  },
+  "reasoning_chain": [
+    "Node 1: 2022 NOPD maximum division-level incident count = 92.",
+    "Node 2: 2022 APD searches-by-type top sector (excluding Unknown) = Charlie.",
+    "Node 3 depends on node 2: 2022 APD CAD incidents in sector Charlie = 39004.",
+    "Node 4: 2022 Austin use-of-force maximum council-district incident count = 1790.",
+    "Take the largest of (92, 39004, 1790) = 39004.",
+    "Final answer: 39004"
+  ],
+  "datasets_used": [
+    "apd-computer-aided-dispatch-incidents",
+    "apd-searches-by-type",
+    "apd-use-of-force",
+    "nopd-use-of-force-incidents"
+  ]
+}

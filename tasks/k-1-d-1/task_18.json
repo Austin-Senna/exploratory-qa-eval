@@ -1,0 +1,20 @@
+{
+  "question": "Which year from 2011-2016 has the highest average unemployment rate for ages 16-19 across U.S. states? Your response should be in the format [Answer].",
+  "answer": "2012",
+  "practical_motivation": "A labor economist wants to pinpoint the worst year for teen unemployment after the recession.",
+  "nodes": {
+    "1": {
+      "source": "datagov/unemployment-rate-by-age-groups/files/unemployment_rate_by_age_groups.txt",
+      "fact": "Filtering Area Type = \"State\" and averaging Age 16-19 by Year for 2011-2016, the maximum average occurs in 2012 at 0.35391666666666666.",
+      "subquestion": "Which year from 2011-2016 has the highest average unemployment rate for ages 16-19 across U.S. states? (Filter Area Type == \"State\"; average Age 16-19 by Year; select the maximum.)",
+      "answer": "2012"
+    }
+  },
+  "reasoning_chain": [
+    "Node 1: Which year from 2011-2016 has the highest average unemployment rate for ages 16-19 across states? (Filter Area Type == \"State\"; average Age 16-19 by Year; select the maximum.) The answer is 2012.",
+    "Final answer: 2012"
+  ],
+  "datasets_used": [
+    "unemployment-rate-by-age-groups"
+  ]
+}

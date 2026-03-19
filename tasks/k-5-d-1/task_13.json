@@ -1,0 +1,61 @@
+{
+  "question": "In the year (within 2017-2022) that has the highest total gasoline/gasohol sales across U.S. states, find the geo area with the most violations of moving traffic arrests reported by the Los Angeles Police Department. Then, find that area's numeric Area ID, and the most common crime description for that Area ID in that same year. Using 2020-present crime data for the same Area ID, find the incident count for that description in the following year, then in two years after the derived year identify the crime description whose incident count is the smallest value exceeding that count and report that count as your final answer. Your response should be in the format [Answer].",
+  "answer": "915",
+  "nodes": {
+    "1": {
+      "source": "datagov/monthly-motor-fuel-sales-reported-by-states-selected-data-from-fhwa-monthly-motor-fuel-rep/files/rows.txt",
+      "fact": "Filtering fuel_type = \"Gasoline/gasohol\" and summing value by year (from date) for 2017-2022, the maximum total is 294719877886 in 2019.",
+      "subquestion": "Which year from 2017-2022 has the highest total gasoline/gasohol sales across U.S. states? (Filter fuel_type == \"Gasoline/gasohol\"; derive year from date; sum value by year and select the maximum.)",
+      "answer": "2019"
+    },
+    "2": {
+      "source": "datagov/arrest-data-from-2010-to-2019/v1/files/rows.csv",
+      "fact": "In <node_1 answer>, the area with the most arrests in the charge group \"Moving Traffic Violations\" is Van Nuys (455 arrests).",
+      "subquestion": "In <node_1 answer> arrest data, which area has the most arrests in the charge group \"Moving Traffic Violations\"?",
+      "answer": "Van Nuys"
+    },
+    "3": {
+      "source": "datagov/lapd-ripa-ab-953-stop-incident-details-from-7-1-2018-to-present/v1/files/rows.csv",
+      "fact": "In the LAPD RIPA stop-incident records, the area name Van Nuys corresponds to Area ID 9.",
+      "subquestion": "In the LAPD stop-incident records collected under California's RIPA program, what Area ID corresponds to area name <node_2 answer> (answer as an integer)?",
+      "answer": "9"
+    },
+    "4": {
+      "source": "datagov/crime-data-from-2010-to-2019/v1/files/rows.csv",
+      "fact": "In <node_1 answer> crime data for AREA = 9, the most common crime description is THEFT OF IDENTITY (807 incidents).",
+      "subquestion": "In <node_1 answer> crime data, within Area ID <node_3 answer>, which crime description is most common?",
+      "answer": "THEFT OF IDENTITY"
+    },
+    "5": {
+      "source": "datagov/crime-data-from-2020-to-present/v1/files/rows.csv",
+      "fact": "In <node_1 answer + 1> crime data for AREA = 9, there were 761 incidents with crime description THEFT OF IDENTITY. In <node_1 answer + 2> crime data for AREA = 9, the smallest incident count that is still greater than 761 is 915, corresponding to VEHICLE - STOLEN (unique within scope).",
+      "subquestion": "Using the 2020-present crime data for Area ID <node_3 answer>, in <node_1 answer + 2> what is the incident count of the crime description whose count is the closest value above the <node_1 answer + 1> incident count for crime description <node_4 answer>?",
+      "answer": "915"
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=1, data.gov year derivation - node 1):",
+    "  Node 1: Motor fuel sales data -> Highest gasoline/gasohol sales (2017-2022) is 2019",
+    "",
+    "HOP 2 (d=1, data.gov - node 2 depends on node 1):",
+    "  Node 2: LAPD arrest data <node_1 answer> -> Van Nuys has most Moving Traffic Violations arrests",
+    "",
+    "HOP 3 (d=1, data.gov - node 3 depends on node 2):",
+    "  Node 3: LAPD RIPA stop-incident data -> Van Nuys corresponds to Area ID 9",
+    "",
+    "HOP 4 (d=1, data.gov - node 4 depends on nodes 1 and 3):",
+    "  Node 4: LAPD crime data <node_1 answer> for Area ID 9 -> Most common description is THEFT OF IDENTITY",
+    "",
+    "HOP 5 (d=1, data.gov - node 5 depends on nodes 1, 3, and 4):",
+    "  Node 5: LAPD crime data <node_1 answer + 1> and <node_1 answer + 2> for Area ID 9 -> THEFT OF IDENTITY in 2020 = 761, smallest 2021 > 761 = 915",
+    "",
+    "Final answer: 915"
+  ],
+  "datasets_used": [
+    "monthly-motor-fuel-sales-reported-by-states-selected-data-from-fhwa-monthly-motor-fuel-rep",
+    "arrest-data-from-2010-to-2019",
+    "crime-data-from-2010-to-2019",
+    "crime-data-from-2020-to-present",
+    "lapd-ripa-ab-953-stop-incident-details-from-7-1-2018-to-present"
+  ]
+}

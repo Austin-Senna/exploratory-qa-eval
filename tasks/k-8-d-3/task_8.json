@@ -1,0 +1,79 @@
+{
+  "question": "Start with Harvard University. Find the U.S. state of that university's city. Let A be the count of the state name in one text, and let B be the number of distinct 4-digit years in another text (exclude years in identifiers). Let C be the number of distinct 4-digit years mentioned in House banking scandal (exclude years in identifiers). Let r0 be the state's GDP rank by gross domestic product (in $ millions) (highest=1), and compute r = ((r0 + A + B - 1) mod 51) + 1. Let H be the number of subcontracting rows in that state with total contract value >= r*100000. From a third text, sort its distinct 4-digit years (exclude years in identifiers) and pick year Y using k = ((H + B) mod 10) + 1 (wrap if needed). From a fourth text, let D be the number of distinct 4-digit years whose last two digits match Y (exclude years in identifiers). In a final text, let E be the same last-two-digits count there (exclude years in identifiers). Return |E - D| + C. Answer as: [number].",
+  "answer": "4",
+  "nodes": {
+    "1": {
+      "source": "wikipedia/Harvard_University/content.txt",
+      "fact": "Harvard University is located in Cambridge.",
+      "subquestion": "What city is Harvard University located in?",
+      "answer": "Cambridge"
+    },
+    "2": {
+      "source": "wikipedia/Cambridge,_Massachusetts/content.txt",
+      "fact": "Cambridge is located in the U.S. state of Massachusetts.",
+      "subquestion": "In U.S. geography, which U.S. state is <node_1 answer> located in?",
+      "answer": "Massachusetts"
+    },
+    "3": {
+      "source": "datagov/esi-vi5-central-st-thomas-u-s-virgin-islands-2000-environmental-sensitivity-index-map4/files/esi_download.txt",
+      "fact": "The name Massachusetts appears 7 times (case-insensitive).",
+      "subquestion": "How many times is the state name <node_2 answer> mentioned (case-insensitive)?",
+      "answer": "7"
+    },
+    "4": {
+      "source": "datagov/305b-assessed-2014-estuary-ebaff/files/data.txt",
+      "fact": "There are 42 distinct 4-digit years.",
+      "subquestion": "How many distinct 4-digit years appear?",
+      "answer": "42"
+    },
+    "5": {
+      "source": "wikipedia/House_banking_scandal/content.txt",
+      "fact": "House banking scandal mentions 3 distinct 4-digit years.",
+      "subquestion": "How many distinct 4-digit years are mentioned in House banking scandal?",
+      "answer": "3"
+    },
+    "6": {
+      "source": "datagov/choose-maryland-compare-states-economy/files/rows.txt",
+      "fact": "Massachusetts has GDP rank by gross domestic product (in $ millions) (highest=1) 10. Using r = ((10 + 7 + 42 - 1) mod 51) + 1, r = 8.",
+      "subquestion": "Let r0 be the GDP rank by gross domestic product (in $ millions) (highest=1) of <node_2 answer>. Let r = ((r0 + <node_3 answer> + <node_4 answer> - 1) mod 51) + 1. What is r?",
+      "answer": "8"
+    },
+    "7": {
+      "source": "datagov/subcontracting-directory-for-small-businesses/files/subk-directory-as-of-07112024-filtered-subk-directory-v3.txt",
+      "fact": "Within vendor address state Massachusetts, there are 4 rows with total contract value >= 800000.",
+      "subquestion": "Within vendor address state <node_2 answer>, how many rows have Base and All Options Value (Total Contract Value) >= (<node_6 answer> * 100000)?",
+      "answer": "4"
+    },
+    "8": {
+      "source": "datagov/deepwater-ctd-4_04_031-ctd-nc-26-28n-94-17w-1993-02-22/files/deepwater_4_04_031_ctd.txt",
+      "fact": "The sorted distinct-year list has length 10. With k = ((4 + 42) mod 10) + 1 = 7, the selected year is 2002.",
+      "subquestion": "List distinct 4-digit years in ascending order. Let k = ((<node_7 answer> + <node_4 answer>) mod 10) + 1 and let L be the number of years in the list. Return the year at position ((k-1) mod L)+1 (1-indexed).",
+      "answer": "2002"
+    },
+    "9": {
+      "source": "datagov/walton-smith-ctd-ws24139-ws24139_ws24139-stncal1-2024-05-20-26-4263n-81-9585w/files/WS24139_WS24139_WS24139_Stn_CAL1-fCAooa.txt",
+      "fact": "There are 0 distinct 4-digit years whose last two digits equal 02.",
+      "subquestion": "How many distinct 4-digit years have the same last two digits as <node_8 answer>?",
+      "answer": "0"
+    },
+    "10": {
+      "source": "datagov/deepwater-ctd-00020125-bdo-nc-21-82n-85-68w-1922-02-01/files/deepwater_00020125_bdo.txt",
+      "fact": "E=1 in this text, D=0 previously; |E-D|+C = 4.",
+      "subquestion": "Let E be the number of distinct 4-digit years whose last two digits match <node_8 answer>. Return |E - <node_9 answer>| + <node_5 answer>.",
+      "answer": "4"
+    }
+  },
+  "reasoning_chain": [
+    "Node 1: find the city for the anchor entity.",
+    "Node 2 depends on node 1: find the U.S. state for that city.",
+    "Node 3 depends on node 2: count case-insensitive mentions of the state name.",
+    "Node 4: count distinct 4-digit years in a second text.",
+    "Node 5: count distinct 4-digit years mentioned in the named page.",
+    "Node 6 depends on nodes 2-4: compute r from the state's GDP ranking and A/B.",
+    "Node 7 depends on nodes 2 and 6: count qualifying subcontracting rows in that state.",
+    "Node 8 depends on nodes 4 and 7: select a year Y by modular index.",
+    "Node 9 depends on node 8: compute D from the next text.",
+    "Node 10 depends on nodes 5, 8, and 9: compute |E-D| + C in the final text.",
+    "Final answer: 4."
+  ]
+}

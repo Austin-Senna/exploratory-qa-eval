@@ -1,0 +1,20 @@
+{
+  "question": "Which year from 2011-2016 has the lowest age-adjusted death rate for all races and both sexes in the United States? Your response should be in the format [Answer].",
+  "answer": "2014",
+  "practical_motivation": "A health policy analyst wants the year with the lowest overall death rate in the early 2010s.",
+  "nodes": {
+    "1": {
+      "source": "datagov/nchs-death-rates-and-life-expectancy-at-birth/files/rows.txt",
+      "fact": "Filtering to Race = \"All Races\" and Sex = \"Both Sexes\" for 2011-2016, the minimum Age-adjusted Death Rate is 724.6 in 2014.",
+      "subquestion": "Which year from 2011-2016 has the lowest age-adjusted death rate for all races and both sexes in the United States? (Filter Race == \"All Races\" and Sex == \"Both Sexes\"; select the minimum Age-adjusted Death Rate.)",
+      "answer": "2014"
+    }
+  },
+  "reasoning_chain": [
+    "Node 1: Which year from 2011-2016 has the lowest age-adjusted death rate for all races and both sexes? (Filter Race == \"All Races\" and Sex == \"Both Sexes\"; select the minimum Age-adjusted Death Rate.) The answer is 2014.",
+    "Final answer: 2014"
+  ],
+  "datasets_used": [
+    "nchs-death-rates-and-life-expectancy-at-birth"
+  ]
+}

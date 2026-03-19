@@ -1,0 +1,96 @@
+{
+  "question": "Using the 2017-2022 year with the highest total daily census records for Allegheny County Jail, build the school-year window from one year before through three years after. Among Texas counties that are top five by average summer meal program sites in that window, what is the highest average site count, rounded to the nearest integer? Report only the rounded number in `Number` format. Your response should be in the format [Answer].",
+  "answer": "1697",
+  "nodes": {
+    "1": {
+      "source": "datagov/allegheny-county-jail-daily-census/files/66cdcd57-6c92-4aaa-8800-0ed9d8f03e22.txt",
+      "fact": "Counting records by year from census_date for 2017-2022, the maximum total is 1202002 in 2019.",
+      "subquestion": "Which year from 2017-2022 has the highest total daily census records from Allegheny County Jail? (Use census_date to derive year; count records by year and select the maximum.)",
+      "answer": "2019"
+    },
+    "2": {
+      "source": "datagov/summer-meal-programs-all-summer-sites-contact-and-program-participation-information-progra-98b1c/files/rows.txt",
+      "fact": "In 2018-2019 (<node_1 answer> - 1 school year), the Texas counties with the most summer meal program sites were: HARRIS (1052), DALLAS (1014), HIDALGO (494), BEXAR (411), TARRANT (367).",
+      "subquestion": "Which Texas counties had the most summer meal program sites in <node_1 answer> - 1 school year? (Filter: ProgramYear == '<node_1 answer - 1>-<node_1 answer (two digits)>'; count sites by SiteCounty; take top 5.)",
+      "answer": {
+        "HARRIS": 1052,
+        "DALLAS": 1014,
+        "HIDALGO": 494,
+        "BEXAR": 411,
+        "TARRANT": 367
+      }
+    },
+    "3": {
+      "source": "datagov/summer-meal-programs-all-summer-sites-contact-and-program-participation-information-progra-3651c/files/rows.txt",
+      "fact": "In 2019-2020 (<node_1 answer> school year), the Texas counties with the most summer meal program sites were: HARRIS (1919), DALLAS (1479), BEXAR (1038), TARRANT (688), HIDALGO (515).",
+      "subquestion": "Which Texas counties had the most summer meal program sites in <node_1 answer> school year? (Filter: ProgramYear == '<node_1 answer>-<node_1 answer + 1 (two digits)>'; count sites by SiteCounty; take top 5.)",
+      "answer": {
+        "HARRIS": 1919,
+        "DALLAS": 1479,
+        "BEXAR": 1038,
+        "TARRANT": 688,
+        "HIDALGO": 515
+      }
+    },
+    "4": {
+      "source": "datagov/summer-meal-programs-all-summer-sites-contact-and-program-participation-information-progra-f6663/files/rows.txt",
+      "fact": "In 2020-2021 (<node_1 answer> + 1 school year), the Texas counties with the most summer meal program sites were: HARRIS (2674), DALLAS (1504), BEXAR (1168), TARRANT (1033), HIDALGO (700).",
+      "subquestion": "Which Texas counties had the most summer meal program sites in <node_1 answer> + 1 school year? (Filter: ProgramYear == '<node_1 answer + 1>-<node_1 answer + 2 (two digits)>'; count sites by SiteCounty; take top 5.)",
+      "answer": {
+        "HARRIS": 2674,
+        "DALLAS": 1504,
+        "BEXAR": 1168,
+        "TARRANT": 1033,
+        "HIDALGO": 700
+      }
+    },
+    "5": {
+      "source": "datagov/summer-meal-programs-all-summer-sites-contact-and-program-participation-information-progra-a726d/files/rows.txt",
+      "fact": "In 2021-2022 (<node_1 answer> + 2 school year), the Texas counties with the most summer meal program sites were: HARRIS (1825), DALLAS (1545), BEXAR (814), TARRANT (757), HIDALGO (526).",
+      "subquestion": "Which Texas counties had the most summer meal program sites in <node_1 answer> + 2 school year? (Filter: ProgramYear == '<node_1 answer + 2>-<node_1 answer + 3 (two digits)>'; count sites by SiteCounty; take top 5.)",
+      "answer": {
+        "HARRIS": 1825,
+        "DALLAS": 1545,
+        "BEXAR": 814,
+        "TARRANT": 757,
+        "HIDALGO": 526
+      }
+    },
+    "6": {
+      "source": "datagov/summer-meal-programs-all-summer-sites-contact-and-program-participation-information-progra/files/rows.txt",
+      "fact": "In 2022-2023 (<node_1 answer> + 3 school year), the Texas counties with the most summer meal program sites were: HARRIS (1016), DALLAS (688), BEXAR (364), HIDALGO (353), TARRANT (303).",
+      "subquestion": "Which Texas counties had the most summer meal program sites in <node_1 answer> + 3 school year? (Filter: ProgramYear == '<node_1 answer + 3>-<node_1 answer + 4 (two digits)>'; count sites by SiteCounty; take top 5.)",
+      "answer": {
+        "HARRIS": 1016,
+        "DALLAS": 688,
+        "BEXAR": 364,
+        "HIDALGO": 353,
+        "TARRANT": 303
+      }
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=1, data.gov year derivation - node 1):",
+    "  Node 1: Year with highest Allegheny County Jail census records (2017-2022) -> 2019",
+    "  Derived school year range: 2018-2019 through 2022-2023 (node_1 answer - 1 to node_1 answer + 3 school years)",
+    "",
+    "HOP 2 (d=5, data.gov AGGREGATION - nodes 2-6):",
+    "  Node 2: Summer Meal 2018-2019 (<node_1> - 1) -> top 5 counties",
+    "  Node 3: Summer Meal 2019-2020 (<node_1>) -> top 5 counties",
+    "  Node 4: Summer Meal 2020-2021 (<node_1> + 1) -> top 5 counties",
+    "  Node 5: Summer Meal 2021-2022 (<node_1> + 2) -> top 5 counties",
+    "  Node 6: Summer Meal 2022-2023 (<node_1> + 3) -> top 5 counties",
+    "  AGGREGATION: Compute average across all 5 years -> Top 5 are {HARRIS: 1697.2, DALLAS: 1246.0, BEXAR: 759.0, TARRANT: 629.6, HIDALGO: 517.6}",
+    "  Result: Highest average is Harris at 1697.2 -> rounded to 1697",
+    "",
+    "Final answer: 1697"
+  ],
+  "datasets_used": [
+    "allegheny-county-jail-daily-census",
+    "summer-meal-programs-all-summer-sites-contact-and-program-participation-information-progra",
+    "summer-meal-programs-all-summer-sites-contact-and-program-participation-information-progra-3651c",
+    "summer-meal-programs-all-summer-sites-contact-and-program-participation-information-progra-98b1c",
+    "summer-meal-programs-all-summer-sites-contact-and-program-participation-information-progra-a726d",
+    "summer-meal-programs-all-summer-sites-contact-and-program-participation-information-progra-f6663"
+  ]
+}

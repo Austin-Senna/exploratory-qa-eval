@@ -1,0 +1,113 @@
+{
+  "question": "Across the years from the year from 2017-2022 that has the highest total gasoline/gasohol sales across U.S. states to the year from 2017-2022 that has the lowest total ridership reported by the Rochester Genesee Regional Transportation Authority, find the Chicago Public Libraries that consistently appear in the top five by total annual computer sessions. Among them, which one has the fewest visitors in the last year of that range. Next, find the person it is named after, identify the university where that person earned a PhD, then report the river that university is located. Answer with the river name only. Your response should be in the format [Answer].",
+  "answer": "Charles River",
+  "nodes": {
+    "1": {
+      "source": "datagov/monthly-motor-fuel-sales-reported-by-states-selected-data-from-fhwa-monthly-motor-fuel-rep/files/rows.txt",
+      "fact": "Filtering fuel_type = \"Gasoline/gasohol\" and summing value by year (from date) for 2017-2022, the maximum total is 294719877886 in 2019.",
+      "subquestion": "Which year from 2017-2022 has the highest total gasoline/gasohol sales? (Filter fuel_type == \"Gasoline/gasohol\"; derive year from date; sum value by year and select the maximum.)",
+      "answer": "2019"
+    },
+    "2": {
+      "source": "datagov/rochester-genesee-regional-transportation-authority-rgrta-rider-volumes-beginning-2006/files/rows.txt",
+      "fact": "Summing Ridership across all subsidiaries by Year for 2017-2022, the minimum total is 7778388 in 2021.",
+      "subquestion": "Which year from 2017-2022 has the lowest total ridership reported by the Rochester Genesee Regional Transportation Authority? (Sum Ridership by Year across all subsidiaries and select the minimum.)",
+      "answer": "2021"
+    },
+    "3": {
+      "source": "datagov/libraries-2019-computer-sessions-by-location/files/rows.txt",
+      "fact": "In 2019 computer-session totals, the top 5 locations by YTD computer sessions are ['HAROLD WASHINGTON LIBRARY CENTER', 'Woodson Regional Library', 'Sulzer Regional Library', 'Edgewater', 'Rogers Park'].",
+      "subquestion": "In 2019 computer-session totals, which locations are in the top 5 by YTD computer sessions? Return the 5 location names.",
+      "answer": [
+        "HAROLD WASHINGTON LIBRARY CENTER",
+        "Woodson Regional Library",
+        "Sulzer Regional Library",
+        "Edgewater",
+        "Rogers Park"
+      ]
+    },
+    "4": {
+      "source": "datagov/libraries-2020-computer-sessions-by-location/files/rows.txt",
+      "fact": "In 2020 computer-session totals, the top 5 branches by YTD computer sessions are ['Harold Washington Library Center', 'Woodson Regional Library', 'Sulzer Regional Library', 'Edgewater', 'Whitney M. Young, Jr.'].",
+      "subquestion": "In 2020 computer-session totals, which branches are in the top 5 by YTD computer sessions? Return the 5 branch names.",
+      "answer": [
+        "Harold Washington Library Center",
+        "Woodson Regional Library",
+        "Sulzer Regional Library",
+        "Edgewater",
+        "Whitney M. Young, Jr."
+      ]
+    },
+    "5": {
+      "source": "datagov/libraries-2021-computer-sessions-by-location/files/rows.txt",
+      "fact": "In 2021 computer-session totals, the top 5 branches by YTD computer sessions are ['Harold Washington Library Center', 'Woodson Regional Library', 'Sulzer Regional Library', 'Edgewater', 'Northtown'].",
+      "subquestion": "In 2021 computer-session totals, which branches are in the top 5 by YTD computer sessions? Return the 5 branch names.",
+      "answer": [
+        "Harold Washington Library Center",
+        "Woodson Regional Library",
+        "Sulzer Regional Library",
+        "Edgewater",
+        "Northtown"
+      ]
+    },
+    "6": {
+      "source": "datagov/libraries-2021-visitors-by-location/files/rows.txt",
+      "fact": "The locations that appear in all three top-5 computer-session lists are {Woodson Regional Library, Edgewater, Sulzer Regional Library}. In 2021 visitor totals, Woodson Regional Library has YTD visitors 55987, Edgewater has 94307, and Sulzer Regional Library has 175377. The fewest is Woodson Regional Library.",
+      "subquestion": "Consider the locations that appear in each of <node_3 answer>, <node_4 answer>, and <node_5 answer>. Using 2021 visitor totals, which of those locations has the fewest YTD visitors?",
+      "answer": "Woodson Regional Library"
+    },
+    "7": {
+      "source": "wikipedia/Carter_G._Woodson_Regional_Library/content.txt",
+      "fact": "Carter G. Woodson Regional Library is named for Carter Woodson (Carter G. Woodson).",
+      "subquestion": "<node_6 answer> is named for which person?",
+      "answer": "Carter G. Woodson"
+    },
+    "8": {
+      "source": "wikipedia/Carter_G._Woodson/content.txt",
+      "fact": "Carter G. Woodson obtained a PhD degree from Harvard University.",
+      "subquestion": "From which university did <node_7 answer> obtain a PhD degree?",
+      "answer": "Harvard University"
+    },
+    "9": {
+      "source": "wikipedia/Harvard_University/content.txt",
+      "fact": "Harvard University is located along the Charles River.",
+      "subquestion": "<node_8 answer> is located along what river?",
+      "answer": "Charles River"
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=2, data.gov year derivation - nodes 1-2):",
+    "  Node 1: Year with highest gasoline sales (2017-2022) -> 2019",
+    "  Node 2: Year with lowest ridership (2017-2022) -> 2021",
+    "  Range: 2019-2021",
+    "",
+    "HOP 2 (d=3, computer sessions 2019-2021 - nodes 3-5):",
+    "  Identify the top five library locations by annual computer sessions for 2019, 2020, and 2021.",
+    "",
+    "HOP 3 (d=1, visitors 2021 - node 6):",
+    "  Intersect those top-five lists, then use 2021 visitor totals to select the location with the fewest visitors (Woodson Regional Library).",
+    "",
+    "HOP 4 (d=1, Wikipedia - node 7):",
+    "  Identify whom that library is named for (Carter G. Woodson).",
+    "",
+    "HOP 5 (d=1, Wikipedia - node 8):",
+    "  Identify the university where Carter G. Woodson obtained a PhD (Harvard University).",
+    "",
+    "HOP 6 (d=1, Wikipedia - node 9):",
+    "  Identify the river Harvard University is located along (Charles River).",
+    "",
+    "Final answer: Charles River."
+  ],
+  "verdict": "pass",
+  "datasets_used": [
+    "monthly-motor-fuel-sales-reported-by-states-selected-data-from-fhwa-monthly-motor-fuel-rep",
+    "rochester-genesee-regional-transportation-authority-rgrta-rider-volumes-beginning-2006",
+    "Carter_G._Woodson_Regional_Library",
+    "Carter_G._Woodson",
+    "Harvard_University",
+    "libraries-2019-computer-sessions-by-location",
+    "libraries-2020-computer-sessions-by-location",
+    "libraries-2021-computer-sessions-by-location",
+    "libraries-2021-visitors-by-location"
+  ]
+}

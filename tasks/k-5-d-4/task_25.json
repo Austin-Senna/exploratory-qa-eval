@@ -1,0 +1,94 @@
+{
+  "question": "Starting with the year within 2011-2016 that saw the lowest birth rate for unmarried females ages 15-19 in the United States and extending forward 4 years to form a range, which NYC middle schools located in Queens District 26 had at least 50 offers to specialized high schools on SHSAT in every school year of that range, and are named after scientists. In what year was the research institute founded that is named after the older of these two scientists? Your response should be in the format [Answer].",
+  "answer": "1887",
+  "nodes": {
+    "1": {
+      "source": "datagov/nchs-birth-rates-for-unmarried-women-by-age-race-and-hispanic-origin-united-states/files/rows.txt",
+      "fact": "Filtering to Age Group = '15-19 years' for 2011-2016, the minimum Birth Rate is in 2015.",
+      "subquestion": "Which year from 2011-2016 has the lowest unmarried teen birth rate?",
+      "answer": "2015"
+    },
+    "2": {
+      "source": "datagov/2015-2016-shsat-admissions-test-offers-by-sending-school/v1/files/rows.csv",
+      "fact": "In 2015-16, schools with >= 50 SHSAT offers included J.H.S. 067 Louis Pasteur and M.S. 158 Marie Curie.",
+      "subquestion": "Which middle schools had >= 50 SHSAT offers in <node_1 answer>-<node_1 answer>+1?",
+      "answer": [
+        "J.H.S. 067 Louis Pasteur",
+        "M.S. 158 Marie Curie"
+      ]
+    },
+    "3": {
+      "source": "datagov/2016-2017-shsat-admissions-test-offers-by-sending-school/v1/files/rows.csv",
+      "fact": "In 2016-17, Louis Pasteur and Marie Curie had >= 50 offers.",
+      "subquestion": "Which middle schools had >= 50 offers in <node_1 answer>+1-<node_1 answer>+2?",
+      "answer": [
+        "J.H.S. 067 Louis Pasteur",
+        "M.S. 158 Marie Curie"
+      ]
+    },
+    "4": {
+      "source": "datagov/2017-2018-shsat-admissions-test-offers-by-sending-school/v1/files/rows.csv",
+      "fact": "In 2017-18, Louis Pasteur and Marie Curie had >= 50 offers.",
+      "subquestion": "Which middle schools had >= 50 offers in <node_1 answer>+2-<node_1 answer>+3?",
+      "answer": [
+        "J.H.S. 067 Louis Pasteur",
+        "M.S. 158 Marie Curie"
+      ]
+    },
+    "5": {
+      "source": "datagov/2018-2019-shsat-admissions-test-offers-by-sending-school/v1/files/rows.csv",
+      "fact": "In 2018-19, Louis Pasteur and Marie Curie had >= 50 offers.",
+      "subquestion": "Which middle schools had >= 50 offers in <node_1 answer>+3-<node_1 answer>+4?",
+      "answer": [
+        "J.H.S. 067 Louis Pasteur",
+        "M.S. 158 Marie Curie"
+      ]
+    },
+    "6": {
+      "source": "datagov/2016-2017-school-locations/v1/files/rows.csv",
+      "fact": "Both Pasteur (26Q067) and Curie (26Q158) are in Queens District 26.",
+      "subquestion": "Which are in Queens District 26?",
+      "answer": [
+        "J.H.S. 067 Louis Pasteur",
+        "M.S. 158 Marie Curie"
+      ]
+    },
+    "7": {
+      "source": "wikipedia/Louis_Pasteur/content.txt",
+      "fact": "Louis Pasteur was a scientist, born December 27, 1822.",
+      "subquestion": "Was Louis Pasteur a scientist and when was he born?",
+      "answer": "Yes, born 1822"
+    },
+    "8": {
+      "source": "wikipedia/Marie_Curie/content.txt",
+      "fact": "Marie Curie was a scientist, born November 7, 1867.",
+      "subquestion": "Was Marie Curie a scientist and when was she born?",
+      "answer": "Yes, born 1867"
+    },
+    "9": {
+      "source": "wikipedia/Pasteur_Institute/content.txt",
+      "fact": "The Pasteur Institute was founded in 1887 and named after Louis Pasteur.",
+      "subquestion": "When was the research institute named after the older scientist founded?",
+      "answer": "1887"
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=1): Unmarried teen birth rate lowest 2011-2016 is 2015",
+    "HOP 2 (d=4): SHSAT 2015-2019 intersection -> Pasteur, Curie schools",
+    "HOP 3 (d=1): Both in Queens District 26",
+    "HOP 4 (d=2): Both scientists; Pasteur born 1822 is older",
+    "HOP 5 (d=1): Pasteur Institute founded 1887",
+    "Final answer: 1887"
+  ],
+  "datasets_used": [
+    "nchs-birth-rates-for-unmarried-women-by-age-race-and-hispanic-origin-united-states",
+    "2015-2016-shsat-admissions-test-offers-by-sending-school",
+    "2016-2017-shsat-admissions-test-offers-by-sending-school",
+    "2017-2018-shsat-admissions-test-offers-by-sending-school",
+    "2018-2019-shsat-admissions-test-offers-by-sending-school",
+    "2016-2017-school-locations",
+    "Louis_Pasteur",
+    "Marie_Curie",
+    "Pasteur_Institute"
+  ]
+}

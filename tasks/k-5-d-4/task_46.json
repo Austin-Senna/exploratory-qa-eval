@@ -1,0 +1,73 @@
+{
+  "question": "Starting with the year throughout 2017-2022 when the lowest Los Angeles Charter passenger traffic and extending 1 year back to form a range, identify the first head of Chicago's department with the highest average overtime during that range. In the city where that person previously served as police chief and founded a criminal justice program at a local university, what county is the city located in? Your response should be in the format [Answer].",
+  "answer": "Sedgwick County",
+  "nodes": {
+    "1": {
+      "source": "datagov/los-angeles-international-airport-charter-passenger-traffic/files/rows.txt",
+      "fact": "For 2017-2022, lowest LA Charter passengers is in 2020.",
+      "subquestion": "Which year from 2017-2022 has lowest LA Charter passengers?",
+      "answer": "2020"
+    },
+    "2": {
+      "source": "datagov/employee-overtime-and-supplemental-earnings-2019/files/rows.txt",
+      "fact": "Police had $139.6M overtime in 2019.",
+      "subquestion": "Which dept had highest overtime in <node_1 answer>-1?",
+      "answer": {
+        "Police": 139560316.72,
+        "Fire": 85821080.71
+      }
+    },
+    "3": {
+      "source": "datagov/employee-overtime-and-supplemental-earnings-2020/files/rows.txt",
+      "fact": "Police had $177.5M overtime in 2020. Police highest both years.",
+      "subquestion": "Which dept had highest overtime in <node_1 answer>?",
+      "answer": {
+        "Police": 177486176.09,
+        "Fire": 95352235.07
+      }
+    },
+    "4": {
+      "source": "wikipedia/Chicago_Police_Department/content.txt",
+      "fact": "O. W. Wilson was first civilian superintendent.",
+      "subquestion": "Who was first civilian head of CPD?",
+      "answer": "O. W. Wilson"
+    },
+    "5": {
+      "source": "wikipedia/O._W._Wilson/content.txt",
+      "fact": "Wilson was police chief in Wichita (1928-1939).",
+      "subquestion": "Where was Wilson police chief?",
+      "answer": [
+        "Fullerton",
+        "Wichita"
+      ]
+    },
+    "6": {
+      "source": "wikipedia/Wichita_Police_Department/content.txt",
+      "fact": "Wilson started CJ Program at Wichita State University.",
+      "subquestion": "Where did Wilson found a CJ program?",
+      "answer": "Wichita"
+    },
+    "7": {
+      "source": "wikipedia/Wichita,_Kansas/content.txt",
+      "fact": "Wichita is in Sedgwick County.",
+      "subquestion": "What county is Wichita in?",
+      "answer": "Sedgwick County"
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=1): LA Charter lowest 2017-2022 is 2020",
+    "HOP 2 (d=2): Chicago overtime 2019-2020 → Police highest",
+    "HOP 3 (d=2): O.W. Wilson + Wichita CJ program",
+    "HOP 4 (d=1): Wichita in Sedgwick County",
+    "Final answer: Sedgwick County"
+  ],
+  "datasets_used": [
+    "los-angeles-international-airport-charter-passenger-traffic",
+    "employee-overtime-and-supplemental-earnings-2019",
+    "employee-overtime-and-supplemental-earnings-2020",
+    "Chicago_Police_Department",
+    "O._W._Wilson",
+    "Wichita_Police_Department",
+    "Wichita,_Kansas"
+  ]
+}

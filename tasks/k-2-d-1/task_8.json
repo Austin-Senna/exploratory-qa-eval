@@ -1,0 +1,32 @@
+{
+  "question": "For the largest airport in Pittsburgh, which destination airport code had the most scheduled seats in March 2019? Return the airport code only. Your response should be in the format [Answer].",
+  "answer": "ATL",
+  "nodes": {
+    "1": {
+      "source": "wikipedia/Pittsburgh/content.txt",
+      "fact": "Pittsburgh International Airport is the largest airport in Pittsburgh.",
+      "subquestion": "What is the largest airport in Pittsburgh?",
+      "answer": "Pittsburgh International Airport"
+    },
+    "2": {
+      "source": "datagov/pittsburgh-international-airport-scheduled-passenger-traffic/files/pittsburgh-international-traffic-report-march-2019.txt",
+      "fact": "In the March 2019 Pittsburgh International scheduled traffic report, Atlanta (ATL) has 44,912 total seats, the highest of any destination (next highest is Chicago O'Hare with 35,699).",
+      "subquestion": "For the largest airport in Pittsburgh, which destination airport code had the most scheduled seats in March 2019?",
+      "answer": "ATL"
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=1, Wikipedia - node 1):",
+    "  Node 1: Pittsburgh's largest airport -> Pittsburgh International Airport",
+    "",
+    "HOP 2 (d=1, data.gov - node 2 depends on hop 1):",
+    "  Node 2: March 2019 scheduled seats -> ATL has the most",
+    "",
+    "Final answer: ATL"
+  ],
+  "verdict": "pass",
+  "datasets_used": [
+    "Pittsburgh",
+    "pittsburgh-international-airport-scheduled-passenger-traffic"
+  ]
+}

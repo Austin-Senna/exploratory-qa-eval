@@ -1,0 +1,62 @@
+{
+  "question": "Among DC wards with the top two average violent crime counts (homicide, assault with dangerous weapon, robbery, sex abuse) across 2019-2020, which ward had the higher average number of 311 service requests across 2019-2020? Return the ward number in `Ward X` format. Your response should be in the format [Answer].",
+  "answer": "Ward 7",
+  "nodes": {
+    "1": {
+      "source": "datagov/crime-incidents-in-2019/files/data.txt",
+      "fact": "In 2019, DC Ward 7 had 905 violent crimes (homicide, assault with dangerous weapon, robbery, sex abuse), and Ward 8 had 765 violent crimes.",
+      "subquestion": "Which DC wards had the top 2 average violent crimes between 2019 and 2020? (Filter for this node: OFFENSE in {HOMICIDE, ASSAULT W/DANGEROUS WEAPON, ROBBERY, SEX ABUSE}; group by WARD; count records; rank by count; keep top 2.)",
+      "answer": [
+        "Ward 7 (905)",
+        "Ward 8 (765)"
+      ]
+    },
+    "2": {
+      "source": "datagov/crime-incidents-in-2020/files/data.txt",
+      "fact": "In 2020, DC Ward 7 had 945 violent crimes and Ward 8 had 907 violent crimes.",
+      "subquestion": "Which DC wards had the top 2 average violent crimes between 2019 and 2020? (Filter for this node: OFFENSE in {HOMICIDE, ASSAULT W/DANGEROUS WEAPON, ROBBERY, SEX ABUSE}; group by WARD; count records; rank by count; keep top 2.)",
+      "answer": [
+        "Ward 7 (945)",
+        "Ward 8 (907)"
+      ]
+    },
+    "3": {
+      "source": "datagov/311-city-service-requests-in-2019/files/data.txt",
+      "fact": "In 2019, DC Ward 7 had 42,226 service requests and Ward 8 had 34,959 service requests.",
+      "subquestion": "Between the top 2 crime wards (from hop 1), which had higher average 311 service requests (2019-2020)? (Filter for this node: WARD in {7, 8}; group by WARD; count records.)",
+      "answer": [
+        "Ward 7 (42,226)",
+        "Ward 8 (34,959)"
+      ]
+    },
+    "4": {
+      "source": "datagov/311-city-service-requests-in-2020/files/data.txt",
+      "fact": "In 2020, DC Ward 7 had 36,113 service requests and Ward 8 had 37,124 service requests.",
+      "subquestion": "Between the top 2 crime wards (from hop 1), which had higher average 311 service requests (2019-2020)? (Filter for this node: WARD in {7, 8}; group by WARD; count records.)",
+      "answer": [
+        "Ward 7 (36,113)",
+        "Ward 8 (37,124)"
+      ]
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=2, data.gov - nodes 1-2):",
+    "  Node 1: 2019 violent crimes by ward -> top two: Ward 7, Ward 8",
+    "  Node 2: 2020 violent crimes by ward -> top two: Ward 7, Ward 8",
+    "  Average 2019-2020 -> top two remain Ward 7 and Ward 8",
+    "",
+    "HOP 2 (d=2, data.gov - nodes 3-4 depend on hop 1 wards):",
+    "  Node 3: 2019 311 requests for Ward 7 vs Ward 8",
+    "  Node 4: 2020 311 requests for Ward 7 vs Ward 8",
+    "  Average 311 requests 2019-2020 -> Ward 7 higher",
+    "",
+    "Final answer: Ward 7"
+  ],
+  "verdict": "pass",
+  "datasets_used": [
+    "crime-incidents-in-2019",
+    "crime-incidents-in-2020",
+    "311-city-service-requests-in-2019",
+    "311-city-service-requests-in-2020"
+  ]
+}

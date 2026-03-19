@@ -1,0 +1,77 @@
+{
+  "question": "Among Harris, Dallas, Hidalgo, Bexar, and Tarrant counties, find the one that in the fiscal year 2 years after the year (within 2017-2022) that has the lowest total traffic volume reported by the New York City Department of Transportation had more than 600 child protective service removals and fewer than 14,000 completed abuse/neglect investigations. Compare its establishment year with Tarrant County's; for the earlier of the two, report the admission-order number of the U.S. state admitted in that same year. Please return the order number only. Your response should be in the format [Answer].",
+  "answer": "25",
+  "nodes": {
+    "1": {
+      "source": "datagov/automated-traffic-volume-counts/files/rows.txt",
+      "fact": "Summing Vol by Yr for 2017-2022, the minimum total is 4497946 in 2020.",
+      "subquestion": "Which year from 2017-2022 has the lowest total traffic volume reported by the New York City Department of Transportation? (Sum Vol by Yr and select the minimum.)",
+      "answer": "2020"
+    },
+    "2": {
+      "source": "datagov/cpi-3-1-completed-abuse-neglect-investigations-by-county-fy2013-fy2022/v1/files/rows.csv",
+      "fact": "In FY<node_1 answer> + 2 (2022), among the top 5 counties by average CACFP sites, Harris (23,468) and Dallas (14,192) had more than 14,000 completed child abuse/neglect investigations, while Tarrant (13,286), Bexar (13,020), and Hidalgo (4,984) had less than 14,000.",
+      "subquestion": "Which counties from the top 5 by average CACFP sites (Harris, Dallas, Hidalgo, Bexar, Tarrant) had less than 14,000 completed child abuse/neglect investigations in FY<node_1 answer> + 2? (Filter: Fiscal Year == <node_1 answer> + 2; sum Completed Investigations by County; keep < 14,000.)",
+      "answer": [
+        "Tarrant",
+        "Bexar",
+        "Hidalgo"
+      ]
+    },
+    "3": {
+      "source": "datagov/cps-2-1-removals-by-county-fy2013-2022/v1/files/rows.csv",
+      "fact": "In FY<node_1 answer> + 2 (2022), among the top 5 counties by average CACFP sites, Bexar (1,074) and Dallas (738) had more than 600 child protective service removals, while Harris (566), Tarrant (555), and Hidalgo (90) had 600 or fewer.",
+      "subquestion": "Which counties from the top 5 by average CACFP sites (Harris, Dallas, Hidalgo, Bexar, Tarrant) had more than 600 CPS removals in FY<node_1 answer> + 2? (Filter: Fiscal Year == <node_1 answer> + 2; sum Removals by County; keep > 600.)",
+      "answer": [
+        "Bexar",
+        "Dallas"
+      ]
+    },
+    "4": {
+      "source": "wikipedia/Bexar_County,_Texas/content.txt",
+      "fact": "According to Wikipedia, Bexar County 'was created on December 20, 1836' as one of the original counties of the Republic of Texas.",
+      "subquestion": "When was <intersection of nodes 2-3: Bexar County> created?",
+      "answer": "1836"
+    },
+    "5": {
+      "source": "wikipedia/Tarrant_County,_Texas/content.txt",
+      "fact": "According to Wikipedia, Tarrant County was established in 1849.",
+      "subquestion": "When was Tarrant County created?",
+      "answer": "1849"
+    },
+    "6": {
+      "source": "wikipedia/Arkansas/content.txt",
+      "fact": "Arkansas was admitted to the Union as the 25th state on June 15, 1836.",
+      "subquestion": "Which U.S. state was admitted to the Union in <earlier of nodes 4-5: 1836>, and what was its admission order number?",
+      "answer": "25"
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=1, data.gov year derivation - node 1):",
+    "  Node 1: Year with lowest NYC traffic volume (2017-2022) -> 2020",
+    "  Derived fiscal year: 2020 + 2 = 2022",
+    "",
+    "HOP 2 (d=2, data.gov INTERSECTION - nodes 2-3):",
+    "  Node 2: From top 5, investigations < 14,000 in FY<node_1 answer> + 2 -> {Tarrant, Bexar, Hidalgo}",
+    "  Node 3: From top 5, CPS removals > 600 in FY<node_1 answer> + 2 -> {Bexar, Dallas}",
+    "  INTERSECTION: {Tarrant, Bexar, Hidalgo} ∩ {Bexar, Dallas} = {Bexar}",
+    "",
+    "HOP 3 (d=2, Wikipedia AGGREGATION - nodes 4-5):",
+    "  Node 4: Bexar County -> created 1836",
+    "  Node 5: Tarrant County -> created 1849",
+    "  Result: Earlier year is 1836",
+    "",
+    "HOP 4 (d=1, Wikipedia - node 6):",
+    "  Node 6: Arkansas -> admitted in 1836 as the 25th state",
+    "",
+    "Final answer: 25"
+  ],
+  "datasets_used": [
+    "automated-traffic-volume-counts",
+    "Arkansas",
+    "Bexar_County,_Texas",
+    "Tarrant_County,_Texas",
+    "cpi-3-1-completed-abuse-neglect-investigations-by-county-fy2013-fy2022",
+    "cps-2-1-removals-by-county-fy2013-2022"
+  ]
+}

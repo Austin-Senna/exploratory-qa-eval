@@ -1,0 +1,20 @@
+{
+  "question": "Which year from 2005-2010 has the highest homicide injury deaths for all ages, both sexes, and all races in the U.S.? Your response should be in the format [Answer].",
+  "answer": "2006",
+  "practical_motivation": "A public health researcher wants to identify the peak year for homicide-related injury deaths in the mid-2000s.",
+  "nodes": {
+    "1": {
+      "source": "datagov/nchs-injury-mortality-united-states/files/rows.txt",
+      "fact": "Filtering to Sex = \"Both sexes\", Race = \"All races\", Age group (years) = \"All Ages\", Injury mechanism = \"All Mechanisms\", and Injury intent = \"Homicide\", the highest total deaths in 2005-2010 occurs in 2006 with 18573.",
+      "subquestion": "Which year from 2005-2010 has the highest homicide injury deaths for all ages, both sexes, and all races in the U.S.? (Filter Sex == \"Both sexes\", Race == \"All races\", Age group (years) == \"All Ages\", Injury mechanism == \"All Mechanisms\", Injury intent == \"Homicide\"; sum Deaths by Year; select the maximum.)",
+      "answer": "2006"
+    }
+  },
+  "reasoning_chain": [
+    "Node 1: Filter to total population and homicide intent, sum Deaths by Year (2005-2010), and select the maximum; the peak year is 2006.",
+    "Final answer: 2006"
+  ],
+  "datasets_used": [
+    "nchs-injury-mortality-united-states"
+  ]
+}

@@ -1,0 +1,82 @@
+{
+  "question": "Among Texas counties that rank in the top five by average state prison releases across FY2019-2022, which county has the lowest coefficient of variation in annual releases, and what is its county seat? Return the county-seat city only. Your response should be in the format [Answer].",
+  "answer": "San Antonio",
+  "nodes": {
+    "1": {
+      "source": "datagov/texas-department-of-criminal-justice-releases-fy-2019/files/rows.txt",
+      "fact": "In the FY 2019 TDCJ Releases dataset, release counts for the counties in the top five by average releases across FY2019-FY2022 (Harris, Dallas, Tarrant, Bexar, Hidalgo) were: Harris 9,029; Dallas 5,355; Tarrant 4,769; Bexar 4,545; Hidalgo 1,861.",
+      "subquestion": "For FY2019, what were release counts for the counties that rank in the top five by average releases across FY2019-FY2022? (Filter for this node: count rows by County in the FY2019 file; normalize County to uppercase; keep counties in the top five average set.)",
+      "answer": {
+        "Harris": 9029,
+        "Dallas": 5355,
+        "Tarrant": 4769,
+        "Bexar": 4545,
+        "Hidalgo": 1861
+      }
+    },
+    "2": {
+      "source": "datagov/texas-department-of-criminal-justice-releases-fy-2020/files/rows.txt",
+      "fact": "In the FY 2020 TDCJ Releases dataset, release counts for the counties in the top five by average releases across FY2019-FY2022 (Harris, Dallas, Tarrant, Bexar, Hidalgo) were: Harris 7,059; Dallas 4,540; Tarrant 4,450; Bexar 3,917; Hidalgo 1,572.",
+      "subquestion": "For FY2020, what were release counts for the counties that rank in the top five by average releases across FY2019-FY2022? (Filter for this node: count rows by County in the FY2020 file; normalize County to uppercase; keep counties in the top five average set.)",
+      "answer": {
+        "Harris": 7059,
+        "Dallas": 4540,
+        "Tarrant": 4450,
+        "Bexar": 3917,
+        "Hidalgo": 1572
+      }
+    },
+    "3": {
+      "source": "datagov/texas-department-of-criminal-justice-releases-fy-2021/files/rows.txt",
+      "fact": "In the FY 2021 TDCJ Releases dataset, release counts for the counties in the top five by average releases across FY2019-FY2022 (Harris, Dallas, Tarrant, Bexar, Hidalgo) were: Harris 5,210; Dallas 3,565; Tarrant 3,252; Bexar 3,236; Hidalgo 1,147.",
+      "subquestion": "For FY2021, what were release counts for the counties that rank in the top five by average releases across FY2019-FY2022? (Filter for this node: count rows by County in the FY2021 file; normalize County to uppercase; keep counties in the top five average set.)",
+      "answer": {
+        "Harris": 5210,
+        "Dallas": 3565,
+        "Tarrant": 3252,
+        "Bexar": 3236,
+        "Hidalgo": 1147
+      }
+    },
+    "4": {
+      "source": "datagov/texas-department-of-criminal-justice-releases-fy-2022/files/rows.txt",
+      "fact": "In the FY 2022 TDCJ Releases dataset, release counts for the counties in the top five by average releases across FY2019-FY2022 (Harris, Dallas, Tarrant, Bexar, Hidalgo) were: Harris 4,988; Dallas 3,557; Tarrant 3,231; Bexar 2,918; Hidalgo 1,015.",
+      "subquestion": "For FY2022, what were release counts for the counties that rank in the top five by average releases across FY2019-FY2022? (Filter for this node: count rows by County in the FY2022 file; normalize County to uppercase; keep counties in the top five average set.)",
+      "answer": {
+        "Harris": 4988,
+        "Dallas": 3557,
+        "Tarrant": 3231,
+        "Bexar": 2918,
+        "Hidalgo": 1015
+      }
+    },
+    "5": {
+      "source": "wikipedia/Bexar_County,_Texas/content.txt",
+      "fact": "According to the Wikipedia article for Bexar County, Texas, 'Its county seat is San Antonio'.",
+      "subquestion": "What is the county seat of the county identified in hop 1? (Lookup: find the county seat statement in the county's article.)",
+      "answer": "San Antonio"
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=4, Texas TDCJ Releases FY2019-FY2022 - nodes 1-4):",
+    "  Node 1: FY2019 releases for top-five-average counties",
+    "  Node 2: FY2020 releases for top-five-average counties",
+    "  Node 3: FY2021 releases for top-five-average counties",
+    "  Node 4: FY2022 releases for top-five-average counties",
+    "  Aggregation: compute coefficient of variation (std/mean) across the four years for each county",
+    "  Result: Bexar County has the lowest CV (most consistent releases)",
+    "",
+    "HOP 2 (d=1, Wikipedia Bexar_County,_Texas - node 5):",
+    "  Node 5: County seat of Bexar County -> San Antonio",
+    "",
+    "Final answer: San Antonio"
+  ],
+  "verdict": "pass",
+  "datasets_used": [
+    "Bexar_County,_Texas",
+    "texas-department-of-criminal-justice-releases-fy-2019",
+    "texas-department-of-criminal-justice-releases-fy-2020",
+    "texas-department-of-criminal-justice-releases-fy-2021",
+    "texas-department-of-criminal-justice-releases-fy-2022"
+  ]
+}

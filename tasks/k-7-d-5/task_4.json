@@ -1,0 +1,120 @@
+{
+  "original_question": "A 'year mention' means any standalone 4-digit number from 1600 to 2099, counted every time it appears. From the first five year lists, find the only year Y that appears in all five. Let S be the sum of the five list lengths. In Transit-oriented development, compute r = ((M + S) mod 5) + 1 where M is the number of times Y is mentioned. In Climate change mitigation, let B be the number of distinct years mentioned at least r times, and set u = (B mod 10) + 1. In Electric vehicle, let C be the number of distinct years mentioned exactly u times. Let t be max(1, C). In the next part compute D (years mentioned at least t times). In the following part compute E (years mentioned at least (D + r + 1) times). In the final part, return the number of distinct years mentioned exactly max(1, E) times. Answer as: [integer].",
+  "question": "I'm working on a data project and need help analyzing several reports. First, identify 4-digit years (1600–2099) in these five sources: 1) monthly travel trends data (1995-1997, mentioned exactly 12 times), 2) flood mitigation records (1985–2000, at least 1 time), 3) Iowa educational attainment [25 years old and above] (1996–1997, at least 1 time), 4) Iowa population age data [16 years and above] (1997–2000, at least 4 times), and 5) the MTA art catalogue (1992–1998, at least 7 times). Please find the only year Y that appears in all five. Let S be the sum of the five list lengths. Next, in the 'Transit-oriented development' article, count how many times Y is mentioned and let this count be M. Calculate r = ((M + S) mod 5) + 1, and find how many distinct years in 'Climate change mitigation' appear at least r times and let this variable be B. Then, calculate u = (B mod 10) + 1, and find C, the number of years that appear exactly u times in the 'Electric vehicle' article. Let t be C (or 1 if C is 0). Following this, find how many years in the 2020 Jackson County Tiger-line files appear at least t times and let this number be D. Then, in the 2020 Franklin Parish Tiger-line files, find E, the number of how many years appear at least (D + r + 1) times. Finally, tell me how many distinct years in the EV title and registration data are mentioned exactly E (or 1 if E = 0) times.",
+  "answer": 1,
+  "nodes": {
+    "1": {
+      "source": "datagov/monthly-travel-trends-dashboard-data/files/rows.txt",
+      "fact": "The distinct 4-digit calendar years from 1995 to 1997 (inclusive) that are mentioned exactly 12 times are ['1995', '1996', '1997'].",
+      "subquestion": "Which distinct 4-digit calendar years from 1995 to 1997 (inclusive) are mentioned exactly 12 times? Return the full set as a list.",
+      "answer": [
+        "1995",
+        "1996",
+        "1997"
+      ]
+    },
+    "2": {
+      "source": "datagov/flood-mitigation-56b35/files/data.txt",
+      "fact": "The distinct 4-digit calendar years from 1985 to 2000 (inclusive) that are mentioned at least 1 time are ['1985', '1996', '1997', '1999', '2000'].",
+      "subquestion": "Which distinct 4-digit calendar years from 1985 to 2000 (inclusive) are mentioned at least 1 time? Return the full set as a list.",
+      "answer": [
+        "1985",
+        "1996",
+        "1997",
+        "1999",
+        "2000"
+      ]
+    },
+    "3": {
+      "source": "datagov/iowa-population-25-years-and-over-by-sex-race-and-educational-attainment-acs-5-year-estima/files/data.txt",
+      "fact": "The distinct 4-digit calendar years from 1996 to 1997 (inclusive) that are mentioned at least 1 time are ['1996', '1997'].",
+      "subquestion": "Which distinct 4-digit calendar years from 1996 to 1997 (inclusive) are mentioned at least 1 time? Return the full set as a list.",
+      "answer": [
+        "1996",
+        "1997"
+      ]
+    },
+    "4": {
+      "source": "datagov/iowa-population-16-years-and-over-by-sex-age-and-employment-status-acs-5-year-estimates/files/data.txt",
+      "fact": "The distinct 4-digit calendar years from 1997 to 2000 (inclusive) that are mentioned at least 4 times are ['1997', '1998', '2000'].",
+      "subquestion": "Which distinct 4-digit calendar years from 1997 to 2000 (inclusive) are mentioned at least 4 times? Return the full set as a list.",
+      "answer": [
+        "1997",
+        "1998",
+        "2000"
+      ]
+    },
+    "5": {
+      "source": "datagov/arts-for-transit-metropolitan-transportation-authority-mta-permanent-art-catalogue/files/rows.txt",
+      "fact": "The distinct 4-digit calendar years from 1992 to 1998 (inclusive) that are mentioned at least 7 times are ['1992', '1994', '1996', '1997', '1998'].",
+      "subquestion": "Which distinct 4-digit calendar years from 1992 to 1998 (inclusive) are mentioned at least 7 times? Return the full set as a list.",
+      "answer": [
+        "1992",
+        "1994",
+        "1996",
+        "1997",
+        "1998"
+      ]
+    },
+    "6": {
+      "source": "wikipedia/Transit-oriented_development/content.txt",
+      "fact": "The only year shared by the five year lists is 1997. In Transit-oriented development, 1997 appears 1 times, the five list-lengths sum to 18, and r = ((1 + 18) mod 5) + 1 = 5.",
+      "subquestion": "Using the five year lists <node_1 answer>, <node_2 answer>, <node_3 answer>, <node_4 answer>, and <node_5 answer>, find the only 4-digit year that appears in all five lists (call it Y). Let S be the sum of the five list lengths. In Transit-oriented development, count how many times Y is mentioned (M). Compute r = ((M + S) mod 5) + 1. What is r?",
+      "answer": 5
+    },
+    "7": {
+      "source": "wikipedia/Climate_change_mitigation/content.txt",
+      "fact": "In Climate change mitigation, with r = 5, there are 10 distinct 4-digit years (1600–2099) that appear at least r times.",
+      "subquestion": "In Climate change mitigation, how many distinct 4-digit years (1600–2099) appear at least <node_6 answer> times?",
+      "answer": 10
+    },
+    "8": {
+      "source": "wikipedia/Electric_vehicle/content.txt",
+      "fact": "In Electric vehicle, with u = (10 mod 10) + 1 = 1, there are 28 distinct 4-digit years (1600–2099) that appear exactly u times.",
+      "subquestion": "Let u = (<node_7 answer> mod 10) + 1. In Electric vehicle, how many distinct 4-digit years (1600–2099) appear exactly u times?",
+      "answer": 28
+    },
+    "9": {
+      "source": "datagov/tiger-line-shapefile-2020-county-jackson-county-ia-topological-faces-polygons-with-all-geocodes/files/tl_2020_faces.shp.ea.iso.txt",
+      "fact": "With t = max(1, 28) = 28, there are 0 distinct 4-digit years (1600–2099) that appear at least t times.",
+      "subquestion": "Let t = max(1, <node_8 answer>). How many distinct 4-digit calendar years (1600–2099) appear at least t times?",
+      "answer": 0
+    },
+    "10": {
+      "source": "datagov/tiger-line-shapefile-2020-county-franklin-parish-la-topological-faces-polygons-with-all-geocode/files/tl_2020_faces.shp.ea.iso.txt",
+      "fact": "With threshold = 0 + 5 + 1 = 6, there are 1 distinct 4-digit years (1600–2099) that appear at least threshold times.",
+      "subquestion": "Let threshold = <node_9 answer> + <node_6 answer> + 1. How many distinct 4-digit calendar years (1600–2099) appear at least threshold times?",
+      "answer": 1
+    },
+    "11": {
+      "source": "datagov/electric-vehicle-title-and-registration-activity/files/columns.txt",
+      "fact": "With v = max(1, 1) = 1, there are 1 distinct 4-digit years (1600–2099) that appear exactly v times.",
+      "subquestion": "Let v = max(1, <node_10 answer>). How many distinct 4-digit calendar years (1600–2099) appear exactly v times?",
+      "answer": 1
+    }
+  },
+  "reasoning_chain": [
+    "Node 1–5: each yields a year list defined by its year-list condition.",
+    "Node 6 depends on nodes 1–5: intersect the five lists to get the unique shared year Y; let S be the sum of the five list lengths; count Y in the first Wikipedia entry as M; compute r = ((M + S) mod 5) + 1.",
+    "Node 7 depends on node 6: count distinct years with frequency ≥ r in the second Wikipedia entry (B).",
+    "Node 8 depends on node 7: with u = (B mod 10) + 1, count distinct years with frequency = u in the third Wikipedia entry (C).",
+    "Node 9 depends on node 8: with t = max(1, C), count distinct years with frequency ≥ t (D).",
+    "Node 10 depends on nodes 6 and 9: with threshold = D + r + 1, count distinct years with frequency ≥ threshold (E).",
+    "Node 11 depends on node 10: with v = max(1, E), count distinct years with frequency = v.",
+    "Final answer: 1."
+  ],
+  "verdict": "pass",
+  "datasets_used": [
+    "monthly-travel-trends-dashboard-data",
+    "flood-mitigation-56b35",
+    "iowa-population-25-years-and-over-by-sex-race-and-educational-attainment-acs-5-year-estima",
+    "iowa-population-16-years-and-over-by-sex-age-and-employment-status-acs-5-year-estimates",
+    "arts-for-transit-metropolitan-transportation-authority-mta-permanent-art-catalogue",
+    "Transit-oriented_development",
+    "Climate_change_mitigation",
+    "Electric_vehicle",
+    "tiger-line-shapefile-2020-county-jackson-county-ia-topological-faces-polygons-with-all-geocodes",
+    "tiger-line-shapefile-2020-county-franklin-parish-la-topological-faces-polygons-with-all-geocode",
+    "electric-vehicle-title-and-registration-activity"
+  ]
+}

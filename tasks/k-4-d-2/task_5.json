@@ -1,0 +1,50 @@
+{
+  "question": "I'm analyzing simple battery assault trends in Los Angeles. First, identify the year between 2010 and 2019 that saw the highest number of these incidents. In that same year, which LAPD area recorded the most arrests for other miscellaneous violations? Focusing on that specific area, how many simple assault battery incidents occurred there in 2020?. Your response should be in the format [Answer].",
+  "answer": "1350",
+  "nodes": {
+    "1": {
+      "source": "datagov/crime-data-from-2010-to-2019/v1/files/rows.csv",
+      "fact": "Filter to rows where Crm Cd Desc = 'BATTERY - SIMPLE ASSAULT' and group by DATE OCC year; the year with the most incidents is 2016 (46,258; no tie observed). This identifies the peak year within the specified range.",
+      "subquestion": "From 2010 to 2019, which year has the most Los Angeles incidents with crime description \"BATTERY - SIMPLE ASSAULT\"?",
+      "answer": "2016"
+    },
+    "2": {
+      "source": "datagov/arrest-data-from-2010-to-2019/v1/files/rows.csv",
+      "fact": "Filter to Arrest Date year = <node_1 answer> and Charge Group Description = \"Miscellaneous Other Violations\". Group by Area Name and count arrests; Central has the highest count (2,434; no tie observed within scope).",
+      "subquestion": "In <node_1 answer> Los Angeles arrest records, which area has the most arrests in the charge group \"Miscellaneous Other Violations\"?",
+      "answer": "Central"
+    },
+    "3": {
+      "source": "datagov/lapd-ripa-ab-953-stop-incident-details-from-7-1-2018-to-present/v1/files/rows.csv",
+      "fact": "Filter to rows where Area Name = Central; the corresponding Area ID is 1 (values appear as 1/01 in this file). This maps the area name to its numeric ID.",
+      "subquestion": "Using LAPD stop-incident records collected under California's RIPA program, what numeric Area ID corresponds to area name <node_2 answer> (answer as an integer)?",
+      "answer": "1"
+    },
+    "4": {
+      "source": "datagov/crime-data-from-2010-to-2019/v1/files/rows.csv",
+      "fact": "Filter to rows where Crm Cd Desc = 'BATTERY - SIMPLE ASSAULT'; the corresponding crime code is 624 (unique mapping in this file). This maps the description to its code.",
+      "subquestion": "In Los Angeles crime records, what crime code corresponds to the crime description \"BATTERY - SIMPLE ASSAULT\"? Answer with the crime code only.",
+      "answer": "624"
+    },
+    "5": {
+      "source": "datagov/crime-data-from-2020-to-present/v1/files/rows.csv",
+      "fact": "Filter to year 2020 (from DATE OCC), Area = <node_3 answer>, and Crm Cd = <node_4 answer>. The incident count is 1350.",
+      "subquestion": "Using the 2020 to present Los Angeles crime records, in 2020 how many incidents with crime code <node_4 answer> occurred in Area ID <node_3 answer>?",
+      "answer": "1350"
+    }
+  },
+  "reasoning_chain": [
+    "Node 1: In 2010 to 2019 LA crime records, the year with the most BATTERY - SIMPLE ASSAULT incidents -> 2016.",
+    "Node 2 depends on node 1: In 2016 arrests, the area with the most Miscellaneous Other Violations arrests -> Central.",
+    "Node 3 depends on node 2: In LAPD RIPA stop-incident records, Central corresponds to Area ID 1.",
+    "Node 4: In Los Angeles crime records, BATTERY - SIMPLE ASSAULT corresponds to crime code 624.",
+    "Node 5 depends on nodes 3-4: In 2020 crime records for Area ID 1, incident count where Crm Cd = 624 -> 1350.",
+    "Final answer: 1350"
+  ],
+  "datasets_used": [
+    "arrest-data-from-2010-to-2019",
+    "crime-data-from-2010-to-2019",
+    "crime-data-from-2020-to-present",
+    "lapd-ripa-ab-953-stop-incident-details-from-7-1-2018-to-present"
+  ]
+}

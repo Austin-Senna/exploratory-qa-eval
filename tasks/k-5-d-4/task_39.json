@@ -1,0 +1,99 @@
+{
+  "question": "Starting with the year across 2011-2016 that saw the lowest unmarried teen birth rate and extending 1 year forward to form a range, identify Texas counties with adult day care meal reimbursements averaging at least $50,000 across that range that had the five largest percentage drops. From those, keep counties with at least one abuse/neglect-related child fatality and at least three non-abuse/neglect child fatality investigations between 2018 and 2022. Among remaining counties, find the one in both the top two for 2021 drug poisoning death rates and the bottom two for 2016 age-adjusted categories. What is the county seat? Your response should be in the format [Answer].",
+  "answer": "Victoria",
+  "nodes": {
+    "1": {
+      "source": "datagov/unmarried-teen-birth-rates-by-age-groups/files/unmarried_teen_birth_rates_by_age_groups.txt",
+      "fact": "For 2011-2016, lowest unmarried teen birth rate is in 2016.",
+      "subquestion": "Which year from 2011-2016 has lowest unmarried teen birth rate?",
+      "answer": "2016"
+    },
+    "2": {
+      "source": "datagov/child-and-adult-care-food-programs-cacfp-adult-day-care-centers-meal-reimbursement-pr-2016/files/rows.txt",
+      "fact": "2016-17 adult day care reimbursements for candidate counties.",
+      "subquestion": "Which counties had reimbursements ≥$50k avg in <node_1 answer>-<node_1 answer>+1?",
+      "answer": {
+        "Brooks County": 60454.65,
+        "Willacy County": 158153.77,
+        "Comal County": 112322.52,
+        "Atascosa County": 141083.37,
+        "Victoria County": 95559.47
+      }
+    },
+    "3": {
+      "source": "datagov/child-and-adult-care-food-programs-cacfp-adult-day-care-centers-meal-reimbursement-pr-2017/files/rows.txt",
+      "fact": "2017-18 adult day care reimbursements.",
+      "subquestion": "Reimbursements in <node_1 answer>+1?",
+      "answer": {
+        "Brooks County": 66250.97,
+        "Willacy County": 160898.5925,
+        "Comal County": 88868.98,
+        "Atascosa County": 142115.25,
+        "Victoria County": 89291.24
+      }
+    },
+    "4": {
+      "source": "datagov/ocs-1-1-abuse-neglect-related-texas-child-fatalities-fy2013-fy2022/files/rows.txt",
+      "fact": "Counties with ≥1 abuse/neglect fatality 2018-2022: Brooks, Willacy, Comal, Victoria.",
+      "subquestion": "Which had ≥1 abuse/neglect fatality?",
+      "answer": [
+        "Brooks County",
+        "Willacy County",
+        "Comal County",
+        "Victoria County"
+      ]
+    },
+    "5": {
+      "source": "datagov/ocs-1-2-non-abuse-neglect-related-texas-child-fatality-investigations-fy2013-fy2022/files/rows.txt",
+      "fact": "Counties with ≥3 non-abuse/neglect investigations: Willacy, Comal, Atascosa, Victoria.",
+      "subquestion": "Which had ≥3 non-abuse/neglect investigations?",
+      "answer": [
+        "Willacy County",
+        "Comal County",
+        "Atascosa County",
+        "Victoria County"
+      ]
+    },
+    "6": {
+      "source": "datagov/nchs-drug-poisoning-mortality-by-county-united-states/files/rows.txt",
+      "fact": "2021 top two death rates: Victoria 19.52, Comal 19.21.",
+      "subquestion": "Which two had highest 2021 death rates?",
+      "answer": [
+        "Victoria County",
+        "Comal County"
+      ]
+    },
+    "7": {
+      "source": "datagov/nchs-drug-poisoning-mortality-by-county-united-states-20278/files/rows.txt",
+      "fact": "2016 bottom two age-adjusted categories: Willacy 6-7.9, Victoria 10-11.9.",
+      "subquestion": "Which two had lowest 2016 age-adjusted categories?",
+      "answer": [
+        "Willacy County",
+        "Victoria County"
+      ]
+    },
+    "8": {
+      "source": "wikipedia/Victoria_County,_Texas/content.txt",
+      "fact": "Victoria County's county seat is Victoria.",
+      "subquestion": "What is the county seat of the intersection?",
+      "answer": "Victoria"
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=1): Unmarried teen birth rate lowest 2011-2016 is 2016",
+    "HOP 2 (d=2): Adult day care reimbursements 2016-2017",
+    "HOP 3 (d=2): Child fatality filters",
+    "HOP 4 (d=2): Drug poisoning intersection → Victoria",
+    "Final answer: Victoria"
+  ],
+  "datasets_used": [
+    "unmarried-teen-birth-rates-by-age-groups",
+    "child-and-adult-care-food-programs-cacfp-adult-day-care-centers-meal-reimbursement-pr-2016",
+    "child-and-adult-care-food-programs-cacfp-adult-day-care-centers-meal-reimbursement-pr-2017",
+    "ocs-1-1-abuse-neglect-related-texas-child-fatalities-fy2013-fy2022",
+    "ocs-1-2-non-abuse-neglect-related-texas-child-fatality-investigations-fy2013-fy2022",
+    "nchs-drug-poisoning-mortality-by-county-united-states",
+    "nchs-drug-poisoning-mortality-by-county-united-states-20278",
+    "Victoria_County,_Texas"
+  ]
+}

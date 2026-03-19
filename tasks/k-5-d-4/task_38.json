@@ -1,0 +1,93 @@
+{
+  "question": "Starting with the year across 2017-2022 with the highest hazard mitigation grant obligations and extending 1 year back to form a range, identify Washington counties with Low-Income student enrollment percentage between 32-40% in every school year during that range. Among those with district-average Math proficiency above 40% in the second year and not the most populous county in Washington, find the agricultural college that was ultimately located in the town that beat the county seat of the county with lowest 2020 census population. Your response should be in the format [Answer].",
+  "answer": "Washington State University",
+  "nodes": {
+    "1": {
+      "source": "datagov/hazard-mitigation-grants-by-state-all-presidentially-declared-disasters/files/rows.txt",
+      "fact": "For 2017-2022, highest hazard mitigation grants is in 2020.",
+      "subquestion": "Which year from 2017-2022 has highest hazard mitigation grants?",
+      "answer": "2020"
+    },
+    "2": {
+      "source": "datagov/report-card-enrollment-2019-20-school-year/files/rows.txt",
+      "fact": "Counties with Low-Income 32-40%: Island, King, Kitsap, San Juan, Snohomish, Whitman.",
+      "subquestion": "Which WA counties had Low-Income 32-40% in <node_1 answer>-1 school year?",
+      "answer": [
+        "Island",
+        "King",
+        "Kitsap",
+        "San Juan",
+        "Snohomish",
+        "Whitman"
+      ]
+    },
+    "3": {
+      "source": "datagov/report-card-enrollment-2020-21-school-year/files/rows.txt",
+      "fact": "Counties with Low-Income 32-40%: Island, King, Kitsap, San Juan, Snohomish, Thurston, Whitman. Intersection: Island, King, Kitsap, San Juan, Snohomish, Whitman.",
+      "subquestion": "Which WA counties had Low-Income 32-40% in <node_1 answer> school year?",
+      "answer": [
+        "Island",
+        "King",
+        "Kitsap",
+        "San Juan",
+        "Snohomish",
+        "Thurston",
+        "Whitman"
+      ]
+    },
+    "4": {
+      "source": "datagov/report-card-assessment-data-2020-21-school-year/files/rows.txt",
+      "fact": "Math proficiency >40%: King, Kitsap, Whitman.",
+      "subquestion": "Which from intersection have Math proficiency >40%?",
+      "answer": [
+        "King",
+        "Kitsap",
+        "Whitman"
+      ]
+    },
+    "5": {
+      "source": "wikipedia/King_County,_Washington/content.txt",
+      "fact": "King is most populous WA county.",
+      "subquestion": "Which is NOT most populous?",
+      "answer": [
+        "Kitsap",
+        "Whitman"
+      ]
+    },
+    "6": {
+      "source": "wikipedia/Kitsap_County,_Washington/content.txt",
+      "fact": "Kitsap population 275,611.",
+      "subquestion": "What is Kitsap's 2020 population?",
+      "answer": "275611"
+    },
+    "7": {
+      "source": "wikipedia/Whitman_County,_Washington/content.txt",
+      "fact": "Whitman population 47,973 (lower). County seat is Colfax.",
+      "subquestion": "What is Whitman's population and seat?",
+      "answer": "Whitman County, pop 47,973, seat is Colfax"
+    },
+    "8": {
+      "source": "wikipedia/Colfax,_Washington/content.txt",
+      "fact": "Colfax competed for WSU; Pullman won.",
+      "subquestion": "What college did Colfax compete to host?",
+      "answer": "Washington State University"
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=1): Hazard mitigation highest 2017-2022 is 2020",
+    "HOP 2 (d=2): WA enrollment 2019-2021 intersection",
+    "HOP 3 (d=2): Math proficiency + most populous filters",
+    "HOP 4 (d=2): Lowest population county seat → WSU",
+    "Final answer: Washington State University"
+  ],
+  "datasets_used": [
+    "hazard-mitigation-grants-by-state-all-presidentially-declared-disasters",
+    "report-card-enrollment-2019-20-school-year",
+    "report-card-enrollment-2020-21-school-year",
+    "report-card-assessment-data-2020-21-school-year",
+    "King_County,_Washington",
+    "Kitsap_County,_Washington",
+    "Whitman_County,_Washington",
+    "Colfax,_Washington"
+  ]
+}

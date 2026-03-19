@@ -1,0 +1,20 @@
+{
+  "question": "Which year from 2005-2010 has the lowest average Evening Daily # in New York? Your response should be in the format [Answer].",
+  "answer": "2009",
+  "practical_motivation": "A lottery analyst is checking year-to-year shifts in evening draw values.",
+  "nodes": {
+    "1": {
+      "source": "datagov/lottery-daily-numbers-win-4-winning-numbers-beginning-1980/files/rows.txt",
+      "fact": "Averaging Evening Daily # by draw year for 2005-2010, 2009 has the lowest average at 487.0631868131868.",
+      "subquestion": "Which year from 2005-2010 has the lowest average Evening Daily # in New York? (Parse Draw Date to Year; compute the mean Evening Daily # by Year; select the minimum.)",
+      "answer": "2009"
+    }
+  },
+  "reasoning_chain": [
+    "Node 1: Compute the average Evening Daily # by year (2005-2010) and select the minimum; the lowest year is 2009.",
+    "Final answer: 2009"
+  ],
+  "datasets_used": [
+    "lottery-daily-numbers-win-4-winning-numbers-beginning-1980"
+  ]
+}

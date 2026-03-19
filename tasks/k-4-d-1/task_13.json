@@ -1,0 +1,66 @@
+{
+  "question": "I'm trying to estimate how many taser-use incidents per century Austin has using data from the year after the year (within 2015-2023) that has the highest total number of drug overdose deaths across U.S. states using December 12 month-ending values and excluding the U.S. total. Find the Austin Police Department sector (excluding Unknown) with the most searches, then within that sector find the council district with the most dispatch-system incident records in that year. Count the incidents in that district where officers applied force and tasers were used, then use Austin's incorporation year to compute the average per century. Please return only the rounded integer in the format [Answer]. Your response should be in the format [Answer].",
+  "answer": "32",
+  "nodes": {
+    "1": {
+      "source": "datagov/vsrr-provisional-drug-overdose-death-counts/files/rows.txt",
+      "fact": "In the VSRR provisional drug overdose death counts dataset (December 12 month-ending values for 2015-2023, excluding the US aggregate), 2022 has the highest total across states at 109,413.",
+      "subquestion": "Which year from 2015-2023 has the highest total number of drug overdose deaths across U.S. states, using December 12 month-ending values and excluding the U.S. total? (Filter Indicator == \"Number of Drug Overdose Deaths\", Period == \"12 month-ending\", Month == \"December\", exclude State == \"US\"; sum Data Value by Year; choose the maximum.)",
+      "answer": "2022"
+    },
+    "2": {
+      "source": "wikipedia/Austin,_Texas/content.txt",
+      "fact": "The Austin, Texas article states that Austin was founded in 1839.",
+      "subquestion": "According to the Austin, Texas article, in what year was Austin founded?",
+      "answer": "1839"
+    },
+    "3": {
+      "source": "datagov/apd-searches-by-type/v1/files/rows.csv",
+      "fact": "In <node_1 answer + 1> APD searches-by-type data (excluding Unknown), the sector with the most searches is Charlie (445; no ties observed within scope).",
+      "subquestion": "In <node_1 answer + 1> APD searches-by-type data (excluding Sector = \"Unknown\"), which sector has the most searches?",
+      "answer": "Charlie"
+    },
+    "4": {
+      "source": "datagov/apd-computer-aided-dispatch-incidents/v1/files/rows.csv",
+      "fact": "In <node_1 answer + 1> APD computer-aided-dispatch incidents data, within sector Charlie, council district 1 has the most incidents (21038; no ties observed within scope).",
+      "subquestion": "In <node_1 answer + 1> APD computer-aided-dispatch incidents data, within sector <node_3 answer>, which council district has the most incidents?",
+      "answer": "1"
+    },
+    "5": {
+      "source": "datagov/apd-use-of-force/v1/files/rows.csv",
+      "fact": "In <node_1 answer + 1> APD use-of-force data, council district 1 has 59 incidents with Used Taser(s) > 0.",
+      "subquestion": "In <node_1 answer + 1> APD use-of-force data, how many incidents with Used Taser(s) > 0 occurred in council district <node_4 answer>?",
+      "answer": "59"
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=1, data.gov year derivation - node 1):",
+    "  Node 1: Year with highest drug overdose deaths (2015-2023) -> 2022",
+    "  Derived year: 2023 (2022+1)",
+    "",
+    "HOP 2 (d=1, Wikipedia - node 2):",
+    "  Node 2: Austin founding year -> 1839",
+    "",
+    "HOP 3 (d=1, data.gov - node 3):",
+    "  Node 3: 2023 APD sector with the most searches (excluding Unknown) -> Charlie (445)",
+    "",
+    "HOP 4 (d=1, data.gov - node 4 depends on node 3):",
+    "  Node 4: In 2023 CAD incidents, within sector Charlie, the council district with the most incidents -> 1 (21038)",
+    "",
+    "HOP 5 (d=1, data.gov - node 5 depends on node 4):",
+    "  Node 5: In 2023 APD use-of-force data, incidents in council district 1 with Used Taser(s) > 0 = 59",
+    "",
+    "Compute Austin age in 2023: 2023 - 1839 = 184 years = 1.84 centuries.",
+    "Compute incidents per century: 59 / 1.84 ≈ 32.07.",
+    "Round to nearest whole number: 32.",
+    "",
+    "Final answer: 32"
+  ],
+  "datasets_used": [
+    "vsrr-provisional-drug-overdose-death-counts",
+    "Austin,_Texas",
+    "apd-computer-aided-dispatch-incidents",
+    "apd-searches-by-type",
+    "apd-use-of-force"
+  ]
+}

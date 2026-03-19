@@ -1,0 +1,64 @@
+{
+  "question": "I'm considering living in Brightwood, Washington, D.C. Identify the ward Brightwood belongs to, find the most common offense in that ward in the year after the year (within 2017-2022) that has the highest total daily census records from Allegheny County Jail, and report the percentage of incidents for that same offense from that year to that of the next year. Rounded to the nearest integer. Your response should be in the format [Answer].",
+  "answer": "93",
+  "nodes": {
+    "1": {
+      "source": "datagov/allegheny-county-jail-daily-census/files/66cdcd57-6c92-4aaa-8800-0ed9d8f03e22.txt",
+      "fact": "Counting records by year from census_date for 2017-2022, the maximum total is 1202002 in 2019.",
+      "subquestion": "Which year from 2017-2022 has the highest total daily census records from Allegheny County Jail? (Use census_date to derive year; count records by year and select the maximum.)",
+      "answer": "2019"
+    },
+    "2": {
+      "source": "wikipedia/Brightwood_(Washington,_D.C.)/content.txt",
+      "fact": "The Brightwood (Washington, D.C.) article states that Brightwood is part of Ward 4.",
+      "subquestion": "Brightwood is part of which Washington, D.C. ward?",
+      "answer": "4"
+    },
+    "3": {
+      "source": "datagov/crime-incidents-in-2020/v1/files/data.csv",
+      "fact": "In <node_1 answer + 1> Washington, D.C. crime-incidents data for Ward 4, the most common offense is THEFT F/AUTO (1,070 incidents; no ties observed within scope).",
+      "subquestion": "In <node_1 answer + 1> Washington, D.C. crime-incidents data, within Ward <node_2 answer>, which offense is most common?",
+      "answer": "THEFT F/AUTO"
+    },
+    "4": {
+      "source": "datagov/crime-incidents-in-2021/v1/files/data.csv",
+      "fact": "In <node_1 answer + 2> Washington, D.C. crime-incidents data, Ward 4 recorded 996 incidents with offense THEFT F/AUTO.",
+      "subquestion": "In <node_1 answer + 2> Washington, D.C. crime-incidents data, how many incidents with offense <node_3 answer> occurred in Ward <node_2 answer>?",
+      "answer": "996"
+    },
+    "5": {
+      "source": "datagov/crime-incidents-in-2020/v1/files/data.csv",
+      "fact": "In <node_1 answer + 1> Washington, D.C. crime-incidents data, the most common offense in Ward 4 has an incident count of 1,070.",
+      "subquestion": "In <node_1 answer + 1> Washington, D.C. crime-incidents data, within Ward <node_2 answer>, what is the incident count of the most common offense?",
+      "answer": "1070"
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=1, data.gov year derivation - node 1):",
+    "  Node 1: Year with highest Allegheny County Jail daily census records (2017-2022) -> 2019",
+    "  Derived year: 2020 (2019+1), next year: 2021 (2019+2)",
+    "",
+    "HOP 2 (d=1, Wikipedia - node 2):",
+    "  Node 2: Brightwood is in Washington, D.C. Ward 4.",
+    "",
+    "HOP 3 (d=1, data.gov - node 3 depends on node 2):",
+    "  Node 3: In 2020 within Ward 4, the most common offense is THEFT F/AUTO.",
+    "",
+    "HOP 4 (d=1, data.gov - node 4 depends on nodes 2 and 3):",
+    "  Node 4: 2021 Ward 4 incidents for THEFT F/AUTO = 996.",
+    "",
+    "HOP 5 (d=1, data.gov - node 5 depends on node 2):",
+    "  Node 5: In 2020 within Ward 4, the incident count of the most common offense = 1,070.",
+    "",
+    "Compute percent of 2020 level in 2021: 996 / 1070 * 100 ≈ 93.08%.",
+    "Round to nearest whole percent: 93.",
+    "",
+    "Final answer: 93"
+  ],
+  "datasets_used": [
+    "allegheny-county-jail-daily-census",
+    "Brightwood_(Washington,_D.C.)",
+    "crime-incidents-in-2020",
+    "crime-incidents-in-2021"
+  ]
+}

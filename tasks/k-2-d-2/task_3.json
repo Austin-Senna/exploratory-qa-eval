@@ -1,0 +1,58 @@
+{
+  "question": "Among King, Kitsap, San Juan, and Whitman counties, which county both has district-average Math proficiency above 40% in 2021-22 and is not the most populous in Washington, and then has the lower 2020 census population among those counties? Return the county name only. Your response should be in the format [Answer].",
+  "answer": "Whitman County",
+  "nodes": {
+    "1": {
+      "source": "datagov/report-card-assessment-data-2021-22-school-year/files/rows.txt",
+      "fact": "According to the Washington Report Card Assessment data for 2021-22, averaging district-level PercentMetStandard for Math (All Students, All Grades) by county: King had 43.5%, Kitsap had 44.4%, San Juan had 35.2%, and Whitman had 41.4%. Counties with district-average Math proficiency above 40% among hop 1 result: King, Kitsap, Whitman.",
+      "subquestion": "Among King, Kitsap, San Juan, and Whitman counties, which had district-average Math proficiency above 40% in 2021-22?",
+      "answer": [
+        "King",
+        "Kitsap",
+        "Whitman"
+      ]
+    },
+    "2": {
+      "source": "wikipedia/King_County,_Washington/content.txt",
+      "fact": "According to the Wikipedia article for King County, Washington, 'The population was 2,269,675 in the 2020 census, making it the most populous county in Washington.'",
+      "subquestion": "Among King, Kitsap, San Juan, and Whitman counties, which are NOT the most populous in Washington?",
+      "answer": [
+        "Kitsap",
+        "San Juan",
+        "Whitman"
+      ]
+    },
+    "3": {
+      "source": "wikipedia/Kitsap_County,_Washington/content.txt",
+      "fact": "According to the Wikipedia article for Kitsap County, Washington, 'As of the 2020 census, its population was 275,611.'",
+      "subquestion": "Among the counties in <intersection of nodes 1 and 2>, which county had the lower 2020 census population?",
+      "answer": "Kitsap County"
+    },
+    "4": {
+      "source": "wikipedia/Whitman_County,_Washington/content.txt",
+      "fact": "According to the Wikipedia article for Whitman County, Washington, 'As of the 2020 census, the population was 47,973.' Also, 'The county seat is Colfax.'",
+      "subquestion": "Among the counties in <intersection of nodes 1 and 2>, which county had the lower 2020 census population?",
+      "answer": "Whitman County"
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=2, data.gov + Wikipedia - nodes 1-2):",
+    "  Node 1: Math proficiency >40% -> King, Kitsap, Whitman",
+    "  Node 2: Not most populous -> Kitsap, San Juan, Whitman",
+    "  Intersection -> Kitsap, Whitman",
+    "",
+    "HOP 2 (d=2, Wikipedia comparison - nodes 3-4 depend on hop 1):",
+    "  Node 3: Kitsap County population 275,611",
+    "  Node 4: Whitman County population 47,973",
+    "  Lower population -> Whitman County",
+    "",
+    "Final answer: Whitman County"
+  ],
+  "verdict": "pass",
+  "datasets_used": [
+    "report-card-assessment-data-2021-22-school-year",
+    "King_County,_Washington",
+    "Kitsap_County,_Washington",
+    "Whitman_County,_Washington"
+  ]
+}

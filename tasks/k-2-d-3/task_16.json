@@ -1,0 +1,57 @@
+{
+  "question": "Find the only 4-digit year common to these three sets: years mentioned exactly 28 times in the CREMP Dry Tortugas coral coverage data, years mentioned exactly once in the AVHRR Pathfinder daytime dataset, and years mentioned exactly once in the SST Pathfinder 8-day composite. Using that year, identify the host city for Olympic bobsleigh venues. Return the city name only. Your response should be in the format [Answer].",
+  "answer": "Turin",
+  "nodes": {
+    "1": {
+      "source": "datagov/cremp-dry-tortugas-yearly-revisited-stony-coral-percent-coverage/files/CREMP_DryTortugas_Coral_Pcover-x5B5uo.txt",
+      "fact": "The distinct 4-digit years mentioned exactly 28 times are ['2005', '2006', '2007', '2008'].",
+      "subquestion": "Which distinct 4-digit years are mentioned exactly 28 times? Return the full set as a list.",
+      "answer": [
+        "2000",
+        "2020"
+      ]
+    },
+    "2": {
+      "source": "datagov/avhrr-pathfinder-version-5-3-l3-collated-l3c-sst-global-0-0417a-1981-present-daytime-1-day-comp/files/nceiPH53sstd1day-9BqEnS.txt",
+      "fact": "The distinct 4-digit years mentioned exactly 1 times are ['2002', '2006', '2010'].",
+      "subquestion": "Which distinct 4-digit years are mentioned exactly 1 times? Return the full set as a list.",
+      "answer": [
+        "2002",
+        "2006",
+        "2010"
+      ]
+    },
+    "3": {
+      "source": "datagov/sst-pathfinder-ver-5-2-l3c-day-global-0-0417a-1981-2012-science-quality-8-day-composite/files/erdPH2sstd8day-tD60h1.txt",
+      "fact": "The distinct 4-digit years mentioned exactly 1 times are ['2002', '2006', '2014'].",
+      "subquestion": "Which distinct 4-digit years are mentioned exactly 1 times? Return the full set as a list.",
+      "answer": [
+        "2002",
+        "2006",
+        "2014"
+      ]
+    },
+    "4": {
+      "source": "wikipedia/List_of_Olympic_venues_in_bobsleigh/content.txt",
+      "fact": "The only year shared by the three year lists is 2006. In the list of Olympic venues in bobsleigh, the Games entry for 2006 lists the host city as Turin.",
+      "subquestion": "In the list of Olympic venues in bobsleigh, focus on the Games entry whose 4-digit year is the only year that appears in each of <node_1 answer>, <node_2 answer>, and <node_3 answer>. From that Games entry, return the host city name (the part after the year, stopping before any comma or parenthesis).",
+      "answer": "Turin"
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=3, data.gov - nodes 1-3):",
+    "  Nodes 1-3: Year lists -> intersection yields a single year",
+    "",
+    "HOP 2 (d=1, Wikipedia - node 4 depends on hop 1):",
+    "  Node 4: Olympic venues for that year -> host city",
+    "",
+    "Final answer: Turin"
+  ],
+  "verdict": "pass",
+  "datasets_used": [
+    "cremp-dry-tortugas-yearly-revisited-stony-coral-percent-coverage",
+    "avhrr-pathfinder-version-5-3-l3-collated-l3c-sst-global-0-0417a-1981-present-daytime-1-day-comp",
+    "sst-pathfinder-ver-5-2-l3c-day-global-0-0417a-1981-2012-science-quality-8-day-composite",
+    "List_of_Olympic_venues_in_bobsleigh"
+  ]
+}

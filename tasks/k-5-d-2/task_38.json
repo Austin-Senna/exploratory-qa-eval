@@ -1,0 +1,51 @@
+{
+  "question": "Starting with the year in the 2014-2019 period when NYC had the lowest average PM2.5 concentration, in Pittsburgh, identify the largest airport; in its March of that year's scheduled traffic report, find the destination with the most seats and map it to its city and state. What is the largest land area (SQMI) among ZIP codes in that destination city/state? Please return the land area only. Your response should be in the format [Answer].",
+  "answer": "45.68",
+  "nodes": {
+    "1": {
+      "source": "datagov/new-york-city-air-quality/files/rows.txt",
+      "fact": "For 2014-2019, lowest NYC PM2.5 concentration is in 2019.",
+      "subquestion": "Which year from 2014-2019 has lowest NYC PM2.5?",
+      "answer": "2019"
+    },
+    "2": {
+      "source": "wikipedia/Pittsburgh/content.txt",
+      "fact": "Pittsburgh International Airport is the largest airport in Pittsburgh.",
+      "subquestion": "What is the largest airport in Pittsburgh?",
+      "answer": "Pittsburgh International Airport"
+    },
+    "3": {
+      "source": "datagov/pittsburgh-international-airport-scheduled-passenger-traffic/files/pittsburgh-international-traffic-report-march-2019.txt",
+      "fact": "In March 2019, Atlanta (ATL) has the most seats (44,912).",
+      "subquestion": "Which destination had the most seats in March <node_1 answer>?",
+      "answer": "Atlanta (ATL)"
+    },
+    "4": {
+      "source": "datagov/airports-5e97a/files/rows.txt",
+      "fact": "ATL → Atlanta, GA.",
+      "subquestion": "What city and state correspond to <node_3 answer>?",
+      "answer": "Atlanta, GA"
+    },
+    "5": {
+      "source": "datagov/boundaries-us-zip-codes/files/rows.txt",
+      "fact": "Atlanta, GA largest ZIP land area is 45.68 SQMI (ZIP 30349).",
+      "subquestion": "What is the largest land area (SQMI) among ZIP codes in <node_4 answer>?",
+      "answer": "45.68"
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=1): NYC PM2.5 lowest 2014-2019 is 2019",
+    "HOP 2 (d=1): Pittsburgh's largest airport → Pittsburgh International",
+    "HOP 3 (d=1): March 2019 top destination → Atlanta (ATL)",
+    "HOP 4 (d=1): ATL → Atlanta, GA",
+    "HOP 5 (d=1): Atlanta, GA largest ZIP SQMI → 45.68",
+    "Final answer: 45.68"
+  ],
+  "datasets_used": [
+    "new-york-city-air-quality",
+    "Pittsburgh",
+    "pittsburgh-international-airport-scheduled-passenger-traffic",
+    "airports-5e97a",
+    "boundaries-us-zip-codes"
+  ]
+}

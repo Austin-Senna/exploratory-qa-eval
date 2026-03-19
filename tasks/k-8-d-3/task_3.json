@@ -1,0 +1,79 @@
+{
+  "question": "Start with University of Miami. Find the U.S. state of that university's city. Let A be the case-insensitive count of the state name mentioned in one text, and let B be the number of distinct 4-digit years in another text (exclude years in identifiers). Let C be the number of distinct 4-digit years mentioned in List of least carbon efficient power stations (exclude years in identifiers). Let r0 be the state's GDP-per-capita rank (highest=1), and compute r = ((r0 + A + B - 1) mod 51) + 1. Within that state in the subcontracting directory, let H be the number of rows with total contract value >= r*20000. From a third text, sort its distinct 4-digit years (exclude years in identifiers) and select year Y using k = ((H + C) mod 10) + 1 (wrap if needed). From a fourth text, let D be the number of distinct 4-digit years ending with the same last digit as Y (exclude years in identifiers). In a final text, how many distinct month names are mentioned at least D+1 times? Answer as: [number].",
+  "answer": "1",
+  "nodes": {
+    "1": {
+      "source": "wikipedia/University_of_Miami/content.txt",
+      "fact": "University of Miami is located in Coral Gables.",
+      "subquestion": "What city is University of Miami located in?",
+      "answer": "Coral Gables"
+    },
+    "2": {
+      "source": "wikipedia/Coral_Gables,_Florida/content.txt",
+      "fact": "Coral Gables is located in the U.S. state of Florida.",
+      "subquestion": "In U.S. geography, which U.S. state is <node_1 answer> located in?",
+      "answer": "Florida"
+    },
+    "3": {
+      "source": "datagov/walton-smith-ctd-ws0603-ws0603_ws0603_09-2006-01-25-24-7632n-80-7227w1/files/WS0603_WS0603_WS0603_09-TdMFQy.txt",
+      "fact": "The name Florida appears 2 times (case-insensitive).",
+      "subquestion": "How many times is the state name <node_2 answer> mentioned (case-insensitive)?",
+      "answer": "2"
+    },
+    "4": {
+      "source": "datagov/walton-smith-ctd-ws1116-ws1116_ws1116_023-2011-10-21-24-4875n-81-83w1/files/WS1116_WS1116_WS1116_023-dAMCAN.txt",
+      "fact": "There are 9 distinct 4-digit years.",
+      "subquestion": "How many distinct 4-digit years appear?",
+      "answer": "9"
+    },
+    "5": {
+      "source": "wikipedia/List_of_least_carbon_efficient_power_stations/content.txt",
+      "fact": "List of least carbon efficient power stations mentions 9 distinct 4-digit years.",
+      "subquestion": "How many distinct 4-digit years are mentioned in List of least carbon efficient power stations?",
+      "answer": "9"
+    },
+    "6": {
+      "source": "datagov/choose-maryland-compare-states-economy/files/rows.txt",
+      "fact": "Florida has GDP-per-capita rank (highest=1) 43. Using r = ((43 + 2 + 9 - 1) mod 51) + 1, r = 3.",
+      "subquestion": "Let r0 be the GDP-per-capita rank (highest=1) of <node_2 answer>. Let r = ((r0 + <node_3 answer> + <node_4 answer> - 1) mod 51) + 1. What is r?",
+      "answer": "3"
+    },
+    "7": {
+      "source": "datagov/subcontracting-directory-for-small-businesses/files/subk-directory-as-of-07112024-filtered-subk-directory-v3.txt",
+      "fact": "Within vendor address state Florida, there are 1 rows with total contract value >= 60000.",
+      "subquestion": "Within vendor address state <node_2 answer>, how many rows have Base and All Options Value (Total Contract Value) >= (<node_6 answer> * 20000)?",
+      "answer": "1"
+    },
+    "8": {
+      "source": "datagov/cmecs-substrate-geoform-and-biotic-component-polygons-derived-from-multibeam-echosounder-d/files/USGS.da665bcf-00aa-49aa-a5ad-78ccbe4ba900.txt",
+      "fact": "The sorted distinct-year list has length 11. With k = ((1 + 9) mod 10) + 1 = 1, the selected year is 1620.",
+      "subquestion": "List distinct 4-digit years in ascending order. Let k = ((<node_7 answer> + <node_5 answer>) mod 10) + 1 and let L be the number of years in the list. Return the year at position ((k-1) mod L)+1 (1-indexed).",
+      "answer": "1620"
+    },
+    "9": {
+      "source": "datagov/noaa-esri-geotiff-2m-multibeam-bathymetry-of-grammanik-bank-us-virgin-islands-project-nf-05-05-6/files/38825.txt",
+      "fact": "There are 1 distinct 4-digit years ending in 0.",
+      "subquestion": "How many distinct 4-digit years end with the same last digit as <node_8 answer>?",
+      "answer": "1"
+    },
+    "10": {
+      "source": "datagov/c-harm-v2-nowcast-pseudo-nitzschia-cellular-domoic-acid-and-particular-domoic-acid-probabil-180/files/charmForecast0dayV2_LonPM180.txt",
+      "fact": "With threshold 2, there are 1 distinct month names that appear at least that many times.",
+      "subquestion": "How many distinct month names (January-December) are mentioned at least (<node_9 answer> + 1) times (case-insensitive)?",
+      "answer": "1"
+    }
+  },
+  "reasoning_chain": [
+    "Node 1: find the city for the anchor entity.",
+    "Node 2 depends on node 1: find the U.S. state for that city.",
+    "Node 3 depends on node 2: count case-insensitive mentions of the state name.",
+    "Node 4: count distinct 4-digit years in a second text.",
+    "Node 5: count distinct 4-digit years mentioned in the named page.",
+    "Node 6 depends on nodes 2-4: compute r from the state's GDP ranking and A/B.",
+    "Node 7 depends on nodes 2 and 6: count qualifying subcontracting rows in that state.",
+    "Node 8 depends on nodes 5 and 7: select a year Y from a sorted year list by modular index.",
+    "Node 9 depends on node 8: compute D from the next text.",
+    "Node 10 depends on node 9: compute the final month-name count.",
+    "Final answer: 1."
+  ]
+}

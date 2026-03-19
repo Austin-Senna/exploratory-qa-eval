@@ -1,0 +1,173 @@
+{
+  "question": "Among Texas counties in the top five for average capital outlay spending from 2018 to 2021, identify the two highest by average prison releases in 2019 and 2020. Of those two, select the county with the smallest increase in disability compensation recipients from the program fiscal year within 2017-2022 with the highest total federal share obligated for Hazard Mitigation Assistance grant programs to 2023. Find the public universities in this county; which was founded the earliest? Return the university name only. Your response should be in the format [Answer].",
+  "answer": "University of Texas at Dallas",
+  "nodes": {
+    "1": {
+      "source": "datagov/texas-state-expenditures-by-county-2018/files/rows.txt",
+      "fact": "In the 2018 Texas State Expenditures by County dataset, the top 5 counties by Capital Outlay total were: Harris ($1,303,630,847.30), Dallas ($838,316,444.65), Travis ($427,160,745.36), Montgomery ($424,383,088.05), and Bexar ($269,462,082.97).",
+      "subquestion": "Which Texas counties were in the top 5 by average Capital Outlay expenditures across 2018-2021?",
+      "answer": {
+        "Harris": 1303630847.3,
+        "Dallas": 838316444.65,
+        "Travis": 427160745.36,
+        "Montgomery": 424383088.05,
+        "Bexar": 269462082.97
+      }
+    },
+    "2": {
+      "source": "datagov/texas-state-expenditures-by-county-2019/files/rows.txt",
+      "fact": "In the 2019 Texas State Expenditures by County dataset, the top 5 counties by Capital Outlay total were: Harris ($1,391,779,835.06), Dallas ($827,510,409.80), Travis ($614,936,080.37), Montgomery ($416,744,287.28), and Bexar ($302,940,592.72).",
+      "subquestion": "Which Texas counties were in the top 5 by average Capital Outlay expenditures across 2018-2021?",
+      "answer": {
+        "Harris": 1391779835.06,
+        "Dallas": 827510409.8,
+        "Travis": 614936080.37,
+        "Montgomery": 416744287.28,
+        "Bexar": 302940592.72
+      }
+    },
+    "3": {
+      "source": "datagov/texas-state-expenditures-by-county-2020/files/rows.txt",
+      "fact": "In the 2020 Texas State Expenditures by County dataset, the top 5 counties by Capital Outlay total were: Harris ($1,663,151,150.96), Dallas ($1,324,261,419.12), Travis ($821,945,717.49), Montgomery ($612,813,968.49), and Bexar ($494,340,352.72).",
+      "subquestion": "Which Texas counties were in the top 5 by average Capital Outlay expenditures across 2018-2021?",
+      "answer": {
+        "Harris": 1663151150.96,
+        "Dallas": 1324261419.12,
+        "Travis": 821945717.49,
+        "Montgomery": 612813968.49,
+        "Bexar": 494340352.72
+      }
+    },
+    "4": {
+      "source": "datagov/texas-state-expenditures-by-county-2021/files/rows.txt",
+      "fact": "In the 2021 Texas State Expenditures by County dataset, the top 5 counties by Capital Outlay total were: Harris ($1,741,663,003.68), Dallas ($1,171,406,639.17), Travis ($774,601,022.23), Montgomery ($705,433,711.03), and Bexar ($596,386,366.99).",
+      "subquestion": "Which Texas counties were in the top 5 by average Capital Outlay expenditures across 2018-2021?",
+      "answer": {
+        "Harris": 1741663003.68,
+        "Dallas": 1171406639.17,
+        "Travis": 774601022.23,
+        "Montgomery": 705433711.03,
+        "Bexar": 596386366.99
+      }
+    },
+    "5": {
+      "source": "datagov/texas-department-of-criminal-justice-releases-fy-2019/files/rows.txt",
+      "fact": "In the 2019 TDCJ Releases dataset, release counts for the top Capital Outlay counties were: Harris 9,029; Dallas 5,355; Bexar 4,545; Travis 1,857; Montgomery 1,315.",
+      "subquestion": "Among the counties from the capital outlay set, which two had the highest average TDCJ releases across 2019-2020?",
+      "answer": {
+        "Harris": 9029,
+        "Dallas": 5355,
+        "Bexar": 4545,
+        "Travis": 1857,
+        "Montgomery": 1315
+      }
+    },
+    "6": {
+      "source": "datagov/texas-department-of-criminal-justice-releases-fy-2020/files/rows.txt",
+      "fact": "In the 2020 TDCJ Releases dataset, release counts for the top Capital Outlay counties were: Harris 7,059; Dallas 4,540; Bexar 3,917; Travis 1,596; Montgomery 1,250.",
+      "subquestion": "Among the counties from the capital outlay set, which two had the highest average TDCJ releases across 2019-2020?",
+      "answer": {
+        "Harris": 7059,
+        "Dallas": 4540,
+        "Bexar": 3917,
+        "Travis": 1596,
+        "Montgomery": 1250
+      }
+    },
+    "7": {
+      "source": "datagov/hazard-mitigation-assistance-projects/files/HazardMitigationAssistanceProjects.txt",
+      "fact": "Summing federalShareObligated by programFy for 2017-2022, the maximum total is 48932227.55 in 2020.",
+      "subquestion": "Which program fiscal year from 2017-2022 has the highest total federal share obligated for funded projects under the Hazard Mitigation Assistance grant programs?",
+      "answer": "2020"
+    },
+    "8": {
+      "source": "datagov/fy-2020-disability-compensation-recipients-by-county/files/rows.txt",
+      "fact": "According to the 2020 Disability Compensation Recipients by County dataset, Harris County, Texas had 49,804 recipients and Dallas County, Texas had 26,317 recipients.",
+      "subquestion": "For the two counties from the releases comparison, what were the disability compensation recipient counts in <node_7 answer> and 2023?",
+      "answer": {
+        "Harris": 49804,
+        "Dallas": 26317
+      }
+    },
+    "9": {
+      "source": "datagov/fy-2023-disability-compensation-recipients-by-county/files/rows.txt",
+      "fact": "According to the 2023 Disability Compensation Recipients by County dataset, Harris County, Texas had 54,266 recipients and Dallas County, Texas had 25,704 recipients.",
+      "subquestion": "For the two counties from the releases comparison, what were the disability compensation recipient counts in <node_7 answer> and 2023?",
+      "answer": {
+        "Harris": 54266,
+        "Dallas": 25704
+      }
+    },
+    "10": {
+      "source": "wikipedia/Dallas_County,_Texas/content.txt",
+      "fact": "There are two public universities in Dallas County: the University of North Texas at Dallas and the University of Texas at Dallas.",
+      "subquestion": "What are the public universities in this county?",
+      "answer": [
+        "University of North Texas at Dallas",
+        "University of Texas at Dallas"
+      ]
+    },
+    "11": {
+      "source": "wikipedia/University_of_North_Texas_at_Dallas/content.txt",
+      "fact": "According to the Wikipedia article for the University of North Texas at Dallas, the university was established in 2000.",
+      "subquestion": "Which of the public universities in <node_10 answer> was founded earlier?",
+      "answer": {
+        "University of North Texas at Dallas": 2000
+      }
+    },
+    "12": {
+      "source": "wikipedia/University_of_Texas_at_Dallas/content.txt",
+      "fact": "According to the Wikipedia article for the University of Texas at Dallas, the university was established in 1961.",
+      "subquestion": "Which of the public universities in <node_10 answer> was founded earlier?",
+      "answer": {
+        "University of Texas at Dallas": 1961
+      }
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=4, Texas Capital Outlay expenditures by county 2018-2021 - nodes 1-4):",
+    "  Node 1: 2018 Capital Outlay totals -> Harris, Dallas, Travis, Montgomery, Bexar",
+    "  Node 2: 2019 Capital Outlay totals -> Harris, Dallas, Travis, Montgomery, Bexar",
+    "  Node 3: 2020 Capital Outlay totals -> Harris, Dallas, Travis, Montgomery, Bexar",
+    "  Node 4: 2021 Capital Outlay totals -> Harris, Dallas, Travis, Montgomery, Bexar",
+    "  Result: {Harris, Dallas, Travis, Montgomery, Bexar}",
+    "",
+    "HOP 2 (d=2, TDCJ releases 2019-2020 - nodes 5-6):",
+    "  Node 5: 2019 releases -> Harris 9,029; Dallas 5,355; Bexar 4,545; Travis 1,857; Montgomery 1,315",
+    "  Node 6: 2020 releases -> Harris 7,059; Dallas 4,540; Bexar 3,917; Travis 1,596; Montgomery 1,250",
+    "  Average releases: Harris 8,044; Dallas 4,947.5 (top two)",
+    "  Result: {Harris, Dallas}",
+    "",
+    "HOP 3 (d=1, data.gov year derivation - node 7):",
+    "  Node 7: Hazard Mitigation Assistance -> Highest federal share obligated (2017-2022) is 2020",
+    "",
+    "HOP 4 (d=2, Disability compensation recipients <node_7 answer> and 2023 - nodes 8-9):",
+    "  Node 8: <node_7 answer> recipients -> Harris 49,804; Dallas 26,317",
+    "  Node 9: 2023 recipients -> Harris 54,266; Dallas 25,704",
+    "  Change: Harris +4,462; Dallas -613 -> Dallas decreased",
+    "  Result: Dallas County, Texas",
+    "",
+    "HOP 5 (d=1, Wikipedia Dallas_County,_Texas - node 10):",
+    "  Node 10: Public universities in Dallas County -> {University of North Texas at Dallas, University of Texas at Dallas}",
+    "",
+    "HOP 6 (d=2, Wikipedia university pages - nodes 11-12):",
+    "  Node 11: University of North Texas at Dallas established in 2000",
+    "  Node 12: University of Texas at Dallas established in 1961",
+    "  Earlier founding year: 1961 -> University of Texas at Dallas",
+    "  Final answer: University of Texas at Dallas"
+  ],
+  "datasets_used": [
+    "texas-state-expenditures-by-county-2018",
+    "texas-state-expenditures-by-county-2019",
+    "texas-state-expenditures-by-county-2020",
+    "texas-state-expenditures-by-county-2021",
+    "texas-department-of-criminal-justice-releases-fy-2019",
+    "texas-department-of-criminal-justice-releases-fy-2020",
+    "hazard-mitigation-assistance-projects",
+    "fy-2020-disability-compensation-recipients-by-county",
+    "fy-2023-disability-compensation-recipients-by-county",
+    "Dallas_County,_Texas",
+    "University_of_North_Texas_at_Dallas",
+    "University_of_Texas_at_Dallas"
+  ]
+}

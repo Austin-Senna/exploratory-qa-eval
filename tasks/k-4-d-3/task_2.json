@@ -1,0 +1,109 @@
+{
+  "question": "Can you find out the Manhattan neighborhood containing a top 7 high school from 2007-2010 by overall score. Then, find out which NYC structure was built with what this neighborhood is named after and was designed by Stanford White. Report in what year is this structure designed. Your response should be in the format [Answer].",
+  "answer": "1891",
+  "nodes": {
+    "1": {
+      "source": "datagov/2007-2008-school-progress-report/v1/files/rows.csv",
+      "fact": "In 2007-08, the top 7 NYC high schools by overall score were: Brooklyn International HS (106.5), Gregorio Luperon HS (100.4), HS for Contemporary Arts (99.1), Bedford Academy HS (98.7), Manhattan Bridges HS (97.8), Marble Hill HS for International Studies (97.5), New World HS (97.0).",
+      "subquestion": "Which NYC high schools were in the top 7 by overall score in 2007-08?",
+      "answer": [
+        "Brooklyn International High School",
+        "Gregorio Luperon High School",
+        "High School for Contemporary Arts",
+        "Bedford Academy High School",
+        "Manhattan Bridges High School",
+        "Marble Hill High School for International Studies",
+        "New World High School"
+      ]
+    },
+    "2": {
+      "source": "datagov/2008-2009-school-progress-report/v1/files/rows.csv",
+      "fact": "In 2008-09, the top 7 NYC high schools by overall score were: HS of Hospitality Management (105.3), Bedford Academy HS (103.3), Williamsburg Prep (102.3), South Bronx Prep (101.7), Marble Hill HS (101.3), HS for Violin and Dance (98.9), Essex Street Academy (95.1).",
+      "subquestion": "Which NYC high schools were in the top 7 by overall score in 2008-09?",
+      "answer": [
+        "High School of Hospitality Management",
+        "Bedford Academy High School",
+        "Williamsburg Preparatory School",
+        "South Bronx Preparatory",
+        "Marble Hill High School for International Studies",
+        "High School for Violin and Dance",
+        "Essex Street Academy"
+      ]
+    },
+    "3": {
+      "source": "datagov/2009-2010-school-progress-report/v1/files/rows.csv",
+      "fact": "In 2009-10, the top 7 NYC high schools by overall score were: Theatre Arts Production Company School (106.3), Brooklyn International HS (103.0), Williamsburg Prep (101.7), Marble Hill HS (100.5), Williamsburg Architecture (100.2), Manhattan Village Academy (96.6), HS for Violin and Dance (95.8).",
+      "subquestion": "Which NYC high schools were in the top 7 by overall score in 2009-10?",
+      "answer": [
+        "Theatre Arts Production Company School",
+        "Brooklyn International High School",
+        "Williamsburg Preparatory School",
+        "Marble Hill High School for International Studies",
+        "Williamsburg High School for Architecture and Design",
+        "Manhattan Village Academy",
+        "High School for Violin and Dance"
+      ]
+    },
+    "4": {
+      "source": "wikipedia/Marble_Hill,_Manhattan/content.txt",
+      "fact": "The Marble Hill neighborhood gained its current name in 1891 from the Tuckahoe marble deposits discovered underneath it. Marble Hill High School for International Studies is located in this neighborhood.",
+      "subquestion": "What is the neighborhood containing <intersection of node_1, node_2, node_3> named after?",
+      "answer": "Tuckahoe marble"
+    },
+    "5": {
+      "source": "wikipedia/Tuckahoe_marble/content.txt",
+      "fact": "NYC structures built with Tuckahoe marble include the Washington Square Arch (1891), Federal Hall National Memorial (1842), Brooklyn Borough Hall (1849), St. Patrick's Cathedral (1858-78), Tweed Courthouse (1861-72), Grace Episcopal Church (1846), and Marble Collegiate Church (1854).",
+      "subquestion": "Which NYC structures were built with <node_4 answer>?",
+      "answer": [
+        "Washington Square Arch",
+        "Federal Hall National Memorial",
+        "Brooklyn Borough Hall",
+        "St. Patrick's Cathedral",
+        "Tweed Courthouse",
+        "Grace Episcopal Church",
+        "Marble Collegiate Church"
+      ]
+    },
+    "6": {
+      "source": "wikipedia/Stanford_White/content.txt",
+      "fact": "Stanford White designed several NYC structures including the Washington Square Arch (1891), the second Madison Square Garden (1890, demolished), the Cable Building (1893), the Villard Houses (1884), the Gould Memorial Library (1900), and Judson Memorial Church (1892).",
+      "subquestion": "Which NYC structures were designed by Stanford White?",
+      "answer": [
+        "Washington Square Arch",
+        "Madison Square Garden (second)",
+        "Cable Building",
+        "Villard Houses",
+        "Gould Memorial Library",
+        "Judson Memorial Church"
+      ]
+    },
+    "7": {
+      "source": "wikipedia/Washington_Square_Arch/content.txt",
+      "fact": "Designed by architect Stanford White in 1891, it commemorates the centennial of George Washington's 1789 inauguration as President of the United States, and forms the southern terminus of Fifth Avenue.",
+      "subquestion": "In what year is <intersection of node_5, node_6> designed?",
+      "answer": "1891"
+    }
+  },
+  "reasoning_chain": [
+    "Node 1: Find top 7 NYC high schools by overall score in 2007-08 \u2192 includes Marble Hill",
+    "Node 2: Find top 7 NYC high schools by overall score in 2008-09 \u2192 includes Marble Hill",
+    "Node 3: Find top 7 NYC high schools by overall score in 2009-10 \u2192 includes Marble Hill",
+    "Intersection of <node_1>, <node_2>, <node_3>: Only school in top 7 all three years \u2192 Marble Hill HS",
+    "Node 4 depends on intersection: Find type of marble Marble Hill is named after \u2192 Tuckahoe marble",
+    "Node 5 depends on node 4: Find NYC structures built with Tuckahoe marble \u2192 {Washington Square Arch, Federal Hall, etc.}",
+    "Node 6: Find NYC structures designed by Stanford White \u2192 {Washington Square Arch, Madison Square Garden, etc.}",
+    "Intersection of <node_5>, <node_6>: Only structure in both sets \u2192 Washington Square Arch",
+    "Node 7 depends on intersection: Find who donated $4,500 to Washington Square Arch \u2192 Ignacy Jan Paderewski",
+    "Final answer: Ignacy Jan Paderewski"
+  ],
+  "verdict": "pass",
+  "datasets_used": [
+    "2007-2008-school-progress-report",
+    "2008-2009-school-progress-report",
+    "2009-2010-school-progress-report",
+    "Marble_Hill,_Manhattan",
+    "Stanford_White",
+    "Tuckahoe_marble",
+    "Washington_Square_Arch"
+  ]
+}

@@ -1,0 +1,65 @@
+{
+  "question": "Starting with the year in the 2014-2019 period when NYC had the lowest average PM2.5 concentration, identify the DC Council member who represents the ward that, among the top two wards, recorded both the highest average crimes involving homicide, assault with dangerous weapon, robbery and sex abuse, and the higher average 311 service requests from that derived year through the following year. Which university did this council member attend for graduate studies? Return the university name only. Your response should be in the format [Answer].",
+  "answer": "Georgetown University",
+  "nodes": {
+    "1": {
+      "source": "datagov/new-york-city-air-quality/files/rows.txt",
+      "fact": "For 2014-2019, lowest NYC PM2.5 concentration is in 2019.",
+      "subquestion": "Which year from 2014-2019 has lowest NYC PM2.5?",
+      "answer": "2019"
+    },
+    "2": {
+      "source": "datagov/crime-incidents-in-2019/files/data.txt",
+      "fact": "In 2019: Ward 7 had 905 violent crimes, Ward 8 had 765.",
+      "subquestion": "Which DC wards had top 2 violent crimes in <node_1 answer>?",
+      "answer": ["Ward 7 (905)", "Ward 8 (765)"]
+    },
+    "3": {
+      "source": "datagov/crime-incidents-in-2020/files/data.txt",
+      "fact": "In 2020: Ward 7 had 945, Ward 8 had 907.",
+      "subquestion": "Which DC wards had top 2 violent crimes in <node_1 answer>+1?",
+      "answer": ["Ward 7 (945)", "Ward 8 (907)"]
+    },
+    "4": {
+      "source": "datagov/311-city-service-requests-in-2019/files/data.txt",
+      "fact": "In 2019: Ward 7 had 42,226, Ward 8 had 34,959.",
+      "subquestion": "311 requests for Ward 7, Ward 8 in <node_1 answer>?",
+      "answer": ["Ward 7 (42,226)", "Ward 8 (34,959)"]
+    },
+    "5": {
+      "source": "datagov/311-city-service-requests-in-2020/files/data.txt",
+      "fact": "In 2020: Ward 7 had 36,113, Ward 8 had 37,124. Ward 7 avg higher.",
+      "subquestion": "311 requests for Ward 7, Ward 8 in <node_1 answer>+1?",
+      "answer": ["Ward 7 (36,113)", "Ward 8 (37,124)"]
+    },
+    "6": {
+      "source": "wikipedia/Neighborhoods_in_Washington,_D.C./content.txt",
+      "fact": "Ward 7 Councilmember: Wendell Felder.",
+      "subquestion": "Who represents Ward 7 on the DC Council?",
+      "answer": "Wendell Felder"
+    },
+    "7": {
+      "source": "wikipedia/Wendell_Felder/content.txt",
+      "fact": "Wendell Felder earned M.A. from Georgetown University.",
+      "subquestion": "Which university did <node_6 answer> attend for graduate studies?",
+      "answer": "Georgetown University"
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=1): NYC PM2.5 lowest 2014-2019 is 2019",
+    "HOP 2 (d=2): Top 2 crime wards 2019-2020 → Ward 7, Ward 8",
+    "HOP 3 (d=2): Higher avg 311 requests 2019-2020 → Ward 7",
+    "HOP 4 (d=1): Ward 7 councilmember → Wendell Felder",
+    "HOP 5 (d=1): Felder's graduate university → Georgetown",
+    "Final answer: Georgetown University"
+  ],
+  "datasets_used": [
+    "new-york-city-air-quality",
+    "crime-incidents-in-2019",
+    "crime-incidents-in-2020",
+    "311-city-service-requests-in-2019",
+    "311-city-service-requests-in-2020",
+    "Neighborhoods_in_Washington,_D.C.",
+    "Wendell_Felder"
+  ]
+}

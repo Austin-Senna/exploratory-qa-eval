@@ -1,0 +1,65 @@
+{
+  "question": "Starting with the year in the 2018-2023 period when national traffic fatalities peaked, among Willacy, Comal, Atascosa, and Victoria counties in Texas, keep those with at least one abuse/neglect-related child fatality and at least three non-abuse/neglect child fatality investigations between 2018 and 2022. From the remaining counties, find the one that is both in the top two for that derived year's model-based drug poisoning death rates and in the bottom two for 2016 age-adjusted rate categories. Identify that county's seat and then the river the seat lies along. Return the river name only. Your response should be in the format [Answer].",
+  "answer": "Guadalupe River",
+  "nodes": {
+    "1": {
+      "source": "datagov/traffic-fatalities/files/rows.txt",
+      "fact": "For 2018-2023, highest national traffic fatalities is in 2021.",
+      "subquestion": "Which year from 2018-2023 has highest national traffic fatalities?",
+      "answer": "2021"
+    },
+    "2": {
+      "source": "datagov/ocs-1-1-abuse-neglect-related-texas-child-fatalities-fy2013-fy2022/files/rows.txt",
+      "fact": "From 2018-2022: Willacy 2, Comal 5, Atascosa 0, Victoria 6. Counties with >= 1: Willacy, Comal, Victoria.",
+      "subquestion": "Among Willacy, Comal, Atascosa, Victoria, which had >= 1 abuse/neglect-related child fatality (2018-2022)?",
+      "answer": ["Willacy County", "Comal County", "Victoria County"]
+    },
+    "3": {
+      "source": "datagov/ocs-1-2-non-abuse-neglect-related-texas-child-fatality-investigations-fy2013-fy2022/files/rows.txt",
+      "fact": "From 2018-2022: Willacy 3, Comal 16, Atascosa 6, Victoria 11. Counties with >= 3: all four.",
+      "subquestion": "Among Willacy, Comal, Atascosa, Victoria, which had >= 3 non-abuse/neglect investigations (2018-2022)?",
+      "answer": ["Willacy County", "Comal County", "Atascosa County", "Victoria County"]
+    },
+    "4": {
+      "source": "datagov/nchs-drug-poisoning-mortality-by-county-united-states/files/rows.txt",
+      "fact": "In 2021: Comal 19.21, Victoria 19.52, Willacy 10.25. Top two: Victoria, Comal.",
+      "subquestion": "Among intersection of node_2 and node_3, which two had highest model-based drug poisoning death rates in <node_1 answer>?",
+      "answer": ["Victoria County", "Comal County"]
+    },
+    "5": {
+      "source": "datagov/nchs-drug-poisoning-mortality-by-county-united-states-20278/files/rows.txt",
+      "fact": "In 2016: Comal 14-15.9, Victoria 10-11.9, Willacy 6-7.9. Bottom two: Willacy, Victoria.",
+      "subquestion": "Among intersection, which two had lowest age-adjusted rate categories in 2016?",
+      "answer": ["Willacy County", "Victoria County"]
+    },
+    "6": {
+      "source": "wikipedia/Victoria_County,_Texas/content.txt",
+      "fact": "Victoria County seat is Victoria.",
+      "subquestion": "What is the county seat of <intersection of node_4, node_5>?",
+      "answer": "Victoria"
+    },
+    "7": {
+      "source": "wikipedia/Victoria,_Texas/content.txt",
+      "fact": "Victoria lies along the Guadalupe River.",
+      "subquestion": "What river does <node_6 answer> lie along?",
+      "answer": "Guadalupe River"
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=1): Traffic fatalities highest 2018-2023 is 2021",
+    "HOP 2 (d=2): Child fatality filters → {Willacy, Comal, Victoria}",
+    "HOP 3 (d=2): 2021 top drug poisoning + 2016 bottom categories → Victoria",
+    "HOP 4 (d=1): Victoria County seat → Victoria",
+    "HOP 5 (d=1): Victoria → Guadalupe River",
+    "Final answer: Guadalupe River"
+  ],
+  "datasets_used": [
+    "traffic-fatalities",
+    "ocs-1-1-abuse-neglect-related-texas-child-fatalities-fy2013-fy2022",
+    "ocs-1-2-non-abuse-neglect-related-texas-child-fatality-investigations-fy2013-fy2022",
+    "nchs-drug-poisoning-mortality-by-county-united-states",
+    "nchs-drug-poisoning-mortality-by-county-united-states-20278",
+    "Victoria_County,_Texas",
+    "Victoria,_Texas"
+  ]
+}

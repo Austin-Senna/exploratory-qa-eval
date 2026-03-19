@@ -1,0 +1,122 @@
+{
+  "original_question": "In Utah, consider counties that are in the top 3 by private schools and are also in at least one of these groups: top 3 by public schools, top 3 by school district offices. Using postsecondary institution counts for those counties, identify the single county with the most postsecondary institutions. For that county, compute (public schools + postsecondary institutions) - (private schools + school district offices). Give the final answer as an integer.",
+  "question": "In which city, county, and state is Instructure (the developer of the Canvas management learning system) based? In that state, identify the counties that rank in the top three for private schools and also place in the top three for either public schools or school district offices. Among the counties that meet these criteria, select the one with the highest number of postsecondary institutions. For that specific county, take the total number of public schools and colleges, and subtract the combined count of private schools and district offices. Give the final answer as an integer.",
+  "answer": "249",
+  "nodes": {
+    "1": {
+      "source": "wikipedia/Instructure/content.txt",
+      "fact": "Instructure is an American educational technology company and the developer of the Canvas learning management system; it is based in Salt Lake City, Utah.",
+      "subquestion": "Instructure, developer of the Canvas learning management system, is based in what city?",
+      "answer": "Salt Lake City"
+    },
+    "2": {
+      "source": "wikipedia/Salt_Lake_City/content.txt",
+      "fact": "Salt Lake City is the county seat of Salt Lake County, the most populous county in Utah.",
+      "subquestion": "<node_1 answer> is the county seat of which county?",
+      "answer": "Salt Lake County"
+    },
+    "3": {
+      "source": "wikipedia/Salt_Lake_County,_Utah/content.txt",
+      "fact": "Salt Lake County is located in the U.S. state of Utah.",
+      "subquestion": "<node_2 answer> is located in which U.S. state?",
+      "answer": "Utah"
+    },
+    "4": {
+      "source": "datagov/school-district-office-locations-current-d848f/files/nces::school-district-office-locations-current-1.txt",
+      "fact": "In the school district office listings, there are 1 entry(ies) with CITY='Salt Lake City' and NMCNTY='Salt Lake County', and they all use the same two-digit state FIPS code (STFIP): 49.",
+      "subquestion": "In the school district office listings, entries with CITY='<node_1 answer>' and NMCNTY='<node_2 answer>' (in the U.S. state '<node_3 answer>') share what two-digit state FIPS code (STFIP)?",
+      "answer": "49"
+    },
+    "5": {
+      "source": "datagov/public-school-locations-2021-22-5a116/files/data.txt",
+      "fact": "For STFIP=49, the 3 counties with the most public schools are: Salt Lake County (327); Utah County (201); Davis County (111). The next county is Weber County (93), so the cut is unique.",
+      "subquestion": "For STFIP='<node_4 answer>', which 3 county names have the most public schools? Return the county names separated by '; '.",
+      "answer": "Salt Lake County; Utah County; Davis County"
+    },
+    "6": {
+      "source": "datagov/private-school-locations-2017-18-f49f6/files/data-dqdQDP.txt",
+      "fact": "For STFIP=49, the 3 counties with the most private schools are: Salt Lake County (55); Utah County (16); Weber County (12). The next county is Davis County (9), so the cut is unique.",
+      "subquestion": "For STFIP='<node_4 answer>', which 3 county names have the most private schools? Return the county names separated by '; '.",
+      "answer": "Salt Lake County; Utah County; Weber County"
+    },
+    "7": {
+      "source": "datagov/school-district-office-locations-2020-21-d8df0/files/data-UDaCeM.txt",
+      "fact": "For STFIP=49, the 3 counties with the most school district offices are: Salt Lake County (49); Utah County (29); Weber County (15). The next county is Davis County (13), so the cut is unique.",
+      "subquestion": "For STFIP='<node_4 answer>', which 3 county names have the most school district offices? Return the county names separated by '; '.",
+      "answer": "Salt Lake County; Utah County; Weber County"
+    },
+    "8": {
+      "source": "datagov/postsecondary-school-locations-2019-20-64b31/files/data-cbxYz6.txt",
+      "fact": "Using the intersection of B with the union of A and C, the candidate counties are: Salt Lake County, Utah County, Weber County. Postsecondary counts within that set are: Salt Lake County (29); Utah County (17); Weber County (5). Salt Lake County is strictly highest.",
+      "subquestion": "Let A be the set of counties in <node_5 answer>, B be the set of counties in <node_6 answer>, and C be the set of counties in <node_7 answer>. Consider the intersection of B with the union of A and C. Among those counties, which single county has the most postsecondary institutions in STFIP='<node_4 answer>'? Answer with the county name including the word 'County'.",
+      "answer": "Salt Lake County"
+    },
+    "9": {
+      "source": "datagov/public-school-locations-2021-22-5a116/files/data.txt",
+      "fact": "For STFIP=49 and NMCNTY='Salt Lake County', the public school count is 327.",
+      "subquestion": "How many public schools have NMCNTY='<node_8 answer>' and STFIP='<node_4 answer>'?",
+      "answer": "327"
+    },
+    "10": {
+      "source": "datagov/private-school-locations-2017-18-f49f6/files/data-dqdQDP.txt",
+      "fact": "For STFIP=49 and NMCNTY='Salt Lake County', the private school count is 55.",
+      "subquestion": "How many private schools have NMCNTY='<node_8 answer>' and STFIP='<node_4 answer>'?",
+      "answer": "55"
+    },
+    "11": {
+      "source": "datagov/school-district-office-locations-current-c8f9d/files/data-ghDEVP.txt",
+      "fact": "For STFIP=49 and NMCNTY='Salt Lake County', the school district office count is 49.",
+      "subquestion": "How many school district offices have NMCNTY='<node_8 answer>' and STFIP='<node_4 answer>'?",
+      "answer": "49"
+    },
+    "12": {
+      "source": "datagov/postsecondary-school-locations-current-5a74c/files/Postsecondary_School_Locations_Current_-3631565628879840217.txt",
+      "fact": "For STFIP=49 and NMCNTY='Salt Lake County', the postsecondary institution count is 26.",
+      "subquestion": "How many postsecondary institutions have NMCNTY='<node_8 answer>' and STFIP='<node_4 answer>'?",
+      "answer": "26"
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=1, Wikipedia - node 1):",
+    "  Node 1: Instructure is an American educational technology company and the developer of the Canvas learning management system; it is based in Salt Lake City, Utah.",
+    "",
+    "HOP 2 (d=1, Wikipedia - node 2):",
+    "  Node 2: Salt Lake City is the county seat of Salt Lake County, the most populous county in Utah.",
+    "",
+    "HOP 3 (d=1, Wikipedia - node 3):",
+    "  Node 3: Salt Lake County is located in the U.S. state of Utah.",
+    "",
+    "HOP 4 (d=1, State FIPS lookup - node 4):",
+    "  Node 4: In the school district office listings, there are 1 entry(ies) with CITY='Salt Lake City' and NMCNTY='Salt Lake County', and they all use the same two-digit state FIPS code (STFIP): 49.",
+    "",
+    "HOP 5 (d=3, County top counts - nodes 5-7):",
+    "  Node 5: For STFIP=49, the 3 counties with the most public schools are: Salt Lake County (327); Utah County (201); Davis County (111). The next county is Weber County (93), so the cut is unique.",
+    "  Node 6: For STFIP=49, the 3 counties with the most private schools are: Salt Lake County (55); Utah County (16); Weber County (12). The next county is Davis County (9), so the cut is unique.",
+    "  Node 7: For STFIP=49, the 3 counties with the most school district offices are: Salt Lake County (49); Utah County (29); Weber County (15). The next county is Davis County (13), so the cut is unique.",
+    "",
+    "HOP 6 (d=4, Postsecondary selection - node 8):",
+    "  Node 8: Using the intersection of B with the union of A and C, the candidate counties are: Salt Lake County, Utah County, Weber County. Postsecondary counts within that set are: Salt Lake County (29); Utah County (17); Weber County (5). Salt Lake County is strictly highest.",
+    "",
+    "HOP 7 (d=4, County counts and arithmetic - nodes 9-12):",
+    "  Node 9: For STFIP=49 and NMCNTY='Salt Lake County', the public school count is 327.",
+    "  Node 10: For STFIP=49 and NMCNTY='Salt Lake County', the private school count is 55.",
+    "  Node 11: For STFIP=49 and NMCNTY='Salt Lake County', the school district office count is 49.",
+    "  Node 12: For STFIP=49 and NMCNTY='Salt Lake County', the postsecondary institution count is 26.",
+    "  Computation: (327 + 26) - (55 + 49) = 249.",
+    "",
+    "Final answer: 249"
+  ],
+  "verdict": "pass",
+  "datasets_used": [
+    "Instructure",
+    "Salt_Lake_City",
+    "Salt_Lake_County,_Utah",
+    "school-district-office-locations-current-d848f",
+    "public-school-locations-2021-22-5a116",
+    "private-school-locations-2017-18-f49f6",
+    "school-district-office-locations-2020-21-d8df0",
+    "postsecondary-school-locations-2019-20-64b31",
+    "school-district-office-locations-current-c8f9d",
+    "postsecondary-school-locations-current-5a74c"
+  ]
+}

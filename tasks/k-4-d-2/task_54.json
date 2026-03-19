@@ -1,0 +1,55 @@
+{
+  "question": "In Los Angeles Police Department report that occurred in the year (within 2011-2016) that has the highest total passenger count across Los Angeles International Airport (LAX) terminals, which geo area had the most robbery arrests? For that area, identify the most common crime code and report how many incidents of that code occurred in 2022. Please return only the 2022 count in the format [Answer].",
+  "answer": "1046",
+  "nodes": {
+    "1": {
+      "source": "datagov/los-angeles-international-airport-passenger-traffic-by-terminal/files/rows.txt",
+      "fact": "Summing Passenger_Count by year (from ReportPeriod) across all terminals and categories for 2011-2016, the highest total is 2016 with 80921651 passengers.",
+      "subquestion": "Which year from 2011-2016 has the highest total passenger count across Los Angeles International Airport (LAX) terminals? (Convert ReportPeriod to Year; sum Passenger_Count by Year; select the maximum.)",
+      "answer": "2016"
+    },
+    "2": {
+      "source": "datagov/arrest-data-from-2010-to-2019/v1/files/rows.csv",
+      "fact": "In <node_1 answer> arrest data, the area with the most Robbery arrests is Southwest, and the largest Robbery-arrest count recorded by a single area is 245.",
+      "subquestion": "In <node_1 answer> arrest data, which area has the most Robbery arrests? And what is that maximum number of Robbery arrests?",
+      "answer": "Southwest, 245"
+    },
+    "3": {
+      "source": "datagov/crime-data-from-2010-to-2019/v1/files/rows.csv",
+      "fact": "In <node_1 answer> crime data for Southwest, the most common crime description is BATTERY - SIMPLE ASSAULT.",
+      "subquestion": "In <node_1 answer> crime data, within area <node_2 answer>, which crime description is most common?",
+      "answer": "BATTERY - SIMPLE ASSAULT"
+    },
+    "4": {
+      "source": "datagov/crime-data-from-2020-to-present/v1/files/rows.csv",
+      "fact": "In 2022, Southwest recorded 1,046 incidents with crime description BATTERY - SIMPLE ASSAULT.",
+      "subquestion": "In 2022 crime data, how many incidents of <node_3 answer> occurred in area <node_2 answer>?",
+      "answer": "1046"
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=1, data.gov year derivation - node 1):",
+    "  Node 1: Year with highest LAX passenger count (2011-2016) -> 2016",
+    "  Derived year: 2016",
+    "",
+    "HOP 2 (d=1, node 2): <node_1 answer> LAPD area with most robbery arrests",
+    "  Node 2: Southwest (245 arrests)",
+    "  Result: Southwest",
+    "",
+    "HOP 3 (d=1, node 3): Most common crime in Southwest <node_1 answer>",
+    "  Node 3: BATTERY - SIMPLE ASSAULT",
+    "  Result: BATTERY - SIMPLE ASSAULT",
+    "",
+    "HOP 4 (d=1, node 4): BATTERY - SIMPLE ASSAULT in Southwest 2022",
+    "  Node 4: 1046 incidents",
+    "  Result: 1046",
+    "",
+    "Final answer: 1046"
+  ],
+  "datasets_used": [
+    "los-angeles-international-airport-passenger-traffic-by-terminal",
+    "arrest-data-from-2010-to-2019",
+    "crime-data-from-2010-to-2019",
+    "crime-data-from-2020-to-present"
+  ]
+}

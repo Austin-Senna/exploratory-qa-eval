@@ -1,0 +1,113 @@
+{
+  "question": "Can you find the counties where the top 3 community colleges by average contract count from FY 2014 to FY 2016 in Washington are located in. In those counties, narrow the scope down by choosing the county with the most population according to the census in the 2017-2022 year when the highest total federal share obligated for funded projects under the Hazard Mitigation Assistance grant programs. In its county seat, what is the building with the highest average greenhouse gas emissions (2015-2023)? Finally, only report the year where this building is built. Your response should be in the format [Answer].",
+  "answer": "1936",
+  "nodes": {
+    "1": {
+      "source": "datagov/hazard-mitigation-assistance-projects/files/HazardMitigationAssistanceProjects.txt",
+      "fact": "Summing federalShareObligated by programFy for 2017-2022, the maximum total is 48932227.55 in 2020.",
+      "subquestion": "Which program fiscal year from 2017-2022 has the highest total federal share obligated for funded projects under the Hazard Mitigation Assistance grant programs?",
+      "answer": "2020"
+    },
+    "2": {
+      "source": "datagov/agency-contracts-fiscal-year-2014/files/rows.txt",
+      "fact": "In FY 2014, Seattle Community College - District 6 (SCCD-6) had 1,308 contracts, Green River Community College (GRC) had 1,723 contracts, and Spokane, Community Colleges of SCCD-17 had 1,797 contracts.",
+      "subquestion": "How many contracts did Seattle Community College - District 6, Green River Community College, and Spokane Community Colleges have in FY 2014?",
+      "answer": "Seattle Community College - District 6: 1,308; Green River Community College: 1,723; Community Colleges of Spokane: 1,797"
+    },
+    "3": {
+      "source": "datagov/agency-contracts-fiscal-year-2015/files/rows.txt",
+      "fact": "In FY 2015, Seattle Colleges had 1,292 contracts, Green River Community College (GRC) had 633 contracts, and Spokane, Community Colleges of SCCD-17 had 383 contracts.",
+      "subquestion": "How many contracts did Seattle Colleges, Green River Community College, and Spokane Community Colleges have in FY 2015?",
+      "answer": "Seattle Colleges: 1,292; Green River Community College: 633; Community Colleges of Spokane: 383"
+    },
+    "4": {
+      "source": "datagov/agency-contracts-fiscal-year-2016/files/rows.txt",
+      "fact": "In FY 2016, Seattle Community College - District 6 (SCCD-6) had 5,244 contracts, Green River Community College (GRC) had 872 contracts, and Spokane, Community Colleges of SCCD-17 had 265 contracts.",
+      "subquestion": "How many contracts did Seattle Community College - District 6, Green River Community College, and Spokane Community Colleges have in FY 2016?",
+      "answer": "Seattle Community College - District 6: 5,244; Green River Community College: 872; Community Colleges of Spokane: 265"
+    },
+    "5": {
+      "source": "wikipedia/Seattle_Colleges_District/content.txt",
+      "fact": "The Seattle Colleges District (also known simply as Seattle Colleges) is a group of public colleges in Seattle, Washington.",
+      "subquestion": "Where is Seattle Colleges District located?",
+      "answer": "Seattle Colleges is located in Seattle, Washington"
+    },
+    "6": {
+      "source": "wikipedia/Green_River_College/content.txt",
+      "fact": "Green River College is a public community college in Auburn, Washington, United States.",
+      "subquestion": "Where is Green River College located?",
+      "answer": "Green River College is located in Auburn, Washington"
+    },
+    "7": {
+      "source": "wikipedia/Community_Colleges_of_Spokane/content.txt",
+      "fact": "Community Colleges of Spokane is a community college district based in Spokane, Washington.",
+      "subquestion": "Where is Community Colleges of Spokane located?",
+      "answer": "Community Colleges of Spokane is located in Spokane, Washington"
+    },
+    "8": {
+      "source": "wikipedia/King_County,_Washington/content.txt",
+      "fact": "King County is a county located in the U.S. state of Washington. The population was 2,269,675 in the <node_1 answer> census, making it the most populous county in Washington. The county seat is Seattle.",
+      "subquestion": "What is the <node_1 answer> census population and county seat of King County, Washington?",
+      "answer": "King County had a <node_1 answer> population of 2,269,675 with Seattle as the county seat"
+    },
+    "9": {
+      "source": "wikipedia/Spokane_County,_Washington/content.txt",
+      "fact": "Spokane County is a county located in the U.S. state of Washington. As of the <node_1 answer> census, its population was 539,339. The county seat and largest city is Spokane.",
+      "subquestion": "What is the <node_1 answer> census population and county seat of Spokane County, Washington?",
+      "answer": "Spokane County had a <node_1 answer> population of 539,339 with Spokane as the county seat"
+    },
+    "10": {
+      "source": "datagov/building-energy-benchmarking-data-2015-present/files/rows.txt",
+      "fact": "According to the Seattle Building Energy Benchmarking data (2015-2023), BOEING PLANT 2 ISAL (BLDG 2-122)-North Boeing Field Campus has the highest average TotalGHGEmissions in Seattle.",
+      "subquestion": "Which Seattle building has the highest average TotalGHGEmissions from 2015 to 2023?",
+      "answer": "BOEING PLANT 2 ISAL (BLDG 2-122)-North Boeing Field Campus with 20,835.8 metric tons CO2e average"
+    },
+    "11": {
+      "source": "wikipedia/Boeing_Plant_2/content.txt",
+      "fact": "Boeing Plant 2 was a factory building which was built in 1936 by The Boeing Company in Seattle, Washington, United States.",
+      "subquestion": "In what year was Boeing Plant 2 built?",
+      "answer": "1936"
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=1, data.gov year derivation - node 1):",
+    "  Node 1: Hazard Mitigation federal share -> Highest 2017-2022 is 2020",
+    "",
+    "HOP 2 (d=3, data.gov aggregation - nodes 2-4):",
+    "  Node 2: FY 2014 community college contracts",
+    "  Node 3: FY 2015 community college contracts",
+    "  Node 4: FY 2016 community college contracts",
+    "  Result: Top 3 are Seattle Colleges, Green River, Spokane CCs",
+    "",
+    "HOP 3 (d=3, Wikipedia - nodes 5-7):",
+    "  Node 5: Seattle Colleges -> Seattle, Washington",
+    "  Node 6: Green River College -> Auburn, Washington",
+    "  Node 7: Community Colleges of Spokane -> Spokane, Washington",
+    "",
+    "HOP 4 (d=2, Wikipedia - nodes 8-9):",
+    "  Node 8: King County - <node_1 answer> pop: 2,269,675, seat: Seattle",
+    "  Node 9: Spokane County - <node_1 answer> pop: 539,339, seat: Spokane",
+    "  Result: King County is most populous -> county seat is Seattle",
+    "",
+    "HOP 5 (d=1, data.gov - node 10):",
+    "  Node 10: Seattle Building Energy Benchmarking shows BOEING PLANT 2 ISAL has highest average GHG emissions",
+    "",
+    "HOP 6 (d=1, Wikipedia - node 11):",
+    "  Node 11: Boeing Plant 2 was built in 1936",
+    "",
+    "Final answer: 1936"
+  ],
+  "datasets_used": [
+    "hazard-mitigation-assistance-projects",
+    "Boeing_Plant_2",
+    "Community_Colleges_of_Spokane",
+    "Green_River_College",
+    "King_County,_Washington",
+    "Seattle_Colleges_District",
+    "Spokane_County,_Washington",
+    "agency-contracts-fiscal-year-2014",
+    "agency-contracts-fiscal-year-2015",
+    "agency-contracts-fiscal-year-2016",
+    "building-energy-benchmarking-data-2015-present"
+  ]
+}

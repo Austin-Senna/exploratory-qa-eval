@@ -1,0 +1,119 @@
+{
+  "original_question": "A 'year mention' means any standalone 4-digit number from 1600 to 2099, counted every time it appears. Find the only year Y that appears in all five year lists from the first five parts, and let S be the sum of the five list lengths. In Greenhouse gas, count how many times Y is mentioned (M) and compute r = ((M + S) mod 5) + 1. In Alternative fuel vehicle, compute B as the number of distinct years mentioned at least r times. In Vehicle emissions control, compute C as the number of distinct years mentioned exactly ((B mod 10) + 1) times. If C is 0, use t = 1; otherwise t = C. In the next part compute D (years mentioned at least t times). In the following part compute E (years mentioned at least (D + r + 1) times). If E is 0, use v = 1; otherwise v = E. In the final part return the number of distinct years mentioned exactly v times. Answer as: [integer].",
+  "question": "I'm working on a data analysis project and need your help looking through several reports. First, please identify specific 4-digit years (1600–2099) in these five sources: 1) Iowa population age data [16 years old and above] (mentioned 16–36 times), 2) the MTA art catalogue (1996–2016, 11–12 times), 3) Iowa educational attainment [25 years old and above] (2016–2019, at least 44 times), 4) 11th grade reading proficiency rates (2015–2016, at least 29 times), and 5) monthly travel trends data (2015–2016, exactly 12 times). Find the only year Y that appears in all five year lists from the first five parts, and let S be the sum of the five list lengths. Next, in the 'Greenhouse gas' report, count how many times Y appears (call this M) and calculate r = ((M + S) mod 5) + 1. Using that result, compute B, the number of distinct years that appear at least r times in the 'Alternative fuel vehicle' dataset. Then, in 'Vehicle emissions control', find how many years appear exactly ((B mod 10) + 1) times, let this be C. Let t be equal to C, or 1 if C is 0. Moving to the 2020 Tiger-line Clay County files, find how many years appear at least t times and call this D. Using the GI Index data, compute E, the number of unique years appearing at least (D + r + 1) times. Finally, tell me how many distinct years in the 2020 Tiger-line Greene County dataset are mentioned exactly v times (where v is the result from the previous step, or 1 if that result was 0).",
+  "answer": 2,
+  "nodes": {
+    "1": {
+      "source": "datagov/iowa-population-16-years-and-over-by-sex-age-and-employment-status-acs-5-year-estimates/files/data.txt",
+      "fact": "The distinct 4-digit calendar years (1600–2099) that are mentioned between 16 and 36 times (inclusive) are ['2010', '2012', '2016', '2017'].",
+      "subquestion": "Which distinct 4-digit calendar years (1600–2099) are mentioned between 16 and 36 times (inclusive)? Return the full set as a list.",
+      "answer": [
+        "2010",
+        "2012",
+        "2016",
+        "2017"
+      ]
+    },
+    "2": {
+      "source": "datagov/arts-for-transit-metropolitan-transportation-authority-mta-permanent-art-catalogue/files/rows.txt",
+      "fact": "The distinct 4-digit calendar years from 1996 to 2016 (inclusive) that are mentioned between 11 and 12 times (inclusive) are ['1996', '2000', '2008', '2015', '2016'].",
+      "subquestion": "Which distinct 4-digit calendar years from 1996 to 2016 (inclusive) are mentioned between 11 and 12 times (inclusive)? Return the full set as a list.",
+      "answer": [
+        "1996",
+        "2000",
+        "2008",
+        "2015",
+        "2016"
+      ]
+    },
+    "3": {
+      "source": "datagov/iowa-population-25-years-and-over-by-sex-race-and-educational-attainment-acs-5-year-estima/files/data.txt",
+      "fact": "The distinct 4-digit calendar years from 2016 to 2019 (inclusive) that are mentioned at least 44 times are ['2016', '2017', '2018', '2019'].",
+      "subquestion": "Which distinct 4-digit calendar years from 2016 to 2019 (inclusive) are mentioned at least 44 times? Return the full set as a list.",
+      "answer": [
+        "2016",
+        "2017",
+        "2018",
+        "2019"
+      ]
+    },
+    "4": {
+      "source": "datagov/11th-grade-reading-proficiency-rate/files/data.txt",
+      "fact": "The distinct 4-digit calendar years from 2015 to 2016 (inclusive) that are mentioned at least 29 times are ['2015', '2016'].",
+      "subquestion": "Which distinct 4-digit calendar years from 2015 to 2016 (inclusive) are mentioned at least 29 times? Return the full set as a list.",
+      "answer": [
+        "2015",
+        "2016"
+      ]
+    },
+    "5": {
+      "source": "datagov/monthly-travel-trends-dashboard-data/files/rows.txt",
+      "fact": "The distinct 4-digit calendar years from 2015 to 2016 (inclusive) that are mentioned exactly 12 times are ['2015', '2016'].",
+      "subquestion": "Which distinct 4-digit calendar years from 2015 to 2016 (inclusive) are mentioned exactly 12 times? Return the full set as a list.",
+      "answer": [
+        "2015",
+        "2016"
+      ]
+    },
+    "6": {
+      "source": "wikipedia/Greenhouse_gas/content.txt",
+      "fact": "The only year shared by the five year lists is 2016. In Greenhouse gas, 2016 appears 0 times, the five list-lengths sum to 17, and r = ((0 + 17) mod 5) + 1 = 3.",
+      "subquestion": "Using the five year lists <node_1 answer>, <node_2 answer>, <node_3 answer>, <node_4 answer>, and <node_5 answer>, find the only 4-digit year that appears in all five lists (call it Y). Let S be the sum of the five list lengths. In Greenhouse gas, count how many times Y is mentioned (M). Compute r = ((M + S) mod 5) + 1. What is r?",
+      "answer": 3
+    },
+    "7": {
+      "source": "wikipedia/Alternative_fuel_vehicle/content.txt",
+      "fact": "In Alternative fuel vehicle, with r = 3, there are 15 distinct 4-digit years (1600–2099) that appear at least r times.",
+      "subquestion": "In Alternative fuel vehicle, how many distinct 4-digit years (1600–2099) appear at least <node_6 answer> times?",
+      "answer": 15
+    },
+    "8": {
+      "source": "wikipedia/Vehicle_emissions_control/content.txt",
+      "fact": "In Vehicle emissions control, with u = (15 mod 10) + 1 = 6, there are 0 distinct 4-digit years (1600–2099) that appear exactly u times.",
+      "subquestion": "Let u = (<node_7 answer> mod 10) + 1. In Vehicle emissions control, how many distinct 4-digit years (1600–2099) appear exactly u times?",
+      "answer": 0
+    },
+    "9": {
+      "source": "datagov/tiger-line-shapefile-2020-county-clay-county-tx-topological-faces-polygons-with-all-geocodes/files/tl_2020_faces.shp.ea.iso.txt",
+      "fact": "With t = max(1, 0) = 1, there are 4 distinct 4-digit years (1600–2099) that appear at least t times.",
+      "subquestion": "Let t = max(1, <node_8 answer>). How many distinct 4-digit calendar years (1600–2099) appear at least t times?",
+      "answer": 4
+    },
+    "10": {
+      "source": "datagov/gi_898-20230830t1500/files/index.txt",
+      "fact": "With threshold = 4 + 3 + 1 = 8, there are 0 distinct 4-digit years (1600–2099) that appear at least threshold times.",
+      "subquestion": "Let threshold = <node_9 answer> + <node_6 answer> + 1. How many distinct 4-digit calendar years (1600–2099) appear at least threshold times?",
+      "answer": 0
+    },
+    "11": {
+      "source": "datagov/tiger-line-shapefile-2020-county-greene-county-tn-topological-faces-polygons-with-all-geocodes/files/tl_2020_faces.shp.ea.iso.txt",
+      "fact": "With v = max(1, 0) = 1, there are 2 distinct 4-digit years (1600–2099) that appear exactly v times.",
+      "subquestion": "Let v = max(1, <node_10 answer>). How many distinct 4-digit calendar years (1600–2099) appear exactly v times?",
+      "answer": 2
+    }
+  },
+  "reasoning_chain": [
+    "Node 1–5: each yields a year list defined by its year-list condition.",
+    "Node 6 depends on nodes 1–5: intersect the five lists to get the unique shared year Y; let S be the sum of the five list lengths; count Y in the first Wikipedia entry as M; compute r = ((M + S) mod 5) + 1.",
+    "Node 7 depends on node 6: count distinct years with frequency ≥ r in the second Wikipedia entry (B).",
+    "Node 8 depends on node 7: with u = (B mod 10) + 1, count distinct years with frequency = u in the third Wikipedia entry (C).",
+    "Node 9 depends on node 8: with t = max(1, C), count distinct years with frequency ≥ t (D).",
+    "Node 10 depends on nodes 6 and 9: with threshold = D + r + 1, count distinct years with frequency ≥ threshold (E).",
+    "Node 11 depends on node 10: with v = max(1, E), count distinct years with frequency = v.",
+    "Final answer: 2."
+  ],
+  "verdict": "pass",
+  "datasets_used": [
+    "iowa-population-16-years-and-over-by-sex-age-and-employment-status-acs-5-year-estimates",
+    "arts-for-transit-metropolitan-transportation-authority-mta-permanent-art-catalogue",
+    "iowa-population-25-years-and-over-by-sex-race-and-educational-attainment-acs-5-year-estima",
+    "11th-grade-reading-proficiency-rate",
+    "monthly-travel-trends-dashboard-data",
+    "Greenhouse_gas",
+    "Alternative_fuel_vehicle",
+    "Vehicle_emissions_control",
+    "tiger-line-shapefile-2020-county-clay-county-tx-topological-faces-polygons-with-all-geocodes",
+    "gi_898-20230830t1500",
+    "tiger-line-shapefile-2020-county-greene-county-tn-topological-faces-polygons-with-all-geocodes"
+  ]
+}

@@ -1,0 +1,137 @@
+{
+  "question": "Consider the only engineering firm founded after 1914 that has no current NY State construction manager projects, yet consistently ranked in the top 20 Washington State contractors by contract count annually from 2017 to 2020. In what year was the Native American interpreter born who helped negotiate the land cession that led to the founding of the city where that firm is based? Please return the year only. Your response should be in the format [Answer].",
+  "answer": "1850",
+  "nodes": {
+    "1": {
+      "source": "datagov/texas-state-expenditures-by-county-2018/files/rows.txt",
+      "fact": "In fiscal year 2018, the Texas counties with highway construction expenditures between $150 million and $500 million were: MONTGOMERY ($423,969,001.84), TRAVIS ($365,021,148.26), BEXAR ($251,711,903.50), TARRANT ($185,973,375.90), DENTON ($180,510,892.41), NUECES ($172,124,055.51), and HAYS ($172,079,795.96).",
+      "subquestion": "Which Texas counties had highway construction expenditures between $150 million and $500 million in fiscal year 2018? (Filter Fiscal Year == 2018; Major Spending Category == 'HIGHWAY CONSTRUCTION-CAPITAL OUTLAY'; sum Amount by County.)",
+      "answer": [
+        "MONTGOMERY",
+        "TRAVIS",
+        "BEXAR",
+        "TARRANT",
+        "DENTON",
+        "NUECES",
+        "HAYS"
+      ]
+    },
+    "2": {
+      "source": "datagov/texas-state-expenditures-by-county-2019/files/rows.txt",
+      "fact": "In fiscal year 2019, the Texas counties with highway construction expenditures between $150 million and $500 million were: TRAVIS ($484.3M), MONTGOMERY ($416.6M), BEXAR ($270.8M), DENTON ($255.0M), NUECES ($239.7M), TARRANT ($170.4M), and WILLIAMSON ($153.9M).",
+      "subquestion": "Which Texas counties had highway construction expenditures between $150 million and $500 million in fiscal year 2019?",
+      "answer": [
+        "TRAVIS",
+        "MONTGOMERY",
+        "BEXAR",
+        "DENTON",
+        "NUECES",
+        "TARRANT",
+        "WILLIAMSON"
+      ]
+    },
+    "3": {
+      "source": "datagov/texas-state-expenditures-by-county-2020/files/rows.txt",
+      "fact": "In fiscal year 2020, the Texas counties with highway construction expenditures between $150 million and $500 million were: BEXAR ($397.8M), DENTON ($349.7M), NUECES ($347.1M), HAYS ($248.8M), TARRANT ($179.6M), MCLENNAN ($162.9M), and WILLIAMSON ($151.5M).",
+      "subquestion": "Which Texas counties had highway construction expenditures between $150 million and $500 million in fiscal year 2020?",
+      "answer": [
+        "BEXAR",
+        "DENTON",
+        "NUECES",
+        "HAYS",
+        "TARRANT",
+        "MCLENNAN",
+        "WILLIAMSON"
+      ]
+    },
+    "4": {
+      "source": "datagov/texas-state-expenditures-by-county-2021/files/rows.txt",
+      "fact": "In fiscal year 2021, the Texas counties with highway construction expenditures between $150 million and $500 million were: BEXAR ($491.4M), DENTON ($404.8M), HAYS ($237.1M), TARRANT ($209.0M), and NUECES ($164.1M).",
+      "subquestion": "Which Texas counties had highway construction expenditures between $150 million and $500 million in fiscal year 2021?",
+      "answer": [
+        "BEXAR",
+        "DENTON",
+        "HAYS",
+        "TARRANT",
+        "NUECES"
+      ]
+    },
+    "5": {
+      "source": "datagov/fy-2023-disability-compensation-recipients-by-county/files/rows.txt",
+      "fact": "According to FY 2023 VA disability compensation data for Texas counties: Bexar County had 86,151 recipients, Denton County had 14,716 recipients, Nueces County had 10,231 recipients, and Tarrant County had 37,476 recipients.",
+      "subquestion": "Of the four Texas counties in the intersection (BEXAR, DENTON, NUECES, TARRANT), which had fewer than 15,000 VA disability compensation recipients in FY 2023?",
+      "answer": [
+        "DENTON",
+        "NUECES"
+      ]
+    },
+    "6": {
+      "source": "wikipedia/Denton_County,_Texas/content.txt",
+      "fact": "Denton County is located in the U.S. state of Texas. The county seat is Denton, which has the same name as the county itself.",
+      "subquestion": "What is the county seat of Denton County, Texas?",
+      "answer": "Denton"
+    },
+    "7": {
+      "source": "wikipedia/Nueces_County,_Texas/content.txt",
+      "fact": "Nueces County is located in the southern part of Texas. The county seat is Corpus Christi, which has a different name than the county.",
+      "subquestion": "What is the county seat of Nueces County, Texas?",
+      "answer": "Corpus Christi"
+    },
+    "8": {
+      "source": "wikipedia/Tarrant_County,_Texas/content.txt",
+      "fact": "Tarrant County is located in Texas with a 2020 census population of 2,110,640. Its county seat is Fort Worth, which has a different name than the county.",
+      "subquestion": "What is the county seat of Tarrant County, Texas?",
+      "answer": "Fort Worth"
+    },
+    "9": {
+      "source": "wikipedia/Corpus_Christi,_Texas/content.txt",
+      "fact": "In 1839, the first known permanent settlement of Corpus Christi was established by Colonel Henry Lawrence Kinney and William P. Aubrey as Kinney's Trading Post, or Kinney's Ranch. The settlement was incorporated as Corpus Christi on September 9, 1852.",
+      "subquestion": "Who founded the first permanent settlement in <intersection result: NUECES County>'s county seat (Corpus Christi)?",
+      "answer": "Henry Lawrence Kinney"
+    },
+    "10": {
+      "source": "wikipedia/Kinney_County,_Texas/content.txt",
+      "fact": "Kinney County is a county located in the U.S. state of Texas. The county was created in 1850 and later organized in 1874. It is named for Henry Lawrence Kinney, an early settler.",
+      "subquestion": "In what year was the Texas county named after <node_9 answer> created?",
+      "answer": "1850"
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=4, data.gov superlative - nodes 1-4):",
+    "  Node 1: Texas counties with highway construction $150M-$500M in FY 2018 -> {MONTGOMERY, TRAVIS, BEXAR, TARRANT, DENTON, NUECES, HAYS} (7 counties)",
+    "  Node 2: Texas counties with highway construction $150M-$500M in FY 2019 -> {TRAVIS, MONTGOMERY, BEXAR, DENTON, NUECES, TARRANT, WILLIAMSON} (7 counties)",
+    "  Node 3: Texas counties with highway construction $150M-$500M in FY 2020 -> {BEXAR, DENTON, NUECES, HAYS, TARRANT, MCLENNAN, WILLIAMSON} (7 counties)",
+    "  Node 4: Texas counties with highway construction $150M-$500M in FY 2021 -> {BEXAR, DENTON, HAYS, TARRANT, NUECES} (5 counties)",
+    "  Intersection of nodes 1-4: Counties meeting criterion all 4 years -> {BEXAR, DENTON, NUECES, TARRANT}",
+    "",
+    "HOP 2 (d=4, mixed data.gov + Wikipedia - nodes 5-8 filter the intersection):",
+    "  Node 5 (data.gov): VA disability recipients for intersection counties -> BEXAR (86,151), DENTON (14,716), NUECES (10,231), TARRANT (37,476)",
+    "    Filter: Under 15,000 recipients -> {DENTON, NUECES}",
+    "  Node 6 (Wikipedia): Denton County seat -> Denton (SAME name as county)",
+    "  Node 7 (Wikipedia): Nueces County seat -> Corpus Christi (DIFFERENT name)",
+    "  Node 8 (Wikipedia): Tarrant County seat -> Fort Worth (DIFFERENT name)",
+    "    Filter: County seat differs from county name -> {NUECES, TARRANT}",
+    "  Intersection of filters: {DENTON, NUECES} \u2229 {NUECES, TARRANT} -> {NUECES}",
+    "",
+    "HOP 3 (d=1, Wikipedia - node 9):",
+    "  Node 9: Nueces County seat is Corpus Christi -> Founded by Henry Lawrence Kinney in 1839",
+    "",
+    "HOP 4 (d=1, Wikipedia - node 10):",
+    "  Node 10: Texas county named after Henry Lawrence Kinney -> Kinney County, created in 1850",
+    "",
+    "Final answer: 1850"
+  ],
+  "verdict": "pass",
+  "datasets_used": [
+    "Corpus_Christi,_Texas",
+    "Denton_County,_Texas",
+    "Kinney_County,_Texas",
+    "Nueces_County,_Texas",
+    "Tarrant_County,_Texas",
+    "fy-2023-disability-compensation-recipients-by-county",
+    "texas-state-expenditures-by-county-2018",
+    "texas-state-expenditures-by-county-2019",
+    "texas-state-expenditures-by-county-2020",
+    "texas-state-expenditures-by-county-2021"
+  ]
+}

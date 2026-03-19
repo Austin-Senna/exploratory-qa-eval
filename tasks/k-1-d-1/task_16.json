@@ -1,0 +1,20 @@
+{
+  "question": "Which year from 2011-2015 has the lowest total air passengers from port authority of New York and New Jersey airports? Your response should be in the format [Answer].",
+  "answer": "2011",
+  "practical_motivation": "An aviation analyst wants to identify the lowest-traffic year at the Port Authority airports in the early 2010s.",
+  "nodes": {
+    "1": {
+      "source": "datagov/air-passenger-traffic-per-month-port-authority-of-ny-nj-beginning-1977/files/rows.txt",
+      "fact": "Summing Total Passengers across all airports and months for 2011-2015, the lowest total occurs in 2011 at 105878221.",
+      "subquestion": "Which year from 2011-2015 has the lowest total air passengers from port authority of New York and New Jersey airports? (Sum Total Passengers by Year across all airports and months; select the minimum.)",
+      "answer": "2011"
+    }
+  },
+  "reasoning_chain": [
+    "Node 1: Which year from 2011-2015 has the lowest total passenger count? (Sum Total Passengers by Year across all airports and months; select the minimum.) The answer is 2011.",
+    "Final answer: 2011"
+  ],
+  "datasets_used": [
+    "air-passenger-traffic-per-month-port-authority-of-ny-nj-beginning-1977"
+  ]
+}

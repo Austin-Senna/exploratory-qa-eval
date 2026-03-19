@@ -1,0 +1,20 @@
+{
+  "question": "Which year from 2008-2010 has the highest total value for MTA's 'Total Ridership' indicator? Your response should be in the format [Answer].",
+  "answer": "2008",
+  "practical_motivation": "An MTA analyst wants to compare early-period ridership totals across years to understand demand trends.",
+  "nodes": {
+    "1": {
+      "source": "datagov/metropolitan-transportation-authority-mta-performance-indicators-per-agency-beginning-2008/files/rows.txt",
+      "fact": "Filtering to Indicator Name = \"Total Ridership\" and summing Monthly Actual by Period Year for 2008-2010, 2008 has the highest total at 170913704.",
+      "subquestion": "Which year from 2008-2010 has the highest total value for MTA's 'Total Ridership' indicator? (Filter Indicator Name == \"Total Ridership\"; sum Monthly Actual by Period Year; select the maximum.)",
+      "answer": "2008"
+    }
+  },
+  "reasoning_chain": [
+    "Node 1: Sum Monthly Actual for \"Total Ridership\" by year (2008-2010) and select the maximum; the peak year is 2008.",
+    "Final answer: 2008"
+  ],
+  "datasets_used": [
+    "metropolitan-transportation-authority-mta-performance-indicators-per-agency-beginning-2008"
+  ]
+}

@@ -1,0 +1,52 @@
+{
+  "question": "I am conducting a study on the northernmost boroughs of New York City. With respect to this borough, I want to compute the yearly shooting/complaint ratio. That is, the number of complaints on the most common offense over the year, divided by the total number of shooting incidents occurred of the same year reported by NYPD. Report the yearly shooting/complaint ratio for the year after the year (within 2020-2022) that has the highest total subway ridership in MTA, and round to the closest integer. Your response should be in the format [Answer].",
+  "answer": "42",
+  "nodes": {
+    "1": {
+      "source": "datagov/mta-daily-ridership-data-beginning-2020/files/rows.txt",
+      "fact": "Summing Subways: Total Estimated Ridership by year (from Date) for 2020-2022, the maximum total is 1012505879 in 2022.",
+      "subquestion": "Which year from 2020-2022 has the highest total subway ridership in MTA? (Use Date to derive year; sum Subways: Total Estimated Ridership by year and select the maximum.)",
+      "answer": "2022"
+    },
+    "2": {
+      "source": "wikipedia/The_Bronx/content.txt",
+      "fact": "The Bronx article states that The Bronx is the northernmost of the five boroughs of New York City.",
+      "subquestion": "Which New York City borough is described as the northernmost of the five boroughs?",
+      "answer": "BRONX"
+    },
+    "3": {
+      "source": "datagov/nypd-complaint-data-historic/v1/files/rows.csv",
+      "fact": "In 2023 NYPD complaint data for the BRONX, the most common offense description has 18,613 complaints.",
+      "subquestion": "In <node_1 answer + 1> NYPD complaint data, within borough <node_2 answer>, how many complaints were filed for the most common offense description (OFNS_DESC)?",
+      "answer": "18613"
+    },
+    "4": {
+      "source": "datagov/nypd-shooting-incident-data-historic/v1/files/rows.csv",
+      "fact": "In 2023 NYPD shooting incident data, the BRONX recorded 439 shooting incidents.",
+      "subquestion": "In <node_1 answer + 1> NYPD shooting incident data, how many shooting incidents occurred in borough <node_2 answer>?",
+      "answer": "439"
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=1, data.gov year derivation - node 1):",
+    "  Node 1: Year with highest MTA subway ridership (2020-2022) -> 2022; add 1 -> 2023",
+    "  Derived year: 2023",
+    "",
+    "HOP 2 (d=1, node 2): Northernmost NYC borough",
+    "  Node 2: The Bronx is the northernmost borough",
+    "  Result: BRONX",
+    "",
+    "HOP 3 (d=2, nodes 3-4): 2023 NYPD data for BRONX",
+    "  Node 3: Most common offense complaints in BRONX 2023 -> 18613",
+    "  Node 4: Shooting incidents in BRONX 2023 -> 439",
+    "  Calculation: 18613 / 439 = 42.4 ≈ 42",
+    "",
+    "Final answer: 42"
+  ],
+  "datasets_used": [
+    "mta-daily-ridership-data-beginning-2020",
+    "The_Bronx",
+    "nypd-complaint-data-historic",
+    "nypd-shooting-incident-data-historic"
+  ]
+}

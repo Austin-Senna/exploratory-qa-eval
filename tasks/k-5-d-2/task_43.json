@@ -1,0 +1,58 @@
+{
+  "question": "Starting with the year (within 2013-2018) with the highest NYC PM2.5 concentration and extending 1 year forward, identify the U.S. state that contains Everett (the seat of Snohomish County), then using that state's 2023–24 school enrollment records determine the county with the highest total count of 10th-grade students. Within that county, use the preliminary 2024–25 data to find the district with the highest enrollment of 11th graders. Retrieve that district's 12th-grade student count from the derived year's school year (YYYY-YY+1) and subtract from it the total number of public schools in the county as recorded in 2021–22. Your response should be in the format [Answer].",
+  "answer": "3455",
+  "nodes": {
+    "1": {
+      "source": "datagov/new-york-city-air-quality/files/rows.txt",
+      "fact": "For 2013-2018, highest NYC PM2.5 concentration is in 2017.",
+      "subquestion": "Which year from 2013-2018 has highest NYC PM2.5?",
+      "answer": "2017"
+    },
+    "2": {
+      "source": "wikipedia/Everett,_Washington/content.txt",
+      "fact": "Everett is in Washington state.",
+      "subquestion": "Which state is Everett (Snohomish County seat) in?",
+      "answer": "Washington"
+    },
+    "3": {
+      "source": "datagov/report-card-enrollment-2023-24-school-year/files/rows.txt",
+      "fact": "In WA 2023-24, King County has highest 10th grade count (23,226).",
+      "subquestion": "Which WA county has highest 10th grade count in 2023-24?",
+      "answer": "King"
+    },
+    "4": {
+      "source": "datagov/report-card-enrollment-2024-25-school-year-preliminary-572ef/files/rows.txt",
+      "fact": "In King County 2024-25 preliminary, Seattle SD has highest 11th grade (4,036).",
+      "subquestion": "Which King County district has highest 11th grade in 2024-25?",
+      "answer": "Seattle School District No. 1"
+    },
+    "5": {
+      "source": "datagov/report-card-enrollment-2018-19-school-year/files/rows.txt",
+      "fact": "Seattle SD 12th grade 2018-19: 3,993.",
+      "subquestion": "Seattle SD 12th grade count in <node_1 answer>+1 school year?",
+      "answer": "3993"
+    },
+    "6": {
+      "source": "datagov/public-school-locations-2021-22-5a116/files/data.txt",
+      "fact": "King County WA 2021-22: 538 public schools. 3993-538=3455.",
+      "subquestion": "Public schools in King County WA in 2021-22?",
+      "answer": "538"
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=1): NYC PM2.5 highest 2013-2018 is 2017 → 2018 school year",
+    "HOP 2 (d=1): Everett → Washington",
+    "HOP 3 (d=1): WA 2023-24 highest 10th grade → King County",
+    "HOP 4 (d=1): King County 2024-25 highest 11th grade → Seattle SD",
+    "HOP 5 (d=2): Seattle SD 12th grade 2018-19 (3993) - King public schools 2021-22 (538) = 3455",
+    "Final answer: 3455"
+  ],
+  "datasets_used": [
+    "new-york-city-air-quality",
+    "Everett,_Washington",
+    "report-card-enrollment-2023-24-school-year",
+    "report-card-enrollment-2024-25-school-year-preliminary-572ef",
+    "report-card-enrollment-2018-19-school-year",
+    "public-school-locations-2021-22-5a116"
+  ]
+}

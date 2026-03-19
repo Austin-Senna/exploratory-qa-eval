@@ -1,0 +1,71 @@
+{
+  "question": "Find the ZIP code with the most agriculture audits completed in the 2017-2019 year with the lowest total annual average daily traffic count for all New York State Routes and roads. For that ZIP code, count how many energy storage projects have a capacity greater than 1000 kW. Add 10 to this count to determine a fiscal year (for example, if the count is 4, use FY14) and find the agricultural transfer tax collected in that year. Next, calculate a target year by taking 1980 plus the integer part of the agricultural transfer tax divided by 10,000. In that target year, find the total electricity sales (in GWh). Using these values, create a threshold by adding together three numbers: the agricultural transfer tax divided by 10,000, the number of energy storage projects, and the total electricity sales divided by 10,000. Finally, in the target year, count how many electricity sectors (Residential, Commercial, Industrial, Transportation) had sales (in TBtu) strictly greater than this threshold. Your response should be in the format [Answer].",
+  "answer": "3",
+  "nodes": {
+    "1": {
+      "source": "datagov/annual-average-daily-traffic-aadt-beginning-1977/files/rows.txt",
+      "fact": "Summing Count by Year for 2017-2019, the minimum total is 73796464 in 2018.",
+      "subquestion": "Which year from 2017-2019 has the lowest total annual average daily traffic count for all New York State Routes and roads?",
+      "answer": "2018"
+    },
+    "2": {
+      "source": "datagov/clean-energy-fund-agriculture-audits-beginning-2016/files/rows.txt",
+      "fact": "Among audits completed in <node_1 answer>, ZIP code 10924 appears most often (5 audits), with no tie for most frequent.",
+      "subquestion": "Among audits completed in <node_1 answer>, which project ZIP code appears most often?",
+      "answer": "10924"
+    },
+    "3": {
+      "source": "datagov/all-statewide-energy-storage-projects/files/rows.txt",
+      "fact": "For ZIP code 10924, there are 4 energy-storage projects with Energy Storage System Size (kWac) strictly greater than 1000.",
+      "subquestion": "For ZIP code <node_2 answer>, how many energy-storage projects have Energy Storage System Size (kWac) strictly greater than 1000?",
+      "answer": "4"
+    },
+    "4": {
+      "source": "datagov/agricultural-transfer-tax/files/rows.txt",
+      "fact": "In fiscal year FY14, the agricultural transfer tax collected is 231042.0.",
+      "subquestion": "Let N = <node_3 answer>. In fiscal year FY(10+N), what is the agricultural transfer tax collected?",
+      "answer": "231042"
+    },
+    "5": {
+      "source": "datagov/electricity-sales-by-sector-gwh-beginning-1980-1f109/files/rows.txt",
+      "fact": "Let yearY = 1980 + floor(231042/10000) = 2003. In yearY, total electricity sales are 144045 GWh.",
+      "subquestion": "Let yearY = 1980 + floor((<node_4 answer> / 10000)). In yearY, what are total electricity sales (in GWh)?",
+      "answer": "144045"
+    },
+    "6": {
+      "source": "datagov/electricity-sales-by-sector-tbtu-beginning-1980/files/rows.txt",
+      "fact": "Let yearY = 2003 and U = (231042/10000) + 4 + (144045/10000) = 41.5087. In 2003, exactly 3 sectors have TBtu sales strictly greater than U.",
+      "subquestion": "Let yearY = 1980 + floor((<node_4 answer> / 10000)). In yearY, define U = (<node_4 answer> / 10000) + (<node_3 answer>) + (<node_5 answer> / 10000). How many sectors (Residential, Commercial, Industrial, Transportation) have electricity sales (in TBtu) strictly greater than U?",
+      "answer": "3"
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=1, data.gov year derivation - node 1):",
+    "  Node 1: NY AADT -> Lowest 2017-2019 is 2018",
+    "",
+    "HOP 2 (d=1, node 2):",
+    "  Node 2: in 2018 audits, the most frequent ZIP code is 10924.",
+    "",
+    "HOP 3 (d=1, node 3):",
+    "  Node 3: for ZIP 10924, the number of storage projects with size > 1000 is N = 4.",
+    "",
+    "HOP 4 (d=1, node 4):",
+    "  Node 4: FY(10+4) = FY14 has tax collected T = 231042.",
+    "",
+    "HOP 5 (d=1, node 5):",
+    "  Node 5: yearY = 1980 + floor(231042/10000) = 2003; total electricity sales in 2003 are G = 144045 GWh.",
+    "",
+    "HOP 6 (d=1, node 6):",
+    "  Node 6: U = 231042/10000 + 4 + 144045/10000 = 41.5087; in 2003, the number of sectors with TBtu sales > U is 3.",
+    "",
+    "Final answer: 3"
+  ],
+  "datasets_used": [
+    "annual-average-daily-traffic-aadt-beginning-1977",
+    "clean-energy-fund-agriculture-audits-beginning-2016",
+    "all-statewide-energy-storage-projects",
+    "agricultural-transfer-tax",
+    "electricity-sales-by-sector-gwh-beginning-1980-1f109",
+    "electricity-sales-by-sector-tbtu-beginning-1980"
+  ]
+}

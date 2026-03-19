@@ -1,0 +1,51 @@
+{
+  "question": "Starting with the year (within 2005-2012) with the lowest CTA bus ridership and adding 4 years, a watershed coordinator is reviewing impairment entries for the river that flows through the city where the Danbury Railway Museum is located. After identifying this river, determine the specific town the river cuts through after leaving that city but before entering New Milford. According to that derived year's impaired rivers inventory, how many entries for that river also mention that specific town in their location description? Your response should be in the format [Answer].",
+  "answer": "2",
+  "nodes": {
+    "1": {
+      "source": "datagov/cta-ridership-daily-boarding-totals/files/rows.txt",
+      "fact": "For 2005-2012, lowest CTA bus ridership is in 2010. 2010+4=2014.",
+      "subquestion": "Which year from 2005-2012 has lowest CTA bus ridership?",
+      "answer": "2010"
+    },
+    "2": {
+      "source": "wikipedia/Danbury_Railway_Museum/content.txt",
+      "fact": "Danbury Railway Museum is in Danbury, Connecticut.",
+      "subquestion": "What city is the Danbury Railway Museum in?",
+      "answer": "Danbury"
+    },
+    "3": {
+      "source": "wikipedia/Danbury,_Connecticut/content.txt",
+      "fact": "Still River runs through Danbury.",
+      "subquestion": "What river runs through <node_2 answer>?",
+      "answer": "Still River"
+    },
+    "4": {
+      "source": "wikipedia/Still_River_(Housatonic_River_tributary)/content.txt",
+      "fact": "Still River cuts through Brookfield before New Milford.",
+      "subquestion": "What town does <node_3 answer> cut through after Danbury before New Milford?",
+      "answer": "Brookfield"
+    },
+    "5": {
+      "source": "datagov/impaired-river-2014-e6fe7/files/data.txt",
+      "fact": "2 features have Still River name and Brookfield in location.",
+      "subquestion": "In <node_1 answer>+4 impaired inventory, how many have <node_3 answer> and <node_4 answer>?",
+      "answer": "2"
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=1): CTA ridership lowest 2005-2012 is 2010 → 2010+4=2014",
+    "HOP 2 (d=1): Danbury Railway Museum → Danbury",
+    "HOP 3 (d=1): Danbury → Still River",
+    "HOP 4 (d=1): Still River after Danbury before New Milford → Brookfield",
+    "HOP 5 (d=1): 2014 impaired with both → 2",
+    "Final answer: 2"
+  ],
+  "datasets_used": [
+    "cta-ridership-daily-boarding-totals",
+    "Danbury_Railway_Museum",
+    "Danbury,_Connecticut",
+    "Still_River_(Housatonic_River_tributary)",
+    "impaired-river-2014-e6fe7"
+  ]
+}

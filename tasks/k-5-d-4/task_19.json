@@ -1,0 +1,119 @@
+{
+  "question": "Starting with the year in the 2017-2022 period with the highest total hazard mitigation grant program funding and extending 3 years back, identify Texas counties with highway construction expenditures between $150 million and $500 million consistently across that 4-year range. Among those that also had fewer than 15,000 VA disability compensation recipients in FY 2023 and whose county seat name differs from the county name, who founded the first permanent settlement in that county seat, and in what year was the Texas county named after that founder created? Your response should be in the format [Answer].",
+  "answer": "1850",
+  "nodes": {
+    "1": {
+      "source": "datagov/hazard-mitigation-grant-program-disaster-summaries-v2/files/rows.txt",
+      "fact": "Summing obligatedAmount by year for 2017-2022, the maximum total occurs in 2020.",
+      "subquestion": "Which year from 2017-2022 has the highest total hazard mitigation grant program funding?",
+      "answer": "2020"
+    },
+    "2": {
+      "source": "datagov/texas-state-expenditures-by-county-2018/files/rows.txt",
+      "fact": "In fiscal year 2018, counties with highway construction $150M-$500M: MONTGOMERY, TRAVIS, BEXAR, TARRANT, DENTON, NUECES, HAYS.",
+      "subquestion": "Which Texas counties had highway construction expenditures between $150M and $500M in FY <node_1 answer>-2?",
+      "answer": [
+        "MONTGOMERY",
+        "TRAVIS",
+        "BEXAR",
+        "TARRANT",
+        "DENTON",
+        "NUECES",
+        "HAYS"
+      ]
+    },
+    "3": {
+      "source": "datagov/texas-state-expenditures-by-county-2019/files/rows.txt",
+      "fact": "In fiscal year 2019, counties with highway construction $150M-$500M: TRAVIS, MONTGOMERY, BEXAR, DENTON, NUECES, TARRANT, WILLIAMSON.",
+      "subquestion": "Which Texas counties had highway construction $150M-$500M in FY <node_1 answer>-1?",
+      "answer": [
+        "TRAVIS",
+        "MONTGOMERY",
+        "BEXAR",
+        "DENTON",
+        "NUECES",
+        "TARRANT",
+        "WILLIAMSON"
+      ]
+    },
+    "4": {
+      "source": "datagov/texas-state-expenditures-by-county-2020/files/rows.txt",
+      "fact": "In fiscal year 2020, counties with highway construction $150M-$500M: BEXAR, DENTON, NUECES, HAYS, TARRANT, MCLENNAN, WILLIAMSON.",
+      "subquestion": "Which Texas counties had highway construction $150M-$500M in FY <node_1 answer>?",
+      "answer": [
+        "BEXAR",
+        "DENTON",
+        "NUECES",
+        "HAYS",
+        "TARRANT",
+        "MCLENNAN",
+        "WILLIAMSON"
+      ]
+    },
+    "5": {
+      "source": "datagov/texas-state-expenditures-by-county-2021/files/rows.txt",
+      "fact": "In fiscal year 2021, counties with highway construction $150M-$500M: BEXAR, DENTON, HAYS, TARRANT, NUECES.",
+      "subquestion": "Which Texas counties had highway construction $150M-$500M in FY <node_1 answer>+1?",
+      "answer": [
+        "BEXAR",
+        "DENTON",
+        "HAYS",
+        "TARRANT",
+        "NUECES"
+      ]
+    },
+    "6": {
+      "source": "datagov/fy-2023-disability-compensation-recipients-by-county/files/rows.txt",
+      "fact": "Among the intersection counties: Bexar 86,151; Denton 14,716; Nueces 10,231; Tarrant 37,476. Under 15,000: DENTON, NUECES.",
+      "subquestion": "Of the intersection (BEXAR, DENTON, NUECES, TARRANT), which had fewer than 15,000 VA disability recipients in FY 2023?",
+      "answer": [
+        "DENTON",
+        "NUECES"
+      ]
+    },
+    "7": {
+      "source": "wikipedia/Denton_County,_Texas/content.txt",
+      "fact": "Denton County's county seat is Denton (same name as county).",
+      "subquestion": "What is the county seat of Denton County?",
+      "answer": "Denton"
+    },
+    "8": {
+      "source": "wikipedia/Nueces_County,_Texas/content.txt",
+      "fact": "Nueces County's county seat is Corpus Christi (different name).",
+      "subquestion": "What is the county seat of Nueces County?",
+      "answer": "Corpus Christi"
+    },
+    "9": {
+      "source": "wikipedia/Corpus_Christi,_Texas/content.txt",
+      "fact": "The first permanent settlement was established by Henry Lawrence Kinney in 1839.",
+      "subquestion": "Who founded the first permanent settlement in Corpus Christi?",
+      "answer": "Henry Lawrence Kinney"
+    },
+    "10": {
+      "source": "wikipedia/Kinney_County,_Texas/content.txt",
+      "fact": "Kinney County was created in 1850 and is named after Henry Lawrence Kinney.",
+      "subquestion": "In what year was the Texas county named after <node_9 answer> created?",
+      "answer": "1850"
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=1, year derivation): Hazard mitigation highest 2017-2022 is 2020",
+    "HOP 2 (d=4, Texas expenditures 2018-2021): Intersection -> {BEXAR, DENTON, NUECES, TARRANT}",
+    "HOP 3 (d=3, filter by VA recipients + county seats): Nueces meets both criteria",
+    "HOP 4 (d=1, Corpus Christi founder): Henry Lawrence Kinney",
+    "HOP 5 (d=1, Kinney County): Created in 1850",
+    "Final answer: 1850"
+  ],
+  "datasets_used": [
+    "hazard-mitigation-grant-program-disaster-summaries-v2",
+    "texas-state-expenditures-by-county-2018",
+    "texas-state-expenditures-by-county-2019",
+    "texas-state-expenditures-by-county-2020",
+    "texas-state-expenditures-by-county-2021",
+    "fy-2023-disability-compensation-recipients-by-county",
+    "Denton_County,_Texas",
+    "Nueces_County,_Texas",
+    "Corpus_Christi,_Texas",
+    "Kinney_County,_Texas"
+  ]
+}

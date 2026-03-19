@@ -1,0 +1,207 @@
+{
+  "question": "I'm looking for a specific Texas county that was a top spender on capital outlay between 2018 and 2021. Among the top five spenders, this county was one of the two highest for average prison releases in the year (within 2017-2022) that has the highest total gasoline/gasohol sales across U.S. states and the year after, and unlike its peer, it saw a significant increase in veteran affair disability recipients from the year (within 2017-2022) that has the lowest total traffic volume reported by the New York City Department of Transportation to the year after the year (within 2020-2022) that has the highest total subway ridership in MTA. Once you identify this county, tell me which University of Houston System universities located in its county seat was founded earliest. Only report the name of the university. Your response should be in the format [Answer].",
+  "answer": "University of Houston",
+  "nodes": {
+    "1": {
+      "source": "datagov/monthly-motor-fuel-sales-reported-by-states-selected-data-from-fhwa-monthly-motor-fuel-rep/files/rows.txt",
+      "fact": "Filtering fuel_type = \"Gasoline/gasohol\" and summing value by year (from date) for 2017-2022, the maximum total is 294719877886 in 2019.",
+      "subquestion": "Which year from 2017-2022 has the highest total gasoline/gasohol sales across U.S. states? (Filter fuel_type == \"Gasoline/gasohol\"; derive year from date; sum value by year and select the maximum.)",
+      "answer": "2019"
+    },
+    "2": {
+      "source": "datagov/automated-traffic-volume-counts/files/rows.txt",
+      "fact": "Summing Vol by Yr for 2017-2022, the minimum total is 4497946 in 2020.",
+      "subquestion": "Which year from 2017-2022 has the lowest total traffic volume reported by the New York City Department of Transportation? (Sum Vol by Yr and select the minimum.)",
+      "answer": "2020"
+    },
+    "3": {
+      "source": "datagov/mta-daily-ridership-data-beginning-2020/files/rows.txt",
+      "fact": "Summing Subways: Total Estimated Ridership by year (from Date) for 2020-2022, the maximum total is 1012505879 in 2022.",
+      "subquestion": "Which year from 2020-2022 has the highest total subway ridership in MTA? (Use Date to derive year; sum Subways: Total Estimated Ridership by year and select the maximum.)",
+      "answer": "2022"
+    },
+    "4": {
+      "source": "datagov/texas-state-expenditures-by-county-2018/files/rows.txt",
+      "fact": "In the FY2018 Texas State Expenditures by County dataset, the top 5 counties by Capital Outlay total were: Harris ($1,303,630,847.30), Dallas ($838,316,444.65), Travis ($427,160,745.36), Montgomery ($424,383,088.05), and Bexar ($269,462,082.97).",
+      "subquestion": "Which Texas counties were in the top 5 by average Capital Outlay expenditures across FY2018-FY2021?",
+      "answer": {
+        "Harris": 1303630847.3,
+        "Dallas": 838316444.65,
+        "Travis": 427160745.36,
+        "Montgomery": 424383088.05,
+        "Bexar": 269462082.97
+      }
+    },
+    "5": {
+      "source": "datagov/texas-state-expenditures-by-county-2019/files/rows.txt",
+      "fact": "In the FY2019 Texas State Expenditures by County dataset, the top 5 counties by Capital Outlay total were: Harris ($1,391,779,835.06), Dallas ($827,510,409.80), Travis ($614,936,080.37), Montgomery ($416,744,287.28), and Bexar ($302,940,592.72).",
+      "subquestion": "Which Texas counties were in the top 5 by average Capital Outlay expenditures across FY2018-FY2021?",
+      "answer": {
+        "Harris": 1391779835.06,
+        "Dallas": 827510409.8,
+        "Travis": 614936080.37,
+        "Montgomery": 416744287.28,
+        "Bexar": 302940592.72
+      }
+    },
+    "6": {
+      "source": "datagov/texas-state-expenditures-by-county-2020/files/rows.txt",
+      "fact": "In the FY2020 Texas State Expenditures by County dataset, the top 5 counties by Capital Outlay total were: Harris ($1,663,151,150.96), Dallas ($1,324,261,419.12), Travis ($821,945,717.49), Montgomery ($612,813,968.49), and Bexar ($494,340,352.72).",
+      "subquestion": "Which Texas counties were in the top 5 by average Capital Outlay expenditures across FY2018-FY2021?",
+      "answer": {
+        "Harris": 1663151150.96,
+        "Dallas": 1324261419.12,
+        "Travis": 821945717.49,
+        "Montgomery": 612813968.49,
+        "Bexar": 494340352.72
+      }
+    },
+    "7": {
+      "source": "datagov/texas-state-expenditures-by-county-2021/files/rows.txt",
+      "fact": "In the FY2021 Texas State Expenditures by County dataset, the top 5 counties by Capital Outlay total were: Harris ($1,741,663,003.68), Dallas ($1,171,406,639.17), Travis ($774,601,022.23), Montgomery ($705,433,711.03), and Bexar ($596,386,366.99).",
+      "subquestion": "Which Texas counties were in the top 5 by average Capital Outlay expenditures across FY2018-FY2021?",
+      "answer": {
+        "Harris": 1741663003.68,
+        "Dallas": 1171406639.17,
+        "Travis": 774601022.23,
+        "Montgomery": 705433711.03,
+        "Bexar": 596386366.99
+      }
+    },
+    "8": {
+      "source": "datagov/texas-department-of-criminal-justice-releases-fy-2019/files/rows.txt",
+      "fact": "In the FY<node_1 answer> TDCJ Releases dataset, release counts for the top Capital Outlay counties were: Harris 9,029; Dallas 5,355; Bexar 4,545; Travis 1,857; Montgomery 1,315.",
+      "subquestion": "Among the counties (from hop 3), which two had the highest average TDCJ releases across FY<node_1 answer>-FY<node_1 answer + 1>?",
+      "answer": {
+        "Harris": 9029,
+        "Dallas": 5355,
+        "Bexar": 4545,
+        "Travis": 1857,
+        "Montgomery": 1315
+      }
+    },
+    "9": {
+      "source": "datagov/texas-department-of-criminal-justice-releases-fy-2020/files/rows.txt",
+      "fact": "In the FY<node_1 answer + 1> TDCJ Releases dataset, release counts for the top Capital Outlay counties were: Harris 7,059; Dallas 4,540; Bexar 3,917; Travis 1,596; Montgomery 1,250.",
+      "subquestion": "Among the counties (from hop 3), which two had the highest average TDCJ releases across FY<node_1 answer>-FY<node_1 answer + 1>?",
+      "answer": {
+        "Harris": 7059,
+        "Dallas": 4540,
+        "Bexar": 3917,
+        "Travis": 1596,
+        "Montgomery": 1250
+      }
+    },
+    "10": {
+      "source": "datagov/fy-2020-disability-compensation-recipients-by-county/files/rows.txt",
+      "fact": "According to the FY2020 VA Disability Compensation Recipients by County dataset, Harris County, Texas had 49,804 recipients and Dallas County, Texas had 26,317 recipients.",
+      "subquestion": "For the two counties (from hop 4), what were the VA disability compensation recipient counts in FY <node_2 answer> and FY <node_3 answer + 1>?",
+      "answer": {
+        "Harris": 49804,
+        "Dallas": 26317
+      }
+    },
+    "11": {
+      "source": "datagov/fy-2023-disability-compensation-recipients-by-county/files/rows.txt",
+      "fact": "According to the FY2023 VA Disability Compensation Recipients by County dataset, Harris County, Texas had 54,266 recipients and Dallas County, Texas had 25,704 recipients.",
+      "subquestion": "For the two counties (from hop 4), what were the VA disability compensation recipient counts in FY <node_2 answer> and FY <node_3 answer + 1>?",
+      "answer": {
+        "Harris": 54266,
+        "Dallas": 25704
+      }
+    },
+    "12": {
+      "source": "wikipedia/Harris_County,_Texas/content.txt",
+      "fact": "According to the Wikipedia article for Harris County, Texas, its county seat is Houston.",
+      "subquestion": "What is the county seat of the county (from hop 5)?",
+      "answer": "Houston"
+    },
+    "13": {
+      "source": "wikipedia/Houston/content.txt",
+      "fact": "According to the Wikipedia article for Houston, the University of Houston is the flagship institution of the University of Houston System, and the University of Houston–Clear Lake and University of Houston–Downtown are universities within the University of Houston System.",
+      "subquestion": "Which University of Houston System universities are located in the city (from hop 6)?",
+      "answer": [
+        "University of Houston",
+        "University of Houston–Clear Lake",
+        "University of Houston–Downtown"
+      ]
+    },
+    "14": {
+      "source": "wikipedia/University_of_Houston/content.txt",
+      "fact": "According to the Wikipedia article for the University of Houston, it was established in 1927 as Houston Junior College.",
+      "subquestion": "When was each University of Houston System university in the city (from hop 7) established?",
+      "answer": {
+        "University of Houston": 1927
+      }
+    },
+    "15": {
+      "source": "wikipedia/University_of_Houston–Clear_Lake/content.txt",
+      "fact": "According to the Wikipedia article for the University of Houston–Clear Lake, the university was established in 1971.",
+      "subquestion": "When was each University of Houston System university in the city (from hop 7) established?",
+      "answer": {
+        "University of Houston–Clear Lake": 1971
+      }
+    },
+    "16": {
+      "source": "wikipedia/University_of_Houston–Downtown/content.txt",
+      "fact": "According to the Wikipedia article for the University of Houston–Downtown, it was established on August 6, 1974.",
+      "subquestion": "When was each University of Houston System university in the city (from hop 7) established?",
+      "answer": {
+        "University of Houston–Downtown": 1974
+      }
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=1, data.gov year derivation - node 1):",
+    "  Node 1: Year with highest gasoline/gasohol sales (2017-2022) -> 2019",
+    "  Derived years for prison releases: 2019 and 2020",
+    "",
+    "HOP 2 (d=2, data.gov year derivation - nodes 2-3):",
+    "  Node 2: Year with lowest NYC traffic volume (2017-2022) -> 2020",
+    "  Node 3: Year with highest MTA subway ridership (2020-2022) -> 2022; add 1 -> 2023",
+    "  Derived VA disability years: 2020 and 2023",
+    "",
+    "HOP 3 (d=4, Texas Capital Outlay expenditures by county FY2018-FY2021 - nodes 4-7):",
+    "  Result: {Harris, Dallas, Travis, Montgomery, Bexar}",
+    "",
+    "HOP 4 (d=2, TDCJ releases FY<node_1 answer>-FY<node_1 answer + 1> - nodes 8-9):",
+    "  Average releases: Harris 8,044; Dallas 4,947.5; Bexar 4,231; Travis 1,726.5; Montgomery 1,282.5",
+    "  Result: {Harris, Dallas}",
+    "",
+    "HOP 5 (d=2, VA disability compensation recipients FY<node_2 answer> and FY<node_3 answer + 1> - nodes 10-11):",
+    "  Change: Harris +4,462; Dallas -613 -> Harris has the larger increase",
+    "  Result: Harris County, Texas",
+    "",
+    "HOP 6 (d=1, Wikipedia Harris County, Texas - node 12):",
+    "  Node 12: County seat of Harris County -> Houston",
+    "",
+    "HOP 7 (d=1, Wikipedia Houston - node 13):",
+    "  Node 13: UH System universities in Houston -> {UH, UH-Clear Lake, UH-Downtown}",
+    "",
+    "HOP 8 (d=3, founding years for UH System universities - nodes 14-16):",
+    "  Node 14: University of Houston established in 1927",
+    "  Node 15: UH-Clear Lake established in 1971",
+    "  Node 16: UH-Downtown established in 1974",
+    "  Earliest founding year: 1927 -> University of Houston",
+    "",
+    "Final answer: University of Houston"
+  ],
+  "datasets_used": [
+    "monthly-motor-fuel-sales-reported-by-states-selected-data-from-fhwa-monthly-motor-fuel-rep",
+    "automated-traffic-volume-counts",
+    "mta-daily-ridership-data-beginning-2020",
+    "Harris_County,_Texas",
+    "Houston",
+    "University_of_Houston",
+    "University_of_Houston–Clear_Lake",
+    "University_of_Houston–Downtown",
+    "fy-2020-disability-compensation-recipients-by-county",
+    "fy-2023-disability-compensation-recipients-by-county",
+    "texas-department-of-criminal-justice-releases-fy-2019",
+    "texas-department-of-criminal-justice-releases-fy-2020",
+    "texas-state-expenditures-by-county-2018",
+    "texas-state-expenditures-by-county-2019",
+    "texas-state-expenditures-by-county-2020",
+    "texas-state-expenditures-by-county-2021"
+  ]
+}

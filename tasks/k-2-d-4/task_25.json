@@ -1,0 +1,86 @@
+{
+  "question": "Which county in the only state that is a Mountain state, borders Mexico, lies in the Four Corners region, and had 4,000\u20136,000 VA pension recipients in FY2020 has the most VA disability compensation recipients in FY2023? Return the county name only. Your response should be in the format [Answer].",
+  "answer": "Maricopa County",
+  "nodes": {
+    "1": {
+      "source": "wikipedia/Mountain_states/content.txt",
+      "fact": "The Mountain states are considered to include: Arizona, Colorado, Idaho, Montana, Nevada, New Mexico, Utah and Wyoming.",
+      "subquestion": "Which US states are Mountain states?",
+      "answer": [
+        "Arizona",
+        "Colorado",
+        "Idaho",
+        "Montana",
+        "Nevada",
+        "New Mexico",
+        "Utah",
+        "Wyoming"
+      ]
+    },
+    "2": {
+      "source": "wikipedia/Mexico\u2013United_States_border/content.txt",
+      "fact": "Four American Sun Belt states border Mexico: California, Arizona, New Mexico and Texas.",
+      "subquestion": "Which US states border Mexico?",
+      "answer": [
+        "California",
+        "Arizona",
+        "New Mexico",
+        "Texas"
+      ]
+    },
+    "3": {
+      "source": "wikipedia/Four_Corners/content.txt",
+      "fact": "The Four Corners is a region of the Southwestern United States consisting of the southwestern corner of Colorado, southeastern corner of Utah, northeastern corner of Arizona, and northwestern corner of New Mexico.",
+      "subquestion": "Which US states share the Four Corners region?",
+      "answer": [
+        "Arizona",
+        "Colorado",
+        "New Mexico",
+        "Utah"
+      ]
+    },
+    "4": {
+      "source": "datagov/fy-2020-pension-recipients-by-state/v1/files/rows.csv",
+      "fact": "In FY 2020, states with between 4,000 and 6,000 VA pension recipients included Arizona (4,968), Alabama (5,798), Louisiana (4,609), Tennessee (5,812), Missouri (5,191), Oregon (4,095), South Carolina (4,089), and Virginia (4,508). New Mexico had only 1,880 recipients, Colorado had 3,153, and Utah had 1,295.",
+      "subquestion": "Which US states had between 4,000 and 6,000 VA pension recipients in fiscal year 2020?",
+      "answer": [
+        "Arizona",
+        "Alabama",
+        "Louisiana",
+        "Tennessee",
+        "Missouri",
+        "Oregon",
+        "South Carolina",
+        "Virginia",
+        "Washington",
+        "Puerto Rico"
+      ]
+    },
+    "5": {
+      "source": "datagov/fy-2023-disability-compensation-recipients-by-county/v1/files/rows.csv",
+      "fact": "In FY 2023, Maricopa County, Arizona had 69,974 VA disability compensation recipients, the most of any county in Arizona. Pima County was second with 25,745, and Pinal County was third with 10,403.",
+      "subquestion": "Which county in the state identified from nodes 1-4 has the most VA disability compensation recipients in FY 2023?",
+      "answer": "Maricopa County"
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=4, intersection - nodes 1-4):",
+    "  Node 1: Mountain states",
+    "  Node 2: States bordering Mexico",
+    "  Node 3: Four Corners states",
+    "  Node 4: States with 4,000\u20136,000 VA pension recipients in FY2020",
+    "  Intersection -> Arizona",
+    "",
+    "HOP 2 (d=1, data.gov - node 5 depends on hop 1):",
+    "  Node 5: Arizona county with most VA disability compensation recipients in FY2023 -> Maricopa County",
+    "",
+    "Final answer: Maricopa County"
+  ],
+  "datasets_used": [
+    "Mountain_states",
+    "Mexico\u2013United_States_border",
+    "Four_Corners",
+    "fy-2020-pension-recipients-by-state",
+    "fy-2023-disability-compensation-recipients-by-county"
+  ]
+}

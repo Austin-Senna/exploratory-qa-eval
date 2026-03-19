@@ -1,0 +1,37 @@
+{
+  "question": "A researcher is summarizing water-quality listings near Yale University. Identify the body of water on whose northern shore the city containing Yale University is located. Then identify the New England river described as the region’s longest that discharges into that body of water. In a 2006 inventory of impaired rivers, how many listed features have names containing that river’s name?",
+  "answer": "3",
+  "nodes": {
+    "1": {
+      "source": "wikipedia/Yale_University/content.txt",
+      "fact": "Yale University is located in New Haven, Connecticut.",
+      "subquestion": "What city is Yale University located in?",
+      "answer": "New Haven"
+    },
+    "2": {
+      "source": "wikipedia/New_Haven,_Connecticut/content.txt",
+      "fact": "New Haven is located on the northern shore of Long Island Sound.",
+      "subquestion": "What body of water is <node_1 answer> located on the northern shore of?",
+      "answer": "Long Island Sound"
+    },
+    "3": {
+      "source": "wikipedia/Connecticut_River/content.txt",
+      "fact": "The Connecticut River is described as New England\u2019s longest river and it discharges into Long Island Sound.",
+      "subquestion": "What is the name of the New England river described as the region\u2019s longest that discharges into <node_2 answer>?",
+      "answer": "Connecticut River"
+    },
+    "4": {
+      "source": "datagov/impaired-river-2006-88194/files/data.txt",
+      "fact": "In the 2006 impaired rivers/lakes/estuaries inventory, 3 features have a NAME that contains \"Connecticut River\".",
+      "subquestion": "In a 2006 inventory of impaired rivers, lakes, and estuaries, how many listed features have a NAME that contains <node_3 answer>?",
+      "answer": "3"
+    }
+  },
+  "reasoning_chain": [
+    "Node 1: Identify the city where Yale University is located \u2192 New Haven.",
+    "Node 2 depends on node 1: Identify the body of water on whose northern shore New Haven is located \u2192 Long Island Sound.",
+    "Node 3 depends on node 2: Identify the New England river described as the region\u2019s longest that discharges into Long Island Sound \u2192 Connecticut River.",
+    "Node 4 depends on node 3: Count how many 2006 impaired-water features have names containing \u201cConnecticut River\u201d \u2192 3.",
+    "Final answer: 3."
+  ]
+}

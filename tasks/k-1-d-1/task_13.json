@@ -1,0 +1,20 @@
+{
+  "question": "Which year from 2005-2010 has the lowest number of stroke deaths in the United States? Your response should be in the format [Answer].",
+  "answer": "2009",
+  "practical_motivation": "A public health analyst wants to identify the lowest mid-2000s year for stroke deaths nationwide.",
+  "nodes": {
+    "1": {
+      "source": "datagov/nchs-leading-causes-of-death-united-states/files/rows.txt",
+      "fact": "For State = \"United States\" and Cause Name = \"Stroke\", the lowest total deaths in 2005-2010 occurs in 2009 with 128842.",
+      "subquestion": "Which year from 2005-2010 has the lowest number of stroke deaths in the United States? (Filter State == \"United States\" and Cause Name == \"Stroke\"; sum Deaths by Year; select the minimum.)",
+      "answer": "2009"
+    }
+  },
+  "reasoning_chain": [
+    "Node 1: Filter to U.S. stroke deaths, sum by Year (2005-2010), and select the minimum; the lowest year is 2009.",
+    "Final answer: 2009"
+  ],
+  "datasets_used": [
+    "nchs-leading-causes-of-death-united-states"
+  ]
+}

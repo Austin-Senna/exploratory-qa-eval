@@ -1,0 +1,72 @@
+{
+  "question": "Among California counties with AMI >= 142,800 in 2022 and AMI >= 147,900 in 2023, which counties also had WIC Average Cost per Family >= $570 in 2018 and >= $700 in 2020? List the county names in alphabetical order separated by `, `. Your response should be in the format [Answer].",
+  "answer": "Alameda, San Francisco, Santa Clara",
+  "nodes": {
+    "1": {
+      "source": "datagov/income-limits-by-county/files/2022-income-limits.txt",
+      "fact": "In the 2022 income limits data, counties with AMI >= 142800 are Santa Clara (168500), Marin (166000), San Francisco (166000), San Mateo (166000), Alameda (142800), and Contra Costa (142800).",
+      "subquestion": "Which counties have AMI >= 142800 in the 2022 income limits data? (Filter: AMI >= 142800; list County and AMI.)",
+      "answer": {
+        "Santa Clara": 168500,
+        "Marin": 166000,
+        "San Francisco": 166000,
+        "San Mateo": 166000,
+        "Alameda": 142800,
+        "Contra Costa": 142800
+      }
+    },
+    "2": {
+      "source": "datagov/income-limits-by-county/files/2023-income-limits.txt",
+      "fact": "In the 2023 income limits data, counties with AMI >= 147900 are Santa Clara (181300), Marin (175000), San Francisco (175000), San Mateo (175000), Alameda (147900), and Contra Costa (147900).",
+      "subquestion": "Which counties have AMI >= 147900 in the 2023 income limits data? (Filter: AMI >= 147900; list County and AMI.)",
+      "answer": {
+        "Santa Clara": 181300,
+        "Marin": 175000,
+        "San Francisco": 175000,
+        "San Mateo": 175000,
+        "Alameda": 147900,
+        "Contra Costa": 147900
+      }
+    },
+    "3": {
+      "source": "datagov/california-women-infants-and-children-program-redemption-by-county-967e9/files/2010-2018-part-a-wic-redemptions-by-vendor-county-with-family-counts.txt",
+      "fact": "In the 2018 WIC data for the hop 1 counties, Average Cost per Family values are Alameda $605.54, Contra Costa $572.19, Marin $537.53, San Francisco $600.20, San Mateo $540.16, and Santa Clara $678.02. The counties with Average Cost per Family >= $570 are Alameda, Contra Costa, San Francisco, and Santa Clara.",
+      "subquestion": "Among the counties that meet the AMI thresholds in 2022 and 2023, which have Average Cost per Family >= $570 in 2018 WIC data?",
+      "answer": [
+        "Alameda",
+        "Contra Costa",
+        "San Francisco",
+        "Santa Clara"
+      ]
+    },
+    "4": {
+      "source": "datagov/california-women-infants-and-children-program-redemption-by-county-967e9/files/2019-2020-part-b-wic-redemptions-by-vendor-county-with-family-counts.txt",
+      "fact": "In the 2020 WIC data for the hop 1 counties, Average Cost per Family values are Alameda $823.68, Contra Costa $686.11, Marin $601.01, San Francisco $935.06, San Mateo $729.54, and Santa Clara $773.97. The counties with Average Cost per Family >= $700 are Alameda, San Francisco, San Mateo, and Santa Clara.",
+      "subquestion": "Among the counties that meet the AMI thresholds in 2022 and 2023, which have Average Cost per Family >= $700 in 2020 WIC data?",
+      "answer": [
+        "Alameda",
+        "San Francisco",
+        "San Mateo",
+        "Santa Clara"
+      ]
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=2, data.gov - nodes 1-2):",
+    "  Node 1: 2022 AMI >= 142,800 -> {Santa Clara, Marin, San Francisco, San Mateo, Alameda, Contra Costa}",
+    "  Node 2: 2023 AMI >= 147,900 -> {Santa Clara, Marin, San Francisco, San Mateo, Alameda, Contra Costa}",
+    "  Intersection -> {Alameda, Contra Costa, Marin, San Francisco, San Mateo, Santa Clara}",
+    "",
+    "HOP 2 (d=2, data.gov - nodes 3-4 depend on hop 1):",
+    "  Node 3: 2018 WIC Avg Cost >= 570 -> Alameda, Contra Costa, San Francisco, Santa Clara",
+    "  Node 4: 2020 WIC Avg Cost >= 700 -> Alameda, San Francisco, San Mateo, Santa Clara",
+    "  Intersection -> Alameda, San Francisco, Santa Clara",
+    "",
+    "Final answer: Alameda, San Francisco, Santa Clara"
+  ],
+  "verdict": "pass",
+  "datasets_used": [
+    "income-limits-by-county",
+    "california-women-infants-and-children-program-redemption-by-county-967e9"
+  ]
+}

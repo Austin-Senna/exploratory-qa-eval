@@ -1,0 +1,42 @@
+{
+  "question": "What was the total student enrollment for the school year starting in five years before the year (within 2020-2022) that has the highest total subway ridership in MTA for the school district in the most populous city of Whitman County (2020 census)? Only report the number in `Number` format. Your response should be in the format [Answer].",
+  "answer": "2941",
+  "nodes": {
+    "1": {
+      "source": "datagov/mta-daily-ridership-data-beginning-2020/files/rows.txt",
+      "fact": "Summing Subways: Total Estimated Ridership by year (from Date) for 2020-2022, the maximum total is 1012505879 in 2022.",
+      "subquestion": "Which year from 2020-2022 has the highest total subway ridership in MTA? (Use Date to derive year; sum Subways: Total Estimated Ridership by year and select the maximum.)",
+      "answer": "2022"
+    },
+    "2": {
+      "source": "wikipedia/Pullman,_Washington/content.txt",
+      "fact": "According to the Wikipedia article for Pullman, Washington, Pullman is the most populous city in Whitman County as of the 2020 census.",
+      "subquestion": "What is the most populous city in Whitman County, Washington according to the 2020 census?",
+      "answer": "Pullman"
+    },
+    "3": {
+      "source": "datagov/report-card-enrollment-2017-18-school-year/files/rows.txt",
+      "fact": "According to the Washington Report Card Enrollment Data for the school year starting in <node_1 answer - 5>, Pullman School District (in Whitman County) had 2,941 total students enrolled for All Grades.",
+      "subquestion": "What is the total student enrollment for the school year starting in <node_1 answer - 5> for the school district in <node_2 answer>? (DistrictName=Pullman School District; GradeLevel=All Grades; column=All Students.)",
+      "answer": "2941"
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=1, data.gov year derivation - node 1):",
+    "  Node 1: Year with highest MTA subway ridership (2020-2022) -> 2022",
+    "  Derived school year: 2017-18 (starting in 2022-5=2017)",
+    "",
+    "HOP 2 (d=1, Wikipedia - node 2):",
+    "  Node 2: Most populous city in Whitman County (2020 census) -> Pullman",
+    "",
+    "HOP 3 (d=1, data.gov - node 3 depends on nodes 1 and 2):",
+    "  Node 3: Pullman School District enrollment 2017-18 -> 2,941",
+    "",
+    "Final answer: 2941"
+  ],
+  "datasets_used": [
+    "mta-daily-ridership-data-beginning-2020",
+    "Pullman,_Washington",
+    "report-card-enrollment-2017-18-school-year"
+  ]
+}

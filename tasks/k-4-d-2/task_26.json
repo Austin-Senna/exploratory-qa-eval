@@ -1,0 +1,53 @@
+{
+  "question": "Identify the U.S. state that contains Everett (the seat of Snohomish County), then using that state’s 2023–24 school enrollment records determine the county with the highest total count of 10th-grade students. Within that county, use the preliminary 2024–25 data to find the district with the highest enrollment of 11th graders. Retrieve that district’s 12th-grade student count from the 2018–19 school year and subtract from it the total number of public schools in the county as recorded in 2021–22—what is the resulting difference (only report the final value)?. Your response should be in the format [Answer].",
+  "answer": "3455",
+  "nodes": {
+    "1": {
+      "source": "wikipedia/Everett,_Washington/content.txt",
+      "fact": "Everett (the county seat of Snohomish County) is located in the U.S. state of Washington.",
+      "subquestion": "In U.S. geography, which U.S. state is Everett (the county seat of Snohomish County) located in?",
+      "answer": "Washington"
+    },
+    "2": {
+      "source": "datagov/report-card-enrollment-2023-24-school-year/files/rows.txt",
+      "fact": "In <node_1 answer> report-card enrollment (2023-24 school year), county King has the largest District-level 'All Students' count for 10th Grade (23226). This result is unique.",
+      "subquestion": "In <node_1 answer> report-card enrollment (2023-24 school year), which county has the largest District-level 'All Students' count for 10th Grade?",
+      "answer": "King"
+    },
+    "3": {
+      "source": "datagov/report-card-enrollment-2024-25-school-year-preliminary-572ef/files/rows.txt",
+      "fact": "Within King County in <node_1 answer> report-card enrollment (2024-25 school year, preliminary), the district with the largest District-level 'All Students' count for 11th Grade is Seattle School District No. 1 (4036). This result is unique.",
+      "subquestion": "Within county <node_2 answer> in <node_1 answer> report-card enrollment (2024-25 school year, preliminary), which district has the largest District-level 'All Students' count for 11th Grade?",
+      "answer": "Seattle School District No. 1"
+    },
+    "4": {
+      "source": "datagov/report-card-enrollment-2018-19-school-year/files/rows.txt",
+      "fact": "In that district, the District-level 12th Grade 'All Students' count is 3993.",
+      "subquestion": "In <node_1 answer> report-card enrollment (2018-19 school year), what is the District-level 'All Students' count for 12th Grade in district <node_3 answer>?",
+      "answer": "3993"
+    },
+    "5": {
+      "source": "datagov/public-school-locations-2021-22-5a116/files/data.txt",
+      "fact": "In the public school locations (2021-22) data, King County, Washington has 538 public schools listed.",
+      "subquestion": "In the public school locations (2021-22) data, how many public schools are listed in <node_2 answer> County, <node_1 answer>?",
+      "answer": "538"
+    }
+  },
+  "reasoning_chain": [
+    "Node 1: Everett (the county seat of Snohomish County) is located in the U.S. state of Washington.",
+    "Node 2 depends on node 1: in Washington report-card enrollment (2023-24), the county with the largest 10th Grade 'All Students' count is King.",
+    "Node 3 depends on nodes 1 and 2: within King County in Washington report-card enrollment (2024-25, preliminary), the district with the largest 11th Grade 'All Students' count is Seattle School District No. 1.",
+    "Node 4 depends on nodes 1 and 3: in Washington report-card enrollment (2018-19), the 12th Grade 'All Students' count for Seattle School District No. 1 is 3993.",
+    "Node 5 depends on nodes 1 and 2: in public school locations (2021-22), the number of public schools listed in King County, Washington is 538.",
+    "Compute 3993 - 538 = 3455.",
+    "Final answer: 3455"
+  ],
+  "verdict": "pass",
+  "datasets_used": [
+    "Everett,_Washington",
+    "report-card-enrollment-2023-24-school-year",
+    "report-card-enrollment-2024-25-school-year-preliminary-572ef",
+    "report-card-enrollment-2018-19-school-year",
+    "public-school-locations-2021-22-5a116"
+  ]
+}

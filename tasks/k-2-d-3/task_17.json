@@ -1,0 +1,61 @@
+{
+  "question": "Identify the 4-digit year that appears in all three lists: (1) years mentioned exactly 7 times in the 2010 impaired estuary records (file data-Fa40pK), (2) years mentioned once in the 2020 Walton-Smith station 55 records (file sSyUBK), and (3) years mentioned once in the 2020 Walton-Smith station 63 records (file 6uY8u5). Using that year, identify the host city for Olympic badminton venues. Return the city name only. Your response should be in the format [Answer].",
+  "answer": "Sydney",
+  "nodes": {
+    "1": {
+      "source": "datagov/impaired-estuary-2010-2fdbd/files/data-Fa40pK.txt",
+      "fact": "The distinct 4-digit years mentioned exactly 7 times are ['2000', '2001', '2025'].",
+      "subquestion": "Which distinct 4-digit years are mentioned exactly 7 times? Return the full set as a list.",
+      "answer": [
+        "2000",
+        "2001",
+        "2025"
+      ]
+    },
+    "2": {
+      "source": "datagov/walton-smith-ctd-ws20279-ws20279_ws20278_stn_55-2020-10-11-25-35n-81-198w1/files/WS20279_WS20279_WS20278_Stn_55-sSyUBK.txt",
+      "fact": "The distinct 4-digit years mentioned exactly 1 times are ['1851', '1876', '2000', '2018'].",
+      "subquestion": "Which distinct 4-digit years are mentioned exactly 1 times? Return the full set as a list.",
+      "answer": [
+        "1851",
+        "1876",
+        "2000",
+        "2018"
+      ]
+    },
+    "3": {
+      "source": "datagov/walton-smith-ctd-ws20231-ws20231_sta_63-2020-08-22-25-1697n-81-216w1/files/WS20231_WS20231_STA_63-6uY8u5.txt",
+      "fact": "The distinct 4-digit years mentioned exactly 1 times are ['1851', '1876', '2000', '2018', '2019'].",
+      "subquestion": "Which distinct 4-digit years are mentioned exactly 1 times? Return the full set as a list.",
+      "answer": [
+        "1851",
+        "1876",
+        "2000",
+        "2018",
+        "2019"
+      ]
+    },
+    "4": {
+      "source": "wikipedia/List_of_Olympic_venues_in_badminton/content.txt",
+      "fact": "The only year shared by the three year lists is 2000. In the list of Olympic venues in badminton, the Games entry for 2000 lists the host city as Sydney.",
+      "subquestion": "In the list of Olympic venues in badminton, focus on the Games entry whose 4-digit year is the only year that appears in each of <node_1 answer>, <node_2 answer>, and <node_3 answer>. From that Games entry, return the host city name (the part after the year, stopping before any comma or parenthesis).",
+      "answer": "Sydney"
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=3, data.gov - nodes 1-3):",
+    "  Nodes 1-3: Year lists -> intersection yields a single year",
+    "",
+    "HOP 2 (d=1, Wikipedia - node 4 depends on hop 1):",
+    "  Node 4: Olympic venues for that year -> host city",
+    "",
+    "Final answer: Sydney"
+  ],
+  "verdict": "pass",
+  "datasets_used": [
+    "impaired-estuary-2010-2fdbd",
+    "walton-smith-ctd-ws20279-ws20279_ws20278_stn_55-2020-10-11-25-35n-81-198w1",
+    "walton-smith-ctd-ws20231-ws20231_sta_63-2020-08-22-25-1697n-81-216w1",
+    "List_of_Olympic_venues_in_badminton"
+  ]
+}

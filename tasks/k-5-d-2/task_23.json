@@ -1,0 +1,58 @@
+{
+  "question": "Starting with the year (within 2013-2018) with the highest NYC PM2.5 concentration, I'm researching crime trends in the D.C. ward that contains the North of Massachusetts Avenue neighborhood. What is the most common offense committed there in that year? After identifying which D.C. ward had the highest number of that specific offense in the following year, tell me how the number of those incidents in that ward changed from 2019 to 2020. (2020 number - 2019 number). Your response should be in the format [Answer].",
+  "answer": "-1675",
+  "nodes": {
+    "1": {
+      "source": "datagov/new-york-city-air-quality/files/rows.txt",
+      "fact": "For 2013-2018, highest NYC PM2.5 concentration is in 2017.",
+      "subquestion": "Which year from 2013-2018 has highest NYC PM2.5?",
+      "answer": "2017"
+    },
+    "2": {
+      "source": "wikipedia/NoMa/content.txt",
+      "fact": "NoMa is a neighborhood of Washington, D.C., located in Ward 6.",
+      "subquestion": "NoMa is a neighborhood in which Washington, D.C. ward?",
+      "answer": "6"
+    },
+    "3": {
+      "source": "datagov/crime-incidents-in-2017/v1/files/data.csv",
+      "fact": "Filter to WARD = 6 in 2017; the most common offense is THEFT/OTHER (2,729).",
+      "subquestion": "In <node_1 answer>, within Ward <node_2 answer>, which offense is most common?",
+      "answer": "THEFT/OTHER"
+    },
+    "4": {
+      "source": "datagov/crime-incidents-in-2018/v1/files/data.csv",
+      "fact": "Filter to OFFENSE = 'THEFT/OTHER' in 2018; Ward 2 has the most incidents (3,484).",
+      "subquestion": "In <node_1 answer>+1, which ward has the most <node_3 answer> incidents?",
+      "answer": "2"
+    },
+    "5": {
+      "source": "datagov/crime-incidents-in-2019/v1/files/data.csv",
+      "fact": "Filter to WARD = 2, OFFENSE = 'THEFT/OTHER', 2019; count is 4,118.",
+      "subquestion": "In 2019, how many <node_3 answer> incidents in Ward <node_4 answer>?",
+      "answer": "4118"
+    },
+    "6": {
+      "source": "datagov/crime-incidents-in-2020/v1/files/data.csv",
+      "fact": "Filter to WARD = 2, OFFENSE = 'THEFT/OTHER', 2020; count is 2,443. Change: 2443 - 4118 = -1675.",
+      "subquestion": "In 2020, how many <node_3 answer> incidents in Ward <node_4 answer>?",
+      "answer": "2443"
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=1): NYC PM2.5 highest 2013-2018 is 2017",
+    "HOP 2 (d=1): NoMa is in Ward 6",
+    "HOP 3 (d=1): In 2017 within Ward 6, most common offense → THEFT/OTHER",
+    "HOP 4 (d=1): In 2018, ward with most THEFT/OTHER → Ward 2",
+    "HOP 5 (d=2): Ward 2 THEFT/OTHER counts: 2019=4118, 2020=2443 → -1675",
+    "Final answer: -1675"
+  ],
+  "datasets_used": [
+    "new-york-city-air-quality",
+    "NoMa",
+    "crime-incidents-in-2017",
+    "crime-incidents-in-2018",
+    "crime-incidents-in-2019",
+    "crime-incidents-in-2020"
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "original_question": "A planner is comparing energy and agriculture indicators across time. First, find the year between 2015 and 2017 (inclusive) with the highest geothermal renewable generation capacity. For that year, take the residential electricity sales value (in GWh) and compute a threshold equal to (residential GWh)/1000. In that same year, count how many energy-storage projects have Energy Storage System Size (kWac) strictly greater than the threshold; call this count C. In fiscal year FY0C, take the agricultural transfer tax collected. Define yearZ = (the geothermal-peak year − 17) + C. In yearZ, how many electricity-sales sectors (Residential, Commercial, Industrial, Transportation) have sales (in TBtu) strictly greater than (the FY0C tax collected)/10000? Answer as: [integer].",
+  "question": "Look at renewable energy generation capacity from 2015 to 2017 (inclusive) and identify the year with the highest geothermal generation capacity. In that year, count how many energy storage projects have a capacity (in kW) greater than 0.1% of residential electricity sales. Use that project count to select a fiscal year (for example, if the count is 3, use FY03) and find how much agricultural transfer tax was collected in that year. Then, take the year with the highest geothermal generation capacity, subtract 17, add the project count, and in the resulting year, determine how many sectors had electricity sales (in TBtu) greater than 0.01% of the agricultural transfer tax.",
+  "answer": "1",
+  "nodes": {
+    "1": {
+      "source": "datagov/renewable-energy-generation-capacity-2006-2017/files/rows.txt",
+      "fact": "Between 2015 and 2017 (inclusive), 2017 has the highest Geothermal renewable generation capacity (2.2), and no other year in that range is tied for highest.",
+      "subquestion": "Between 2015 and 2017 (inclusive), which year has the highest Geothermal renewable generation capacity?",
+      "answer": "2017"
+    },
+    "2": {
+      "source": "datagov/electricity-sales-by-sector-gwh-beginning-1980-1f109/files/rows.txt",
+      "fact": "In 2017, Residential electricity sales are 49081 GWh.",
+      "subquestion": "In year <node_1 answer>, what are Residential electricity sales (in GWh)?",
+      "answer": "49081"
+    },
+    "3": {
+      "source": "datagov/all-statewide-energy-storage-projects/files/rows.txt",
+      "fact": "In 2017, the number of energy-storage projects with Energy Storage System Size (kWac) strictly greater than 49081/1000 = 49.081 is 3.",
+      "subquestion": "In year <node_1 answer>, how many energy-storage projects have Energy Storage System Size (kWac) strictly greater than (<node_2 answer> / 1000)?",
+      "answer": "3"
+    },
+    "4": {
+      "source": "datagov/agricultural-transfer-tax/files/rows.txt",
+      "fact": "In fiscal year FY03, the agricultural transfer tax collected is 2431000.0.",
+      "subquestion": "Let C = <node_3 answer>. In fiscal year FY0C, what is the agricultural transfer tax collected?",
+      "answer": "2431000"
+    },
+    "5": {
+      "source": "datagov/electricity-sales-by-sector-tbtu-beginning-1980/files/rows.txt",
+      "fact": "Let C = 3 and yearZ = (2017 - 17) + 3 = 2003. In yearZ, exactly 1 sector has sales (TBtu) strictly greater than 2431000/10000 = 243.1.",
+      "subquestion": "Let C = <node_3 answer> and define yearZ = (<node_1 answer> - 17) + C. In yearZ, how many sectors (Residential, Commercial, Industrial, Transportation) have electricity sales (in TBtu) strictly greater than (<node_4 answer> / 10000)?",
+      "answer": "1"
+    }
+  },
+  "reasoning_chain": [
+    "Node 1: geothermal-peak year (2015–2017) is 2017.",
+    "Node 2 depends on node 1: Residential electricity sales in 2017 are 49081 GWh.",
+    "Node 3 depends on nodes 1–2: threshold is 49081/1000 = 49.081; the count of 2017 projects with size > 49.081 is C = 3.",
+    "Node 4 depends on node 3: FY0C = FY03 has tax collected 2431000.",
+    "Node 5 depends on nodes 1, 3, and 4: yearZ = (2017 - 17) + 3 = 2003; the number of sectors with TBtu > 2431000/10000 is 1.",
+    "Final answer: 1"
+  ],
+  "verdict": "pass"
+}

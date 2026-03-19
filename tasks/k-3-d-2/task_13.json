@@ -1,0 +1,43 @@
+{
+  "question": "In school year 2022-2023, in the capital city of California, what is the number of public schools in its county minus the number of district administrative offices in its county? . Your response should be in the format [Answer].",
+  "answer": "176",
+  "nodes": {
+    "1": {
+      "source": "wikipedia/California/content.txt",
+      "fact": "California's capital is Sacramento.",
+      "subquestion": "What is the capital city of California?",
+      "answer": "Sacramento"
+    },
+    "2": {
+      "source": "datagov/postsecondary-school-locations-current-5a74c/files/Postsecondary_School_Locations_Current_-3631565628879840217.txt",
+      "fact": "In school year 2022-2023, postsecondary institutions located in Sacramento are in Sacramento County (no other county name appears for Sacramento).",
+      "subquestion": "In school year 2022-2023, among postsecondary institutions located in the city of <node_1 answer>, what is the county name?",
+      "answer": "Sacramento County"
+    },
+    "3": {
+      "source": "datagov/public-school-locations-current-23297/files/data-oyCYxF.txt",
+      "fact": "In school year 2022-2023, there are 203 public schools located in Sacramento in Sacramento County.",
+      "subquestion": "In school year 2022-2023, how many public schools are located in the city of <node_1 answer> in <node_2 answer>?",
+      "answer": "203"
+    },
+    "4": {
+      "source": "datagov/school-district-office-locations-current-c8f9d/files/data-ghDEVP.txt",
+      "fact": "In school year 2022-2023, there are 27 school district offices located in Sacramento in Sacramento County.",
+      "subquestion": "In school year 2022-2023, how many school district offices are located in the city of <node_1 answer> in <node_2 answer>?",
+      "answer": "27"
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=1, nodes 1): California's capital → Sacramento",
+    "HOP 2 (d=1, nodes 2): Postsecondary institutions in Sacramento → Sacramento County",
+    "HOP 3 (d=1, nodes 3): Public schools in Sacramento County 2022-23 → 203; school district offices → 27; difference → 176",
+    "Final answer: 176"
+  ],
+  "verdict": "pass",
+  "datasets_used": [
+    "California",
+    "postsecondary-school-locations-current-5a74c",
+    "public-school-locations-current-23297",
+    "school-district-office-locations-current-c8f9d"
+  ]
+}

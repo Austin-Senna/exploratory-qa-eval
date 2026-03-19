@@ -1,0 +1,62 @@
+{
+  "question": "Among New York counties outside of NYC, identify the top two by total mental health service recipients from 2017 to 2018. The county seat with the earlier incorporation date between these two is located at the terminus of a canal. What is the name of that canal? Please return the canal name only. Your response should be in the format [Answer].",
+  "answer": "Erie Canal",
+  "nodes": {
+    "1": {
+      "source": "datagov/county-mental-health-profiles-phase-2-beginning-2014/files/rows.txt",
+      "fact": "According to the NY mental health profiles dataset (2017-2018), excluding NYC counties, the top 2 NY counties by total mental health service recipients are Erie County (83,049 recipients) and Monroe County (74,299 recipients).",
+      "subquestion": "Which non-NYC NY counties are in the top 2 by total mental health service recipients (2017-2018)? (Filter for this node: Service Year in {2017, 2018}; group by County Label; sum Count of Recipients by Rate Code Group and County; exclude NYC counties {Bronx, Kings, New York, Queens, Richmond}; rank by total; keep top 2.)",
+      "answer": [
+        "Erie County",
+        "Monroe County"
+      ]
+    },
+    "2": {
+      "source": "wikipedia/Erie_County,_New_York/content.txt",
+      "fact": "The county seat of Erie County, New York is Buffalo.",
+      "subquestion": "What is the county seat of each county (from hop 1)?",
+      "answer": "Buffalo"
+    },
+    "3": {
+      "source": "wikipedia/Monroe_County,_New_York/content.txt",
+      "fact": "The county seat of Monroe County, New York is Rochester.",
+      "subquestion": "What is the county seat of each county (from hop 1)?",
+      "answer": "Rochester"
+    },
+    "4": {
+      "source": "wikipedia/Buffalo,_New_York/content.txt",
+      "fact": "Buffalo was selected as the terminus of the Erie Canal in 1825, which led to its incorporation in 1832.",
+      "subquestion": "When was each county seat (from hop 2) incorporated as a city?",
+      "answer": "1832"
+    },
+    "5": {
+      "source": "wikipedia/Rochester,_New_York/content.txt",
+      "fact": "Rochester was rechartered as a city in 1834.",
+      "subquestion": "When was each county seat (from hop 2) incorporated as a city?",
+      "answer": "1834"
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=1, nodes 1): Identify top 2 non-NYC NY counties by total mental health service recipients (2017-2018)",
+    "  Node 1: Mental health data -> Erie County (83,049 recipients) and Monroe County (74,299 recipients)",
+    "  Result: {Erie County, Monroe County}",
+    "HOP 2 (d=2, nodes 2-3): Find county seats of both counties from hop 1",
+    "  Node 2: Erie County -> Buffalo",
+    "  Node 3: Monroe County -> Rochester",
+    "  Result: {Buffalo, Rochester}",
+    "HOP 3 (d=2, nodes 4-5): Find incorporation years of cities from hop 2 and determine which is older; identify the canal",
+    "  Node 4: Buffalo -> Erie Canal terminus; incorporated 1832",
+    "  Node 5: Rochester -> incorporated 1834",
+    "  Comparison: 1832 < 1834 -> Buffalo is older",
+    "  Result: Buffalo is older; Erie Canal",
+    "Final answer: Erie Canal"
+  ],
+  "verdict": "pass",
+  "datasets_used": [
+    "county-mental-health-profiles-phase-2-beginning-2014",
+    "Erie_County,_New_York",
+    "Monroe_County,_New_York",
+    "Buffalo,_New_York",
+    "Rochester,_New_York"
+  ]
+}

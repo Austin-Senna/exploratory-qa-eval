@@ -1,0 +1,57 @@
+{
+  "question": "Find the only 4-digit year that appears exactly once in all three records: the Arkansas River Valley water table altitude report, the Walker River groundwater pumping study, and the Puerto Rico coral reef monitoring database. Using that year, identify the host city for Olympic rowing venues. Return the city name only. Your response should be in the format [Answer].",
+  "answer": "Munich",
+  "nodes": {
+    "1": {
+      "source": "datagov/change-in-water-table-altitude-in-the-alluvium-in-the-lower-arkansas-river-valley-southeas-012fc/files/USGS.58e3b3ade4b09da67997edfc.txt",
+      "fact": "The distinct 4-digit years mentioned exactly 1 times are ['1972', '1998', '2001'].",
+      "subquestion": "Which distinct 4-digit years are mentioned exactly 1 times? Return the full set as a list.",
+      "answer": [
+        "1972",
+        "1998",
+        "2001"
+      ]
+    },
+    "2": {
+      "source": "datagov/supplemental-data-estimated-effects-of-pumping-on-groundwater-storage-and-walker-river-str/files/USGS.60241c02d34eb1203113852c.txt",
+      "fact": "The distinct 4-digit years mentioned exactly 1 times are ['1931', '1953', '1972', '1998'].",
+      "subquestion": "Which distinct 4-digit years are mentioned exactly 1 times? Return the full set as a list.",
+      "answer": [
+        "1931",
+        "1953",
+        "1972",
+        "1998"
+      ]
+    },
+    "3": {
+      "source": "datagov/puerto-rico-long-term-coral-reef-monitoring-program-database-compilation-substrate-cover-percen1/files/iso.txt",
+      "fact": "The distinct 4-digit years mentioned exactly 1 times are ['1971', '1972'].",
+      "subquestion": "Which distinct 4-digit years are mentioned exactly 1 times? Return the full set as a list.",
+      "answer": [
+        "1972"
+      ]
+    },
+    "4": {
+      "source": "wikipedia/List_of_Olympic_venues_in_rowing/content.txt",
+      "fact": "The only year shared by the three year lists is 1972. In the list of Olympic venues in rowing, the Games entry for 1972 lists the host city as Munich.",
+      "subquestion": "In the list of Olympic venues in rowing, focus on the Games entry whose 4-digit year is the only year that appears in each of <node_1 answer>, <node_2 answer>, and <node_3 answer>. From that Games entry, return the host city name (the part after the year, stopping before any comma or parenthesis).",
+      "answer": "Munich"
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=3, data.gov - nodes 1-3):",
+    "  Nodes 1-3: Year lists -> intersection yields a single year",
+    "",
+    "HOP 2 (d=1, Wikipedia - node 4 depends on hop 1):",
+    "  Node 4: Olympic venues for that year -> host city",
+    "",
+    "Final answer: Munich"
+  ],
+  "verdict": "pass",
+  "datasets_used": [
+    "change-in-water-table-altitude-in-the-alluvium-in-the-lower-arkansas-river-valley-southeas-012fc",
+    "supplemental-data-estimated-effects-of-pumping-on-groundwater-storage-and-walker-river-str",
+    "puerto-rico-long-term-coral-reef-monitoring-program-database-compilation-substrate-cover-percen1",
+    "List_of_Olympic_venues_in_rowing"
+  ]
+}

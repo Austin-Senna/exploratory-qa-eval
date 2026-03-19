@@ -1,0 +1,87 @@
+{
+    "question": "Among New York counties with violent crime rates over 300 per 100,000 in 2020 and more than 100 secure juvenile detention admissions in 2015, find the county that also had School Tax Relief (STAR) reimbursement between $60M and $90M in 2023 and a jail population above 800. The county seat is a major upstate industrial city and the former western terminus of the Erie Canal. What year was that city incorporated? Please return the year only. Your response should be in the format [Answer].",
+    "answer": "1832",
+    "practical_motivation": "A criminal justice researcher studying the intersection of public safety challenges and economic conditions across New York counties wants to understand the historical context of major upstate urban centers, including when they achieved city status and how that relates to their current roles as regional hubs grappling with crime and incarceration issues.",
+    "nodes": {
+        "1": {
+            "source": "datagov/index-violent-property-and-firearm-rates-by-county-beginning-1990/files/rows.txt",
+            "fact": "In 2020, the following New York counties had violent crime rates exceeding 300 per 100,000 population: Albany (361.8), Bronx (928.8), Broome (350.7), Chautauqua (319.3), Erie (404.2), Greene (411.3), Kings (571.8), Monroe (309.5), New York (570.7), Niagara (319.1), Onondaga (354.4), Queens (428.6), and Schenectady (362.8).",
+            "subquestion": "Which New York counties had a violent crime rate exceeding 300 per 100,000 population in 2020?",
+            "answer": [
+                "Albany",
+                "Bronx",
+                "Broome",
+                "Chautauqua",
+                "Erie",
+                "Greene",
+                "Kings",
+                "Monroe",
+                "New York",
+                "Niagara",
+                "Onondaga",
+                "Queens",
+                "Schenectady"
+            ]
+        },
+        "2": {
+            "source": "datagov/annual-youth-detention-admissions-by-county-beginning-2006/files/rows.txt",
+            "fact": "In 2015, the following New York counties had more than 100 secure or mixed juvenile detention admissions: Erie (513), Monroe (211), Onondaga (146), and Westchester (175).",
+            "subquestion": "Which New York counties had more than 100 secure or mixed juvenile detention admissions in 2015?",
+            "answer": [
+                "Erie",
+                "Monroe",
+                "Onondaga",
+                "Westchester"
+            ]
+        },
+        "3": {
+            "source": "datagov/nys-school-tax-relief-star-reimbursement-by-county-beginning-levy-year-1998/files/rows.txt",
+            "fact": "In levy year 2023, the total STAR tax relief reimbursement amounts by county included Erie ($85,751,092), Monroe ($94,596,564), and Onondaga ($60,477,999). Only Erie and Onondaga received between $60 million and $90 million.",
+            "subquestion": "From <intersection of node_1, node_2>, which counties received between $60 million and $90 million in total STAR tax relief reimbursement in 2023?",
+            "answer": [
+                "Erie",
+                "Onondaga"
+            ]
+        },
+        "4": {
+            "source": "datagov/jail-population-by-county-beginning-1997/files/rows.txt",
+            "fact": "In 2019, the total jail census by county was: Erie County (852 inmates across correctional facilities), Monroe County (966 inmates), and Onondaga County (784 inmates).",
+            "subquestion": "From <intersection of node_1, node_2>, which counties had a total jail census exceeding 800 in 2019?",
+            "answer": [
+                "Erie",
+                "Monroe"
+            ]
+        },
+        "5": {
+            "source": "wikipedia/Erie_County,_New_York/content.txt",
+            "fact": "Erie County is a county along the shore of Lake Erie in western New York State. The county seat is Buffalo, which makes up about 28% of the county's population.",
+            "subquestion": "What is the county seat of <intersection of node_1, node_2, node_3, node_4>?",
+            "answer": "Buffalo"
+        },
+        "6": {
+            "source": "wikipedia/Buffalo,_New_York/content.txt",
+            "fact": "Buffalo was selected as the terminus of the Erie Canal in 1825, which led to its incorporation in 1832 and stimulated its growth as the primary inland port between the Great Lakes and Atlantic Ocean.",
+            "subquestion": "In what year was <node_5 answer> incorporated as a city?",
+            "answer": "1832"
+        }
+    },
+    "reasoning_chain": [
+        "Node 1: Find NY counties with violent crime rate > 300 in 2020 → {Albany, Bronx, Broome, Chautauqua, Erie, Greene, Kings, Monroe, New York, Niagara, Onondaga, Queens, Schenectady}",
+        "Node 2: Find NY counties with secure/mixed juvenile detention admissions > 100 in 2015 → {Erie, Monroe, Onondaga, Westchester}",
+        "Intersection of <node_1>, <node_2>: Counties in both sets → {Erie, Monroe, Onondaga}",
+        "Node 3: From candidates, find counties with STAR reimbursement $60M-$90M in 2023 → {Erie, Onondaga}",
+        "Node 4: From candidates, find counties with jail census > 800 in 2019 → {Erie, Monroe}",
+        "Intersection of <node_3>, <node_4>: Counties in both sets → {Erie}",
+        "Node 5: Find county seat of Erie County → Buffalo",
+        "Node 6: Find when Buffalo was incorporated → 1832",
+        "Final answer: 1832"
+    ],
+    "datasets_used": [
+        "index-violent-property-and-firearm-rates-by-county-beginning-1990",
+        "annual-youth-detention-admissions-by-county-beginning-2006",
+        "nys-school-tax-relief-star-reimbursement-by-county-beginning-levy-year-1998",
+        "jail-population-by-county-beginning-1997",
+        "Erie_County,_New_York",
+        "Buffalo,_New_York"
+    ]
+}

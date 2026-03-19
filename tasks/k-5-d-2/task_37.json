@@ -1,0 +1,65 @@
+{
+  "question": "Starting with the year (within 2013-2018) with the highest NYC PM2.5 concentration and extending 1 year forward, find the Chicago city department with a budget of $400 million to $700 million in that year and $600 million to $700 million the following year. Determine if this department became a paid professional force before or after Pittsburgh's fire bureau did, and focus on the city whose department became paid later. For that city, identify its largest airport; in its March 2019 scheduled traffic report, how many total seats did the top destination have? Please return the number only. Your response should be in the format [Answer].",
+  "answer": "44912",
+  "nodes": {
+    "1": {
+      "source": "datagov/new-york-city-air-quality/files/rows.txt",
+      "fact": "For 2013-2018, highest NYC PM2.5 concentration is in 2017.",
+      "subquestion": "Which year from 2013-2018 has highest NYC PM2.5?",
+      "answer": "2017"
+    },
+    "2": {
+      "source": "datagov/budget-2018-budget-ordinance-appropriations/files/rows.txt",
+      "fact": "In 2018: CFD ($642.6M), CDOT ($459.1M) between $400M-$700M.",
+      "subquestion": "Chicago departments with $400M-$700M budget in <node_1 answer>+1?",
+      "answer": {"CFD": 642620615, "CDOT": 459129158}
+    },
+    "3": {
+      "source": "datagov/budget-2019-budget-ordinance-appropriations/files/rows.txt",
+      "fact": "In 2019: CFD ($652.3M), DFSS ($633.6M) between $600M-$700M. CFD in both.",
+      "subquestion": "Chicago departments with $600M-$700M budget in <node_1 answer>+2?",
+      "answer": {"CFD": 652282316, "DFSS": 633571744}
+    },
+    "4": {
+      "source": "wikipedia/Chicago_Fire_Department/content.txt",
+      "fact": "Chicago Fire Department became paid on August 2, 1858.",
+      "subquestion": "When did CFD become a paid department?",
+      "answer": "August 2, 1858"
+    },
+    "5": {
+      "source": "wikipedia/Pittsburgh_Bureau_of_Fire/content.txt",
+      "fact": "Pittsburgh Bureau of Fire became paid on May 23, 1870. Later than Chicago.",
+      "subquestion": "When did Pittsburgh Bureau of Fire become paid?",
+      "answer": "May 23, 1870"
+    },
+    "6": {
+      "source": "wikipedia/Pittsburgh/content.txt",
+      "fact": "Pittsburgh's largest airport is Pittsburgh International Airport.",
+      "subquestion": "What is Pittsburgh's largest airport?",
+      "answer": "Pittsburgh International Airport"
+    },
+    "7": {
+      "source": "datagov/pittsburgh-international-airport-scheduled-passenger-traffic/files/pittsburgh-international-traffic-report-march-2019.txt",
+      "fact": "March 2019 top destination: Atlanta with 44,912 seats.",
+      "subquestion": "How many seats did the top destination have in March 2019?",
+      "answer": "44912"
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=1): NYC PM2.5 highest 2013-2018 is 2017",
+    "HOP 2 (d=2): 2018+2019 budget filters → CFD",
+    "HOP 3 (d=2): CFD 1858 vs Pittsburgh 1870 → Pittsburgh later",
+    "HOP 4 (d=1): Pittsburgh's largest airport → Pittsburgh International",
+    "HOP 5 (d=1): March 2019 top destination → 44912 seats",
+    "Final answer: 44912"
+  ],
+  "datasets_used": [
+    "new-york-city-air-quality",
+    "budget-2018-budget-ordinance-appropriations",
+    "budget-2019-budget-ordinance-appropriations",
+    "Chicago_Fire_Department",
+    "Pittsburgh_Bureau_of_Fire",
+    "Pittsburgh",
+    "pittsburgh-international-airport-scheduled-passenger-traffic"
+  ]
+}

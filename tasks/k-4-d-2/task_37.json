@@ -1,0 +1,37 @@
+{
+  "question": "A planner is reviewing impairment entries for a specific river that flows into the city home to the Slater Memorial Museum and helps form its harbor. Then, find the name of another river whose mouth is located at that specific river. Based on the 2010 inventory of impaired waters, how many entries for the primary river have a location description that specifically mentions this secondary river?",
+  "answer": "1",
+  "nodes": {
+    "1": {
+      "source": "wikipedia/Slater_Memorial_Museum/content.txt",
+      "fact": "The Slater Memorial Museum is located in Norwich, Connecticut.",
+      "subquestion": "What city is the Slater Memorial Museum located in?",
+      "answer": "Norwich"
+    },
+    "2": {
+      "source": "wikipedia/Norwich,_Connecticut/content.txt",
+      "fact": "Quinebaug River is described as one of the rivers that flow into Norwich, Connecticut, and help form its harbor.",
+      "subquestion": "What river is described as flowing into <node_1 answer> and helping form its harbor?",
+      "answer": "Quinebaug River"
+    },
+    "3": {
+      "source": "wikipedia/Moosup_River/content.txt",
+      "fact": "The Moosup River is described as flowing to its mouth at the Quinebaug River.",
+      "subquestion": "What river is described as flowing to its mouth at the <node_2 answer>?",
+      "answer": "Moosup River"
+    },
+    "4": {
+      "source": "datagov/impaired-river-2010-9f1ab/files/data.txt",
+      "fact": "In the 2010 impaired rivers/lakes/estuaries inventory, 1 feature has a name containing \"Quinebaug River\" and a location description mentioning \"Moosup River\".",
+      "subquestion": "In a 2010 inventory of impaired rivers, lakes, and estuaries, how many listed features have names containing <node_2 answer> and a location description that mentions <node_3 answer>?",
+      "answer": "1"
+    }
+  },
+  "reasoning_chain": [
+    "Node 1: Identify the city where the Slater Memorial Museum is located \u2192 Norwich.",
+    "Node 2 depends on node 1: Identify the river described as flowing into Norwich and helping form its harbor \u2192 Quinebaug River.",
+    "Node 3 depends on node 2: Identify the river described as having its mouth at the Quinebaug River \u2192 Moosup River.",
+    "Node 4 depends on nodes 2 and 3: Count 2010 impaired-water features whose names contain \u201cQuinebaug River\u201d and whose location descriptions mention \u201cMoosup River\u201d \u2192 1.",
+    "Final answer: 1."
+  ]
+}

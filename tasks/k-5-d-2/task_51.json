@@ -1,0 +1,51 @@
+{
+  "question": "Starting with the year (within 2005-2012) with the lowest CTA bus ridership and subtracting 2 years, a river scientist is reviewing impairment entries for the river that flows through the town home to the Hill–Stead Museum. After identifying this river, determine the town where it is described as joining the Connecticut River. Based on that derived year's inventory of impaired waters, how many listed features have names containing that river's name and a location description that specifically mentions that joining town? Your response should be in the format [Answer].",
+  "answer": "1",
+  "nodes": {
+    "1": {
+      "source": "datagov/cta-ridership-daily-boarding-totals/files/rows.txt",
+      "fact": "For 2005-2012, lowest CTA bus ridership is in 2010. 2010-2=2008.",
+      "subquestion": "Which year from 2005-2012 has lowest CTA bus ridership?",
+      "answer": "2010"
+    },
+    "2": {
+      "source": "wikipedia/Hill–Stead_Museum/content.txt",
+      "fact": "Hill-Stead Museum is in Farmington, Connecticut.",
+      "subquestion": "What town is the Hill-Stead Museum in?",
+      "answer": "Farmington"
+    },
+    "3": {
+      "source": "wikipedia/Farmington,_Connecticut/content.txt",
+      "fact": "Farmington River runs through Farmington.",
+      "subquestion": "What river runs through <node_2 answer>?",
+      "answer": "Farmington River"
+    },
+    "4": {
+      "source": "wikipedia/Farmington_River/content.txt",
+      "fact": "Farmington River joins Connecticut River in Windsor.",
+      "subquestion": "Where does <node_3 answer> join the Connecticut River?",
+      "answer": "Windsor"
+    },
+    "5": {
+      "source": "datagov/impaired-river-2008-91322/files/data.txt",
+      "fact": "1 feature has Farmington River name and Windsor in location.",
+      "subquestion": "In <node_1 answer>-2 impaired inventory, how many have <node_3 answer> and <node_4 answer>?",
+      "answer": "1"
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=1): CTA ridership lowest 2005-2012 is 2010 → 2010-2=2008",
+    "HOP 2 (d=1): Hill-Stead Museum → Farmington",
+    "HOP 3 (d=1): Farmington → Farmington River",
+    "HOP 4 (d=1): Farmington River joins Connecticut River → Windsor",
+    "HOP 5 (d=1): 2008 impaired with both → 1",
+    "Final answer: 1"
+  ],
+  "datasets_used": [
+    "cta-ridership-daily-boarding-totals",
+    "Hill–Stead_Museum",
+    "Farmington,_Connecticut",
+    "Farmington_River",
+    "impaired-river-2008-91322"
+  ]
+}

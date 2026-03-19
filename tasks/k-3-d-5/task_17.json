@@ -1,0 +1,99 @@
+{
+  "question": "Within 2017-2022, identify the year with the highest total daily census records for Allegheny County Jail. Over the window from one year before through three years after that year, which drug (5-10M total annual U.S. prescriptions) has the highest average prescription count? In what year did that drug first enter medical use? Your response should be in the format [Answer].",
+  "answer": "1958",
+  "nodes": {
+    "1": {
+      "source": "datagov/allegheny-county-jail-daily-census/files/66cdcd57-6c92-4aaa-8800-0ed9d8f03e22.txt",
+      "fact": "Counting records by year from census_date for 2017-2022, the maximum total is 1202002 in 2019.",
+      "subquestion": "Which year from 2017-2022 has the highest total daily census records from Allegheny County Jail? (Use census_date to derive year; count records by year and select the maximum.)",
+      "answer": "2019"
+    },
+    "2": {
+      "source": "datagov/state-drug-utilization-data-2018-b2fe5/v1/files/StateDrugUtilizationData2018.txt",
+      "fact": "In 2018 (<node_1 answer> - 1), 39 drugs had total prescriptions between 5,000,000 and 10,000,000. Totals for the drugs used later in the chain were: TRIAMCINOL (8,461,177), DULOXETINE (7,846,188), CLONAZEPAM (8,894,975).",
+      "subquestion": "What were the total prescriptions for drugs with between 5 and 10 million prescriptions across all US states in <node_1 answer> - 1? (Filter: sum Number of Prescriptions by Product Name; keep totals between 5,000,000 and 10,000,000.)",
+      "answer": {
+        "TRIAMCINOL": 8461177,
+        "DULOXETINE": 7846188,
+        "CLONAZEPAM": 8894975
+      }
+    },
+    "3": {
+      "source": "datagov/state-drug-utilization-data-2019/files/StateDrugUtilizationData2019.txt",
+      "fact": "In 2019 (<node_1 answer>), 45 drugs had total prescriptions between 5,000,000 and 10,000,000. Totals for the drugs used later in the chain were: TRIAMCINOL (8,501,578), DULOXETINE (8,307,336), CLONAZEPAM (8,120,719).",
+      "subquestion": "What were the total prescriptions for drugs with between 5 and 10 million prescriptions across all US states in <node_1 answer>? (Filter: sum Number of Prescriptions by Product Name; keep totals between 5,000,000 and 10,000,000.)",
+      "answer": {
+        "TRIAMCINOL": 8501578,
+        "DULOXETINE": 8307336,
+        "CLONAZEPAM": 8120719
+      }
+    },
+    "4": {
+      "source": "datagov/state-drug-utilization-data-2020-3e746/v1/files/StateDrugUtilizationData2020.txt",
+      "fact": "In 2020 (<node_1 answer> + 1), 38 drugs had total prescriptions between 5,000,000 and 10,000,000. Totals for the drugs used later in the chain were: TRIAMCINOL (8,295,768), DULOXETINE (8,714,249), CLONAZEPAM (8,184,145).",
+      "subquestion": "What were the total prescriptions for drugs with between 5 and 10 million prescriptions across all US states in <node_1 answer> + 1? (Filter: sum Number of Prescriptions by Product Name; keep totals between 5,000,000 and 10,000,000.)",
+      "answer": {
+        "TRIAMCINOL": 8295768,
+        "DULOXETINE": 8714249,
+        "CLONAZEPAM": 8184145
+      }
+    },
+    "5": {
+      "source": "datagov/state-drug-utilization-data-2021-f9419/files/StateDrugUtilizationData2021.txt",
+      "fact": "In 2021 (<node_1 answer> + 2), 40 drugs had total prescriptions between 5,000,000 and 10,000,000. Totals for the drugs used later in the chain were: TRIAMCINOL (9,134,798), DULOXETINE (9,181,333), CLONAZEPAM (8,270,464).",
+      "subquestion": "What were the total prescriptions for drugs with between 5 and 10 million prescriptions across all US states in <node_1 answer> + 2? (Filter: sum Number of Prescriptions by Product Name; keep totals between 5,000,000 and 10,000,000.)",
+      "answer": {
+        "TRIAMCINOL": 9134798,
+        "DULOXETINE": 9181333,
+        "CLONAZEPAM": 8270464
+      }
+    },
+    "6": {
+      "source": "datagov/state-drug-utilization-data-2022/files/StateDrugUtilizationData2022.txt",
+      "fact": "In 2022 (<node_1 answer> + 3), 42 drugs had total prescriptions between 5,000,000 and 10,000,000. Totals for the drugs used later in the chain were: TRIAMCINOL (9,341,676), DULOXETINE (9,371,705), CLONAZEPAM (8,066,255).",
+      "subquestion": "What were the total prescriptions for drugs with between 5 and 10 million prescriptions across all US states in <node_1 answer> + 3? (Filter: sum Number of Prescriptions by Product Name; keep totals between 5,000,000 and 10,000,000.)",
+      "answer": {
+        "TRIAMCINOL": 9341676,
+        "DULOXETINE": 9371705,
+        "CLONAZEPAM": 8066255
+      }
+    },
+    "7": {
+      "source": "wikipedia/Triamcinolone/content.txt",
+      "fact": "Triamcinolone was patented in 1956 and came into medical use in 1958.",
+      "subquestion": "In what year did <superlative of nodes 2-6: TRIAMCINOLONE, the drug with highest average prescriptions in 5-10M range> come into medical use?",
+      "answer": "1958"
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=1, data.gov year derivation - node 1):",
+    "  Node 1: Year with highest Allegheny County Jail census records (2017-2022) -> 2019",
+    "  Derived year range: 2018-2022 (node_1 answer - 1 to node_1 answer + 3)",
+    "",
+    "HOP 2 (d=5, data.gov SUPERLATIVE AGGREGATION - nodes 2-6):",
+    "  Node 2: Drug Utilization 2018 (<node_1> - 1), drugs 5-10M",
+    "  Node 3: Drug Utilization 2019 (<node_1>), drugs 5-10M",
+    "  Node 4: Drug Utilization 2020 (<node_1> + 1), drugs 5-10M",
+    "  Node 5: Drug Utilization 2021 (<node_1> + 2), drugs 5-10M",
+    "  Node 6: Drug Utilization 2022 (<node_1> + 3), drugs 5-10M",
+    "  Compute 5-year averages:",
+    "    TRIAMCINOL: (8,461,177 + 8,501,578 + 8,295,768 + 9,134,798 + 9,341,676) / 5 = 8746999.4",
+    "    DULOXETINE: (7,846,188 + 8,307,336 + 8,714,249 + 9,181,333 + 9,371,705) / 5 = 8684162.2",
+    "    CLONAZEPAM: (8,894,975 + 8,120,719 + 8,184,145 + 8,270,464 + 8,066,255) / 5 = 8307311.6",
+    "  SUPERLATIVE: TRIAMCINOL has highest average (8746999.4)",
+    "",
+    "HOP 3 (d=1, Wikipedia - node 7):",
+    "  Node 7: Triamcinolone -> came into medical use in 1958",
+    "",
+    "Final answer: 1958"
+  ],
+  "datasets_used": [
+    "allegheny-county-jail-daily-census",
+    "state-drug-utilization-data-2018-b2fe5",
+    "state-drug-utilization-data-2019",
+    "state-drug-utilization-data-2020-3e746",
+    "state-drug-utilization-data-2021-f9419",
+    "state-drug-utilization-data-2022",
+    "Triamcinolone"
+  ]
+}

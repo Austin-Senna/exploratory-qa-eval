@@ -1,0 +1,118 @@
+{
+  "original_question": "A 'year mention' means any standalone 4-digit number from 1600 to 2099, counted every time it appears. 1) The first five parts of the task each return a short list of years. Find the one year that appears in all five lists (call it Y). Let S be the sum of the five list lengths. 2) In Hydrogen vehicle, count how many times Y is mentioned (M) and compute r = ((M + S) mod 5) + 1. 3) In Sustainable transport, let B be the number of distinct years mentioned at least r times. 4) Let u = (B mod 10) + 1. In Carbon footprint, let C be the number of distinct years mentioned exactly u times. 5) Let t be C unless C is 0, in which case set t = 1. In the next part, compute D = the number of distinct years mentioned at least t times. 6) In the following part, compute E = the number of distinct years mentioned at least (D + r + 1) times. 7) Let v be E unless E is 0, in which case set v = 1. In the final part, return how many distinct years are mentioned exactly v times. Answer as: [integer].",
+  "question": "First, find 4-digit years (1600–2099) in five datasets: 1) election financial analysis (2005–2022, mentioned 1–3 times), 2) Iowa population age data [16 years and above] (2005–2010, mentioned at least 6 times), 3) MTA art catalogue (1998–2010, 7–10 times), 4) Iowa education attainment [25 years and above] (2009–2010, mentioned at least 6 times), and 5) 11th grade reading proficiency rates (2003–2011, mentioned at least 7 times). Find the one year that appears in all five lists (call it Y). Let S be the sum of the five list lengths. Then, in the Hydrogen vehicle article, count how many times Y is mentioned (M) and compute r = ((M + S) mod 5) + 1. Then, in the Sustainable transport article, let B be the number of distinct years mentioned at least r times. Applying that value, let u = (B mod 10) + 1, find C, the number of distinct years mentioned exactly u times in the Carbon footprint article. Let t be C unless C is 0, in which case set t = 1. Compute D = the number of distinct years mentioned at least t times in Fairbanks mining report in Alaska. Compute E = the number of distinct years mentioned at least (D + r + 1) times in EV registration data to find a final threshold: let v be E unless E is 0, in which case set v = 1. Finally, return how many distinct years are mentioned exactly v times in the SHRP 2 reliability dataset in Florida.",
+  "answer": 1,
+  "nodes": {
+    "1": {
+      "source": "datagov/off-year-and-special-elections-financial-analysis/files/rows.txt",
+      "fact": "The distinct 4-digit calendar years from 2005 to 2022 (inclusive) that are mentioned between 1 and 3 times (inclusive) are ['2005', '2010', '2014', '2016', '2022'].",
+      "subquestion": "Which distinct 4-digit calendar years from 2005 to 2022 (inclusive) are mentioned between 1 and 3 times (inclusive)? Return the full set as a list.",
+      "answer": [
+        "2005",
+        "2010",
+        "2014",
+        "2016",
+        "2022"
+      ]
+    },
+    "2": {
+      "source": "datagov/iowa-population-16-years-and-over-by-sex-age-and-employment-status-acs-5-year-estimates/files/data.txt",
+      "fact": "The distinct 4-digit calendar years from 2005 to 2010 (inclusive) that are mentioned at least 6 times are ['2005', '2009', '2010'].",
+      "subquestion": "Which distinct 4-digit calendar years from 2005 to 2010 (inclusive) are mentioned at least 6 times? Return the full set as a list.",
+      "answer": [
+        "2005",
+        "2009",
+        "2010"
+      ]
+    },
+    "3": {
+      "source": "datagov/arts-for-transit-metropolitan-transportation-authority-mta-permanent-art-catalogue/files/rows.txt",
+      "fact": "The distinct 4-digit calendar years from 1998 to 2010 (inclusive) that are mentioned between 7 and 10 times (inclusive) are ['1998', '2009', '2010'].",
+      "subquestion": "Which distinct 4-digit calendar years from 1998 to 2010 (inclusive) are mentioned between 7 and 10 times (inclusive)? Return the full set as a list.",
+      "answer": [
+        "1998",
+        "2009",
+        "2010"
+      ]
+    },
+    "4": {
+      "source": "datagov/iowa-population-25-years-and-over-by-sex-race-and-educational-attainment-acs-5-year-estima/files/data.txt",
+      "fact": "The distinct 4-digit calendar years from 2009 to 2010 (inclusive) that are mentioned at least 6 times are ['2009', '2010'].",
+      "subquestion": "Which distinct 4-digit calendar years from 2009 to 2010 (inclusive) are mentioned at least 6 times? Return the full set as a list.",
+      "answer": [
+        "2009",
+        "2010"
+      ]
+    },
+    "5": {
+      "source": "datagov/11th-grade-reading-proficiency-rate/files/data.txt",
+      "fact": "The distinct 4-digit calendar years from 2003 to 2011 (inclusive) that are mentioned at least 7 times are ['2003', '2010', '2011'].",
+      "subquestion": "Which distinct 4-digit calendar years from 2003 to 2011 (inclusive) are mentioned at least 7 times? Return the full set as a list.",
+      "answer": [
+        "2003",
+        "2010",
+        "2011"
+      ]
+    },
+    "6": {
+      "source": "wikipedia/Hydrogen_vehicle/content.txt",
+      "fact": "The only year shared by the five year lists is 2010. In Hydrogen vehicle, 2010 appears 5 times, the five list-lengths sum to 16, and r = ((5 + 16) mod 5) + 1 = 2.",
+      "subquestion": "Using the five year lists <node_1 answer>, <node_2 answer>, <node_3 answer>, <node_4 answer>, and <node_5 answer>, find the only 4-digit year that appears in all five lists (call it Y). Let S be the sum of the five list lengths. In Hydrogen vehicle, count how many times Y is mentioned (M). Compute r = ((M + S) mod 5) + 1. What is r?",
+      "answer": 1
+    },
+    "7": {
+      "source": "wikipedia/Sustainable_transport/content.txt",
+      "fact": "In Sustainable transport, with r = 2, there are 21 distinct 4-digit years (1600–2099) that appear at least r times.",
+      "subquestion": "In Sustainable transport, how many distinct 4-digit years (1600–2099) appear at least <node_6 answer> times?",
+      "answer": 35
+    },
+    "8": {
+      "source": "wikipedia/Carbon_footprint/content.txt",
+      "fact": "In Carbon footprint, with u = (21 mod 10) + 1 = 2, there are 6 distinct 4-digit years (1600–2099) that appear exactly u times.",
+      "subquestion": "Let u = (<node_7 answer> mod 10) + 1. In Carbon footprint, how many distinct 4-digit years (1600–2099) appear exactly u times?",
+      "answer": 1
+    },
+    "9": {
+      "source": "datagov/bedrock-geologic-map-of-the-northern-fairbanks-mining-district-circle-quadrangle-alaska2/files/15901.txt",
+      "fact": "With t = max(1, 6) = 6, there are 1 distinct 4-digit years (1600–2099) that appear at least t times.",
+      "subquestion": "Let t = max(1, <node_8 answer>). How many distinct 4-digit calendar years (1600–2099) appear at least t times?",
+      "answer": 3
+    },
+    "10": {
+      "source": "datagov/electric-vehicle-title-and-registration-activity/files/columns.txt",
+      "fact": "With threshold = 1 + 2 + 1 = 4, there are 2 distinct 4-digit years (1600–2099) that appear at least threshold times.",
+      "subquestion": "Let threshold = <node_9 answer> + <node_6 answer> + 1. How many distinct 4-digit calendar years (1600–2099) appear at least threshold times?",
+      "answer": 2
+    },
+    "11": {
+      "source": "datagov/pilot-testing-of-shrp-2-reliability-data-and-analytical-products-florida-supporting-datase/files/x9hu-qxyc.txt",
+      "fact": "With v = max(1, 2) = 2, there are 1 distinct 4-digit years (1600–2099) that appear exactly v times.",
+      "subquestion": "Let v = max(1, <node_10 answer>). How many distinct 4-digit calendar years (1600–2099) appear exactly v times?",
+      "answer": 1
+    }
+  },
+  "reasoning_chain": [
+    "Node 1–5: each yields a year list defined by its year-list condition.",
+    "Node 6 depends on nodes 1–5: intersect the five lists to get the unique shared year Y; let S be the sum of the five list lengths; count Y in the first Wikipedia entry as M; compute r = ((M + S) mod 5) + 1.",
+    "Node 7 depends on node 6: count distinct years with frequency ≥ r in the second Wikipedia entry (B).",
+    "Node 8 depends on node 7: with u = (B mod 10) + 1, count distinct years with frequency = u in the third Wikipedia entry (C).",
+    "Node 9 depends on node 8: with t = max(1, C), count distinct years with frequency ≥ t (D).",
+    "Node 10 depends on nodes 6 and 9: with threshold = D + r + 1, count distinct years with frequency ≥ threshold (E).",
+    "Node 11 depends on node 10: with v = max(1, E), count distinct years with frequency = v.",
+    "Final answer: 1."
+  ],
+  "verdict": "pass",
+  "datasets_used": [
+    "off-year-and-special-elections-financial-analysis",
+    "iowa-population-16-years-and-over-by-sex-age-and-employment-status-acs-5-year-estimates",
+    "arts-for-transit-metropolitan-transportation-authority-mta-permanent-art-catalogue",
+    "iowa-population-25-years-and-over-by-sex-race-and-educational-attainment-acs-5-year-estima",
+    "11th-grade-reading-proficiency-rate",
+    "Hydrogen_vehicle",
+    "Sustainable_transport",
+    "Carbon_footprint",
+    "bedrock-geologic-map-of-the-northern-fairbanks-mining-district-circle-quadrangle-alaska2",
+    "electric-vehicle-title-and-registration-activity",
+    "pilot-testing-of-shrp-2-reliability-data-and-analytical-products-florida-supporting-datase"
+  ]
+}

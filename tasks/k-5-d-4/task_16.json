@@ -1,0 +1,111 @@
+{
+  "question": "Starting with the year during 2005-2010 with the highest suicide rate for all races and both sexes in the United States and going back 4 years to define a range, find the NYC elementary school that appears in the top 5 by environment category rating in at least three years of that range and is located in the Bedford Neighborhood Tabulation Area. Report the school day in MM/DD format. Your response should be in the format [Answer].",
+  "answer": "10/28",
+  "nodes": {
+    "1": {
+      "source": "datagov/nchs-death-rates-and-life-expectancy-at-birth/files/rows.txt",
+      "fact": "Filtering to Race = 'All Races' and Sex = 'Both Sexes' for 2005-2010, the maximum Age-adjusted Death Rate (proxy for suicide rate) is in 2010.",
+      "subquestion": "Which year from 2005-2010 has the highest suicide rate for all races and both sexes in the United States?",
+      "answer": "2010"
+    },
+    "2": {
+      "source": "datagov/2006-2007-school-progress-report/files/rows.txt",
+      "fact": "After filtering to elementary schools and ranking by environment category score (ties broken by SCHOOL name Z-A), the top 5 in 2006-07 were: PS 034 OLIVER H PERRY (0.989), EARTH SCHOOL (0.985), PS 212 MIDTOWN WEST (0.951), PS 205 ALEXANDER GRAHAM BELL (0.943), PS 120 CARLOS TAPIA (0.919).",
+      "subquestion": "Which NYC elementary schools were in the top 5 by environment category score in (<node_1 answer>-4)-(<node_1 answer>-3) school year?",
+      "answer": [
+        "PS 034 OLIVER H PERRY",
+        "EARTH SCHOOL",
+        "PS 212 MIDTOWN WEST",
+        "PS 205 ALEXANDER GRAHAM BELL",
+        "PS 120 CARLOS TAPIA"
+      ]
+    },
+    "3": {
+      "source": "datagov/2007-2008-school-progress-report/files/rows.txt",
+      "fact": "After filtering to elementary schools and ranking by environment category score (ties broken by SCHOOL name Z-A), the top 5 in 2007-08 were: P.S. 380 JOHN WAYNE ELEMENTARY (15.0), P.S. 172 BEACON SCHOOL OF EXCELLENCE (15.0), P.S. 120 CARLOS TAPIA (15.0), EXCELLENCE CHARTER SCHOOL OF BEDFORD STUYVESANT (15.0), P.S. 164 CAESAR RODNEY (14.9).",
+      "subquestion": "Which NYC elementary schools were in the top 5 by environment category score in (<node_1 answer>-3)-(<node_1 answer>-2) school year?",
+      "answer": [
+        "P.S. 380 JOHN WAYNE ELEMENTARY",
+        "P.S. 172 BEACON SCHOOL OF EXCELLENCE",
+        "P.S. 120 CARLOS TAPIA",
+        "EXCELLENCE CHARTER SCHOOL OF BEDFORD STUYVESANT",
+        "P.S. 164 CAESAR RODNEY"
+      ]
+    },
+    "4": {
+      "source": "datagov/2008-2009-school-progress-report/files/rows.txt",
+      "fact": "After filtering to elementary schools and ranking by environment category score (ties broken by SCHOOL name Z-A), the top 5 in 2008-09 were: P.S. X307 - EAMES PLACE (15.0), P.S. 380 JOHN WAYNE ELEMENTARY (15.0), P.S. 254 (15.0), P.S. 172 BEACON SCHOOL OF EXCELLENCE (15.0), P.S. 157 BENJAMIN FRANKLIN (15.0).",
+      "subquestion": "Which NYC elementary schools were in the top 5 by environment category score in (<node_1 answer>-2)-(<node_1 answer>-1) school year?",
+      "answer": [
+        "P.S. X307 - EAMES PLACE",
+        "P.S. 380 JOHN WAYNE ELEMENTARY",
+        "P.S. 254",
+        "P.S. 172 BEACON SCHOOL OF EXCELLENCE",
+        "P.S. 157 BENJAMIN FRANKLIN"
+      ]
+    },
+    "5": {
+      "source": "datagov/2009-2010-school-progress-report/files/rows.txt",
+      "fact": "After filtering to elementary schools and ranking by environment category score (ties broken by SCHOOL name Z-A), the top 5 in 2009-10 were: P.S. 380 John Wayne Elementary (15.0), P.S. 172 Beacon School of Excellence (15.0), Achievement First East New York School (15.0), Bronx Charter School for Excellence (14.8), P.S. 254 (14.1).",
+      "subquestion": "Which NYC elementary schools were in the top 5 by environment category score in (<node_1 answer>-1)-<node_1 answer> school year?",
+      "answer": [
+        "P.S. 380 John Wayne Elementary",
+        "P.S. 172 Beacon School of Excellence",
+        "Achievement First East New York School",
+        "Bronx Charter School for Excellence",
+        "P.S. 254"
+      ]
+    },
+    "6": {
+      "source": "datagov/2006-2007-school-progress-report/files/rows.txt",
+      "fact": "From the top-5 lists in nodes 2-5, the only schools appearing in at least three of the four years are P.S. 380 John Wayne Elementary and P.S. 172 Beacon School of Excellence.",
+      "subquestion": "Which schools appear in the top-5 lists in at least three of the four years from nodes 2-5?",
+      "answer": [
+        "P.S. 380 John Wayne Elementary",
+        "P.S. 172 Beacon School of Excellence"
+      ]
+    },
+    "7": {
+      "source": "datagov/2013-2014-school-locations/files/rows.txt",
+      "fact": "In the school locations data, P.S. 380 John Wayne Elementary has NTA_NAME 'Bedford', while P.S. 172 Beacon School of Excellence has NTA_NAME 'Sunset Park West'. The school in Bedford NTA is P.S. 380 John Wayne Elementary.",
+      "subquestion": "Which school from node_6 is located in the Bedford NTA?",
+      "answer": "P.S. 380 John Wayne Elementary"
+    },
+    "8": {
+      "source": "wikipedia/John_Wayne_Elementary_School/content.txt",
+      "fact": "John Wayne Elementary School Day is on October 28",
+      "subquestion": "What day is 380 John Wayne Elementary's school day? Answer in MM/DD format",
+      "answer": "10/28"
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=1, data.gov year derivation - node 1):",
+    "  Node 1: Suicide rate highest 2005-2010 is 2010",
+    "",
+    "HOP 2 (d=4, data.gov school progress reports - nodes 2-5):",
+    "  Node 2: Top 5 elementary schools by environment score in 2006-07",
+    "  Node 3: Top 5 elementary schools by environment score in 2007-08",
+    "  Node 4: Top 5 elementary schools by environment score in 2008-09",
+    "  Node 5: Top 5 elementary schools by environment score in 2009-10",
+    "",
+    "HOP 3 (d=1, aggregation - node 6):",
+    "  Node 6: Schools appearing in top-5 at least three years -> {P.S. 380, P.S. 172}",
+    "",
+    "HOP 4 (d=1, school locations - node 7):",
+    "  Node 7: School in Bedford NTA -> P.S. 380 John Wayne Elementary",
+    "",
+    "HOP 5 (d=1, Wikipedia - node 8):",
+    "  Node 8: School day is October 28",
+    "",
+    "Final answer: 10/28"
+  ],
+  "datasets_used": [
+    "nchs-death-rates-and-life-expectancy-at-birth",
+    "2006-2007-school-progress-report",
+    "2007-2008-school-progress-report",
+    "2008-2009-school-progress-report",
+    "2009-2010-school-progress-report",
+    "2013-2014-school-locations",
+    "John_Wayne_Elementary_School"
+  ]
+}

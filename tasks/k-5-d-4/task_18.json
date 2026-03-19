@@ -1,0 +1,112 @@
+{
+  "question": "Starting with the year from 2017-2022 that had the lowest total red-light camera violations in Chicago and extending 3 years forward, consider engineering firms that consistently ranked in the top 20 Washington State contractors by contract count annually during that range. Among those founded after 1914 that have no current NY State construction manager projects, identify the firm based in a city founded through land cession negotiations. In what year was the Native American interpreter born who helped negotiate that land cession? Your response should be in the format [Answer].",
+  "answer": "1825",
+  "nodes": {
+    "1": {
+      "source": "datagov/red-light-camera-violations/files/rows.txt",
+      "fact": "Summing VIOLATIONS by year from VIOLATION DATE for 2017-2022, the minimum total is 526238 in 2017.",
+      "subquestion": "Which year from 2017-2022 has the lowest total red-light camera violations reported by the city of Chicago?",
+      "answer": "2017"
+    },
+    "2": {
+      "source": "datagov/agency-contracts-fiscal-year-2017/files/rows.txt",
+      "fact": "In fiscal year 2017, the top 20 Washington State contractors by contract count included HDR Engineering, Inc., Jacobs Engineering Group, Inc., and HNTB Corporation.",
+      "subquestion": "Which engineering contractors ranked in the top 20 by contract count in Washington State agency contracts in fiscal year <node_1 answer>?",
+      "answer": [
+        "HDR Engineering, Inc.",
+        "Jacobs Engineering Group, Inc.",
+        "HNTB Corporation"
+      ]
+    },
+    "3": {
+      "source": "datagov/agency-contracts-fiscal-year-2018/files/rows.txt",
+      "fact": "In fiscal year 2018, the top 20 included Jacobs Engineering Group, Inc., HDR Engineering, Inc., and HNTB Corporation.",
+      "subquestion": "Which engineering contractors ranked in the top 20 in fiscal year <node_1 answer>+1?",
+      "answer": [
+        "Jacobs Engineering Group, Inc.",
+        "HDR Engineering, Inc.",
+        "HNTB Corporation"
+      ]
+    },
+    "4": {
+      "source": "datagov/agency-contracts-fiscal-year-2019/files/rows.txt",
+      "fact": "In fiscal year 2019, the top 20 included Jacobs Engineering Group, Inc., HDR Engineering, Inc., and HNTB Corporation.",
+      "subquestion": "Which engineering contractors ranked in the top 20 in fiscal year <node_1 answer>+2?",
+      "answer": [
+        "Jacobs Engineering Group, Inc.",
+        "HDR Engineering, Inc.",
+        "HNTB Corporation"
+      ]
+    },
+    "5": {
+      "source": "datagov/agency-contracts-fiscal-year-2020/files/rows.txt",
+      "fact": "In fiscal year 2020, the top 20 included HDR Engineering, Inc., HNTB Corporation, and Jacobs Engineering Group, Inc.",
+      "subquestion": "Which engineering contractors ranked in the top 20 in fiscal year <node_1 answer>+3?",
+      "answer": [
+        "HDR Engineering, Inc.",
+        "HNTB Corporation",
+        "Jacobs Engineering Group, Inc."
+      ]
+    },
+    "6": {
+      "source": "wikipedia/HDR,_Inc./content.txt",
+      "fact": "HDR, Inc. is based in Omaha, Nebraska and started in 1917.",
+      "subquestion": "For HDR Engineering, where is it based and when was it founded?",
+      "answer": "Omaha, Nebraska; 1917"
+    },
+    "7": {
+      "source": "wikipedia/Jacobs_Solutions/content.txt",
+      "fact": "Jacobs Engineering was founded in 1947.",
+      "subquestion": "When was Jacobs Engineering founded?",
+      "answer": "1947"
+    },
+    "8": {
+      "source": "wikipedia/HNTB/content.txt",
+      "fact": "HNTB Corporation was founded in 1914.",
+      "subquestion": "When was HNTB Corporation founded?",
+      "answer": "1914"
+    },
+    "9": {
+      "source": "datagov/active-construction-projects/files/rows.txt",
+      "fact": "Neither HDR Engineering nor HNTB Corporation appear as Construction Manager on any NY State projects. Jacobs has 3 projects.",
+      "subquestion": "Which of the three have zero NY State construction manager projects?",
+      "answer": [
+        "HDR Engineering, Inc.",
+        "HNTB Corporation"
+      ]
+    },
+    "10": {
+      "source": "wikipedia/Omaha,_Nebraska/content.txt",
+      "fact": "Logan Fontenelle was an interpreter during the land cession negotiations that led to Omaha's founding.",
+      "subquestion": "Who was the Native American interpreter for the land cession negotiations?",
+      "answer": "Logan Fontenelle"
+    },
+    "11": {
+      "source": "wikipedia/Logan_Fontenelle/content.txt",
+      "fact": "Logan Fontenelle was born May 6, 1825.",
+      "subquestion": "In what year was <node_10 answer> born?",
+      "answer": "1825"
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=1, year derivation): Chicago red-light violations lowest 2017-2022 is 2017",
+    "HOP 2 (d=4, agency contracts 2017-2020): Intersection -> {HDR, Jacobs, HNTB}",
+    "HOP 3 (d=4, company info + NY projects): Founded after 1914 AND zero CM projects -> HDR",
+    "HOP 4 (d=1, Omaha history): Logan Fontenelle negotiated land cession",
+    "HOP 5 (d=1, Logan Fontenelle): Born in 1825",
+    "Final answer: 1825"
+  ],
+  "datasets_used": [
+    "red-light-camera-violations",
+    "agency-contracts-fiscal-year-2017",
+    "agency-contracts-fiscal-year-2018",
+    "agency-contracts-fiscal-year-2019",
+    "agency-contracts-fiscal-year-2020",
+    "HDR,_Inc.",
+    "Jacobs_Solutions",
+    "HNTB",
+    "active-construction-projects",
+    "Omaha,_Nebraska",
+    "Logan_Fontenelle"
+  ]
+}

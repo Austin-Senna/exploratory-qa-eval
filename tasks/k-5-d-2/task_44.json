@@ -1,0 +1,58 @@
+{
+  "question": "Starting with the year in the 2018-2023 period when national traffic fatalities peaked, in that school year (YYYY-YY+1), identify the most common grade category for Chicago Public Schools. Within that category, find the two schools that had the highest total student count and the highest attendance percentage, respectively. Compare these two schools to see which one listed more admissions programs. For that school, take the total student count, add the number of schools in its local voting district representative area, and subtract the number of its admissions programs. Your response should be in the format [Answer].",
+  "answer": "1495",
+  "nodes": {
+    "1": {
+      "source": "datagov/traffic-fatalities/files/rows.txt",
+      "fact": "For 2018-2023, highest national traffic fatalities is in 2021.",
+      "subquestion": "Which year from 2018-2023 has highest national traffic fatalities?",
+      "answer": "2021"
+    },
+    "2": {
+      "source": "datagov/chicago-public-schools-school-locations-sy2122/files/rows.txt",
+      "fact": "In CPS 2021-22, Grade_Cat ES appears most (477 rows).",
+      "subquestion": "In CPS school locations <node_1 answer>-22, which Grade_Cat appears most?",
+      "answer": "ES"
+    },
+    "3": {
+      "source": "datagov/chicago-public-schools-school-profile-information-sy2122/files/rows.txt",
+      "fact": "Among ES schools, School_ID 610363 has largest Student_Count_Total (1,459).",
+      "subquestion": "Among <node_2 answer> schools, which has highest student count?",
+      "answer": "610363"
+    },
+    "4": {
+      "source": "datagov/chicago-public-schools-school-progress-reports-sy2122/files/rows.txt",
+      "fact": "Among ES schools, School_ID 609959 has highest attendance (98.9%).",
+      "subquestion": "Among <node_2 answer> schools, which has highest attendance?",
+      "answer": "609959"
+    },
+    "5": {
+      "source": "datagov/chicago-public-schools-school-admissions-information-sy2122/files/rows.txt",
+      "fact": "School_ID 610363 has 2 admissions programs vs 609959 has 1. Winner: 610363.",
+      "subquestion": "Which of <node_3 answer> or <node_4 answer> has more admissions programs?",
+      "answer": "610363"
+    },
+    "6": {
+      "source": "datagov/chicago-public-schools-local-school-council-voting-districts-2020-2022/files/rows.txt",
+      "fact": "BOARD_REPO containing 610363 has 38 schools. 1459+38-2=1495.",
+      "subquestion": "How many schools in the voting district containing <node_5 answer>?",
+      "answer": "38"
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=1): Traffic fatalities highest 2018-2023 is 2021",
+    "HOP 2 (d=1): CPS 2021-22 most common Grade_Cat → ES",
+    "HOP 3 (d=2): ES highest student count (610363) + highest attendance (609959)",
+    "HOP 4 (d=1): More admissions programs → 610363 (2 vs 1)",
+    "HOP 5 (d=2): 1459 + 38 - 2 = 1495",
+    "Final answer: 1495"
+  ],
+  "datasets_used": [
+    "traffic-fatalities",
+    "chicago-public-schools-school-locations-sy2122",
+    "chicago-public-schools-school-profile-information-sy2122",
+    "chicago-public-schools-school-progress-reports-sy2122",
+    "chicago-public-schools-school-admissions-information-sy2122",
+    "chicago-public-schools-local-school-council-voting-districts-2020-2022"
+  ]
+}

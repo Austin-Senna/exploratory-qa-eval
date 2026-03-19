@@ -1,0 +1,60 @@
+{
+  "question": "In Washington, which cities host the top three community colleges by average contract count across FY2014\u2013FY2016? List the city names in alphabetical order separated by `, `. Your response should be in the format [Answer].",
+  "answer": "Auburn, Seattle, Spokane",
+  "nodes": {
+    "1": {
+      "source": "datagov/agency-contracts-fiscal-year-2014/files/rows.txt",
+      "fact": "In FY 2014, Seattle Community College - District 6 (SCCD-6) had 1,308 contracts, Green River Community College (GRC) had 1,723 contracts, and Spokane, Community Colleges of SCCD-17 had 1,797 contracts.",
+      "subquestion": "How many contracts did community colleges in Washington (in Washington) have in FY 2014? Specifically, Seattle Community College - District 6 (SCCD-6), Green River Community College (GRC), and Spokane, Community Colleges of SCCD-17.",
+      "answer": "Seattle Community College - District 6: 1,308; Green River Community College: 1,723; Community Colleges of Spokane: 1,797"
+    },
+    "2": {
+      "source": "datagov/agency-contracts-fiscal-year-2015/files/rows.txt",
+      "fact": "In FY 2015, Seattle Colleges had 1,292 contracts, Green River Community College (GRC) had 633 contracts, and Spokane, Community Colleges of SCCD-17 had 383 contracts.",
+      "subquestion": "How many contracts did community colleges in Washington (in Washington) have in FY 2015? Specifically, Seattle Colleges, Green River Community College (GRC), and Spokane, Community Colleges of SCCD-17.",
+      "answer": "Seattle Colleges: 1,292; Green River Community College: 633; Community Colleges of Spokane: 383"
+    },
+    "3": {
+      "source": "datagov/agency-contracts-fiscal-year-2016/files/rows.txt",
+      "fact": "In FY 2016, Seattle Community College - District 6 (SCCD-6) had 5,244 contracts, Green River Community College (GRC) had 872 contracts, and Spokane, Community Colleges of SCCD-17 had 265 contracts.",
+      "subquestion": "How many contracts did community colleges in Washington (in Washington) have in FY 2016? Specifically, Seattle Community College - District 6 (SCCD-6), Green River Community College (GRC), and Spokane, Community Colleges of SCCD-17.",
+      "answer": "Seattle Community College - District 6: 5,244; Green River Community College: 872; Community Colleges of Spokane: 265"
+    },
+    "4": {
+      "source": "wikipedia/Seattle_Colleges_District/content.txt",
+      "fact": "The Seattle Colleges District (also known simply as Seattle Colleges) is a group of public colleges in Seattle, Washington.",
+      "subquestion": "Where is Seattle Colleges District (the #1 community college by average contracts from nodes 1-3) located?",
+      "answer": "Seattle Colleges is located in Seattle, Washington"
+    },
+    "5": {
+      "source": "wikipedia/Green_River_College/content.txt",
+      "fact": "Green River College is a public community college in Auburn, Washington, United States.",
+      "subquestion": "Where is Green River College (the #2 community college by average contracts from nodes 1-3) located?",
+      "answer": "Green River College is located in Auburn, Washington"
+    },
+    "6": {
+      "source": "wikipedia/Community_Colleges_of_Spokane/content.txt",
+      "fact": "Community Colleges of Spokane is a community college district based in Spokane, Washington.",
+      "subquestion": "Where is Community Colleges of Spokane (the #3 community college by average contracts from nodes 1-3) located?",
+      "answer": "Community Colleges of Spokane is located in Spokane, Washington"
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=3, data.gov - nodes 1-3):",
+    "  Nodes 1-3: FY2014\u2013FY2016 contract counts -> top three colleges are Seattle Colleges, Green River College, Community Colleges of Spokane",
+    "",
+    "HOP 2 (d=3, Wikipedia - nodes 4-6 depend on hop 1):",
+    "  Nodes 4-6: Locations -> Seattle, Auburn, Spokane",
+    "",
+    "Final answer: Auburn, Seattle, Spokane"
+  ],
+  "verdict": "pass",
+  "datasets_used": [
+    "agency-contracts-fiscal-year-2014",
+    "agency-contracts-fiscal-year-2015",
+    "agency-contracts-fiscal-year-2016",
+    "Seattle_Colleges_District",
+    "Green_River_College",
+    "Community_Colleges_of_Spokane"
+  ]
+}

@@ -1,0 +1,107 @@
+{
+  "question": "Among NY counties that have at least 65 'Poor' bridges, at least 50 fire departments, at least 100 bank ATMs, and at least 1.0 MW of operational renewable energy capacity, which county had more violent crimes in 2021? Return the county name only. Your response should be in the format [Answer].",
+  "answer": "Erie County",
+  "nodes": {
+    "1": {
+      "source": "datagov/bridge-conditions-nys-department-of-transportation/files/rows.txt",
+      "fact": "Per the NYS DOT Bridge Conditions dataset, NY counties with at least 65 bridges rated 'Poor': Ulster (84), Erie (82), Westchester (68), Orange (67).",
+      "subquestion": "Which NY counties have at least 65 bridges rated 'Poor' status?",
+      "answer": [
+        "Ulster County",
+        "Erie County",
+        "Westchester County",
+        "Orange County"
+      ]
+    },
+    "2": {
+      "source": "datagov/fire-department-directory-for-new-york-state/files/rows.txt",
+      "fact": "Per the NYS Fire Department Directory, NY counties with at least 50 fire departments: Suffolk (108), Erie (91), Nassau (70), Westchester (57), Onondaga (53), Orange (52), Ulster (51), Oneida (50).",
+      "subquestion": "Which NY counties have at least 50 fire departments?",
+      "answer": [
+        "Suffolk County",
+        "Erie County",
+        "Nassau County",
+        "Westchester County",
+        "Onondaga County",
+        "Orange County",
+        "Ulster County",
+        "Oneida County"
+      ]
+    },
+    "3": {
+      "source": "datagov/bank-owned-atm-locations-in-new-york-state/files/rows.txt",
+      "fact": "Per the NYS Bank-Owned ATM Locations dataset, NY counties with at least 100 bank ATMs: New York (676), Nassau (515), Suffolk (494), Queens (429), Kings (388), Westchester (335), Erie (244), Monroe (232), Onondaga (182), Bronx (158), Albany (148), Orange (128), Dutchess (125), Richmond (115). Ulster has only 76 ATMs.",
+      "subquestion": "Which NY counties have at least 100 bank ATMs?",
+      "answer": [
+        "New York County",
+        "Nassau County",
+        "Suffolk County",
+        "Queens County",
+        "Kings County",
+        "Westchester County",
+        "Erie County",
+        "Monroe County",
+        "Onondaga County",
+        "Bronx County",
+        "Albany County",
+        "Orange County",
+        "Dutchess County",
+        "Richmond County"
+      ]
+    },
+    "4": {
+      "source": "datagov/large-scale-renewable-projects-reported-by-nyserda-beginning-2004/files/rows.txt",
+      "fact": "Per the NYSERDA Large-Scale Renewable Projects dataset, NY counties with at least 1.0 MW of operational renewable energy capacity: Steuben (286.29), Chautauqua (185.90), Lewis (183.99), Livingston (177.00), Montgomery (130.00), Broome (111.80), Franklin (79.30), Schoharie (50.00), Washington (40.00), Saratoga (20.00), Albany (20.00), Cortland (20.00), Chenango (20.00), Schenectady (19.99), Erie (11.48), Jefferson (7.35), Westchester (2.64), Sullivan (2.18), Oswego (1.32). Orange has 0 MW operational capacity.",
+      "subquestion": "Which NY counties have at least 1.0 MW of operational renewable energy capacity?",
+      "answer": [
+        "Steuben County",
+        "Chautauqua County",
+        "Lewis County",
+        "Livingston County",
+        "Montgomery County",
+        "Broome County",
+        "Franklin County",
+        "Schoharie County",
+        "Washington County",
+        "Saratoga County",
+        "Albany County",
+        "Cortland County",
+        "Chenango County",
+        "Schenectady County",
+        "Erie County",
+        "Jefferson County",
+        "Westchester County",
+        "Sullivan County",
+        "Oswego County"
+      ]
+    },
+    "5": {
+      "source": "datagov/index-violent-property-and-firearm-rates-by-county-beginning-1990/files/rows.txt",
+      "fact": "According to the NY Index Crimes by County dataset for 2021, Erie County had 3,493 violent crimes while Westchester County had 1,520 violent crimes. Erie County (3,493) had more violent crimes than Westchester County (1,520).",
+      "subquestion": "Between the counties in <intersection of nodes 1-4>, which had more violent crimes in 2021?",
+      "answer": "Erie County"
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=4, data.gov intersection - nodes 1-4):",
+    "  Node 1: Bridge conditions -> counties with >=65 Poor bridges",
+    "  Node 2: Fire departments -> counties with >=50 fire departments",
+    "  Node 3: Bank ATMs -> counties with >=100 ATMs",
+    "  Node 4: Renewable energy -> counties with >=1.0 MW operational capacity",
+    "  Intersection(1,2,3,4) -> {Erie County, Westchester County}",
+    "",
+    "HOP 2 (d=1, data.gov comparison - node 5 depends on hop 1):",
+    "  Node 5: 2021 violent crimes -> Erie County (3,493) vs Westchester County (1,520)",
+    "  Comparison: 3,493 > 1,520 -> Erie County",
+    "",
+    "Final answer: Erie County"
+  ],
+  "verdict": "pass",
+  "datasets_used": [
+    "bridge-conditions-nys-department-of-transportation",
+    "fire-department-directory-for-new-york-state",
+    "bank-owned-atm-locations-in-new-york-state",
+    "large-scale-renewable-projects-reported-by-nyserda-beginning-2004",
+    "index-violent-property-and-firearm-rates-by-county-beginning-1990"
+  ]
+}

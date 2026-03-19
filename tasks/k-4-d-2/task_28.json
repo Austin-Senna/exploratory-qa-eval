@@ -1,0 +1,60 @@
+{
+  "question": "In the 2021–22 school year, determine which grade category (e.g., Elementary or High School) is least common for Chicago Public Schools. Within that category, identify two schools: one that listed the most admissions programs in 2023–24, and another that had the highest attendance percentage in 2021–22. Between these two schools, select the one with the larger total student enrollment in 2021–22. For that school, compute the sum of (a) its total student enrollment, (b) its number of admissions programs in 2021–22, and (c) its attendance percentage rounded to the nearest whole number—what is the final result (only report the final number)?. Your response should be in the format [Answer].",
+  "answer": "3040",
+  "nodes": {
+    "1": {
+      "source": "datagov/chicago-public-schools-school-locations-sy2122/files/rows.txt",
+      "fact": "In CPS school locations (SY 2021-22), Grade_Cat HS appears in 170 rows and ES appears in 477; the Grade_Cat that appears in the fewest rows is HS. This result is unique.",
+      "subquestion": "In CPS school locations (SY 2021-22), which Grade_Cat appears in the fewest rows?",
+      "answer": "HS"
+    },
+    "2": {
+      "source": "datagov/chicago-public-schools-school-admissions-information-sy2324/files/rows.txt",
+      "fact": "In CPS school admissions information (SY 2023-24), among schools with Primary_Category HS, School_ID 609756 has the most admissions program rows (18). This result is unique.",
+      "subquestion": "In CPS school admissions information (SY 2023-24), among schools with Primary_Category <node_1 answer>, which School_ID has the most admissions program rows?",
+      "answer": "609756"
+    },
+    "3": {
+      "source": "datagov/chicago-public-schools-school-progress-reports-sy2122/files/rows.txt",
+      "fact": "In CPS progress reports (SY 2021-22), among schools with Primary_Category HS, School_ID 610385 has the highest Student_Attendance_Year_2_Pct (98.9). This result is unique.",
+      "subquestion": "In CPS progress reports (SY 2021-22), among schools with Primary_Category <node_1 answer>, which School_ID has the highest Student_Attendance_Year_2_Pct?",
+      "answer": "610385"
+    },
+    "4": {
+      "source": "datagov/chicago-public-schools-school-profile-information-sy2122/files/rows.txt",
+      "fact": "In CPS school profile information (SY 2021-22), School_ID 609756 has Student_Count_Total 2938 and School_ID 610385 has Student_Count_Total 248; the larger Student_Count_Total is for School_ID 609756.",
+      "subquestion": "In CPS school profile information (SY 2021-22), between School_ID <node_2 answer> and School_ID <node_3 answer>, which one has the larger Student_Count_Total?",
+      "answer": "609756"
+    },
+    "5": {
+      "source": "datagov/chicago-public-schools-school-progress-reports-sy2122/files/rows.txt",
+      "fact": "In CPS progress reports (SY 2021-22), School_ID 609756 has Student_Attendance_Year_2_Pct = 83.0, which rounds to 83.",
+      "subquestion": "In CPS progress reports (SY 2021-22), what is Student_Attendance_Year_2_Pct for School_ID <node_4 answer> (round to nearest integer)?",
+      "answer": "83"
+    },
+    "6": {
+      "source": "datagov/chicago-public-schools-school-admissions-information-sy2122/files/rows.txt",
+      "fact": "In CPS school admissions information (SY 2021-22), School_ID 609756 has 19 admissions program rows.",
+      "subquestion": "In CPS school admissions information (SY 2021-22), how many admissions program rows are listed for School_ID <node_4 answer>?",
+      "answer": "19"
+    }
+  },
+  "reasoning_chain": [
+    "Node 1: the Grade_Cat that appears in the fewest CPS school locations rows is HS.",
+    "Node 2 depends on node 1: among schools with Primary_Category HS, the School_ID with the most admissions program rows (SY 2023-24) is 609756.",
+    "Node 3 depends on node 1: among schools with Primary_Category HS, the School_ID with the highest Student_Attendance_Year_2_Pct is 610385.",
+    "Node 4 depends on nodes 2 and 3: the School_ID with the larger Student_Count_Total is 609756.",
+    "Node 5 depends on node 4: Student_Attendance_Year_2_Pct rounds to 83.",
+    "Node 6 depends on node 4: admissions program rows = 19.",
+    "Compute 2938 + 19 + 83 = 3040.",
+    "Final answer: 3040"
+  ],
+  "verdict": "pass",
+  "datasets_used": [
+    "chicago-public-schools-school-locations-sy2122",
+    "chicago-public-schools-school-admissions-information-sy2324",
+    "chicago-public-schools-school-progress-reports-sy2122",
+    "chicago-public-schools-school-profile-information-sy2122",
+    "chicago-public-schools-school-admissions-information-sy2122"
+  ]
+}

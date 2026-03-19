@@ -1,0 +1,97 @@
+{
+  "question": "Identify a specific California county based on a set of health and housing statistics. The county had an Area Median Income of at least $142,800 in 2022 and $147,900 in 2023. It also had a women & infants & children average cost per family of $570 or more in 2018 and $700 or more in 2020, a 2015 perioperative hemorrhage/hematoma observed rate of 19 or higher, and a geographical shape area of at least 3 billion square meters. What county matches all these criteria? Only report the county name. Your response should be in the format [Answer].",
+  "answer": "Santa Clara",
+  "nodes": {
+    "1": {
+      "source": "datagov/income-limits-by-county/files/2022-income-limits.txt",
+      "fact": "In the 2022 income limits data, counties with AMI >= 142800 are Santa Clara (168500), Marin (166000), San Francisco (166000), San Mateo (166000), Alameda (142800), and Contra Costa (142800).",
+      "subquestion": "Which counties have AMI >= 142800 in the 2022 income limits data? (Filter: AMI >= 142800; list County and AMI.)",
+      "answer": {
+        "Santa Clara": 168500,
+        "Marin": 166000,
+        "San Francisco": 166000,
+        "San Mateo": 166000,
+        "Alameda": 142800,
+        "Contra Costa": 142800
+      }
+    },
+    "2": {
+      "source": "datagov/income-limits-by-county/files/2023-income-limits.txt",
+      "fact": "In the 2023 income limits data, counties with AMI >= 147900 are Santa Clara (181300), Marin (175000), San Francisco (175000), San Mateo (175000), Alameda (147900), and Contra Costa (147900).",
+      "subquestion": "Which counties have AMI >= 147900 in the 2023 income limits data? (Filter: AMI >= 147900; list County and AMI.)",
+      "answer": {
+        "Santa Clara": 181300,
+        "Marin": 175000,
+        "San Francisco": 175000,
+        "San Mateo": 175000,
+        "Alameda": 147900,
+        "Contra Costa": 147900
+      }
+    },
+    "3": {
+      "source": "datagov/california-women-infants-and-children-program-redemption-by-county-967e9/files/2010-2018-part-a-wic-redemptions-by-vendor-county-with-family-counts.txt",
+      "fact": "In the 2018 WIC data for the hop 1 counties, Average Cost per Family values are Alameda $605.54, Contra Costa $572.19, Marin $537.53, San Francisco $600.20, San Mateo $540.16, and Santa Clara $678.02. The counties with Average Cost per Family >= $570 are Alameda, Contra Costa, San Francisco, and Santa Clara.",
+      "subquestion": "Among the counties from hop 1, which have Average Cost per Family >= $570 in the 2018 WIC redemptions data? (Filter: Obligation Year and Month == 2018; Vendor County in <hop 1>; parse Average Cost per Family; keep >= 570.)",
+      "answer": [
+        "Alameda",
+        "Contra Costa",
+        "San Francisco",
+        "Santa Clara"
+      ]
+    },
+    "4": {
+      "source": "datagov/california-women-infants-and-children-program-redemption-by-county-967e9/files/2019-2020-part-b-wic-redemptions-by-vendor-county-with-family-counts.txt",
+      "fact": "In the 2020 WIC data for the hop 1 counties, Average Cost per Family values are Alameda $823.68, Contra Costa $686.11, Marin $601.01, San Francisco $935.06, San Mateo $729.54, and Santa Clara $773.97. The counties with Average Cost per Family >= $700 are Alameda, San Francisco, San Mateo, and Santa Clara.",
+      "subquestion": "Among the counties from hop 1, which have Average Cost per Family >= $700 in the 2020 WIC redemptions data? (Filter: Obligation Year and Month == 2020; Vendor County in <hop 1>; parse Average Cost per Family; keep >= 700.)",
+      "answer": [
+        "Alameda",
+        "San Francisco",
+        "San Mateo",
+        "Santa Clara"
+      ]
+    },
+    "5": {
+      "source": "datagov/hospitalization-counts-and-rates-of-selected-adverse-hospital-events-by-california-county-67a4a/files/ca-oshpd-adveventhospitalizationspsi-county2005-2015q3.txt",
+      "fact": "For 2015 PSI 27 (Perioperative Hemorrhage or Hematoma), ObsRate values are Alameda 18.84, San Francisco 19.15, and Santa Clara 20.31. The counties with ObsRate >= 19 are San Francisco and Santa Clara.",
+      "subquestion": "Among the counties from hop 2, which have ObsRate >= 19 for PSI 27 (Perioperative Hemorrhage or Hematoma) in 2015? (Filter: Year == 2015; PSI == 27; County in <hop 2>; read ObsRate; keep >= 19.)",
+      "answer": [
+        "San Francisco",
+        "Santa Clara"
+      ]
+    },
+    "6": {
+      "source": "datagov/california-county-boundaries-bd0f6/files/California_County_Boundaries_9101614255844818638.txt",
+      "fact": "In the California county boundaries data, Shape__Area values for the hop 2 counties are Alameda 3402787058.96094, San Francisco 438635888.980469, and Santa Clara 5341596055.52344. The counties with Shape__Area >= 3000000000 are Alameda and Santa Clara.",
+      "subquestion": "Among the counties from hop 2, which have Shape__Area >= 3000000000 in the California county boundaries data? (Filter: COUNTY_NAME in <hop 2>; read Shape__Area; keep >= 3000000000.)",
+      "answer": [
+        "Alameda",
+        "Santa Clara"
+      ]
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=2, nodes 1-2):",
+    "  Node 1: 2022 income limits - AMI >= 142800 -> {Santa Clara, Marin, San Francisco, San Mateo, Alameda, Contra Costa}",
+    "  Node 2: 2023 income limits - AMI >= 147900 -> {Santa Clara, Marin, San Francisco, San Mateo, Alameda, Contra Costa}",
+    "  Intersection -> {Alameda, Contra Costa, Marin, San Francisco, San Mateo, Santa Clara}",
+    "",
+    "HOP 2 (d=2, nodes 3-4):",
+    "  Node 3: 2018 WIC Avg Cost per Family >= 570 -> {Alameda, Contra Costa, San Francisco, Santa Clara}",
+    "  Node 4: 2020 WIC Avg Cost per Family >= 700 -> {Alameda, San Francisco, San Mateo, Santa Clara}",
+    "  Intersection -> {Alameda, San Francisco, Santa Clara}",
+    "",
+    "HOP 3 (d=2, nodes 5-6):",
+    "  Node 5: 2015 PSI 27 ObsRate >= 19 -> {San Francisco, Santa Clara}",
+    "  Node 6: Shape__Area >= 3000000000 -> {Alameda, Santa Clara}",
+    "  Intersection -> {Santa Clara}",
+    "",
+    "Final answer: Santa Clara"
+  ],
+  "verdict": "pass",
+  "datasets_used": [
+    "income-limits-by-county",
+    "california-women-infants-and-children-program-redemption-by-county-967e9",
+    "hospitalization-counts-and-rates-of-selected-adverse-hospital-events-by-california-county-67a4a",
+    "california-county-boundaries-bd0f6"
+  ]
+}

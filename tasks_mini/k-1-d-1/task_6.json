@@ -1,0 +1,20 @@
+{
+  "question": "Which year from 2005-2010 has the lowest total CTA bus route ridership? Your response should be in the format [Answer].",
+  "answer": "2006",
+  "practical_motivation": "A transit operations analyst wants to pinpoint the lowest-ridership year for buses during the mid-2000s.",
+  "nodes": {
+    "1": {
+      "source": "datagov/cta-ridership-bus-routes-monthly-day-type-averages-totals/files/rows.txt",
+      "fact": "Summing MonthTotal by year (from Month_Beginning) for 2005-2010, 2006 has the lowest total at 296915179.",
+      "subquestion": "Which year from 2005-2010 has the lowest total CTA bus route ridership? (Parse Month_Beginning to Year; sum MonthTotal by Year; select the minimum.)",
+      "answer": "2006"
+    }
+  },
+  "reasoning_chain": [
+    "Node 1: Sum MonthTotal by year (2005-2010) and select the minimum; the lowest year is 2006.",
+    "Final answer: 2006"
+  ],
+  "datasets_used": [
+    "cta-ridership-bus-routes-monthly-day-type-averages-totals"
+  ]
+}

@@ -1,0 +1,101 @@
+{
+  "question": "Starting with the year within 2011-2015 with the lowest total air passengers from Port Authority of New York and New Jersey airports and extending forward through 2014-15 school year, find Chicago elementary schools that (1) received top performance rating in that first school year, (2) showed above-average growth the next year, (3) were moderately organized the year after, and (4) showed above-average student growth in 2017-18. Among schools meeting all criteria and located in a community area with per capita income above $50K, in what year was the MLB team founded that plays in the stadium in that community area? Your response should be in the format [Answer].",
+  "answer": "1876",
+  "nodes": {
+    "1": {
+      "source": "datagov/air-passenger-traffic-per-month-port-authority-of-ny-nj-beginning-1977/files/rows.txt",
+      "fact": "Summing Total Passengers for 2011-2015, the lowest total occurs in 2011.",
+      "subquestion": "Which year from 2011-2015 has the lowest total air passengers?",
+      "answer": "2011"
+    },
+    "2": {
+      "source": "datagov/chicago-public-schools-progress-report-cards-2011-2012/v1/files/rows.csv",
+      "fact": "In 2011-2012, Level 1 schools included Cleveland, Hawthorne, Poe, Reinberg.",
+      "subquestion": "Which elementary schools had Level 1 in <node_1 answer>-<node_1 answer>+1?",
+      "answer": [
+        "Cleveland",
+        "Hawthorne",
+        "Poe",
+        "Reinberg"
+      ]
+    },
+    "3": {
+      "source": "datagov/chicago-public-schools-elementary-school-progress-report-card-2012-2013/v1/files/rows.csv",
+      "fact": "In 2012-2013, above-average growth schools included Cleveland, Hawthorne, Poe, Reinberg.",
+      "subquestion": "Which schools had above-average growth in <node_1 answer>+1-<node_1 answer>+2?",
+      "answer": [
+        "Cleveland",
+        "Hawthorne",
+        "Poe",
+        "Reinberg"
+      ]
+    },
+    "4": {
+      "source": "datagov/chicago-public-schools-elementary-school-progress-report-2013-2014/v1/files/rows.csv",
+      "fact": "In 2013-2014, moderately organized schools included Cleveland, Hawthorne, Poe, Reinberg.",
+      "subquestion": "Which schools were moderately organized in <node_1 answer>+2-<node_1 answer>+3?",
+      "answer": [
+        "Cleveland",
+        "Hawthorne",
+        "Poe",
+        "Reinberg"
+      ]
+    },
+    "5": {
+      "source": "datagov/chicago-public-schools-school-progress-reports-sy1718/v1/files/rows.csv",
+      "fact": "In 2017-18, above-average/far-above-average schools included Cleveland, Hawthorne, Poe, Reinberg.",
+      "subquestion": "Which schools had above-average student growth in 2017-18?",
+      "answer": [
+        "Cleveland",
+        "Hawthorne",
+        "Poe",
+        "Reinberg"
+      ]
+    },
+    "6": {
+      "source": "datagov/chicago-public-schools-school-locations-sy1516/v1/files/rows.csv",
+      "fact": "Hawthorne is in Lake View.",
+      "subquestion": "In which community areas are the schools?",
+      "answer": {
+        "Hawthorne": "Lake View"
+      }
+    },
+    "7": {
+      "source": "datagov/census-data-selected-socioeconomic-indicators-in-chicago-2008-2012/v1/files/rows.csv",
+      "fact": "Lake View has per capita income $60,058, above $50K.",
+      "subquestion": "Which community area has income above $50,000?",
+      "answer": "Lake View"
+    },
+    "8": {
+      "source": "wikipedia/Wrigley_Field/content.txt",
+      "fact": "Wrigley Field is home to the Chicago Cubs.",
+      "subquestion": "Which MLB team plays in Lake View?",
+      "answer": "Chicago Cubs"
+    },
+    "9": {
+      "source": "wikipedia/Chicago_Cubs/content.txt",
+      "fact": "The Chicago Cubs were established in 1876.",
+      "subquestion": "When was the team founded?",
+      "answer": "1876"
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=1): Port Authority passengers lowest 2011-2015 is 2011",
+    "HOP 2 (d=4): CPS progress reports intersection",
+    "HOP 3 (d=2): Lake View has income > $50K",
+    "HOP 4 (d=1): Chicago Cubs in Lake View",
+    "HOP 5 (d=1): Cubs founded 1876",
+    "Final answer: 1876"
+  ],
+  "datasets_used": [
+    "air-passenger-traffic-per-month-port-authority-of-ny-nj-beginning-1977",
+    "chicago-public-schools-progress-report-cards-2011-2012",
+    "chicago-public-schools-elementary-school-progress-report-card-2012-2013",
+    "chicago-public-schools-elementary-school-progress-report-2013-2014",
+    "chicago-public-schools-school-progress-reports-sy1718",
+    "chicago-public-schools-school-locations-sy1516",
+    "census-data-selected-socioeconomic-indicators-in-chicago-2008-2012",
+    "Wrigley_Field",
+    "Chicago_Cubs"
+  ]
+}

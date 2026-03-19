@@ -1,0 +1,164 @@
+{
+  "question": "A Missouri state agency ranked third by average expenditures from FY2007 to FY2010. Find the city where the agency's Southwest district is based and the highway that originated in that city. Between that highway's two terminus cities, which one had higher binge drinking rates in the year within 2011-2016 when the teen birth rate for females ages 15-19 across all races in the United States was lowest and the year within 2017-2019 when New York State Routes had the lowest total annual average daily traffic? For that city, which department had the second-highest cost overtime from 2014 to 2017? Return the department name only. Your response should be in the format [Answer].",
+  "answer": "Fire",
+  "nodes": {
+    "1": {
+      "source": "datagov/nchs-teen-birth-rates-for-females-by-age-group-race-and-hispanic-origin-united-states/files/rows.txt",
+      "fact": "Filtering to Race or Hispanic Origin = \"All Races\" and Age Group = \"15-19 Years\" for 2011-2016, the minimum Birth Rate is 20.3 in 2016.",
+      "subquestion": "Which year from 2011-2016 has the lowest teen birth rate for females ages 15-19 across all races in the United States?",
+      "answer": "2016"
+    },
+    "2": {
+      "source": "datagov/annual-average-daily-traffic-aadt-beginning-1977/files/rows.txt",
+      "fact": "Summing Count by Year for 2017-2019, the minimum total is 73796464 in 2018.",
+      "subquestion": "Which year from 2017-2019 has the lowest total annual average daily traffic count for all New York State Routes and roads?",
+      "answer": "2018"
+    },
+    "3": {
+      "source": "datagov/2007-state-expenditures/files/rows.txt",
+      "fact": "In FY2007 Missouri State Expenditures, TRANSPORTATION had $1,922,237,354.88.",
+      "subquestion": "Which Missouri state agency had the 3rd highest average expenditure from FY2007-FY2010?",
+      "answer": {
+        "SOCIAL SERVICES": 5528171459.84,
+        "ELEMENTARY AND SECONDARY EDUCATION": 4893252163.41,
+        "TRANSPORTATION": 1922237354.88
+      }
+    },
+    "4": {
+      "source": "datagov/2008-state-expenditures/files/rows.txt",
+      "fact": "In FY2008 Missouri State Expenditures, TRANSPORTATION had $1,786,534,604.37.",
+      "subquestion": "Which Missouri state agency had the 3rd highest average expenditure from FY2007-FY2010?",
+      "answer": {
+        "SOCIAL SERVICES": 5988522037.62,
+        "ELEMENTARY AND SECONDARY EDUCATION": 5048553721.08,
+        "TRANSPORTATION": 1786534604.37
+      }
+    },
+    "5": {
+      "source": "datagov/2009-state-expenditures/files/rows.txt",
+      "fact": "In FY2009 Missouri State Expenditures, TRANSPORTATION had $2,000,940,522.19.",
+      "subquestion": "Which Missouri state agency had the 3rd highest average expenditure from FY2007-FY2010?",
+      "answer": {
+        "SOCIAL SERVICES": 6707806742.86,
+        "ELEMENTARY AND SECONDARY EDUCATION": 5170194688.51,
+        "TRANSPORTATION": 2000940522.19
+      }
+    },
+    "6": {
+      "source": "datagov/2010-state-expenditures/files/rows.txt",
+      "fact": "In FY2010 Missouri State Expenditures, TRANSPORTATION had $2,144,139,919.08.",
+      "subquestion": "Which Missouri state agency had the 3rd highest average expenditure from FY2007-FY2010?",
+      "answer": {
+        "SOCIAL SERVICES": 7141666880.32,
+        "ELEMENTARY AND SECONDARY EDUCATION": 5351561573.54,
+        "TRANSPORTATION": 2144139919.08
+      }
+    },
+    "7": {
+      "source": "wikipedia/Missouri_Department_of_Transportation/content.txt",
+      "fact": "MoDOT Southwest district is based in Springfield.",
+      "subquestion": "In which city is the Southwest district of the agency based?",
+      "answer": "Springfield"
+    },
+    "8": {
+      "source": "wikipedia/Springfield,_Missouri/content.txt",
+      "fact": "Springfield is 'The Birthplace of Route 66', the Chicago-to-Los Angeles highway.",
+      "subquestion": "What are the terminus cities of the highway that was born in Springfield?",
+      "answer": [
+        "Chicago",
+        "Los Angeles"
+      ]
+    },
+    "9": {
+      "source": "datagov/500-cities-local-data-for-better-health-2016-release/files/rows.txt",
+      "fact": "In the 500-Cities <node_1 answer> health data release, Chicago had 20.1% and Los Angeles had 15.9% binge drinking prevalence.",
+      "subquestion": "Which terminus city had higher binge drinking prevalence in <node_1 answer> and <node_2 answer>?",
+      "answer": {
+        "Chicago": 20.1,
+        "Los Angeles": 15.9
+      }
+    },
+    "10": {
+      "source": "datagov/500-cities-local-data-for-better-health-2018-release/files/rows.txt",
+      "fact": "In the 500-Cities <node_2 answer> health data release, Chicago had 21.5% and Los Angeles had 16.7% binge drinking prevalence.",
+      "subquestion": "Which terminus city had higher binge drinking prevalence in <node_1 answer> and <node_2 answer>?",
+      "answer": {
+        "Chicago": 21.5,
+        "Los Angeles": 16.7
+      }
+    },
+    "11": {
+      "source": "datagov/employee-overtime-and-supplemental-earnings-2014/files/rows.txt",
+      "fact": "In 2014 Chicago Employee Overtime, Fire had the 2nd highest at $63,941,565.36.",
+      "subquestion": "Which city department had the 2nd highest total overtime from 2014-2017?",
+      "answer": {
+        "Police": 101460132.24,
+        "Fire": 63941565.36
+      }
+    },
+    "12": {
+      "source": "datagov/employee-overtime-and-supplemental-earnings-2015/files/rows.txt",
+      "fact": "In 2015 Chicago Employee Overtime, Fire had the 2nd highest at $43,847,384.30.",
+      "subquestion": "Which city department had the 2nd highest total overtime from 2014-2017?",
+      "answer": {
+        "Police": 116144553.32,
+        "Fire": 43847384.3
+      }
+    },
+    "13": {
+      "source": "datagov/employee-overtime-and-supplemental-earnings-2016/files/rows.txt",
+      "fact": "In 2016 Chicago Employee Overtime, Fire had the 2nd highest at $50,604,010.67.",
+      "subquestion": "Which city department had the 2nd highest total overtime from 2014-2017?",
+      "answer": {
+        "Police": 143032724.45,
+        "Fire": 50604010.67
+      }
+    },
+    "14": {
+      "source": "datagov/employee-overtime-and-supplemental-earnings-2017/files/rows.txt",
+      "fact": "In 2017 Chicago Employee Overtime, Fire had the 2nd highest at $49,571,354.",
+      "subquestion": "Which city department had the 2nd highest total overtime from 2014-2017?",
+      "answer": {
+        "Police": 156732988,
+        "Fire": 49571354
+      }
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=2, data.gov year derivations - nodes 1-2):",
+    "  Node 1: Teen birth rate -> Lowest 2011-2016 is 2016",
+    "  Node 2: NY AADT -> Lowest 2017-2019 is 2018",
+    "",
+    "HOP 2 (d=4, Missouri State Expenditures FY2007-FY2010 - nodes 3-6):",
+    "  Average expenditure -> TRANSPORTATION is 3rd highest",
+    "",
+    "HOP 3 (d=1, Wikipedia Missouri_Department_of_Transportation - node 7):",
+    "  Node 7: MoDOT Southwest district is based in Springfield",
+    "",
+    "HOP 4 (d=1, Wikipedia Springfield,_Missouri - node 8):",
+    "  Node 8: Route 66 was the Chicago-to-Los Angeles highway",
+    "",
+    "HOP 5 (d=2, 500-Cities Health Data - nodes 9-10):",
+    "  Both years confirm Chicago has higher binge drinking prevalence",
+    "",
+    "HOP 6 (d=4, Chicago Employee Overtime 2014-2017 - nodes 11-14):",
+    "  Fire is consistently #2 in all 4 years",
+    "  Final answer: Fire"
+  ],
+  "datasets_used": [
+    "nchs-teen-birth-rates-for-females-by-age-group-race-and-hispanic-origin-united-states",
+    "annual-average-daily-traffic-aadt-beginning-1977",
+    "2007-state-expenditures",
+    "2008-state-expenditures",
+    "2009-state-expenditures",
+    "2010-state-expenditures",
+    "Missouri_Department_of_Transportation",
+    "Springfield,_Missouri",
+    "500-cities-local-data-for-better-health-2016-release",
+    "500-cities-local-data-for-better-health-2018-release",
+    "employee-overtime-and-supplemental-earnings-2014",
+    "employee-overtime-and-supplemental-earnings-2015",
+    "employee-overtime-and-supplemental-earnings-2016",
+    "employee-overtime-and-supplemental-earnings-2017"
+  ]
+}

@@ -1,0 +1,160 @@
+{
+  "question": "Which year had the highest total number of unemployment insurance beneficiaries since 2001? I am looking for a major Texas county that consistently ranked in the top five for childcare centers participating in food programs from 2 years before that year through 2 years after. Among these leaders, find the one that reported over 600 child protective service removals in 2022 despite completing fewer than 14,000 abuse investigations. Compare this county's establishment date with Tarrant County's; for the earlier of the two, report the admission order number of the U.S. state admitted to the Union in that same year. Please return the order number only. Your response should be in the format [Answer].",
+  "answer": "25",
+  "practical_motivation": "A child welfare policy researcher is examining the correlation between economic hardship, childcare availability, and protective service outcomes across major Texas counties. By first identifying the peak unemployment year and then examining counties that maintained high childcare infrastructure (CACFP centers) during that economic period with significant child welfare caseloads, they can study whether greater access to formal childcare affects investigation and removal rates. Understanding when these counties were established relative to major historical events like the Texas Revolution provides context for their distinct institutional development.",
+  "nodes": {
+    "1": {
+      "source": "datagov/unemployment-insurance-beneficiaries-and-benefit-amounts-paid-beginning-2001/files/rows.txt",
+      "fact": "In this dataset, summing Beneficiaries across all records by Year, 2020 has the highest total beneficiaries at 11,355,300.",
+      "subquestion": "Which year has the highest total number of beneficiaries? (Group by Year; sum Beneficiaries; choose the maximum.)",
+      "answer": "2020"
+    },
+    "2": {
+      "source": "datagov/child-and-adult-care-food-programs-cacfp-centers-site-level-contact-and-program-parti-2018/v1/files/rows.csv",
+      "fact": "In 2018-2019 (<node_1 answer> - 2 school year), counts by SiteCounty show 195 Texas counties with CACFP childcare center sites. The top 5 were: HARRIS (1781), DALLAS (1207), HIDALGO (878), BEXAR (622), TARRANT (562).",
+      "subquestion": "How many CACFP childcare center sites did each Texas county have in <node_1 answer> - 2 school year (2018-2019)? (Filter: ProgramYear == '2018-2019'; count sites by SiteCounty.)",
+      "answer": {
+        "HARRIS": 1781,
+        "DALLAS": 1207,
+        "HIDALGO": 878,
+        "BEXAR": 622,
+        "TARRANT": 562,
+        "OTHER_COUNTIES": 190
+      }
+    },
+    "3": {
+      "source": "datagov/child-and-adult-care-food-programs-cacfp-centers-site-level-contact-and-program-parti-2019/v1/files/rows.csv",
+      "fact": "In 2019-2020 (<node_1 answer> - 1 school year), counts by SiteCounty show 199 Texas counties with CACFP childcare center sites. The top 5 were: HARRIS (2179), DALLAS (1435), HIDALGO (1203), BEXAR (888), CAMERON (592).",
+      "subquestion": "How many CACFP childcare center sites did each Texas county have in <node_1 answer> - 1 school year (2019-2020)? (Filter: ProgramYear == '2019-2020'; count sites by SiteCounty.)",
+      "answer": {
+        "HARRIS": 2179,
+        "DALLAS": 1435,
+        "HIDALGO": 1203,
+        "BEXAR": 888,
+        "CAMERON": 592,
+        "OTHER_COUNTIES": 194
+      }
+    },
+    "4": {
+      "source": "datagov/child-and-adult-care-food-programs-cacfp-centers-site-level-contact-and-program-parti-2020/v1/files/rows.csv",
+      "fact": "In 2020-2021 (<node_1 answer> school year), counts by SiteCounty show 194 Texas counties with CACFP childcare center sites. The top 5 were: HARRIS (1709), DALLAS (1120), HIDALGO (918), BEXAR (756), TARRANT (592).",
+      "subquestion": "How many CACFP childcare center sites did each Texas county have in <node_1 answer> school year (2020-2021)? (Filter: ProgramYear == '2020-2021'; count sites by SiteCounty.)",
+      "answer": {
+        "HARRIS": 1709,
+        "DALLAS": 1120,
+        "HIDALGO": 918,
+        "BEXAR": 756,
+        "TARRANT": 592,
+        "OTHER_COUNTIES": 189
+      }
+    },
+    "5": {
+      "source": "datagov/child-and-adult-care-food-programs-cacfp-centers-site-level-contact-and-program-parti-2021/v1/files/rows.csv",
+      "fact": "In 2021-2022 (<node_1 answer> + 1 school year), counts by SiteCounty show 193 Texas counties with CACFP childcare center sites. The top 5 were: HARRIS (1871), DALLAS (1269), HIDALGO (924), BEXAR (772), TARRANT (687).",
+      "subquestion": "How many CACFP childcare center sites did each Texas county have in <node_1 answer> + 1 school year (2021-2022)? (Filter: ProgramYear == '2021-2022'; count sites by SiteCounty.)",
+      "answer": {
+        "HARRIS": 1871,
+        "DALLAS": 1269,
+        "HIDALGO": 924,
+        "BEXAR": 772,
+        "TARRANT": 687,
+        "OTHER_COUNTIES": 188
+      }
+    },
+    "6": {
+      "source": "datagov/child-and-adult-care-food-programs-cacfp-centers-site-level-contact-and-program-parti-2022/v1/files/rows.csv",
+      "fact": "In 2022-2023 (<node_1 answer> + 2 school year), counts by SiteCounty show 194 Texas counties with CACFP childcare center sites. The top 5 were: HARRIS (2183), DALLAS (1352), HIDALGO (947), BEXAR (743), TARRANT (715).",
+      "subquestion": "How many CACFP childcare center sites did each Texas county have in <node_1 answer> + 2 school year (2022-2023)? (Filter: ProgramYear == '2022-2023'; count sites by SiteCounty.)",
+      "answer": {
+        "HARRIS": 2183,
+        "DALLAS": 1352,
+        "HIDALGO": 947,
+        "BEXAR": 743,
+        "TARRANT": 715,
+        "OTHER_COUNTIES": 189
+      }
+    },
+    "7": {
+      "source": "datagov/cpi-3-1-completed-abuse-neglect-investigations-by-county-fy2013-fy2022/v1/files/rows.csv",
+      "fact": "In FY2022, among the top 5 counties by average CACFP sites, Harris (23,468) and Dallas (14,192) had more than 14,000 completed child abuse/neglect investigations, while Tarrant (13,286), Bexar (13,020), and Hidalgo (4,984) had less than 14,000.",
+      "subquestion": "Which counties from <nodes 2-6 top 5 by average: Harris, Dallas, Hidalgo, Bexar, Tarrant> had less than 14,000 completed child abuse/neglect investigations in FY2022? (Filter: Fiscal Year == 2022; sum Completed Investigations by County; keep < 14,000.)",
+      "answer": [
+        "Tarrant",
+        "Bexar",
+        "Hidalgo"
+      ]
+    },
+    "8": {
+      "source": "datagov/cps-2-1-removals-by-county-fy2013-2022/v1/files/rows.csv",
+      "fact": "In FY2022, among the top 5 counties by average CACFP sites, Bexar (1,074) and Dallas (738) had more than 600 child protective service removals, while Harris (566), Tarrant (555), and Hidalgo (90) had 600 or fewer.",
+      "subquestion": "Which counties from <nodes 2-6 top 5 by average: Harris, Dallas, Hidalgo, Bexar, Tarrant> had more than 600 CPS removals in FY2022? (Filter: Fiscal Year == 2022; sum Removals by County; keep > 600.)",
+      "answer": [
+        "Bexar",
+        "Dallas"
+      ]
+    },
+    "9": {
+      "source": "wikipedia/Bexar_County,_Texas/content.txt",
+      "fact": "According to Wikipedia, Bexar County 'was created on December 20, 1836' as one of the original counties of the Republic of Texas.",
+      "subquestion": "When was <intersection of nodes 7-8: Bexar County> created?",
+      "answer": "1836"
+    },
+    "10": {
+      "source": "wikipedia/Tarrant_County,_Texas/content.txt",
+      "fact": "According to Wikipedia, Tarrant County was established in 1849.",
+      "subquestion": "When was Tarrant County created?",
+      "answer": "1849"
+    },
+    "11": {
+      "source": "wikipedia/Arkansas/content.txt",
+      "fact": "Arkansas was admitted to the Union as the 25th state on June 15, 1836.",
+      "subquestion": "Which U.S. state was admitted to the Union in <earlier of nodes 9-10: 1836>, and what was its admission order number?",
+      "answer": "25"
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=1, data.gov):",
+    "  Node 1: Unemployment Insurance Beneficiaries dataset -> Year with highest total beneficiaries -> 2020 (11,355,300)",
+    "",
+    "HOP 2 (d=5, data.gov AGGREGATION - nodes 2-6):",
+    "  Node 2: CACFP Centers 2018-2019 (<node_1> - 2) -> site counts per county",
+    "  Node 3: CACFP Centers 2019-2020 (<node_1> - 1) -> site counts per county",
+    "  Node 4: CACFP Centers 2020-2021 (<node_1>) -> site counts per county",
+    "  Node 5: CACFP Centers 2021-2022 (<node_1> + 1) -> site counts per county",
+    "  Node 6: CACFP Centers 2022-2023 (<node_1> + 2) -> site counts per county",
+    "  AGGREGATION: Compute average across all 5 years -> Top 5 are {Harris: 1944.6, Dallas: 1276.6, Hidalgo: 974.0, Bexar: 756.2, Tarrant: 628.8}",
+    "  Note: All 5 years required because rankings vary year to year (e.g., Tarrant was #6 in 2019-2020)",
+    "",
+    "HOP 3 (d=2, data.gov INTERSECTION - nodes 7-8):",
+    "  Node 7: From top 5, investigations < 14,000 -> {Tarrant, Bexar, Hidalgo}",
+    "  Node 8: From top 5, CPS removals > 600 -> {Bexar, Dallas}",
+    "  INTERSECTION: {Tarrant, Bexar, Hidalgo} ∩ {Bexar, Dallas} = {Bexar}",
+    "  Both criteria necessary: Node 7 alone gives 3 counties, Node 8 alone gives 2 counties",
+    "",
+    "HOP 4 (d=2, Wikipedia AGGREGATION - nodes 9-10):",
+    "  Node 9: Bexar County Wikipedia -> created 1836",
+    "  Node 10: Tarrant County Wikipedia -> created 1849",
+    "  AGGREGATION: Compare years -> earlier is 1836 (Bexar)",
+    "  Both nodes needed: Node 9 provides Bexar creation year, Node 10 provides Tarrant creation year for comparison",
+    "",
+    "HOP 5 (d=1, Wikipedia - node 11):",
+    "  Node 11: Arkansas Wikipedia -> admitted June 15, 1836 as the 25th state",
+    "  Result: 25th state",
+    "",
+    "Final answer: 25"
+  ],
+  "verdict": "pass",
+  "datasets_used": [
+    "Arkansas",
+    "Bexar_County,_Texas",
+    "Tarrant_County,_Texas",
+    "child-and-adult-care-food-programs-cacfp-centers-site-level-contact-and-program-parti-2018",
+    "child-and-adult-care-food-programs-cacfp-centers-site-level-contact-and-program-parti-2019",
+    "child-and-adult-care-food-programs-cacfp-centers-site-level-contact-and-program-parti-2020",
+    "child-and-adult-care-food-programs-cacfp-centers-site-level-contact-and-program-parti-2021",
+    "child-and-adult-care-food-programs-cacfp-centers-site-level-contact-and-program-parti-2022",
+    "cpi-3-1-completed-abuse-neglect-investigations-by-county-fy2013-fy2022",
+    "cps-2-1-removals-by-county-fy2013-2022",
+    "unemployment-insurance-beneficiaries-and-benefit-amounts-paid-beginning-2001"
+  ]
+}

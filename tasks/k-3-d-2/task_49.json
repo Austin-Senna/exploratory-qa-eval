@@ -1,0 +1,88 @@
+{
+  "question": "From Harris, Dallas, Bexar, Tarrant, and Hidalgo counties, select the one that in the year (within 2019-2022) that has the highest total docked bikeshare trips across U.S. docked bikeshare systems had under 12% of its population aged 65+ and more than 3,000 children served in family preservation services. For that county and its county seat, identify who each is named after and give the earlier birth year. Your response should be in the format [Answer].",
+  "answer": "1790",
+  "nodes": {
+    "1": {
+      "source": "datagov/docked-bikeshare-ridership-by-system-year-and-month/files/rows.txt",
+      "fact": "Summing num_trip by year for 2019-2022, the maximum total is 50063823 in 2022.",
+      "subquestion": "Which year from 2019-2022 has the highest total docked bikeshare trips across U.S. docked bikeshare systems? (Sum num_trip by year and select the maximum.)",
+      "answer": "2022"
+    },
+    "2": {
+      "source": "datagov/aps-1-1-texas-adult-populations-at-risk-by-county-region-fy2013-fy2022/files/rows.txt",
+      "fact": "In <node_1 answer> (2022), among the top 5 counties by average summer meal sites, Harris (11.2%) and Dallas (11.5%) had less than 12% of their population aged 65 and older, while Bexar (13.1%), Tarrant (13.1%), and Hidalgo (12.3%) had 12% or more.",
+      "subquestion": "Which counties from the top 5 by average summer meal sites (Harris, Dallas, Bexar, Tarrant, Hidalgo) had less than 12% of their population aged 65 and older in <node_1 answer>? (Filter: Fiscal Year == <node_1 answer>; use '65 and older: % of Population' < 12.)",
+      "answer": [
+        "HARRIS",
+        "DALLAS"
+      ]
+    },
+    "3": {
+      "source": "datagov/cps-1-1-family-preservation-children-served-by-county-fy2013-2022/files/rows.txt",
+      "fact": "In <node_1 answer> (2022), among the top 5 counties by average summer meal sites, Harris (3312), Bexar (4612), and Tarrant (3101) had more than 3000 children served in family preservation services, while Dallas (2582) and Hidalgo (882) had fewer.",
+      "subquestion": "Which counties from the top 5 by average summer meal sites (Harris, Dallas, Bexar, Tarrant, Hidalgo) had more than 3000 children served in family preservation services in <node_1 answer>? (Filter: Fiscal Year == <node_1 answer>; sum 'Children served in FBSS Family Preservation Services' by County across race/ethnicity; keep > 3000.)",
+      "answer": [
+        "HARRIS",
+        "BEXAR",
+        "TARRANT"
+      ]
+    },
+    "4": {
+      "source": "wikipedia/Harris_County,_Texas/content.txt",
+      "fact": "According to Wikipedia, Harris County was founded on December 22, 1836 and 'is named for John Richardson Harris, who founded the town of Harrisburg on Buffalo Bayou in 1826.' Its county seat is Houston.",
+      "subquestion": "Who is <intersection of nodes 2-3: Harris County> named after, and what is its county seat?",
+      "answer": {
+        "county_namesake": "John Richardson Harris",
+        "county_seat": "Houston"
+      }
+    },
+    "5": {
+      "source": "wikipedia/Houston/content.txt",
+      "fact": "According to Wikipedia, 'The city is named after former General Sam Houston, who was president of the Republic of Texas and had won Texas's independence from Mexico at the Battle of San Jacinto.'",
+      "subquestion": "Who is <node_4 county seat: Houston> named after?",
+      "answer": "Sam Houston"
+    },
+    "6": {
+      "source": "wikipedia/John_Richardson_Harris/content.txt",
+      "fact": "According to Wikipedia, 'John Richardson Harris (October 22, 1790 – August 21, 1829) was an American settler of Mexican Texas and the namesake of Harris County, Texas.'",
+      "subquestion": "In what year was <node_4: John Richardson Harris> born?",
+      "answer": "1790"
+    },
+    "7": {
+      "source": "wikipedia/Sam_Houston/content.txt",
+      "fact": "According to Wikipedia, 'Samuel Houston (March 2, 1793 – July 26, 1863) was an American general and statesman who played a prominent role in the Texas Revolution.'",
+      "subquestion": "In what year was <node_5: Sam Houston> born?",
+      "answer": "1793"
+    }
+  },
+  "reasoning_chain": [
+    "HOP 1 (d=1, data.gov year derivation - node 1):",
+    "  Node 1: Year with highest docked bikeshare trips (2019-2022) -> 2022",
+    "",
+    "HOP 2 (d=2, data.gov INTERSECTION - nodes 2-3):",
+    "  Node 2: From top 5, elderly < 12% in <node_1 answer> -> {Harris, Dallas}",
+    "  Node 3: From top 5, family preservation > 3000 in <node_1 answer> -> {Harris, Bexar, Tarrant}",
+    "  INTERSECTION: {Harris, Dallas} ∩ {Harris, Bexar, Tarrant} = {Harris}",
+    "",
+    "HOP 3 (d=2, Wikipedia - nodes 4-5):",
+    "  Node 4: Harris County -> named after John Richardson Harris; county seat Houston",
+    "  Node 5: Houston -> named after Sam Houston",
+    "  Result: Namesakes are John Richardson Harris and Sam Houston",
+    "",
+    "HOP 4 (d=2, Wikipedia SUPERLATIVE - nodes 6-7):",
+    "  Node 6: John Richardson Harris birth year -> 1790",
+    "  Node 7: Sam Houston birth year -> 1793",
+    "  Result: min(1790, 1793) = 1790",
+    "",
+    "Final answer: 1790"
+  ],
+  "datasets_used": [
+    "docked-bikeshare-ridership-by-system-year-and-month",
+    "Harris_County,_Texas",
+    "Houston",
+    "John_Richardson_Harris",
+    "Sam_Houston",
+    "aps-1-1-texas-adult-populations-at-risk-by-county-region-fy2013-fy2022",
+    "cps-1-1-family-preservation-children-served-by-county-fy2013-2022"
+  ]
+}
