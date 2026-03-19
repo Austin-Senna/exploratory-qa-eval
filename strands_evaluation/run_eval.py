@@ -15,9 +15,6 @@ Usage:
 
     # Limit tasks per directory and increase parallelism
     python -m strands_evaluation.run_eval --all-tasks --tasks-per-dir 2 --parallel 4
-
-    # Enable Aurum tools
-    python -m strands_evaluation.run_eval --all-tasks --use-aurum
 """
 
 import argparse
@@ -30,7 +27,7 @@ from datetime import datetime
 from typing import Optional
 
 from strands_evaluation.agent import BatchRunner
-from strands_evaluation.config import AgentConfig, RunConfig
+from strands_evaluation.config import AgentConfig, ConditionConfig, RunConfig
 from strands_evaluation.helper.logger import configure_logging
 
 logger = logging.getLogger(__name__)
@@ -63,7 +60,10 @@ def run_evaluation(
     tasks_per_dir: Optional[int] = None,
 ) -> dict:
     """Run evaluation on a task directory and return {model_id -> {summary, results}}."""
-    output_dir = "results"
+    cond = run_config.condition_config
+    condition_label = cond.condition
+    safe_model = _sanitize_model_name(agent_config.model_id)
+    output_dir = os.path.join("results", condition_label, safe_model)
     os.makedirs(output_dir, exist_ok=True)
 
     task_files = sorted(glob.glob(os.path.join(task_dir, "*.json")))
@@ -76,10 +76,9 @@ def run_evaluation(
 
     task_dir_name = os.path.basename(task_dir)
     model_id = agent_config.model_id
-    safe_name = _sanitize_model_name(model_id)
 
     logger.info(f"\nEvaluating {len(task_files)} tasks from {task_dir_name}")
-    logger.info(f"Model: {model_id}")
+    logger.info(f"Model: {model_id}  Condition: {condition_label}")
     logger.info("=" * 60)
 
     # Load task metadata for CSV annotation
@@ -90,7 +89,7 @@ def run_evaluation(
             task["id"] = path
             tasks_by_id[path] = task
 
-    csv_path = os.path.join(output_dir, f"{safe_name}_eval.csv")
+    csv_path = os.path.join(output_dir, "eval_results.csv")
 
     # --only-new: skip tasks already present in the CSV
     task_files_to_run = task_files
@@ -142,8 +141,12 @@ def run_evaluation(
     _write_main_csv(csv_path, results, tasks_by_id)
 
     # Write per-tool breakdown CSV
-    tools_csv_path = os.path.join(output_dir, f"{safe_name}_eval_tools.csv")
+    tools_csv_path = os.path.join(output_dir, "tools_breakdown.csv")
     _write_tools_csv(tools_csv_path, results)
+
+    # Write agent_results JSONL (one line per task)
+    jsonl_path = os.path.join(output_dir, "agent_results.jsonl")
+    _write_agent_results_jsonl(jsonl_path, results)
 
     return {model_id: {"summary": summary, "results": results}}
 
@@ -170,7 +173,7 @@ def _write_main_csv(csv_path: str, results: list, tasks_by_id: dict) -> None:
         "reasoning", "required_datasets", "sources_used",
         "runtime_seconds", "cycle_count",
         "input_tokens", "output_tokens", "total_tokens", "cost_usd",
-        "tool_calls_total", "api_tool_calls", "aurum_tool_calls",
+        "tool_calls_total", "api_tool_calls",
         "success", "error",
     ]
     existing_rows: dict = {}
@@ -202,7 +205,6 @@ def _write_main_csv(csv_path: str, results: list, tasks_by_id: dict) -> None:
             "cost_usd": r.get("cost_usd", 0.0),
             "tool_calls_total": r.get("tool_calls_total", 0),
             "api_tool_calls": r.get("api_tool_calls", 0),
-            "aurum_tool_calls": r.get("aurum_tool_calls", 0),
             "success": r.get("success", False),
             "error": r.get("error", ""),
         }
@@ -240,6 +242,13 @@ def _write_tools_csv(tools_csv_path: str, results: list) -> None:
         writer.writeheader()
         for key in sorted(existing_rows.keys()):
             writer.writerow(existing_rows[key])
+
+
+def _write_agent_results_jsonl(jsonl_path: str, results: list) -> None:
+    """Append agent results to a JSONL file (one object per task)."""
+    with open(jsonl_path, "a") as f:
+        for r in results:
+            f.write(json.dumps(r, ensure_ascii=False, default=str) + "\n")
 
 
 # ---------------------------------------------------------------------------
@@ -298,8 +307,16 @@ def main() -> None:
                         help="Conversation window size (last-k turns kept)")
     parser.add_argument("--timeout", type=int, default=450,
                         help="Per-task timeout in seconds")
-    parser.add_argument("--use-aurum", action="store_true",
-                        help="Enable Aurum schema/value discovery tools")
+
+    # Condition flags (ConditionConfig)
+    parser.add_argument("--condition", choices=["baseline", "a", "b"], default="baseline",
+                        help="Experiment condition: 'a' (tools-rich), 'b' (planning-rich), or 'baseline'")
+    parser.add_argument("--sparse-backend", choices=["bm25", "splade"], default="bm25",
+                        help="Sparse search backend for Condition A (default: bm25)")
+    parser.add_argument("--enable-sidecar", action="store_true",
+                        help="Enable per-call sidecar trace logging")
+    parser.add_argument("--sidecar-output-dir", default="results/sidecar",
+                        help="Base directory for sidecar JSONL traces (default: results/sidecar)")
 
     # Execution
     parser.add_argument("--parallel", type=int, default=6,
@@ -320,11 +337,22 @@ def main() -> None:
         temperature=args.temperature,
         max_tokens=args.max_tokens,
     )
+    # Resolve sidecar output dir to include condition + model subdirectory
+    safe_model_name = _sanitize_model_name(agent_config.model_id)
+    sidecar_dir = os.path.join(
+        args.sidecar_output_dir, args.condition, safe_model_name
+    )
+
     run_config = RunConfig(
         max_tool_calls=args.max_tool_calls,
         sliding_window_k=args.sliding_window,
         timeout_seconds=args.timeout,
-        use_aurum=args.use_aurum,
+        condition_config=ConditionConfig(
+            condition=args.condition,
+            sparse_backend=args.sparse_backend,
+            sidecar_output_dir=sidecar_dir,
+            enable_sidecar=args.enable_sidecar,
+        ),
     )
 
     start_time = datetime.now()

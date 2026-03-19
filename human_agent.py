@@ -3,31 +3,31 @@
 Interactive human-agent REPL.
 
 Lets you manually run a benchmark task using the same tools the LLM agent has:
-  search, search_keyword, list_files, inspect_file, download, execute_code, submit_answer
+  search, search_keyword, list_files, peek_file, download, execute_code, submit_answer
+  sparse, hybrid, graph  (new search backends from Condition A/B)
 
 Usage:
-    python human_agent.py                          # pick a random task
+    python human_agent.py                        # pick a random task
     python human_agent.py --task tasks/k-3-d-3/task_3.json
     python human_agent.py --question "What is ..."
-    python human_agent.py --use-aurum              # also enable aurum tools
 """
 
 import argparse
 import json
-import os
 import random
+import re
 import sys
 import textwrap
 import time
 from pathlib import Path
 
 # ---------------------------------------------------------------------------
-# Bootstrap path so we can import from evaluation/
+# Bootstrap path so we can import from strands_evaluation/
 # ---------------------------------------------------------------------------
 _ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(_ROOT))
 
-from evaluation.tools import agent_tools
+from strands_evaluation.tools import agent_tools  # noqa: E402
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -57,7 +57,7 @@ def _short(obj, max_chars=2000):
 # Tool wrappers with friendly I/O
 # ---------------------------------------------------------------------------
 
-def cmd_search(use_aurum: bool):
+def cmd_search():
     raw = input("  prefixes (comma-separated): ").strip()
     prefixes = [p.strip() for p in raw.split(",") if p.strip()]
     if not prefixes:
@@ -69,7 +69,7 @@ def cmd_search(use_aurum: bool):
     print(_short(result))
 
 
-def cmd_search_keyword(use_aurum: bool):
+def cmd_search_keyword():
     raw = input("  keywords (comma-separated): ").strip()
     keywords = [k.strip() for k in raw.split(",") if k.strip()]
     if not keywords:
@@ -83,7 +83,7 @@ def cmd_search_keyword(use_aurum: bool):
     print(_short(result))
 
 
-def cmd_list_files(use_aurum: bool):
+def cmd_list_files():
     raw = input("  dataset_ids (comma-separated): ").strip()
     ids = [d.strip() for d in raw.split(",") if d.strip()]
     if not ids:
@@ -95,19 +95,20 @@ def cmd_list_files(use_aurum: bool):
     print(_short(result))
 
 
-def cmd_inspect_file(use_aurum: bool):
+def cmd_peek_file():
     dataset_id = input("  dataset_id: ").strip()
     file_path = input("  file_path: ").strip()
     if not dataset_id or not file_path:
         print("  [!] Both dataset_id and file_path required.")
         return
+    from strands_evaluation.tools.agent_tools_v2 import peek_file
     t0 = time.time()
-    result = agent_tools.inspect_file(dataset_id, file_path)
+    result = peek_file(dataset_id, file_path)
     print(f"  [{time.time()-t0:.1f}s]")
     print(_short(result))
 
 
-def cmd_download(use_aurum: bool):
+def cmd_download():
     print("  Enter files to download. Empty dataset_id to stop.")
     files = []
     while True:
@@ -126,7 +127,7 @@ def cmd_download(use_aurum: bool):
     print(_short(result))
 
 
-def cmd_execute_code(use_aurum: bool):
+def cmd_execute_code():
     print("  Enter Python code. Type END on its own line to run.")
     lines = []
     while True:
@@ -141,7 +142,6 @@ def cmd_execute_code(use_aurum: bool):
     t0 = time.time()
     result = agent_tools.execute_code(code)
     print(f"  [{time.time()-t0:.1f}s]")
-    # execute_code returns stdout/stderr as strings — print them directly
     if "output" in result:
         print(result["output"])
     if "error" in result:
@@ -151,50 +151,46 @@ def cmd_execute_code(use_aurum: bool):
         _pp(other)
 
 
-def cmd_sandbox_info(use_aurum: bool):
+def cmd_sandbox_info():
     _pp(agent_tools.get_sandbox_info())
 
 
-# Aurum tools
-def cmd_search_value(use_aurum: bool):
-    if not use_aurum:
-        print("  [!] Aurum not enabled. Run with --use-aurum.")
-        return
-    from evaluation.tools.aurum_tools import search_value
+def cmd_search_sparse():
     query = input("  query: ").strip()
+    if not query:
+        print("  [!] Query required.")
+        return
     top_k_raw = input("  top_k [10]: ").strip()
     top_k = int(top_k_raw) if top_k_raw.isdigit() else 10
+    from strands_evaluation.tools.external.search_tools import search_sparse
     t0 = time.time()
-    result = search_value(query, top_k=top_k)
+    result = search_sparse(query=query, top_k=top_k)
     print(f"  [{time.time()-t0:.1f}s]")
     print(_short(result))
 
 
-def cmd_search_field(use_aurum: bool):
-    if not use_aurum:
-        print("  [!] Aurum not enabled. Run with --use-aurum.")
-        return
-    from evaluation.tools.aurum_tools import search_field
+def cmd_search_hybrid():
     query = input("  query: ").strip()
+    if not query:
+        print("  [!] Query required.")
+        return
     top_k_raw = input("  top_k [10]: ").strip()
     top_k = int(top_k_raw) if top_k_raw.isdigit() else 10
+    from strands_evaluation.tools.external.search_tools import search_hybrid
     t0 = time.time()
-    result = search_field(query, top_k=top_k)
+    result = search_hybrid(query=query, top_k=top_k)
     print(f"  [{time.time()-t0:.1f}s]")
     print(_short(result))
 
 
-def cmd_neighbor(use_aurum: bool):
-    if not use_aurum:
-        print("  [!] Aurum not enabled. Run with --use-aurum.")
+def cmd_search_graph():
+    query = input("  query: ").strip()
+    if not query:
+        print("  [!] Query required.")
         return
-    from evaluation.tools.aurum_tools import neighbor
-    inp = input("  input (table or column id): ").strip()
-    relation = input("  relation [pkfk/content/schema, default pkfk]: ").strip() or "pkfk"
-    top_k_raw = input("  top_k [10]: ").strip()
-    top_k = int(top_k_raw) if top_k_raw.isdigit() else 10
+    from strands_evaluation.tools.external.search_tools import search_graph
     t0 = time.time()
-    result = neighbor(inp, relation=relation, top_k=top_k)
+    result = search_graph(query=query)
     print(f"  [{time.time()-t0:.1f}s]")
     print(_short(result))
 
@@ -203,30 +199,24 @@ def cmd_neighbor(use_aurum: bool):
 # Command dispatch
 # ---------------------------------------------------------------------------
 
-BASE_COMMANDS = {
-    "search":         ("search datasets by prefix",              cmd_search),
-    "kw":             ("search_keyword — semantic search",       cmd_search_keyword),
-    "ls":             ("list_files in dataset(s)",               cmd_list_files),
-    "inspect":        ("inspect_file structure/sample",          cmd_inspect_file),
-    "dl":             ("download file(s) to sandbox",            cmd_download),
-    "run":            ("execute_code in sandbox",                cmd_execute_code),
-    "sandbox":        ("show sandbox info / downloaded files",   cmd_sandbox_info),
-}
-
-AURUM_COMMANDS = {
-    "sv":             ("search_value — find columns by value",   cmd_search_value),
-    "sf":             ("search_field — find columns by name",    cmd_search_field),
-    "nb":             ("neighbor — find related tables",         cmd_neighbor),
+COMMANDS = {
+    "search":   ("search datasets by prefix",                      cmd_search),
+    "kw":       ("search_keyword — keyword/FTS search",            cmd_search_keyword),
+    "ls":       ("list_files in dataset(s)",                       cmd_list_files),
+    "peek":     ("peek_file — structure/sample preview",           cmd_peek_file),
+    "dl":       ("download file(s) to sandbox",                    cmd_download),
+    "run":      ("execute_code in sandbox",                        cmd_execute_code),
+    "sandbox":  ("show sandbox info / downloaded files",           cmd_sandbox_info),
+    "sparse":   ("search_sparse — BM25/SPLADE sparse search",      cmd_search_sparse),
+    "hybrid":   ("search_hybrid — hybrid dense+sparse + rerank",   cmd_search_hybrid),
+    "graph":    ("search_graph — knowledge-graph semantic search",  cmd_search_graph),
 }
 
 
-def print_help(use_aurum: bool):
+def print_help():
     print("\nAvailable commands:")
-    for cmd, (desc, _) in BASE_COMMANDS.items():
+    for cmd, (desc, _) in COMMANDS.items():
         print(f"  {cmd:<12}  {desc}")
-    if use_aurum:
-        for cmd, (desc, _) in AURUM_COMMANDS.items():
-            print(f"  {cmd:<12}  {desc}  [aurum]")
     print(f"  {'submit':<12}  submit your final answer")
     print(f"  {'skip':<12}  skip this task (reveal answer)")
     print(f"  {'help':<12}  show this help")
@@ -253,21 +243,12 @@ def pick_random_task() -> str:
 # Main REPL
 # ---------------------------------------------------------------------------
 
-def run_repl(question: str, answer: str | None, use_aurum: bool):
-    # Set up a fresh sandbox for this session
+def run_repl(question: str, answer: str | None):
     sandbox = Path(_ROOT) / ".sandbox" / f"human_{int(time.time())}"
     agent_tools.set_sandbox_dir(sandbox)
 
-    all_commands = dict(BASE_COMMANDS)
-    if use_aurum:
-        all_commands.update(AURUM_COMMANDS)
-        print("[aurum] Loading index... ", end="", flush=True)
-        from evaluation.tools.aurum_tools import _get_aurum_agent
-        _get_aurum_agent()
-        print("ready.")
-
     _banner(f"QUESTION:\n{question}")
-    print_help(use_aurum)
+    print_help()
 
     start = time.time()
 
@@ -287,7 +268,7 @@ def run_repl(question: str, answer: str | None, use_aurum: bool):
             break
 
         elif cmd in ("help", "h", "?"):
-            print_help(use_aurum)
+            print_help()
 
         elif cmd == "skip":
             if answer:
@@ -302,24 +283,22 @@ def run_repl(question: str, answer: str | None, use_aurum: bool):
             print(f"\n  Submitted: {ans}")
             print(f"  Time: {elapsed:.1f}s")
             if answer:
-                import re
-                norm = lambda s: re.sub(r"[^a-z0-9]", "", s.lower())
+                def norm(s): return re.sub(r"[^a-z0-9]", "", s.lower())
                 correct = norm(ans) == norm(answer)
                 print(f"  Correct answer: {answer}")
-                print(f"  Result: {'✓ CORRECT' if correct else '✗ WRONG'}")
+                print(f"  Result: {'CORRECT' if correct else 'WRONG'}")
             break
 
-        elif cmd in all_commands:
-            _, fn = all_commands[cmd]
+        elif cmd in COMMANDS:
+            _, fn = COMMANDS[cmd]
             try:
-                fn(use_aurum)
+                fn()
             except Exception as e:
                 print(f"  [ERROR] {e}")
 
         else:
             print(f"  Unknown command '{cmd}'. Type 'help' for options.")
 
-    # Cleanup sandbox
     try:
         import shutil
         shutil.rmtree(sandbox, ignore_errors=True)
@@ -336,7 +315,6 @@ def main():
     group = parser.add_mutually_exclusive_group()
     group.add_argument("--task", help="Path to a task JSON file")
     group.add_argument("--question", help="Ad-hoc question to answer")
-    parser.add_argument("--use-aurum", action="store_true", help="Enable Aurum discovery tools")
     args = parser.parse_args()
 
     if args.question:
@@ -349,7 +327,7 @@ def main():
         question = task["question"]
         answer = task.get("answer")
 
-    run_repl(question, answer, use_aurum=args.use_aurum)
+    run_repl(question, answer)
 
 
 if __name__ == "__main__":

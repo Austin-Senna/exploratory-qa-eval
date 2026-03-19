@@ -26,8 +26,6 @@ import boto3
 import requests
 from dotenv import load_dotenv
 
-from .external.aurum_tools import search_value, search_field, search_field_and_value, neighbor  # noqa: F401
-
 # Load AWS credentials from .env
 load_dotenv()
 

@@ -319,8 +319,6 @@ def main() -> None:
     parser.add_argument("--max-tool-calls", type=int, default=30)
     parser.add_argument("--sliding-window", type=int, default=40)
     parser.add_argument("--timeout", type=int, default=450)
-    parser.add_argument("--use-aurum", action="store_true", help="Enable Aurum tools")
-
     parser.add_argument("--judge-model", default=None, help="Optional evaluator judge model-id")
     parser.add_argument("--output-rubric", default=DEFAULT_OUTPUT_RUBRIC)
     parser.add_argument("--trajectory-rubric", default=DEFAULT_TRAJECTORY_RUBRIC)
@@ -343,7 +341,6 @@ def main() -> None:
         max_tool_calls=args.max_tool_calls,
         sliding_window_k=args.sliding_window,
         timeout_seconds=args.timeout,
-        use_aurum=args.use_aurum,
     )
 
     judge_model = args.judge_model or agent_config.model_id

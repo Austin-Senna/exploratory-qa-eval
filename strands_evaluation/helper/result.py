@@ -6,8 +6,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from strands_evaluation.helper.constants import MODEL_PRICING
 
-_AURUM_TOOL_NAMES = {"search_value", "search_field", "search_field_and_value", "neighbor"}
-# Condition B (baseline API tools)
+# Baseline API tools
 _API_TOOL_NAMES = {"search", "search_keyword", "list_files", "peek_file", "query_file", "download"}
 # Condition A (augmented search backends — sparse/hybrid/graph)
 _CONDITION_A_TOOL_NAMES = {"search_sparse", "search_hybrid", "search_graph"}
@@ -86,10 +85,5 @@ class AgentResult:
     def get_cumulative_tool_counts(self) -> tuple:
         if not self.tool_metrics:
             return 0, 0
-        aurum_calls = 0
-        total_calls = 0
-        for tool_name, m in self.tool_metrics.items():
-            if tool_name in _AURUM_TOOL_NAMES:
-                aurum_calls += m.call_count
-            total_calls += m.call_count
-        return aurum_calls, total_calls
+        total_calls = sum(m.call_count for m in self.tool_metrics.values())
+        return 0, total_calls

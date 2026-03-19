@@ -26,13 +26,22 @@ def resolve_model(model_name: str) -> Tuple[str, str]:
 
 
 @dataclass
+class ConditionConfig:
+    condition: str = "baseline"          # "a", "b", or "baseline"
+    sparse_backend: str = "bm25"         # "bm25" or "splade" (Condition A)
+    sidecar_output_dir: str = "results/sidecar"
+    enable_sidecar: bool = False
+    skills_path: str = "prompts/skills.md"   # Condition B skills plugin
+
+
+@dataclass
 class RunConfig:
     max_tool_calls: int = 30
     sliding_window_k: int = 40
     timeout_seconds: int = 450
-    use_aurum: bool = False
     system_prompt: str = SYSTEM_PROMPT
-    tool_executor: str = "sequential" #or concurrent
+    tool_executor: str = "sequential"    # or "concurrent"
+    condition_config: ConditionConfig = field(default_factory=ConditionConfig)
 
 
 @dataclass

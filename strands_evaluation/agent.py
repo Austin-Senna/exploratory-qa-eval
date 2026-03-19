@@ -27,7 +27,7 @@ from strands.vended_plugins.steering import Guide, Proceed, SteeringHandler, Too
 
 import logging
 
-from strands_evaluation.config import AgentConfig, RunConfig
+from strands_evaluation.config import AgentConfig, ConditionConfig, RunConfig
 from strands_evaluation.helper.logger import configure_logging
 from strands_evaluation.helper.result import AgentResult
 from strands_evaluation.helper.sandbox import (
@@ -59,16 +59,26 @@ from strands_evaluation.tools.agent_tools import download
 
 logger = logging.getLogger(__name__)
 
-# Aurum tools — imported lazily when use_aurum=True, but listed here for static checkers
-_AURUM_TOOLS_AVAILABLE = False
+# Condition A/B search and plan tools
+_SEARCH_TOOLS_AVAILABLE = False
 try:
-    from strands_evaluation.tools.agent_tools_v2 import (
-        neighbor,
-        search_field,
-        search_field_and_value,
-        search_value,
+    from strands_evaluation.tools.external.search_tools import (
+        search_graph,
+        search_hybrid,
+        search_sparse,
     )
-    _AURUM_TOOLS_AVAILABLE = True
+    _SEARCH_TOOLS_AVAILABLE = True
+except ImportError:
+    pass
+
+_PLAN_TOOLS_AVAILABLE = False
+try:
+    from strands_evaluation.tools.external.plan_tools import (
+        generate_plan,
+        generate_reflective_plan,
+        set_plan_model,
+    )
+    _PLAN_TOOLS_AVAILABLE = True
 except ImportError:
     pass
 
@@ -281,6 +291,24 @@ class TelemetryTracker:
 # DataLakeAgent
 # ---------------------------------------------------------------------------
 
+def _load_condition_prompt(condition: str, skills_path: str = "", fallback: str = "") -> str:
+    """Load system prompt for a condition, optionally appending skills.md."""
+    path = f"prompts/condition_{condition}.txt"
+    try:
+        with open(path) as f:
+            prompt = f.read()
+    except FileNotFoundError:
+        logger.warning(f"{path} not found — using default system prompt")
+        prompt = fallback
+    if skills_path:
+        try:
+            with open(skills_path) as f:
+                prompt = prompt + "\n\n## SKILLS REFERENCE\n" + f.read()
+        except FileNotFoundError:
+            logger.warning(f"Skills file not found: {skills_path}")
+    return prompt
+
+
 class DataLakeAgent:
     """Strands-based agent for the Data Lake benchmark."""
 
@@ -298,23 +326,56 @@ class DataLakeAgent:
         telemetry: "TelemetryTracker",
         trace_attributes: Optional[Dict[str, Any]] = None,
     ) -> Agent:
-        tools = [
-            search,
-            search_keyword,
-            list_files,
-            peek_file,
-            peek_files,
-            read_file,
-            search_in_file,
-            query_file,
-            download,
-            execute_code,
-            get_sandbox_info,
-            cleanup_sandbox,
+        cond = self.run_config.condition_config
+        condition = cond.condition
+
+        # Core data-manipulation tools shared across all conditions
+        _data_tools = [
+            list_files, peek_file, peek_files, read_file, search_in_file,
+            query_file, download, execute_code, get_sandbox_info, cleanup_sandbox,
             submit_answer,
         ]
-        if self.run_config.use_aurum and _AURUM_TOOLS_AVAILABLE:
-            tools += [search_value, search_field, search_field_and_value, neighbor]
+
+        if condition == "a" and _SEARCH_TOOLS_AVAILABLE:
+            # Condition A: three search backends + no legacy search tools
+            import os
+            os.environ["SEARCH_SPARSE_BACKEND"] = cond.sparse_backend
+            search_tools = [search_sparse, search_hybrid, search_graph]
+            if cond.enable_sidecar:
+                from strands_evaluation.instrumentation.sidecar import instrument
+                search_tools = [
+                    instrument(t.__name__, cond.sidecar_output_dir)(t)
+                    for t in search_tools
+                ]
+            tools = search_tools + _data_tools
+            system_prompt = _load_condition_prompt("a", fallback=self.run_config.system_prompt)
+
+        elif condition == "b" and _SEARCH_TOOLS_AVAILABLE and _PLAN_TOOLS_AVAILABLE:
+            # Condition B: SPLADE-only + planning tools
+            import os
+            os.environ["SEARCH_SPARSE_BACKEND"] = "splade"
+            plan_tools = [generate_plan, generate_reflective_plan]
+            sparse = search_sparse
+            if cond.enable_sidecar:
+                from strands_evaluation.instrumentation.sidecar import instrument
+                sparse = instrument("search_sparse", cond.sidecar_output_dir)(search_sparse)
+                plan_tools = [
+                    instrument(t.__name__, cond.sidecar_output_dir)(t)
+                    for t in plan_tools
+                ]
+            # Wire planning model to match agent model
+            set_plan_model(self.agent_config.model_id)
+            tools = [sparse] + plan_tools + _data_tools
+            system_prompt = _load_condition_prompt("b", skills_path=cond.skills_path, fallback=self.run_config.system_prompt)
+
+        else:
+            # Baseline: original tool set
+            tools = [
+                search, search_keyword, list_files, peek_file, peek_files,
+                read_file, search_in_file, query_file, download, execute_code,
+                get_sandbox_info, cleanup_sandbox, submit_answer,
+            ]
+            system_prompt = self.run_config.system_prompt
 
         conv_manager = SlidingWindowConversationManager(
             window_size=self.run_config.sliding_window_k
@@ -333,13 +394,13 @@ class DataLakeAgent:
             model=self._model,
             tools=tools,
             tool_executor=tool_executor,
-            system_prompt=self.run_config.system_prompt,
+            system_prompt=system_prompt,
             conversation_manager=conv_manager,
             plugins=[ToolLimitSteeringHandler(self.run_config.max_tool_calls, self.run_config.timeout_seconds), SubmitAnswerPlugin(), LoggingPlugin()],
             callback_handler=_callback,
             trace_attributes=trace_attributes,
         )
- 
+
     def run(self, question: str, session_id: Optional[str] = None) -> AgentResult:
         start = time.time()
 
@@ -435,6 +496,15 @@ def _run_task_worker(
         logger.info(f"Starting task {task_index + 1}: {task.get('question', '')[:80]}...")
 
         da = DataLakeAgent(agent_config, run_config)
+
+        # Inject sidecar context before running (mirrors set_sandbox_dir pattern)
+        cond = run_config.condition_config
+        if cond.enable_sidecar:
+            from strands_evaluation.instrumentation.sidecar import set_sidecar_context
+            task_id = str(task.get("id", task_index))
+            gold_ids = task.get("datasets_used", [])
+            set_sidecar_context(task_id, gold_ids, cond.sidecar_output_dir)
+
         result = da.run(task["question"])
 
         result_dict: Dict[str, Any] = {
@@ -457,10 +527,9 @@ def _run_task_worker(
         result_dict["cost_usd"]         = result.cost_usd
 
         # Tool counts
-        aurum_calls, total_calls = result.get_cumulative_tool_counts()
+        _, total_calls = result.get_cumulative_tool_counts()
         result_dict["tool_calls_total"] = total_calls
         result_dict["api_tool_calls"]   = result.get_api_tool_calls()
-        result_dict["aurum_tool_calls"] = aurum_calls
 
         # Cycle count
         result_dict["cycle_count"]      = result.cycle_count

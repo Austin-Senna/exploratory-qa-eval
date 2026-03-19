@@ -37,7 +37,6 @@ from .agent_tools import (  # noqa: F401 — re-exported
     REGION,
     SANDBOX_BASE_DIR,
 )
-from .external.aurum_tools import search_value, search_field, search_field_and_value, neighbor  
 from .helper.detect import detect_family, should_skip
 
 load_dotenv()
@@ -523,9 +522,4 @@ __all__ = [
     "cleanup_sandbox",
     "set_sandbox_dir",
     "download",
-    # re-exported from aurum_tools
-    "search_value",
-    "search_field",
-    "search_field_and_value",
-    "neighbor",
 ]
