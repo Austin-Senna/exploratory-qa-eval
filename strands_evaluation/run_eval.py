@@ -313,6 +313,10 @@ def main() -> None:
                         help="Experiment condition: 'a' (tools-rich), 'b' (planning-rich), or 'baseline'")
     parser.add_argument("--sparse-backend", choices=["bm25", "splade"], default="bm25",
                         help="Sparse search backend for Condition A (default: bm25)")
+    parser.add_argument("--enable-traces", action="store_true",
+                        help="Write per-call trace JSONL files to --traces-output-dir")
+    parser.add_argument("--traces-output-dir", default="results/traces",
+                        help="Base directory for trace JSONL files (default: results/traces)")
 
     # Execution
     parser.add_argument("--parallel", type=int, default=6,
@@ -333,6 +337,9 @@ def main() -> None:
         temperature=args.temperature,
         max_tokens=args.max_tokens,
     )
+    safe_model_name = _sanitize_model_name(agent_config.model_id)
+    trace_dir = os.path.join(args.traces_output_dir, args.condition, safe_model_name)
+
     run_config = RunConfig(
         max_tool_calls=args.max_tool_calls,
         sliding_window_k=args.sliding_window,
@@ -340,6 +347,8 @@ def main() -> None:
         condition_config=ConditionConfig(
             condition=args.condition,
             sparse_backend=args.sparse_backend,
+            enable_traces=args.enable_traces,
+            trace_output_dir=trace_dir,
         ),
     )
 

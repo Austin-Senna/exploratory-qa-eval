@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """
-Compute discovery metrics D_ret, D_acc, precision/recall/F1 from sidecar traces.
+Compute discovery metrics D_ret, D_acc, precision/recall/F1 from trace JSONL files.
 
 D_ret: fraction of tasks where at least one gold dataset appeared in any search result
-D_acc: fraction of tasks where the agent used (cited) a gold dataset in its answer sources
+D_acc: fraction of tasks where the agent cited a gold dataset in its submit_answer sources
 
 Usage:
-    python analysis/discovery_metrics.py [--sidecar-dir results/sidecar] [--results-dir results]
+    python analysis/discovery_metrics.py [--traces-dir results/traces] [--tasks-dir tasks_mini]
 """
 import argparse
 import json
@@ -14,10 +14,10 @@ from collections import defaultdict
 from pathlib import Path
 
 
-def load_sidecar_traces(sidecar_dir: str) -> dict[str, list]:
-    """Load all sidecar JSONL files. Returns {task_id: [trace_records]}."""
+def load_traces(traces_dir: str) -> dict[str, list]:
+    """Load all trace JSONL files. Returns {task_id: [trace_records]}."""
     traces: dict = defaultdict(list)
-    for jsonl_path in Path(sidecar_dir).rglob("*.jsonl"):
+    for jsonl_path in Path(traces_dir).rglob("*.jsonl"):
         task_id = jsonl_path.stem
         with open(jsonl_path) as f:
             for line in f:
@@ -27,40 +27,26 @@ def load_sidecar_traces(sidecar_dir: str) -> dict[str, list]:
     return dict(traces)
 
 
-def load_agent_results(results_dir: str) -> dict[str, dict]:
-    """Load agent_results.jsonl. Returns {task_id: result_record}."""
-    results: dict = {}
-    for jsonl_path in Path(results_dir).rglob("agent_results.jsonl"):
-        with open(jsonl_path) as f:
-            for line in f:
-                line = line.strip()
-                if not line:
-                    continue
-                r = json.loads(line)
-                task_id = str(r.get("task_id", ""))
-                if task_id:
-                    results[task_id] = r
-    return results
-
-
 def compute_discovery_metrics(
     traces: dict[str, list],
-    agent_results: dict[str, dict],
     task_gold: dict[str, list],
 ) -> dict:
     """Compute per-task and aggregate discovery metrics."""
     task_metrics: list = []
 
-    all_task_ids = set(traces) | set(agent_results)
-    for task_id in all_task_ids:
-        gold_ids = set(task_gold.get(task_id, []))
+    for task_id, task_traces in traces.items():
+        # Resolve task_id stem back to a full path key for gold lookup
+        gold_ids = set(_resolve_gold(task_id, task_gold))
         if not gold_ids:
             continue
 
+        # Separate search traces from submit_answer record
+        search_traces = [t for t in task_traces if t.get("tool") != "submit_answer"]
+        submit_record = next((t for t in task_traces if t.get("tool") == "submit_answer"), None)
+
         # D_ret: did any search result contain a gold dataset?
-        task_traces = traces.get(task_id, [])
         all_result_ids: set = set()
-        for trace in task_traces:
+        for trace in search_traces:
             all_result_ids.update(trace.get("result_dataset_ids", []))
 
         retrieved_gold = all_result_ids & gold_ids
@@ -71,16 +57,11 @@ def compute_discovery_metrics(
         recall = len(retrieved_gold) / len(gold_ids) if gold_ids else 0.0
         f1 = (2 * precision * recall / (precision + recall)) if (precision + recall) > 0 else 0.0
 
-        # D_acc: did the agent cite a gold dataset in its answer?
-        agent_result = agent_results.get(task_id, {})
-        sources_used = agent_result.get("sources_used", [])
-        cited_ids = set()
-        for s in sources_used:
-            # Normalize: strip prefix, take first component
-            s = str(s)
-            if "lakeqa-yc4103-datalake/" in s:
-                s = s.split("lakeqa-yc4103-datalake/")[-1]
-            cited_ids.add(s.split("/")[0])
+        # D_acc: did the agent cite a gold dataset in submit_answer?
+        cited_ids: set = set()
+        if submit_record:
+            for s in submit_record.get("sources_cited", []):
+                cited_ids.add(str(s))
         d_acc = int(bool(cited_ids & gold_ids))
 
         task_metrics.append({
@@ -91,7 +72,7 @@ def compute_discovery_metrics(
             "precision": precision,
             "recall": recall,
             "f1": f1,
-            "num_search_calls": len(task_traces),
+            "num_search_calls": len(search_traces),
             "num_results_total": len(all_result_ids),
         })
 
@@ -112,36 +93,45 @@ def compute_discovery_metrics(
     return {"task_metrics": task_metrics, "aggregate": agg}
 
 
+def _resolve_gold(task_id_stem: str, task_gold: dict[str, list]) -> list:
+    """Match a trace file stem to a gold entry (full path key)."""
+    # Exact match first (in case task_id was stored as stem)
+    if task_id_stem in task_gold:
+        return task_gold[task_id_stem]
+    # Find a task path whose stem matches
+    for path_key in task_gold:
+        if Path(path_key).stem == task_id_stem:
+            return task_gold[path_key]
+    return []
+
+
 def load_task_gold_ids(tasks_dir: str) -> dict[str, list]:
-    """Load gold dataset IDs from task files. Returns {task_id: [dataset_id]}."""
+    """Load gold dataset IDs from task files. Returns {task_path: [dataset_id]}."""
     import glob as glob_mod
     gold: dict = {}
     for path in glob_mod.glob(str(Path(tasks_dir) / "**" / "*.json"), recursive=True):
         with open(path) as f:
             task = json.load(f)
-        task_id = path  # matches agent.py task["id"] = path
-        gold[task_id] = task.get("datasets_used", [])
+        gold[path] = task.get("datasets_used", [])
     return gold
 
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--sidecar-dir", default="results/sidecar")
-    parser.add_argument("--results-dir", default="results")
+    parser.add_argument("--traces-dir", default="results/traces")
     parser.add_argument("--tasks-dir", default="tasks_mini")
     args = parser.parse_args()
 
-    traces = load_sidecar_traces(args.sidecar_dir)
-    agent_results = load_agent_results(args.results_dir)
+    traces = load_traces(args.traces_dir)
     task_gold = load_task_gold_ids(args.tasks_dir)
 
-    print(f"Loaded {len(traces)} sidecar traces, {len(agent_results)} agent results")
+    print(f"Loaded traces for {len(traces)} tasks from {args.traces_dir}")
 
-    metrics = compute_discovery_metrics(traces, agent_results, task_gold)
+    metrics = compute_discovery_metrics(traces, task_gold)
     agg = metrics["aggregate"]
 
     if not agg:
-        print("No metrics computed (check task gold IDs and sidecar traces).")
+        print("No metrics computed (check task gold IDs and trace files).")
         return
 
     print(f"\nAggregate Discovery Metrics (n={agg['n']}):")

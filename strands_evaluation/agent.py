@@ -28,6 +28,7 @@ from strands.vended_plugins.steering import Guide, Proceed, SteeringHandler, Too
 import logging
 
 from strands_evaluation.config import AgentConfig, ConditionConfig, RunConfig
+from strands_evaluation.instrumentation import TracePlugin, set_trace_context
 from strands_evaluation.helper.logger import configure_logging
 from strands_evaluation.helper.result import AgentResult
 from strands_evaluation.helper.sandbox import (
@@ -50,9 +51,7 @@ from strands_evaluation.tools.agent_tools_v2 import (
     peek_files,
     query_file,
     read_file,
-    search,
     search_in_file,
-    search_keyword,
     set_sandbox_dir,
 )
 from strands_evaluation.tools.agent_tools import download
@@ -353,7 +352,7 @@ class DataLakeAgent:
         else:
             # Baseline: original tool set
             tools = [
-                search, search_keyword, list_files, peek_file, peek_files,
+                list_files, peek_file, peek_files,
                 read_file, search_in_file, query_file, download, execute_code,
                 get_sandbox_info, cleanup_sandbox, submit_answer,
             ]
@@ -372,13 +371,22 @@ class DataLakeAgent:
             telemetry(**kwargs)
             event_loop_tracker(**kwargs)
 
+        cond = self.run_config.condition_config
+        plugins = [
+            ToolLimitSteeringHandler(self.run_config.max_tool_calls, self.run_config.timeout_seconds),
+            SubmitAnswerPlugin(),
+            LoggingPlugin(),
+        ]
+        if cond.enable_traces:
+            plugins.append(TracePlugin(cond.trace_output_dir))
+
         return Agent(
             model=self._model,
             tools=tools,
             tool_executor=tool_executor,
             system_prompt=system_prompt,
             conversation_manager=conv_manager,
-            plugins=[ToolLimitSteeringHandler(self.run_config.max_tool_calls, self.run_config.timeout_seconds), SubmitAnswerPlugin(), LoggingPlugin()],
+            plugins=plugins,
             callback_handler=_callback,
             trace_attributes=trace_attributes,
         )
@@ -478,6 +486,14 @@ def _run_task_worker(
         logger.info(f"Starting task {task_index + 1}: {task.get('question', '')[:80]}...")
 
         da = DataLakeAgent(agent_config, run_config)
+
+        # Wire trace context before running if traces are enabled
+        cond = run_config.condition_config
+        if cond.enable_traces:
+            gold_ids = task.get("datasets_used", [])
+            task_id = task.get("id", str(task_index))
+            set_trace_context(task_id, gold_ids, cond.trace_output_dir)
+
         result = da.run(task["question"])
 
         result_dict: Dict[str, Any] = {

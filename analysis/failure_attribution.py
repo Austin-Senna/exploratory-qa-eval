@@ -10,7 +10,7 @@ Failure taxonomy:
   correct           — EM=1
 
 Usage:
-    python analysis/failure_attribution.py [--sidecar-dir results/sidecar] [--results-dir results]
+    python analysis/failure_attribution.py [--traces-dir results/traces] [--results-dir results]
 """
 import argparse
 import json
@@ -34,7 +34,7 @@ def classify_failure(task_result: dict, d_ret: int, d_acc: int) -> str:
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--sidecar-dir", default="results/sidecar")
+    parser.add_argument("--traces-dir", default="results/traces")
     parser.add_argument("--results-dir", default="results")
     parser.add_argument("--tasks-dir", default="tasks_mini")
     args = parser.parse_args()
@@ -42,16 +42,27 @@ def main() -> None:
     import sys
     sys.path.insert(0, str(Path(__file__).parent.parent))
     from analysis.discovery_metrics import (
-        load_agent_results,
-        load_sidecar_traces,
+        load_traces,
         load_task_gold_ids,
         compute_discovery_metrics,
     )
 
-    traces = load_sidecar_traces(args.sidecar_dir)
-    agent_results = load_agent_results(args.results_dir)
+    traces = load_traces(args.traces_dir)
     task_gold = load_task_gold_ids(args.tasks_dir)
-    metrics = compute_discovery_metrics(traces, agent_results, task_gold)
+    metrics = compute_discovery_metrics(traces, task_gold)
+
+    # Load agent results for EM scores and sources_used
+    agent_results: dict = {}
+    for jsonl_path in Path(args.results_dir).rglob("agent_results.jsonl"):
+        with open(jsonl_path) as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                r = json.loads(line)
+                task_id = str(r.get("task_id", ""))
+                if task_id:
+                    agent_results[Path(task_id).stem] = r
 
     counts: Counter = Counter()
     for m in metrics["task_metrics"]:

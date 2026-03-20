@@ -1,7 +1,39 @@
 # Analysis Methods Reference
 
 Single reference for understanding the post-eval analysis pipeline.
-All scripts read from `results/` (eval CSVs / agent JSONL) and/or `results/sidecar/` (per-call traces).
+All scripts read from `results/` (eval CSVs / agent JSONL) and/or `results/traces/` (per-call traces).
+
+### Trace file format
+
+Per-call traces are written by `TracePlugin` to `results/traces/{condition}/{model}/{task_id}.jsonl`.
+Each file contains one JSON record per line. Two record types:
+
+**Search tool record** (one per `search_sparse` / `search_hybrid` / `search_graph` / `search` / `search_keyword` call):
+```json
+{
+  "task_id": "tasks_mini/k-1-d-1/task_001.json",
+  "turn": 3,
+  "tool": "search_sparse",
+  "query": "unemployment county 2019",
+  "latency_ms": 142,
+  "result_dataset_ids": ["unemployment-county-2019", "bls-laus-2019"],
+  "gold_dataset_ids_in_results": ["unemployment-county-2019"],
+  "gold_rank": 1,
+  "timestamp_ms": 1710000000000
+}
+```
+
+**submit_answer record** (one per task, written when the agent calls `submit_answer`):
+```json
+{
+  "task_id": "tasks_mini/k-1-d-1/task_001.json",
+  "tool": "submit_answer",
+  "sources_cited": ["unemployment-county-2019"],
+  "timestamp_ms": 1710000000000
+}
+```
+
+Dataset IDs are normalized: S3 prefix `s3://lakeqa-yc4103-datalake/` stripped, first path component taken.
 
 ---
 
@@ -32,12 +64,11 @@ All scripts read from `results/` (eval CSVs / agent JSONL) and/or `results/sidec
 **What it computes:** Two binary discovery metrics per task.
 
 **Metric definitions:**
-- **D_ret** (retrieval discovery): 1 if any gold dataset ID appeared in any search tool result during the task, 0 otherwise. Determined by joining sidecar traces on `gold_dataset_ids_in_results`.
-- **D_acc** (accuracy discovery): 1 if the agent cited at least one gold dataset in its final answer's `sources_used` field, 0 otherwise.
+- **D_ret** (retrieval discovery): 1 if any gold dataset ID appeared in any search tool result during the task, 0 otherwise. Determined from `result_dataset_ids` in search trace records.
+- **D_acc** (accuracy discovery): 1 if the agent cited at least one gold dataset in its `submit_answer` call's `sources_cited` field, 0 otherwise.
 
 **Inputs:**
-- `results/sidecar/{condition}/{model}/{task_id}.jsonl` — per-call trace records with `result_dataset_ids`, `gold_dataset_ids_in_results`
-- `results/{condition}/{model}/agent_results.jsonl` — final `sources_used` per task
+- `results/traces/{condition}/{model}/{task_id}.jsonl` — per-call trace records
 - `tasks_mini/**/*.json` — ground-truth `datasets_used` field (gold dataset IDs)
 
 **Precision/recall formulas (aggregate):**
@@ -60,7 +91,7 @@ EM == 0 ∧ D_ret == 1 ∧ D_acc == 0    → discovery-reason
 EM == 0 ∧ D_ret == 1 ∧ D_acc == 1    → execution
 ```
 
-**Inputs:** `results/sidecar/`, `results/`, `tasks_mini/` (delegated to `discovery_metrics.py`)
+**Inputs:** `results/traces/`, `results/`, `tasks_mini/` (delegated to `discovery_metrics.py`)
 
 **Output:** Printed table of counts and percentages per category.
 
@@ -70,36 +101,15 @@ EM == 0 ∧ D_ret == 1 ∧ D_acc == 1    → execution
 
 **What it computes:** For each correctly-answered task (EM=1), which search backend first returned a gold dataset ID.
 
-**Attribution rule:** Scan sidecar traces for a given task in turn order (`turn` field ascending). The first trace entry where `gold_dataset_ids_in_results` is non-empty determines the backend. Ties (same turn) are broken by the order they appear in the JSONL file (i.e., write order).
+**Attribution rule:** Scan trace records for a given task in turn order (`turn` field ascending). The first search record where `gold_dataset_ids_in_results` is non-empty determines the backend. Ties (same turn) are broken by write order in the JSONL file.
 
-**Inputs:** `results/sidecar/{condition}/{model}/{task_id}.jsonl`
+**Inputs:** `results/traces/{condition}/{model}/{task_id}.jsonl`
 
 **Output columns:** `task_id`, `first_hit_backend`, `first_hit_turn`, `condition`, `model`
 
 ---
 
-## 5. `behavioral.py` — tool switching and query drift
-
-**What it computes:** Two behavioral signatures, one per condition.
-
-**Condition A — tool switching:**
-- Per task: count consecutive backend changes in turn-ordered trace sequence.
-  - `switches = Σ [backend[i] ≠ backend[i-1]]` for i in 1..n
-- Aggregates: `avg_switches`, `max_switches`, `backend_task_coverage` (tasks that used each backend ≥ once)
-
-**Condition B — query drift (Jaccard and cosine):**
-For each consecutive pair of queries `(q_{i-1}, q_i)` within a task:
-- **Jaccard**: `|tok(q_{i-1}) ∩ tok(q_i)| / |tok(q_{i-1}) ∪ tok(q_i)|`
-- **Cosine (TF)**: `dot(tf(q_{i-1}), tf(q_i)) / (‖tf(q_{i-1})‖ · ‖tf(q_i)‖)`
-
-where `tok(q)` = set of lowercase word tokens. Average across pairs per task, then average across tasks.
-Lower similarity = more reformulation / drift.
-
-**Inputs:** `results/sidecar/` (uses `query` and `tool` fields from trace records)
-
----
-
-## 6. `efficiency.py` — cost, latency, and runtime distributions
+## 5. `efficiency.py` — cost, latency, and runtime distributions
 
 **What it computes:** Distributions and correlations for resource usage metrics.
 
@@ -114,7 +124,7 @@ Lower similarity = more reformulation / drift.
 
 ---
 
-## 7. `generate_figures.py` — figure generation
+## 6. `generate_figures.py` — figure generation
 
 | Figure | Script producing it | Data source |
 |--------|---------------------|-------------|
@@ -122,8 +132,6 @@ Lower similarity = more reformulation / drift.
 | D_ret / D_acc heatmap | `generate_figures.py::fig_discovery_heatmap` | `discovery_metrics.py` output |
 | Failure attribution pie/stacked bar | `generate_figures.py::fig_failure_pie` | `failure_attribution.py` output |
 | Provenance Sankey / stacked bar | `generate_figures.py::fig_provenance` | `provenance.py` output |
-| Query drift violin plot (Condition B) | `generate_figures.py::fig_drift_violin` | `behavioral.py` output |
-| Tool switching heatmap (Condition A) | `generate_figures.py::fig_switch_heatmap` | `behavioral.py` output |
 | Cost vs. EM scatter | `generate_figures.py::fig_cost_scatter` | `efficiency.py` output |
 
 All figures are written to `results/figures/` as PDF + PNG.

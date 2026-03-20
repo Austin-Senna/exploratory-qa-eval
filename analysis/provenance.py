@@ -6,24 +6,12 @@ For each gold dataset, determines which search backend (sparse/hybrid/graph)
 first retrieved it (lowest turn number), or "none" if never retrieved.
 
 Usage:
-    python analysis/provenance.py [--sidecar-dir results/sidecar/a]
+    python analysis/provenance.py [--traces-dir results/traces/a]
 """
 import argparse
 import json
 from collections import Counter, defaultdict
 from pathlib import Path
-
-
-def load_sidecar_traces(sidecar_dir: str) -> dict[str, list]:
-    traces: dict = defaultdict(list)
-    for jsonl_path in Path(sidecar_dir).rglob("*.jsonl"):
-        task_id = jsonl_path.stem
-        with open(jsonl_path) as f:
-            for line in f:
-                line = line.strip()
-                if line:
-                    traces[task_id].append(json.loads(line))
-    return dict(traces)
 
 
 def compute_provenance(traces: dict[str, list], task_gold: dict[str, list]) -> dict:
@@ -74,15 +62,15 @@ def compute_provenance(traces: dict[str, list], task_gold: dict[str, list]) -> d
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--sidecar-dir", default="results/sidecar/a")
+    parser.add_argument("--traces-dir", default="results/traces/a")
     parser.add_argument("--tasks-dir", default="tasks_mini")
     args = parser.parse_args()
 
     import sys
     sys.path.insert(0, str(Path(__file__).parent.parent))
-    from analysis.discovery_metrics import load_task_gold_ids
+    from analysis.discovery_metrics import load_traces, load_task_gold_ids
 
-    traces = load_sidecar_traces(args.sidecar_dir)
+    traces = load_traces(args.traces_dir)
     task_gold = load_task_gold_ids(args.tasks_dir)
 
     results = compute_provenance(traces, task_gold)
