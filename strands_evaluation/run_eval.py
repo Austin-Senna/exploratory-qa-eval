@@ -313,10 +313,6 @@ def main() -> None:
                         help="Experiment condition: 'a' (tools-rich), 'b' (planning-rich), or 'baseline'")
     parser.add_argument("--sparse-backend", choices=["bm25", "splade"], default="bm25",
                         help="Sparse search backend for Condition A (default: bm25)")
-    parser.add_argument("--enable-sidecar", action="store_true",
-                        help="Enable per-call sidecar trace logging")
-    parser.add_argument("--sidecar-output-dir", default="results/sidecar",
-                        help="Base directory for sidecar JSONL traces (default: results/sidecar)")
 
     # Execution
     parser.add_argument("--parallel", type=int, default=6,
@@ -337,12 +333,6 @@ def main() -> None:
         temperature=args.temperature,
         max_tokens=args.max_tokens,
     )
-    # Resolve sidecar output dir to include condition + model subdirectory
-    safe_model_name = _sanitize_model_name(agent_config.model_id)
-    sidecar_dir = os.path.join(
-        args.sidecar_output_dir, args.condition, safe_model_name
-    )
-
     run_config = RunConfig(
         max_tool_calls=args.max_tool_calls,
         sliding_window_k=args.sliding_window,
@@ -350,8 +340,6 @@ def main() -> None:
         condition_config=ConditionConfig(
             condition=args.condition,
             sparse_backend=args.sparse_backend,
-            sidecar_output_dir=sidecar_dir,
-            enable_sidecar=args.enable_sidecar,
         ),
     )
 

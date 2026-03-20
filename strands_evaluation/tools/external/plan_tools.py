@@ -4,26 +4,29 @@ Planning tools for Condition B (planning-rich agent).
 generate_plan             — decompose the question into sub-tasks with search strategies
 generate_reflective_plan  — revise the current plan based on discoveries so far
 
-Both tools call the Anthropic API directly using ANTHROPIC_API_KEY.
-The model is configurable via set_plan_model().
+Each tool spawns a short-lived Strands Agent subagent that returns its response
+as a plain string, then parses sub-tasks from the result.
+
+The planning model is configurable via set_plan_model().
 """
-import os
 from typing import Dict, List
 
-from strands import tool
+from strands import Agent, tool
 
 # ---------------------------------------------------------------------------
 # Module-level state
 # ---------------------------------------------------------------------------
 
-_plan_model: str = "claude-haiku-4-5-20251001"
+_plan_model_id: str = "claude-haiku-4-5-20251001"
+_plan_provider: str = "anthropic"
 _current_plan: str = ""
 
 
-def set_plan_model(model_id: str) -> None:
-    """Set the model used for plan generation. Called at agent init."""
-    global _plan_model
-    _plan_model = model_id
+def set_plan_model(model_id: str, provider: str = "anthropic") -> None:
+    """Set the model used by planning subagents. Called at agent init."""
+    global _plan_model_id, _plan_provider
+    _plan_model_id = model_id
+    _plan_provider = provider
 
 
 def get_current_plan() -> str:
@@ -32,24 +35,32 @@ def get_current_plan() -> str:
 
 
 # ---------------------------------------------------------------------------
-# Internal LLM caller
+# Subagent runner
 # ---------------------------------------------------------------------------
 
-def _call_anthropic(system: str, user: str) -> str:
-    """Call the Anthropic API directly and return the response text."""
-    import anthropic
-    api_key = os.environ.get("ANTHROPIC_API_KEY")
-    if not api_key:
-        raise RuntimeError("ANTHROPIC_API_KEY env var not set — cannot generate plan")
-    client = anthropic.Anthropic(api_key=api_key)
-    message = client.messages.create(
-        model=_plan_model,
-        max_tokens=2048,
-        system=system,
-        messages=[{"role": "user", "content": user}],
-    )
-    return message.content[0].text
+def _run_planning_subagent(system_prompt: str, user_message: str) -> str:
+    """Spin up a single-turn Strands Agent subagent and return its response."""
+    from strands_evaluation.llm.llm_factory import build_model
+    from strands_evaluation.config import AgentConfig
 
+    config = AgentConfig(provider=_plan_provider, model_id=_plan_model_id)
+    model = build_model(config)
+
+    subagent = Agent(
+        model=model,
+        system_prompt=system_prompt,
+        # No tools — pure reasoning/text generation
+        tools=[],
+        # Single turn, no conversation history needed
+        load_tools_from_directory=False,
+    )
+    response = subagent(user_message)
+    return str(response)
+
+
+# ---------------------------------------------------------------------------
+# Prompt templates
+# ---------------------------------------------------------------------------
 
 _PLAN_SYSTEM = """You are a planning assistant for a data lake research agent.
 Given a natural-language question about public government datasets, decompose it
@@ -83,6 +94,15 @@ REMAINING SUB-TASKS:
 Keep the revised plan concise (2-4 remaining sub-tasks)."""
 
 
+def _parse_sub_tasks(text: str) -> List[str]:
+    sub_tasks: List[str] = []
+    for line in text.splitlines():
+        line = line.strip()
+        if line and line[0].isdigit() and "." in line[:3]:
+            sub_tasks.append(line)
+    return sub_tasks
+
+
 # ---------------------------------------------------------------------------
 # Tools
 # ---------------------------------------------------------------------------
@@ -99,18 +119,12 @@ def generate_plan(question: str) -> Dict:
     """
     global _current_plan
     try:
-        user_prompt = f"Question: {question}\n\nGenerate a research plan."
-        plan_text = _call_anthropic(_PLAN_SYSTEM, user_prompt)
+        plan_text = _run_planning_subagent(
+            _PLAN_SYSTEM,
+            f"Question: {question}\n\nGenerate a research plan.",
+        )
         _current_plan = plan_text
-
-        # Parse sub-tasks from plan text (best-effort)
-        sub_tasks: List[str] = []
-        for line in plan_text.splitlines():
-            line = line.strip()
-            if line and line[0].isdigit() and "." in line[:3]:
-                sub_tasks.append(line)
-
-        return {"plan": plan_text, "sub_tasks": sub_tasks}
+        return {"plan": plan_text, "sub_tasks": _parse_sub_tasks(plan_text)}
     except Exception as e:
         return {"error": str(e), "plan": "", "sub_tasks": []}
 
@@ -130,21 +144,14 @@ def generate_reflective_plan(discoveries_so_far: str = "") -> Dict:
     global _current_plan
     try:
         prior_plan = _current_plan or "(no prior plan)"
-        user_prompt = (
+        user_message = (
             f"Prior plan:\n{prior_plan}\n\n"
             f"Discoveries so far:\n{discoveries_so_far or '(none specified)'}\n\n"
             "Revise the plan based on current progress."
         )
-        revised_text = _call_anthropic(_REPLAN_SYSTEM, user_prompt)
+        revised_text = _run_planning_subagent(_REPLAN_SYSTEM, user_message)
         _current_plan = revised_text
-
-        sub_tasks: list = []
-        for line in revised_text.splitlines():
-            line = line.strip()
-            if line and line[0].isdigit() and "." in line[:3]:
-                sub_tasks.append(line)
-
-        return {"plan": revised_text, "sub_tasks": sub_tasks, "revised": True}
+        return {"plan": revised_text, "sub_tasks": _parse_sub_tasks(revised_text), "revised": True}
     except Exception as e:
         return {"error": str(e), "plan": _current_plan, "sub_tasks": [], "revised": False}
 

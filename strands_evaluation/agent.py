@@ -76,7 +76,7 @@ try:
     from strands_evaluation.tools.external.plan_tools import (
         generate_plan,
         generate_reflective_plan,
-        set_plan_model,
+        set_plan_model,  # set_plan_model(model_id, provider)
     )
     _PLAN_TOOLS_AVAILABLE = True
 except ImportError:
@@ -291,8 +291,8 @@ class TelemetryTracker:
 # DataLakeAgent
 # ---------------------------------------------------------------------------
 
-def _load_condition_prompt(condition: str, skills_path: str = "", fallback: str = "") -> str:
-    """Load system prompt for a condition, optionally appending skills.md."""
+def _load_condition_prompt(condition: str, append_skills: bool = False, fallback: str = "") -> str:
+    """Load system prompt for a condition, optionally appending skills."""
     path = f"prompts/condition_{condition}.txt"
     try:
         with open(path) as f:
@@ -300,12 +300,12 @@ def _load_condition_prompt(condition: str, skills_path: str = "", fallback: str 
     except FileNotFoundError:
         logger.warning(f"{path} not found — using default system prompt")
         prompt = fallback
-    if skills_path:
+    if append_skills:
         try:
-            with open(skills_path) as f:
-                prompt = prompt + "\n\n## SKILLS REFERENCE\n" + f.read()
-        except FileNotFoundError:
-            logger.warning(f"Skills file not found: {skills_path}")
+            from strands_evaluation.tools.skills import append_skills as _append
+            prompt = _append(prompt)
+        except Exception as e:
+            logger.warning(f"Could not load skills: {e}")
     return prompt
 
 
@@ -338,35 +338,17 @@ class DataLakeAgent:
 
         if condition == "a" and _SEARCH_TOOLS_AVAILABLE:
             # Condition A: three search backends + no legacy search tools
-            import os
             os.environ["SEARCH_SPARSE_BACKEND"] = cond.sparse_backend
-            search_tools = [search_sparse, search_hybrid, search_graph]
-            if cond.enable_sidecar:
-                from strands_evaluation.instrumentation.sidecar import instrument
-                search_tools = [
-                    instrument(t.__name__, cond.sidecar_output_dir)(t)
-                    for t in search_tools
-                ]
-            tools = search_tools + _data_tools
+            tools = [search_sparse, search_hybrid, search_graph] + _data_tools
             system_prompt = _load_condition_prompt("a", fallback=self.run_config.system_prompt)
 
         elif condition == "b" and _SEARCH_TOOLS_AVAILABLE and _PLAN_TOOLS_AVAILABLE:
             # Condition B: SPLADE-only + planning tools
-            import os
             os.environ["SEARCH_SPARSE_BACKEND"] = "splade"
-            plan_tools = [generate_plan, generate_reflective_plan]
-            sparse = search_sparse
-            if cond.enable_sidecar:
-                from strands_evaluation.instrumentation.sidecar import instrument
-                sparse = instrument("search_sparse", cond.sidecar_output_dir)(search_sparse)
-                plan_tools = [
-                    instrument(t.__name__, cond.sidecar_output_dir)(t)
-                    for t in plan_tools
-                ]
-            # Wire planning model to match agent model
-            set_plan_model(self.agent_config.model_id)
-            tools = [sparse] + plan_tools + _data_tools
-            system_prompt = _load_condition_prompt("b", skills_path=cond.skills_path, fallback=self.run_config.system_prompt)
+            # Wire planning subagent model to match the outer agent model
+            set_plan_model(self.agent_config.model_id, self.agent_config.provider)
+            tools = [search_sparse, generate_plan, generate_reflective_plan] + _data_tools
+            system_prompt = _load_condition_prompt("b", append_skills=True, fallback=self.run_config.system_prompt)
 
         else:
             # Baseline: original tool set
@@ -496,15 +478,6 @@ def _run_task_worker(
         logger.info(f"Starting task {task_index + 1}: {task.get('question', '')[:80]}...")
 
         da = DataLakeAgent(agent_config, run_config)
-
-        # Inject sidecar context before running (mirrors set_sandbox_dir pattern)
-        cond = run_config.condition_config
-        if cond.enable_sidecar:
-            from strands_evaluation.instrumentation.sidecar import set_sidecar_context
-            task_id = str(task.get("id", task_index))
-            gold_ids = task.get("datasets_used", [])
-            set_sidecar_context(task_id, gold_ids, cond.sidecar_output_dir)
-
         result = da.run(task["question"])
 
         result_dict: Dict[str, Any] = {

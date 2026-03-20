@@ -29,9 +29,6 @@ def resolve_model(model_name: str) -> Tuple[str, str]:
 class ConditionConfig:
     condition: str = "baseline"          # "a", "b", or "baseline"
     sparse_backend: str = "bm25"         # "bm25" or "splade" (Condition A)
-    sidecar_output_dir: str = "results/sidecar"
-    enable_sidecar: bool = False
-    skills_path: str = "prompts/skills.md"   # Condition B skills plugin
 
 
 @dataclass
