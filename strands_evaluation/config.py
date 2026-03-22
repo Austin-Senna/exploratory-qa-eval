@@ -29,7 +29,7 @@ def resolve_model(model_name: str) -> Tuple[str, str]:
 class ConditionConfig:
     condition: str = "baseline"          # "a", "b", or "baseline"
     sparse_backend: str = "bm25"         # "bm25" or "splade" (Condition A)
-    enable_traces: bool = False
+    enable_traces: bool = True
     trace_output_dir: str = "results/traces"
 
 
