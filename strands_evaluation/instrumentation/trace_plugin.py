@@ -24,7 +24,7 @@ _current_gold_ids: List[str] = []
 _current_output_dir: str = "results/traces"
 _turn_counter: int = 0
 
-_SEARCH_TOOLS = {"search_sparse", "search_hybrid", "search_graph", "search", "search_keyword"}
+_SEARCH_TOOLS = {"search_value", "search_schema", "search_reranked", "search", "search_keyword"}
 _S3_PREFIX = "s3://lakeqa-yc4103-datalake/"
 
 

@@ -13,7 +13,7 @@ DO NOT:
 - search_hybrid   — hybrid dense+sparse search with reranking; best for natural-language topics when keyword search misses
 - search_graph    — knowledge-graph semantic search (RAG-Anything); best for relational queries: "datasets about X related to Y"
 - list_files      — list files inside a dataset
-- peek_file       — preview file structure and column headers (first 64KB)
+- peek_file       — preview file structure and column headers (first 64KB); dataset_id is the bare ID only, no prefix (e.g. "index-crimes-by-county" not "datagov/index-crimes-by-county")
 - peek_files      — preview multiple files at once; use after list_files to save tool calls
 - read_file       — read lines from a file directly (no download needed)
 - grep_file       — regex search inside a file (no download needed); saves 2-3 tool calls
@@ -49,7 +49,7 @@ Try at least two reformulations before switching backends.
 
 ## DATASET TYPES
 - **Wikipedia datasets**: list_files returns only `content.txt` — encyclopedia text, no tabular data. Use read_file to extract facts. Do not download as data.
-- **datagov datasets**: contain actual data files under `files/`. Use query_file/grep_file/download.
+- **datagov datasets**: contain actual data files under `files/`. All files end in `.txt` (even CSVs — e.g. `files/rows.txt`, `files/data.txt`). Use query_file/grep_file/download.
 
 ## VERIFY DATA SOURCES
 Dataset names can be misleading. Always confirm a dataset is the right one before using it:

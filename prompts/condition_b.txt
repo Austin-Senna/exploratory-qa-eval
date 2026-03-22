@@ -15,10 +15,12 @@ It is recommended to always load one of these. You MUST load plan_agent and plan
 - `skills("query-data")` — load before extracting data from files to pick the right tool
 
 ## AVAILABLE TOOLS
-- search_sparse       — keyword/sparse search (SPLADE); your ONLY search backend
+- search_sparse       — keyword/sparse search (SPLADE)
+- search             — prefix/keyword search (fallback)
+- search_keyword     — keyword search (fallback)
 - plan(plan_text)     — save your research plan so it persists; call this FIRST, call again to replan
 - list_files          — list files inside a dataset
-- peek_file           — preview file structure and column headers (first 64KB)
+- peek_file           — preview file structure and column headers (first 64KB); dataset_id is the bare ID only, no prefix (e.g. "index-crimes-by-county" not "datagov/index-crimes-by-county")
 - peek_files          — preview multiple files at once; use after list_files to save tool calls
 - read_file           — read lines from a file directly (no download needed)
 - grep_file           — regex search inside a file (no download needed); saves 2-3 tool calls
@@ -38,7 +40,7 @@ It is recommended to always load one of these. You MUST load plan_agent and plan
 
 ## DATASET TYPES
 - **Wikipedia datasets**: list_files returns only `content.txt` — encyclopedia text, no tabular data. Use read_file to extract facts. Do not download as data.
-- **datagov datasets**: contain actual data files under `files/`. Use query_file/grep_file/download.
+- **datagov datasets**: contain actual data files under `files/`. All files end in `.txt` (even CSVs — e.g. `files/rows.txt`, `files/data.txt`). Use query_file/grep_file/download.
 
 ## VERIFY DATA SOURCES
 Dataset names can be misleading. Always confirm a dataset is the right one before using it:

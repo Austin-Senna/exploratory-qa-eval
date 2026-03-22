@@ -62,15 +62,25 @@ from strands_evaluation.tools.external.plan_tools import plan
 
 logger = logging.getLogger(__name__)
 
-# Condition A/B search tools
-_SEARCH_TOOLS_AVAILABLE = False
+# Condition A search tools
+_CONDITION_A_TOOLS_AVAILABLE = False
 try:
-    from strands_evaluation.tools.external.search_tools import (
-        search_graph,
-        search_hybrid,
-        search_sparse,
+    from strands_evaluation.tools.external.search_a_tools import (
+        search_value as search_value_a,
+        search_schema,
+        search_reranked,
     )
-    _SEARCH_TOOLS_AVAILABLE = True
+    _CONDITION_A_TOOLS_AVAILABLE = True
+except ImportError:
+    pass
+
+# Condition B search tools
+_CONDITION_B_TOOLS_AVAILABLE = False
+try:
+    from strands_evaluation.tools.external.search_b_tools import (
+        search_value as search_value_b,
+    )
+    _CONDITION_B_TOOLS_AVAILABLE = True
 except ImportError:
     pass
 
@@ -324,16 +334,14 @@ class DataLakeAgent:
             submit_answer,
         ]
 
-        if condition == "a" and _SEARCH_TOOLS_AVAILABLE:
-            # Condition A: three search backends + no legacy search tools
-            os.environ["SEARCH_SPARSE_BACKEND"] = cond.sparse_backend
-            tools = [search_sparse, search_hybrid, search_graph] + _data_tools
+        if condition == "a" and _CONDITION_A_TOOLS_AVAILABLE:
+            # Condition A (tools-rich): hybrid RRF + schema + reranked
+            tools = [search_value_a, search_schema, search_reranked] + _data_tools
             system_prompt = _load_condition_prompt("a", fallback=self.run_config.system_prompt)
 
-        elif condition == "b" and _SEARCH_TOOLS_AVAILABLE:
-            # Condition B: SPLADE-only search + plan tool + skills
-            os.environ["SEARCH_SPARSE_BACKEND"] = "splade"
-            tools = [plan] + _data_tools
+        elif condition == "b" and _CONDITION_B_TOOLS_AVAILABLE:
+            # Condition B (planning-rich): sparse search + plan tool + skills
+            tools = [search_value_b, plan] + _data_tools
             system_prompt = _load_condition_prompt("b", fallback=self.run_config.system_prompt)
 
         else:
