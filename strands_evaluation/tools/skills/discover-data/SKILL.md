@@ -12,7 +12,7 @@ Use search to get dataset IDs, then `list_files` to inspect structure.
 - `search` / `search_keyword` — prefix and keyword search (baseline condition)
 
 **Tips:**
-- Dataset IDs often encode the answer — read the name before searching further (e.g. `unemployment-insurance-beneficiaries-and-benefit-amounts-paid-beginning-2001` tells you exactly what's inside)
+- Dataset IDs often encode the answer — read the name before searching further (e.g. a dataset named `public-school-locations-by-county-2020` tells you its contents without opening it)
 - Try at least two reformulations before giving up: broader terms, agency names (VA, HUD, BLS, CDC, FEMA), or government-specific terminology
 - **Lexical pivot**: swap broad concept for agency term (e.g. "food stamps" → "SNAP", "unemployment benefits" → "ETA")
 - **Granularity pivot**: if city-level fails, search state-level and filter in code
@@ -22,7 +22,9 @@ Use search to get dataset IDs, then `list_files` to inspect structure.
 
 ## Inspecting Dataset Structure
 
-If you only get a dataset id, call `list_files` to see what's inside.
+**NEVER guess file paths.** Always call `list_files` first to see what files exist, then use the exact paths returned.
+
+Once you have a dataset id, call `list_files` to see what's inside. Then call `peek_files` with all the returned file paths at once — one tool call instead of one `peek_file` per file.
 
 **Two dataset types:**
 

@@ -58,10 +58,11 @@ from strands_evaluation.tools.agent_tools_v2 import (
     set_sandbox_dir,
 )
 from strands_evaluation.tools.agent_tools import download
+from strands_evaluation.tools.external.plan_tools import plan
 
 logger = logging.getLogger(__name__)
 
-# Condition A/B search and plan tools
+# Condition A/B search tools
 _SEARCH_TOOLS_AVAILABLE = False
 try:
     from strands_evaluation.tools.external.search_tools import (
@@ -72,8 +73,6 @@ try:
     _SEARCH_TOOLS_AVAILABLE = True
 except ImportError:
     pass
-
-from strands_evaluation.tools.external.plan_tools import plan, reset_plan_state
 
 
 # ---------------------------------------------------------------------------
@@ -334,7 +333,7 @@ class DataLakeAgent:
         elif condition == "b" and _SEARCH_TOOLS_AVAILABLE:
             # Condition B: SPLADE-only search + plan tool + skills
             os.environ["SEARCH_SPARSE_BACKEND"] = "splade"
-            tools = [search_sparse, plan] + _data_tools
+            tools = [plan] + _data_tools
             system_prompt = _load_condition_prompt("b", fallback=self.run_config.system_prompt)
 
         else:
@@ -397,7 +396,7 @@ class DataLakeAgent:
         sandbox = _create_isolated_sandbox(str(os.getpid()))
         set_sandbox_dir(sandbox)
         clear_submitted_answer()
-        reset_plan_state()
+
         telemetry = TelemetryTracker()
         trace_attributes = (
             {

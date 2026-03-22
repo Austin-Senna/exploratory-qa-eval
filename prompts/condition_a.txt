@@ -14,6 +14,7 @@ DO NOT:
 - search_graph    — knowledge-graph semantic search (RAG-Anything); best for relational queries: "datasets about X related to Y"
 - list_files      — list files inside a dataset
 - peek_file       — preview file structure and column headers (first 64KB)
+- peek_files      — preview multiple files at once; use after list_files to save tool calls
 - read_file       — read lines from a file directly (no download needed)
 - grep_file       — regex search inside a file (no download needed); saves 2-3 tool calls
 - query_file      — SQL query directly on CSV/JSON via DuckDB (no download needed); saves 2-3 tool calls
