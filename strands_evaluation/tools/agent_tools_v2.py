@@ -15,6 +15,7 @@ import os
 import json
 import re
 import traceback
+from collections import deque
 from typing import Any, Dict, List
 
 import duckdb
@@ -54,6 +55,7 @@ _MAX_TEXT_CHARS = 50_000
 _QUERY_ROW_CAP = 200
 _SEARCH_MAX_MATCHES = 20
 _SEARCH_CONTEXT_LINES = 2
+_QUERY_MAX_FILE_BYTES = 500 * 1024 * 1024  # 500 MB — above this, download first
 
 
 # ---------------------------------------------------------------------------
@@ -115,10 +117,6 @@ def peek_file(
         return {"error": "dataset_id is required"}
     if not file_path:
         return {"error": "file_path is required"}
-
-    filename = file_path.rsplit("/", 1)[-1]
-    if should_skip(filename):
-        return {"error": f"File skipped (metadata/binary): {file_path}"}
 
     folder = _resolve_dataset_folder(dataset_id)
     if folder is None:
@@ -223,30 +221,13 @@ def peek_files(
 # Tool 2: read_file
 # ---------------------------------------------------------------------------
 
-def _s3_fetch_text(dataset_id: str, file_path: str, max_bytes: int):
-    """Fetch up to max_bytes of a file from S3 and return (text, size_bytes, truncated).
-
-    Returns a tuple (text, size_bytes, truncated) or raises on error.
-    """
-    folder = _resolve_dataset_folder(dataset_id)
-    if folder is None:
-        raise ValueError(f"Dataset not found or ambiguous: {dataset_id}")
-    s3 = _get_s3_client()
-    key = f"{folder}/{dataset_id}/{file_path.lstrip('/')}"
-    size_bytes = _s3_head(s3, key)
-    end = min(max_bytes - 1, size_bytes - 1)
-    raw = _s3_range_get(s3, key, 0, end)
-    text = raw.decode("utf-8", errors="replace")
-    truncated = size_bytes > max_bytes
-    return text, size_bytes, truncated
-
 
 @tool
 def read_file(
     dataset_id: str,
     file_path: str,
     start_line: int = 0,
-    max_lines: int = 200,
+    max_lines: int = 10000,
 ) -> Dict[str, Any]:
     """
     Read lines from a file in the data lake without downloading it.
@@ -257,17 +238,14 @@ def read_file(
         dataset_id: Dataset identifier (e.g. "census")
         file_path:  Relative path within the dataset (e.g. "files/data.txt")
         start_line: Line index to start reading from, 0-based (default 0)
-        max_lines:  Number of lines to return, capped at 500 (default 200)
+        max_lines:  Number of lines to return, capped at 10000 (default 10000)
     """
     if not dataset_id or not file_path:
         return {"error": "dataset_id and file_path are required"}
     if start_line < 0:
         return {"error": "start_line must be >= 0"}
 
-    max_lines = min(max_lines, 500)
-    filename = file_path.rsplit("/", 1)[-1]
-    if should_skip(filename):
-        return {"error": f"File skipped (metadata/binary): {file_path}"}
+    max_lines = min(max_lines, 10_000)
 
     folder = _resolve_dataset_folder(dataset_id)
     if folder is None:
@@ -275,37 +253,23 @@ def read_file(
 
     s3 = _get_s3_client()
     key = f"{folder}/{dataset_id}/{file_path.lstrip('/')}"
-    
+
     try:
-        # Open a streaming connection to the file
         resp = s3.get_object(Bucket=BUCKET, Key=key)
-        line_iter = resp["Body"].iter_lines()
-        
+        body = resp["Body"]
         lines = []
-        current_line = 0
-
-        # Skip lines until we hit the requested start_line
-        for _ in range(start_line):
-            try:
-                next(line_iter)
-                current_line += 1
-            except StopIteration:
+        current = 0
+        for raw_line in body.iter_lines():
+            if current < start_line:
+                current += 1
+                continue
+            lines.append(raw_line.decode("utf-8", errors="replace"))
+            current += 1
+            if len(lines) >= max_lines:
                 break
-
-        # Read the requested chunk
-        for _ in range(max_lines):
-            try:
-                raw_line = next(line_iter)
-                lines.append(raw_line.decode("utf-8", errors="replace"))
-                current_line += 1
-            except StopIteration:
-                break
-                
-        # Close the stream explicitly to free the connection
-        resp["Body"].close()
-        
+        body.close()
     except Exception as e:
-        return {"error": f"Failed to stream file: {e}"}
+        return {"error": f"Failed to read file: {e}"}
 
     return {
         "dataset_id": dataset_id,
@@ -317,18 +281,31 @@ def read_file(
 
 
 # ---------------------------------------------------------------------------
-# Tool 3: search_in_file
+# Tool 3: grep_file
 # ---------------------------------------------------------------------------
 
 @tool
-def search_in_file(
+def grep_file(
     dataset_id: str,
     file_path: str,
     regex_pattern: str,
     context_lines: int = 2,
 ) -> Dict[str, Any]:
-    """Search for a regex pattern inside a file over an S3 stream."""
-    # ... (validation and S3 setup remains the same) ...
+    """
+    Search for a regex pattern inside a file without downloading it.
+    Streams the file from S3 and returns matching lines with surrounding context.
+    Use this to locate specific values, IDs, or keywords in large files.
+
+    Args:
+        dataset_id:    Dataset identifier (e.g. "public-school-locations-current-23297")
+        file_path:     Relative path within the dataset (e.g. "files/data.txt")
+        regex_pattern: Case-insensitive regex to search for (e.g. "King County")
+        context_lines: Lines of context before/after each match (default 2, max 5)
+
+    Returns:
+        Dict with keys: match_count, matches (list of {line_number, line,
+        context_before, context_after}), truncated. On error: {error: ...}
+    """
     if not dataset_id or not file_path or not regex_pattern:
         return {"error": "dataset_id, file_path, and regex_pattern are required"}
 
@@ -445,41 +422,32 @@ def query_file(
     if not sql or not sql.strip():
         return {"error": "sql is required"}
 
-    filename = file_path.rsplit("/", 1)[-1]
-    if should_skip(filename):
-        return {"error": f"File skipped (metadata/binary): {file_path}"}
-
     folder = _resolve_dataset_folder(dataset_id)
     if folder is None:
         return {"error": f"Dataset not found or ambiguous: {dataset_id}"}
 
     s3_uri = f"s3://{BUCKET}/{folder}/{dataset_id}/{file_path.lstrip('/')}"
-    lower_path = file_path.lower()
 
-    # Determine reader function
-    if lower_path.endswith(".csv"):
+    # Determine reader function — peek first for all extensions
+    try:
+        s3 = _get_s3_client()
+        key = f"{folder}/{dataset_id}/{file_path.lstrip('/')}"
+        size = _s3_head(s3, key)
+        if size > _QUERY_MAX_FILE_BYTES:
+            return {"error": f"File too large to query directly ({size // (1024*1024)} MB). Use download + execute_code instead."}
+        end = min(_PEEK_BYTES - 1, size - 1)
+        raw = _s3_range_get(s3, key, 0, end)
+        text = raw.decode("utf-8", errors="replace")
+        family = detect_family(text)
+    except Exception as e:
+        return {"error": f"Could not detect file family: {e}"}
+
+    if family == "csv":
         reader = f"read_csv_auto('{s3_uri}')"
-    elif lower_path.endswith((".json", ".jsonl", ".ndjson")):
-        reader = f"read_json_auto('{s3_uri}')"
+    elif family == "json":
+        reader = f"read_json_auto('{s3_uri}', maximum_object_size=104857600)"
     else:
-        # Attempt to detect from a quick peek
-        try:
-            s3 = _get_s3_client()
-            key = f"{folder}/{dataset_id}/{file_path.lstrip('/')}"
-            size = _s3_head(s3, key)
-            end = min(_PEEK_BYTES - 1, size - 1)
-            raw = _s3_range_get(s3, key, 0, end)
-            text = raw.decode("utf-8", errors="replace")
-            family = detect_family(text)
-        except Exception as e:
-            return {"error": f"Could not detect file family: {e}"}
-
-        if family == "csv":
-            reader = f"read_csv_auto('{s3_uri}')"
-        elif family == "json":
-            reader = f"read_json_auto('{s3_uri}')"
-        else:
-            return {"error": f"File family '{family}' is not queryable with SQL"}
+        return {"error": f"File family '{family}' is not queryable with SQL"}
 
     try:
         conn = _duckdb_connection()
@@ -511,7 +479,7 @@ __all__ = [
     "peek_file",
     "peek_files",
     "read_file",
-    "search_in_file",
+    "grep_file",
     "query_file",
     # re-exported from agent_tools
     "search",

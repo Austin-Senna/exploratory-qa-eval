@@ -92,14 +92,27 @@ DO NOT:
 
 ## AVAILABLE TOOLS
 - search / search_keyword — find datasets by name or keyword; returns dataset IDs (not data)
-- list_files — list files inside datasets
-- peek_file / query_file — inspect file contents without downloading
+- list_files — list files inside a dataset
+- peek_file — preview file structure and column headers (first 64KB)
+- read_file — read lines from a file directly (paginated, no download needed)
+- grep_file — regex search inside a file (no download needed); saves 2-3 tool calls vs download+execute_code
+- query_file — SQL query directly on a CSV/JSON file via DuckDB (no download needed); saves 2-3 tool calls
 - download — download files to the sandbox
-- execute_code — run Python against downloaded files; always use print() to see output
+- execute_code — run Python against downloaded files; ONLY use when query_file/grep_file aren't enough
 - submit_answer(answer, reasoning, sources) — submit your final answer and stop
   - answer: wrap in square brackets e.g. [42]
   - reasoning: brief explanation of how you found the answer
-  - sources: list of file paths / dataset IDs you used
+  - sources: list of dataset IDs you used (e.g. ["public-school-locations-current-23297", "Sal_Khan"])
+
+## TOOL COST LADDER — use the cheapest that works
+1. query_file — for COUNT, GROUP BY, filter, aggregation on CSV/JSON
+2. grep_file — for keyword/value search inside a file
+3. read_file — for text inspection, Wikipedia content
+4. download + execute_code — ONLY for joins, complex pandas, multi-file operations
+
+## DATASET TYPES
+- **Wikipedia datasets**: list_files returns only `content.txt` — encyclopedia text, no tabular data. Use read_file to extract facts (names, locations). Do not try to download as data.
+- **datagov datasets**: contain actual data files under `files/`. Use query_file/grep_file/download.
 
 ## VERIFY DATA SOURCES
 Dataset names can be misleading. Always confirm a dataset is the right one before using it:
@@ -107,11 +120,13 @@ Dataset names can be misleading. Always confirm a dataset is the right one befor
 - Two datasets with similar names may cover completely different locations
 
 ## GENERAL TIPS
+- query_file and grep_file work directly on S3 — no download needed, use them first
 - Always print() in execute_code to see output
-- Check actual column names and date formats in the data
+- execute_code does NOT persist state between calls — always reload files at the top of each block
+- Check actual column names before writing analysis code (peek_file or query_file LIMIT 1)
 - Use the full dataset for your final answer, not just a sample
 - Answer format: [value] only, no labels or units
 
 ## TURN AND TIME LIMITS
-- You have LIMITED TURNS. Do not waste them on unnecessary exploration.
+- You have a maximum of 30 tool calls. Use them wisely.
 - If running low on turns, submit your best answer."""

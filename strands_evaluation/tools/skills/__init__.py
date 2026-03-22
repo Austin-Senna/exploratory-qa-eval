@@ -1,3 +1,2 @@
-from strands_evaluation.tools.skills.load_skills import load_skills, append_skills
-
-__all__ = ["load_skills", "append_skills"]
+# Skills are now loaded via AgentSkills plugin (strands.vended_plugins.skills).
+# See strands_evaluation/tools/skills/data-lake-agent/SKILL.md

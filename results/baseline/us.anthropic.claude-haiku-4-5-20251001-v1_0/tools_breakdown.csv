@@ -1,0 +1,9 @@
+task_id,tool_name,call_count,success_count,avg_time_seconds
+tasks_mini/k-1-d-1/task_1.json,download,1,1,0.40763282775878906
+tasks_mini/k-1-d-1/task_1.json,execute_code,3,2,0.06585399309794109
+tasks_mini/k-1-d-1/task_1.json,list_files,4,4,0.3180732727050781
+tasks_mini/k-1-d-1/task_1.json,peek_file,7,5,0.23910621234348842
+tasks_mini/k-1-d-1/task_1.json,read_file,3,1,0.08139634132385254
+tasks_mini/k-1-d-1/task_1.json,search,2,2,0.3637399673461914
+tasks_mini/k-1-d-1/task_1.json,search_keyword,3,3,3.5658379395802817
+tasks_mini/k-1-d-1/task_1.json,submit_answer,1,1,0.0011680126190185547

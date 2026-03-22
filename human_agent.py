@@ -28,6 +28,9 @@ _ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(_ROOT))
 
 from strands_evaluation.tools import agent_tools  # noqa: E402
+from strands_evaluation.tools.agent_tools_v2 import (  # noqa: E402
+    peek_file, peek_files, read_file, grep_file, query_file,
+)
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -101,9 +104,50 @@ def cmd_peek_file():
     if not dataset_id or not file_path:
         print("  [!] Both dataset_id and file_path required.")
         return
-    from strands_evaluation.tools.agent_tools_v2 import peek_file
     t0 = time.time()
     result = peek_file(dataset_id, file_path)
+    print(f"  [{time.time()-t0:.1f}s]")
+    print(_short(result))
+
+
+def cmd_read_file():
+    dataset_id = input("  dataset_id: ").strip()
+    file_path = input("  file_path: ").strip()
+    if not dataset_id or not file_path:
+        print("  [!] Both dataset_id and file_path required.")
+        return
+    start_line_raw = input("  start_line [0]: ").strip()
+    max_lines_raw = input("  max_lines [200]: ").strip()
+    start_line = int(start_line_raw) if start_line_raw.isdigit() else 0
+    max_lines = int(max_lines_raw) if max_lines_raw.isdigit() else 200
+    t0 = time.time()
+    result = read_file(dataset_id, file_path, start_line=start_line, max_lines=max_lines)
+    print(f"  [{time.time()-t0:.1f}s]")
+    print(_short(result))
+
+
+def cmd_grep_file():
+    dataset_id = input("  dataset_id: ").strip()
+    file_path = input("  file_path: ").strip()
+    pattern = input("  regex_pattern: ").strip()
+    if not dataset_id or not file_path or not pattern:
+        print("  [!] dataset_id, file_path, and regex_pattern required.")
+        return
+    t0 = time.time()
+    result = grep_file(dataset_id, file_path, pattern)
+    print(f"  [{time.time()-t0:.1f}s]")
+    print(_short(result))
+
+
+def cmd_query_file():
+    dataset_id = input("  dataset_id: ").strip()
+    file_path = input("  file_path: ").strip()
+    sql = input("  sql (use 't' as table): ").strip()
+    if not dataset_id or not file_path or not sql:
+        print("  [!] dataset_id, file_path, and sql required.")
+        return
+    t0 = time.time()
+    result = query_file(dataset_id, file_path, sql)
     print(f"  [{time.time()-t0:.1f}s]")
     print(_short(result))
 
@@ -204,6 +248,9 @@ COMMANDS = {
     "kw":       ("search_keyword — keyword/FTS search",            cmd_search_keyword),
     "ls":       ("list_files in dataset(s)",                       cmd_list_files),
     "peek":     ("peek_file — structure/sample preview",           cmd_peek_file),
+    "read":     ("read_file — paginated line reader",              cmd_read_file),
+    "grep":     ("grep_file — regex search over S3 stream",         cmd_grep_file),
+    "query":    ("query_file — SQL query via DuckDB httpfs",        cmd_query_file),
     "dl":       ("download file(s) to sandbox",                    cmd_download),
     "run":      ("execute_code in sandbox",                        cmd_execute_code),
     "sandbox":  ("show sandbox info / downloaded files",           cmd_sandbox_info),
@@ -233,7 +280,7 @@ def load_task(task_file: str) -> dict:
 
 
 def pick_random_task() -> str:
-    tasks = list(Path("tasks").rglob("*.json"))
+    tasks = list(Path("tasks_mini").rglob("*.json"))
     if not tasks:
         sys.exit("No tasks found in tasks/")
     return str(random.choice(tasks))

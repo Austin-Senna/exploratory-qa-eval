@@ -23,6 +23,7 @@ from strands.agent.conversation_manager import SlidingWindowConversationManager
 from strands.tools.executors import SequentialToolExecutor, ConcurrentToolExecutor
 from strands.hooks import AfterToolCallEvent, AgentInitializedEvent, BeforeToolCallEvent
 from strands.plugins import hook
+from strands.vended_plugins.skills import AgentSkills
 from strands.vended_plugins.steering import Guide, Proceed, SteeringHandler, ToolSteeringAction
 
 import logging
@@ -41,17 +42,19 @@ from strands_evaluation.tools.agent_tools import (
     clear_submitted_answer,
     get_submitted_answer,
     submit_answer,
+    search,
+    search_keyword,
 )
 from strands_evaluation.tools.agent_tools_v2 import (
     cleanup_sandbox,
     execute_code,
     get_sandbox_info,
+    grep_file,
     list_files,
     peek_file,
     peek_files,
     query_file,
     read_file,
-    search_in_file,
     set_sandbox_dir,
 )
 from strands_evaluation.tools.agent_tools import download
@@ -70,16 +73,8 @@ try:
 except ImportError:
     pass
 
-_PLAN_TOOLS_AVAILABLE = False
-try:
-    from strands_evaluation.tools.external.plan_tools import (
-        generate_plan,
-        generate_reflective_plan,
-        set_plan_model,  # set_plan_model(model_id, provider)
-    )
-    _PLAN_TOOLS_AVAILABLE = True
-except ImportError:
-    pass
+from strands_evaluation.tools.external.plan_tools import plan, reset_plan_state
+
 
 # ---------------------------------------------------------------------------
 # CallbackHandler
@@ -170,7 +165,8 @@ class ToolLimitSteeringHandler(SteeringHandler):
 
     @hook
     def on_after_tool(self, event: AfterToolCallEvent) -> None:
-        self._count += 1
+        if event.tool_use.get("name") != "skills":
+            self._count += 1
 
     async def steer_before_tool(self, *, agent, tool_use, **kwargs) -> ToolSteeringAction:
         # Never intercept submit_answer itself
@@ -271,6 +267,7 @@ class LoggingPlugin(Plugin):
             logger.debug(f"Tool result: {result_str}")
 
 
+
 class TelemetryTracker:
     def __init__(self):
         self.tool_calls = 0
@@ -290,22 +287,15 @@ class TelemetryTracker:
 # DataLakeAgent
 # ---------------------------------------------------------------------------
 
-def _load_condition_prompt(condition: str, append_skills: bool = False, fallback: str = "") -> str:
-    """Load system prompt for a condition, optionally appending skills."""
+def _load_condition_prompt(condition: str, fallback: str = "") -> str:
+    """Load system prompt for a condition."""
     path = f"prompts/condition_{condition}.txt"
     try:
         with open(path) as f:
-            prompt = f.read()
+            return f.read()
     except FileNotFoundError:
         logger.warning(f"{path} not found — using default system prompt")
-        prompt = fallback
-    if append_skills:
-        try:
-            from strands_evaluation.tools.skills import append_skills as _append
-            prompt = _append(prompt)
-        except Exception as e:
-            logger.warning(f"Could not load skills: {e}")
-    return prompt
+        return fallback
 
 
 class DataLakeAgent:
@@ -330,7 +320,7 @@ class DataLakeAgent:
 
         # Core data-manipulation tools shared across all conditions
         _data_tools = [
-            list_files, peek_file, peek_files, read_file, search_in_file,
+            list_files, peek_file, peek_files, read_file, grep_file,
             query_file, download, execute_code, get_sandbox_info, cleanup_sandbox,
             submit_answer,
         ]
@@ -341,19 +331,18 @@ class DataLakeAgent:
             tools = [search_sparse, search_hybrid, search_graph] + _data_tools
             system_prompt = _load_condition_prompt("a", fallback=self.run_config.system_prompt)
 
-        elif condition == "b" and _SEARCH_TOOLS_AVAILABLE and _PLAN_TOOLS_AVAILABLE:
-            # Condition B: SPLADE-only + planning tools
+        elif condition == "b" and _SEARCH_TOOLS_AVAILABLE:
+            # Condition B: SPLADE-only search + plan tool + skills
             os.environ["SEARCH_SPARSE_BACKEND"] = "splade"
-            # Wire planning subagent model to match the outer agent model
-            set_plan_model(self.agent_config.model_id, self.agent_config.provider)
-            tools = [search_sparse, generate_plan, generate_reflective_plan] + _data_tools
-            system_prompt = _load_condition_prompt("b", append_skills=True, fallback=self.run_config.system_prompt)
+            tools = [search_sparse, plan] + _data_tools
+            system_prompt = _load_condition_prompt("b", fallback=self.run_config.system_prompt)
 
         else:
             # Baseline: original tool set
             tools = [
+                search, search_keyword,
                 list_files, peek_file, peek_files,
-                read_file, search_in_file, query_file, download, execute_code,
+                read_file, grep_file, query_file, download, execute_code,
                 get_sandbox_info, cleanup_sandbox, submit_answer,
             ]
             system_prompt = self.run_config.system_prompt
@@ -377,6 +366,12 @@ class DataLakeAgent:
             SubmitAnswerPlugin(),
             LoggingPlugin(),
         ]
+        if condition == "b":
+            plugins.append(AgentSkills(skills=[
+                "strands_evaluation/tools/skills/plan-agent",
+                "strands_evaluation/tools/skills/discover-data",
+                "strands_evaluation/tools/skills/query-data",
+            ]))
         if cond.enable_traces:
             plugins.append(TracePlugin(cond.trace_output_dir))
 
@@ -402,6 +397,7 @@ class DataLakeAgent:
         sandbox = _create_isolated_sandbox(str(os.getpid()))
         set_sandbox_dir(sandbox)
         clear_submitted_answer()
+        reset_plan_state()
         telemetry = TelemetryTracker()
         trace_attributes = (
             {
@@ -542,8 +538,22 @@ def _run_task_worker(
             ]
             result_dict["expected_sources"] = expected_sources
             if result.sources:
-                pred_set = {str(s).lower() for s in result.sources}
-                exp_set = {str(s).lower() for s in expected_sources if s}
+                # Normalize to dataset_id: strip folder prefix (wikipedia/, datagov/)
+                # and everything from /files/ onward, then lowercase.
+                # e.g. "datagov/public-school-locations-current-23297/files/data.txt"
+                #   -> "public-school-locations-current-23297"
+                # e.g. "wikipedia/Sal_Khan/content.txt" -> "sal_khan"
+                def _norm_source(s: str) -> str:
+                    s = str(s).lower()
+                    for prefix in ("wikipedia/", "datagov/"):
+                        if s.startswith(prefix):
+                            s = s[len(prefix):]
+                            break
+                    s = s.split("/")[0]
+                    return s
+
+                pred_set = {_norm_source(s) for s in result.sources}
+                exp_set = {_norm_source(s) for s in expected_sources if s}
                 overlap = pred_set & exp_set
                 result_dict["source_recall"] = (
                     len(overlap) / len(exp_set) if exp_set else 0.0
