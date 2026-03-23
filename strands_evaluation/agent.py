@@ -416,6 +416,18 @@ class DataLakeAgent:
             response = agent(question)
 
             submitted = get_submitted_answer()
+            retries = 0
+            while not submitted and retries < 2:
+                logger.warning(
+                    f"Agent finished without submit_answer. Nudging (attempt {retries + 1}/2)..."
+                )
+                response = agent(
+                    "You provided a text response but you MUST use the `submit_answer` tool "
+                    "to submit your final answer and sources. Please call the tool now."
+                )
+                submitted = get_submitted_answer()
+                retries += 1
+
             answer = submitted["answer"] if submitted else _clean_answer(str(response))
             elapsed = sum(response.metrics.cycle_durations)
 
