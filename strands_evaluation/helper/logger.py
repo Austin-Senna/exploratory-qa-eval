@@ -21,23 +21,27 @@ def _slugify(value: Optional[str]) -> Optional[str]:
 
 def _build_log_file(
     log_dir: str,
-    run_id: Optional[str],
+    condition: Optional[str],
     model: Optional[str],
-    batch: Optional[str],
+    task_id: Optional[str],
 ) -> str:
-    os.makedirs(log_dir, exist_ok=True)
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    model_part = _slugify(model)
-    batch_part = _slugify(batch)
-    parts = ["agent"]
-    if model_part:
-        parts.append(model_part)
-    if batch_part:
-        parts.append(batch_part)
-    parts.append(run_id or timestamp)
-    parts.append(f"pid{os.getpid()}")
-    filename = "_".join(parts) + ".log"
-    return os.path.join(log_dir, filename)
+    from pathlib import Path
+    # Build: logs/{condition}/{model}/{task_dir}/{task_stem}.log
+    # e.g.  logs/a/claude-haiku-4-5/k-2-d-1/task_1.log
+    subdir = log_dir
+    if condition:
+        subdir = os.path.join(subdir, _slugify(condition))
+    if model:
+        subdir = os.path.join(subdir, _slugify(model))
+    if task_id:
+        p = Path(task_id)
+        subdir = os.path.join(subdir, p.parent.name)
+        filename = p.stem + ".log"
+    else:
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"agent_{timestamp}_pid{os.getpid()}.log"
+    os.makedirs(subdir, exist_ok=True)
+    return os.path.join(subdir, filename)
 
 
 def configure_logging(
@@ -45,6 +49,8 @@ def configure_logging(
     run_id: Optional[str] = None,
     model: Optional[str] = None,
     batch: Optional[str] = None,
+    condition: Optional[str] = None,
+    task_id: Optional[str] = None,
     level: int = logging.DEBUG,
 ) -> None:
     """Configure file + console handlers on the strands and strands_evaluation root loggers.
@@ -52,7 +58,7 @@ def configure_logging(
     Call once per process before creating any Agent. Worker processes call this inside
     _run_task_worker before constructing DataLakeAgent.
     """
-    log_file = _build_log_file(log_dir, run_id, model, batch)
+    log_file = _build_log_file(log_dir, condition, model, task_id)
 
     file_handler = logging.FileHandler(log_file, encoding="utf-8")
     file_handler.setLevel(logging.DEBUG)

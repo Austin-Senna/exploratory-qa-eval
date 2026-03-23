@@ -480,9 +480,9 @@ def _run_task_worker(
     from strands_evaluation.helper.metrics import compute_exact_match, compute_f1_score, normalize_text
 
     configure_logging(
-        run_id=run_id,
         model=agent_config.model_id,
-        batch=batch_name,
+        condition=run_config.condition_config.condition,
+        task_id=task.get("id"),
     )
 
     try:

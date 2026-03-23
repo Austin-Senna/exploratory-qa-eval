@@ -15,6 +15,14 @@ Usage:
 
     # Limit tasks per directory and increase parallelism
     python -m strands_evaluation.run_eval --all-tasks --tasks-per-dir 2 --parallel 4
+
+    # condition B:
+    python -m strands_evaluation.run_eval --task-dir tasks_mini/k-5-d-3 --tasks-per-dir 2 --parallel 2 --model-name bedrock/claude-haiku-4.5 --enable-traces -
+    -condition b
+
+    # condition A:
+    python -m strands_evaluation.run_eval --task-dir tasks_mini/k-5-d-3 --tasks-per-dir 2 --parallel 2 --model-name bedrock/claude-haiku-4.5 --enable-traces -
+    -condition a
 """
 
 import argparse

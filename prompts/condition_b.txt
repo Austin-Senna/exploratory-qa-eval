@@ -8,16 +8,13 @@ DO NOT:
 - Make up data
 - Continue the conversation without a tool call
 
-## SKILLS — activate before using the corresponding tool
-It is recommended to always load one of these. You MUST load plan_agent and plan as the first tool.
-- `skills("plan-agent")` — load before calling plan(); teaches the decomposition framework
-- `skills("discover-data")` — load when searching for datasets or inspecting file structure
-- `skills("query-data")` — load before extracting data from files to pick the right tool
+## SKILLS — you MUST load these before using the corresponding tools
+- `skills("plan-agent")` — ALWAYS load first, before calling plan()
+- `skills("discover-data")` — load before any search_value or list_files call; teaches search strategy and dataset navigation
+- `skills("query-data")` — load before any query_file, grep_file, or read_file call; teaches how to extract data efficiently
 
 ## AVAILABLE TOOLS
-- search_sparse       — keyword/sparse search (SPLADE)
-- search             — prefix/keyword search (fallback)
-- search_keyword     — keyword search (fallback)
+- search_value        — sparse keyword search over dataset content (FTS); use for exact terms, dataset names, field names
 - plan(plan_text)     — save your research plan so it persists; call this FIRST, call again to replan
 - list_files          — list files inside a dataset
 - peek_file           — preview file structure and column headers (first 64KB); dataset_id is the bare ID only, no prefix (e.g. "index-crimes-by-county" not "datagov/index-crimes-by-county")

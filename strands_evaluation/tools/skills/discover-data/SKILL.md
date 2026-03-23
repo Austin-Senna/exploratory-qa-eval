@@ -8,8 +8,7 @@ description: How to find datasets and files in the data lake using search and di
 Use search to get dataset IDs, then `list_files` to inspect structure.
 
 **Search tools:**
-- `search_sparse` — keyword/sparse search; best for exact terms, dataset names, field names
-- `search` / `search_keyword` — prefix and keyword search (baseline condition)
+- `search_value` — sparse keyword search; best for exact terms, dataset names, field names
 
 **Tips:**
 - Dataset IDs often encode the answer — read the name before searching further (e.g. a dataset named `public-school-locations-by-county-2020` tells you its contents without opening it)

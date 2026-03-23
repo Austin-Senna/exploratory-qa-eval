@@ -42,13 +42,16 @@ def set_trace_context(task_id: str, gold_ids: List[str], output_dir: str) -> Non
 # ---------------------------------------------------------------------------
 
 def _normalize_dataset_id(raw: str) -> str:
-    """Strip S3 prefix and return the first path component."""
+    """Strip S3 prefix and folder (datagov/wikipedia) to return the dataset ID."""
     s = str(raw)
     if _S3_PREFIX in s:
         s = s.split(_S3_PREFIX)[-1]
     elif "lakeqa-yc4103-datalake/" in s:
         s = s.split("lakeqa-yc4103-datalake/")[-1]
-    return s.split("/")[0]
+    # s is now e.g. "datagov/index-violent-.../files/rows.txt" or "wikipedia/Foo/content.txt"
+    # skip the folder prefix (datagov, wikipedia, etc.) to get the dataset ID
+    parts = s.split("/")
+    return parts[1] if len(parts) > 1 else parts[0]
 
 
 def _extract_dataset_ids(result_text: str) -> List[str]:
@@ -82,9 +85,10 @@ def _write_record(record: dict) -> None:
     """Append a JSONL record to the current task's trace file."""
     if not _current_output_dir or not _current_task_id:
         return
-    os.makedirs(_current_output_dir, exist_ok=True)
-    filename = _task_id_safe(_current_task_id) + ".jsonl"
-    path = os.path.join(_current_output_dir, filename)
+    p = Path(_current_task_id)
+    out_dir = os.path.join(_current_output_dir, p.parent.name)
+    os.makedirs(out_dir, exist_ok=True)
+    path = os.path.join(out_dir, p.stem + ".jsonl")
     with open(path, "a") as f:
         f.write(json.dumps(record, ensure_ascii=False) + "\n")
 
