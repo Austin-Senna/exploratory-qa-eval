@@ -1,35 +1,72 @@
 #!/usr/bin/env python3
 """
-Classify failures into: search / discovery-reasoning / execution / hallucination.
+Classify each task into a success mode or failure mode using the expanded taxonomy.
 
-Failure taxonomy:
-  search            — gold dataset never appeared in any search result (D_ret=0)
-  discovery-reason  — gold dataset retrieved but not cited in answer (D_ret=1, D_acc=0)
-  execution         — gold dataset cited but answer is wrong (D_acc=1, EM=0)
-  hallucination     — no sources cited, answer wrong, gold never retrieved
-  correct           — EM=1
+Success modes (EM == 1):
+  grounded_success              — EM=1, D_acc=1          (right answer, all gold sources cited)
+  partial_parametric_success    — EM=1, 0 < D_acc <= 0.5 (right answer, only some gold sources cited)
+  parametric_hallucination      — EM=1, D_acc=0          (right answer, no gold sources cited — lucky guess)
+
+Failure modes (EM == 0):
+  execution_failed              — EM=0, D_ret=1, D_acc=1 (found + cited gold, but wrong final answer)
+  discovery_reasoning_failed    — EM=0, D_ret=1, D_acc=0 (gold was retrieved but not recognised/cited)
+  hallucination                 — EM=0, D_ret=0, sources=[] (nothing found, nothing cited, wrong)
+  search_failed                 — EM=0, D_ret=0, sources!=[] (cited something, but gold never retrieved)
 
 Usage:
     python analysis/failure_attribution.py [--traces-dir results/traces] [--results-dir results]
 """
 import argparse
 import json
-from collections import Counter, defaultdict
+from collections import Counter
 from pathlib import Path
 
 
-def classify_failure(task_result: dict, d_ret: int, d_acc: int) -> str:
-    em = task_result.get("exact_match", 0)
+# Display order for the summary table
+_LABEL_ORDER = [
+    # Success modes
+    "grounded_success",
+    "partial_parametric_success",
+    "parametric_hallucination",
+    # Failure modes
+    "execution_failed",
+    "discovery_reasoning_failed",
+    "hallucination",
+    "search_failed",
+]
+
+
+def classify_failure(task_result: dict, d_ret: int, d_acc: float) -> str:
+    """Return the taxonomy label for a single task result.
+
+    Args:
+        task_result: row from agent_results.jsonl
+        d_ret: 1 if any gold dataset appeared in search results, else 0
+        d_acc: fraction of gold datasets cited in the final answer (0.0–1.0)
+    """
+    em = int(bool(task_result.get("exact_match", 0)))
+    sources = task_result.get("sources_used", [])
+
+    # --- Success modes ---
     if em:
-        return "correct"
-    if d_ret == 0:
-        sources = task_result.get("sources_used", [])
-        if not sources:
-            return "hallucination"
-        return "search"
-    if d_acc == 0:
-        return "discovery-reason"
-    return "execution"
+        if d_acc == 1:
+            return "grounded_success"
+        if d_acc >= 0.5:
+            return "partial_parametric_success"
+        elif d_acc >= 0:
+            return "parametric_hallucination_success"
+        return "parametric_hallucination"
+
+    # --- Failure modes ---
+    if d_ret == 1:
+        if d_acc == 1:
+            return "execution_failed"
+        return "discovery_reasoning_failed"
+
+    # d_ret == 0
+    if not sources:
+        return "hallucination"
+    return "search_failed"
 
 
 def main() -> None:
@@ -69,16 +106,18 @@ def main() -> None:
     for m in metrics["task_metrics"]:
         task_id = m["task_id"]
         ar = agent_results.get(task_id, {})
-        label = classify_failure(ar, m["d_ret"], m["d_acc"])
+        label = classify(ar, m["d_ret"], m["d_acc"])
         counts[label] += 1
         m["failure_type"] = label
 
     total = sum(counts.values())
-    print(f"\nFailure Attribution (n={total}):")
-    for label in ["correct", "search", "discovery-reason", "execution", "hallucination"]:
+    print(f"\nFailure / Success Attribution (n={total}):")
+    print(f"  {'Label':<30} {'N':>4}  {'%':>6}")
+    print(f"  {'-'*42}")
+    for label in _LABEL_ORDER:
         n = counts.get(label, 0)
         pct = 100 * n / total if total else 0
-        print(f"  {label:<22} {n:>4} ({pct:.1f}%)")
+        print(f"  {label:<30} {n:>4}  ({pct:5.1f}%)")
 
 
 if __name__ == "__main__":

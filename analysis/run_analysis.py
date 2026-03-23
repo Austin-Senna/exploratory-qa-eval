@@ -22,7 +22,13 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from analysis.compute_em import load_results, compute_stats
-from analysis.discovery_metrics import load_traces, load_task_gold_ids, compute_discovery_metrics
+from analysis.discovery_metrics import (
+    load_traces,
+    load_task_gold_ids,
+    compute_discovery_metrics,
+    compute_per_folder_discovery,
+    compute_tools_discovery,
+)
 from analysis.failure_attribution import classify_failure
 from analysis.provenance import compute_provenance
 
@@ -90,6 +96,7 @@ def run_discovery(traces_dir: str, tasks_dir: str) -> dict:
             key = f"{condition_dir.name}/{model_dir.name}"
             out[key] = metrics["aggregate"]
             out[key]["task_metrics"] = metrics["task_metrics"]
+            out[key]["per_folder"] = compute_per_folder_discovery(traces, task_gold)
     return out
 
 
@@ -195,6 +202,28 @@ def run_provenance(traces_dir: str, tasks_dir: str) -> dict:
 
 
 # ---------------------------------------------------------------------------
+# Tools discovery
+# ---------------------------------------------------------------------------
+
+def run_tools_discovery(traces_dir: str, tasks_dir: str) -> dict:
+    task_gold = load_task_gold_ids(tasks_dir)
+    out = {}
+    traces_root = Path(traces_dir)
+    for condition_dir in sorted(traces_root.iterdir()):
+        if not condition_dir.is_dir():
+            continue
+        for model_dir in sorted(condition_dir.iterdir()):
+            if not model_dir.is_dir():
+                continue
+            traces = load_traces(str(model_dir))
+            if not traces:
+                continue
+            key = f"{condition_dir.name}/{model_dir.name}"
+            out[key] = compute_tools_discovery(traces, task_gold)
+    return out
+
+
+# ---------------------------------------------------------------------------
 # Summary table
 # ---------------------------------------------------------------------------
 
@@ -258,12 +287,16 @@ def main() -> None:
     print("Running provenance (Condition A)...")
     provenance = run_provenance(args.traces_dir, args.tasks_dir)
 
+    print("Running tools discovery...")
+    tools_discovery = run_tools_discovery(args.traces_dir, args.tasks_dir)
+
     print("Building summary...")
     summary = build_summary(em, discovery, failure, efficiency)
 
     files = {
         "em_f1.json": em,
         "discovery.json": {k: {kk: vv for kk, vv in v.items() if kk != "task_metrics"} for k, v in discovery.items()},
+        "tools_discovery.json": tools_discovery,
         "failure.json": failure,
         "efficiency.json": efficiency,
         "provenance.json": provenance,

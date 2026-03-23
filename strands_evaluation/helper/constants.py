@@ -1,4 +1,14 @@
 from typing import Dict, Tuple
+import os 
+from dotenv import load_dotenv
+
+# This physically reads your .env file and injects it into os.environ
+load_dotenv()
+
+HAIKU_ARN = os.getenv("BEDROCK_HAIKU_ARN", "us.anthropic.claude-haiku-4-5-20251001-v1:0")
+SONNET_ARN = os.getenv("BEDROCK_SONNET_ARN", "us.anthropic.claude-sonnet-4-5-20250929-v1:0")
+LLAMA_ARN = os.getenv("BEDROCK_LLAMA_ARN", "us.meta.llama3-3-70b-instruct-v1:0")
+QWEN_ARN = os.getenv("BEDROCK_QWEN_ARN", "qwen.qwen3-vl-235b-a22b")
 
 # ---------------------------------------------------------------------------
 # Model registry — short name -> (provider, actual_model_id)
@@ -11,10 +21,10 @@ MODEL_REGISTRY: Dict[str, Tuple[str, str]] = {
     "bedrock/claude-haiku-4.5":    ("bedrock", "us.anthropic.claude-haiku-4-5-20251001-v1:0"),
 
     # Custom application inference profiles (ARN-based)
-    "bedrock/claude-haiku-4.5-arn": ("bedrock", "arn:aws:bedrock:us-east-1:920736616554:application-inference-profile/amvc10gdnvg8"),
-    "bedrock/claude-sonnet-4.5-arn": {"bedrock", "arn:aws:bedrock:us-east-1:920736616554:application-inference-profile/uq1jqy9pu3ul"},
-    "bedrock/llama-3.3-70b-arn": {"bedrock", "arn:aws:bedrock:us-east-1:920736616554:application-inference-profile/0u3kk9rviw37"},
-    "bedrock/qwen3-235b-arn": {"bedrock", "arn:aws:bedrock:us-east-1:920736616554:application-inference-profile/bctv8c03xo7u"},
+    "bedrock/claude-haiku-4.5-arn":  ("bedrock", HAIKU_ARN),
+    "bedrock/claude-sonnet-4.5-arn": ("bedrock", SONNET_ARN),
+    "bedrock/llama-3.3-70b-arn":     ("bedrock", LLAMA_ARN),
+    "bedrock/qwen3-235b-arn":        ("bedrock", QWEN_ARN),
     # Llama via Bedrock
     "bedrock/llama4-maverick":     ("bedrock", "us.meta.llama4-maverick-17b-instruct-v1:0"),
     "bedrock/llama4-scout":        ("bedrock", "us.meta.llama4-scout-17b-instruct-v1:0"),
@@ -52,15 +62,15 @@ MODEL_PRICING = {
         "bedrock/claude-opus-4.5": {"input": 5.00, "output": 25.00},
         "bedrock/claude-sonnet-4.5": {"input": 3.00, "output": 15.00},
         "bedrock/claude-haiku-4.5": {"input": 1.00, "output": 5.00},
-        "bedrock/arn:aws:bedrock:us-east-1:920736616554:application-inference-profile/amvc10gdnvg8": {"input": 1.00, "output": 5.00},
-        "bedrock/arn:aws:bedrock:us-east-1:920736616554:application-inference-profile/uq1jqy9pu3ul": {"input": 3.00, "output": 15.00},
+        "bedrock/claude-haiku-4.5-arn": {"input": 1.00, "output": 5.00},
+        "bedrock/claude-sonnet-4.5-arn": {"input": 3.00, "output": 15.00},
 
         # AWS Bedrock Llama models
         "bedrock/llama4-maverick": {"input": 0.24, "output": 0.97},
         "bedrock/llama4-scout": {"input": 0.17, "output": 0.66},
         "bedrock/llama3.3-70b": {"input": 0.72, "output": 0.72},
         "bedrock/llama3.1-70b": {"input": 0.72, "output": 0.72},
-        "bedrock/arn:aws:bedrock:us-east-1:920736616554:application-inference-profile/0u3kk9rviw37": {"input": 0.72, "output": 0.72},
+        "bedrock/llama-3.3-70b-arn": {"input": 0.72, "output": 0.72},
 
         # AWS Bedrock Mistral models
         "bedrock/mistral-large": {"input": 0.50, "output": 1.50},
@@ -70,7 +80,7 @@ MODEL_PRICING = {
         "bedrock/qwen3-32b": {"input": 0.15, "output": 0.60},
         "bedrock/qwen3-80b": {"input": 0.15, "output": 1.20},
         "bedrock/qwen3-235b": {"input": 0.53, "output": 2.66},
-        "bedrock/arn:aws:bedrock:us-east-1:920736616554:application-inference-profile/bctv8c03xo7u": {"input": 0.53, "output": 2.66},
+        "bedrock/qwen3-235b-arn": {"input": 0.53, "output": 2.66},
 
         # AWS Bedrock DeepSeek
         "bedrock/deepseek-r1": {"input": 1.35, "output": 5.40},

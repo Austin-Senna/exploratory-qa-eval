@@ -65,7 +65,7 @@ Dataset IDs are normalized: S3 prefix `s3://lakeqa-yc4103-datalake/` stripped, f
 
 **Metric definitions:**
 - **D_ret** (retrieval discovery): 1 if any gold dataset ID appeared in any search tool result during the task, 0 otherwise. Determined from `result_dataset_ids` in search trace records.
-- **D_acc** (accuracy discovery): 1 if the agent cited at least one gold dataset in its `submit_answer` call's `sources_cited` field, 0 otherwise.
+- **D_acc** (accuracy discovery): fraction of gold datasets cited in the agent's `submit_answer` sources — `|cited ∩ gold| / |gold|` (0.0–1.0). Used as binary (≥1 vs 0) in older analyses; used as a continuous score in the failure taxonomy.
 
 **Inputs:**
 - `results/traces/{condition}/{model}/{task_id}.jsonl` — per-call trace records
@@ -78,22 +78,31 @@ Dataset IDs are normalized: S3 prefix `s3://lakeqa-yc4103-datalake/` stripped, f
 
 ---
 
-## 3. `failure_attribution.py` — failure taxonomy
+## 3. `failure_attribution.py` — failure / success taxonomy
 
-**What it computes:** Classifies each failed task into one of five categories.
+**What it computes:** Classifies every task (not just failures) into one of seven labels using `EM`, `D_ret`, and `D_acc`.
+
+Note: `D_acc` here is the fractional overlap `|cited ∩ gold| / |gold|` (0.0–1.0), not just binary.
 
 **Decision tree:**
 ```
-EM == 1                          → correct
-EM == 0 ∧ D_ret == 0 ∧ sources == []  → hallucination
-EM == 0 ∧ D_ret == 0                  → search
-EM == 0 ∧ D_ret == 1 ∧ D_acc == 0    → discovery-reason
-EM == 0 ∧ D_ret == 1 ∧ D_acc == 1    → execution
+EM == 1:
+  D_acc == 1            → grounded_success           (right answer + all gold sources cited)
+  0 < D_acc <= 0.5      → partial_parametric_success (right answer + only some gold sources cited)
+  D_acc == 0            → parametric_hallucination   (right answer + no gold sources — lucky guess)
+
+EM == 0:
+  D_ret == 1:
+    D_acc == 1          → execution_failed            (found + cited gold, wrong final answer)
+    D_acc == 0          → discovery_reasoning_failed  (gold retrieved but not recognised/cited)
+  D_ret == 0:
+    sources == []       → hallucination               (nothing found, nothing cited, wrong)
+    sources != []       → search_failed               (cited something, but gold never retrieved)
 ```
 
 **Inputs:** `results/traces/`, `results/`, `tasks_mini/` (delegated to `discovery_metrics.py`)
 
-**Output:** Printed table of counts and percentages per category.
+**Output:** Printed table of counts and percentages for all seven labels.
 
 ---
 

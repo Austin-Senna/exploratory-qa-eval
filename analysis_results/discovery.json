@@ -1,4 +1,24 @@
 {
+  "a/bedrock_qwen3-235b-arn": {
+    "n": 2,
+    "D_ret": 1.0,
+    "D_acc": 0.0,
+    "avg_precision": 0.24840510366826157,
+    "avg_recall": 0.8125,
+    "avg_f1": 0.36724565756823824,
+    "avg_search_calls": 6.0,
+    "per_folder": {
+      "k-5-d-3": {
+        "n": 2,
+        "D_ret": 1.0,
+        "D_acc": 0.0,
+        "avg_precision": 0.24840510366826157,
+        "avg_recall": 0.8125,
+        "avg_f1": 0.36724565756823824,
+        "avg_search_calls": 6.0
+      }
+    }
+  },
   "a/us.anthropic.claude-haiku-4-5-20251001-v1_0": {
     "n": 2,
     "D_ret": 1.0,
@@ -6,7 +26,58 @@
     "avg_precision": 0.2573099415204678,
     "avg_recall": 0.6944444444444444,
     "avg_f1": 0.3578347578347578,
-    "avg_search_calls": 7.5
+    "avg_search_calls": 7.5,
+    "per_folder": {
+      "k-5-d-3": {
+        "n": 2,
+        "D_ret": 1.0,
+        "D_acc": 1.0,
+        "avg_precision": 0.2573099415204678,
+        "avg_recall": 0.6944444444444444,
+        "avg_f1": 0.3578347578347578,
+        "avg_search_calls": 7.5
+      }
+    }
+  },
+  "b/arn_aws_bedrock_us-east-1_920736616554_application-inference-profile_amvc10gdnvg8": {
+    "n": 2,
+    "D_ret": 1.0,
+    "D_acc": 1.0,
+    "avg_precision": 0.08552631578947367,
+    "avg_recall": 0.8333333333333333,
+    "avg_f1": 0.1546628407460545,
+    "avg_search_calls": 11.0,
+    "per_folder": {
+      "k-4-d-4": {
+        "n": 2,
+        "D_ret": 1.0,
+        "D_acc": 1.0,
+        "avg_precision": 0.08552631578947367,
+        "avg_recall": 0.8333333333333333,
+        "avg_f1": 0.1546628407460545,
+        "avg_search_calls": 11.0
+      }
+    }
+  },
+  "b/bedrock_qwen3-235b-arn": {
+    "n": 2,
+    "D_ret": 1.0,
+    "D_acc": 0.0,
+    "avg_precision": 0.1278409090909091,
+    "avg_recall": 0.7083333333333333,
+    "avg_f1": 0.20884146341463417,
+    "avg_search_calls": 26.0,
+    "per_folder": {
+      "k-5-d-3": {
+        "n": 2,
+        "D_ret": 1.0,
+        "D_acc": 0.0,
+        "avg_precision": 0.1278409090909091,
+        "avg_recall": 0.7083333333333333,
+        "avg_f1": 0.20884146341463417,
+        "avg_search_calls": 26.0
+      }
+    }
   },
   "b/us.anthropic.claude-haiku-4-5-20251001-v1_0": {
     "n": 3,
@@ -15,7 +86,27 @@
     "avg_precision": 0.12905023914841587,
     "avg_recall": 0.9583333333333334,
     "avg_f1": 0.21944444444444444,
-    "avg_search_calls": 11.333333333333334
+    "avg_search_calls": 11.333333333333334,
+    "per_folder": {
+      "k-2-d-1": {
+        "n": 1,
+        "D_ret": 1.0,
+        "D_acc": 1.0,
+        "avg_precision": 0.043478260869565216,
+        "avg_recall": 1.0,
+        "avg_f1": 0.08333333333333333,
+        "avg_search_calls": 12.0
+      },
+      "k-5-d-3": {
+        "n": 2,
+        "D_ret": 1.0,
+        "D_acc": 1.0,
+        "avg_precision": 0.1718362282878412,
+        "avg_recall": 0.9375,
+        "avg_f1": 0.2875,
+        "avg_search_calls": 11.0
+      }
+    }
   },
   "baseline/us.anthropic.claude-haiku-4-5-20251001-v1_0": {
     "n": 2,
@@ -24,6 +115,17 @@
     "avg_precision": 0.014705882352941176,
     "avg_recall": 0.05555555555555555,
     "avg_f1": 0.02325581395348837,
-    "avg_search_calls": 1.5
+    "avg_search_calls": 1.5,
+    "per_folder": {
+      "k-5-d-3": {
+        "n": 2,
+        "D_ret": 0.5,
+        "D_acc": 0.0,
+        "avg_precision": 0.014705882352941176,
+        "avg_recall": 0.05555555555555555,
+        "avg_f1": 0.02325581395348837,
+        "avg_search_calls": 1.5
+      }
+    }
   }
 }

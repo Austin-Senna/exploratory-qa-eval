@@ -1,4 +1,16 @@
 {
+  "a/bedrock_qwen3-235b-arn": {
+    "condition": "a",
+    "model": "bedrock_qwen3-235b-arn",
+    "n": 4,
+    "em": 1.0,
+    "em_count": 2.0,
+    "f1": 1.0,
+    "avg_cost_usd": 0.0,
+    "total_cost_usd": 0.0,
+    "avg_tool_calls": 6.25,
+    "avg_time_s": 1.7786707878112793
+  },
   "a/us.anthropic.claude-haiku-4-5-20251001-v1_0": {
     "condition": "a",
     "model": "us.anthropic.claude-haiku-4-5-20251001-v1_0",
@@ -11,17 +23,41 @@
     "avg_tool_calls": 20.6,
     "avg_time_s": 1.5739483833312988
   },
+  "b/arn_aws_bedrock_us-east-1_920736616554_application-inference-profile_amvc10gdnvg8": {
+    "condition": "b",
+    "model": "arn_aws_bedrock_us-east-1_920736616554_application-inference-profile_amvc10gdnvg8",
+    "n": 6,
+    "em": 0.25,
+    "em_count": 1.0,
+    "f1": 0.25,
+    "avg_cost_usd": 0.0,
+    "total_cost_usd": 0.0,
+    "avg_tool_calls": 11.666666666666666,
+    "avg_time_s": 0.4508043130238851
+  },
+  "b/bedrock_qwen3-235b-arn": {
+    "condition": "b",
+    "model": "bedrock_qwen3-235b-arn",
+    "n": 6,
+    "em": 0.3333333333333333,
+    "em_count": 2.0,
+    "f1": 0.3333333333333333,
+    "avg_cost_usd": 0.15370003333333335,
+    "total_cost_usd": 0.9222002,
+    "avg_tool_calls": 16.166666666666668,
+    "avg_time_s": 3.5956168174743652
+  },
   "b/us.anthropic.claude-haiku-4-5-20251001-v1_0": {
     "condition": "b",
     "model": "us.anthropic.claude-haiku-4-5-20251001-v1_0",
-    "n": 9,
-    "em": 0.7777777777777778,
-    "em_count": 7.0,
-    "f1": 0.7777777777777778,
-    "avg_cost_usd": 0.4977946666666667,
-    "total_cost_usd": 4.480152,
-    "avg_tool_calls": 26.555555555555557,
-    "avg_time_s": 1.6734463903639052
+    "n": 10,
+    "em": 0.8,
+    "em_count": 8.0,
+    "f1": 0.8,
+    "avg_cost_usd": 0.46591380000000004,
+    "total_cost_usd": 4.6591380000000004,
+    "avg_tool_calls": 25.6,
+    "avg_time_s": 1.7005239486694337
   },
   "baseline/us.anthropic.claude-haiku-4-5-20251001-v1_0": {
     "condition": "baseline",

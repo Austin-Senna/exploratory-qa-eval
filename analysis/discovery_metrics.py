@@ -109,6 +109,133 @@ def _resolve_gold(task_id: str, task_gold: dict[str, list]) -> list:
     return []
 
 
+def compute_per_folder_discovery(
+    traces: dict[str, list],
+    task_gold: dict[str, list],
+) -> dict:
+    """Group traces by task-dir prefix and compute discovery metrics per folder.
+
+    Returns {folder_name: aggregate_dict} where aggregate_dict is the same shape
+    as compute_discovery_metrics()['aggregate'] (no task_metrics key).
+    """
+    from collections import defaultdict
+
+    folder_traces: dict = defaultdict(dict)
+    for task_id, recs in traces.items():
+        folder = task_id.split("/")[0]
+        folder_traces[folder][task_id] = recs
+
+    out = {}
+    for folder, subset in sorted(folder_traces.items()):
+        result = compute_discovery_metrics(subset, task_gold)
+        out[folder] = result["aggregate"]
+    return out
+
+
+def compute_tools_discovery(
+    traces: dict[str, list],
+    task_gold: dict[str, list],
+) -> dict:
+    """Per-tool micro-averaged precision/recall/F1 with per_folder > per_task nesting.
+
+    For each task × tool:
+      - unique_results  = |set of dataset IDs returned by this tool in this task|
+      - unique_gold_hits = |set of gold IDs found by this tool in this task|
+      - gold_total      = |gold IDs for this task|
+      - precision = unique_gold_hits / unique_results
+      - recall    = unique_gold_hits / gold_total
+      - f1        = harmonic mean
+
+    per_folder averages the per_task values within that folder.
+    Top-level averages all per_task values across all folders.
+
+    Returns {tool_name: {avg_precision, avg_recall, avg_f1, calls, tasks_with_hit,
+                         n_tasks, per_folder: {folder: {... per_task: {task_id: {...}}}}}}
+    """
+    from collections import defaultdict
+
+    # tool -> task_id -> accumulated sets + call count
+    tool_task: dict = defaultdict(lambda: defaultdict(lambda: {
+        "result_ids": set(),
+        "gold_hit_ids": set(),
+        "calls": 0,
+    }))
+
+    for task_id, task_traces in traces.items():
+        gold_ids = set(_resolve_gold(task_id, task_gold))
+        for rec in task_traces:
+            tool = rec.get("tool")
+            if not tool or tool == "submit_answer":
+                continue
+            result_ids = rec.get("result_dataset_ids", [])
+            gold_in_results = rec.get("gold_dataset_ids_in_results")
+            if not gold_in_results:
+                gold_in_results = [r for r in result_ids if r in gold_ids]
+            s = tool_task[tool][task_id]
+            s["result_ids"].update(result_ids)
+            s["gold_hit_ids"].update(gold_in_results)
+            s["calls"] += 1
+            # stash gold_ids for recall denominator
+            s.setdefault("gold_ids", gold_ids)
+
+    out = {}
+    for tool, task_map in tool_task.items():
+        # Build per_task records grouped by folder
+        folder_tasks: dict = defaultdict(dict)
+        for task_id, s in task_map.items():
+            folder = task_id.split("/")[0]
+            unique_results = len(s["result_ids"])
+            unique_gold_hits = len(s["gold_hit_ids"])
+            gold_total = len(s.get("gold_ids", set()))
+            precision = unique_gold_hits / unique_results if unique_results else 0.0
+            recall = unique_gold_hits / gold_total if gold_total else 0.0
+            f1 = (2 * precision * recall / (precision + recall)) if (precision + recall) > 0 else 0.0
+            folder_tasks[folder][task_id] = {
+                "calls": s["calls"],
+                "unique_results": unique_results,
+                "unique_gold_hits": unique_gold_hits,
+                "gold_total": gold_total,
+                "precision": round(precision, 4),
+                "recall": round(recall, 4),
+                "f1": round(f1, 4),
+            }
+
+        # Build per_folder aggregates
+        per_folder = {}
+        all_task_records = []
+        for folder, tasks in sorted(folder_tasks.items()):
+            task_vals = list(tasks.values())
+            all_task_records.extend(task_vals)
+            n = len(task_vals)
+            folder_calls = sum(t["calls"] for t in task_vals)
+            folder_hits = sum(1 for t in task_vals if t["unique_gold_hits"] > 0)
+            per_folder[folder] = {
+                "n_tasks": n,
+                "calls": folder_calls,
+                "avg_precision": round(sum(t["precision"] for t in task_vals) / n, 4),
+                "avg_recall": round(sum(t["recall"] for t in task_vals) / n, 4),
+                "avg_f1": round(sum(t["f1"] for t in task_vals) / n, 4),
+                "tasks_with_hit": folder_hits,
+                "per_task": tasks,
+            }
+
+        # Top-level aggregate over all tasks
+        n_all = len(all_task_records)
+        total_calls = sum(t["calls"] for t in all_task_records)
+        tasks_with_hit = sum(1 for t in all_task_records if t["unique_gold_hits"] > 0)
+        out[tool] = {
+            "calls": total_calls,
+            "n_tasks": n_all,
+            "tasks_with_hit": tasks_with_hit,
+            "avg_precision": round(sum(t["precision"] for t in all_task_records) / n_all, 4) if n_all else 0.0,
+            "avg_recall": round(sum(t["recall"] for t in all_task_records) / n_all, 4) if n_all else 0.0,
+            "avg_f1": round(sum(t["f1"] for t in all_task_records) / n_all, 4) if n_all else 0.0,
+            "per_folder": per_folder,
+        }
+
+    return out
+
+
 def load_task_gold_ids(tasks_dir: str) -> dict[str, list]:
     """Load gold dataset IDs from task files. Returns {task_path: [dataset_id]}."""
     import glob as glob_mod
