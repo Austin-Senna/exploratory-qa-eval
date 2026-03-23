@@ -5,3 +5,4 @@ results/
 **/__pycache__/
 *.pyc
 lance_data/
+setup_credentials.sh

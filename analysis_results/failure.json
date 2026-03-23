@@ -1,0 +1,71 @@
+{
+  "a/us.anthropic.claude-haiku-4-5-20251001-v1_0": {
+    "correct": {
+      "n": 2,
+      "pct": 100.0
+    },
+    "search": {
+      "n": 0,
+      "pct": 0.0
+    },
+    "discovery-reason": {
+      "n": 0,
+      "pct": 0.0
+    },
+    "execution": {
+      "n": 0,
+      "pct": 0.0
+    },
+    "hallucination": {
+      "n": 0,
+      "pct": 0.0
+    },
+    "total": 2
+  },
+  "b/us.anthropic.claude-haiku-4-5-20251001-v1_0": {
+    "correct": {
+      "n": 3,
+      "pct": 100.0
+    },
+    "search": {
+      "n": 0,
+      "pct": 0.0
+    },
+    "discovery-reason": {
+      "n": 0,
+      "pct": 0.0
+    },
+    "execution": {
+      "n": 0,
+      "pct": 0.0
+    },
+    "hallucination": {
+      "n": 0,
+      "pct": 0.0
+    },
+    "total": 3
+  },
+  "baseline/us.anthropic.claude-haiku-4-5-20251001-v1_0": {
+    "correct": {
+      "n": 0,
+      "pct": 0.0
+    },
+    "search": {
+      "n": 0,
+      "pct": 0.0
+    },
+    "discovery-reason": {
+      "n": 1,
+      "pct": 50.0
+    },
+    "execution": {
+      "n": 0,
+      "pct": 0.0
+    },
+    "hallucination": {
+      "n": 1,
+      "pct": 50.0
+    },
+    "total": 2
+  }
+}

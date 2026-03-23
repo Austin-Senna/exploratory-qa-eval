@@ -1,0 +1,50 @@
+{
+  "a/us.anthropic.claude-haiku-4-5-20251001-v1_0": {
+    "condition": "a",
+    "model": "us.anthropic.claude-haiku-4-5-20251001-v1_0",
+    "n": 5,
+    "em": 1.0,
+    "em_count": 5.0,
+    "f1": 1.0,
+    "avg_cost_usd": 0.23398639999999998,
+    "total_cost_usd": 1.169932,
+    "avg_tool_calls": 20.6,
+    "avg_time_s": 1.5739483833312988
+  },
+  "b/us.anthropic.claude-haiku-4-5-20251001-v1_0": {
+    "condition": "b",
+    "model": "us.anthropic.claude-haiku-4-5-20251001-v1_0",
+    "n": 9,
+    "em": 0.7777777777777778,
+    "em_count": 7.0,
+    "f1": 0.7777777777777778,
+    "avg_cost_usd": 0.4977946666666667,
+    "total_cost_usd": 4.480152,
+    "avg_tool_calls": 26.555555555555557,
+    "avg_time_s": 1.6734463903639052
+  },
+  "baseline/us.anthropic.claude-haiku-4-5-20251001-v1_0": {
+    "condition": "baseline",
+    "model": "us.anthropic.claude-haiku-4-5-20251001-v1_0",
+    "n": 2,
+    "em": 1.0,
+    "em_count": 2.0,
+    "f1": 1.0,
+    "avg_cost_usd": 0.6035980000000001,
+    "total_cost_usd": 1.2071960000000002,
+    "avg_tool_calls": 27.0,
+    "avg_time_s": 1.769881010055542
+  },
+  "baseline/us.anthropic.claude-sonnet-4-5-20251001-v1_0": {
+    "condition": "baseline",
+    "model": "us.anthropic.claude-sonnet-4-5-20251001-v1_0",
+    "n": 2,
+    "em": 0.0,
+    "em_count": 0.0,
+    "f1": 0.0,
+    "avg_cost_usd": 0.0,
+    "total_cost_usd": 0.0,
+    "avg_tool_calls": 0.0,
+    "avg_time_s": 0.13422393798828125
+  }
+}

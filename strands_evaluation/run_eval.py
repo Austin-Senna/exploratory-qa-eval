@@ -6,9 +6,9 @@ Usage:
     # Evaluate a single task directory
     python -m strands_evaluation.run_eval --task-dir tasks/k-3-d-2/
 
-    # Evaluate specific models
+    # Evaluate a specific model by registry name
     python -m strands_evaluation.run_eval --task-dir tasks/k-3-d-2/ \
-        --provider bedrock --model-id us.anthropic.claude-sonnet-4-5-20251001-v1:0
+        --model-name bedrock/claude-sonnet-4.5
 
     # Evaluate all task directories
     python -m strands_evaluation.run_eval --all-tasks
@@ -49,6 +49,16 @@ def _sanitize_model_name(model_id: str) -> str:
     return model_id.replace("/", "_").replace(":", "_")
 
 
+def _display_name(agent_config) -> str:
+    """Return a clean, human-readable slug for use in paths.
+
+    Prefers model_name (e.g. 'bedrock/claude-haiku-4.5-arn') over raw model_id
+    so ARN-based models don't produce garbage directory names.
+    """
+    name = agent_config.model_name or agent_config.model_id
+    return _sanitize_model_name(name)
+
+
 def find_all_task_dirs(base_dir: str = "tasks") -> list:
     """Return all task directories matching the k-*-d-* pattern."""
     return sorted(glob.glob(os.path.join(base_dir, "k-*-d-*")))
@@ -70,7 +80,7 @@ def run_evaluation(
     """Run evaluation on a task directory and return {model_id -> {summary, results}}."""
     cond = run_config.condition_config
     condition_label = cond.condition
-    safe_model = _sanitize_model_name(agent_config.model_id)
+    safe_model = _display_name(agent_config)
     output_dir = os.path.join("results", condition_label, safe_model)
     os.makedirs(output_dir, exist_ok=True)
 
@@ -297,14 +307,10 @@ def main() -> None:
     parser.add_argument("--tasks-per-dir", type=int, default=None,
                         help="Limit number of tasks evaluated per directory")
 
-    # Model — maps directly to AgentConfig
-    parser.add_argument("--model-name", default=None,
-                        help="Short model name from MODEL_REGISTRY e.g. bedrock/claude-sonnet-4.5. "
-                             "Resolves --provider/--model-id automatically and enables cost tracking.")
-    parser.add_argument("--provider", default="bedrock",
-                        help="LLM provider (bedrock, anthropic, openai, gemini, …)")
-    parser.add_argument("--model-id", default="us.anthropic.claude-sonnet-4-5-20251001-v1:0",
-                        help="Model identifier for the chosen provider")
+    # Model — use a short name from MODEL_REGISTRY
+    parser.add_argument("--model-name", default="bedrock/claude-sonnet-4.5",
+                        help="Short model name from MODEL_REGISTRY e.g. bedrock/claude-sonnet-4.5 "
+                             "or bedrock/claude-haiku-4.5-arn. Resolves provider/model-id automatically.")
     parser.add_argument("--temperature", type=float, default=0.0)
     parser.add_argument("--max-tokens", type=int, default=8096)
 
@@ -340,12 +346,10 @@ def main() -> None:
 
     agent_config = AgentConfig(
         model_name=args.model_name,
-        provider=args.provider,
-        model_id=args.model_id,
         temperature=args.temperature,
         max_tokens=args.max_tokens,
     )
-    safe_model_name = _sanitize_model_name(agent_config.model_id)
+    safe_model_name = _display_name(agent_config)
     trace_dir = os.path.join(args.traces_output_dir, args.condition, safe_model_name)
 
     run_config = RunConfig(

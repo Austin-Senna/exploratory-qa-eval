@@ -57,9 +57,6 @@ def build_model(config: AgentConfig) -> Any:
     return builders[p](config)
 
 
-# ---------------------------------------------------------------------------
-# Provider builders
-# ---------------------------------------------------------------------------
 
 def _build_bedrock(c: AgentConfig) -> Any:
     # Requires: AWS credentials (env vars, IAM role, or ~/.aws/credentials)
@@ -75,6 +72,9 @@ def _build_bedrock(c: AgentConfig) -> Any:
     )
     if c.bedrock_region:
         kwargs["region_name"] = c.bedrock_region
+    if c.model_id.startswith("arn:aws:bedrock:"):
+        extracted_region = c.model_id.split(":")[3]
+        kwargs["region_name"] = extracted_region
     return BedrockModel(**kwargs)
 
 

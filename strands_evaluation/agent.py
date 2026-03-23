@@ -44,6 +44,7 @@ from strands_evaluation.tools.agent_tools import (
     submit_answer,
     search,
     search_keyword,
+    search_prefix,
 )
 from strands_evaluation.tools.agent_tools_v2 import (
     cleanup_sandbox,
@@ -335,23 +336,18 @@ class DataLakeAgent:
         ]
 
         if condition == "a" and _CONDITION_A_TOOLS_AVAILABLE:
-            # Condition A (tools-rich): hybrid RRF + schema + reranked
-            tools = [search_value_a, search_schema, search_reranked] + _data_tools
+            # Condition A (tools-rich): hybrid RRF + schema + reranked + shared baseline tools
+            tools = [search_value_a, search_schema, search_reranked, search_prefix] + _data_tools
             system_prompt = _load_condition_prompt("a", fallback=self.run_config.system_prompt)
 
         elif condition == "b" and _CONDITION_B_TOOLS_AVAILABLE:
-            # Condition B (planning-rich): sparse search + plan tool + skills
-            tools = [search_value_b, plan] + _data_tools
+            # Condition B (planning-rich): sparse search + prefix + plan tool + skills
+            tools = [search_value_b, search_prefix, plan] + _data_tools
             system_prompt = _load_condition_prompt("b", fallback=self.run_config.system_prompt)
 
         else:
-            # Baseline: original tool set
-            tools = [
-                search, search_keyword,
-                list_files, peek_file, peek_files,
-                read_file, grep_file, query_file, download, execute_code,
-                get_sandbox_info, cleanup_sandbox, submit_answer,
-            ]
+            # Baseline: original tool set + sparse search + prefix
+            tools = [search_value_b, search_prefix, search, search_keyword] + _data_tools
             system_prompt = self.run_config.system_prompt
 
         conv_manager = SlidingWindowConversationManager(
@@ -480,7 +476,7 @@ def _run_task_worker(
     from strands_evaluation.helper.metrics import compute_exact_match, compute_f1_score, normalize_text
 
     configure_logging(
-        model=agent_config.model_id,
+        model=agent_config.model_name or agent_config.model_id,
         condition=run_config.condition_config.condition,
         task_id=task.get("id"),
     )

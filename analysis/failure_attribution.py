@@ -62,7 +62,8 @@ def main() -> None:
                 r = json.loads(line)
                 task_id = str(r.get("task_id", ""))
                 if task_id:
-                    agent_results[Path(task_id).stem] = r
+                    p = Path(task_id)
+                    agent_results[f"{p.parent.name}/{p.stem}"] = r
 
     counts: Counter = Counter()
     for m in metrics["task_metrics"]:

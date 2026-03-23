@@ -15,10 +15,13 @@ from pathlib import Path
 
 
 def load_traces(traces_dir: str) -> dict[str, list]:
-    """Load all trace JSONL files. Returns {task_id: [trace_records]}."""
+    """Load all trace JSONL files. Returns {task_id: [trace_records]}.
+
+    task_id key is "{parent_dir}/{stem}", e.g. "k-2-d-1/task_1".
+    """
     traces: dict = defaultdict(list)
     for jsonl_path in Path(traces_dir).rglob("*.jsonl"):
-        task_id = jsonl_path.stem
+        task_id = f"{jsonl_path.parent.name}/{jsonl_path.stem}"
         with open(jsonl_path) as f:
             for line in f:
                 line = line.strip()
@@ -93,14 +96,15 @@ def compute_discovery_metrics(
     return {"task_metrics": task_metrics, "aggregate": agg}
 
 
-def _resolve_gold(task_id_stem: str, task_gold: dict[str, list]) -> list:
-    """Match a trace file stem to a gold entry (full path key)."""
-    # Exact match first (in case task_id was stored as stem)
-    if task_id_stem in task_gold:
-        return task_gold[task_id_stem]
-    # Find a task path whose stem matches
+def _resolve_gold(task_id: str, task_gold: dict[str, list]) -> list:
+    """Match a trace task_id ("k-2-d-1/task_1") to a gold entry."""
+    # Exact match
+    if task_id in task_gold:
+        return task_gold[task_id]
+    # Match on "{parent.name}/{stem}" from full path keys
     for path_key in task_gold:
-        if Path(path_key).stem == task_id_stem:
+        p = Path(path_key)
+        if f"{p.parent.name}/{p.stem}" == task_id:
             return task_gold[path_key]
     return []
 

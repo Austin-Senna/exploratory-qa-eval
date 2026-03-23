@@ -331,6 +331,25 @@ def search(prefixes: List[str], limit: int = 50) -> Dict[str, Any]:
         'prefixes': prefix_list
     }
 
+
+@tool
+def search_prefix(prefixes: List[str], limit: int = 50) -> Dict[str, Any]:
+    """
+    Search for datasets matching one or more prefixes (S3 native prefix search).
+
+    Searches across BOTH wikipedia/ and datagov/ folders automatically.
+    Use for known dataset name fragments or entity names.
+
+    Args:
+        prefixes: List of search prefixes (min 2 chars each).
+                  Examples: ["Erie_County"], ["index-crimes", "violent-crime"]
+        limit: Maximum results per folder per prefix (default 50)
+
+    Returns:
+        Dict with 'results' containing dataset identifiers
+    """
+    return search(prefixes=prefixes, limit=limit)
+
 @tool
 def search_keyword(
     keywords: List[str],

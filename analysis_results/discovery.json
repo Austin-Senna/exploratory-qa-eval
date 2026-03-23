@@ -1,0 +1,29 @@
+{
+  "a/us.anthropic.claude-haiku-4-5-20251001-v1_0": {
+    "n": 2,
+    "D_ret": 1.0,
+    "D_acc": 1.0,
+    "avg_precision": 0.2573099415204678,
+    "avg_recall": 0.6944444444444444,
+    "avg_f1": 0.3578347578347578,
+    "avg_search_calls": 7.5
+  },
+  "b/us.anthropic.claude-haiku-4-5-20251001-v1_0": {
+    "n": 3,
+    "D_ret": 1.0,
+    "D_acc": 1.0,
+    "avg_precision": 0.12905023914841587,
+    "avg_recall": 0.9583333333333334,
+    "avg_f1": 0.21944444444444444,
+    "avg_search_calls": 11.333333333333334
+  },
+  "baseline/us.anthropic.claude-haiku-4-5-20251001-v1_0": {
+    "n": 2,
+    "D_ret": 0.5,
+    "D_acc": 0.0,
+    "avg_precision": 0.014705882352941176,
+    "avg_recall": 0.05555555555555555,
+    "avg_f1": 0.02325581395348837,
+    "avg_search_calls": 1.5
+  }
+}
