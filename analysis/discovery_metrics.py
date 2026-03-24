@@ -45,8 +45,8 @@ def compute_discovery_metrics(
         if not gold_ids:
             continue
 
-        # Separate search traces from submit_answer record
-        search_traces = [t for t in task_traces if t.get("tool") != "submit_answer"]
+        # Separate search traces from read traces and submit_answer record
+        search_traces = [t for t in task_traces if t.get("tool") not in _READ_TOOLS and t.get("tool") != "submit_answer"]
         submit_record = next((t for t in task_traces if t.get("tool") == "submit_answer"), None)
 
         # D_ret: did any search result contain a gold dataset?
@@ -169,7 +169,7 @@ def compute_tools_discovery(
         gold_ids = set(_resolve_gold(task_id, task_gold))
         for rec in task_traces:
             tool = rec.get("tool")
-            if not tool or tool == "submit_answer":
+            if not tool or tool == "submit_answer" or tool in _READ_TOOLS:
                 continue
             result_ids = rec.get("result_dataset_ids", [])
             gold_in_results = rec.get("gold_dataset_ids_in_results")

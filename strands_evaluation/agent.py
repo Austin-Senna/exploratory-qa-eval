@@ -438,7 +438,7 @@ class DataLakeAgent:
                 retries += 1
 
             answer = submitted["answer"] if submitted else _clean_answer(str(response))
-            elapsed = sum(response.metrics.cycle_durations)
+            elapsed = time.time() - start
             sources = list(read_tracer.gold_datasets_read)
 
             logger.info(f"ANSWER: {answer} ({elapsed:.1f}s)")

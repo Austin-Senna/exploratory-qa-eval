@@ -126,8 +126,12 @@ def main() -> None:
             label = classify_failure(r, m.get("d_ret", 0), m.get("d_acc", 0))
             failure_by_cond[cond][label] += 1
 
-        categories = ["correct", "search", "discovery-reason", "execution", "hallucination"]
-        colors = ["#2ecc71", "#e74c3c", "#e67e22", "#3498db", "#9b59b6"]
+        categories = [
+            "grounded_success", "partial_parametric_hallucination",
+            "heavy_parametric_hallucination", "parametric_hallucination",
+            "execution_failed", "search_not_read", "hallucination", "search_failed",
+        ]
+        colors = ["#2ecc71", "#27ae60", "#f39c12", "#e67e22", "#3498db", "#e74c3c", "#9b59b6", "#95a5a6"]
         conds = sorted(failure_by_cond)
 
         if conds:
@@ -193,10 +197,22 @@ def main() -> None:
         print("Saved fig7_latency_dist.pdf")
 
     # -----------------------------------------------------------------------
-    # Fig 8: Per-search-tool avg precision & recall
+    # Fig 8: Per-search-tool avg precision & recall — one chart per condition
     # -----------------------------------------------------------------------
-    tools_disc = compute_tools_discovery(traces, task_gold)
-    if tools_disc:
+    traces_root = Path(args.traces_dir)
+    for condition_dir in sorted(traces_root.iterdir()):
+        if not condition_dir.is_dir():
+            continue
+        cond_name = condition_dir.name
+        cond_traces: dict = {}
+        for model_dir in condition_dir.iterdir():
+            if model_dir.is_dir():
+                cond_traces.update(load_traces(str(model_dir)))
+        if not cond_traces:
+            continue
+        tools_disc = compute_tools_discovery(cond_traces, task_gold)
+        if not tools_disc:
+            continue
         tool_names = sorted(tools_disc.keys())
         precisions = [tools_disc[t].get("avg_precision", 0) for t in tool_names]
         recalls = [tools_disc[t].get("avg_recall", 0) for t in tool_names]
@@ -215,12 +231,13 @@ def main() -> None:
         ax.set_xticklabels(tool_names, rotation=20, ha="right")
         ax.set_ylim(0, 1.1)
         ax.set_ylabel("Score")
-        ax.set_title("Search Tool Precision & Recall")
+        ax.set_title(f"Search Tool Precision & Recall — Condition {cond_name.upper()}")
         ax.legend()
         fig.tight_layout()
-        fig.savefig(output_dir / "fig8_tool_precision_recall.pdf")
+        fname = f"fig8_{cond_name}_tool_precision_recall.pdf"
+        fig.savefig(output_dir / fname)
         plt.close(fig)
-        print("Saved fig8_tool_precision_recall.pdf")
+        print(f"Saved {fname}")
 
     print(f"\nAll figures saved to {output_dir}/")
 
