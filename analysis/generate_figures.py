@@ -10,6 +10,7 @@ Figures produced:
   fig5_query_drift.pdf        — Condition B: Jaccard similarity distribution
   fig6_cost_vs_em.pdf         — Cost-accuracy frontier scatter
   fig7_latency_dist.pdf       — Tool call latency CDF by backend
+  fig8_tool_precision_recall.pdf — Per-search-tool avg precision & recall (grouped bar)
 
 Usage:
     python analysis/generate_figures.py [--results-dir results] [--sidecar-dir results/sidecar]
@@ -37,9 +38,9 @@ def _import_plot_libs():
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--results-dir", default="results")
-    parser.add_argument("--sidecar-dir", default="results/sidecar")
+    parser.add_argument("--traces-dir", default="results/traces")
     parser.add_argument("--tasks-dir", default="tasks_mini")
-    parser.add_argument("--output-dir", default="figures")
+    parser.add_argument("--output-dir", default="analysis_results/figures")
     args = parser.parse_args()
 
     plt, sns = _import_plot_libs()
@@ -53,7 +54,7 @@ def main() -> None:
 
     from analysis.compute_em import load_results, compute_stats
     from analysis.discovery_metrics import (
-        load_agent_results, load_sidecar_traces, load_task_gold_ids, compute_discovery_metrics
+        load_traces, load_task_gold_ids, compute_discovery_metrics, compute_tools_discovery
     )
 
     records = load_results(args.results_dir)
@@ -92,10 +93,9 @@ def main() -> None:
     # -----------------------------------------------------------------------
     # Fig 2: D_ret vs D_acc by condition
     # -----------------------------------------------------------------------
-    traces = load_sidecar_traces(args.sidecar_dir)
-    agent_results = load_agent_results(args.results_dir)
+    traces = load_traces(args.traces_dir)
     task_gold = load_task_gold_ids(args.tasks_dir)
-    disc = compute_discovery_metrics(traces, agent_results, task_gold)
+    disc = compute_discovery_metrics(traces, task_gold)
 
     if disc["aggregate"]:
         agg = disc["aggregate"]
@@ -191,6 +191,36 @@ def main() -> None:
         fig.savefig(output_dir / "fig7_latency_dist.pdf")
         plt.close(fig)
         print("Saved fig7_latency_dist.pdf")
+
+    # -----------------------------------------------------------------------
+    # Fig 8: Per-search-tool avg precision & recall
+    # -----------------------------------------------------------------------
+    tools_disc = compute_tools_discovery(traces, task_gold)
+    if tools_disc:
+        tool_names = sorted(tools_disc.keys())
+        precisions = [tools_disc[t].get("avg_precision", 0) for t in tool_names]
+        recalls = [tools_disc[t].get("avg_recall", 0) for t in tool_names]
+
+        x = range(len(tool_names))
+        width = 0.35
+        fig, ax = plt.subplots(figsize=(max(6, len(tool_names) * 1.5), 5))
+        bars_p = ax.bar([xi - width / 2 for xi in x], precisions, width, label="Avg Precision", color="steelblue")
+        bars_r = ax.bar([xi + width / 2 for xi in x], recalls, width, label="Avg Recall", color="coral")
+        for bar in list(bars_p) + list(bars_r):
+            h = bar.get_height()
+            if h > 0:
+                ax.text(bar.get_x() + bar.get_width() / 2, h + 0.01,
+                        f"{h:.2f}", ha="center", va="bottom", fontsize=8)
+        ax.set_xticks(list(x))
+        ax.set_xticklabels(tool_names, rotation=20, ha="right")
+        ax.set_ylim(0, 1.1)
+        ax.set_ylabel("Score")
+        ax.set_title("Search Tool Precision & Recall")
+        ax.legend()
+        fig.tight_layout()
+        fig.savefig(output_dir / "fig8_tool_precision_recall.pdf")
+        plt.close(fig)
+        print("Saved fig8_tool_precision_recall.pdf")
 
     print(f"\nAll figures saved to {output_dir}/")
 

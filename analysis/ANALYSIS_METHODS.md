@@ -65,7 +65,7 @@ Dataset IDs are normalized: S3 prefix `s3://lakeqa-yc4103-datalake/` stripped, f
 
 **Metric definitions:**
 - **D_ret** (retrieval discovery): 1 if any gold dataset ID appeared in any search tool result during the task, 0 otherwise. Determined from `result_dataset_ids` in search trace records.
-- **D_acc** (accuracy discovery): fraction of gold datasets cited in the agent's `submit_answer` sources — `|cited ∩ gold| / |gold|` (0.0–1.0). Used as binary (≥1 vs 0) in older analyses; used as a continuous score in the failure taxonomy.
+- **D_acc** (accuracy discovery): fraction of gold datasets cited read by the agent — `|read ∩ gold| / |gold|` (0.0–1.0). Used as binary (≥1 vs 0) in older analyses; used as a continuous score in the failure taxonomy.
 
 **Inputs:**
 - `results/traces/{condition}/{model}/{task_id}.jsonl` — per-call trace records

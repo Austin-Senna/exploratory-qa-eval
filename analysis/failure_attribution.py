@@ -3,13 +3,11 @@
 Classify each task into a success mode or failure mode using the expanded taxonomy.
 
 Success modes (EM == 1):
-  grounded_success              — EM=1, D_acc=1          (right answer, agent read gold data)
-  partial_parametric_success    — EM=1, 0 < D_acc <= 0.5 (right answer, agent read some gold data)
-  parametric_hallucination      — EM=1, D_acc=0          (right answer, no gold data read — lucky guess)
+  grounded_success              — EM=1, D_acc=1 (right answer, agent read gold data)
+  parametric_hallucination      — EM=1, D_acc=0 (right answer, no gold data read — lucky guess)
 
 Failure modes (EM == 0):
   execution_failed              — EM=0, D_ret=1, D_acc=1 (found + read gold, but wrong final answer)
-  read_not_cited                — EM=0, D_ret=1, D_acc=1, EM=0 (read gold, failed to reason correctly)
   search_not_read               — EM=0, D_ret=1, D_acc=0 (gold in search results, agent never opened it)
   hallucination                 — EM=0, D_ret=0, sources=[] (nothing found, nothing cited, wrong)
   search_failed                 — EM=0, D_ret=0, sources!=[] (cited something, but gold never retrieved)
@@ -27,6 +25,8 @@ from pathlib import Path
 _LABEL_ORDER = [
     # Success modes
     "grounded_success",
+    "partial_parametric_hallucination",
+    "heavy_parametric_hallucination",
     "parametric_hallucination",
     # Failure modes
     "execution_failed",
@@ -49,8 +49,12 @@ def classify_failure(task_result: dict, d_ret: int, d_acc: int) -> str:
 
     # --- Success modes ---
     if em:
-        if d_acc == 1:
+        if d_acc >= 0.8:
             return "grounded_success"
+        if d_acc >= 0.5:
+            return "partial_parametric_hallucination"
+        if d_acc >= 0.2:
+            return "heavy_parametric_hallucination"
         return "parametric_hallucination"
 
     # --- Failure modes ---

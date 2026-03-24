@@ -31,6 +31,7 @@ from analysis.discovery_metrics import (
 )
 from analysis.failure_attribution import classify_failure
 from analysis.provenance import compute_provenance
+from analysis.generate_figures import main as generate_figs
 
 
 # ---------------------------------------------------------------------------
@@ -145,7 +146,7 @@ def run_failure(results_dir: str, traces_dir: str, tasks_dir: str) -> dict:
             total = sum(counts.values())
             out[key] = {
                 label: {"n": counts.get(label, 0), "pct": round(100 * counts.get(label, 0) / total, 1) if total else 0}
-                for label in ["correct", "search", "discovery-reason", "execution", "hallucination"]
+                for label in ["grounded_success", "partial_parametric_hallucination", "heavy_parametric_hallucination", "parametric_hallucination", "execution_failed", "search_not_read", "hallucination", "search_failed"]
             }
             out[key]["total"] = total
     return out
@@ -248,11 +249,14 @@ def build_summary(em: dict, discovery: dict, failure: dict, efficiency: dict) ->
             row["avg_precision"] = round(d.get("avg_precision", 0), 3)
         if key in failure:
             f = failure[key]
-            row["pct_correct"] = f.get("correct", {}).get("pct")
-            row["pct_search_fail"] = f.get("search", {}).get("pct")
-            row["pct_discovery_reason"] = f.get("discovery-reason", {}).get("pct")
-            row["pct_execution"] = f.get("execution", {}).get("pct")
+            row["pct_grounded_success"] = f.get("grounded_success", {}).get("pct")
+            row["pct_partial_parametric"] = f.get("partial_parametric_hallucination", {}).get("pct")
+            row["pct_heavy_parametric"] = f.get("heavy_parametric_hallucination", {}).get("pct")
+            row["pct_parametric_hallucination"] = f.get("parametric_hallucination", {}).get("pct")
+            row["pct_execution_failed"] = f.get("execution_failed", {}).get("pct")
+            row["pct_search_not_read"] = f.get("search_not_read", {}).get("pct")
             row["pct_hallucination"] = f.get("hallucination", {}).get("pct")
+            row["pct_search_failed"] = f.get("search_failed", {}).get("pct")
         rows.append(row)
     return rows
 
@@ -313,7 +317,10 @@ def main() -> None:
     for row in summary:
         em_pct = f"{row.get('em', 0)*100:.1f}%" if row.get('em') is not None else "N/A"
         d_ret = f"{row.get('D_ret', 0):.2f}" if row.get('D_ret') is not None else "N/A"
-        print(f"  {row['condition_model']:<55} EM={em_pct}  D_ret={d_ret}  correct={row.get('pct_correct')}%")
+        print(f"  {row['condition_model']:<55} EM={em_pct}  D_ret={d_ret}  grounded={row.get('pct_grounded_success')}%")
+
+    print("Generating figures...")
+    generate_figs()
 
 
 if __name__ == "__main__":

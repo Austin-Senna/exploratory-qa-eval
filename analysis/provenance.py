@@ -14,6 +14,17 @@ from collections import Counter, defaultdict
 from pathlib import Path
 
 
+def _resolve_gold(task_id: str, task_gold: dict) -> list:
+    """Match trace task_id ('k-2-d-1/task_1') to gold entry (mirrors discovery_metrics)."""
+    if task_id in task_gold:
+        return task_gold[task_id]
+    for path_key in task_gold:
+        p = Path(path_key)
+        if f"{p.parent.name}/{p.stem}" == task_id:
+            return task_gold[path_key]
+    return []
+
+
 def compute_provenance(traces: dict[str, list], task_gold: dict[str, list]) -> dict:
     """For each gold dataset, find the first backend that retrieved it."""
     backend_hits: Counter = Counter()
@@ -22,7 +33,7 @@ def compute_provenance(traces: dict[str, list], task_gold: dict[str, list]) -> d
     task_provenance: list = []
 
     for task_id, task_traces in traces.items():
-        gold_ids = set(task_gold.get(task_id, []))
+        gold_ids = set(_resolve_gold(task_id, task_gold))
         if not gold_ids:
             continue
 
