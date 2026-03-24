@@ -34,10 +34,10 @@ Use a layered approach — start fast, escalate when needed:
 2. **search_schema** when you know the column or field name you're looking for.
    Example: search_schema("violent crimes county year")
 
-3. **search_reranked** when search_value returns results but none look quite right — reranking rescores with a cross-encoder.
+3. **search_reranked** when you want higher-quality, more semantic results — it uses a cross-encoder reranker that scores true relevance rather than keyword overlap. Use it freely whenever you want more accurate results; it is slower but always worth it for specific or ambiguous queries.
    Example: search_reranked("New York index crimes by county 2021")
 
-DO NOT call all three for every query.
+You do NOT need to call all three for every query.
 
 ## TOOL COST LADDER — use the cheapest that works
 1. query_file — COUNT, GROUP BY, filter, aggregation on CSV/JSON
