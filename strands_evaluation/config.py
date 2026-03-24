@@ -40,7 +40,7 @@ class RunConfig:
     system_prompt: str = SYSTEM_PROMPT
     tool_executor: str = "sequential"    # or "concurrent"
     condition_config: ConditionConfig = field(default_factory=ConditionConfig)
-    max_consecutive_category: int = 4    # CategoryStagnationHandler threshold (0 = disabled)
+    max_consecutive_category: int = 6    # CategoryStagnationHandler threshold (0 = disabled)
 
 
 @dataclass
