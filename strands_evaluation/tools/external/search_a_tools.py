@@ -8,7 +8,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent.parent / "e
 
 from api import setup, hybrid_search, hybrid_search_schema, hybrid_search_with_reranker  # noqa: E402
 
-setup()
+
 
 
 @tool

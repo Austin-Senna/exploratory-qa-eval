@@ -9,7 +9,6 @@ Use search to get dataset IDs, then `list_files` to inspect structure.
 
 **Search tools:**
 - `search_value` — hybrid RRF search (keyword + semantic); good broad recall for most queries
-- `search_reranked` — hybrid search with a cross-encoder semantic reranker; Use it freely — it is the best search tool available that is semantically useful.
 - `search_schema` — hybrid search over column/field names; use when you know the data structure you need
 - `search_prefix` — S3 prefix search by dataset name fragment; use when you know part of the dataset or entity name
 

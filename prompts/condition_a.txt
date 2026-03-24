@@ -10,8 +10,8 @@ DO NOT:
 
 ## AVAILABLE TOOLS
 - search_value    — hybrid semantic + keyword search over dataset content (RRF); best for broad topic queries
-- search_schema   — hybrid search over dataset schemas (column names, types); best when you know the structure
-- search_reranked — hybrid search with cross-encoder reranking; slower but more accurate for specific queries
+- search_schema   — hybrid search over dataset schemas (column names, types); best when you only need the schemas and dataset title
+- search_reranked — hybrid search with cross-encoder reranking; best in accuracy 
 - search_prefix   — S3 prefix search by dataset name fragment; use when you know part of the dataset name or entity name (e.g. "Erie_County", "index-crimes")
 - list_files      — list files inside a dataset
 - peek_file       — preview file structure and column headers (first 64KB); dataset_id is the bare ID only, no prefix (e.g. "index-crimes-by-county" not "datagov/index-crimes-by-county")
@@ -28,16 +28,16 @@ DO NOT:
 ## SEARCH STRATEGY GUIDE
 Use a layered approach — start fast, escalate when needed:
 
-1. **search_value first** for any query — hybrid RRF gives good recall across both keywords and semantics.
+1. **search_value** when you want to do a quick search - hybrid RRF gives good recall across both keywords and semantics.
    Example: "population by county 2020" → search_value("population county 2020")
 
 2. **search_schema** when you know the column or field name you're looking for.
    Example: search_schema("violent crimes county year")
 
-3. **search_reranked** when you want higher-quality, more semantic results — it uses a cross-encoder reranker that scores true relevance rather than keyword overlap. Use it freely whenever you want more accurate results; it is slower but always worth it for specific or ambiguous queries.
+3. **search_reranked** when you want higher-quality, more semantic results. Use it freely whenever you want more accurate results; it is slower as a tradeoff for precision.
    Example: search_reranked("New York index crimes by county 2021")
 
-You do NOT need to call all three for every query.
+You do NOT need to call all three for every query. But always prefer search_reranked when you need precision over speed.
 
 ## TOOL COST LADDER — use the cheapest that works
 1. query_file — COUNT, GROUP BY, filter, aggregation on CSV/JSON

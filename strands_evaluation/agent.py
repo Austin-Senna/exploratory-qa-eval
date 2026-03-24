@@ -503,6 +503,15 @@ def _run_task_worker(
         task_id=task.get("id"),
     )
 
+    # Eagerly load the hybrid search DB + embedding model + cross-encoder reranker once
+    # per worker process (singletons in api.py guard against re-loading on subsequent tasks).
+    if run_config.condition_config.condition == "a" and _CONDITION_A_TOOLS_AVAILABLE:
+        try:
+            import strands_evaluation.tools.external.search_a_tools as _sa
+            _sa.setup()
+        except Exception as e:
+            logger.warning(f"Hybrid search setup failed: {e}")
+
     try:
         logger.info(f"Starting task {task_index + 1}: {task.get('question', '')[:80]}...")
 
