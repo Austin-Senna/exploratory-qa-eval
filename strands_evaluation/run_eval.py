@@ -36,7 +36,6 @@ from typing import Optional
 
 from strands_evaluation.agent import BatchRunner
 from strands_evaluation.config import AgentConfig, ConditionConfig, RunConfig
-from strands_evaluation.helper.logger import configure_logging
 
 logger = logging.getLogger(__name__)
 
@@ -327,8 +326,6 @@ def main() -> None:
                         help="Experiment condition: 'a' (tools-rich), 'b' (planning-rich), or 'baseline'")
     parser.add_argument("--sparse-backend", choices=["bm25", "splade"], default="bm25",
                         help="Sparse search backend for Condition A (default: bm25)")
-    parser.add_argument("--enable-traces", action="store_true",
-                        help="Write per-call trace JSONL files to --traces-output-dir")
     parser.add_argument("--traces-output-dir", default="results/traces",
                         help="Base directory for trace JSONL files (default: results/traces)")
 
@@ -342,7 +339,6 @@ def main() -> None:
     args = parser.parse_args()
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    configure_logging(run_id=timestamp)
 
     agent_config = AgentConfig(
         model_name=args.model_name,
@@ -359,7 +355,6 @@ def main() -> None:
         condition_config=ConditionConfig(
             condition=args.condition,
             sparse_backend=args.sparse_backend,
-            enable_traces=args.enable_traces,
             trace_output_dir=trace_dir,
         ),
     )

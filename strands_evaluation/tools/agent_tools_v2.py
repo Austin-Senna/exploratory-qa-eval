@@ -106,7 +106,7 @@ def peek_file(
 
     Args:
         dataset_id: Dataset identifier (e.g. "Barack_Obama")
-        file_path:  Relative path within the dataset (e.g. "table_0.csv")
+        file_path:  Relative path within the dataset (e.g. "files/data.txt")
         max_rows:   Maximum preview rows to include (default 20)
 
     Returns:

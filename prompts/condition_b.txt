@@ -25,10 +25,9 @@ DO NOT:
 - query_file          — SQL query directly on CSV/JSON via DuckDB (no download needed); saves 2-3 tool calls
 - download            — download files to the sandbox
 - execute_code        — run Python against downloaded files; ONLY use when query_file/grep_file aren't enough
-- submit_answer(answer, reasoning, sources) — submit your final answer and stop
+- submit_answer(answer, reasoning) — submit your final answer and stop
   - answer: wrap in square brackets e.g. [42]
   - reasoning: brief explanation of how you found the answer
-  - sources: list of dataset IDs you used (e.g. ["public-school-locations-current-23297", "Sal_Khan"])
 
 ## TOOL COST LADDER — use the cheapest that works
 1. query_file — COUNT, GROUP BY, filter, aggregation on CSV/JSON

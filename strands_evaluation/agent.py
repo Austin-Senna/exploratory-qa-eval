@@ -328,7 +328,7 @@ class DataLakeAgent:
         self,
         telemetry: "TelemetryTracker",
         trace_attributes: Optional[Dict[str, Any]] = None,
-    ) -> Agent:
+    ) -> tuple:
         cond = self.run_config.condition_config
         condition = cond.condition
 
@@ -383,9 +383,9 @@ class DataLakeAgent:
                 plugins.append(
                     CategoryStagnationHandler(self.run_config.max_consecutive_category)
                 )
-        if cond.enable_traces:
-            plugins.append(TracePlugin(cond.trace_output_dir))
-            plugins.append(ReadTracePlugin())
+        read_tracer = ReadTracePlugin()
+        plugins.append(read_tracer)
+        plugins.append(TracePlugin(cond.trace_output_dir))
 
         return Agent(
             model=self._model,
@@ -396,7 +396,7 @@ class DataLakeAgent:
             plugins=plugins,
             callback_handler=_callback,
             trace_attributes=trace_attributes,
-        )
+        ), read_tracer
 
     def run(self, question: str, session_id: Optional[str] = None) -> AgentResult:
         start = time.time()
@@ -421,7 +421,7 @@ class DataLakeAgent:
         )
 
         try:
-            agent = self._build_agent(telemetry, trace_attributes=trace_attributes)
+            agent, read_tracer = self._build_agent(telemetry, trace_attributes=trace_attributes)
             response = agent(question)
 
             submitted = get_submitted_answer()
@@ -432,13 +432,14 @@ class DataLakeAgent:
                 )
                 response = agent(
                     "You provided a text response but you MUST use the `submit_answer` tool "
-                    "to submit your final answer and sources. Please call the tool now."
+                    "to submit your final answer. Please call the tool now."
                 )
                 submitted = get_submitted_answer()
                 retries += 1
 
             answer = submitted["answer"] if submitted else _clean_answer(str(response))
             elapsed = sum(response.metrics.cycle_durations)
+            sources = list(read_tracer.gold_datasets_read)
 
             logger.info(f"ANSWER: {answer} ({elapsed:.1f}s)")
             return AgentResult(
@@ -446,7 +447,7 @@ class DataLakeAgent:
                 model=agent.model.config,
                 model_name=self.agent_config.model_name,
                 reasoning=submitted["reasoning"] if submitted else "",
-                sources=submitted["sources"] if submitted else [],
+                sources=sources,
                 metrics=response.metrics,
                 elapsed_time=elapsed,
                 success=True,
@@ -507,12 +508,10 @@ def _run_task_worker(
 
         da = DataLakeAgent(agent_config, run_config)
 
-        # Wire trace context before running if traces are enabled
         cond = run_config.condition_config
-        if cond.enable_traces:
-            gold_ids = task.get("datasets_used", [])
-            task_id = task.get("id", str(task_index))
-            set_trace_context(task_id, gold_ids, cond.trace_output_dir)
+        gold_ids = task.get("datasets_used", [])
+        task_id = task.get("id", str(task_index))
+        set_trace_context(task_id, gold_ids, cond.trace_output_dir)
 
         result = da.run(task["question"])
 
@@ -555,36 +554,6 @@ def _run_task_worker(
             result_dict["normalized_prediction"] = normalize_text(pred)
             result_dict["normalized_ground_truth"] = normalize_text(gt)
 
-        # Source recall/precision from task graph nodes
-        if task.get("nodes"):
-            expected_sources = [
-                node.get("source", "") for node in task["nodes"].values()
-            ]
-            result_dict["expected_sources"] = expected_sources
-            if result.sources:
-                # Normalize to dataset_id: strip folder prefix (wikipedia/, datagov/)
-                # and everything from /files/ onward, then lowercase.
-                # e.g. "datagov/public-school-locations-current-23297/files/data.txt"
-                #   -> "public-school-locations-current-23297"
-                # e.g. "wikipedia/Sal_Khan/content.txt" -> "sal_khan"
-                def _norm_source(s: str) -> str:
-                    s = str(s).lower()
-                    for prefix in ("wikipedia/", "datagov/"):
-                        if s.startswith(prefix):
-                            s = s[len(prefix):]
-                            break
-                    s = s.split("/")[0]
-                    return s
-
-                pred_set = {_norm_source(s) for s in result.sources}
-                exp_set = {_norm_source(s) for s in expected_sources if s}
-                overlap = pred_set & exp_set
-                result_dict["source_recall"] = (
-                    len(overlap) / len(exp_set) if exp_set else 0.0
-                )
-                result_dict["source_precision"] = (
-                    len(overlap) / len(pred_set) if pred_set else 0.0
-                )
 
         result_dict["task_metadata"] = {
             "num_nodes": len(task.get("nodes", {})),

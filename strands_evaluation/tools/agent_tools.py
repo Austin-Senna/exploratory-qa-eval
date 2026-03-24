@@ -58,7 +58,7 @@ def clear_submitted_answer() -> None:
 
 
 @tool
-def submit_answer(answer: str, reasoning: str = "", sources: Optional[List[str]] = None) -> str:
+def submit_answer(answer: str, reasoning: str = "") -> str:
     """Submit the final answer to the question.
 
     Call this tool when you have found the definitive answer. The agent loop
@@ -67,13 +67,11 @@ def submit_answer(answer: str, reasoning: str = "", sources: Optional[List[str]]
     Args:
         answer: The final answer, wrapped in square brackets e.g. [42]
         reasoning: Brief explanation of how you arrived at the answer
-        sources: List of file paths or dataset IDs used to find the answer
     """
     global _submitted_answer
     _submitted_answer = {
         "answer": answer,
         "reasoning": reasoning,
-        "sources": sources or [],
     }
     return f"Answer submitted: {answer}"
 

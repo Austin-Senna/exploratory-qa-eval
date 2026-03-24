@@ -158,22 +158,3 @@ class TracePlugin(Plugin):
                 "timestamp_ms": int(time.time() * 1000),
             })
 
-        elif tool_name == "submit_answer":
-            # Parse sources from the submitted answer
-            content = event.result.get("content", [])
-            result_text = ""
-            for block in content:
-                if isinstance(block, dict) and "text" in block:
-                    result_text = block["text"]
-                    break
-
-            # The submit_answer tool input carries the sources
-            sources_raw = event.tool_use.get("input", {}).get("sources", [])
-            sources_cited = [_normalize_dataset_id(str(s)) for s in sources_raw]
-
-            _write_record({
-                "task_id": _current_task_id,
-                "tool": "submit_answer",
-                "sources_cited": sources_cited,
-                "timestamp_ms": int(time.time() * 1000),
-            })

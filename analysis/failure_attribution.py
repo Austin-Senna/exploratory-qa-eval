@@ -3,13 +3,14 @@
 Classify each task into a success mode or failure mode using the expanded taxonomy.
 
 Success modes (EM == 1):
-  grounded_success              — EM=1, D_acc=1          (right answer, all gold sources cited)
-  partial_parametric_success    — EM=1, 0 < D_acc <= 0.5 (right answer, only some gold sources cited)
-  parametric_hallucination      — EM=1, D_acc=0          (right answer, no gold sources cited — lucky guess)
+  grounded_success              — EM=1, D_acc=1          (right answer, agent read gold data)
+  partial_parametric_success    — EM=1, 0 < D_acc <= 0.5 (right answer, agent read some gold data)
+  parametric_hallucination      — EM=1, D_acc=0          (right answer, no gold data read — lucky guess)
 
 Failure modes (EM == 0):
-  execution_failed              — EM=0, D_ret=1, D_acc=1 (found + cited gold, but wrong final answer)
-  discovery_reasoning_failed    — EM=0, D_ret=1, D_acc=0 (gold was retrieved but not recognised/cited)
+  execution_failed              — EM=0, D_ret=1, D_acc=1 (found + read gold, but wrong final answer)
+  read_not_cited                — EM=0, D_ret=1, D_acc=1, EM=0 (read gold, failed to reason correctly)
+  search_not_read               — EM=0, D_ret=1, D_acc=0 (gold in search results, agent never opened it)
   hallucination                 — EM=0, D_ret=0, sources=[] (nothing found, nothing cited, wrong)
   search_failed                 — EM=0, D_ret=0, sources!=[] (cited something, but gold never retrieved)
 
@@ -26,25 +27,22 @@ from pathlib import Path
 _LABEL_ORDER = [
     # Success modes
     "grounded_success",
-    "partial_parametric_success",
     "parametric_hallucination",
     # Failure modes
     "execution_failed",
-    "read_not_cited",
     "search_not_read",
     "hallucination",
     "search_failed",
 ]
 
 
-def classify_failure(task_result: dict, d_ret: int, d_read: int, d_acc: float) -> str:
+def classify_failure(task_result: dict, d_ret: int, d_acc: int) -> str:
     """Return the taxonomy label for a single task result.
 
     Args:
         task_result: row from agent_results.jsonl
-        d_ret:  1 if any gold dataset appeared in search results, else 0
-        d_read: 1 if agent opened a gold dataset via a read tool, else 0
-        d_acc:  fraction of gold datasets cited in the final answer (0.0–1.0)
+        d_ret: 1 if any gold dataset appeared in search results, else 0
+        d_acc: 1 if agent actually opened/queried a gold dataset via a read tool, else 0
     """
     em = int(bool(task_result.get("exact_match", 0)))
     sources = task_result.get("sources_used", [])
@@ -53,17 +51,13 @@ def classify_failure(task_result: dict, d_ret: int, d_read: int, d_acc: float) -
     if em:
         if d_acc == 1:
             return "grounded_success"
-        if d_acc >= 0.5:
-            return "partial_parametric_success"
         return "parametric_hallucination"
 
     # --- Failure modes ---
     if d_ret == 1:
         if d_acc == 1:
-            return "execution_failed"
-        if d_read == 1:
-            return "read_not_cited"   # opened gold, failed to cite/reason
-        return "search_not_read"      # found in search, never opened
+            return "execution_failed"   # read gold, still got wrong answer
+        return "search_not_read"        # found in search, never opened it
 
     # d_ret == 0
     if not sources:
@@ -108,7 +102,7 @@ def main() -> None:
     for m in metrics["task_metrics"]:
         task_id = m["task_id"]
         ar = agent_results.get(task_id, {})
-        label = classify_failure(ar, m["d_ret"], m.get("d_read", 0), m["d_acc"])
+        label = classify_failure(ar, m["d_ret"], m["d_acc"])
         counts[label] += 1
         m["failure_type"] = label
 

@@ -3,7 +3,7 @@
 Compute discovery metrics D_ret, D_acc, precision/recall/F1 from trace JSONL files.
 
 D_ret: fraction of tasks where at least one gold dataset appeared in any search result
-D_acc: fraction of tasks where the agent cited a gold dataset in its submit_answer sources
+D_acc: fraction of tasks where the agent actually opened/queried a gold dataset via a read tool
 
 Usage:
     python analysis/discovery_metrics.py [--traces-dir results/traces] [--tasks-dir tasks_mini]
@@ -57,31 +57,22 @@ def compute_discovery_metrics(
         retrieved_gold = all_result_ids & gold_ids
         d_ret = int(bool(retrieved_gold))
 
-        # D_read: did the agent open a gold dataset via a read tool?
-        read_records = [t for t in task_traces if t.get("tool") in _READ_TOOLS]
-        all_read_ids: set = set()
-        for rec in read_records:
-            all_read_ids.update(rec.get("read_dataset_ids", []))
-        read_gold = all_read_ids & gold_ids
-        d_read = int(bool(read_gold))
-
         # Precision / Recall over all search results
         precision = len(retrieved_gold) / len(all_result_ids) if all_result_ids else 0.0
         recall = len(retrieved_gold) / len(gold_ids) if gold_ids else 0.0
         f1 = (2 * precision * recall / (precision + recall)) if (precision + recall) > 0 else 0.0
 
-        # D_acc: did the agent cite a gold dataset in submit_answer?
-        cited_ids: set = set()
-        if submit_record:
-            for s in submit_record.get("sources_cited", []):
-                cited_ids.add(str(s))
-        d_acc = int(bool(cited_ids & gold_ids))
+        # D_acc: did the agent actually open/query a gold dataset via a read tool?
+        read_records = [t for t in task_traces if t.get("tool") in _READ_TOOLS]
+        all_read_ids: set = set()
+        for rec in read_records:
+            all_read_ids.update(rec.get("read_dataset_ids", []))
+        d_acc = int(bool(all_read_ids & gold_ids))
 
         task_metrics.append({
             "task_id": task_id,
             "gold_ids": list(gold_ids),
             "d_ret": d_ret,
-            "d_read": d_read,
             "d_acc": d_acc,
             "precision": precision,
             "recall": recall,
@@ -98,7 +89,6 @@ def compute_discovery_metrics(
     agg = {
         "n": n,
         "D_ret": sum(m["d_ret"] for m in task_metrics) / n,
-        "D_read": sum(m["d_read"] for m in task_metrics) / n,
         "D_acc": sum(m["d_acc"] for m in task_metrics) / n,
         "avg_precision": sum(m["precision"] for m in task_metrics) / n,
         "avg_recall": sum(m["recall"] for m in task_metrics) / n,
@@ -280,9 +270,8 @@ def main() -> None:
         return
 
     print(f"\nAggregate Discovery Metrics (n={agg['n']}):")
-    print(f"  D_ret  (retrieval coverage): {agg['D_ret']:.3f}")
-    print(f"  D_read (gold dataset read):  {agg['D_read']:.3f}")
-    print(f"  D_acc  (answer attribution): {agg['D_acc']:.3f}")
+    print(f"  D_ret (retrieval coverage): {agg['D_ret']:.3f}")
+    print(f"  D_acc (gold dataset read):  {agg['D_acc']:.3f}")
     print(f"  Avg Precision:               {agg['avg_precision']:.3f}")
     print(f"  Avg Recall:                  {agg['avg_recall']:.3f}")
     print(f"  Avg F1:                      {agg['avg_f1']:.3f}")

@@ -16,15 +16,10 @@ from strands import Plugin
 from strands.hooks import AfterToolCallEvent, BeforeToolCallEvent
 from strands.plugins import hook
 
-from strands_evaluation.instrumentation.trace_plugin import (
-    _current_gold_ids,
-    _current_task_id,
-    _normalize_dataset_id,
-    _write_record,
-)
+import strands_evaluation.instrumentation.trace_plugin as _tp
+from strands_evaluation.instrumentation.trace_plugin import _normalize_dataset_id, _write_record
 
 _READ_TOOLS = {"read_file", "peek_file", "peek_files", "grep_file", "query_file"}
-
 
 def _extract_read_dataset_ids(tool_name: str, tool_input: dict) -> List[str]:
     """Return normalized dataset_id(s) from a read tool's input."""
@@ -46,6 +41,8 @@ class ReadTracePlugin(Plugin):
         super().__init__()
         self._t0: float = 0.0
         self._pending_tool: str = ""
+        self.gold_datasets_read: set = set()
+
 
     @hook
     def on_before_tool(self, event: BeforeToolCallEvent) -> None:
@@ -64,11 +61,13 @@ class ReadTracePlugin(Plugin):
         latency_ms = int((time.time() - self._t0) * 1000)
         tool_input = event.tool_use.get("input", {})
         read_ids = _extract_read_dataset_ids(tool_name, tool_input)
-        gold_set = set(_current_gold_ids)
+        gold_set = set(_tp._current_gold_ids)
         gold_read = [rid for rid in read_ids if rid in gold_set]
 
+        self.gold_datasets_read.update(gold_read)
+
         _write_record({
-            "task_id": _current_task_id,
+            "task_id": _tp._current_task_id,
             "tool": tool_name,
             "read_dataset_ids": read_ids,
             "gold_dataset_ids_read": gold_read,
