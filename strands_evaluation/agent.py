@@ -29,7 +29,8 @@ from strands.vended_plugins.steering import Guide, Proceed, SteeringHandler, Too
 import logging
 
 from strands_evaluation.config import AgentConfig, ConditionConfig, RunConfig
-from strands_evaluation.instrumentation import TracePlugin, set_trace_context
+from strands_evaluation.instrumentation import TracePlugin, ReadTracePlugin, set_trace_context
+from strands_evaluation.instrumentation.loop_plugin import CategoryStagnationHandler
 from strands_evaluation.helper.logger import configure_logging
 from strands_evaluation.helper.result import AgentResult
 from strands_evaluation.helper.sandbox import (
@@ -175,8 +176,11 @@ class ToolLimitSteeringHandler(SteeringHandler):
 
     @hook
     def on_after_tool(self, event: AfterToolCallEvent) -> None:
-        if event.tool_use.get("name") != "skills":
+        if not (event.tool_use.get("name") == "skills" or 
+            event.tool_use.get('name') == "plan"):
             self._count += 1
+
+
 
     async def steer_before_tool(self, *, agent, tool_use, **kwargs) -> ToolSteeringAction:
         # Never intercept submit_answer itself
@@ -375,8 +379,13 @@ class DataLakeAgent:
                 "strands_evaluation/tools/skills/discover-data",
                 "strands_evaluation/tools/skills/query-data",
             ]))
+            if self.run_config.max_consecutive_category > 0:
+                plugins.append(
+                    CategoryStagnationHandler(self.run_config.max_consecutive_category)
+                )
         if cond.enable_traces:
             plugins.append(TracePlugin(cond.trace_output_dir))
+            plugins.append(ReadTracePlugin())
 
         return Agent(
             model=self._model,

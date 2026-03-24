@@ -30,19 +30,21 @@ _LABEL_ORDER = [
     "parametric_hallucination",
     # Failure modes
     "execution_failed",
-    "discovery_reasoning_failed",
+    "read_not_cited",
+    "search_not_read",
     "hallucination",
     "search_failed",
 ]
 
 
-def classify_failure(task_result: dict, d_ret: int, d_acc: float) -> str:
+def classify_failure(task_result: dict, d_ret: int, d_read: int, d_acc: float) -> str:
     """Return the taxonomy label for a single task result.
 
     Args:
         task_result: row from agent_results.jsonl
-        d_ret: 1 if any gold dataset appeared in search results, else 0
-        d_acc: fraction of gold datasets cited in the final answer (0.0–1.0)
+        d_ret:  1 if any gold dataset appeared in search results, else 0
+        d_read: 1 if agent opened a gold dataset via a read tool, else 0
+        d_acc:  fraction of gold datasets cited in the final answer (0.0–1.0)
     """
     em = int(bool(task_result.get("exact_match", 0)))
     sources = task_result.get("sources_used", [])
@@ -53,15 +55,15 @@ def classify_failure(task_result: dict, d_ret: int, d_acc: float) -> str:
             return "grounded_success"
         if d_acc >= 0.5:
             return "partial_parametric_success"
-        elif d_acc >= 0:
-            return "parametric_hallucination_success"
         return "parametric_hallucination"
 
     # --- Failure modes ---
     if d_ret == 1:
         if d_acc == 1:
             return "execution_failed"
-        return "discovery_reasoning_failed"
+        if d_read == 1:
+            return "read_not_cited"   # opened gold, failed to cite/reason
+        return "search_not_read"      # found in search, never opened
 
     # d_ret == 0
     if not sources:
@@ -106,7 +108,7 @@ def main() -> None:
     for m in metrics["task_metrics"]:
         task_id = m["task_id"]
         ar = agent_results.get(task_id, {})
-        label = classify(ar, m["d_ret"], m["d_acc"])
+        label = classify_failure(ar, m["d_ret"], m.get("d_read", 0), m["d_acc"])
         counts[label] += 1
         m["failure_type"] = label
 
