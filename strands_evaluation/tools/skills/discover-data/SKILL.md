@@ -8,8 +8,8 @@ description: How to find datasets and files in the data lake using search and di
 Use search to get dataset IDs, then `list_files` to inspect structure.
 
 **Search tools:**
-- `search_value` — hybrid RRF search (keyword + semantic); good broad recall for most queries
-- `search_schema` — hybrid search over column/field names; use when you know the data structure you need
+- `search_value` — sparse keyword search (FTS); best for exact terms, dataset names, field names
+- `search_schema` — sparse keyword search over dataset schemas (column names, types); use when you know the field structure you need
 - `search_prefix` — S3 prefix search by dataset name fragment; use when you know part of the dataset or entity name
 
 **Tips:**

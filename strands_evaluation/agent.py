@@ -81,6 +81,7 @@ _CONDITION_B_TOOLS_AVAILABLE = False
 try:
     from strands_evaluation.tools.external.search_b_tools import (
         search_value as search_value_b,
+        search_schema as search_schema_b,
     )
     _CONDITION_B_TOOLS_AVAILABLE = True
 except ImportError:
@@ -346,7 +347,7 @@ class DataLakeAgent:
 
         elif condition == "b" and _CONDITION_B_TOOLS_AVAILABLE:
             # Condition B (planning-rich): sparse search + prefix + plan tool + skills
-            tools = [search_value_b, search_prefix, plan] + _data_tools
+            tools = [search_value_b, search_schema_b, search_prefix, plan] + _data_tools
             system_prompt = _load_condition_prompt("b", fallback=self.run_config.system_prompt)
 
         else:

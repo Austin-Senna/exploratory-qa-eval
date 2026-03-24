@@ -6,7 +6,7 @@ from strands import tool
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent.parent / "external-tools" / "hybrid_search"))
 
-from api import setup, sparse_search  # noqa: E402
+from api import setup, sparse_search, sparse_search_schema  # noqa: E402
 
 setup()
 
@@ -21,6 +21,21 @@ def search_value(query: str, top_k: int = 10) -> dict:
     """
     try:
         results = sparse_search(query, k=top_k)
+        return {"results": results, "count": len(results), "query": query}
+    except Exception as e:
+        return {"error": str(e), "query": query, "results": [], "count": 0}
+
+
+@tool
+def search_schema(query: str, top_k: int = 10) -> dict:
+    """Sparse keyword search over dataset schemas (column names, types).
+
+    Args:
+        query: Keywords describing the column or field structure you need.
+        top_k: Maximum number of results to return (default 10).
+    """
+    try:
+        results = sparse_search_schema(query, k=top_k)
         return {"results": results, "count": len(results), "query": query}
     except Exception as e:
         return {"error": str(e), "query": query, "results": [], "count": 0}
