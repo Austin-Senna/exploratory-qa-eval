@@ -513,6 +513,13 @@ def _run_task_worker(
         except Exception as e:
             logger.warning(f"Hybrid search setup failed: {e}")
 
+    if run_config.condition_config.condition == "b" and _CONDITION_B_TOOLS_AVAILABLE:
+        try:
+            import strands_evaluation.tools.external.search_b_tools as _sb
+            _sb.setup()
+        except Exception as e:
+            logger.warning(f"Sparse search setup failed: {e}")
+
     try:
         logger.info(f"Starting task {task_index + 1}: {task.get('question', '')[:80]}...")
 
@@ -632,7 +639,8 @@ class BatchRunner:
 
         results: List[tuple] = []
 
-        with concurrent.futures.ProcessPoolExecutor(max_workers=num_workers) as executor:
+        mp_ctx = concurrent.futures.process.mp.get_context("spawn")
+        with concurrent.futures.ProcessPoolExecutor(max_workers=num_workers, mp_context=mp_ctx) as executor:
             future_to_index = {
                 executor.submit(
                     _run_task_worker,

@@ -7,3 +7,4 @@ results/
 lance_data/
 setup_credentials.sh
 analysis_results/
+*.pem

@@ -8,8 +8,6 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent.parent / "e
 
 from api import setup, sparse_search, sparse_search_schema  # noqa: E402
 
-setup()
-
 
 @tool
 def search_value(query: str, top_k: int = 10) -> dict:
