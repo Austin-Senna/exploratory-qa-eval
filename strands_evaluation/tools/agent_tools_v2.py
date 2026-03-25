@@ -57,7 +57,7 @@ _QUERY_ROW_CAP = 200
 _SEARCH_MAX_MATCHES = 20
 _SEARCH_CONTEXT_LINES = 2
 _QUERY_MAX_FILE_BYTES = 500 * 1024 * 1024  # 500 MB — above this, download first
-_TOOL_RESULT_CHAR_CAP = 16_000             # ~4k tokens — prevents single result overflowing context
+_TOOL_RESULT_CHAR_CAP = 24_000             # ~6k tokens — prevents single result overflowing context
 
 
 # ---------------------------------------------------------------------------

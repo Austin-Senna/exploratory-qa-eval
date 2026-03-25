@@ -37,7 +37,7 @@ REGION = "us-east-1"
 # Sandbox directory on main disk (500G) instead of /tmp (63G tmpfs)
 SANDBOX_BASE_DIR = Path(__file__).resolve().parent.parent.parent / ".sandbox"
 
-_TOOL_RESULT_CHAR_CAP = 16_000  # ~4k tokens — prevents single result overflowing context
+_TOOL_RESULT_CHAR_CAP = 24_000  # ~6k tokens — prevents single result overflowing context
 
 # Global sandbox directory (created per session)
 _SANDBOX_DIR = None
@@ -748,14 +748,16 @@ from pathlib import Path
         output = stdout_capture.getvalue()
         errors = stderr_capture.getvalue()
 
+        stdout_overflow_path = None
         if len(output) > _TOOL_RESULT_CHAR_CAP:
             dump_path = sandbox / "_stdout_overflow.txt"
             dump_path.write_text(output)
+            stdout_overflow_path = str(dump_path)
             output = (
                 output[:_TOOL_RESULT_CHAR_CAP]
-                + f"\n... [output truncated at {_TOOL_RESULT_CHAR_CAP} chars. "
-                f"Full stdout written to: {dump_path} — use execute_code to read it. "
-                "Print less data or use more specific queries.]"
+                + f"\n... [stdout truncated at {_TOOL_RESULT_CHAR_CAP} chars. "
+                f"Full output written to: {dump_path} — read it with: "
+                f"open('{dump_path}').read(). Print less data or query more specifically.]"
             )
 
         result = {
@@ -763,8 +765,14 @@ from pathlib import Path
             'success': True,
             'sandbox_dir': str(sandbox),
             'sandbox_files': sandbox_files,
-            'datasets_in_sandbox': sorted(datasets_in_sandbox)
+            'datasets_in_sandbox': sorted(datasets_in_sandbox),
         }
+        if stdout_overflow_path:
+            result['local_result_path'] = stdout_overflow_path
+            result['truncation_note'] = (
+                f"stdout exceeded {_TOOL_RESULT_CHAR_CAP} chars and was truncated. "
+                f"Full output at: {stdout_overflow_path}"
+            )
 
         if errors:
             result['stderr'] = errors

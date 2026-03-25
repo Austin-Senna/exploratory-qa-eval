@@ -124,18 +124,18 @@ DO NOT:
   - sources: list of dataset IDs you used (e.g. ["public-school-locations-current-23297", "Sal_Khan"])
 
 ## OUTPUT LIMITS — read_file, query_file, execute_code
-These tools cap their output at ~16,000 characters to protect context.
+These tools cap their output at ~24,000 characters (~6k tokens) to protect context.
 If a result is too large, you will receive:
 - `truncation_note` — explains the limit was hit and how many rows/lines fit
 - `local_result_path` — full result written to the sandbox (e.g. `/path/rows.txt.query_result.json`)
-- As many rows/lines as fit within the 16k limit
+- As many rows/lines as fit within the 24k limit
 
 **When you see a truncation_note:**
 1. Use a more targeted query: `SELECT specific_col FROM t WHERE ... GROUP BY ... LIMIT n`
 2. Use `grep_file` to search for specific values instead
 3. Or read the full dump: `execute_code("import json; data = json.load(open('<local_result_path>')); print(data['rows'][:10])")`
 
-execute_code stdout is also capped at ~16,000 chars. If output is truncated, print less or query more specifically.
+execute_code stdout is also capped at ~24,000 chars (~6k tokens). If output is truncated, print less or query more specifically.
 
 ## TOOL COST LADDER — use the cheapest that works
 1. query_file — for COUNT, GROUP BY, filter, aggregation on CSV/JSON

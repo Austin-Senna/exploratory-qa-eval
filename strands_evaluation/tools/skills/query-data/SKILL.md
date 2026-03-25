@@ -21,10 +21,10 @@ Only use `execute_code` when genuinely required: multi-file joins, complex trans
 
 ## Output Limits — query_file, read_file, execute_code
 
-These tools cap output at ~16,000 characters. If a result is too large you will get:
+These tools cap output at ~24,000 characters (~6k tokens). If a result is too large you will get:
 - `truncation_note` describing how many rows/lines fit within the limit
 - `local_result_path` — path to the full result dumped in the sandbox
-- As many rows/lines as fit within the 16k limit
+- As many rows/lines as fit within the 24k limit
 
 **Recovery options (in order of preference):**
 1. Rewrite the query to return less: add `WHERE`, `GROUP BY`, select specific columns, use `LIMIT`
