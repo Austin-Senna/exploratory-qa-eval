@@ -19,6 +19,47 @@ Only use `execute_code` when genuinely required: multi-file joins, complex trans
 
 ---
 
+## Output Limits — query_file, read_file, execute_code
+
+These tools cap output at ~16,000 characters. If a result is too large you will get:
+- `truncation_note` describing how many rows/lines fit within the limit
+- `local_result_path` — path to the full result dumped in the sandbox
+- As many rows/lines as fit within the 16k limit
+
+**Recovery options (in order of preference):**
+1. Rewrite the query to return less: add `WHERE`, `GROUP BY`, select specific columns, use `LIMIT`
+2. Use `grep_file` to find a specific value instead of reading all rows
+3. Access the dump directly:
+   ```python
+   execute_code("""
+   import json
+   data = json.load(open('<local_result_path>'))
+   rows = data['rows']          # list of lists
+   cols = data['columns']       # column names
+   print(cols)
+   print(rows[:5])
+   """)
+   ```
+
+execute_code stdout is also capped. If truncated, print a summary (`df.describe()`, `df.head()`) instead of the full dataframe.
+
+---
+
+## Context Management — summarize_context
+
+If you have made many tool calls and the conversation is getting long, call `summarize_context` before large queries:
+```
+summarize_context(
+  summary="Found dataset X (id: ...). Column Y contains the target values. Computed Z=42 for sub-task 1. Still need: sub-task 2.",
+  drop_messages=16
+)
+```
+- Write your findings thoroughly — this replaces the dropped messages as your memory
+- Your summary is anchored permanently and won't be truncated
+- Use `drop_messages=10` for light cleanup, `20+` for heavy cleanup
+
+---
+
 ## Before Writing Code — Verify Column Names
 
 Never assume column names. Always check first:

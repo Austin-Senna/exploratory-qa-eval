@@ -21,6 +21,7 @@ from typing import Any, Dict, List
 import duckdb
 from dotenv import load_dotenv
 from strands import tool
+from strands.types.tools import ToolContext
 
 from .agent_tools import (  # noqa: F401 — re-exported
     search,
@@ -56,6 +57,7 @@ _QUERY_ROW_CAP = 200
 _SEARCH_MAX_MATCHES = 20
 _SEARCH_CONTEXT_LINES = 2
 _QUERY_MAX_FILE_BYTES = 500 * 1024 * 1024  # 500 MB — above this, download first
+_TOOL_RESULT_CHAR_CAP = 16_000             # ~4k tokens — prevents single result overflowing context
 
 
 # ---------------------------------------------------------------------------
@@ -271,13 +273,44 @@ def read_file(
     except Exception as e:
         return {"error": f"Failed to read file: {e}"}
 
-    return {
+    result = {
         "dataset_id": dataset_id,
         "file_path": file_path,
         "start_line": start_line,
         "returned_lines": len(lines),
         "lines": lines,
     }
+    result_json = json.dumps(result)
+    if len(result_json) > _TOOL_RESULT_CHAR_CAP:
+        # Write full content to sandbox, return truncated lines + pointer
+        sandbox = _get_sandbox_dir()
+        safe_name = file_path.lstrip("/").replace("/", "_")
+        dump_path = sandbox / dataset_id / f"{safe_name}.read_result.json"
+        dump_path.parent.mkdir(parents=True, exist_ok=True)
+        dump_path.write_text(result_json)
+        budget = _TOOL_RESULT_CHAR_CAP - 600
+        char_count, truncated_lines = 0, []
+        for line in lines:
+            if char_count + len(line) + 4 > budget:
+                break
+            truncated_lines.append(line)
+            char_count += len(line) + 4
+        return {
+            "dataset_id": dataset_id,
+            "file_path": file_path,
+            "start_line": start_line,
+            "returned_lines": len(truncated_lines),
+            "truncated": True,
+            "local_result_path": str(dump_path),
+            "truncation_note": (
+                f"Output truncated to {len(truncated_lines)} of {len(lines)} fetched lines. "
+                f"Full content written to: {dump_path} (use execute_code to read it). "
+                f"Or use start_line={start_line + len(truncated_lines)} to page forward, "
+                "or grep_file for specific values."
+            ),
+            "lines": truncated_lines,
+        }
+    return result
 
 
 # ---------------------------------------------------------------------------
@@ -460,14 +493,135 @@ def query_file(
         truncated = len(rows) > _QUERY_ROW_CAP
         if truncated:
             rows = rows[:_QUERY_ROW_CAP]
-        return {
+        result = {
             "columns": columns,
             "rows": [list(r) for r in rows],
             "row_count": len(rows),
             "truncated": truncated,
         }
+        result_json = json.dumps(result)
+        if len(result_json) > _TOOL_RESULT_CHAR_CAP:
+            # Write full result to sandbox so agent can read it via execute_code
+            sandbox = _get_sandbox_dir()
+            safe_name = file_path.lstrip("/").replace("/", "_")
+            dump_path = sandbox / dataset_id / f"{safe_name}.query_result.json"
+            dump_path.parent.mkdir(parents=True, exist_ok=True)
+            dump_path.write_text(result_json)
+            # Pack as many rows as fit within the budget
+            budget = _TOOL_RESULT_CHAR_CAP - 600  # headroom for metadata fields
+            char_count, capped_rows = 0, []
+            for row in rows:
+                row_json = json.dumps(list(row))
+                if char_count + len(row_json) + 2 > budget:
+                    break
+                capped_rows.append(list(row))
+                char_count += len(row_json) + 2
+            avg_row_bytes = len(result_json) // max(len(rows), 1)
+            return {
+                "truncated": True,
+                "truncation_note": (
+                    f"Result too large for context ({size // 1024}KB source file, "
+                    f"~{int(size / max(1, avg_row_bytes))} rows estimated). "
+                    f"Showing {len(capped_rows)} of {len(rows)} rows within the 16k limit. "
+                    f"Full result written to: {dump_path} (use execute_code to read it). "
+                    "Prefer: query_file with SELECT specific columns + WHERE/GROUP BY/LIMIT "
+                    "for aggregates, or grep_file for searching specific values."
+                ),
+                "local_result_path": str(dump_path),
+                "file_path": file_path,
+                "size_bytes": size,
+                "columns": columns,
+                "rows": capped_rows,
+                "row_count_shown": len(capped_rows),
+                "row_count_estimate": int(size / max(1, avg_row_bytes)),
+            }
+        return result
     except Exception as e:
         return {"error": f"Query failed: {e}", "traceback": traceback.format_exc()}
+
+
+# ---------------------------------------------------------------------------
+# Tool 5: summarize_context
+# ---------------------------------------------------------------------------
+
+@tool(context=True)
+def summarize_context(
+    summary: str,
+    drop_messages: int,
+    tool_context: ToolContext,
+) -> dict:
+    """
+    Free up context space by dropping old messages and anchoring your key findings.
+
+    Write everything important you've learned so far into `summary` — datasets found,
+    values computed, hypotheses confirmed or rejected. That text is injected at the
+    start of the remaining history as a permanent memory anchor that won't be
+    truncated by the sliding window.
+
+    Call this proactively when the conversation is getting long, before making a
+    large tool call, or after receiving a truncation_note from another tool.
+
+    Args:
+        summary:       Your written summary of findings so far. Be thorough — this
+                       replaces the dropped messages as your memory. Not truncated.
+        drop_messages: Number of oldest messages to remove (must be >= 2 and even,
+                       to preserve tool use/result pairs). Use 10–20 for moderate
+                       cleanup, higher for aggressive cleanup.
+
+    Returns:
+        Dict with messages_before, messages_after, and confirmation.
+    """
+    try:
+        agent = tool_context.agent
+        messages = agent.messages
+        before = len(messages)
+
+        # Clamp and align drop_messages to an even number (preserve tool use/result pairs)
+        n = max(2, int(drop_messages))
+        n = min(n, max(0, before - 2))  # always keep at least 2 messages
+        if n % 2 != 0:
+            n -= 1  # round down to even
+
+        # Find a safe trim index: can't start on a toolResult or orphaned toolUse
+        trim = n
+        while trim < before:
+            content = messages[trim].get("content", [])
+            is_tool_result = any("toolResult" in c for c in content)
+            is_orphan_tool_use = (
+                any("toolUse" in c for c in content)
+                and trim + 1 < before
+                and not any("toolResult" in c for c in messages[trim + 1].get("content", []))
+            )
+            if is_tool_result or is_orphan_tool_use:
+                trim += 1
+            else:
+                break
+
+        # Drop the oldest `trim` messages
+        messages[:] = messages[trim:]
+
+        # Prepend the agent's summary as a user message at position 0
+        # User messages are never truncated by _truncate_tool_results
+        memory_message = {
+            "role": "user",
+            "content": [{"text": f"[Context summary — key findings so far]\n{summary}"}],
+        }
+        messages.insert(0, memory_message)
+
+        after = len(messages)
+        return {
+            "status": "ok",
+            "messages_before": before,
+            "messages_dropped": trim,
+            "messages_after": after,
+            "summary_anchored": True,
+            "note": (
+                f"Dropped {trim} oldest messages. Your summary is anchored at position 0 "
+                "and will not be truncated. Continue your task."
+            ),
+        }
+    except Exception as e:
+        return {"status": "error", "error": str(e)}
 
 
 # ---------------------------------------------------------------------------
@@ -481,6 +635,7 @@ __all__ = [
     "read_file",
     "grep_file",
     "query_file",
+    "summarize_context",
     # re-exported from agent_tools
     "search",
     "search_keyword",

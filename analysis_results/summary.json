@@ -1,0 +1,24 @@
+[
+  {
+    "condition_model": "a/bedrock_claude-haiku-4.5-arn",
+    "condition": "a",
+    "model": "bedrock_claude-haiku-4.5-arn",
+    "n": 135,
+    "em": 0.526,
+    "f1": 0.589,
+    "avg_cost_usd": 0.4353,
+    "avg_tool_calls": 23.6,
+    "D_ret": 0.993,
+    "D_acc": 0.978,
+    "avg_recall": 0.287,
+    "avg_precision": 0.22,
+    "pct_grounded_success": 51.9,
+    "pct_partial_parametric": 0.0,
+    "pct_heavy_parametric": 0.0,
+    "pct_parametric_hallucination": 0.7,
+    "pct_execution_failed": 45.9,
+    "pct_search_not_read": 0.7,
+    "pct_hallucination": 0.7,
+    "pct_search_failed": 0.0
+  }
+]

@@ -1,0 +1,5632 @@
+{
+  "a/bedrock_claude-haiku-4.5-arn": {
+    "backend_hits": {
+      "search_value": 695,
+      "search_prefix": 185,
+      "search_reranked": 25
+    },
+    "total_gold": 1055,
+    "never_retrieved": 150,
+    "task_provenance": [
+      {
+        "task_id": "k-7-d-4/task_8",
+        "gold_ids": [
+          "school-district-office-locations-current-d848f",
+          "school-district-office-locations-2022-23",
+          "private-school-locations-2019-20-ee873",
+          "public-school-locations-2018-19-42360",
+          "school-district-office-locations-current-c8f9d",
+          "postsecondary-school-locations-current-5a74c",
+          "EdX",
+          "Cambridge,_Massachusetts",
+          "postsecondary-school-locations-current-40ae1",
+          "Massachusetts_Institute_of_Technology"
+        ],
+        "first_hits": {
+          "EdX": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "Massachusetts_Institute_of_Technology": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "Cambridge,_Massachusetts": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "school-district-office-locations-2022-23": {
+            "turn": 5,
+            "backend": "search_value"
+          },
+          "school-district-office-locations-current-c8f9d": {
+            "turn": 5,
+            "backend": "search_value"
+          },
+          "private-school-locations-2019-20-ee873": {
+            "turn": 6,
+            "backend": "search_value"
+          },
+          "postsecondary-school-locations-current-5a74c": {
+            "turn": 7,
+            "backend": "search_value"
+          },
+          "postsecondary-school-locations-current-40ae1": {
+            "turn": 7,
+            "backend": "search_value"
+          },
+          "public-school-locations-2018-19-42360": {
+            "turn": 8,
+            "backend": "search_prefix"
+          }
+        }
+      },
+      {
+        "task_id": "k-7-d-4/task_9",
+        "gold_ids": [
+          "public-school-locations-current-23297",
+          "school-district-office-locations-2020-21-d8df0",
+          "postsecondary-school-locations-2022-23",
+          "Kaplan,_Inc.",
+          "Fort_Lauderdale,_Florida",
+          "postsecondary-school-locations-current-5a74c",
+          "school-district-office-locations-current-c8f9d",
+          "private-school-locations-2017-18-f49f6",
+          "Graham_Holdings",
+          "postsecondary-school-locations-2017-18-fa280"
+        ],
+        "first_hits": {
+          "Graham_Holdings": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "Kaplan,_Inc.": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "private-school-locations-2017-18-f49f6": {
+            "turn": 4,
+            "backend": "search_value"
+          },
+          "postsecondary-school-locations-current-5a74c": {
+            "turn": 5,
+            "backend": "search_value"
+          },
+          "school-district-office-locations-2020-21-d8df0": {
+            "turn": 6,
+            "backend": "search_value"
+          },
+          "school-district-office-locations-current-c8f9d": {
+            "turn": 6,
+            "backend": "search_value"
+          },
+          "Fort_Lauderdale,_Florida": {
+            "turn": 7,
+            "backend": "search_value"
+          },
+          "postsecondary-school-locations-2017-18-fa280": {
+            "turn": 8,
+            "backend": "search_reranked"
+          },
+          "public-school-locations-current-23297": {
+            "turn": 9,
+            "backend": "search_prefix"
+          },
+          "postsecondary-school-locations-2022-23": {
+            "turn": 9,
+            "backend": "search_prefix"
+          }
+        }
+      },
+      {
+        "task_id": "k-7-d-4/task_5",
+        "gold_ids": [
+          "Blacksburg,_Virginia",
+          "Virginia_Tech",
+          "private-school-locations-2021-22-1ec7b",
+          "school-district-office-locations-2022-23",
+          "postsecondary-school-locations-2022-23",
+          "postsecondary-school-locations-current-5a74c",
+          "school-district-office-locations-current-c8f9d",
+          "Montgomery_County,_Virginia",
+          "postsecondary-school-locations-current-40ae1",
+          "public-school-locations-2016-17-b4d7f"
+        ],
+        "first_hits": {
+          "Virginia_Tech": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "Blacksburg,_Virginia": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "Montgomery_County,_Virginia": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "school-district-office-locations-current-c8f9d": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "school-district-office-locations-2022-23": {
+            "turn": 3,
+            "backend": "search_prefix"
+          },
+          "postsecondary-school-locations-2022-23": {
+            "turn": 4,
+            "backend": "search_prefix"
+          },
+          "postsecondary-school-locations-current-40ae1": {
+            "turn": 4,
+            "backend": "search_prefix"
+          },
+          "postsecondary-school-locations-current-5a74c": {
+            "turn": 4,
+            "backend": "search_prefix"
+          },
+          "public-school-locations-2016-17-b4d7f": {
+            "turn": 11,
+            "backend": "search_prefix"
+          }
+        }
+      },
+      {
+        "task_id": "k-7-d-4/task_7",
+        "gold_ids": [
+          "school-district-office-locations-current-d848f",
+          "public-school-locations-current-23297",
+          "school-district-office-locations-2021-22-4ff1f",
+          "postsecondary-school-locations-2022-23",
+          "private-school-locations-2021-22-1ec7b",
+          "postsecondary-school-locations-2016-17-cf06a",
+          "Seattle",
+          "school-district-office-locations-current-c8f9d",
+          "Code.org",
+          "Ali_Partovi"
+        ],
+        "first_hits": {
+          "Ali_Partovi": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "Code.org": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "public-school-locations-current-23297": {
+            "turn": 7,
+            "backend": "search_prefix"
+          },
+          "private-school-locations-2021-22-1ec7b": {
+            "turn": 7,
+            "backend": "search_prefix"
+          },
+          "postsecondary-school-locations-2016-17-cf06a": {
+            "turn": 10,
+            "backend": "search_prefix"
+          },
+          "postsecondary-school-locations-2022-23": {
+            "turn": 10,
+            "backend": "search_prefix"
+          },
+          "school-district-office-locations-2021-22-4ff1f": {
+            "turn": 10,
+            "backend": "search_prefix"
+          },
+          "school-district-office-locations-current-c8f9d": {
+            "turn": 10,
+            "backend": "search_prefix"
+          },
+          "school-district-office-locations-current-d848f": {
+            "turn": 10,
+            "backend": "search_prefix"
+          }
+        }
+      },
+      {
+        "task_id": "k-7-d-4/task_3",
+        "gold_ids": [
+          "Educational_Testing_Service",
+          "school-district-office-locations-current-d848f",
+          "postsecondary-school-locations-2022-23",
+          "private-school-locations-2019-20-ee873",
+          "Princeton,_New_Jersey",
+          "Graduate_Record_Examinations",
+          "postsecondary-school-locations-current-5a74c",
+          "school-district-office-locations-current-c8f9d",
+          "public-school-locations-2021-22-5a116",
+          "school-district-office-locations-2021-22-d5dd7"
+        ],
+        "first_hits": {
+          "Graduate_Record_Examinations": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "Educational_Testing_Service": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "Princeton,_New_Jersey": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "school-district-office-locations-2021-22-d5dd7": {
+            "turn": 5,
+            "backend": "search_value"
+          },
+          "school-district-office-locations-current-c8f9d": {
+            "turn": 5,
+            "backend": "search_value"
+          },
+          "postsecondary-school-locations-current-5a74c": {
+            "turn": 6,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-7-d-4/task_1",
+        "gold_ids": [
+          "school-district-office-locations-current-d848f",
+          "public-school-locations-current-23297",
+          "postsecondary-school-locations-2022-23",
+          "school-district-office-locations-2022-23",
+          "private-school-locations-current-f7d96",
+          "school-district-office-locations-current-c8f9d",
+          "postsecondary-school-locations-current-5a74c",
+          "Mountain_View,_California",
+          "Sal_Khan",
+          "Khan_Lab_School"
+        ],
+        "first_hits": {
+          "Sal_Khan": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "Khan_Lab_School": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "postsecondary-school-locations-current-5a74c": {
+            "turn": 4,
+            "backend": "search_reranked"
+          },
+          "postsecondary-school-locations-2022-23": {
+            "turn": 4,
+            "backend": "search_reranked"
+          },
+          "public-school-locations-current-23297": {
+            "turn": 5,
+            "backend": "search_prefix"
+          },
+          "private-school-locations-current-f7d96": {
+            "turn": 5,
+            "backend": "search_prefix"
+          },
+          "school-district-office-locations-current-d848f": {
+            "turn": 7,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-7-d-4/task_6",
+        "gold_ids": [
+          "school-district-office-locations-current-d848f",
+          "school-district-office-locations-2020-21-d8df0",
+          "school-district-office-locations-current-c8f9d",
+          "postsecondary-school-locations-current-5a74c",
+          "Salt_Lake_City",
+          "public-school-locations-2021-22-5a116",
+          "Instructure",
+          "private-school-locations-2017-18-f49f6",
+          "postsecondary-school-locations-2019-20-64b31",
+          "Salt_Lake_County,_Utah"
+        ],
+        "first_hits": {
+          "Instructure": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "Salt_Lake_County,_Utah": {
+            "turn": 3,
+            "backend": "search_value"
+          },
+          "public-school-locations-2021-22-5a116": {
+            "turn": 3,
+            "backend": "search_value"
+          },
+          "Salt_Lake_City": {
+            "turn": 3,
+            "backend": "search_value"
+          },
+          "school-district-office-locations-2020-21-d8df0": {
+            "turn": 4,
+            "backend": "search_value"
+          },
+          "school-district-office-locations-current-c8f9d": {
+            "turn": 4,
+            "backend": "search_value"
+          },
+          "postsecondary-school-locations-current-5a74c": {
+            "turn": 5,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-7-d-4/task_4",
+        "gold_ids": [
+          "school-district-office-locations-current-d848f",
+          "postsecondary-school-locations-2022-23",
+          "private-school-locations-current-f7d96",
+          "Duolingo",
+          "school-district-office-locations-current-c8f9d",
+          "postsecondary-school-locations-current-40ae1",
+          "Luis_von_Ahn",
+          "Pittsburgh",
+          "school-district-office-locations-2016-17-9faab",
+          "public-school-locations-2017-18-af716"
+        ],
+        "first_hits": {
+          "Luis_von_Ahn": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "Duolingo": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "Pittsburgh": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "public-school-locations-2017-18-af716": {
+            "turn": 5,
+            "backend": "search_value"
+          },
+          "private-school-locations-current-f7d96": {
+            "turn": 5,
+            "backend": "search_value"
+          },
+          "school-district-office-locations-2016-17-9faab": {
+            "turn": 7,
+            "backend": "search_prefix"
+          },
+          "school-district-office-locations-current-c8f9d": {
+            "turn": 7,
+            "backend": "search_prefix"
+          },
+          "school-district-office-locations-current-d848f": {
+            "turn": 7,
+            "backend": "search_prefix"
+          },
+          "postsecondary-school-locations-2022-23": {
+            "turn": 17,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-7-d-4/task_10",
+        "gold_ids": [
+          "New_York_State_Education_Department",
+          "postsecondary-school-locations-current-5a74c",
+          "New_York_Regents_Examinations",
+          "private-school-locations-current-f7d96",
+          "public-school-locations-2021-22-5a116",
+          "school-district-office-locations-2021-22-d5dd7",
+          "school-district-office-locations-current-c8f9d",
+          "postsecondary-school-locations-2019-20-64b31",
+          "postsecondary-school-locations-current-40ae1",
+          "Albany,_New_York"
+        ],
+        "first_hits": {
+          "New_York_Regents_Examinations": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "New_York_State_Education_Department": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "public-school-locations-2021-22-5a116": {
+            "turn": 3,
+            "backend": "search_prefix"
+          },
+          "private-school-locations-current-f7d96": {
+            "turn": 3,
+            "backend": "search_prefix"
+          },
+          "school-district-office-locations-2021-22-d5dd7": {
+            "turn": 3,
+            "backend": "search_prefix"
+          },
+          "school-district-office-locations-current-c8f9d": {
+            "turn": 3,
+            "backend": "search_prefix"
+          }
+        }
+      },
+      {
+        "task_id": "k-7-d-4/task_2",
+        "gold_ids": [
+          "school-district-office-locations-current-d848f",
+          "school-district-office-locations-2020-21-d8df0",
+          "public-school-locations-2018-19-42360",
+          "school-district-office-locations-current-c8f9d",
+          "ACT_(for-profit_organization)",
+          "Iowa_City,_Iowa",
+          "Jon_Whitmore",
+          "private-school-locations-2017-18-f49f6",
+          "postsecondary-school-locations-2019-20-64b31",
+          "postsecondary-school-locations-2017-18-fa280"
+        ],
+        "first_hits": {
+          "Jon_Whitmore": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "Iowa_City,_Iowa": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "ACT_(for-profit_organization)": {
+            "turn": 4,
+            "backend": "search_value"
+          },
+          "postsecondary-school-locations-2019-20-64b31": {
+            "turn": 4,
+            "backend": "search_value"
+          },
+          "public-school-locations-2018-19-42360": {
+            "turn": 6,
+            "backend": "search_prefix"
+          },
+          "private-school-locations-2017-18-f49f6": {
+            "turn": 6,
+            "backend": "search_prefix"
+          },
+          "postsecondary-school-locations-2017-18-fa280": {
+            "turn": 6,
+            "backend": "search_prefix"
+          }
+        }
+      },
+      {
+        "task_id": "k-7-d-3/task_8",
+        "gold_ids": [
+          "United_States_Department_of_the_Interior",
+          "National_Park_Service",
+          "parking-violations-issued-in-january-2020",
+          "allegheny-county-jail-daily-census",
+          "parking-violations-issued-in-january-2021",
+          "los-angeles-international-airport-passenger-count-by-carrier-type",
+          "moving-violations-issued-in-january-2020",
+          "moving-violations-issued-in-january-2019",
+          "Doug_Burgum",
+          "parking-violations-issued-in-january-2019",
+          "moving-violations-issued-in-january-2021",
+          "United_States_Park_Police"
+        ],
+        "first_hits": {
+          "moving-violations-issued-in-january-2020": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "parking-violations-issued-in-january-2021": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "parking-violations-issued-in-january-2020": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "parking-violations-issued-in-january-2019": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "allegheny-county-jail-daily-census": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "los-angeles-international-airport-passenger-count-by-carrier-type": {
+            "turn": 3,
+            "backend": "search_value"
+          },
+          "moving-violations-issued-in-january-2021": {
+            "turn": 4,
+            "backend": "search_value"
+          },
+          "moving-violations-issued-in-january-2019": {
+            "turn": 4,
+            "backend": "search_value"
+          },
+          "United_States_Department_of_the_Interior": {
+            "turn": 6,
+            "backend": "search_value"
+          },
+          "Doug_Burgum": {
+            "turn": 6,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-7-d-3/task_9",
+        "gold_ids": [
+          "United_States_Department_of_the_Interior",
+          "National_Park_Service",
+          "parking-violations-issued-in-january-2020",
+          "allegheny-county-jail-daily-census",
+          "rochester-genesee-regional-transportation-authority-rgrta-rider-volumes-beginning-2006",
+          "parking-violations-issued-in-january-2021",
+          "moving-violations-issued-in-january-2020",
+          "moving-violations-issued-in-january-2019",
+          "Doug_Burgum",
+          "parking-violations-issued-in-january-2019",
+          "moving-violations-issued-in-january-2021",
+          "United_States_Park_Police"
+        ],
+        "first_hits": {
+          "parking-violations-issued-in-january-2021": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "moving-violations-issued-in-january-2020": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "parking-violations-issued-in-january-2020": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "parking-violations-issued-in-january-2019": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "allegheny-county-jail-daily-census": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "rochester-genesee-regional-transportation-authority-rgrta-rider-volumes-beginning-2006": {
+            "turn": 3,
+            "backend": "search_value"
+          },
+          "moving-violations-issued-in-january-2019": {
+            "turn": 4,
+            "backend": "search_prefix"
+          },
+          "moving-violations-issued-in-january-2021": {
+            "turn": 4,
+            "backend": "search_prefix"
+          },
+          "United_States_Park_Police": {
+            "turn": 5,
+            "backend": "search_value"
+          },
+          "United_States_Department_of_the_Interior": {
+            "turn": 6,
+            "backend": "search_value"
+          },
+          "National_Park_Service": {
+            "turn": 7,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-7-d-3/task_5",
+        "gold_ids": [
+          "texas-department-of-criminal-justice-releases-fy-2019",
+          "texas-state-expenditures-by-county-2020",
+          "texas-state-expenditures-by-county-2021",
+          "Houston_Rockets",
+          "texas-state-expenditures-by-county-2019",
+          "Houston",
+          "allegheny-county-jail-daily-census",
+          "texas-department-of-criminal-justice-receives-fy-2020",
+          "rochester-genesee-regional-transportation-authority-rgrta-rider-volumes-beginning-2006",
+          "texas-department-of-criminal-justice-releases-fy-2021",
+          "Harris_County,_Texas",
+          "texas-department-of-criminal-justice-receives-fy-2019",
+          "texas-department-of-criminal-justice-receives-fy-2021",
+          "texas-department-of-criminal-justice-releases-fy-2020"
+        ],
+        "first_hits": {
+          "texas-department-of-criminal-justice-releases-fy-2019": {
+            "turn": 4,
+            "backend": "search_value"
+          },
+          "texas-department-of-criminal-justice-releases-fy-2020": {
+            "turn": 4,
+            "backend": "search_value"
+          },
+          "texas-department-of-criminal-justice-releases-fy-2021": {
+            "turn": 4,
+            "backend": "search_value"
+          },
+          "texas-department-of-criminal-justice-receives-fy-2019": {
+            "turn": 4,
+            "backend": "search_value"
+          },
+          "allegheny-county-jail-daily-census": {
+            "turn": 5,
+            "backend": "search_value"
+          },
+          "rochester-genesee-regional-transportation-authority-rgrta-rider-volumes-beginning-2006": {
+            "turn": 6,
+            "backend": "search_value"
+          },
+          "texas-department-of-criminal-justice-receives-fy-2021": {
+            "turn": 7,
+            "backend": "search_value"
+          },
+          "texas-department-of-criminal-justice-receives-fy-2020": {
+            "turn": 7,
+            "backend": "search_value"
+          },
+          "texas-state-expenditures-by-county-2021": {
+            "turn": 8,
+            "backend": "search_value"
+          },
+          "texas-state-expenditures-by-county-2020": {
+            "turn": 8,
+            "backend": "search_value"
+          },
+          "Harris_County,_Texas": {
+            "turn": 11,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-7-d-3/task_7",
+        "gold_ids": [
+          "United_States_Department_of_the_Interior",
+          "National_Park_Service",
+          "parking-violations-issued-in-january-2020",
+          "monthly-motor-fuel-sales-reported-by-states-selected-data-from-fhwa-monthly-motor-fuel-rep",
+          "rochester-genesee-regional-transportation-authority-rgrta-rider-volumes-beginning-2006",
+          "parking-violations-issued-in-january-2021",
+          "moving-violations-issued-in-january-2020",
+          "moving-violations-issued-in-january-2019",
+          "Doug_Burgum",
+          "parking-violations-issued-in-january-2019",
+          "moving-violations-issued-in-january-2021",
+          "United_States_Park_Police"
+        ],
+        "first_hits": {
+          "parking-violations-issued-in-january-2021": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "parking-violations-issued-in-january-2020": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "parking-violations-issued-in-january-2019": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "moving-violations-issued-in-january-2020": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "moving-violations-issued-in-january-2021": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "moving-violations-issued-in-january-2019": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "United_States_Park_Police": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "monthly-motor-fuel-sales-reported-by-states-selected-data-from-fhwa-monthly-motor-fuel-rep": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "rochester-genesee-regional-transportation-authority-rgrta-rider-volumes-beginning-2006": {
+            "turn": 3,
+            "backend": "search_value"
+          },
+          "United_States_Department_of_the_Interior": {
+            "turn": 7,
+            "backend": "search_reranked"
+          },
+          "Doug_Burgum": {
+            "turn": 9,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-7-d-3/task_3",
+        "gold_ids": [
+          "texas-department-of-criminal-justice-releases-fy-2019",
+          "texas-state-expenditures-by-county-2020",
+          "texas-state-expenditures-by-county-2021",
+          "Houston_Rockets",
+          "texas-state-expenditures-by-county-2019",
+          "monthly-motor-fuel-sales-reported-by-states-selected-data-from-fhwa-monthly-motor-fuel-rep",
+          "Houston",
+          "texas-department-of-criminal-justice-receives-fy-2020",
+          "rochester-genesee-regional-transportation-authority-rgrta-rider-volumes-beginning-2006",
+          "texas-department-of-criminal-justice-releases-fy-2021",
+          "Harris_County,_Texas",
+          "texas-department-of-criminal-justice-receives-fy-2019",
+          "texas-department-of-criminal-justice-receives-fy-2021",
+          "texas-department-of-criminal-justice-releases-fy-2020"
+        ],
+        "first_hits": {
+          "texas-state-expenditures-by-county-2020": {
+            "turn": 4,
+            "backend": "search_value"
+          },
+          "Harris_County,_Texas": {
+            "turn": 5,
+            "backend": "search_value"
+          },
+          "texas-department-of-criminal-justice-releases-fy-2021": {
+            "turn": 5,
+            "backend": "search_value"
+          },
+          "texas-department-of-criminal-justice-releases-fy-2019": {
+            "turn": 5,
+            "backend": "search_value"
+          },
+          "texas-department-of-criminal-justice-releases-fy-2020": {
+            "turn": 5,
+            "backend": "search_value"
+          },
+          "monthly-motor-fuel-sales-reported-by-states-selected-data-from-fhwa-monthly-motor-fuel-rep": {
+            "turn": 6,
+            "backend": "search_value"
+          },
+          "rochester-genesee-regional-transportation-authority-rgrta-rider-volumes-beginning-2006": {
+            "turn": 7,
+            "backend": "search_value"
+          },
+          "texas-department-of-criminal-justice-receives-fy-2021": {
+            "turn": 8,
+            "backend": "search_value"
+          },
+          "texas-department-of-criminal-justice-receives-fy-2019": {
+            "turn": 8,
+            "backend": "search_value"
+          },
+          "texas-department-of-criminal-justice-receives-fy-2020": {
+            "turn": 8,
+            "backend": "search_value"
+          },
+          "Houston": {
+            "turn": 10,
+            "backend": "search_value"
+          },
+          "Houston_Rockets": {
+            "turn": 11,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-7-d-3/task_1",
+        "gold_ids": [
+          "tax-rates-by-motor-fuel-and-state",
+          "2007-2008-school-progress-report",
+          "List_of_first_ladies_of_the_United_States",
+          "2009-2010-school-progress-report",
+          "Franklin_D._Roosevelt",
+          "Manhattan",
+          "2008-2009-school-progress-report",
+          "Theodore_Roosevelt",
+          "Eleanor_Roosevelt",
+          "New_York_City"
+        ],
+        "first_hits": {
+          "tax-rates-by-motor-fuel-and-state": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "2009-2010-school-progress-report": {
+            "turn": 6,
+            "backend": "search_value"
+          },
+          "2008-2009-school-progress-report": {
+            "turn": 7,
+            "backend": "search_value"
+          },
+          "2007-2008-school-progress-report": {
+            "turn": 10,
+            "backend": "search_prefix"
+          },
+          "Franklin_D._Roosevelt": {
+            "turn": 11,
+            "backend": "search_value"
+          },
+          "Eleanor_Roosevelt": {
+            "turn": 11,
+            "backend": "search_value"
+          },
+          "Theodore_Roosevelt": {
+            "turn": 11,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-7-d-3/task_6",
+        "gold_ids": [
+          "United_States_Department_of_the_Interior",
+          "National_Park_Service",
+          "parking-violations-issued-in-january-2020",
+          "monthly-motor-fuel-sales-reported-by-states-selected-data-from-fhwa-monthly-motor-fuel-rep",
+          "parking-violations-issued-in-january-2021",
+          "los-angeles-international-airport-passenger-count-by-carrier-type",
+          "moving-violations-issued-in-january-2020",
+          "moving-violations-issued-in-january-2019",
+          "Doug_Burgum",
+          "parking-violations-issued-in-january-2019",
+          "moving-violations-issued-in-january-2021",
+          "United_States_Park_Police"
+        ],
+        "first_hits": {
+          "moving-violations-issued-in-january-2020": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "parking-violations-issued-in-january-2021": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "parking-violations-issued-in-january-2020": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "parking-violations-issued-in-january-2019": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "monthly-motor-fuel-sales-reported-by-states-selected-data-from-fhwa-monthly-motor-fuel-rep": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "los-angeles-international-airport-passenger-count-by-carrier-type": {
+            "turn": 3,
+            "backend": "search_value"
+          },
+          "moving-violations-issued-in-january-2021": {
+            "turn": 4,
+            "backend": "search_value"
+          },
+          "moving-violations-issued-in-january-2019": {
+            "turn": 4,
+            "backend": "search_value"
+          },
+          "United_States_Park_Police": {
+            "turn": 6,
+            "backend": "search_value"
+          },
+          "United_States_Department_of_the_Interior": {
+            "turn": 7,
+            "backend": "search_value"
+          },
+          "National_Park_Service": {
+            "turn": 7,
+            "backend": "search_value"
+          },
+          "Doug_Burgum": {
+            "turn": 10,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-7-d-3/task_4",
+        "gold_ids": [
+          "texas-department-of-criminal-justice-releases-fy-2019",
+          "texas-state-expenditures-by-county-2020",
+          "texas-state-expenditures-by-county-2021",
+          "Houston_Rockets",
+          "texas-state-expenditures-by-county-2019",
+          "Houston",
+          "allegheny-county-jail-daily-census",
+          "texas-department-of-criminal-justice-receives-fy-2020",
+          "texas-department-of-criminal-justice-releases-fy-2021",
+          "los-angeles-international-airport-passenger-count-by-carrier-type",
+          "Harris_County,_Texas",
+          "texas-department-of-criminal-justice-receives-fy-2019",
+          "texas-department-of-criminal-justice-receives-fy-2021",
+          "texas-department-of-criminal-justice-releases-fy-2020"
+        ],
+        "first_hits": {
+          "texas-state-expenditures-by-county-2020": {
+            "turn": 4,
+            "backend": "search_value"
+          },
+          "texas-department-of-criminal-justice-releases-fy-2021": {
+            "turn": 5,
+            "backend": "search_value"
+          },
+          "Harris_County,_Texas": {
+            "turn": 5,
+            "backend": "search_value"
+          },
+          "texas-department-of-criminal-justice-releases-fy-2019": {
+            "turn": 5,
+            "backend": "search_value"
+          },
+          "texas-department-of-criminal-justice-releases-fy-2020": {
+            "turn": 5,
+            "backend": "search_value"
+          },
+          "allegheny-county-jail-daily-census": {
+            "turn": 6,
+            "backend": "search_value"
+          },
+          "los-angeles-international-airport-passenger-count-by-carrier-type": {
+            "turn": 7,
+            "backend": "search_value"
+          },
+          "texas-department-of-criminal-justice-receives-fy-2019": {
+            "turn": 8,
+            "backend": "search_value"
+          },
+          "texas-department-of-criminal-justice-receives-fy-2021": {
+            "turn": 8,
+            "backend": "search_value"
+          },
+          "texas-department-of-criminal-justice-receives-fy-2020": {
+            "turn": 8,
+            "backend": "search_value"
+          },
+          "texas-state-expenditures-by-county-2019": {
+            "turn": 9,
+            "backend": "search_prefix"
+          },
+          "texas-state-expenditures-by-county-2021": {
+            "turn": 9,
+            "backend": "search_prefix"
+          },
+          "Houston_Rockets": {
+            "turn": 11,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-7-d-3/task_10",
+        "gold_ids": [
+          "budget-2019-budget-ordinance-positions-and-salaries",
+          "budget-2019-budget-ordinance-appropriations",
+          "Chicago_Police_Department",
+          "budget-2020-budget-ordinance-positions-and-salaries",
+          "monthly-motor-fuel-sales-reported-by-states-selected-data-from-fhwa-monthly-motor-fuel-rep",
+          "budget-2019-budget-recommendations-positions-and-salaries",
+          "budget-2020-budget-ordinance-appropriations",
+          "budget-2021-budget-ordinance-positions-and-salaries",
+          "los-angeles-international-airport-passenger-count-by-carrier-type",
+          "budget-2021-budget-recommendations-positions-and-salaries",
+          "O._W._Wilson",
+          "budget-2021-budget-ordinance-appropriations",
+          "budget-2020-budget-recommendations-positions-and-salaries",
+          "University_of_California,_Berkeley"
+        ],
+        "first_hits": {
+          "budget-2019-budget-ordinance-appropriations": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "budget-2021-budget-recommendations-positions-and-salaries": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "budget-2019-budget-ordinance-positions-and-salaries": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "budget-2021-budget-ordinance-positions-and-salaries": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "monthly-motor-fuel-sales-reported-by-states-selected-data-from-fhwa-monthly-motor-fuel-rep": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "los-angeles-international-airport-passenger-count-by-carrier-type": {
+            "turn": 3,
+            "backend": "search_value"
+          },
+          "budget-2020-budget-ordinance-appropriations": {
+            "turn": 4,
+            "backend": "search_prefix"
+          },
+          "budget-2020-budget-ordinance-positions-and-salaries": {
+            "turn": 4,
+            "backend": "search_prefix"
+          },
+          "budget-2020-budget-recommendations-positions-and-salaries": {
+            "turn": 4,
+            "backend": "search_prefix"
+          },
+          "budget-2021-budget-ordinance-appropriations": {
+            "turn": 4,
+            "backend": "search_prefix"
+          },
+          "Chicago_Police_Department": {
+            "turn": 5,
+            "backend": "search_value"
+          },
+          "O._W._Wilson": {
+            "turn": 5,
+            "backend": "search_value"
+          },
+          "University_of_California,_Berkeley": {
+            "turn": 6,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-7-d-3/task_2",
+        "gold_ids": [
+          "texas-department-of-criminal-justice-releases-fy-2019",
+          "texas-state-expenditures-by-county-2020",
+          "texas-state-expenditures-by-county-2021",
+          "Houston_Rockets",
+          "texas-state-expenditures-by-county-2019",
+          "monthly-motor-fuel-sales-reported-by-states-selected-data-from-fhwa-monthly-motor-fuel-rep",
+          "Houston",
+          "texas-department-of-criminal-justice-receives-fy-2020",
+          "texas-department-of-criminal-justice-releases-fy-2021",
+          "los-angeles-international-airport-passenger-count-by-carrier-type",
+          "Harris_County,_Texas",
+          "texas-department-of-criminal-justice-receives-fy-2019",
+          "texas-department-of-criminal-justice-receives-fy-2021",
+          "texas-department-of-criminal-justice-releases-fy-2020"
+        ],
+        "first_hits": {
+          "texas-state-expenditures-by-county-2020": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "texas-state-expenditures-by-county-2021": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "texas-state-expenditures-by-county-2019": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "texas-department-of-criminal-justice-releases-fy-2021": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "Harris_County,_Texas": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "texas-department-of-criminal-justice-releases-fy-2019": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "texas-department-of-criminal-justice-releases-fy-2020": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "texas-department-of-criminal-justice-receives-fy-2019": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "monthly-motor-fuel-sales-reported-by-states-selected-data-from-fhwa-monthly-motor-fuel-rep": {
+            "turn": 3,
+            "backend": "search_value"
+          },
+          "los-angeles-international-airport-passenger-count-by-carrier-type": {
+            "turn": 4,
+            "backend": "search_value"
+          },
+          "texas-department-of-criminal-justice-receives-fy-2020": {
+            "turn": 5,
+            "backend": "search_value"
+          },
+          "texas-department-of-criminal-justice-receives-fy-2021": {
+            "turn": 5,
+            "backend": "search_value"
+          },
+          "Houston_Rockets": {
+            "turn": 9,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-6-d-3/task_8",
+        "gold_ids": [
+          "texas-state-expenditures-by-county-2020",
+          "texas-state-expenditures-by-county-2019",
+          "Houston",
+          "Lyndon_B._Johnson",
+          "texas-department-of-criminal-justice-releases-fy-2021",
+          "Harris_County,_Texas",
+          "Johnson_Space_Center",
+          "texas-state-expenditures-by-county-2021"
+        ],
+        "first_hits": {
+          "texas-department-of-criminal-justice-releases-fy-2021": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "texas-state-expenditures-by-county-2019": {
+            "turn": 3,
+            "backend": "search_prefix"
+          },
+          "texas-state-expenditures-by-county-2020": {
+            "turn": 3,
+            "backend": "search_prefix"
+          },
+          "texas-state-expenditures-by-county-2021": {
+            "turn": 3,
+            "backend": "search_prefix"
+          },
+          "Harris_County,_Texas": {
+            "turn": 4,
+            "backend": "search_value"
+          },
+          "Houston": {
+            "turn": 4,
+            "backend": "search_value"
+          },
+          "Johnson_Space_Center": {
+            "turn": 5,
+            "backend": "search_value"
+          },
+          "Lyndon_B._Johnson": {
+            "turn": 6,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-6-d-3/task_9",
+        "gold_ids": [
+          "libraries-2021-computer-sessions-by-location",
+          "libraries-2019-computer-sessions-by-location",
+          "Carter_G._Woodson_Regional_Library",
+          "libraries-2020-computer-sessions-by-location",
+          "Harvard_University",
+          "libraries-2021-visitors-by-location",
+          "Carter_G._Woodson"
+        ],
+        "first_hits": {
+          "libraries-2019-computer-sessions-by-location": {
+            "turn": 2,
+            "backend": "search_prefix"
+          },
+          "libraries-2020-computer-sessions-by-location": {
+            "turn": 2,
+            "backend": "search_prefix"
+          },
+          "libraries-2021-computer-sessions-by-location": {
+            "turn": 2,
+            "backend": "search_prefix"
+          },
+          "libraries-2021-visitors-by-location": {
+            "turn": 2,
+            "backend": "search_prefix"
+          },
+          "Carter_G._Woodson_Regional_Library": {
+            "turn": 3,
+            "backend": "search_value"
+          },
+          "Carter_G._Woodson": {
+            "turn": 3,
+            "backend": "search_value"
+          },
+          "Harvard_University": {
+            "turn": 4,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-6-d-3/task_5",
+        "gold_ids": [
+          "libraries-2020-visitors-by-location",
+          "libraries-2021-computer-sessions-by-location",
+          "public-health-statistics-selected-public-health-indicators-by-chicago-community-area",
+          "public-health-statistics-life-expectancy-by-community-area",
+          "Conrad_Sulzer_Regional_Library",
+          "libraries-2019-computer-sessions-by-location",
+          "libraries-2020-computer-sessions-by-location",
+          "libraries-2020-circulation-by-location",
+          "libraries-2019-circulation-by-location",
+          "libraries-2021-visitors-by-location",
+          "libraries-2019-visitors-by-location",
+          "libraries-2021-circulation-by-location"
+        ],
+        "first_hits": {
+          "libraries-2019-circulation-by-location": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "libraries-2020-circulation-by-location": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "libraries-2021-circulation-by-location": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "libraries-2019-visitors-by-location": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "libraries-2021-visitors-by-location": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "libraries-2020-visitors-by-location": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "public-health-statistics-selected-public-health-indicators-by-chicago-community-area": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "public-health-statistics-life-expectancy-by-community-area": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "libraries-2019-computer-sessions-by-location": {
+            "turn": 3,
+            "backend": "search_prefix"
+          },
+          "libraries-2020-computer-sessions-by-location": {
+            "turn": 3,
+            "backend": "search_prefix"
+          },
+          "libraries-2021-computer-sessions-by-location": {
+            "turn": 3,
+            "backend": "search_prefix"
+          }
+        }
+      },
+      {
+        "task_id": "k-6-d-3/task_7",
+        "gold_ids": [
+          "parking-violations-issued-in-january-2020",
+          "parking-violations-issued-in-january-2021",
+          "moving-violations-issued-in-january-2019",
+          "Potomac_River",
+          "United_States_Capitol_Police",
+          "United_States_Congress",
+          "parking-violations-issued-in-january-2019",
+          "Washington,_D.C."
+        ],
+        "first_hits": {
+          "parking-violations-issued-in-january-2019": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "parking-violations-issued-in-january-2020": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "parking-violations-issued-in-january-2021": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "moving-violations-issued-in-january-2019": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "Potomac_River": {
+            "turn": 2,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-6-d-3/task_3",
+        "gold_ids": [
+          "United_States_Department_of_the_Interior",
+          "National_Park_Service",
+          "parking-violations-issued-in-january-2020",
+          "parking-violations-issued-in-january-2021",
+          "moving-violations-issued-in-january-2020",
+          "moving-violations-issued-in-january-2019",
+          "Doug_Burgum",
+          "parking-violations-issued-in-january-2019",
+          "moving-violations-issued-in-january-2021",
+          "United_States_Park_Police"
+        ],
+        "first_hits": {
+          "moving-violations-issued-in-january-2020": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "moving-violations-issued-in-january-2019": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "parking-violations-issued-in-january-2021": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "moving-violations-issued-in-january-2021": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "parking-violations-issued-in-january-2019": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "parking-violations-issued-in-january-2020": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "United_States_Park_Police": {
+            "turn": 3,
+            "backend": "search_value"
+          },
+          "National_Park_Service": {
+            "turn": 3,
+            "backend": "search_value"
+          },
+          "United_States_Department_of_the_Interior": {
+            "turn": 4,
+            "backend": "search_value"
+          },
+          "Doug_Burgum": {
+            "turn": 4,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-6-d-3/task_1",
+        "gold_ids": [
+          "2021-state-expenditures",
+          "2023-state-expenditures",
+          "James_Milton_Turner",
+          "Missouri_Department_of_Corrections",
+          "Jefferson_City,_Missouri",
+          "2021-state-employee-pay",
+          "Lincoln_University_(Missouri)",
+          "2023-state-employee-pay",
+          "2022-state-expenditures",
+          "2022-state-employee-pay"
+        ],
+        "first_hits": {
+          "2021-state-employee-pay": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "2023-state-employee-pay": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "2022-state-employee-pay": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "2022-state-expenditures": {
+            "turn": 4,
+            "backend": "search_reranked"
+          },
+          "2023-state-expenditures": {
+            "turn": 4,
+            "backend": "search_reranked"
+          },
+          "2021-state-expenditures": {
+            "turn": 4,
+            "backend": "search_reranked"
+          },
+          "Missouri_Department_of_Corrections": {
+            "turn": 6,
+            "backend": "search_value"
+          },
+          "Jefferson_City,_Missouri": {
+            "turn": 6,
+            "backend": "search_value"
+          },
+          "Lincoln_University_(Missouri)": {
+            "turn": 7,
+            "backend": "search_value"
+          },
+          "James_Milton_Turner": {
+            "turn": 7,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-6-d-3/task_6",
+        "gold_ids": [
+          "street-sweeping-schedule-2024",
+          "crime-incidents-in-2023",
+          "building-permits-in-2023",
+          "building-permits-in-2024",
+          "crime-incidents-in-2022",
+          "crime-incidents-in-2024",
+          "dc-charter-schools",
+          "street-sweeping-schedule-2023",
+          "building-permits-in-2022",
+          "street-sweeping-schedule-2022",
+          "Sojourner_Truth",
+          "Rifton,_New_York"
+        ],
+        "first_hits": {
+          "building-permits-in-2022": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "building-permits-in-2023": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "building-permits-in-2024": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "crime-incidents-in-2023": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "crime-incidents-in-2022": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "crime-incidents-in-2024": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "street-sweeping-schedule-2023": {
+            "turn": 3,
+            "backend": "search_value"
+          },
+          "street-sweeping-schedule-2024": {
+            "turn": 3,
+            "backend": "search_value"
+          },
+          "street-sweeping-schedule-2022": {
+            "turn": 3,
+            "backend": "search_value"
+          },
+          "dc-charter-schools": {
+            "turn": 5,
+            "backend": "search_value"
+          },
+          "Sojourner_Truth": {
+            "turn": 6,
+            "backend": "search_value"
+          },
+          "Rifton,_New_York": {
+            "turn": 7,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-6-d-3/task_4",
+        "gold_ids": [
+          "budget-2019-budget-ordinance-positions-and-salaries",
+          "budget-2019-budget-ordinance-appropriations",
+          "Chicago_Police_Department",
+          "budget-2020-budget-ordinance-positions-and-salaries",
+          "budget-2020-budget-ordinance-appropriations",
+          "budget-2019-budget-recommendations-positions-and-salaries",
+          "budget-2021-budget-ordinance-positions-and-salaries",
+          "budget-2021-budget-recommendations-positions-and-salaries",
+          "O._W._Wilson",
+          "budget-2021-budget-ordinance-appropriations",
+          "budget-2020-budget-recommendations-positions-and-salaries",
+          "University_of_California,_Berkeley"
+        ],
+        "first_hits": {
+          "budget-2019-budget-ordinance-appropriations": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "budget-2021-budget-recommendations-positions-and-salaries": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "budget-2019-budget-ordinance-positions-and-salaries": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "budget-2020-budget-ordinance-appropriations": {
+            "turn": 2,
+            "backend": "search_prefix"
+          },
+          "budget-2020-budget-ordinance-positions-and-salaries": {
+            "turn": 2,
+            "backend": "search_prefix"
+          },
+          "budget-2020-budget-recommendations-positions-and-salaries": {
+            "turn": 2,
+            "backend": "search_prefix"
+          },
+          "budget-2021-budget-ordinance-appropriations": {
+            "turn": 2,
+            "backend": "search_prefix"
+          },
+          "budget-2021-budget-ordinance-positions-and-salaries": {
+            "turn": 2,
+            "backend": "search_prefix"
+          },
+          "Chicago_Police_Department": {
+            "turn": 3,
+            "backend": "search_value"
+          },
+          "O._W._Wilson": {
+            "turn": 3,
+            "backend": "search_value"
+          },
+          "University_of_California,_Berkeley": {
+            "turn": 4,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-6-d-3/task_10",
+        "gold_ids": [
+          "United_States_Department_of_the_Interior",
+          "National_Park_Service",
+          "parking-violations-issued-in-january-2020",
+          "parking-violations-issued-in-january-2021",
+          "moving-violations-issued-in-january-2019",
+          "parking-violations-issued-in-january-2019",
+          "Washington,_D.C.",
+          "United_States_Park_Police"
+        ],
+        "first_hits": {
+          "parking-violations-issued-in-january-2019": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "parking-violations-issued-in-january-2020": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "parking-violations-issued-in-january-2021": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "moving-violations-issued-in-january-2019": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "United_States_Park_Police": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "National_Park_Service": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "United_States_Department_of_the_Interior": {
+            "turn": 2,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-6-d-3/task_2",
+        "gold_ids": [
+          "texas-department-of-criminal-justice-releases-fy-2019",
+          "texas-state-expenditures-by-county-2020",
+          "texas-state-expenditures-by-county-2021",
+          "Houston_Rockets",
+          "texas-state-expenditures-by-county-2019",
+          "Houston",
+          "texas-department-of-criminal-justice-receives-fy-2020",
+          "texas-department-of-criminal-justice-releases-fy-2021",
+          "Harris_County,_Texas",
+          "texas-department-of-criminal-justice-receives-fy-2019",
+          "texas-department-of-criminal-justice-receives-fy-2021",
+          "texas-department-of-criminal-justice-releases-fy-2020"
+        ],
+        "first_hits": {
+          "texas-department-of-criminal-justice-releases-fy-2019": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "texas-department-of-criminal-justice-releases-fy-2021": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "texas-department-of-criminal-justice-releases-fy-2020": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "texas-department-of-criminal-justice-receives-fy-2019": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "texas-department-of-criminal-justice-receives-fy-2021": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "Harris_County,_Texas": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "texas-state-expenditures-by-county-2019": {
+            "turn": 3,
+            "backend": "search_prefix"
+          },
+          "texas-state-expenditures-by-county-2020": {
+            "turn": 3,
+            "backend": "search_prefix"
+          },
+          "texas-state-expenditures-by-county-2021": {
+            "turn": 3,
+            "backend": "search_prefix"
+          },
+          "Houston_Rockets": {
+            "turn": 4,
+            "backend": "search_value"
+          },
+          "Houston": {
+            "turn": 4,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-6-d-4/task_8",
+        "gold_ids": [
+          "Educational_Testing_Service",
+          "school-district-office-locations-current-d848f",
+          "private-school-locations-2019-20-ee873",
+          "Princeton,_New_Jersey",
+          "Graduate_Record_Examinations",
+          "postsecondary-school-locations-current-5a74c",
+          "public-school-locations-2021-22-5a116",
+          "school-district-office-locations-2021-22-d5dd7"
+        ],
+        "first_hits": {
+          "Graduate_Record_Examinations": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "Educational_Testing_Service": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "school-district-office-locations-2021-22-d5dd7": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "Princeton,_New_Jersey": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "public-school-locations-2021-22-5a116": {
+            "turn": 5,
+            "backend": "search_prefix"
+          },
+          "private-school-locations-2019-20-ee873": {
+            "turn": 5,
+            "backend": "search_prefix"
+          },
+          "postsecondary-school-locations-current-5a74c": {
+            "turn": 5,
+            "backend": "search_prefix"
+          }
+        }
+      },
+      {
+        "task_id": "k-6-d-4/task_9",
+        "gold_ids": [
+          "John_Wayne_Elementary_School",
+          "tax-rates-by-motor-fuel-and-state",
+          "2007-2008-school-progress-report",
+          "2013-2014-school-locations",
+          "2006-2007-school-progress-report",
+          "2009-2010-school-progress-report",
+          "2008-2009-school-progress-report",
+          "New_York_City"
+        ],
+        "first_hits": {
+          "tax-rates-by-motor-fuel-and-state": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "2009-2010-school-progress-report": {
+            "turn": 3,
+            "backend": "search_value"
+          },
+          "John_Wayne_Elementary_School": {
+            "turn": 3,
+            "backend": "search_value"
+          },
+          "2006-2007-school-progress-report": {
+            "turn": 4,
+            "backend": "search_prefix"
+          },
+          "2007-2008-school-progress-report": {
+            "turn": 4,
+            "backend": "search_prefix"
+          },
+          "2008-2009-school-progress-report": {
+            "turn": 4,
+            "backend": "search_prefix"
+          },
+          "2013-2014-school-locations": {
+            "turn": 9,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-6-d-4/task_5",
+        "gold_ids": [
+          "ocs-1-2-non-abuse-neglect-related-texas-child-fatality-investigations-fy2013-fy2022",
+          "child-and-adult-care-food-programs-cacfp-adult-day-care-centers-meal-reimbursement-pr-2019",
+          "Victoria,_Texas",
+          "Guadalupe_River_(Texas)",
+          "ocs-1-1-abuse-neglect-related-texas-child-fatalities-fy2013-fy2022",
+          "Victoria_County,_Texas",
+          "child-and-adult-care-food-programs-cacfp-adult-day-care-centers-meal-reimbursement-pr-2018",
+          "nchs-drug-poisoning-mortality-by-county-united-states",
+          "child-and-adult-care-food-programs-cacfp-adult-day-care-centers-meal-reimbursement-pr-2017",
+          "nchs-drug-poisoning-mortality-by-county-united-states-20278",
+          "child-and-adult-care-food-programs-cacfp-adult-day-care-centers-meal-reimbursement-pr-2016"
+        ],
+        "first_hits": {
+          "ocs-1-2-non-abuse-neglect-related-texas-child-fatality-investigations-fy2013-fy2022": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "ocs-1-1-abuse-neglect-related-texas-child-fatalities-fy2013-fy2022": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "nchs-drug-poisoning-mortality-by-county-united-states-20278": {
+            "turn": 3,
+            "backend": "search_value"
+          },
+          "nchs-drug-poisoning-mortality-by-county-united-states": {
+            "turn": 3,
+            "backend": "search_value"
+          },
+          "child-and-adult-care-food-programs-cacfp-adult-day-care-centers-meal-reimbursement-pr-2016": {
+            "turn": 6,
+            "backend": "search_prefix"
+          },
+          "child-and-adult-care-food-programs-cacfp-adult-day-care-centers-meal-reimbursement-pr-2017": {
+            "turn": 6,
+            "backend": "search_prefix"
+          },
+          "child-and-adult-care-food-programs-cacfp-adult-day-care-centers-meal-reimbursement-pr-2018": {
+            "turn": 6,
+            "backend": "search_prefix"
+          },
+          "child-and-adult-care-food-programs-cacfp-adult-day-care-centers-meal-reimbursement-pr-2019": {
+            "turn": 6,
+            "backend": "search_prefix"
+          }
+        }
+      },
+      {
+        "task_id": "k-6-d-4/task_7",
+        "gold_ids": [
+          "school-district-office-locations-current-d848f",
+          "school-district-office-locations-2020-21-d8df0",
+          "public-school-locations-2018-19-42360",
+          "ACT_(for-profit_organization)",
+          "Iowa_City,_Iowa",
+          "Jon_Whitmore",
+          "private-school-locations-2017-18-f49f6",
+          "postsecondary-school-locations-2019-20-64b31"
+        ],
+        "first_hits": {
+          "Jon_Whitmore": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "school-district-office-locations-2020-21-d8df0": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "school-district-office-locations-current-d848f": {
+            "turn": 3,
+            "backend": "search_prefix"
+          },
+          "Iowa_City,_Iowa": {
+            "turn": 4,
+            "backend": "search_value"
+          },
+          "postsecondary-school-locations-2019-20-64b31": {
+            "turn": 5,
+            "backend": "search_value"
+          },
+          "public-school-locations-2018-19-42360": {
+            "turn": 6,
+            "backend": "search_prefix"
+          },
+          "private-school-locations-2017-18-f49f6": {
+            "turn": 6,
+            "backend": "search_prefix"
+          }
+        }
+      },
+      {
+        "task_id": "k-6-d-4/task_3",
+        "gold_ids": [
+          "University_of_Houston",
+          "texas-department-of-criminal-justice-releases-fy-2019",
+          "texas-state-expenditures-by-county-2020",
+          "texas-state-expenditures-by-county-2021",
+          "University_of_Houston\u2013Clear_Lake",
+          "fy-2020-disability-compensation-recipients-by-county",
+          "texas-state-expenditures-by-county-2018",
+          "texas-state-expenditures-by-county-2019",
+          "Houston",
+          "fy-2023-disability-compensation-recipients-by-county",
+          "Harris_County,_Texas",
+          "University_of_Houston\u2013Downtown",
+          "texas-department-of-criminal-justice-releases-fy-2020"
+        ],
+        "first_hits": {
+          "texas-state-expenditures-by-county-2020": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "texas-department-of-criminal-justice-releases-fy-2020": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "texas-department-of-criminal-justice-releases-fy-2019": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "fy-2023-disability-compensation-recipients-by-county": {
+            "turn": 3,
+            "backend": "search_value"
+          },
+          "fy-2020-disability-compensation-recipients-by-county": {
+            "turn": 3,
+            "backend": "search_value"
+          },
+          "texas-state-expenditures-by-county-2018": {
+            "turn": 4,
+            "backend": "search_prefix"
+          },
+          "texas-state-expenditures-by-county-2019": {
+            "turn": 4,
+            "backend": "search_prefix"
+          },
+          "texas-state-expenditures-by-county-2021": {
+            "turn": 4,
+            "backend": "search_prefix"
+          },
+          "Houston": {
+            "turn": 5,
+            "backend": "search_value"
+          },
+          "University_of_Houston": {
+            "turn": 5,
+            "backend": "search_value"
+          },
+          "University_of_Houston\u2013Clear_Lake": {
+            "turn": 5,
+            "backend": "search_value"
+          },
+          "University_of_Houston\u2013Downtown": {
+            "turn": 5,
+            "backend": "search_value"
+          },
+          "Harris_County,_Texas": {
+            "turn": 5,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-6-d-4/task_1",
+        "gold_ids": [
+          "texas-department-of-criminal-justice-releases-fy-2019",
+          "texas-department-of-criminal-justice-releases-fy-2020",
+          "hate-crimes-by-county-and-bias-type-beginning-2010",
+          "texas-department-of-criminal-justice-releases-fy-2022",
+          "San_Antonio_Spurs",
+          "Manhattan",
+          "texas-department-of-criminal-justice-releases-fy-2021",
+          "Bexar_County,_Texas",
+          "index-violent-property-and-firearm-rates-by-county-beginning-1990",
+          "San_Antonio",
+          "New_York_Knicks"
+        ],
+        "first_hits": {
+          "texas-department-of-criminal-justice-releases-fy-2021": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "texas-department-of-criminal-justice-releases-fy-2022": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "texas-department-of-criminal-justice-releases-fy-2020": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "texas-department-of-criminal-justice-releases-fy-2019": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "San_Antonio_Spurs": {
+            "turn": 4,
+            "backend": "search_value"
+          },
+          "San_Antonio": {
+            "turn": 4,
+            "backend": "search_value"
+          },
+          "Bexar_County,_Texas": {
+            "turn": 6,
+            "backend": "search_prefix"
+          },
+          "New_York_Knicks": {
+            "turn": 7,
+            "backend": "search_value"
+          },
+          "hate-crimes-by-county-and-bias-type-beginning-2010": {
+            "turn": 8,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-6-d-4/task_6",
+        "gold_ids": [
+          "school-district-office-locations-current-d848f",
+          "public-school-locations-current-23297",
+          "postsecondary-school-locations-2022-23",
+          "school-district-office-locations-2022-23",
+          "private-school-locations-current-f7d96",
+          "Mountain_View,_California",
+          "Sal_Khan",
+          "Khan_Lab_School"
+        ],
+        "first_hits": {
+          "Sal_Khan": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "Khan_Lab_School": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "school-district-office-locations-2022-23": {
+            "turn": 3,
+            "backend": "search_value"
+          },
+          "school-district-office-locations-current-d848f": {
+            "turn": 4,
+            "backend": "search_prefix"
+          },
+          "private-school-locations-current-f7d96": {
+            "turn": 5,
+            "backend": "search_value"
+          },
+          "postsecondary-school-locations-2022-23": {
+            "turn": 6,
+            "backend": "search_value"
+          },
+          "public-school-locations-current-23297": {
+            "turn": 11,
+            "backend": "search_prefix"
+          }
+        }
+      },
+      {
+        "task_id": "k-6-d-4/task_4",
+        "gold_ids": [
+          "Cameron_County,_Texas",
+          "summer-meal-programs-seamless-summer-option-sso-meal-count-information-program-period-2019",
+          "Gulf_Coast_of_the_United_States",
+          "Brownsville,_Texas",
+          "child-and-adult-care-food-program-cacfp-child-centers-meal-reimbursement-program-year-2019",
+          "child-and-adult-care-food-program-cacfp-child-centers-meal-reimbursement-program-year-2018",
+          "child-and-adult-care-food-programs-cacfp-day-care-homes-meal-reimbursement-program-ye-2020",
+          "summer-meal-programs-seamless-summer-option-sso-meal-count-information-program-period-2016",
+          "summer-meal-programs-seamless-summer-option-sso-meal-count-information-program-period-2017",
+          "summer-meal-programs-seamless-summer-option-sso-meal-count-information-program-period-2018",
+          "child-and-adult-care-food-programs-cacfp-day-care-homes-meal-reimbursement-program-ye-2018"
+        ],
+        "first_hits": {
+          "child-and-adult-care-food-programs-cacfp-day-care-homes-meal-reimbursement-program-ye-2020": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "child-and-adult-care-food-program-cacfp-child-centers-meal-reimbursement-program-year-2018": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "summer-meal-programs-seamless-summer-option-sso-meal-count-information-program-period-2019": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "summer-meal-programs-seamless-summer-option-sso-meal-count-information-program-period-2016": {
+            "turn": 3,
+            "backend": "search_prefix"
+          },
+          "summer-meal-programs-seamless-summer-option-sso-meal-count-information-program-period-2017": {
+            "turn": 3,
+            "backend": "search_prefix"
+          },
+          "summer-meal-programs-seamless-summer-option-sso-meal-count-information-program-period-2018": {
+            "turn": 3,
+            "backend": "search_prefix"
+          },
+          "child-and-adult-care-food-program-cacfp-child-centers-meal-reimbursement-program-year-2019": {
+            "turn": 7,
+            "backend": "search_prefix"
+          },
+          "child-and-adult-care-food-programs-cacfp-day-care-homes-meal-reimbursement-program-ye-2018": {
+            "turn": 7,
+            "backend": "search_prefix"
+          }
+        }
+      },
+      {
+        "task_id": "k-6-d-4/task_10",
+        "gold_ids": [
+          "Erie_County,_New_York",
+          "fire-department-directory-for-new-york-state",
+          "Westchester_County,_New_York",
+          "large-scale-renewable-projects-reported-by-nyserda-beginning-2004",
+          "bridge-conditions-nys-department-of-transportation",
+          "Holland_Land_Company",
+          "los-angeles-international-airport-passenger-count-by-carrier-type",
+          "bank-owned-atm-locations-in-new-york-state",
+          "Buffalo,_New_York",
+          "index-violent-property-and-firearm-rates-by-county-beginning-1990"
+        ],
+        "first_hits": {
+          "bridge-conditions-nys-department-of-transportation": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "fire-department-directory-for-new-york-state": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "Westchester_County,_New_York": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "bank-owned-atm-locations-in-new-york-state": {
+            "turn": 3,
+            "backend": "search_value"
+          },
+          "large-scale-renewable-projects-reported-by-nyserda-beginning-2004": {
+            "turn": 4,
+            "backend": "search_value"
+          },
+          "los-angeles-international-airport-passenger-count-by-carrier-type": {
+            "turn": 6,
+            "backend": "search_value"
+          },
+          "Buffalo,_New_York": {
+            "turn": 9,
+            "backend": "search_value"
+          },
+          "Holland_Land_Company": {
+            "turn": 9,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-6-d-4/task_2",
+        "gold_ids": [
+          "2008-state-expenditures",
+          "Chicago_Fire_Department",
+          "employee-overtime-and-supplemental-earnings-2014",
+          "employee-overtime-and-supplemental-earnings-2016",
+          "2007-state-expenditures",
+          "Missouri_Department_of_Transportation",
+          "2010-state-expenditures",
+          "Springfield,_Missouri",
+          "employee-overtime-and-supplemental-earnings-2017",
+          "employee-overtime-and-supplemental-earnings-2015",
+          "500-cities-local-data-for-better-health-2016-release",
+          "2009-state-expenditures",
+          "500-cities-local-data-for-better-health-2018-release"
+        ],
+        "first_hits": {
+          "2009-state-expenditures": {
+            "turn": 3,
+            "backend": "search_reranked"
+          },
+          "2008-state-expenditures": {
+            "turn": 3,
+            "backend": "search_reranked"
+          },
+          "2010-state-expenditures": {
+            "turn": 3,
+            "backend": "search_reranked"
+          },
+          "2007-state-expenditures": {
+            "turn": 3,
+            "backend": "search_reranked"
+          },
+          "Missouri_Department_of_Transportation": {
+            "turn": 5,
+            "backend": "search_reranked"
+          },
+          "Springfield,_Missouri": {
+            "turn": 5,
+            "backend": "search_reranked"
+          },
+          "500-cities-local-data-for-better-health-2016-release": {
+            "turn": 10,
+            "backend": "search_reranked"
+          },
+          "500-cities-local-data-for-better-health-2018-release": {
+            "turn": 10,
+            "backend": "search_reranked"
+          }
+        }
+      },
+      {
+        "task_id": "k-4-d-4/task_8",
+        "gold_ids": [
+          "2008-state-expenditures",
+          "2007-state-expenditures",
+          "Missouri_Department_of_Transportation",
+          "2010-state-expenditures",
+          "Springfield,_Missouri",
+          "500-cities-local-data-for-better-health-2016-release",
+          "2009-state-expenditures",
+          "500-cities-local-data-for-better-health-2018-release"
+        ],
+        "first_hits": {
+          "2009-state-expenditures": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "2008-state-expenditures": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "2010-state-expenditures": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "2007-state-expenditures": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "Missouri_Department_of_Transportation": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "Springfield,_Missouri": {
+            "turn": 2,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-4-d-4/task_9",
+        "gold_ids": [
+          "employee-overtime-and-supplemental-earnings-2014",
+          "employee-overtime-and-supplemental-earnings-2016",
+          "Missouri_Department_of_Transportation",
+          "Springfield,_Missouri",
+          "employee-overtime-and-supplemental-earnings-2017",
+          "employee-overtime-and-supplemental-earnings-2015",
+          "500-cities-local-data-for-better-health-2016-release",
+          "500-cities-local-data-for-better-health-2018-release"
+        ],
+        "first_hits": {
+          "Missouri_Department_of_Transportation": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "Springfield,_Missouri": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "500-cities-local-data-for-better-health-2016-release": {
+            "turn": 3,
+            "backend": "search_value"
+          },
+          "500-cities-local-data-for-better-health-2018-release": {
+            "turn": 3,
+            "backend": "search_value"
+          },
+          "employee-overtime-and-supplemental-earnings-2014": {
+            "turn": 5,
+            "backend": "search_prefix"
+          },
+          "employee-overtime-and-supplemental-earnings-2015": {
+            "turn": 5,
+            "backend": "search_prefix"
+          },
+          "employee-overtime-and-supplemental-earnings-2016": {
+            "turn": 5,
+            "backend": "search_prefix"
+          },
+          "employee-overtime-and-supplemental-earnings-2017": {
+            "turn": 5,
+            "backend": "search_prefix"
+          }
+        }
+      },
+      {
+        "task_id": "k-4-d-4/task_5",
+        "gold_ids": [
+          "chicago-public-schools-school-progress-reports-sy1718",
+          "Chicago_Cubs",
+          "chicago-public-schools-school-locations-sy1516",
+          "chicago-public-schools-elementary-school-progress-report-2013-2014",
+          "chicago-public-schools-elementary-school-progress-report-card-2012-2013",
+          "census-data-selected-socioeconomic-indicators-in-chicago-2008-2012",
+          "chicago-public-schools-progress-report-cards-2011-2012",
+          "Wrigley_Field"
+        ],
+        "first_hits": {
+          "chicago-public-schools-progress-report-cards-2011-2012": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "chicago-public-schools-elementary-school-progress-report-card-2012-2013": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "chicago-public-schools-elementary-school-progress-report-2013-2014": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "chicago-public-schools-school-progress-reports-sy1718": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "census-data-selected-socioeconomic-indicators-in-chicago-2008-2012": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "Wrigley_Field": {
+            "turn": 3,
+            "backend": "search_value"
+          },
+          "Chicago_Cubs": {
+            "turn": 3,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-4-d-4/task_7",
+        "gold_ids": [
+          "employee-overtime-and-supplemental-earnings-2014",
+          "employee-overtime-and-supplemental-earnings-2016",
+          "Chicago_Police_Department",
+          "Springfield,_Missouri",
+          "employee-overtime-and-supplemental-earnings-2017",
+          "employee-overtime-and-supplemental-earnings-2015",
+          "500-cities-local-data-for-better-health-2016-release",
+          "500-cities-local-data-for-better-health-2018-release"
+        ],
+        "first_hits": {
+          "500-cities-local-data-for-better-health-2016-release": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "500-cities-local-data-for-better-health-2018-release": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "employee-overtime-and-supplemental-earnings-2014": {
+            "turn": 10,
+            "backend": "search_prefix"
+          },
+          "employee-overtime-and-supplemental-earnings-2015": {
+            "turn": 10,
+            "backend": "search_prefix"
+          },
+          "employee-overtime-and-supplemental-earnings-2016": {
+            "turn": 10,
+            "backend": "search_prefix"
+          },
+          "employee-overtime-and-supplemental-earnings-2017": {
+            "turn": 10,
+            "backend": "search_prefix"
+          },
+          "Chicago_Police_Department": {
+            "turn": 11,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-4-d-4/task_3",
+        "gold_ids": [
+          "texas-state-expenditures-by-county-2020",
+          "texas-state-expenditures-by-county-2018",
+          "texas-state-expenditures-by-county-2019",
+          "Nueces_County,_Texas",
+          "fy-2023-disability-compensation-recipients-by-county",
+          "Denton_County,_Texas",
+          "Tarrant_County,_Texas",
+          "Kinney_County,_Texas",
+          "Corpus_Christi,_Texas",
+          "texas-state-expenditures-by-county-2021"
+        ],
+        "first_hits": {}
+      },
+      {
+        "task_id": "k-4-d-4/task_1",
+        "gold_ids": [
+          "John_Wayne_Elementary_School",
+          "2007-2008-school-progress-report",
+          "2013-2014-school-locations",
+          "2006-2007-school-progress-report",
+          "2009-2010-school-progress-report",
+          "2008-2009-school-progress-report"
+        ],
+        "first_hits": {
+          "2013-2014-school-locations": {
+            "turn": 5,
+            "backend": "search_value"
+          },
+          "2006-2007-school-progress-report": {
+            "turn": 9,
+            "backend": "search_reranked"
+          },
+          "2009-2010-school-progress-report": {
+            "turn": 9,
+            "backend": "search_reranked"
+          },
+          "2007-2008-school-progress-report": {
+            "turn": 10,
+            "backend": "search_prefix"
+          },
+          "2008-2009-school-progress-report": {
+            "turn": 10,
+            "backend": "search_prefix"
+          }
+        }
+      },
+      {
+        "task_id": "k-4-d-4/task_6",
+        "gold_ids": [
+          "Pasteur_Institute",
+          "2018-2019-shsat-admissions-test-offers-by-sending-school",
+          "2015-2016-shsat-admissions-test-offers-by-sending-school",
+          "Louis_Pasteur",
+          "Marie_Curie",
+          "Nathaniel_Hawthorne",
+          "2016-2017-shsat-admissions-test-offers-by-sending-school",
+          "2017-2018-shsat-admissions-test-offers-by-sending-school",
+          "2016-2017-school-locations"
+        ],
+        "first_hits": {
+          "2018-2019-shsat-admissions-test-offers-by-sending-school": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "2016-2017-shsat-admissions-test-offers-by-sending-school": {
+            "turn": 4,
+            "backend": "search_value"
+          },
+          "2015-2016-shsat-admissions-test-offers-by-sending-school": {
+            "turn": 4,
+            "backend": "search_value"
+          },
+          "2017-2018-shsat-admissions-test-offers-by-sending-school": {
+            "turn": 4,
+            "backend": "search_value"
+          },
+          "Pasteur_Institute": {
+            "turn": 6,
+            "backend": "search_value"
+          },
+          "Louis_Pasteur": {
+            "turn": 6,
+            "backend": "search_value"
+          },
+          "Marie_Curie": {
+            "turn": 6,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-4-d-4/task_4",
+        "gold_ids": [
+          "2018-property-tax-roll",
+          "national-incorporated-places-and-counties",
+          "2016-property-tax-roll",
+          "Brown_University",
+          "Moses_Brown_Ives",
+          "2017-property-tax-roll",
+          "Moses_Brown",
+          "2015-property-tax-roll"
+        ],
+        "first_hits": {
+          "2015-property-tax-roll": {
+            "turn": 3,
+            "backend": "search_value"
+          },
+          "2016-property-tax-roll": {
+            "turn": 3,
+            "backend": "search_value"
+          },
+          "2018-property-tax-roll": {
+            "turn": 3,
+            "backend": "search_value"
+          },
+          "2017-property-tax-roll": {
+            "turn": 5,
+            "backend": "search_prefix"
+          },
+          "Moses_Brown": {
+            "turn": 7,
+            "backend": "search_value"
+          },
+          "Brown_University": {
+            "turn": 7,
+            "backend": "search_value"
+          },
+          "Moses_Brown_Ives": {
+            "turn": 7,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-4-d-4/task_10",
+        "gold_ids": [
+          "texas-department-of-criminal-justice-releases-fy-2019",
+          "texas-state-expenditures-by-county-2020",
+          "texas-department-of-criminal-justice-releases-fy-2020",
+          "fy-2020-disability-compensation-recipients-by-county",
+          "texas-state-expenditures-by-county-2018",
+          "texas-state-expenditures-by-county-2019",
+          "fy-2023-disability-compensation-recipients-by-county",
+          "Harris_County,_Texas",
+          "texas-state-expenditures-by-county-2021"
+        ],
+        "first_hits": {
+          "texas-state-expenditures-by-county-2020": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "texas-state-expenditures-by-county-2021": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "texas-department-of-criminal-justice-releases-fy-2020": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "texas-department-of-criminal-justice-releases-fy-2019": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "fy-2020-disability-compensation-recipients-by-county": {
+            "turn": 3,
+            "backend": "search_value"
+          },
+          "fy-2023-disability-compensation-recipients-by-county": {
+            "turn": 3,
+            "backend": "search_value"
+          },
+          "texas-state-expenditures-by-county-2018": {
+            "turn": 4,
+            "backend": "search_prefix"
+          },
+          "texas-state-expenditures-by-county-2019": {
+            "turn": 4,
+            "backend": "search_prefix"
+          },
+          "Harris_County,_Texas": {
+            "turn": 6,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-4-d-4/task_2",
+        "gold_ids": [
+          "agency-contracts-fiscal-year-2018",
+          "Jacobs_Solutions",
+          "agency-contracts-fiscal-year-2019",
+          "active-construction-projects",
+          "agency-contracts-fiscal-year-2020",
+          "HNTB",
+          "agency-contracts-fiscal-year-2017",
+          "HDR,_Inc.",
+          "Omaha,_Nebraska",
+          "Logan_Fontenelle"
+        ],
+        "first_hits": {
+          "agency-contracts-fiscal-year-2018": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "Jacobs_Solutions": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "HNTB": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "active-construction-projects": {
+            "turn": 4,
+            "backend": "search_value"
+          },
+          "agency-contracts-fiscal-year-2020": {
+            "turn": 5,
+            "backend": "search_value"
+          },
+          "agency-contracts-fiscal-year-2017": {
+            "turn": 5,
+            "backend": "search_value"
+          },
+          "agency-contracts-fiscal-year-2019": {
+            "turn": 6,
+            "backend": "search_prefix"
+          },
+          "Omaha,_Nebraska": {
+            "turn": 8,
+            "backend": "search_value"
+          },
+          "HDR,_Inc.": {
+            "turn": 9,
+            "backend": "search_value"
+          },
+          "Logan_Fontenelle": {
+            "turn": 12,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-4-d-3/task_8",
+        "gold_ids": [
+          "texas-department-of-criminal-justice-releases-fy-2019",
+          "texas-state-expenditures-by-county-2020",
+          "texas-state-expenditures-by-county-2021",
+          "texas-state-expenditures-by-county-2019",
+          "texas-department-of-criminal-justice-receives-fy-2020",
+          "texas-department-of-criminal-justice-releases-fy-2021",
+          "Harris_County,_Texas",
+          "texas-department-of-criminal-justice-receives-fy-2019",
+          "texas-department-of-criminal-justice-receives-fy-2021",
+          "texas-department-of-criminal-justice-releases-fy-2020"
+        ],
+        "first_hits": {
+          "texas-department-of-criminal-justice-releases-fy-2021": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "texas-department-of-criminal-justice-releases-fy-2020": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "texas-department-of-criminal-justice-releases-fy-2019": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "Harris_County,_Texas": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "texas-state-expenditures-by-county-2020": {
+            "turn": 3,
+            "backend": "search_value"
+          },
+          "texas-state-expenditures-by-county-2021": {
+            "turn": 3,
+            "backend": "search_value"
+          },
+          "texas-department-of-criminal-justice-receives-fy-2019": {
+            "turn": 4,
+            "backend": "search_prefix"
+          },
+          "texas-department-of-criminal-justice-receives-fy-2020": {
+            "turn": 4,
+            "backend": "search_prefix"
+          },
+          "texas-department-of-criminal-justice-receives-fy-2021": {
+            "turn": 4,
+            "backend": "search_prefix"
+          },
+          "texas-state-expenditures-by-county-2019": {
+            "turn": 4,
+            "backend": "search_prefix"
+          }
+        }
+      },
+      {
+        "task_id": "k-4-d-3/task_9",
+        "gold_ids": [
+          "United_States_Department_of_the_Interior",
+          "National_Park_Service",
+          "parking-violations-issued-in-january-2020",
+          "parking-violations-issued-in-january-2021",
+          "moving-violations-issued-in-january-2020",
+          "moving-violations-issued-in-january-2019",
+          "parking-violations-issued-in-january-2019",
+          "moving-violations-issued-in-january-2021",
+          "United_States_Park_Police"
+        ],
+        "first_hits": {
+          "parking-violations-issued-in-january-2019": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "parking-violations-issued-in-january-2020": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "parking-violations-issued-in-january-2021": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "moving-violations-issued-in-january-2020": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "moving-violations-issued-in-january-2019": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "moving-violations-issued-in-january-2021": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "United_States_Park_Police": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "National_Park_Service": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "United_States_Department_of_the_Interior": {
+            "turn": 2,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-4-d-3/task_5",
+        "gold_ids": [
+          "annual-personal-income-for-state-of-iowa-by-county",
+          "Davenport,_Iowa",
+          "Scott_County,_Iowa",
+          "iowa-local-area-unemployment-statistics",
+          "Waterloo,_Iowa",
+          "Black_Hawk_County,_Iowa",
+          "iowa-motor-fuel-sales-by-county-and-year",
+          "county-population-in-iowa-by-year"
+        ],
+        "first_hits": {
+          "iowa-local-area-unemployment-statistics": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "county-population-in-iowa-by-year": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "annual-personal-income-for-state-of-iowa-by-county": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "iowa-motor-fuel-sales-by-county-and-year": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "Scott_County,_Iowa": {
+            "turn": 3,
+            "backend": "search_value"
+          },
+          "Black_Hawk_County,_Iowa": {
+            "turn": 4,
+            "backend": "search_value"
+          },
+          "Davenport,_Iowa": {
+            "turn": 4,
+            "backend": "search_value"
+          },
+          "Waterloo,_Iowa": {
+            "turn": 4,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-4-d-3/task_7",
+        "gold_ids": [
+          "Missouri_Department_of_Corrections",
+          "Jefferson_City,_Missouri",
+          "2021-state-employee-pay",
+          "Lincoln_University_(Missouri)",
+          "2023-state-employee-pay",
+          "2022-state-employee-pay"
+        ],
+        "first_hits": {
+          "Missouri_Department_of_Corrections": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "2021-state-employee-pay": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "2023-state-employee-pay": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "2022-state-employee-pay": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "Jefferson_City,_Missouri": {
+            "turn": 5,
+            "backend": "search_value"
+          },
+          "Lincoln_University_(Missouri)": {
+            "turn": 5,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-4-d-3/task_3",
+        "gold_ids": [
+          "local-social-services-district-ssd-staff-counts-by-function-beginning-state-fiscal-ye-2004",
+          "public-assistance-cases-opened-by-month-beginning-2006",
+          "public-assistance-pa-caseloads-and-expenditures-beginning-2002",
+          "county-mental-health-profiles-phase-2-beginning-2014",
+          "Onondaga_County,_New_York",
+          "supplemental-nutrition-assistance-program-snap-caseloads-and-expenditures-beginning-2002",
+          "children-in-foster-care-annually-beginning-1994"
+        ],
+        "first_hits": {
+          "supplemental-nutrition-assistance-program-snap-caseloads-and-expenditures-beginning-2002": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "children-in-foster-care-annually-beginning-1994": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "public-assistance-pa-caseloads-and-expenditures-beginning-2002": {
+            "turn": 3,
+            "backend": "search_value"
+          },
+          "public-assistance-cases-opened-by-month-beginning-2006": {
+            "turn": 3,
+            "backend": "search_value"
+          },
+          "local-social-services-district-ssd-staff-counts-by-function-beginning-state-fiscal-ye-2004": {
+            "turn": 3,
+            "backend": "search_value"
+          },
+          "county-mental-health-profiles-phase-2-beginning-2014": {
+            "turn": 5,
+            "backend": "search_value"
+          },
+          "Onondaga_County,_New_York": {
+            "turn": 7,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-4-d-3/task_1",
+        "gold_ids": [
+          "Wallops_Island",
+          "List_of_presidents_of_the_United_States_by_home_state",
+          "George_Washington_Birthplace_National_Monument",
+          "United_States_dollar",
+          "List_of_presidents_of_the_United_States_by_military_rank",
+          "eaarl-topography-george-washington-birthplace-national-monument"
+        ],
+        "first_hits": {
+          "eaarl-topography-george-washington-birthplace-national-monument": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "George_Washington_Birthplace_National_Monument": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "Wallops_Island": {
+            "turn": 3,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-4-d-3/task_6",
+        "gold_ids": [
+          "2021-state-expenditures",
+          "2023-state-expenditures",
+          "Missouri_Department_of_Corrections",
+          "Jefferson_City,_Missouri",
+          "2021-state-employee-pay",
+          "2023-state-employee-pay",
+          "2022-state-expenditures",
+          "2022-state-employee-pay"
+        ],
+        "first_hits": {
+          "2021-state-employee-pay": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "2023-state-employee-pay": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "2022-state-employee-pay": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "2022-state-expenditures": {
+            "turn": 3,
+            "backend": "search_value"
+          },
+          "2021-state-expenditures": {
+            "turn": 3,
+            "backend": "search_value"
+          },
+          "2023-state-expenditures": {
+            "turn": 3,
+            "backend": "search_value"
+          },
+          "Missouri_Department_of_Corrections": {
+            "turn": 6,
+            "backend": "search_value"
+          },
+          "Jefferson_City,_Missouri": {
+            "turn": 6,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-4-d-3/task_4",
+        "gold_ids": [
+          "Erie_County,_New_York",
+          "nys-school-tax-relief-star-reimbursement-by-county-beginning-levy-year-1998",
+          "Monroe_County,_New_York",
+          "index-violent-property-and-firearm-rates-by-county-beginning-1990",
+          "annual-youth-detention-admissions-by-county-beginning-2006",
+          "jail-population-by-county-beginning-1997",
+          "Buffalo,_New_York",
+          "index-crimes-by-county-and-agency-beginning-1990"
+        ],
+        "first_hits": {
+          "annual-youth-detention-admissions-by-county-beginning-2006": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "jail-population-by-county-beginning-1997": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "nys-school-tax-relief-star-reimbursement-by-county-beginning-levy-year-1998": {
+            "turn": 3,
+            "backend": "search_value"
+          },
+          "index-crimes-by-county-and-agency-beginning-1990": {
+            "turn": 5,
+            "backend": "search_prefix"
+          },
+          "Buffalo,_New_York": {
+            "turn": 7,
+            "backend": "search_value"
+          },
+          "Erie_County,_New_York": {
+            "turn": 7,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-4-d-3/task_10",
+        "gold_ids": [
+          "United_States_Department_of_the_Interior",
+          "National_Park_Service",
+          "moving-violations-issued-in-january-2020",
+          "moving-violations-issued-in-january-2019",
+          "moving-violations-issued-in-january-2021",
+          "United_States_Park_Police"
+        ],
+        "first_hits": {
+          "moving-violations-issued-in-january-2021": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "moving-violations-issued-in-january-2020": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "moving-violations-issued-in-january-2019": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "United_States_Park_Police": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "United_States_Department_of_the_Interior": {
+            "turn": 2,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-4-d-3/task_2",
+        "gold_ids": [
+          "Marble_Hill,_Manhattan",
+          "2007-2008-school-progress-report",
+          "Stanford_White",
+          "Washington_Square_Arch",
+          "2009-2010-school-progress-report",
+          "2008-2009-school-progress-report",
+          "Tuckahoe_marble"
+        ],
+        "first_hits": {
+          "2007-2008-school-progress-report": {
+            "turn": 2,
+            "backend": "search_prefix"
+          },
+          "2008-2009-school-progress-report": {
+            "turn": 2,
+            "backend": "search_prefix"
+          },
+          "2009-2010-school-progress-report": {
+            "turn": 2,
+            "backend": "search_prefix"
+          },
+          "Stanford_White": {
+            "turn": 7,
+            "backend": "search_value"
+          },
+          "Washington_Square_Arch": {
+            "turn": 7,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-5-d-3/task_8",
+        "gold_ids": [
+          "James_Milton_Turner",
+          "Missouri_Department_of_Corrections",
+          "Jefferson_City,_Missouri",
+          "2021-state-employee-pay",
+          "Lincoln_University_(Missouri)",
+          "2023-state-employee-pay",
+          "2022-state-employee-pay"
+        ],
+        "first_hits": {
+          "Missouri_Department_of_Corrections": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "2021-state-employee-pay": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "2023-state-employee-pay": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "2022-state-employee-pay": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "Jefferson_City,_Missouri": {
+            "turn": 5,
+            "backend": "search_value"
+          },
+          "Lincoln_University_(Missouri)": {
+            "turn": 5,
+            "backend": "search_value"
+          },
+          "James_Milton_Turner": {
+            "turn": 5,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-5-d-3/task_9",
+        "gold_ids": [
+          "texas-department-of-criminal-justice-releases-fy-2019",
+          "texas-state-expenditures-by-county-2020",
+          "texas-state-expenditures-by-county-2021",
+          "texas-state-expenditures-by-county-2019",
+          "Houston",
+          "texas-department-of-criminal-justice-receives-fy-2020",
+          "texas-department-of-criminal-justice-releases-fy-2021",
+          "Harris_County,_Texas",
+          "texas-department-of-criminal-justice-receives-fy-2019",
+          "texas-department-of-criminal-justice-receives-fy-2021",
+          "texas-department-of-criminal-justice-releases-fy-2020"
+        ],
+        "first_hits": {
+          "texas-department-of-criminal-justice-releases-fy-2021": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "texas-department-of-criminal-justice-releases-fy-2020": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "texas-department-of-criminal-justice-releases-fy-2019": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "Harris_County,_Texas": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "texas-department-of-criminal-justice-receives-fy-2019": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "texas-department-of-criminal-justice-receives-fy-2020": {
+            "turn": 3,
+            "backend": "search_value"
+          },
+          "texas-department-of-criminal-justice-receives-fy-2021": {
+            "turn": 4,
+            "backend": "search_prefix"
+          },
+          "texas-state-expenditures-by-county-2019": {
+            "turn": 4,
+            "backend": "search_prefix"
+          },
+          "texas-state-expenditures-by-county-2020": {
+            "turn": 4,
+            "backend": "search_prefix"
+          },
+          "texas-state-expenditures-by-county-2021": {
+            "turn": 4,
+            "backend": "search_prefix"
+          },
+          "Houston": {
+            "turn": 5,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-5-d-3/task_5",
+        "gold_ids": [
+          "texas-department-of-criminal-justice-releases-fy-2019",
+          "texas-department-of-criminal-justice-releases-fy-2020",
+          "Dallas_County,_Texas",
+          "Houston",
+          "school-nutrition-programs-contact-information-and-site-level-program-participation-pr-2019",
+          "texas-department-of-criminal-justice-releases-fy-2021",
+          "Harris_County,_Texas",
+          "Fort_Worth,_Texas",
+          "school-nutrition-programs-contact-information-and-site-level-program-participation-pr-2021",
+          "school-nutrition-programs-contact-information-and-site-level-program-participation-pr-2020",
+          "Tarrant_County,_Texas",
+          "Dallas",
+          "Lake_Worth_Independent_School_District"
+        ],
+        "first_hits": {
+          "texas-department-of-criminal-justice-releases-fy-2021": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "texas-department-of-criminal-justice-releases-fy-2020": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "texas-department-of-criminal-justice-releases-fy-2019": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "Harris_County,_Texas": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "Dallas_County,_Texas": {
+            "turn": 3,
+            "backend": "search_prefix"
+          },
+          "Tarrant_County,_Texas": {
+            "turn": 3,
+            "backend": "search_prefix"
+          },
+          "Fort_Worth,_Texas": {
+            "turn": 4,
+            "backend": "search_prefix"
+          },
+          "Houston": {
+            "turn": 5,
+            "backend": "search_value"
+          },
+          "Dallas": {
+            "turn": 6,
+            "backend": "search_value"
+          },
+          "Lake_Worth_Independent_School_District": {
+            "turn": 12,
+            "backend": "search_reranked"
+          }
+        }
+      },
+      {
+        "task_id": "k-5-d-3/task_7",
+        "gold_ids": [
+          "2021-state-expenditures",
+          "2023-state-expenditures",
+          "Missouri_Department_of_Corrections",
+          "Jefferson_City,_Missouri",
+          "2021-state-employee-pay",
+          "Lincoln_University_(Missouri)",
+          "2023-state-employee-pay",
+          "2022-state-expenditures",
+          "2022-state-employee-pay"
+        ],
+        "first_hits": {
+          "2021-state-employee-pay": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "2023-state-employee-pay": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "2022-state-employee-pay": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "2021-state-expenditures": {
+            "turn": 6,
+            "backend": "search_value"
+          },
+          "2023-state-expenditures": {
+            "turn": 6,
+            "backend": "search_value"
+          },
+          "2022-state-expenditures": {
+            "turn": 8,
+            "backend": "search_value"
+          },
+          "Missouri_Department_of_Corrections": {
+            "turn": 9,
+            "backend": "search_value"
+          },
+          "Jefferson_City,_Missouri": {
+            "turn": 9,
+            "backend": "search_value"
+          },
+          "Lincoln_University_(Missouri)": {
+            "turn": 10,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-5-d-3/task_3",
+        "gold_ids": [
+          "Boeing_Plant_2",
+          "Green_River_College",
+          "agency-contracts-fiscal-year-2016",
+          "agency-contracts-fiscal-year-2014",
+          "building-energy-benchmarking-data-2015-present",
+          "Spokane_County,_Washington",
+          "Community_Colleges_of_Spokane",
+          "agency-contracts-fiscal-year-2015",
+          "King_County,_Washington",
+          "Seattle_Colleges_District"
+        ],
+        "first_hits": {
+          "agency-contracts-fiscal-year-2015": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "agency-contracts-fiscal-year-2014": {
+            "turn": 3,
+            "backend": "search_prefix"
+          },
+          "agency-contracts-fiscal-year-2016": {
+            "turn": 3,
+            "backend": "search_prefix"
+          },
+          "Seattle_Colleges_District": {
+            "turn": 5,
+            "backend": "search_value"
+          },
+          "building-energy-benchmarking-data-2015-present": {
+            "turn": 5,
+            "backend": "search_value"
+          },
+          "Community_Colleges_of_Spokane": {
+            "turn": 5,
+            "backend": "search_value"
+          },
+          "Green_River_College": {
+            "turn": 6,
+            "backend": "search_value"
+          },
+          "Spokane_County,_Washington": {
+            "turn": 7,
+            "backend": "search_value"
+          },
+          "King_County,_Washington": {
+            "turn": 8,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-5-d-3/task_1",
+        "gold_ids": [
+          "2007-2008-school-progress-report",
+          "List_of_first_ladies_of_the_United_States",
+          "2009-2010-school-progress-report",
+          "Franklin_D._Roosevelt",
+          "Warm_Springs,_Georgia",
+          "2008-2009-school-progress-report",
+          "Theodore_Roosevelt",
+          "Eleanor_Roosevelt"
+        ],
+        "first_hits": {
+          "2008-2009-school-progress-report": {
+            "turn": 8,
+            "backend": "search_value"
+          },
+          "2007-2008-school-progress-report": {
+            "turn": 8,
+            "backend": "search_value"
+          },
+          "2009-2010-school-progress-report": {
+            "turn": 9,
+            "backend": "search_value"
+          },
+          "Eleanor_Roosevelt": {
+            "turn": 10,
+            "backend": "search_value"
+          },
+          "Franklin_D._Roosevelt": {
+            "turn": 10,
+            "backend": "search_value"
+          },
+          "Warm_Springs,_Georgia": {
+            "turn": 10,
+            "backend": "search_value"
+          },
+          "Theodore_Roosevelt": {
+            "turn": 10,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-5-d-3/task_6",
+        "gold_ids": [
+          "University_of_Houston",
+          "University_of_Houston\u2013Clear_Lake",
+          "fy-2020-disability-compensation-recipients-by-county",
+          "University_of_Houston\u2013Downtown",
+          "Houston",
+          "fy-2023-disability-compensation-recipients-by-county",
+          "Harris_County,_Texas",
+          "List_of_counties_in_Texas"
+        ],
+        "first_hits": {
+          "List_of_counties_in_Texas": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "Harris_County,_Texas": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "fy-2020-disability-compensation-recipients-by-county": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "fy-2023-disability-compensation-recipients-by-county": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "Houston": {
+            "turn": 3,
+            "backend": "search_value"
+          },
+          "University_of_Houston": {
+            "turn": 3,
+            "backend": "search_value"
+          },
+          "University_of_Houston\u2013Clear_Lake": {
+            "turn": 3,
+            "backend": "search_value"
+          },
+          "University_of_Houston\u2013Downtown": {
+            "turn": 3,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-5-d-3/task_4",
+        "gold_ids": [
+          "Austin,_Texas",
+          "texas-state-expenditures-by-county-2020",
+          "Dallas_County,_Texas",
+          "school-nutrition-programs-contact-information-and-site-level-program-participation-pr-2018",
+          "texas-state-expenditures-by-county-2018",
+          "texas-state-expenditures-by-county-2019",
+          "Houston",
+          "school-nutrition-programs-contact-information-and-site-level-program-participation-pr-2019",
+          "Harris_County,_Texas",
+          "school-nutrition-programs-contact-information-and-site-level-program-participation-pr-2020",
+          "Travis_County,_Texas",
+          "Dallas",
+          "Sheldon_Independent_School_District"
+        ],
+        "first_hits": {
+          "school-nutrition-programs-contact-information-and-site-level-program-participation-pr-2018": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "texas-state-expenditures-by-county-2020": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "Dallas_County,_Texas": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "Travis_County,_Texas": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "Houston": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "Harris_County,_Texas": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "texas-state-expenditures-by-county-2018": {
+            "turn": 3,
+            "backend": "search_prefix"
+          },
+          "texas-state-expenditures-by-county-2019": {
+            "turn": 3,
+            "backend": "search_prefix"
+          },
+          "Austin,_Texas": {
+            "turn": 4,
+            "backend": "search_value"
+          },
+          "Dallas": {
+            "turn": 6,
+            "backend": "search_value"
+          },
+          "Sheldon_Independent_School_District": {
+            "turn": 7,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-5-d-3/task_10",
+        "gold_ids": [
+          "texas-department-of-criminal-justice-releases-fy-2019",
+          "Houston_Rockets",
+          "Houston",
+          "texas-department-of-criminal-justice-receives-fy-2020",
+          "texas-department-of-criminal-justice-releases-fy-2021",
+          "Harris_County,_Texas",
+          "texas-department-of-criminal-justice-receives-fy-2019",
+          "texas-department-of-criminal-justice-receives-fy-2021",
+          "texas-department-of-criminal-justice-releases-fy-2020"
+        ],
+        "first_hits": {
+          "texas-department-of-criminal-justice-receives-fy-2019": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "texas-department-of-criminal-justice-receives-fy-2020": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "texas-department-of-criminal-justice-releases-fy-2021": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "Harris_County,_Texas": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "texas-department-of-criminal-justice-releases-fy-2019": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "texas-department-of-criminal-justice-releases-fy-2020": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "texas-department-of-criminal-justice-receives-fy-2021": {
+            "turn": 3,
+            "backend": "search_value"
+          },
+          "Houston_Rockets": {
+            "turn": 4,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-5-d-3/task_2",
+        "gold_ids": [
+          "2019-state-employee-pay",
+          "State_Auditor_of_Missouri",
+          "2018-state-employee-pay",
+          "Missouri_Attorney_General",
+          "Edward_Bates",
+          "John_Ashcroft",
+          "2020-state-employee-pay",
+          "List_of_attorneys_general_of_Missouri",
+          "chicago-population-counts"
+        ],
+        "first_hits": {
+          "2019-state-employee-pay": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "2018-state-employee-pay": {
+            "turn": 3,
+            "backend": "search_prefix"
+          },
+          "2020-state-employee-pay": {
+            "turn": 3,
+            "backend": "search_prefix"
+          },
+          "Missouri_Attorney_General": {
+            "turn": 4,
+            "backend": "search_value"
+          },
+          "John_Ashcroft": {
+            "turn": 4,
+            "backend": "search_value"
+          },
+          "Edward_Bates": {
+            "turn": 4,
+            "backend": "search_value"
+          },
+          "List_of_attorneys_general_of_Missouri": {
+            "turn": 4,
+            "backend": "search_value"
+          },
+          "State_Auditor_of_Missouri": {
+            "turn": 4,
+            "backend": "search_value"
+          },
+          "chicago-population-counts": {
+            "turn": 7,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-5-d-4/task_8",
+        "gold_ids": [
+          "2008-state-expenditures",
+          "employee-overtime-and-supplemental-earnings-2014",
+          "employee-overtime-and-supplemental-earnings-2016",
+          "2007-state-expenditures",
+          "Missouri_Department_of_Transportation",
+          "2010-state-expenditures",
+          "Springfield,_Missouri",
+          "employee-overtime-and-supplemental-earnings-2017",
+          "employee-overtime-and-supplemental-earnings-2015",
+          "500-cities-local-data-for-better-health-2016-release",
+          "2009-state-expenditures",
+          "500-cities-local-data-for-better-health-2018-release"
+        ],
+        "first_hits": {
+          "2009-state-expenditures": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "2008-state-expenditures": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "2010-state-expenditures": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "2007-state-expenditures": {
+            "turn": 1,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-5-d-4/task_9",
+        "gold_ids": [
+          "employee-overtime-and-supplemental-earnings-2014",
+          "Chicago_Fire_Department",
+          "employee-overtime-and-supplemental-earnings-2016",
+          "Missouri_Department_of_Transportation",
+          "Springfield,_Missouri",
+          "employee-overtime-and-supplemental-earnings-2017",
+          "employee-overtime-and-supplemental-earnings-2015",
+          "500-cities-local-data-for-better-health-2016-release",
+          "500-cities-local-data-for-better-health-2018-release"
+        ],
+        "first_hits": {
+          "Missouri_Department_of_Transportation": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "Springfield,_Missouri": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "500-cities-local-data-for-better-health-2018-release": {
+            "turn": 4,
+            "backend": "search_value"
+          },
+          "500-cities-local-data-for-better-health-2016-release": {
+            "turn": 4,
+            "backend": "search_value"
+          },
+          "employee-overtime-and-supplemental-earnings-2017": {
+            "turn": 5,
+            "backend": "search_value"
+          },
+          "employee-overtime-and-supplemental-earnings-2014": {
+            "turn": 6,
+            "backend": "search_prefix"
+          },
+          "employee-overtime-and-supplemental-earnings-2015": {
+            "turn": 6,
+            "backend": "search_prefix"
+          },
+          "employee-overtime-and-supplemental-earnings-2016": {
+            "turn": 6,
+            "backend": "search_prefix"
+          },
+          "Chicago_Fire_Department": {
+            "turn": 7,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-5-d-4/task_5",
+        "gold_ids": [
+          "texas-department-of-criminal-justice-receives-fy-2022",
+          "University_of_Texas_Rio_Grande_Valley",
+          "Montgomery_County,_Texas",
+          "West_Texas",
+          "texas-department-of-criminal-justice-receives-fy-2020",
+          "texas-department-of-criminal-justice-receives-fy-2019",
+          "Hidalgo_County,_Texas",
+          "texas-department-of-criminal-justice-receives-fy-2021",
+          "2020-census-redistricting-data-all-texas-counties"
+        ],
+        "first_hits": {
+          "University_of_Texas_Rio_Grande_Valley": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "Hidalgo_County,_Texas": {
+            "turn": 20,
+            "backend": "search_value"
+          },
+          "Montgomery_County,_Texas": {
+            "turn": 22,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-5-d-4/task_7",
+        "gold_ids": [
+          "texas-department-of-criminal-justice-releases-fy-2019",
+          "San_Antonio",
+          "texas-department-of-criminal-justice-releases-fy-2022",
+          "San_Antonio_Spurs",
+          "Manhattan",
+          "texas-department-of-criminal-justice-releases-fy-2021",
+          "Bexar_County,_Texas",
+          "texas-department-of-criminal-justice-releases-fy-2020",
+          "New_York_Knicks"
+        ],
+        "first_hits": {
+          "texas-department-of-criminal-justice-releases-fy-2022": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "texas-department-of-criminal-justice-releases-fy-2021": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "texas-department-of-criminal-justice-releases-fy-2020": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "texas-department-of-criminal-justice-releases-fy-2019": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "Bexar_County,_Texas": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "San_Antonio": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "San_Antonio_Spurs": {
+            "turn": 3,
+            "backend": "search_value"
+          },
+          "New_York_Knicks": {
+            "turn": 4,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-5-d-4/task_3",
+        "gold_ids": [
+          "employee-overtime-and-supplemental-earnings-2018",
+          "fy-2020-disability-compensation-recipients-by-county",
+          "Chicago_Police_Department",
+          "fy-2023-disability-compensation-recipients-by-county",
+          "Wichita_Police_Department",
+          "employee-overtime-and-supplemental-earnings-2020",
+          "O._W._Wilson",
+          "Wichita,_Kansas",
+          "employee-overtime-and-supplemental-earnings-2019",
+          "employee-overtime-and-supplemental-earnings-2021"
+        ],
+        "first_hits": {
+          "employee-overtime-and-supplemental-earnings-2019": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "Chicago_Police_Department": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "employee-overtime-and-supplemental-earnings-2020": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "O._W._Wilson": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "Wichita_Police_Department": {
+            "turn": 2,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-5-d-4/task_1",
+        "gold_ids": [
+          "Erie_County,_New_York",
+          "fire-department-directory-for-new-york-state",
+          "Westchester_County,_New_York",
+          "large-scale-renewable-projects-reported-by-nyserda-beginning-2004",
+          "bridge-conditions-nys-department-of-transportation",
+          "Holland_Land_Company",
+          "bank-owned-atm-locations-in-new-york-state",
+          "Buffalo,_New_York",
+          "index-violent-property-and-firearm-rates-by-county-beginning-1990"
+        ],
+        "first_hits": {
+          "bridge-conditions-nys-department-of-transportation": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "fire-department-directory-for-new-york-state": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "Westchester_County,_New_York": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "bank-owned-atm-locations-in-new-york-state": {
+            "turn": 3,
+            "backend": "search_value"
+          },
+          "large-scale-renewable-projects-reported-by-nyserda-beginning-2004": {
+            "turn": 4,
+            "backend": "search_value"
+          },
+          "Buffalo,_New_York": {
+            "turn": 7,
+            "backend": "search_value"
+          },
+          "Holland_Land_Company": {
+            "turn": 10,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-5-d-4/task_6",
+        "gold_ids": [
+          "report-card-enrollment-2019-20-school-year",
+          "report-card-enrollment-2018-19-school-year",
+          "report-card-enrollment-2020-21-school-year",
+          "Whitman_County,_Washington",
+          "report-card-enrollment-2021-22-school-year",
+          "report-card-assessment-data-2021-22-school-year",
+          "King_County,_Washington",
+          "Kitsap_County,_Washington",
+          "Washington_State_University",
+          "Colfax,_Washington"
+        ],
+        "first_hits": {
+          "Whitman_County,_Washington": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "Kitsap_County,_Washington": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "report-card-enrollment-2019-20-school-year": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "report-card-enrollment-2018-19-school-year": {
+            "turn": 4,
+            "backend": "search_prefix"
+          },
+          "report-card-enrollment-2020-21-school-year": {
+            "turn": 4,
+            "backend": "search_prefix"
+          },
+          "report-card-enrollment-2021-22-school-year": {
+            "turn": 4,
+            "backend": "search_prefix"
+          },
+          "report-card-assessment-data-2021-22-school-year": {
+            "turn": 5,
+            "backend": "search_prefix"
+          },
+          "Washington_State_University": {
+            "turn": 8,
+            "backend": "search_value"
+          },
+          "Colfax,_Washington": {
+            "turn": 8,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-5-d-4/task_4",
+        "gold_ids": [
+          "report-card-assessment-data-2015-16-school-year",
+          "Pullman,_Washington",
+          "report-card-assessment-data-2016-17-school-year",
+          "report-card-assessment-data-2017-18-school-year",
+          "report-card-enrollment-2017-18-school-year",
+          "Spokane_County,_Washington",
+          "Whitman_County,_Washington",
+          "report-card-assessment-data-2014-15-school-year",
+          "Eastern_Washington"
+        ],
+        "first_hits": {
+          "Eastern_Washington": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "Spokane_County,_Washington": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "Whitman_County,_Washington": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "report-card-assessment-data-2014-15-school-year": {
+            "turn": 5,
+            "backend": "search_prefix"
+          },
+          "report-card-assessment-data-2015-16-school-year": {
+            "turn": 5,
+            "backend": "search_prefix"
+          },
+          "report-card-assessment-data-2016-17-school-year": {
+            "turn": 5,
+            "backend": "search_prefix"
+          },
+          "report-card-assessment-data-2017-18-school-year": {
+            "turn": 5,
+            "backend": "search_prefix"
+          },
+          "Pullman,_Washington": {
+            "turn": 6,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-5-d-4/task_10",
+        "gold_ids": [
+          "texas-department-of-criminal-justice-releases-fy-2019",
+          "texas-state-expenditures-by-county-2020",
+          "texas-department-of-criminal-justice-releases-fy-2020",
+          "Dallas_County,_Texas",
+          "fy-2020-disability-compensation-recipients-by-county",
+          "texas-state-expenditures-by-county-2018",
+          "texas-state-expenditures-by-county-2019",
+          "University_of_North_Texas_at_Dallas",
+          "fy-2023-disability-compensation-recipients-by-county",
+          "University_of_Texas_at_Dallas",
+          "texas-state-expenditures-by-county-2021"
+        ],
+        "first_hits": {
+          "texas-state-expenditures-by-county-2020": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "texas-state-expenditures-by-county-2021": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "texas-department-of-criminal-justice-releases-fy-2020": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "texas-department-of-criminal-justice-releases-fy-2019": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "fy-2020-disability-compensation-recipients-by-county": {
+            "turn": 3,
+            "backend": "search_value"
+          },
+          "fy-2023-disability-compensation-recipients-by-county": {
+            "turn": 3,
+            "backend": "search_value"
+          },
+          "University_of_North_Texas_at_Dallas": {
+            "turn": 4,
+            "backend": "search_value"
+          },
+          "University_of_Texas_at_Dallas": {
+            "turn": 4,
+            "backend": "search_value"
+          },
+          "Dallas_County,_Texas": {
+            "turn": 4,
+            "backend": "search_value"
+          },
+          "texas-state-expenditures-by-county-2018": {
+            "turn": 5,
+            "backend": "search_prefix"
+          },
+          "texas-state-expenditures-by-county-2019": {
+            "turn": 5,
+            "backend": "search_prefix"
+          }
+        }
+      },
+      {
+        "task_id": "k-5-d-4/task_2",
+        "gold_ids": [
+          "aps-1-1-texas-adult-populations-at-risk-by-county-region-fy2013-fy2022",
+          "McAllen,_Texas",
+          "500-cities-city-level-data-gis-friendly-format-2017-release",
+          "500-cities-city-level-data-gis-friendly-format-2016-release",
+          "2020-census-redistricting-data-all-texas-places",
+          "500-cities-city-level-data-gis-friendly-format-2019-release",
+          "Mission,_Texas",
+          "500-cities-city-level-data-gis-friendly-format-2018-release",
+          "Pharr,_Texas"
+        ],
+        "first_hits": {
+          "McAllen,_Texas": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "aps-1-1-texas-adult-populations-at-risk-by-county-region-fy2013-fy2022": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "Pharr,_Texas": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "Mission,_Texas": {
+            "turn": 7,
+            "backend": "search_prefix"
+          }
+        }
+      },
+      {
+        "task_id": "k-2-d-4/task_8",
+        "gold_ids": [
+          "texas-department-of-criminal-justice-receives-fy-2022",
+          "texas-department-of-criminal-justice-receives-fy-2020",
+          "texas-department-of-criminal-justice-receives-fy-2019",
+          "Hidalgo_County,_Texas",
+          "texas-department-of-criminal-justice-receives-fy-2021"
+        ],
+        "first_hits": {
+          "texas-department-of-criminal-justice-receives-fy-2019": {
+            "turn": 6,
+            "backend": "search_value"
+          },
+          "texas-department-of-criminal-justice-receives-fy-2020": {
+            "turn": 6,
+            "backend": "search_value"
+          },
+          "texas-department-of-criminal-justice-receives-fy-2021": {
+            "turn": 6,
+            "backend": "search_value"
+          },
+          "texas-department-of-criminal-justice-receives-fy-2022": {
+            "turn": 6,
+            "backend": "search_value"
+          },
+          "Hidalgo_County,_Texas": {
+            "turn": 7,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-2-d-4/task_9",
+        "gold_ids": [
+          "report-card-enrollment-2018-19-school-year",
+          "report-card-enrollment-2020-21-school-year",
+          "report-card-enrollment-2021-22-school-year",
+          "report-card-assessment-data-2021-22-school-year",
+          "report-card-enrollment-2019-20-school-year"
+        ],
+        "first_hits": {
+          "report-card-assessment-data-2021-22-school-year": {
+            "turn": 4,
+            "backend": "search_value"
+          },
+          "report-card-enrollment-2018-19-school-year": {
+            "turn": 6,
+            "backend": "search_prefix"
+          },
+          "report-card-enrollment-2019-20-school-year": {
+            "turn": 6,
+            "backend": "search_prefix"
+          },
+          "report-card-enrollment-2020-21-school-year": {
+            "turn": 6,
+            "backend": "search_prefix"
+          },
+          "report-card-enrollment-2021-22-school-year": {
+            "turn": 6,
+            "backend": "search_prefix"
+          }
+        }
+      },
+      {
+        "task_id": "k-2-d-4/task_5",
+        "gold_ids": [
+          "report-card-assessment-data-2015-16-school-year",
+          "report-card-assessment-data-2016-17-school-year",
+          "report-card-assessment-data-2017-18-school-year",
+          "Spokane_County,_Washington",
+          "Whitman_County,_Washington",
+          "report-card-assessment-data-2014-15-school-year"
+        ],
+        "first_hits": {
+          "report-card-assessment-data-2015-16-school-year": {
+            "turn": 4,
+            "backend": "search_value"
+          },
+          "report-card-assessment-data-2016-17-school-year": {
+            "turn": 4,
+            "backend": "search_value"
+          },
+          "report-card-assessment-data-2017-18-school-year": {
+            "turn": 4,
+            "backend": "search_value"
+          },
+          "report-card-assessment-data-2014-15-school-year": {
+            "turn": 5,
+            "backend": "search_prefix"
+          },
+          "Whitman_County,_Washington": {
+            "turn": 6,
+            "backend": "search_value"
+          },
+          "Spokane_County,_Washington": {
+            "turn": 7,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-2-d-4/task_7",
+        "gold_ids": [
+          "texas-department-of-criminal-justice-receives-fy-2022",
+          "texas-department-of-criminal-justice-receives-fy-2020",
+          "West_Texas",
+          "texas-department-of-criminal-justice-receives-fy-2019",
+          "texas-department-of-criminal-justice-receives-fy-2021"
+        ],
+        "first_hits": {
+          "texas-department-of-criminal-justice-receives-fy-2019": {
+            "turn": 4,
+            "backend": "search_reranked"
+          },
+          "texas-department-of-criminal-justice-receives-fy-2022": {
+            "turn": 4,
+            "backend": "search_reranked"
+          },
+          "texas-department-of-criminal-justice-receives-fy-2020": {
+            "turn": 4,
+            "backend": "search_reranked"
+          },
+          "West_Texas": {
+            "turn": 5,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-2-d-4/task_3",
+        "gold_ids": [
+          "employee-overtime-and-supplemental-earnings-2018",
+          "Chicago_Police_Department",
+          "employee-overtime-and-supplemental-earnings-2020",
+          "employee-overtime-and-supplemental-earnings-2019",
+          "employee-overtime-and-supplemental-earnings-2021"
+        ],
+        "first_hits": {
+          "employee-overtime-and-supplemental-earnings-2019": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "employee-overtime-and-supplemental-earnings-2020": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "employee-overtime-and-supplemental-earnings-2021": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "employee-overtime-and-supplemental-earnings-2018": {
+            "turn": 3,
+            "backend": "search_prefix"
+          },
+          "Chicago_Police_Department": {
+            "turn": 4,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-2-d-4/task_1",
+        "gold_ids": [
+          "fire-department-directory-for-new-york-state",
+          "large-scale-renewable-projects-reported-by-nyserda-beginning-2004",
+          "bridge-conditions-nys-department-of-transportation",
+          "bank-owned-atm-locations-in-new-york-state",
+          "index-violent-property-and-firearm-rates-by-county-beginning-1990"
+        ],
+        "first_hits": {
+          "fire-department-directory-for-new-york-state": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "bank-owned-atm-locations-in-new-york-state": {
+            "turn": 3,
+            "backend": "search_value"
+          },
+          "large-scale-renewable-projects-reported-by-nyserda-beginning-2004": {
+            "turn": 4,
+            "backend": "search_value"
+          },
+          "bridge-conditions-nys-department-of-transportation": {
+            "turn": 7,
+            "backend": "search_prefix"
+          }
+        }
+      },
+      {
+        "task_id": "k-2-d-4/task_6",
+        "gold_ids": [
+          "texas-department-of-criminal-justice-receives-fy-2022",
+          "texas-department-of-criminal-justice-receives-fy-2020",
+          "texas-department-of-criminal-justice-receives-fy-2019",
+          "texas-department-of-criminal-justice-receives-fy-2021",
+          "2020-census-redistricting-data-all-texas-counties"
+        ],
+        "first_hits": {
+          "texas-department-of-criminal-justice-receives-fy-2020": {
+            "turn": 5,
+            "backend": "search_value"
+          },
+          "texas-department-of-criminal-justice-receives-fy-2019": {
+            "turn": 6,
+            "backend": "search_prefix"
+          },
+          "texas-department-of-criminal-justice-receives-fy-2021": {
+            "turn": 6,
+            "backend": "search_prefix"
+          },
+          "texas-department-of-criminal-justice-receives-fy-2022": {
+            "turn": 6,
+            "backend": "search_prefix"
+          }
+        }
+      },
+      {
+        "task_id": "k-2-d-4/task_4",
+        "gold_ids": [
+          "report-card-assessment-data-2015-16-school-year",
+          "report-card-assessment-data-2016-17-school-year",
+          "report-card-assessment-data-2017-18-school-year",
+          "report-card-assessment-data-2014-15-school-year",
+          "Eastern_Washington"
+        ],
+        "first_hits": {
+          "report-card-assessment-data-2014-15-school-year": {
+            "turn": 2,
+            "backend": "search_prefix"
+          },
+          "report-card-assessment-data-2015-16-school-year": {
+            "turn": 2,
+            "backend": "search_prefix"
+          },
+          "report-card-assessment-data-2016-17-school-year": {
+            "turn": 2,
+            "backend": "search_prefix"
+          },
+          "report-card-assessment-data-2017-18-school-year": {
+            "turn": 2,
+            "backend": "search_prefix"
+          }
+        }
+      },
+      {
+        "task_id": "k-2-d-4/task_10",
+        "gold_ids": [
+          "report-card-enrollment-2018-19-school-year",
+          "report-card-enrollment-2020-21-school-year",
+          "report-card-enrollment-2021-22-school-year",
+          "King_County,_Washington",
+          "report-card-enrollment-2019-20-school-year"
+        ],
+        "first_hits": {
+          "report-card-enrollment-2021-22-school-year": {
+            "turn": 3,
+            "backend": "search_reranked"
+          },
+          "report-card-enrollment-2018-19-school-year": {
+            "turn": 4,
+            "backend": "search_prefix"
+          },
+          "report-card-enrollment-2019-20-school-year": {
+            "turn": 4,
+            "backend": "search_prefix"
+          },
+          "report-card-enrollment-2020-21-school-year": {
+            "turn": 4,
+            "backend": "search_prefix"
+          }
+        }
+      },
+      {
+        "task_id": "k-2-d-4/task_2",
+        "gold_ids": [
+          "500-cities-city-level-data-gis-friendly-format-2017-release",
+          "500-cities-city-level-data-gis-friendly-format-2016-release",
+          "2020-census-redistricting-data-all-texas-places",
+          "500-cities-city-level-data-gis-friendly-format-2019-release",
+          "500-cities-city-level-data-gis-friendly-format-2018-release"
+        ],
+        "first_hits": {
+          "2020-census-redistricting-data-all-texas-places": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "500-cities-city-level-data-gis-friendly-format-2016-release": {
+            "turn": 3,
+            "backend": "search_prefix"
+          },
+          "500-cities-city-level-data-gis-friendly-format-2017-release": {
+            "turn": 3,
+            "backend": "search_prefix"
+          },
+          "500-cities-city-level-data-gis-friendly-format-2018-release": {
+            "turn": 3,
+            "backend": "search_prefix"
+          },
+          "500-cities-city-level-data-gis-friendly-format-2019-release": {
+            "turn": 3,
+            "backend": "search_prefix"
+          }
+        }
+      },
+      {
+        "task_id": "k-2-d-3/task_8",
+        "gold_ids": [
+          "libraries-2020-visitors-by-location",
+          "libraries-2020-circulation-by-location",
+          "libraries-2019-circulation-by-location",
+          "libraries-2021-visitors-by-location",
+          "libraries-2019-visitors-by-location",
+          "libraries-2021-circulation-by-location"
+        ],
+        "first_hits": {
+          "libraries-2021-circulation-by-location": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "libraries-2020-circulation-by-location": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "libraries-2020-visitors-by-location": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "libraries-2021-visitors-by-location": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "libraries-2019-circulation-by-location": {
+            "turn": 2,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-2-d-3/task_9",
+        "gold_ids": [
+          "crime-incidents-in-2023",
+          "building-permits-in-2023",
+          "crime-incidents-in-2022",
+          "building-permits-in-2024",
+          "crime-incidents-in-2024",
+          "building-permits-in-2022"
+        ],
+        "first_hits": {
+          "building-permits-in-2022": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "building-permits-in-2023": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "building-permits-in-2024": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "crime-incidents-in-2023": {
+            "turn": 3,
+            "backend": "search_value"
+          },
+          "crime-incidents-in-2022": {
+            "turn": 3,
+            "backend": "search_value"
+          },
+          "crime-incidents-in-2024": {
+            "turn": 3,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-2-d-3/task_5",
+        "gold_ids": [
+          "texas-department-of-criminal-justice-releases-fy-2019",
+          "texas-state-expenditures-by-county-2020",
+          "texas-department-of-criminal-justice-releases-fy-2020",
+          "texas-state-expenditures-by-county-2019",
+          "texas-department-of-criminal-justice-releases-fy-2021",
+          "texas-state-expenditures-by-county-2021"
+        ],
+        "first_hits": {
+          "texas-state-expenditures-by-county-2020": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "texas-state-expenditures-by-county-2021": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "texas-state-expenditures-by-county-2019": {
+            "turn": 3,
+            "backend": "search_prefix"
+          },
+          "texas-department-of-criminal-justice-releases-fy-2020": {
+            "turn": 4,
+            "backend": "search_value"
+          },
+          "texas-department-of-criminal-justice-releases-fy-2021": {
+            "turn": 4,
+            "backend": "search_value"
+          },
+          "texas-department-of-criminal-justice-releases-fy-2019": {
+            "turn": 4,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-2-d-3/task_7",
+        "gold_ids": [
+          "budget-2019-budget-ordinance-positions-and-salaries",
+          "budget-2019-budget-ordinance-appropriations",
+          "budget-2020-budget-ordinance-positions-and-salaries",
+          "budget-2020-budget-ordinance-appropriations",
+          "budget-2021-budget-ordinance-positions-and-salaries",
+          "budget-2021-budget-ordinance-appropriations"
+        ],
+        "first_hits": {
+          "budget-2019-budget-ordinance-positions-and-salaries": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "budget-2019-budget-ordinance-appropriations": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "budget-2021-budget-ordinance-positions-and-salaries": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "budget-2020-budget-ordinance-appropriations": {
+            "turn": 2,
+            "backend": "search_prefix"
+          },
+          "budget-2021-budget-ordinance-appropriations": {
+            "turn": 2,
+            "backend": "search_prefix"
+          },
+          "budget-2020-budget-ordinance-positions-and-salaries": {
+            "turn": 2,
+            "backend": "search_prefix"
+          }
+        }
+      },
+      {
+        "task_id": "k-2-d-3/task_3",
+        "gold_ids": [
+          "texas-state-expenditures-by-county-2018",
+          "texas-state-expenditures-by-county-2020",
+          "texas-state-expenditures-by-county-2019",
+          "unemployment-insurance-beneficiaries-and-benefit-amounts-paid-beginning-2001"
+        ],
+        "first_hits": {
+          "unemployment-insurance-beneficiaries-and-benefit-amounts-paid-beginning-2001": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "texas-state-expenditures-by-county-2020": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "texas-state-expenditures-by-county-2018": {
+            "turn": 3,
+            "backend": "search_prefix"
+          },
+          "texas-state-expenditures-by-county-2019": {
+            "turn": 3,
+            "backend": "search_prefix"
+          }
+        }
+      },
+      {
+        "task_id": "k-2-d-3/task_1",
+        "gold_ids": [
+          "nopd-use-of-force-incidents",
+          "apd-searches-by-type",
+          "apd-computer-aided-dispatch-incidents",
+          "apd-use-of-force"
+        ],
+        "first_hits": {
+          "nopd-use-of-force-incidents": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "apd-use-of-force": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "apd-computer-aided-dispatch-incidents": {
+            "turn": 3,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-2-d-3/task_6",
+        "gold_ids": [
+          "parking-violations-issued-in-january-2020",
+          "parking-violations-issued-in-january-2021",
+          "moving-violations-issued-in-january-2020",
+          "moving-violations-issued-in-january-2019",
+          "parking-violations-issued-in-january-2019",
+          "moving-violations-issued-in-january-2021"
+        ],
+        "first_hits": {
+          "parking-violations-issued-in-january-2019": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "parking-violations-issued-in-january-2020": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "parking-violations-issued-in-january-2021": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "moving-violations-issued-in-january-2020": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "moving-violations-issued-in-january-2019": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "moving-violations-issued-in-january-2021": {
+            "turn": 1,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-2-d-3/task_4",
+        "gold_ids": [
+          "2021-state-expenditures",
+          "2023-state-expenditures",
+          "2021-state-employee-pay",
+          "2023-state-employee-pay",
+          "2022-state-expenditures",
+          "2022-state-employee-pay"
+        ],
+        "first_hits": {
+          "2021-state-employee-pay": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "2023-state-employee-pay": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "2022-state-employee-pay": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "2022-state-expenditures": {
+            "turn": 4,
+            "backend": "search_reranked"
+          },
+          "2023-state-expenditures": {
+            "turn": 4,
+            "backend": "search_reranked"
+          },
+          "2021-state-expenditures": {
+            "turn": 4,
+            "backend": "search_reranked"
+          }
+        }
+      },
+      {
+        "task_id": "k-2-d-3/task_10",
+        "gold_ids": [
+          "parking-violations-issued-in-january-2020",
+          "moving-violations-issued-in-january-2019",
+          "parking-violations-issued-in-january-2019",
+          "parking-violations-issued-in-january-2021"
+        ],
+        "first_hits": {
+          "parking-violations-issued-in-january-2019": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "parking-violations-issued-in-january-2020": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "parking-violations-issued-in-january-2021": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "moving-violations-issued-in-january-2019": {
+            "turn": 1,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-2-d-3/task_2",
+        "gold_ids": [
+          "agency-contracts-fiscal-year-2015",
+          "agency-contracts-fiscal-year-2014",
+          "Washington_(state)",
+          "agency-contracts-fiscal-year-2016"
+        ],
+        "first_hits": {
+          "agency-contracts-fiscal-year-2015": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "Washington_(state)": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "agency-contracts-fiscal-year-2014": {
+            "turn": 3,
+            "backend": "search_prefix"
+          },
+          "agency-contracts-fiscal-year-2016": {
+            "turn": 3,
+            "backend": "search_prefix"
+          }
+        }
+      },
+      {
+        "task_id": "k-3-d-3/task_8",
+        "gold_ids": [
+          "National_Park_Service",
+          "parking-violations-issued-in-january-2020",
+          "parking-violations-issued-in-january-2021",
+          "moving-violations-issued-in-january-2020",
+          "moving-violations-issued-in-january-2019",
+          "parking-violations-issued-in-january-2019",
+          "moving-violations-issued-in-january-2021",
+          "United_States_Park_Police"
+        ],
+        "first_hits": {
+          "parking-violations-issued-in-january-2019": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "parking-violations-issued-in-january-2021": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "parking-violations-issued-in-january-2020": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "moving-violations-issued-in-january-2020": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "moving-violations-issued-in-january-2021": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "moving-violations-issued-in-january-2019": {
+            "turn": 2,
+            "backend": "search_prefix"
+          },
+          "United_States_Park_Police": {
+            "turn": 3,
+            "backend": "search_value"
+          },
+          "National_Park_Service": {
+            "turn": 3,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-3-d-3/task_9",
+        "gold_ids": [
+          "budget-2019-budget-ordinance-positions-and-salaries",
+          "budget-2019-budget-ordinance-appropriations",
+          "budget-2020-budget-ordinance-positions-and-salaries",
+          "budget-2020-budget-ordinance-appropriations",
+          "budget-2019-budget-recommendations-positions-and-salaries",
+          "budget-2021-budget-ordinance-positions-and-salaries",
+          "budget-2021-budget-recommendations-positions-and-salaries",
+          "budget-2021-budget-ordinance-appropriations",
+          "budget-2020-budget-recommendations-positions-and-salaries"
+        ],
+        "first_hits": {
+          "budget-2019-budget-ordinance-appropriations": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "budget-2021-budget-recommendations-positions-and-salaries": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "budget-2019-budget-ordinance-positions-and-salaries": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "budget-2020-budget-ordinance-appropriations": {
+            "turn": 3,
+            "backend": "search_prefix"
+          },
+          "budget-2020-budget-ordinance-positions-and-salaries": {
+            "turn": 3,
+            "backend": "search_prefix"
+          },
+          "budget-2021-budget-ordinance-appropriations": {
+            "turn": 3,
+            "backend": "search_prefix"
+          },
+          "budget-2021-budget-ordinance-positions-and-salaries": {
+            "turn": 3,
+            "backend": "search_prefix"
+          },
+          "budget-2019-budget-recommendations-positions-and-salaries": {
+            "turn": 4,
+            "backend": "search_prefix"
+          },
+          "budget-2020-budget-recommendations-positions-and-salaries": {
+            "turn": 4,
+            "backend": "search_prefix"
+          }
+        }
+      },
+      {
+        "task_id": "k-3-d-3/task_5",
+        "gold_ids": [
+          "2021-state-expenditures",
+          "2023-state-expenditures",
+          "Missouri_Department_of_Corrections",
+          "2021-state-employee-pay",
+          "2023-state-employee-pay",
+          "2022-state-expenditures",
+          "2022-state-employee-pay"
+        ],
+        "first_hits": {
+          "2021-state-employee-pay": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "2023-state-employee-pay": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "2022-state-employee-pay": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "2021-state-expenditures": {
+            "turn": 5,
+            "backend": "search_value"
+          },
+          "2023-state-expenditures": {
+            "turn": 5,
+            "backend": "search_value"
+          },
+          "Missouri_Department_of_Corrections": {
+            "turn": 6,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-3-d-3/task_7",
+        "gold_ids": [
+          "texas-department-of-criminal-justice-releases-fy-2019",
+          "texas-department-of-criminal-justice-receives-fy-2020",
+          "texas-department-of-criminal-justice-releases-fy-2021",
+          "Harris_County,_Texas",
+          "texas-department-of-criminal-justice-receives-fy-2019",
+          "texas-department-of-criminal-justice-receives-fy-2021",
+          "texas-department-of-criminal-justice-releases-fy-2020"
+        ],
+        "first_hits": {
+          "texas-department-of-criminal-justice-releases-fy-2021": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "texas-department-of-criminal-justice-releases-fy-2020": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "texas-department-of-criminal-justice-releases-fy-2019": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "texas-department-of-criminal-justice-receives-fy-2019": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "Harris_County,_Texas": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "texas-department-of-criminal-justice-receives-fy-2021": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "texas-department-of-criminal-justice-receives-fy-2020": {
+            "turn": 2,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-3-d-3/task_3",
+        "gold_ids": [
+          "Park_Slope",
+          "Prospect_Park_(Brooklyn)",
+          "2011-2012-school-progress-report-all-schools",
+          "2013-2014-school-locations",
+          "2012-2013-citywide-progress-report",
+          "2010-2011-school-progress-report"
+        ],
+        "first_hits": {
+          "2011-2012-school-progress-report-all-schools": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "2012-2013-citywide-progress-report": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "2010-2011-school-progress-report": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "2013-2014-school-locations": {
+            "turn": 3,
+            "backend": "search_prefix"
+          },
+          "Prospect_Park_(Brooklyn)": {
+            "turn": 10,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-3-d-3/task_1",
+        "gold_ids": [
+          "Marble_Hill,_Manhattan",
+          "2006-2007-school-progress-report",
+          "2009-2010-school-progress-report",
+          "2010-2011-school-progress-report",
+          "Frederick_Philipse"
+        ],
+        "first_hits": {
+          "2006-2007-school-progress-report": {
+            "turn": 8,
+            "backend": "search_value"
+          },
+          "2009-2010-school-progress-report": {
+            "turn": 10,
+            "backend": "search_value"
+          },
+          "2010-2011-school-progress-report": {
+            "turn": 10,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-3-d-3/task_6",
+        "gold_ids": [
+          "texas-department-of-criminal-justice-releases-fy-2019",
+          "texas-state-expenditures-by-county-2020",
+          "texas-state-expenditures-by-county-2021",
+          "texas-state-expenditures-by-county-2019",
+          "texas-department-of-criminal-justice-receives-fy-2020",
+          "texas-department-of-criminal-justice-releases-fy-2021",
+          "texas-department-of-criminal-justice-receives-fy-2019",
+          "texas-department-of-criminal-justice-receives-fy-2021",
+          "texas-department-of-criminal-justice-releases-fy-2020"
+        ],
+        "first_hits": {
+          "texas-department-of-criminal-justice-releases-fy-2021": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "texas-department-of-criminal-justice-releases-fy-2020": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "texas-department-of-criminal-justice-releases-fy-2019": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "texas-department-of-criminal-justice-receives-fy-2019": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "texas-department-of-criminal-justice-receives-fy-2020": {
+            "turn": 3,
+            "backend": "search_value"
+          },
+          "texas-state-expenditures-by-county-2019": {
+            "turn": 4,
+            "backend": "search_prefix"
+          },
+          "texas-state-expenditures-by-county-2020": {
+            "turn": 4,
+            "backend": "search_prefix"
+          },
+          "texas-state-expenditures-by-county-2021": {
+            "turn": 4,
+            "backend": "search_prefix"
+          },
+          "texas-department-of-criminal-justice-receives-fy-2021": {
+            "turn": 4,
+            "backend": "search_prefix"
+          }
+        }
+      },
+      {
+        "task_id": "k-3-d-3/task_4",
+        "gold_ids": [
+          "2011-2012-school-progress-report-all-schools",
+          "2013-2014-school-locations",
+          "Andrew_Carnegie",
+          "2012-2013-citywide-progress-report",
+          "Carnegie_Hill",
+          "2010-2011-school-progress-report"
+        ],
+        "first_hits": {
+          "2011-2012-school-progress-report-all-schools": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "2012-2013-citywide-progress-report": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "2010-2011-school-progress-report": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "2013-2014-school-locations": {
+            "turn": 7,
+            "backend": "search_value"
+          },
+          "Carnegie_Hill": {
+            "turn": 7,
+            "backend": "search_value"
+          },
+          "Andrew_Carnegie": {
+            "turn": 11,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-3-d-3/task_10",
+        "gold_ids": [
+          "libraries-2020-visitors-by-location",
+          "libraries-2021-computer-sessions-by-location",
+          "libraries-2019-computer-sessions-by-location",
+          "libraries-2020-computer-sessions-by-location",
+          "libraries-2020-circulation-by-location",
+          "libraries-2019-circulation-by-location",
+          "libraries-2021-visitors-by-location",
+          "libraries-2019-visitors-by-location",
+          "libraries-2021-circulation-by-location"
+        ],
+        "first_hits": {
+          "libraries-2019-circulation-by-location": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "libraries-2020-circulation-by-location": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "libraries-2021-circulation-by-location": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "libraries-2019-visitors-by-location": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "libraries-2021-visitors-by-location": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "libraries-2020-visitors-by-location": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "libraries-2019-computer-sessions-by-location": {
+            "turn": 2,
+            "backend": "search_prefix"
+          },
+          "libraries-2020-computer-sessions-by-location": {
+            "turn": 2,
+            "backend": "search_prefix"
+          },
+          "libraries-2021-computer-sessions-by-location": {
+            "turn": 2,
+            "backend": "search_prefix"
+          }
+        }
+      },
+      {
+        "task_id": "k-3-d-3/task_2",
+        "gold_ids": [
+          "2013-2014-doe-high-school-performance-directory",
+          "2012-2013-high-school-progress-report",
+          "2011-2012-high-school-progress-report",
+          "2012-2013-school-locations",
+          "East_Flatbush,_Brooklyn"
+        ],
+        "first_hits": {
+          "2011-2012-high-school-progress-report": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "2012-2013-high-school-progress-report": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "East_Flatbush,_Brooklyn": {
+            "turn": 6,
+            "backend": "search_value"
+          },
+          "2013-2014-doe-high-school-performance-directory": {
+            "turn": 9,
+            "backend": "search_value"
+          },
+          "2012-2013-school-locations": {
+            "turn": 9,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-3-d-4/task_8",
+        "gold_ids": [
+          "texas-department-of-criminal-justice-releases-fy-2019",
+          "texas-state-expenditures-by-county-2020",
+          "texas-department-of-criminal-justice-releases-fy-2020",
+          "fy-2020-disability-compensation-recipients-by-county",
+          "texas-state-expenditures-by-county-2018",
+          "texas-state-expenditures-by-county-2019",
+          "fy-2023-disability-compensation-recipients-by-county",
+          "texas-state-expenditures-by-county-2021"
+        ],
+        "first_hits": {
+          "texas-state-expenditures-by-county-2020": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "texas-state-expenditures-by-county-2021": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "texas-department-of-criminal-justice-releases-fy-2020": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "texas-department-of-criminal-justice-releases-fy-2019": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "fy-2020-disability-compensation-recipients-by-county": {
+            "turn": 3,
+            "backend": "search_value"
+          },
+          "fy-2023-disability-compensation-recipients-by-county": {
+            "turn": 3,
+            "backend": "search_value"
+          },
+          "texas-state-expenditures-by-county-2018": {
+            "turn": 4,
+            "backend": "search_prefix"
+          },
+          "texas-state-expenditures-by-county-2019": {
+            "turn": 4,
+            "backend": "search_prefix"
+          }
+        }
+      },
+      {
+        "task_id": "k-3-d-4/task_9",
+        "gold_ids": [
+          "texas-department-of-criminal-justice-releases-fy-2019",
+          "texas-state-expenditures-by-county-2020",
+          "texas-department-of-criminal-justice-releases-fy-2020",
+          "texas-state-expenditures-by-county-2018",
+          "texas-state-expenditures-by-county-2019",
+          "List_of_counties_in_Texas",
+          "texas-state-expenditures-by-county-2021"
+        ],
+        "first_hits": {
+          "texas-state-expenditures-by-county-2020": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "List_of_counties_in_Texas": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "texas-state-expenditures-by-county-2021": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "texas-department-of-criminal-justice-releases-fy-2019": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "texas-department-of-criminal-justice-releases-fy-2020": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "texas-state-expenditures-by-county-2018": {
+            "turn": 3,
+            "backend": "search_prefix"
+          },
+          "texas-state-expenditures-by-county-2019": {
+            "turn": 3,
+            "backend": "search_prefix"
+          }
+        }
+      },
+      {
+        "task_id": "k-3-d-4/task_5",
+        "gold_ids": [
+          "Four_Corners",
+          "Mountain_states",
+          "fy-2023-disability-compensation-recipients-by-county",
+          "Phoenix,_Arizona",
+          "Mexico\u2013United_States_border",
+          "fy-2020-pension-recipients-by-state"
+        ],
+        "first_hits": {
+          "fy-2023-disability-compensation-recipients-by-county": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "fy-2020-pension-recipients-by-state": {
+            "turn": 3,
+            "backend": "search_prefix"
+          },
+          "Phoenix,_Arizona": {
+            "turn": 4,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-3-d-4/task_7",
+        "gold_ids": [
+          "2008-state-expenditures",
+          "2007-state-expenditures",
+          "Missouri_Department_of_Transportation",
+          "2010-state-expenditures",
+          "Springfield,_Missouri",
+          "2009-state-expenditures"
+        ],
+        "first_hits": {
+          "2009-state-expenditures": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "2008-state-expenditures": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "2010-state-expenditures": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "2007-state-expenditures": {
+            "turn": 1,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-3-d-4/task_3",
+        "gold_ids": [
+          "Central_Park",
+          "2007-2008-school-progress-report",
+          "2013-2014-school-locations",
+          "2006-2007-school-progress-report",
+          "2009-2010-school-progress-report",
+          "American_Museum_of_Natural_History",
+          "Upper_West_Side",
+          "2008-2009-school-progress-report"
+        ],
+        "first_hits": {
+          "2006-2007-school-progress-report": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "2007-2008-school-progress-report": {
+            "turn": 3,
+            "backend": "search_prefix"
+          },
+          "2008-2009-school-progress-report": {
+            "turn": 3,
+            "backend": "search_prefix"
+          },
+          "2009-2010-school-progress-report": {
+            "turn": 3,
+            "backend": "search_prefix"
+          },
+          "Upper_West_Side": {
+            "turn": 5,
+            "backend": "search_value"
+          },
+          "2013-2014-school-locations": {
+            "turn": 5,
+            "backend": "search_value"
+          },
+          "Central_Park": {
+            "turn": 8,
+            "backend": "search_value"
+          },
+          "American_Museum_of_Natural_History": {
+            "turn": 8,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-3-d-4/task_1",
+        "gold_ids": [
+          "crime-incidents-in-2021",
+          "crime-incidents-in-2020",
+          "Neighborhoods_in_Washington,_D.C.",
+          "crime-incidents-in-2018",
+          "crime-incidents-in-2019",
+          "Montgomery_County,_Maryland",
+          "Chevy_Chase,_Maryland"
+        ],
+        "first_hits": {
+          "crime-incidents-in-2020": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "crime-incidents-in-2019": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "crime-incidents-in-2018": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "crime-incidents-in-2021": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "Montgomery_County,_Maryland": {
+            "turn": 2,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-3-d-4/task_6",
+        "gold_ids": [
+          "fy-2021-pension-recipients-by-state-1266e",
+          "New_England",
+          "fy-2023-pension-recipients-by-state",
+          "Vermont",
+          "Montpelier,_Vermont",
+          "fy-2020-pension-recipients-by-state"
+        ],
+        "first_hits": {
+          "fy-2021-pension-recipients-by-state-1266e": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "fy-2023-pension-recipients-by-state": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "fy-2020-pension-recipients-by-state": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "Montpelier,_Vermont": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "Vermont": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "New_England": {
+            "turn": 2,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-3-d-4/task_4",
+        "gold_ids": [
+          "2007-2008-school-progress-report",
+          "2009-2010-school-progress-report",
+          "Colgate_University",
+          "2010-2011-school-progress-report",
+          "2008-2009-school-progress-report",
+          "Adam_Clayton_Powell_Jr."
+        ],
+        "first_hits": {
+          "2007-2008-school-progress-report": {
+            "turn": 12,
+            "backend": "search_prefix"
+          },
+          "2008-2009-school-progress-report": {
+            "turn": 12,
+            "backend": "search_prefix"
+          },
+          "2009-2010-school-progress-report": {
+            "turn": 12,
+            "backend": "search_prefix"
+          },
+          "Adam_Clayton_Powell_Jr.": {
+            "turn": 13,
+            "backend": "search_value"
+          },
+          "Colgate_University": {
+            "turn": 14,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-3-d-4/task_10",
+        "gold_ids": [
+          "summer-meal-programs-seamless-summer-option-sso-meal-count-information-program-period-2019",
+          "child-and-adult-care-food-program-cacfp-child-centers-meal-reimbursement-program-year-2019",
+          "child-and-adult-care-food-program-cacfp-child-centers-meal-reimbursement-program-year-2018",
+          "summer-meal-programs-seamless-summer-option-sso-meal-count-information-program-period-2016",
+          "child-and-adult-care-food-programs-cacfp-day-care-homes-meal-reimbursement-program-ye-2020",
+          "summer-meal-programs-seamless-summer-option-sso-meal-count-information-program-period-2017",
+          "summer-meal-programs-seamless-summer-option-sso-meal-count-information-program-period-2018",
+          "child-and-adult-care-food-programs-cacfp-day-care-homes-meal-reimbursement-program-ye-2018"
+        ],
+        "first_hits": {
+          "summer-meal-programs-seamless-summer-option-sso-meal-count-information-program-period-2019": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "summer-meal-programs-seamless-summer-option-sso-meal-count-information-program-period-2018": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "summer-meal-programs-seamless-summer-option-sso-meal-count-information-program-period-2016": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "child-and-adult-care-food-program-cacfp-child-centers-meal-reimbursement-program-year-2018": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "summer-meal-programs-seamless-summer-option-sso-meal-count-information-program-period-2017": {
+            "turn": 4,
+            "backend": "search_prefix"
+          },
+          "child-and-adult-care-food-programs-cacfp-day-care-homes-meal-reimbursement-program-ye-2020": {
+            "turn": 8,
+            "backend": "search_value"
+          },
+          "child-and-adult-care-food-program-cacfp-child-centers-meal-reimbursement-program-year-2019": {
+            "turn": 10,
+            "backend": "search_value"
+          },
+          "child-and-adult-care-food-programs-cacfp-day-care-homes-meal-reimbursement-program-ye-2018": {
+            "turn": 12,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-3-d-4/task_2",
+        "gold_ids": [
+          "Staten_Island",
+          "Susan_E._Wagner_High_School",
+          "2011-2012-vadir-incidents",
+          "2010-2011-vadir-incidents",
+          "2012-2013-vadir-incidents",
+          "2013-2014-vadir-incidents",
+          "List_of_bridges_and_tunnels_in_New_York_City"
+        ],
+        "first_hits": {
+          "2011-2012-vadir-incidents": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "2010-2011-vadir-incidents": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "2013-2014-vadir-incidents": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "2012-2013-vadir-incidents": {
+            "turn": 1,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-3-d-1/task_5",
+        "gold_ids": [
+          "los-angeles-international-airport-passenger-count-by-carrier-type",
+          "Buffalo,_New_York",
+          "index-violent-property-and-firearm-rates-by-county-beginning-1990"
+        ],
+        "first_hits": {
+          "los-angeles-international-airport-passenger-count-by-carrier-type": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "index-violent-property-and-firearm-rates-by-county-beginning-1990": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "Buffalo,_New_York": {
+            "turn": 4,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-3-d-1/task_3",
+        "gold_ids": [
+          "Alabama",
+          "University_of_Alabama",
+          "Tuscaloosa,_Alabama"
+        ],
+        "first_hits": {
+          "University_of_Alabama": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "Tuscaloosa,_Alabama": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "Alabama": {
+            "turn": 1,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-3-d-1/task_1",
+        "gold_ids": [
+          "Austin,_Texas",
+          "apd-searches-by-type",
+          "apd-computer-aided-dispatch-incidents",
+          "apd-use-of-force"
+        ],
+        "first_hits": {
+          "apd-use-of-force": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "apd-computer-aided-dispatch-incidents": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "Austin,_Texas": {
+            "turn": 3,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-3-d-1/task_4",
+        "gold_ids": [
+          "Buffalo,_New_York",
+          "index-violent-property-and-firearm-rates-by-county-beginning-1990",
+          "rochester-genesee-regional-transportation-authority-rgrta-rider-volumes-beginning-2006"
+        ],
+        "first_hits": {
+          "rochester-genesee-regional-transportation-authority-rgrta-rider-volumes-beginning-2006": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "Buffalo,_New_York": {
+            "turn": 3,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-3-d-1/task_2",
+        "gold_ids": [
+          "crime-incidents-in-2021",
+          "Brightwood_(Washington,_D.C.)",
+          "crime-incidents-in-2020"
+        ],
+        "first_hits": {
+          "Brightwood_(Washington,_D.C.)": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "crime-incidents-in-2020": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "crime-incidents-in-2021": {
+            "turn": 2,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-2-d-1/task_5",
+        "gold_ids": [
+          "2020-census-redistricting-data-all-texas-counties",
+          "West_Texas"
+        ],
+        "first_hits": {
+          "West_Texas": {
+            "turn": 2,
+            "backend": "search_value"
+          },
+          "2020-census-redistricting-data-all-texas-counties": {
+            "turn": 2,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-2-d-1/task_3",
+        "gold_ids": [
+          "Pullman,_Washington",
+          "report-card-enrollment-2017-18-school-year"
+        ],
+        "first_hits": {
+          "Pullman,_Washington": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "report-card-enrollment-2017-18-school-year": {
+            "turn": 5,
+            "backend": "search_prefix"
+          }
+        }
+      },
+      {
+        "task_id": "k-2-d-1/task_1",
+        "gold_ids": [
+          "Buffalo,_New_York",
+          "index-violent-property-and-firearm-rates-by-county-beginning-1990"
+        ],
+        "first_hits": {
+          "Buffalo,_New_York": {
+            "turn": 2,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-2-d-1/task_4",
+        "gold_ids": [
+          "2020-census-redistricting-data-all-texas-counties",
+          "Montgomery_County,_Texas"
+        ],
+        "first_hits": {
+          "Montgomery_County,_Texas": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "2020-census-redistricting-data-all-texas-counties": {
+            "turn": 3,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-2-d-1/task_2",
+        "gold_ids": [
+          "aps-1-1-texas-adult-populations-at-risk-by-county-region-fy2013-fy2022",
+          "McAllen,_Texas"
+        ],
+        "first_hits": {
+          "McAllen,_Texas": {
+            "turn": 1,
+            "backend": "search_value"
+          },
+          "aps-1-1-texas-adult-populations-at-risk-by-county-region-fy2013-fy2022": {
+            "turn": 1,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-1-d-1/task_5",
+        "gold_ids": [
+          "cta-ridership-l-station-entries-monthly-day-type-averages-totals"
+        ],
+        "first_hits": {
+          "cta-ridership-l-station-entries-monthly-day-type-averages-totals": {
+            "turn": 1,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-1-d-1/task_1",
+        "gold_ids": [
+          "unemployment-insurance-beneficiaries-and-benefit-amounts-paid-beginning-2001"
+        ],
+        "first_hits": {
+          "unemployment-insurance-beneficiaries-and-benefit-amounts-paid-beginning-2001": {
+            "turn": 1,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-1-d-1/task_6",
+        "gold_ids": [
+          "cta-ridership-bus-routes-monthly-day-type-averages-totals"
+        ],
+        "first_hits": {
+          "cta-ridership-bus-routes-monthly-day-type-averages-totals": {
+            "turn": 1,
+            "backend": "search_value"
+          }
+        }
+      },
+      {
+        "task_id": "k-1-d-1/task_4",
+        "gold_ids": [
+          "lottery-ny-lotto-winning-numbers-beginning-2001"
+        ],
+        "first_hits": {
+          "lottery-ny-lotto-winning-numbers-beginning-2001": {
+            "turn": 1,
+            "backend": "search_prefix"
+          }
+        }
+      },
+      {
+        "task_id": "k-1-d-1/task_2",
+        "gold_ids": [
+          "vsrr-provisional-drug-overdose-death-counts"
+        ],
+        "first_hits": {
+          "vsrr-provisional-drug-overdose-death-counts": {
+            "turn": 1,
+            "backend": "search_value"
+          }
+        }
+      }
+    ]
+  }
+}

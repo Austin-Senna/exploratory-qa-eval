@@ -37,6 +37,8 @@ REGION = "us-east-1"
 # Sandbox directory on main disk (500G) instead of /tmp (63G tmpfs)
 SANDBOX_BASE_DIR = Path(__file__).resolve().parent.parent.parent / ".sandbox"
 
+_TOOL_RESULT_CHAR_CAP = 16_000  # ~4k tokens — prevents single result overflowing context
+
 # Global sandbox directory (created per session)
 _SANDBOX_DIR = None
 # Optional override to force a specific sandbox directory (set by callers for isolation)
@@ -745,6 +747,16 @@ from pathlib import Path
 
         output = stdout_capture.getvalue()
         errors = stderr_capture.getvalue()
+
+        if len(output) > _TOOL_RESULT_CHAR_CAP:
+            dump_path = sandbox / "_stdout_overflow.txt"
+            dump_path.write_text(output)
+            output = (
+                output[:_TOOL_RESULT_CHAR_CAP]
+                + f"\n... [output truncated at {_TOOL_RESULT_CHAR_CAP} chars. "
+                f"Full stdout written to: {dump_path} — use execute_code to read it. "
+                "Print less data or use more specific queries.]"
+            )
 
         result = {
             'output': output,

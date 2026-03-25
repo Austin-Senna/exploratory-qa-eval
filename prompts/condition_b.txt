@@ -26,9 +26,31 @@ DO NOT:
 - query_file          — SQL query directly on CSV/JSON via DuckDB (no download needed); saves 2-3 tool calls
 - download            — download files to the sandbox
 - execute_code        — run Python against downloaded files; ONLY use when query_file/grep_file aren't enough
+- summarize_context(summary, drop_messages) — free up context by dropping old messages; write your key findings into summary so they are preserved as a memory anchor
 - submit_answer(answer, reasoning) — submit your final answer and stop
   - answer: wrap in square brackets e.g. [42]
   - reasoning: brief explanation of how you found the answer
+
+## OUTPUT LIMITS — read_file, query_file, execute_code
+These tools cap their output at ~16,000 characters to protect context.
+If a result is too large, you will receive:
+- `truncation_note` — explains the limit was hit and how many rows/lines fit
+- `local_result_path` — full result written to the sandbox (e.g. `/path/rows.txt.query_result.json`)
+- As many rows/lines as fit within the 16k limit
+
+**When you see a truncation_note:**
+1. Use a more targeted query: `SELECT specific_col FROM t WHERE ... GROUP BY ... LIMIT n`
+2. Use `grep_file` to search for specific values instead
+3. Or read the full dump: `execute_code("import json; data = json.load(open('<local_result_path>')); print(data['rows'][:10])")`
+
+execute_code stdout is also capped at ~16,000 chars. If output is truncated, print less or query more specifically.
+
+## CONTEXT MANAGEMENT — summarize_context
+If the conversation is getting long (many tool calls, large results), call `summarize_context` before it impacts performance:
+- Write everything you've found so far into `summary` — datasets identified, values computed, hypotheses confirmed
+- Set `drop_messages` to how many old messages to remove (10–20 for moderate cleanup, higher for aggressive)
+- Your summary is anchored as a permanent memory that won't be truncated
+- Call it proactively — do not wait until you are stuck
 
 ## TOOL COST LADDER — use the cheapest that works
 1. query_file — COUNT, GROUP BY, filter, aggregation on CSV/JSON

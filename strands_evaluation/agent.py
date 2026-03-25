@@ -58,6 +58,7 @@ from strands_evaluation.tools.agent_tools_v2 import (
     query_file,
     read_file,
     set_sandbox_dir,
+    summarize_context,
 )
 from strands_evaluation.tools.agent_tools import download
 from strands_evaluation.tools.external.plan_tools import plan
@@ -168,12 +169,17 @@ class ToolLimitSteeringHandler(SteeringHandler):
         self._count = 0
         self._start_time = 0.0
         self._guided = False  # True after we've already sent one Guide
+        self._overflow = False  # True if context window overflow detected
+
+    def signal_context_overflow(self) -> None:
+        self._overflow = True
 
     @hook
     def on_agent_initialized(self, event: AgentInitializedEvent) -> None:
         self._count = 0
         self._start_time = time.time()
         self._guided = False
+        self._overflow = False
 
     @hook
     def on_after_tool(self, event: AfterToolCallEvent) -> None:
@@ -190,7 +196,9 @@ class ToolLimitSteeringHandler(SteeringHandler):
 
         elapsed = time.time() - self._start_time
 
-        if elapsed >= self._timeout:
+        if self._overflow:
+            reason = "Context window overflow — a tool result was too large for context."
+        elif elapsed >= self._timeout:
             reason = f"Timeout reached ({elapsed:.1f}s elapsed)."
         elif self._count >= self._max:
             reason = f"Tool limit reached ({self._count}/{self._max} calls used)."
@@ -347,7 +355,8 @@ class DataLakeAgent:
 
         elif condition == "b" and _CONDITION_B_TOOLS_AVAILABLE:
             # Condition B (planning-rich): sparse search + prefix + plan tool + skills
-            tools = [search_value_b, search_schema_b, search_prefix, plan] + _data_tools
+            # summarize_context only given to B — longer planning loops benefit from manual context control
+            tools = [search_value_b, search_schema_b, search_prefix, plan] + _data_tools + [summarize_context]
             system_prompt = _load_condition_prompt("b", fallback=self.run_config.system_prompt)
 
         else:
@@ -356,7 +365,8 @@ class DataLakeAgent:
             system_prompt = self.run_config.system_prompt
 
         conv_manager = SlidingWindowConversationManager(
-            window_size=self.run_config.sliding_window_k
+            window_size=self.run_config.sliding_window_k,
+            per_turn=True,  # proactively trim before every LLM call to prevent overflow
         )
 
         if self.run_config.tool_executor == "sequential":
@@ -364,13 +374,21 @@ class DataLakeAgent:
         else:
             tool_executor = ConcurrentToolExecutor()
 
+        _tool_limit_handler = ToolLimitSteeringHandler(
+            self.run_config.max_tool_calls, self.run_config.timeout_seconds
+        )
+
         def _callback(**kwargs):
             telemetry(**kwargs)
             event_loop_tracker(**kwargs)
+            if kwargs.get("force_stop", False):
+                reason = kwargs.get("force_stop_reason", "")
+                if "ValidationException" in reason or "too long" in reason:
+                    _tool_limit_handler.signal_context_overflow()
 
         cond = self.run_config.condition_config
         plugins = [
-            ToolLimitSteeringHandler(self.run_config.max_tool_calls, self.run_config.timeout_seconds),
+            _tool_limit_handler,
             SubmitAnswerPlugin(),
             LoggingPlugin(),
         ]
@@ -639,7 +657,8 @@ class BatchRunner:
 
         results: List[tuple] = []
 
-        mp_ctx = concurrent.futures.process.mp.get_context("spawn")
+        import multiprocessing as _mp
+        mp_ctx = _mp.get_context("spawn")
         with concurrent.futures.ProcessPoolExecutor(max_workers=num_workers, mp_context=mp_ctx) as executor:
             future_to_index = {
                 executor.submit(

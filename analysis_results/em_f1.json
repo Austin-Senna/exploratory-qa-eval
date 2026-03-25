@@ -1,0 +1,14 @@
+{
+  "a/bedrock_claude-haiku-4.5-arn": {
+    "condition": "a",
+    "model": "bedrock_claude-haiku-4.5-arn",
+    "n": 135,
+    "em": 0.5259259259259259,
+    "em_count": 71.0,
+    "f1": 0.5893602693602693,
+    "avg_cost_usd": 0.4353079037037037,
+    "total_cost_usd": 58.766567,
+    "avg_tool_calls": 23.644444444444446,
+    "avg_time_s": 109.46709181644299
+  }
+}

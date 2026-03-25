@@ -57,9 +57,19 @@ def compute_discovery_metrics(
         retrieved_gold = all_result_ids & gold_ids
         d_ret = int(bool(retrieved_gold))
 
-        # Precision / Recall over all search results
-        precision = len(retrieved_gold) / len(all_result_ids) if all_result_ids else 0.0
-        recall = len(retrieved_gold) / len(gold_ids) if gold_ids else 0.0
+        # Precision / Recall: per-call average (standard IR)
+        # Compute P/R for each individual search call, then average across calls.
+        call_precisions = []
+        call_recalls = []
+        for trace in search_traces:
+            result_ids = trace.get("result_dataset_ids", [])
+            if not result_ids:
+                continue
+            hits = len(set(result_ids) & gold_ids)
+            call_precisions.append(hits / len(result_ids))
+            call_recalls.append(hits / len(gold_ids))
+        precision = sum(call_precisions) / len(call_precisions) if call_precisions else 0.0
+        recall = sum(call_recalls) / len(call_recalls) if call_recalls else 0.0
         f1 = (2 * precision * recall / (precision + recall)) if (precision + recall) > 0 else 0.0
 
         # D_acc: did the agent actually open/query a gold dataset via a read tool?
@@ -67,7 +77,8 @@ def compute_discovery_metrics(
         all_read_ids: set = set()
         for rec in read_records:
             all_read_ids.update(rec.get("read_dataset_ids", []))
-        d_acc = int(bool(all_read_ids & gold_ids))
+        read_gold = all_read_ids & gold_ids
+        d_acc = len(read_gold) / len(gold_ids) if gold_ids else 0.0
 
         task_metrics.append({
             "task_id": task_id,
@@ -143,11 +154,10 @@ def compute_tools_discovery(
     """Per-tool micro-averaged precision/recall/F1 with per_folder > per_task nesting.
 
     For each task × tool:
-      - unique_results  = |set of dataset IDs returned by this tool in this task|
-      - unique_gold_hits = |set of gold IDs found by this tool in this task|
-      - gold_total      = |gold IDs for this task|
-      - precision = unique_gold_hits / unique_results
-      - recall    = unique_gold_hits / gold_total
+    For each task × tool, per-call average (standard IR):
+      - precision per call = |gold in call results| / |call results|
+      - recall per call    = |gold in call results| / |gold for task|
+      - task precision/recall = mean over all calls for that tool in that task
       - f1        = harmonic mean
 
     per_folder averages the per_task values within that folder.
@@ -158,29 +168,29 @@ def compute_tools_discovery(
     """
     from collections import defaultdict
 
-    # tool -> task_id -> accumulated sets + call count
+    # tool -> task_id -> list of per-call (precision, recall) + call count
     tool_task: dict = defaultdict(lambda: defaultdict(lambda: {
-        "result_ids": set(),
-        "gold_hit_ids": set(),
+        "call_precisions": [],
+        "call_recalls": [],
         "calls": 0,
     }))
 
     for task_id, task_traces in traces.items():
         gold_ids = set(_resolve_gold(task_id, task_gold))
+        if not gold_ids:
+            continue
         for rec in task_traces:
             tool = rec.get("tool")
             if not tool or tool == "submit_answer" or tool in _READ_TOOLS:
                 continue
             result_ids = rec.get("result_dataset_ids", [])
-            gold_in_results = rec.get("gold_dataset_ids_in_results")
-            if not gold_in_results:
-                gold_in_results = [r for r in result_ids if r in gold_ids]
+            if not result_ids:
+                continue
+            hits = len(set(result_ids) & gold_ids)
             s = tool_task[tool][task_id]
-            s["result_ids"].update(result_ids)
-            s["gold_hit_ids"].update(gold_in_results)
+            s["call_precisions"].append(hits / len(result_ids))
+            s["call_recalls"].append(hits / len(gold_ids))
             s["calls"] += 1
-            # stash gold_ids for recall denominator
-            s.setdefault("gold_ids", gold_ids)
 
     out = {}
     for tool, task_map in tool_task.items():
@@ -188,20 +198,16 @@ def compute_tools_discovery(
         folder_tasks: dict = defaultdict(dict)
         for task_id, s in task_map.items():
             folder = task_id.split("/")[0]
-            unique_results = len(s["result_ids"])
-            unique_gold_hits = len(s["gold_hit_ids"])
-            gold_total = len(s.get("gold_ids", set()))
-            precision = unique_gold_hits / unique_results if unique_results else 0.0
-            recall = unique_gold_hits / gold_total if gold_total else 0.0
+            cp, cr = s["call_precisions"], s["call_recalls"]
+            precision = sum(cp) / len(cp) if cp else 0.0
+            recall = sum(cr) / len(cr) if cr else 0.0
             f1 = (2 * precision * recall / (precision + recall)) if (precision + recall) > 0 else 0.0
             folder_tasks[folder][task_id] = {
                 "calls": s["calls"],
-                "unique_results": unique_results,
-                "unique_gold_hits": unique_gold_hits,
-                "gold_total": gold_total,
                 "precision": round(precision, 4),
                 "recall": round(recall, 4),
                 "f1": round(f1, 4),
+                "has_hit": int(recall > 0),
             }
 
         # Build per_folder aggregates
@@ -212,7 +218,7 @@ def compute_tools_discovery(
             all_task_records.extend(task_vals)
             n = len(task_vals)
             folder_calls = sum(t["calls"] for t in task_vals)
-            folder_hits = sum(1 for t in task_vals if t["unique_gold_hits"] > 0)
+            folder_hits = sum(t["has_hit"] for t in task_vals)
             per_folder[folder] = {
                 "n_tasks": n,
                 "calls": folder_calls,
@@ -226,7 +232,7 @@ def compute_tools_discovery(
         # Top-level aggregate over all tasks
         n_all = len(all_task_records)
         total_calls = sum(t["calls"] for t in all_task_records)
-        tasks_with_hit = sum(1 for t in all_task_records if t["unique_gold_hits"] > 0)
+        tasks_with_hit = sum(t["has_hit"] for t in all_task_records)
         out[tool] = {
             "calls": total_calls,
             "n_tasks": n_all,

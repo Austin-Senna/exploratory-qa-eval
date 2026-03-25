@@ -1,0 +1,37 @@
+{
+  "a/bedrock_claude-haiku-4.5-arn": {
+    "grounded_success": {
+      "n": 70,
+      "pct": 51.9
+    },
+    "partial_parametric_hallucination": {
+      "n": 0,
+      "pct": 0.0
+    },
+    "heavy_parametric_hallucination": {
+      "n": 0,
+      "pct": 0.0
+    },
+    "parametric_hallucination": {
+      "n": 1,
+      "pct": 0.7
+    },
+    "execution_failed": {
+      "n": 62,
+      "pct": 45.9
+    },
+    "search_not_read": {
+      "n": 1,
+      "pct": 0.7
+    },
+    "hallucination": {
+      "n": 1,
+      "pct": 0.7
+    },
+    "search_failed": {
+      "n": 0,
+      "pct": 0.0
+    },
+    "total": 135
+  }
+}
