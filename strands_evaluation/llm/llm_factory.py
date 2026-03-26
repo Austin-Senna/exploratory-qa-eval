@@ -75,6 +75,15 @@ def _build_bedrock(c: AgentConfig) -> Any:
     if c.model_id.startswith("arn:aws:bedrock:"):
         extracted_region = c.model_id.split(":")[3]
         kwargs["region_name"] = extracted_region
+
+    # Llama on Bedrock doesn't support tool use in streaming mode (ValidationException).
+    # Disable streaming so Strands uses converse() instead of converse_stream(),
+    # which correctly returns native toolUse blocks.
+    model_id_lower = str(c.model_id).lower()
+    model_name_lower = (c.model_name or "").lower()
+    if "llama" in model_id_lower or "llama" in model_name_lower:
+        kwargs["streaming"] = False
+
     return BedrockModel(**kwargs)
 
 

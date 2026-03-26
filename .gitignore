@@ -6,5 +6,6 @@ results/
 *.pyc
 lance_data/
 setup_credentials.sh
-# analysis_results/
+analysis_results/
 *.pem
+paper/
