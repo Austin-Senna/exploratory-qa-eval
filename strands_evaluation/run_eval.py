@@ -290,6 +290,119 @@ def print_comparison_table(results: dict) -> None:
 
 
 # ---------------------------------------------------------------------------
+# Continue mode
+# ---------------------------------------------------------------------------
+
+def _run_continue(args, agent_config, run_config) -> None:
+    """Re-run evaluation over task_set, skipping already-recorded tasks."""
+    condition = args.condition
+    safe_model = _display_name(agent_config)
+    results_dir = os.path.join("results", condition, safe_model)
+    csv_path = os.path.join(results_dir, "eval_results.csv")
+
+    # Collect already-completed task_ids from the CSV
+    completed_ids: set = set()
+    if os.path.exists(csv_path):
+        with open(csv_path, newline="") as f:
+            for row in csv.DictReader(f):
+                tid = row.get("task_id", "").strip()
+                if tid:
+                    completed_ids.add(tid)
+
+    # Find all task dirs and their pending task files
+    all_task_dirs = find_all_task_dirs(args.task_set)
+    pending: dict[str, list[str]] = {}  # task_dir -> [task_files not yet done]
+    for task_dir in all_task_dirs:
+        task_files = sorted(glob.glob(os.path.join(task_dir, "*.json")))
+        if args.tasks_per_dir is not None:
+            task_files = task_files[:args.tasks_per_dir]
+        remaining = [p for p in task_files if p not in completed_ids]
+        if remaining:
+            pending[task_dir] = remaining
+
+    if not pending:
+        print("Nothing to do — all tasks already recorded.")
+        return
+
+    # Print summary of what will be evaluated
+    total_pending = sum(len(v) for v in pending.values())
+    print(f"\nCondition : {condition}")
+    print(f"Model     : {safe_model}")
+    print(f"Task set  : {args.task_set}")
+    print(f"Results   : {results_dir}")
+    print(f"Completed : {len(completed_ids)} tasks already recorded")
+    print(f"\nDirectories to evaluate ({len(pending)} dirs, {total_pending} tasks remaining):")
+    for task_dir, files in sorted(pending.items()):
+        print(f"  {task_dir:<40}  {len(files)} task(s)")
+
+    print()
+    answer = input("Proceed? [y/N] ").strip().lower()
+    if answer != "y":
+        print("Aborted.")
+        return
+
+    print()
+    for task_dir, task_files in sorted(pending.items()):
+        # Temporarily override task_files_to_run by passing only pending files.
+        # We reuse run_evaluation with only_new=False and pass a sliced file list
+        # via a thin wrapper that bypasses glob inside run_evaluation.
+        _run_task_files(
+            task_dir=task_dir,
+            task_files=task_files,
+            agent_config=agent_config,
+            run_config=run_config,
+            verbose=args.verbose,
+            parallel=args.parallel,
+        )
+
+
+def _run_task_files(
+    task_dir: str,
+    task_files: list,
+    agent_config,
+    run_config,
+    verbose: bool,
+    parallel: int,
+) -> None:
+    """Run evaluation on an explicit list of task files (bypass glob in run_evaluation)."""
+    cond = run_config.condition_config
+    condition_label = cond.condition
+    safe_model = _display_name(agent_config)
+    output_dir = os.path.join("results", condition_label, safe_model)
+    os.makedirs(output_dir, exist_ok=True)
+
+    task_dir_name = os.path.basename(task_dir)
+    model_id = agent_config.model_id
+
+    tasks_by_id: dict = {}
+    for path in task_files:
+        with open(path) as f:
+            task = json.load(f)
+            task["id"] = path
+            tasks_by_id[path] = task
+
+    logger.info(f"\nEvaluating {len(task_files)} tasks from {task_dir_name}")
+    logger.info(f"Model: {model_id}  Condition: {condition_label}")
+    logger.info("=" * 60)
+
+    try:
+        batch = BatchRunner(agent_config=agent_config, run_config=run_config, max_workers=parallel)
+        results = batch.run_from_files(task_files, verbose=verbose)
+    except Exception as e:
+        logger.error(f"  Error: {e}", exc_info=True)
+        return
+
+    csv_path = os.path.join(output_dir, "eval_results.csv")
+    _write_main_csv(csv_path, results, tasks_by_id)
+    _write_tools_csv(os.path.join(output_dir, "tools_breakdown.csv"), results)
+    _write_agent_results_jsonl(os.path.join(output_dir, "agent_results.jsonl"), results)
+
+    total = len(results)
+    exact_matches = sum(r.get("exact_match", 0) for r in results)
+    logger.info(f"  Exact Match: {exact_matches}/{total} ({100*exact_matches/total:.1f}%)" if total else "  No results")
+
+
+# ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
 
@@ -303,6 +416,9 @@ def main() -> None:
                         help="Base directory for --all-tasks (default: tasks)")
     parser.add_argument("--tasks-per-dir", type=int, default=None,
                         help="Limit number of tasks evaluated per directory")
+    parser.add_argument("--task-continue", action="store_true",
+                        help="Continue evaluation, skipping tasks already recorded in results. "
+                             "Requires --condition, --model-name, and --task-set.")
 
     # Model — use a short name from MODEL_REGISTRY
     parser.add_argument("--model-name", default="bedrock/claude-sonnet-4.5",
@@ -359,7 +475,10 @@ def main() -> None:
 
     start_time = datetime.now()
 
-    if args.all_tasks:
+    if args.task_continue:
+        _run_continue(args, agent_config, run_config)
+
+    elif args.all_tasks:
         task_dirs = find_all_task_dirs(args.task_set)
         logger.info(f"Found {len(task_dirs)} task directories in '{args.task_set}'")
         for task_dir in task_dirs:
