@@ -61,3 +61,21 @@ If a search returns poor results, try in order:
 1. **Lexical pivot**: swap broad concept for agency/program term (e.g. "school count" → "NCES public school locations")
 2. **Granularity pivot**: search state-level if county-level fails; filter in code
 3. **Proxy pivot**: find a standard proxy metric if exact one is unavailable
+
+---
+
+## Context Management — summarize_context
+
+If you have made many tool calls and the conversation is getting long, call `summarize_context` to free context without losing findings:
+
+```
+summarize_context(
+  summary="Found dataset X (id: ...). Column Y contains the target values. Computed Z=42 for sub-task 1. Still need: sub-task 2.",
+  drop_messages=16
+)
+```
+
+- Write your findings thoroughly — this summary replaces the dropped messages as permanent memory
+- Your summary is anchored at position 0 and will not be truncated
+- Use `drop_messages=10` for light cleanup, `20+` for heavy cleanup
+- Call this proactively when the conversation is getting long, before large queries that will add more context

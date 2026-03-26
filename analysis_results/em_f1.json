@@ -10,6 +10,8 @@
     "total_cost_usd": 58.766567,
     "avg_tool_calls": 22.321678321678323,
     "avg_search_calls": 6.636363636363637,
+    "avg_query_file_calls": 4.937062937062937,
+    "avg_execute_code_calls": 1.986013986013986,
     "avg_time_s": 103.34307511036212
   }
 }

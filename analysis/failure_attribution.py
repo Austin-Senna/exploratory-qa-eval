@@ -29,15 +29,25 @@ _LABEL_ORDER = [
     "heavy_parametric_hallucination",
     "parametric_hallucination",
     # Failure modes
-    "execution_failed",
+    "execution_failed_tool_error",
+    "execution_failed_reasoning",
     "search_not_read",
     "hallucination",
     "search_failed_budget",
     "search_failed_quality",
 ]
 
+# Legacy label kept for callers that still reference the unsplit bucket
+_EXECUTION_FAILED_TOOLS = {"query_file", "execute_code", "grep_file"}
 
-def classify_failure(task_result: dict, d_ret: int, d_acc: int, max_tool_calls: int = 30) -> str:
+
+def classify_failure(
+    task_result: dict,
+    d_ret: int,
+    d_acc: int,
+    max_tool_calls: int = 30,
+    tool_counts: list | None = None,
+) -> str:
     """Return the taxonomy label for a single task result.
 
     Args:
@@ -45,6 +55,8 @@ def classify_failure(task_result: dict, d_ret: int, d_acc: int, max_tool_calls: 
         d_ret: 1 if any gold dataset appeared in search results, else 0
         d_acc: 1 if agent actually opened/queried a gold dataset via a read tool, else 0
         max_tool_calls: budget limit (default 30); used to distinguish budget vs. quality failures
+        tool_counts: list of {name, call_count, success_count} entries from agent_results.jsonl;
+                     if None, falls back to task_result["tool_counts"]
     """
     em = int(bool(task_result.get("exact_match", 0)))
     sources = task_result.get("sources_used", [])
@@ -62,7 +74,14 @@ def classify_failure(task_result: dict, d_ret: int, d_acc: int, max_tool_calls: 
     # --- Failure modes ---
     if d_ret == 1:
         if d_acc == 1:
-            return "execution_failed"   # read gold, still got wrong answer
+            # Found gold, read it, still wrong — sub-type by whether a tool errored
+            tc = tool_counts if tool_counts is not None else task_result.get("tool_counts", [])
+            had_tool_error = any(
+                t.get("name") in _EXECUTION_FAILED_TOOLS
+                and t.get("call_count", 0) > t.get("success_count", 0)
+                for t in tc
+            )
+            return "execution_failed_tool_error" if had_tool_error else "execution_failed_reasoning"
         return "search_not_read"        # found in search, never opened it
 
     # d_ret == 0

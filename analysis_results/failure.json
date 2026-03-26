@@ -16,9 +16,13 @@
       "n": 1,
       "pct": 0.7
     },
-    "execution_failed": {
-      "n": 6,
-      "pct": 4.4
+    "execution_failed_tool_error": {
+      "n": 1,
+      "pct": 0.7
+    },
+    "execution_failed_reasoning": {
+      "n": 5,
+      "pct": 3.7
     },
     "search_not_read": {
       "n": 57,

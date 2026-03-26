@@ -387,6 +387,47 @@ def main() -> None:
         plt.close(fig)
         print("Saved fig12_reasoning_density.pdf")
 
+    # -----------------------------------------------------------------------
+    # Fig 13: Tool error rate heatmap — rows=tools, cols=condition×model
+    # -----------------------------------------------------------------------
+    from analysis.tool_error_analysis import compute_tool_error_rates, _DATA_TOOLS
+    error_rates = compute_tool_error_rates(depth_records)
+
+    if error_rates:
+        import numpy as np
+        all_tools = sorted(
+            {t for cm_data in error_rates.values() for t in cm_data if t in _DATA_TOOLS}
+        )
+        cm_keys = sorted(error_rates.keys())
+
+        if all_tools and cm_keys:
+            matrix = np.zeros((len(all_tools), len(cm_keys)))
+            for j, cm in enumerate(cm_keys):
+                for i, tool in enumerate(all_tools):
+                    matrix[i, j] = error_rates[cm].get(tool, {}).get("error_rate", 0.0) * 100
+
+            fig, ax = plt.subplots(figsize=(max(6, len(cm_keys) * 2), max(4, len(all_tools) * 0.7)))
+            im = ax.imshow(matrix, aspect="auto", cmap="Reds", vmin=0, vmax=50)
+            plt.colorbar(im, ax=ax, label="Error Rate (%)")
+
+            ax.set_xticks(range(len(cm_keys)))
+            ax.set_xticklabels([k.replace("bedrock_", "") for k in cm_keys], rotation=30, ha="right", fontsize=8)
+            ax.set_yticks(range(len(all_tools)))
+            ax.set_yticklabels(all_tools, fontsize=9)
+
+            # Annotate cells
+            for i in range(len(all_tools)):
+                for j in range(len(cm_keys)):
+                    val = matrix[i, j]
+                    color = "white" if val > 25 else "black"
+                    ax.text(j, i, f"{val:.0f}%", ha="center", va="center", fontsize=8, color=color)
+
+            ax.set_title("Tool Error Rates by Condition × Model (%)")
+            fig.tight_layout()
+            fig.savefig(output_dir / "fig13_tool_error_rates.pdf")
+            plt.close(fig)
+            print("Saved fig13_tool_error_rates.pdf")
+
     print(f"\nAll figures saved to {output_dir}/")
 
 

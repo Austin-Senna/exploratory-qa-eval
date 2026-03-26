@@ -1,0 +1,64 @@
+{
+  "a/bedrock_claude-haiku-4.5-arn": {
+    "download": {
+      "total_calls": 102,
+      "total_errors": 5,
+      "error_rate": 0.049
+    },
+    "execute_code": {
+      "total_calls": 284,
+      "total_errors": 56,
+      "error_rate": 0.1972
+    },
+    "grep_file": {
+      "total_calls": 80,
+      "total_errors": 1,
+      "error_rate": 0.0125
+    },
+    "list_files": {
+      "total_calls": 107,
+      "total_errors": 0,
+      "error_rate": 0.0
+    },
+    "peek_file": {
+      "total_calls": 559,
+      "total_errors": 42,
+      "error_rate": 0.0751
+    },
+    "peek_files": {
+      "total_calls": 3,
+      "total_errors": 0,
+      "error_rate": 0.0
+    },
+    "query_file": {
+      "total_calls": 706,
+      "total_errors": 117,
+      "error_rate": 0.1657
+    },
+    "read_file": {
+      "total_calls": 267,
+      "total_errors": 6,
+      "error_rate": 0.0225
+    },
+    "search_prefix": {
+      "total_calls": 277,
+      "total_errors": 7,
+      "error_rate": 0.0253
+    },
+    "search_reranked": {
+      "total_calls": 42,
+      "total_errors": 21,
+      "error_rate": 0.5
+    },
+    "search_value": {
+      "total_calls": 630,
+      "total_errors": 8,
+      "error_rate": 0.0127
+    },
+    "submit_answer": {
+      "total_calls": 135,
+      "total_errors": 0,
+      "error_rate": 0.0
+    }
+  }
+}

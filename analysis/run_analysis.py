@@ -34,6 +34,7 @@ from analysis.provenance import compute_provenance
 from analysis.search_depth import compute_search_depth_curve
 from analysis.planning_overhead import compute_planning_overhead
 from analysis.reasoning_density import compute_reasoning_density_curve, load_task_gold_counts
+from analysis.tool_error_analysis import compute_tool_error_rates
 from analysis.generate_figures import main as generate_figs
 
 
@@ -149,7 +150,7 @@ def run_failure(results_dir: str, traces_dir: str, tasks_dir: str) -> dict:
             total = sum(counts.values())
             out[key] = {
                 label: {"n": counts.get(label, 0), "pct": round(100 * counts.get(label, 0) / total, 1) if total else 0}
-                for label in ["grounded_success", "partial_parametric_hallucination", "heavy_parametric_hallucination", "parametric_hallucination", "execution_failed", "search_not_read", "hallucination", "search_failed_budget", "search_failed_quality"]
+                for label in ["grounded_success", "partial_parametric_hallucination", "heavy_parametric_hallucination", "parametric_hallucination", "execution_failed_tool_error", "execution_failed_reasoning", "search_not_read", "hallucination", "search_failed_budget", "search_failed_quality"]
             }
             out[key]["total"] = total
     return out
@@ -246,6 +247,53 @@ def run_tools_discovery(traces_dir: str, tasks_dir: str) -> dict:
 
 
 # ---------------------------------------------------------------------------
+# Tool error rates
+# ---------------------------------------------------------------------------
+
+def run_tool_errors(results_dir: str) -> dict:
+    """Compute tool error rates keyed by path-derived condition/model (same as summary keys)."""
+    by_cm: dict = defaultdict(list)
+    for jsonl_path in Path(results_dir).rglob("agent_results.jsonl"):
+        condition, model = _condition_model_from_path(jsonl_path)
+        key = f"{condition}/{model}"
+        with open(jsonl_path) as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                r = json.loads(line)
+                r["_cm_key"] = key  # inject path-derived key
+                by_cm[key].append(r)
+
+    # Patch records so compute_tool_error_rates can group by _cm_key
+    from analysis.tool_error_analysis import _DATA_TOOLS
+    from collections import defaultdict as _dd
+    acc: dict = _dd(lambda: _dd(lambda: [0, 0]))
+    for key, rows in by_cm.items():
+        for r in rows:
+            for tc in r.get("tool_counts", []):
+                name = tc.get("name", "")
+                calls = tc.get("call_count", 0)
+                successes = tc.get("success_count", 0)
+                if calls == 0:
+                    continue
+                errors = max(calls - successes, 0)
+                acc[key][name][0] += calls
+                acc[key][name][1] += errors
+
+    out = {}
+    for key, tools in sorted(acc.items()):
+        out[key] = {}
+        for tool_name, (total_calls, total_errors) in sorted(tools.items()):
+            out[key][tool_name] = {
+                "total_calls": total_calls,
+                "total_errors": total_errors,
+                "error_rate": round(total_errors / total_calls, 4) if total_calls else 0.0,
+            }
+    return out
+
+
+# ---------------------------------------------------------------------------
 # Reasoning density curve (EM by gold-doc count — reproduces LakeQA Fig 4)
 # ---------------------------------------------------------------------------
 
@@ -259,7 +307,7 @@ def run_reasoning_density(results_dir: str, tasks_dir: str) -> dict:
 # Summary table
 # ---------------------------------------------------------------------------
 
-def build_summary(em: dict, discovery: dict, failure: dict, efficiency: dict, search_depth: dict | None = None, reasoning_density: dict | None = None) -> list[dict]:
+def build_summary(em: dict, discovery: dict, failure: dict, efficiency: dict, search_depth: dict | None = None, reasoning_density: dict | None = None, tool_errors: dict | None = None) -> list[dict]:
     keys = sorted(set(list(em.keys()) + list(discovery.keys()) + list(failure.keys())))
     rows = []
     for key in keys:
@@ -273,6 +321,8 @@ def build_summary(em: dict, discovery: dict, failure: dict, efficiency: dict, se
             row["avg_cost_usd"] = round(e.get("avg_cost_usd", 0), 4)
             row["avg_tool_calls"] = round(e.get("avg_tool_calls", 0), 1)
             row["avg_search_calls"] = round(e.get("avg_search_calls", 0), 1)
+            row["avg_query_file_calls"] = round(e.get("avg_query_file_calls", 0), 1)
+            row["avg_execute_code_calls"] = round(e.get("avg_execute_code_calls", 0), 1)
             avg_sc = e.get("avg_search_calls") or 0
             em_val = e.get("em") or 0
             row["search_efficiency"] = round(em_val / avg_sc, 4) if avg_sc else None
@@ -289,11 +339,17 @@ def build_summary(em: dict, discovery: dict, failure: dict, efficiency: dict, se
             row["pct_partial_parametric"] = f.get("partial_parametric_hallucination", {}).get("pct")
             row["pct_heavy_parametric"] = f.get("heavy_parametric_hallucination", {}).get("pct")
             row["pct_parametric_hallucination"] = f.get("parametric_hallucination", {}).get("pct")
-            row["pct_execution_failed"] = f.get("execution_failed", {}).get("pct")
+            row["pct_execution_failed_tool_error"] = f.get("execution_failed_tool_error", {}).get("pct")
+            row["pct_execution_failed_reasoning"] = f.get("execution_failed_reasoning", {}).get("pct")
             row["pct_search_not_read"] = f.get("search_not_read", {}).get("pct")
             row["pct_hallucination"] = f.get("hallucination", {}).get("pct")
             row["pct_search_failed_budget"] = f.get("search_failed_budget", {}).get("pct")
             row["pct_search_failed_quality"] = f.get("search_failed_quality", {}).get("pct")
+        if tool_errors is not None and key in tool_errors:
+            te = tool_errors[key]
+            for tool_name in ("query_file", "execute_code", "peek_file"):
+                col = f"{tool_name}_error_rate"
+                row[col] = te.get(tool_name, {}).get("error_rate")
         if search_depth is not None:
             cond = parts[0]
             depth = search_depth.get(cond, {})
@@ -356,8 +412,11 @@ def main() -> None:
     print("Running reasoning density curve (LakeQA Fig 4)...")
     reasoning_density = run_reasoning_density(args.results_dir, args.tasks_dir)
 
+    print("Running tool error rates...")
+    tool_errors = run_tool_errors(args.results_dir)
+
     print("Building summary...")
-    summary = build_summary(em, discovery, failure, efficiency, search_depth, reasoning_density)
+    summary = build_summary(em, discovery, failure, efficiency, search_depth, reasoning_density, tool_errors)
 
     files = {
         "em_f1.json": em,
@@ -369,6 +428,7 @@ def main() -> None:
         "search_depth.json": search_depth,
         "planning_overhead.json": planning_overhead,
         "reasoning_density.json": reasoning_density,
+        "tool_errors.json": tool_errors,
         "summary.json": summary,
     }
 

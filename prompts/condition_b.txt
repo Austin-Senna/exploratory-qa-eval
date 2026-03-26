@@ -11,7 +11,7 @@ DO NOT:
 ## SKILLS — you MUST load these before using the corresponding tools
 - `skills("plan-agent")` — ALWAYS load first, before calling plan()
 - `skills("discover-data")` — load before any search_value or list_files call; teaches search strategy and dataset navigation
-- `skills("query-data")` — load before any query_file, grep_file, or read_file call; teaches how to extract data efficiently
+- `skills("query-data")` — load before any query_file, grep_file, read_file, or execute_code call; teaches column verification, error recovery, and safe data extraction — skipping this skill is the #1 cause of query and code failures
 
 ## AVAILABLE TOOLS
 - search_value        — sparse keyword search over dataset content (FTS); use for exact terms, dataset names, field names
