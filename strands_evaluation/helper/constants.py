@@ -110,14 +110,17 @@ DO NOT:
 - Continue the conversation without a tool call
 
 ## AVAILABLE TOOLS
-- search / search_keyword — find datasets by name or keyword; returns dataset IDs (not data)
-- list_files — list files inside a dataset
-- peek_file — preview file structure and column headers (first 64KB)
-- read_file — read lines from a file directly (paginated, no download needed)
-- grep_file — regex search inside a file (no download needed); saves 2-3 tool calls vs download+execute_code
-- query_file — SQL query directly on a CSV/JSON file via DuckDB (no download needed); saves 2-3 tool calls
-- download — download files to the sandbox
-- execute_code — run Python against downloaded files; ONLY use when query_file/grep_file aren't enough
+- search_value   — sparse keyword search (BM25 FTS) over dataset content; use for exact terms, dataset names, field names
+- search_schema  — sparse keyword search over dataset schemas (column names, types); use when you know the field structure you need
+- search_prefix  — S3 prefix search by dataset name fragment; use when you know part of the dataset or entity name (e.g. "Erie_County", "index-crimes")
+- list_files     — list files inside a dataset
+- peek_file      — preview file structure and column headers (first 64KB); dataset_id is the bare ID only, no prefix
+- peek_files     — preview multiple files at once; use after list_files to save tool calls
+- read_file      — read lines from a file directly (paginated, no download needed)
+- grep_file      — regex search inside a file (no download needed); saves 2-3 tool calls vs download+execute_code
+- query_file     — SQL query directly on a CSV/JSON file via DuckDB (no download needed); saves 2-3 tool calls
+- download       — download files to the sandbox
+- execute_code   — run Python against downloaded files; ONLY use when query_file/grep_file aren't enough
 - submit_answer(answer, reasoning, sources) — submit your final answer and stop
   - answer: wrap in square brackets e.g. [42]
   - reasoning: brief explanation of how you found the answer

@@ -239,6 +239,154 @@ def main() -> None:
         plt.close(fig)
         print(f"Saved {fname}")
 
+    # -----------------------------------------------------------------------
+    # Fig 9: Avg search calls per condition × model
+    # -----------------------------------------------------------------------
+    if em_table:
+        conditions = sorted(set(k[0] for k in em_table))
+        models = sorted(set(k[1] for k in em_table))
+        search_calls_data = {k: v.get("avg_search_calls", 0) or 0 for k, v in em_table.items()}
+
+        if any(search_calls_data.values()):
+            x = range(len(models))
+            width = 0.8 / max(len(conditions), 1)
+            fig, ax = plt.subplots(figsize=(9, 5))
+            for i, cond in enumerate(conditions):
+                vals = [search_calls_data.get((cond, m), 0) for m in models]
+                offset = (i - len(conditions) / 2 + 0.5) * width
+                bars = ax.bar([xi + offset for xi in x], vals, width=width * 0.9, label=f"Condition {cond}")
+                for bar, val in zip(bars, vals):
+                    if val:
+                        ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 0.1,
+                                f"{val:.1f}", ha="center", va="bottom", fontsize=8)
+            ax.set_xticks(list(x))
+            ax.set_xticklabels([m.split("/")[-1] for m in models], rotation=20, ha="right")
+            ax.set_ylabel("Avg Search Calls per Task")
+            ax.set_title("Search Calls by Condition × Model")
+            ax.legend()
+            fig.tight_layout()
+            fig.savefig(output_dir / "fig9_search_calls.pdf")
+            plt.close(fig)
+            print("Saved fig9_search_calls.pdf")
+
+    # -----------------------------------------------------------------------
+    # Fig 10: Search depth curve — EM% vs search-call bin per condition
+    # -----------------------------------------------------------------------
+    repo_root2 = Path(__file__).parent.parent
+    sys.path.insert(0, str(repo_root2))
+    from analysis.search_depth import compute_search_depth_curve
+    depth_records = load_results(args.results_dir)
+    depth_curve = compute_search_depth_curve(depth_records)
+
+    if depth_curve:
+        bin_labels = ["1", "2-3", "4-6", "7-10", "11-30"]
+        fig, ax = plt.subplots(figsize=(8, 5))
+        for cond, bins in sorted(depth_curve.items()):
+            xs = []
+            ys = []
+            for i, label in enumerate(bin_labels):
+                entry = bins.get(label, {})
+                em = entry.get("mean_em")
+                n = entry.get("n", 0)
+                if em is not None and n > 0:
+                    xs.append(i)
+                    ys.append(em * 100)
+            if xs:
+                ax.plot(xs, ys, marker="o", label=f"Condition {cond}")
+                for xi, yi in zip(xs, ys):
+                    ax.annotate(f"{yi:.1f}%", (xi, yi), textcoords="offset points",
+                                xytext=(0, 6), ha="center", fontsize=8)
+        ax.set_xticks(range(len(bin_labels)))
+        ax.set_xticklabels(bin_labels)
+        ax.set_xlabel("Search Calls per Task")
+        ax.set_ylabel("Mean EM (%)")
+        ax.set_title("Search Depth Curve — EM vs. Search Call Budget Used")
+        ax.legend()
+        fig.tight_layout()
+        fig.savefig(output_dir / "fig10_search_depth_curve.pdf")
+        plt.close(fig)
+        print("Saved fig10_search_depth_curve.pdf")
+
+    # -----------------------------------------------------------------------
+    # Fig 11: Planning overhead — Condition B dual-axis (EM% + output tokens vs cycle bin)
+    # -----------------------------------------------------------------------
+    from analysis.planning_overhead import compute_planning_overhead
+    planning = compute_planning_overhead(depth_records)
+
+    if planning.get("n_cond_b", 0) > 0:
+        cycle_bin_labels = ["1-3", "4-6", "7-10", "11+"]
+        by_bin = planning["by_bin"]
+        xs = []
+        em_ys = []
+        tok_ys = []
+        for i, label in enumerate(cycle_bin_labels):
+            entry = by_bin.get(label, {})
+            em = entry.get("mean_em")
+            tok = entry.get("mean_output_tokens")
+            n = entry.get("n", 0)
+            if em is not None and n > 0:
+                xs.append(i)
+                em_ys.append(em * 100)
+                tok_ys.append(tok if tok is not None else 0)
+
+        if xs:
+            fig, ax1 = plt.subplots(figsize=(8, 5))
+            ax2 = ax1.twinx()
+            ax1.plot(xs, em_ys, marker="o", color="steelblue", label="Mean EM%")
+            ax2.plot(xs, tok_ys, marker="s", color="coral", linestyle="--", label="Mean Output Tokens")
+            ax1.set_xticks(range(len(cycle_bin_labels)))
+            ax1.set_xticklabels(cycle_bin_labels)
+            ax1.set_xlabel("Cycle Count Bin (planning proxy)")
+            ax1.set_ylabel("Mean EM (%)", color="steelblue")
+            ax2.set_ylabel("Mean Output Tokens", color="coral")
+            ax1.set_title(
+                f"Planning Overhead — Condition B  "
+                f"(r={planning['pearson_cycle_em']}, n={planning['n_cond_b']})"
+            )
+            lines1, labels1 = ax1.get_legend_handles_labels()
+            lines2, labels2 = ax2.get_legend_handles_labels()
+            ax1.legend(lines1 + lines2, labels1 + labels2, loc="upper right")
+            fig.tight_layout()
+            fig.savefig(output_dir / "fig11_planning_overhead.pdf")
+            plt.close(fig)
+            print("Saved fig11_planning_overhead.pdf")
+
+    # -----------------------------------------------------------------------
+    # Fig 12: EM by reasoning density (gold-doc count) — reproduces LakeQA Fig 4
+    # -----------------------------------------------------------------------
+    from analysis.reasoning_density import compute_reasoning_density_curve, load_task_gold_counts
+    task_gold_counts = load_task_gold_counts(args.tasks_dir)
+    density_curve = compute_reasoning_density_curve(depth_records, task_gold_counts)
+
+    if density_curve:
+        bin_labels = ["<=2", "3-4", "5-7", "8-10", ">10"]
+        fig, ax = plt.subplots(figsize=(8, 5))
+        for cond, bins in sorted(density_curve.items()):
+            xs = []
+            ys = []
+            for i, label in enumerate(bin_labels):
+                entry = bins.get(label, {})
+                em = entry.get("mean_em")
+                n = entry.get("n", 0)
+                if em is not None and n > 0:
+                    xs.append(i)
+                    ys.append(em * 100)
+            if xs:
+                ax.plot(xs, ys, marker="o", label=f"Condition {cond}")
+                for xi, yi in zip(xs, ys):
+                    ax.annotate(f"{yi:.1f}%", (xi, yi), textcoords="offset points",
+                                xytext=(0, 6), ha="center", fontsize=8)
+        ax.set_xticks(range(len(bin_labels)))
+        ax.set_xticklabels(bin_labels)
+        ax.set_xlabel("Number of Gold Documents per Task")
+        ax.set_ylabel("Mean EM (%)")
+        ax.set_title("EM vs. Reasoning Density (LakeQA Fig 4 reproduction)")
+        ax.legend()
+        fig.tight_layout()
+        fig.savefig(output_dir / "fig12_reasoning_density.pdf")
+        plt.close(fig)
+        print("Saved fig12_reasoning_density.pdf")
+
     print(f"\nAll figures saved to {output_dir}/")
 
 

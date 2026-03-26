@@ -1,0 +1,8 @@
+Hybrid Retrieval Fusion for RAG — Sawarkar et al. (2024) 
+https://arxiv.org/abs/2404.07220
+Blended RAG systematically evaluates dense vector, sparse encoder (ELSER), and BM25 indices combined via hybrid query strategies on NQ, TREC-COVID, SQuAD, and HotpotQA. Demonstrates that blended retrieval configurations consistently outperform any single-index strategy, with the best hybrid configurations surpassing even fine-tuned baselines on generative QA. Provides the empirical grounding for our choice to include hybrid retrieval as one arm of our retrieval-strategy factor rather than treating retriever type as a secondary hyperparameter.
+
+
+Agentic Retriever Optimization — Liu et al. (2026) 
+https://arxiv.org/abs/2601.11888
+Proposes Agentic-R, a retriever training framework that jointly optimizes local query-passage relevance and global answer correctness via iterative agent–retriever co-training. Tests E5, LLM-Embedder, and their proposed Agentic-R across Search-R1 and R1-Searcher agents on seven QA benchmarks. A key finding is that RAG-specific retrievers do not consistently outperform general-purpose retrievers in agentic search due to a query-distribution gap between human-authored training queries and agent-generated intermediate queries — reinforcing the need for our ablation of retrieval-backend diversity as a first-class experimental factor.

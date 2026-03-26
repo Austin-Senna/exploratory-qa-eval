@@ -32,8 +32,23 @@ def load_results(results_dir: str) -> list[dict]:
     return records
 
 
+_SEARCH_TOOL_NAMES = {
+    "search_value", "search_schema", "search_reranked",
+    "search_prefix", "search", "search_keyword",
+}
+
+
+def _count_search_calls(record: dict) -> int:
+    """Sum call_count for search tools from the tool_counts list in a record."""
+    return sum(
+        t.get("call_count", 0)
+        for t in record.get("tool_counts", [])
+        if t.get("name") in _SEARCH_TOOL_NAMES
+    )
+
+
 def compute_stats(records: list[dict]) -> dict:
-    """Group by (condition, model) and compute EM, F1, cost, tool_calls."""
+    """Group by (condition, model) and compute EM, F1, cost, tool_calls, search_calls."""
     groups: dict = defaultdict(list)
     for r in records:
         key = (r.get("condition", "?"), r.get("model_label", r.get("model", "?")))
@@ -47,6 +62,7 @@ def compute_stats(records: list[dict]) -> dict:
         cost_vals = [r.get("cost_usd", 0.0) for r in rows]
         tool_vals = [r.get("tool_calls_total", 0) for r in rows]
         time_vals = [r.get("time", 0.0) for r in rows]
+        search_vals = [_count_search_calls(r) for r in rows]
 
         table[(cond, model)] = {
             "condition": cond,
@@ -58,6 +74,7 @@ def compute_stats(records: list[dict]) -> dict:
             "avg_cost_usd": sum(cost_vals) / n if n else 0.0,
             "total_cost_usd": sum(cost_vals),
             "avg_tool_calls": sum(tool_vals) / n if n else 0.0,
+            "avg_search_calls": sum(search_vals) / n if n else 0.0,
             "avg_time_s": sum(time_vals) / n if n else 0.0,
         }
     return table

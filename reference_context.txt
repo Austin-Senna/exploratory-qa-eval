@@ -1,0 +1,53 @@
+IMPORTANT: THIS IS SETUP BY ME, A HUMAN. USE THIS AS GOOD CONTEXT FOR WRITING AND POSITIONING OUR PAPER.
+
+This file is a running log of reference papers we have reviewed, what they find, and what that means for our paper specifically. Add entries as new papers are reviewed.
+
+---
+
+## Our Hypotheses (for reference)
+
+- **H1 (Search wins):** Condition A (hybrid search + reranker) > Baseline on EM — better retrieval tools are the primary lever
+- **H2 (Planning helps):** Condition B (BM25 + planning scaffold) > Baseline on EM — planning scaffold adds value even with weaker search
+- **H3 (Model-dependent):** The A vs. B gap is model-dependent — planning helps smaller models (Haiku) more than larger ones (Sonnet); search quality matters more for larger models
+
+---
+
+## Reference Papers
+
+---
+
+### BCAS — McCleary & Ghawaly (2026)
+**Full title:** Quantifying the Accuracy and Cost Impact of Design Decisions in Budget-Constrained Agentic LLM Search
+**ArXiv:** 2603.08877v1
+**Setting:** 6 LLMs × 3 QA benchmarks (TriviaQA, HotpotQA, 2WikiMultihopQA), ~500 samples each. Closed corpora, short factoid answers, binary LLM judge. Budget levers: `max_searches` ∈ {1,2,3,unlimited} and `max_total_tokens` ∈ {500,1K,2K,4K,16K}.
+
+#### Key findings
+
+**Hybrid+rerank is the strongest single component (+9.29 pts avg on HotpotQA).**
+Hybrid BM25+vector search alone gives +6.36 pts; adding a cross-encoder reranker (100 candidates → top 5) pushes it to +9.29 pts average across all 6 models. This is the most consistent gain in their ablation grid — holds across model sizes.
+*For us: directly justifies Condition A's design (hybrid RRF + BAAI/bge-reranker-v2-m3). When we report Condition A > Baseline, BCAS gives us external support that the retrieval stack choice is doing real work, not just overfitting to our eval.*
+
+**Planning helps smaller models 4–12 pts; negligible for strong reasoning models (<1.1 pts for o4-mini).**
+Pre-planning (decompose question into a step-by-step plan before searching) adds 4–12 points for LLaMA 3.1 8B, Gemma 3 27B, Qwen 3 14B. For o4-mini (a reasoning model with built-in CoT), the same planning component adds less than 1.1 pts — external scaffolding is redundant when the model already reasons internally.
+*For us: directly supports H3. We expect Condition B's planning scaffold to matter more for Haiku than Sonnet. If Sonnet already internalizes planning, the skills plugin and plan() tool add less marginal value. Cite this when interpreting the Haiku vs. Sonnet gap in Condition B results.*
+
+**Search saturates at ~3 calls; diminishing returns above that.**
+Accuracy improves monotonically with search steps but plateaus after roughly 3 searches across all models and datasets. Adding planning+reflection on top of unlimited search gives additional gains but smaller ones.
+*For us: our search depth curve (fig10) will show where saturation happens in the data lake setting. We expect it to be higher than 3 — LakeQA tasks require finding multiple datasets across a 1M+ doc space, so the saturation point is a meaningful finding. Frame as: BCAS finds saturation at ~3 on standard QA; we find saturation at [X] on data lake QA, reflecting the harder discovery challenge.*
+
+**Tight token budget + multiple searches can outperform large single-search allocation.**
+Models under tight completion budgets (500–2K tokens) make efficient, targeted tool calls that enable multiple searches within budget. Unconstrained single-search models generate verbose responses that exhaust tokens without gathering more evidence. GPT-4.1-mini hits 55.84% on 2WikiMultihopQA at 500 tokens vs. 30.62% with a single search at 16K tokens.
+*For us: validates our 30-call shared budget design. The budget forcing function is a feature, not just a constraint — it pushes agents toward deliberate search strategies. Mention in methodology when justifying the 30-call cap.*
+
+#### What BCAS does NOT cover (our differentiation)
+- **Dataset discovery:** their corpus is closed and pre-partitioned per benchmark. Agents never need to find which dataset to use — only retrieve within it. Our primary bottleneck (Dacc recall — did the agent find the right tables among 1M+ docs?) does not exist in their setting.
+- **Structured data + code execution:** their answers are short factoids. Ours require SQL queries, joins, pandas over government CSVs — retrieval success is necessary but not sufficient.
+- **Metrics:** they use binary LLM judge. We use EM + Dacc P/R/F1 + Dret P/R/F1, which separately measures retrieval quality from answer quality. This lets us localize failures in a way BCAS cannot.
+- **Disentanglement:** BCAS ablates components additively within one agent. We run search-rich vs. planning-rich as competing *conditions* — a cleaner test of which axis matters more at fixed budget.
+
+#### Where to cite
+- **Related Work:** cite for budget-constrained agentic RAG framing and retrieval component ablation methodology
+- **Condition A motivation:** cite +9.29 hybrid+rerank finding when justifying the search stack design
+- **Condition B / H3 discussion:** cite planning-helps-small-models finding when interpreting Haiku vs. Sonnet gaps
+- **Search depth curve discussion:** cite ~3-call saturation as the standard QA baseline; contrast with our data lake saturation point
+- **Methodology (budget design):** cite tight-budget finding to justify the 30-call cap as a deliberate design choice

@@ -32,17 +32,19 @@ _LABEL_ORDER = [
     "execution_failed",
     "search_not_read",
     "hallucination",
-    "search_failed",
+    "search_failed_budget",
+    "search_failed_quality",
 ]
 
 
-def classify_failure(task_result: dict, d_ret: int, d_acc: int) -> str:
+def classify_failure(task_result: dict, d_ret: int, d_acc: int, max_tool_calls: int = 30) -> str:
     """Return the taxonomy label for a single task result.
 
     Args:
         task_result: row from agent_results.jsonl
         d_ret: 1 if any gold dataset appeared in search results, else 0
         d_acc: 1 if agent actually opened/queried a gold dataset via a read tool, else 0
+        max_tool_calls: budget limit (default 30); used to distinguish budget vs. quality failures
     """
     em = int(bool(task_result.get("exact_match", 0)))
     sources = task_result.get("sources_used", [])
@@ -66,7 +68,10 @@ def classify_failure(task_result: dict, d_ret: int, d_acc: int) -> str:
     # d_ret == 0
     if not sources:
         return "hallucination"
-    return "search_failed"
+    # Gold never retrieved — distinguish budget exhaustion from retrieval quality failure
+    if task_result.get("tool_calls_total", 0) >= max_tool_calls:
+        return "search_failed_budget"   # ran out of budget before finding gold
+    return "search_failed_quality"      # had budget remaining; retrieval quality issue
 
 
 def main() -> None:

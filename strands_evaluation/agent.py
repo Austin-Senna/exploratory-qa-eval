@@ -360,8 +360,8 @@ class DataLakeAgent:
             system_prompt = _load_condition_prompt("b", fallback=self.run_config.system_prompt)
 
         else:
-            # Baseline: original tool set + sparse search + prefix
-            tools = [search_value_b, search_prefix, search, search_keyword] + _data_tools
+            # Baseline: Condition B search tools (BM25 + schema + prefix) without any context tools
+            tools = [search_value_b, search_schema_b, search_prefix] + _data_tools
             system_prompt = self.run_config.system_prompt
 
         conv_manager = SlidingWindowConversationManager(

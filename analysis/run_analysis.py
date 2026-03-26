@@ -31,6 +31,9 @@ from analysis.discovery_metrics import (
 )
 from analysis.failure_attribution import classify_failure
 from analysis.provenance import compute_provenance
+from analysis.search_depth import compute_search_depth_curve
+from analysis.planning_overhead import compute_planning_overhead
+from analysis.reasoning_density import compute_reasoning_density_curve, load_task_gold_counts
 from analysis.generate_figures import main as generate_figs
 
 
@@ -146,10 +149,28 @@ def run_failure(results_dir: str, traces_dir: str, tasks_dir: str) -> dict:
             total = sum(counts.values())
             out[key] = {
                 label: {"n": counts.get(label, 0), "pct": round(100 * counts.get(label, 0) / total, 1) if total else 0}
-                for label in ["grounded_success", "partial_parametric_hallucination", "heavy_parametric_hallucination", "parametric_hallucination", "execution_failed", "search_not_read", "hallucination", "search_failed"]
+                for label in ["grounded_success", "partial_parametric_hallucination", "heavy_parametric_hallucination", "parametric_hallucination", "execution_failed", "search_not_read", "hallucination", "search_failed_budget", "search_failed_quality"]
             }
             out[key]["total"] = total
     return out
+
+
+# ---------------------------------------------------------------------------
+# Search depth curve
+# ---------------------------------------------------------------------------
+
+def run_search_depth(results_dir: str) -> dict:
+    records = load_results(results_dir)
+    return compute_search_depth_curve(records)
+
+
+# ---------------------------------------------------------------------------
+# Planning overhead (Condition B)
+# ---------------------------------------------------------------------------
+
+def run_planning_overhead(results_dir: str) -> dict:
+    records = load_results(results_dir)
+    return compute_planning_overhead(records)
 
 
 # ---------------------------------------------------------------------------
@@ -225,10 +246,20 @@ def run_tools_discovery(traces_dir: str, tasks_dir: str) -> dict:
 
 
 # ---------------------------------------------------------------------------
+# Reasoning density curve (EM by gold-doc count — reproduces LakeQA Fig 4)
+# ---------------------------------------------------------------------------
+
+def run_reasoning_density(results_dir: str, tasks_dir: str) -> dict:
+    records = load_results(results_dir)
+    task_gold_counts = load_task_gold_counts(tasks_dir)
+    return compute_reasoning_density_curve(records, task_gold_counts)
+
+
+# ---------------------------------------------------------------------------
 # Summary table
 # ---------------------------------------------------------------------------
 
-def build_summary(em: dict, discovery: dict, failure: dict, efficiency: dict) -> list[dict]:
+def build_summary(em: dict, discovery: dict, failure: dict, efficiency: dict, search_depth: dict | None = None, reasoning_density: dict | None = None) -> list[dict]:
     keys = sorted(set(list(em.keys()) + list(discovery.keys()) + list(failure.keys())))
     rows = []
     for key in keys:
@@ -241,12 +272,17 @@ def build_summary(em: dict, discovery: dict, failure: dict, efficiency: dict) ->
             row["f1"] = round(e.get("f1", 0) or 0, 3)
             row["avg_cost_usd"] = round(e.get("avg_cost_usd", 0), 4)
             row["avg_tool_calls"] = round(e.get("avg_tool_calls", 0), 1)
+            row["avg_search_calls"] = round(e.get("avg_search_calls", 0), 1)
+            avg_sc = e.get("avg_search_calls") or 0
+            em_val = e.get("em") or 0
+            row["search_efficiency"] = round(em_val / avg_sc, 4) if avg_sc else None
         if key in discovery:
             d = discovery[key]
             row["D_ret"] = round(d.get("D_ret", 0), 3)
             row["D_acc"] = round(d.get("D_acc", 0), 3)
-            row["avg_recall"] = round(d.get("avg_recall", 0), 3)
-            row["avg_precision"] = round(d.get("avg_precision", 0), 3)
+            row["exploration_gap"] = round(d.get("D_ret", 0) - d.get("D_acc", 0), 3)
+            row["dacc_avg_precision"] = round(d.get("avg_precision", 0), 3)
+            row["dacc_avg_recall"] = round(d.get("avg_recall", 0), 3)
         if key in failure:
             f = failure[key]
             row["pct_grounded_success"] = f.get("grounded_success", {}).get("pct")
@@ -256,7 +292,24 @@ def build_summary(em: dict, discovery: dict, failure: dict, efficiency: dict) ->
             row["pct_execution_failed"] = f.get("execution_failed", {}).get("pct")
             row["pct_search_not_read"] = f.get("search_not_read", {}).get("pct")
             row["pct_hallucination"] = f.get("hallucination", {}).get("pct")
-            row["pct_search_failed"] = f.get("search_failed", {}).get("pct")
+            row["pct_search_failed_budget"] = f.get("search_failed_budget", {}).get("pct")
+            row["pct_search_failed_quality"] = f.get("search_failed_quality", {}).get("pct")
+        if search_depth is not None:
+            cond = parts[0]
+            depth = search_depth.get(cond, {})
+            for bin_label in ("1", "2-3", "4-6", "7-10", "11-30"):
+                safe = bin_label.replace("-", "_")
+                entry = depth.get(bin_label, {})
+                row[f"depth_{safe}_em"] = entry.get("mean_em")
+                row[f"depth_{safe}_n"] = entry.get("n")
+        if reasoning_density is not None:
+            cond = parts[0]
+            rdensity = reasoning_density.get(cond, {})
+            for bin_label in ("<=2", "3-4", "5-7", "8-10", ">10"):
+                safe = bin_label.replace("<", "lte").replace(">", "gt").replace("-", "_")
+                entry = rdensity.get(bin_label, {})
+                row[f"rdensity_{safe}_em"] = entry.get("mean_em")
+                row[f"rdensity_{safe}_n"] = entry.get("n")
         rows.append(row)
     return rows
 
@@ -294,8 +347,17 @@ def main() -> None:
     print("Running tools discovery...")
     tools_discovery = run_tools_discovery(args.traces_dir, args.tasks_dir)
 
+    print("Running search depth curve...")
+    search_depth = run_search_depth(args.results_dir)
+
+    print("Running planning overhead (Condition B)...")
+    planning_overhead = run_planning_overhead(args.results_dir)
+
+    print("Running reasoning density curve (LakeQA Fig 4)...")
+    reasoning_density = run_reasoning_density(args.results_dir, args.tasks_dir)
+
     print("Building summary...")
-    summary = build_summary(em, discovery, failure, efficiency)
+    summary = build_summary(em, discovery, failure, efficiency, search_depth, reasoning_density)
 
     files = {
         "em_f1.json": em,
@@ -304,6 +366,9 @@ def main() -> None:
         "failure.json": failure,
         "efficiency.json": efficiency,
         "provenance.json": provenance,
+        "search_depth.json": search_depth,
+        "planning_overhead.json": planning_overhead,
+        "reasoning_density.json": reasoning_density,
         "summary.json": summary,
     }
 

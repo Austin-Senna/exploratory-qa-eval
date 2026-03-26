@@ -1,0 +1,171 @@
+GOALS & HYPOTHESES
+"Tools or Thinking? Disentangling Search and Planning for LLM Agents over Data Lakes"
+Target venue: ACM SIGMOD 2026, Bengaluru, India
+
+=============================================================================
+PAPER POSITIONING
+=============================================================================
+
+Venue framing (SIGMOD):
+  The database systems community is building "AI query" layers on top of data lakes.
+  A core engineering decision is: invest in a better retrieval stack (hybrid indexing,
+  reranking) or a better agent scaffold (planning loops, context management, skill
+  injection)? This paper provides the first controlled empirical answer to that question
+  on a real government data lake benchmark.
+
+This paper uses LakeQA (a separate benchmark paper) as the evaluation platform.
+The contribution here is: (1) the ablation study design, (2) the disentanglement
+finding, and (3) concrete implications for how to build agentic data lake systems.
+
+=============================================================================
+RESEARCH QUESTION
+=============================================================================
+
+Primary: In budget-constrained agentic QA over a data lake, what is the dominant
+bottleneck — retrieval quality (the search/indexing layer) or agent behavior
+(planning, context management, loop avoidance)?
+
+Operationalized as:
+  Does Condition A (hybrid search, no planning tools) outperform
+  Condition B (BM25 search, full planning toolkit) on EM?
+
+Secondary: Are these effects model-dependent? Specifically, does planning help
+smaller models more than larger ones?
+
+=============================================================================
+GOALS
+=============================================================================
+
+G1 — Quantify the isolated effect of search quality on end-to-end task accuracy.
+     (Baseline → Cond A: same agent scaffold, better retrieval)
+
+G2 — Quantify the isolated effect of planning/context tools on end-to-end accuracy.
+     (Baseline → Cond B: same retrieval, richer agent scaffold)
+
+G3 — Determine which effect is larger and whether this holds across model sizes.
+     (Cond A vs Cond B × Haiku / Sonnet / Llama)
+
+G4 — Characterize the dominant failure mode: retrieval miss vs. reading behavior
+     vs. execution failure — and show how each condition shifts the failure distribution.
+
+G5 — Identify where search investment saturates (search depth curve: EM vs. #search
+     calls) and where planning overhead hurts (cycle_count vs. EM for Cond B).
+
+=============================================================================
+HYPOTHESES
+=============================================================================
+
+H1 (primary — currently OPEN):
+  Condition A > Condition B on EM across all models.
+  Rationale: the fundamental failure mode is not finding the right datasets.
+  No amount of planning recovers from a retrieval miss.
+
+  Challenge from early data (Cond A / Haiku):
+  D_ret = 99.3% — hybrid search already surfaces gold datasets on nearly every task.
+  The dominant failure is search_not_read (42.2%): the agent retrieves correctly
+  but fails to open what it found. This is a behavioral failure, not a retrieval
+  failure — which would favor Condition B's planning tools.
+  H1 may be falsified or model-dependent.
+
+H2 (model interaction):
+  Planning tools help smaller models more than larger ones.
+  Cond B gain (vs Baseline) will be larger for Haiku than Sonnet or Llama.
+  Rationale: smaller models are more prone to looping, losing track of prior
+  findings, and poor query reformulation — exactly what the skills plugin,
+  loop nudge, and plan tool address.
+
+H3 (search efficiency):
+  Cond A achieves equal or higher EM with fewer search calls than Cond B.
+  Higher-quality results per call → agent finds needed data sooner, spends
+  more remaining budget on data extraction rather than re-searching.
+
+H4 (exploration gap):
+  Cond B will have a smaller exploration_gap (D_ret - D_acc) than Cond A.
+  The plan tool and skills give the agent a more structured reading agenda,
+  so it opens more of what it retrieves. Cond A has better results but the
+  agent may still skip over them.
+
+  Early signal: Cond A / Haiku exploration_gap = 0.366. Dacc precision = 22%
+  (agent opens a lot of noise). Planning tools should narrow both.
+
+H5 (search saturation):
+  EM peaks at 4-6 search calls and degrades beyond 10 (diminishing returns,
+  budget crowded out by re-searching). Early data supports this:
+    1 call:    87.5% EM
+    2-3 calls: 59.3%
+    4-6 calls: 70.6%   <- plateau
+    7-10:      38.9%
+    11-30:     26.3%   <- degradation (budget crowded out)
+
+H6 (reasoning density):
+  The EM gap between conditions grows with task reasoning density
+  (len(datasets_used)). Hard tasks (>7 datasets) are where retrieval quality
+  and planning structure both matter most — this is where conditions diverge.
+
+  Early data (Cond A / Haiku):
+    <=2 datasets:  100% EM
+    3-4:            55.6%
+    5-7:            48.7%
+    8-10:           42.6%
+    >10:            45.8%
+
+=============================================================================
+WHAT WOULD FALSIFY H1
+=============================================================================
+
+If Cond B > Cond A on EM: the bottleneck is behavioral, not retrieval.
+Practitioners should invest in agent scaffold over index quality.
+Still a strong, publishable finding — and arguably more surprising given
+the conventional wisdom that better retrieval always helps.
+
+If effects are model-dependent (H2 confirmed): split finding — search helps
+larger models, planning helps smaller ones. Different investment priorities
+depending on which model tier you deploy.
+
+=============================================================================
+PRELIMINARY DATA (Cond A / Haiku, n=135 tasks)
+=============================================================================
+
+EM:                    49.7%
+F1:                    55.6%
+Avg tool calls:        22.3 / 30
+Avg search calls:      6.6
+Search efficiency:     0.075 (EM per search call)
+D_ret:                 99.3%   <- retrieval is not the miss
+D_acc:                 62.7%
+Exploration gap:       36.6%   <- agent finds but doesn't open
+Dacc precision:        22.0%   <- agent reads a lot of noise
+Avg cost/task:         $0.41
+Total run cost:        $58.77
+
+Failure breakdown:
+  search_not_read:          42.2%  <- dominant failure mode
+  partial_parametric:       17.0%
+  heavy_parametric:          8.9%
+  execution_failed:          4.4%
+  search_failed_budget:      0.0%
+  search_failed_quality:     0.0%
+
+Key implication: With hybrid search, retrieval is essentially solved (D_ret ~= 1.0).
+The bottleneck has shifted downstream — to whether the agent reads what it found
+and extracts the right answer from it. This positions Condition B (planning tools)
+as the potentially stronger intervention.
+
+=============================================================================
+SIGMOD CONTRIBUTION FRAMING
+=============================================================================
+
+1. Experimental design: a clean 2x2 ablation (search quality x planning quality)
+   over a real government data lake benchmark with 135 multi-hop tasks.
+
+2. Finding: [to be confirmed] retrieval quality alone is insufficient when the
+   agent's reading strategy is the bottleneck. OR: planning tools provide
+   diminishing returns when search quality is the bottleneck. (TBD by results.)
+
+3. Systems implication: for data lake query systems, the right investment depends
+   on which failure mode dominates — retrieval miss (invest in index) vs.
+   reading behavior (invest in scaffold). This paper provides a methodology
+   for diagnosing which regime you are in.
+
+4. Model interaction: planning helps smaller models more, informing which agent
+   tier to augment with structured scaffolding.

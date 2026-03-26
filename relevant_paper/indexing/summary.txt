@@ -1,0 +1,18 @@
+We haven't implemented this yet, what we have right now is only the following setup.
+
+AutoDDG (Zhang et al., PVLDB 2025) 
+https://arxiv.org/html/2502.01050v3#A1.T6
+Provides the most rigorous evidence on description generation. The system creates two description types: a User-Focused Description (UFD) that reads as coherent narrative, and a Search-Focused Description (SFD) deliberately stuffed with synonyms, related concepts, and use-case terms. The SFD consistently outperforms UFD on BM25, and both outperform original human-authored descriptions on NTCIR and ECIR benchmarks.
+AutoDDG's generation pipeline reveals exactly what should go into the description:
+Data-driven profile: Full algorithmic profiling over all rows — per-column data types, value ranges, coverage, unique counts, statistical summaries. This uses Datamart Profiler, not sampling.
+Semantic profile: LLM-generated JSON per column with temporal/spatial classification, entity types ("Monetary Value"), domain types ("Financial"), and functional roles ("Aggregation Key").
+Topic generation: A 2–3 word topic extracted by the LLM from title + description + sample data.
+SFD prompt: Instructs the LLM to expand the initial description with "as many related concepts, synonyms, and relevant terms as possible" because "the expanded description is intended to be indexed at backend of a dataset search engine to improve searchability."
+Removing the semantic profile from AutoDDG causes a noticeable NDCG drop, confirming that LLM-inferred column semantics add retrieval value beyond raw profiling. The full SFD includes a Dataset Overview, Related Topics, Concepts and Synonyms, Applications and Use Cases, and Additional Context sections.
+
+Keywords are not always the key: A metadata field analysis for natural language search on open data portals
+https://arxiv.org/pdf/2509.14457
+It directly validates two of your key design decisions: (1) using LLM-generated natural-language descriptions as the primary content of your SPLADE/BM25 index documents, and (2) deprioritizing keywords and tags in favor of rich narrative descriptions.
+
+LLM-Generated Table Summaries for Retrieval — Pneuma (Balaka et al., SIGMOD 2025) https://arxiv.org/html/2504.09207v1
+Uses LLM-generated table summaries in a hybrid BM25+HNSW index for dataset discovery. Outperforms full-text search baselines, validating the synthetic description approach.
