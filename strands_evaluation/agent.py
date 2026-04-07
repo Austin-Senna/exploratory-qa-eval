@@ -29,7 +29,12 @@ from strands.vended_plugins.steering import Guide, Proceed, SteeringHandler, Too
 import logging
 
 from strands_evaluation.config import AgentConfig, ConditionConfig, RunConfig
-from strands_evaluation.instrumentation import TracePlugin, ReadTracePlugin, set_trace_context
+from strands_evaluation.instrumentation import (
+    TracePlugin,
+    ReadTracePlugin,
+    SearchCallBudgetHandler,
+    set_trace_context,
+)
 from strands_evaluation.instrumentation.loop_plugin import CategoryStagnationHandler
 from strands_evaluation.helper.logger import configure_logging
 from strands_evaluation.helper.result import AgentResult
@@ -62,6 +67,10 @@ from strands_evaluation.tools.agent_tools_v2 import (
 )
 from strands_evaluation.tools.agent_tools import download
 from strands_evaluation.tools.external.plan_tools import plan
+from strands_evaluation.tools.external.search_eval_tools import (
+    build_search_tools,
+    search_tool_names_in,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -321,6 +330,39 @@ def _load_condition_prompt(condition: str, fallback: str = "") -> str:
         return fallback
 
 
+def _base_condition(condition_label: str) -> str:
+    """Strip optional experimental suffix from condition label."""
+    if not condition_label:
+        return "baseline"
+    return str(condition_label).split("__", 1)[0]
+
+
+def _resolve_condition(cond_cfg: ConditionConfig) -> str:
+    """Resolve the actual experiment condition (baseline/a/b)."""
+    if getattr(cond_cfg, "base_condition", None):
+        return str(cond_cfg.base_condition)
+    return _base_condition(cond_cfg.condition)
+
+
+def _inject_search_budget_prompt(
+    system_prompt: str,
+    search_calls_limit: Optional[int],
+    search_tool_names: tuple[str, ...],
+) -> str:
+    """Append search-call budget instructions when configured."""
+    if search_calls_limit is None:
+        return system_prompt
+    names = ", ".join(search_tool_names) if search_tool_names else "search tools"
+    budget_note = (
+        "\n\n## SEARCH CALL BUDGET\n"
+        f"- You have at most {search_calls_limit} total calls to: {names}.\n"
+        "- When this budget is exhausted, do not call search tools again.\n"
+        "- Continue with non-search tools (list/read/query/grep/download/execute_code), "
+        "then call submit_answer."
+    )
+    return system_prompt.rstrip() + budget_note
+
+
 class DataLakeAgent:
     """Strands-based agent for the Data Lake benchmark."""
 
@@ -339,7 +381,12 @@ class DataLakeAgent:
         trace_attributes: Optional[Dict[str, Any]] = None,
     ) -> tuple:
         cond = self.run_config.condition_config
-        condition = cond.condition
+        condition = _resolve_condition(cond)
+
+        if condition == "a" and not _CONDITION_A_TOOLS_AVAILABLE:
+            raise RuntimeError("Condition A search tools are unavailable (import failed).")
+        if condition in {"baseline", "b"} and not _CONDITION_B_TOOLS_AVAILABLE:
+            raise RuntimeError("Condition B/Baseline search tools are unavailable (import failed).")
 
         # Core data-manipulation tools shared across all conditions
         _data_tools = [
@@ -350,19 +397,44 @@ class DataLakeAgent:
 
         if condition == "a" and _CONDITION_A_TOOLS_AVAILABLE:
             # Condition A (tools-rich): hybrid RRF + schema + reranked + shared baseline tools
-            tools = [search_value_a, search_schema, search_reranked, search_prefix] + _data_tools
+            raw_search_tools = [search_value_a, search_schema, search_reranked, search_prefix]
             system_prompt = _load_condition_prompt("a", fallback=self.run_config.system_prompt)
+            search_tools = build_search_tools(
+                raw_search_tools,
+                fixed_k=self.run_config.search_k,
+                search_descriptions=self.run_config.search_descriptions,
+            )
+            tools = search_tools + _data_tools
 
         elif condition == "b" and _CONDITION_B_TOOLS_AVAILABLE:
             # Condition B (planning-rich): sparse search + prefix + plan tool + skills
             # summarize_context only given to B — longer planning loops benefit from manual context control
-            tools = [search_value_b, search_schema_b, search_prefix, plan] + _data_tools + [summarize_context]
+            raw_search_tools = [search_value_b, search_schema_b, search_prefix]
             system_prompt = _load_condition_prompt("b", fallback=self.run_config.system_prompt)
+            search_tools = build_search_tools(
+                raw_search_tools,
+                fixed_k=self.run_config.search_k,
+                search_descriptions=self.run_config.search_descriptions,
+            )
+            tools = search_tools + [plan] + _data_tools + [summarize_context]
 
         else:
             # Baseline: Condition B search tools (BM25 + schema + prefix) without any context tools
-            tools = [search_value_b, search_schema_b, search_prefix] + _data_tools
+            raw_search_tools = [search_value_b, search_schema_b, search_prefix]
             system_prompt = self.run_config.system_prompt
+            search_tools = build_search_tools(
+                raw_search_tools,
+                fixed_k=self.run_config.search_k,
+                search_descriptions=self.run_config.search_descriptions,
+            )
+            tools = search_tools + _data_tools
+
+        search_tool_names = search_tool_names_in(search_tools)
+        system_prompt = _inject_search_budget_prompt(
+            system_prompt,
+            self.run_config.search_calls_limit,
+            search_tool_names,
+        )
 
         conv_manager = SlidingWindowConversationManager(
             window_size=self.run_config.sliding_window_k,
@@ -387,11 +459,18 @@ class DataLakeAgent:
                     _tool_limit_handler.signal_context_overflow()
 
         cond = self.run_config.condition_config
-        plugins = [
-            _tool_limit_handler,
+        plugins = [_tool_limit_handler]
+        if self.run_config.search_calls_limit is not None:
+            plugins.append(
+                SearchCallBudgetHandler(
+                    max_search_calls=self.run_config.search_calls_limit,
+                    search_tools=search_tool_names,
+                )
+            )
+        plugins.extend([
             SubmitAnswerPlugin(),
             LoggingPlugin(),
-        ]
+        ])
         if condition == "b":
             plugins.append(AgentSkills(skills=[
                 "strands_evaluation/tools/skills/plan-agent",
@@ -524,16 +603,22 @@ def _run_task_worker(
 
     # Eagerly load the hybrid search DB + embedding model + cross-encoder reranker once
     # per worker process (singletons in api.py guard against re-loading on subsequent tasks).
-    if run_config.condition_config.condition == "a" and _CONDITION_A_TOOLS_AVAILABLE:
+    condition = _resolve_condition(run_config.condition_config)
+
+    if condition == "a" and _CONDITION_A_TOOLS_AVAILABLE:
         try:
             import strands_evaluation.tools.external.search_a_tools as _sa
+            if run_config.search_db_path:
+                _sa.set_db_path(run_config.search_db_path)
             _sa.setup()
         except Exception as e:
             logger.warning(f"Hybrid search setup failed: {e}")
 
-    if run_config.condition_config.condition == "b" and _CONDITION_B_TOOLS_AVAILABLE:
+    if condition == "b" and _CONDITION_B_TOOLS_AVAILABLE:
         try:
             import strands_evaluation.tools.external.search_b_tools as _sb
+            if run_config.search_db_path:
+                _sb.set_db_path(run_config.search_db_path)
             _sb.setup()
         except Exception as e:
             logger.warning(f"Sparse search setup failed: {e}")

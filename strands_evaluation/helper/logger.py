@@ -30,7 +30,10 @@ def _build_log_file(
     # e.g.  logs/a/claude-haiku-4-5/k-2-d-1/task_1.log
     subdir = log_dir
     if condition:
-        subdir = os.path.join(subdir, _slugify(condition))
+        # Allow hierarchical condition labels like "naive_k5/baseline".
+        for part in str(condition).replace("\\", "/").split("/"):
+            if part:
+                subdir = os.path.join(subdir, _slugify(part))
     if model:
         subdir = os.path.join(subdir, _slugify(model))
     if task_id:

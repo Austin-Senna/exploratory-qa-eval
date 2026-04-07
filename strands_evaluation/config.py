@@ -28,12 +28,14 @@ def resolve_model(model_name: str) -> Tuple[str, str]:
 @dataclass
 class ConditionConfig:
     condition: str = "baseline"          # "a", "b", or "baseline"
+    base_condition: Optional[str] = None # optional explicit base condition for variant labels
     sparse_backend: str = "bm25"         # "bm25" or "splade" (Condition A)
     trace_output_dir: str = "results/traces"
 
 
 @dataclass
 class RunConfig:
+    results_output_dir: str = "results"
     max_tool_calls: int = 30
     sliding_window_k: int = 40
     timeout_seconds: int = 450
@@ -41,6 +43,10 @@ class RunConfig:
     tool_executor: str = "sequential"    # or "concurrent"
     condition_config: ConditionConfig = field(default_factory=ConditionConfig)
     max_consecutive_category: int = 6    # CategoryStagnationHandler threshold (0 = disabled)
+    search_k: Optional[int] = None
+    search_calls_limit: Optional[int] = None
+    search_descriptions: str = "naive"
+    search_db_path: Optional[str] = None
 
 
 @dataclass
@@ -79,8 +85,3 @@ class AgentConfig:
     def __post_init__(self) -> None:
         if self.model_name:
             self.provider, self.model_id = resolve_model(self.model_name)
-
-@dataclass
-class AurumConfig:
-    graph_path:str = "aurum_model"
-    db_path:str = "aurum.db"

@@ -56,6 +56,10 @@ def _display_name(agent_config) -> str:
     return _sanitize_model_name(name)
 
 
+def _results_root(run_config: RunConfig) -> str:
+    return getattr(run_config, "results_output_dir", "results") or "results"
+
+
 def find_all_task_dirs(base_dir: str = "tasks") -> list:
     """Return all task directories matching the k-*-d-* pattern."""
     return sorted(glob.glob(os.path.join(base_dir, "k-*-d-*")))
@@ -78,7 +82,7 @@ def run_evaluation(
     cond = run_config.condition_config
     condition_label = cond.condition
     safe_model = _display_name(agent_config)
-    output_dir = os.path.join("results", condition_label, safe_model)
+    output_dir = os.path.join(_results_root(run_config), condition_label, safe_model)
     os.makedirs(output_dir, exist_ok=True)
 
     task_files = sorted(glob.glob(os.path.join(task_dir, "*.json")))
@@ -297,7 +301,7 @@ def _run_continue(args, agent_config, run_config) -> None:
     """Re-run evaluation over task_set, skipping already-recorded tasks."""
     condition = args.condition
     safe_model = _display_name(agent_config)
-    results_dir = os.path.join("results", condition, safe_model)
+    results_dir = os.path.join(_results_root(run_config), condition, safe_model)
     csv_path = os.path.join(results_dir, "eval_results.csv")
 
     # Collect already-completed task_ids from the CSV
@@ -368,7 +372,7 @@ def _run_task_files(
     cond = run_config.condition_config
     condition_label = cond.condition
     safe_model = _display_name(agent_config)
-    output_dir = os.path.join("results", condition_label, safe_model)
+    output_dir = os.path.join(_results_root(run_config), condition_label, safe_model)
     os.makedirs(output_dir, exist_ok=True)
 
     task_dir_name = os.path.basename(task_dir)
@@ -440,8 +444,8 @@ def main() -> None:
                         help="Experiment condition: 'a' (tools-rich), 'b' (planning-rich), or 'baseline'")
     parser.add_argument("--sparse-backend", choices=["bm25", "splade"], default="bm25",
                         help="Sparse search backend for Condition A (default: bm25)")
-    parser.add_argument("--traces-output-dir", default="results/traces",
-                        help="Base directory for trace JSONL files (default: results/traces)")
+    parser.add_argument("--results-output-dir", default="results",
+                        help="Base directory for evaluation outputs (default: results)")
 
     # Execution
     parser.add_argument("--parallel", type=int, default=6,
@@ -460,14 +464,17 @@ def main() -> None:
         max_tokens=args.max_tokens,
     )
     safe_model_name = _display_name(agent_config)
-    trace_dir = os.path.join(args.traces_output_dir, args.condition, safe_model_name)
+    traces_root = os.path.join(args.results_output_dir, "traces")
+    trace_dir = os.path.join(traces_root, args.condition, safe_model_name)
 
     run_config = RunConfig(
+        results_output_dir=args.results_output_dir,
         max_tool_calls=args.max_tool_calls,
         sliding_window_k=args.sliding_window,
         timeout_seconds=args.timeout,
         condition_config=ConditionConfig(
             condition=args.condition,
+            base_condition=args.condition,
             sparse_backend=args.sparse_backend,
             trace_output_dir=trace_dir,
         ),

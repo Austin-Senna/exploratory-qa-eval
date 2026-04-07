@@ -6,8 +6,17 @@ from strands import tool
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent.parent / "external-tools" / "hybrid_search"))
 
-from api import setup, hybrid_search, hybrid_search_schema, hybrid_search_with_reranker  # noqa: E402
+import api as _api  # noqa: E402
 
+
+def set_db_path(path: str) -> None:
+    """Override hybrid search LanceDB path for this process."""
+    _api.cfg.path = str(path)
+    _api._db = None
+
+
+def setup() -> None:
+    _api.setup()
 
 
 
@@ -20,7 +29,7 @@ def search_value(query: str, top_k: int = 10) -> dict:
         top_k: Maximum number of results to return (default 10).
     """
     try:
-        results = hybrid_search(query, k=top_k)
+        results = _api.hybrid_search(query, k=top_k)
         return {"results": results, "count": len(results), "query": query}
     except Exception as e:
         return {"error": str(e), "query": query, "results": [], "count": 0}
@@ -35,7 +44,7 @@ def search_schema(query: str, top_k: int = 10) -> dict:
         top_k: Maximum number of results to return (default 10).
     """
     try:
-        results = hybrid_search_schema(query, k=top_k)
+        results = _api.hybrid_search_schema(query, k=top_k)
         return {"results": results, "count": len(results), "query": query}
     except Exception as e:
         return {"error": str(e), "query": query, "results": [], "count": 0}
@@ -50,7 +59,7 @@ def search_reranked(query: str, top_k: int = 10) -> dict:
         top_k: Maximum number of results to return (default 10).
     """
     try:
-        results = hybrid_search_with_reranker(query, k=top_k)
+        results = _api.hybrid_search_with_reranker(query, k=top_k)
         return {"results": results, "count": len(results), "query": query}
     except Exception as e:
         return {"error": str(e), "query": query, "results": [], "count": 0}
