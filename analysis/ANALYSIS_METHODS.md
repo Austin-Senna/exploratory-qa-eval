@@ -61,48 +61,51 @@ Dataset IDs are normalized: S3 prefix `s3://lakeqa-yc4103-datalake/` stripped, f
 
 ## 2. `discovery_metrics.py` — D_ret and D_acc
 
-**What it computes:** Two binary discovery metrics per task.
+**What it computes:** One binary retrieval metric and one continuous access metric per task.
 
 **Metric definitions:**
 - **D_ret** (retrieval discovery): 1 if any gold dataset ID appeared in any search tool result during the task, 0 otherwise. Determined from `result_dataset_ids` in search trace records.
-- **D_acc** (accuracy discovery): fraction of gold datasets cited read by the agent — `|read ∩ gold| / |gold|` (0.0–1.0). Used as binary (≥1 vs 0) in older analyses; used as a continuous score in the failure taxonomy.
+- **D_acc** (D_accessed): fraction of gold datasets accessed by the agent via read tools — `|read ∩ gold| / |gold|` (0.0–1.0). Used as a continuous score in the failure taxonomy.
 
 **Inputs:**
 - `results/traces/{condition}/{model}/{task_id}.jsonl` — per-call trace records
 - `tasks_mini/**/*.json` — ground-truth `datasets_used` field (gold dataset IDs)
 
 **Precision/recall formulas (aggregate):**
-- Retrieval precision: `sum(D_ret) / n_tasks`
-- Source precision: `|cited ∩ gold| / |cited|` averaged over tasks where `|cited| > 0`
-- Source recall: `|cited ∩ gold| / |gold|` averaged over tasks where `|gold| > 0`
+- Per-search-call precision: `|gold in call results| / |call results|`
+- Per-search-call recall: `|gold in call results| / |gold|`
+- Task precision/recall: mean of the per-call values over search calls in that task
+- Aggregate precision/recall/F1: mean of the task-level values over tasks
 
 ---
 
-## 3. `failure_attribution.py` — failure / success taxonomy
+## 3. `failure_attribution.py` — EM × D_acc attribution
 
-**What it computes:** Classifies every task (not just failures) into one of seven labels using `EM`, `D_ret`, and `D_acc`.
-
-Note: `D_acc` here is the fractional overlap `|cited ∩ gold| / |gold|` (0.0–1.0), not just binary.
+**What it computes:** Classifies every task (not just failures) into `EM × D_acc` bins using explicit thresholds.
 
 **Decision tree:**
 ```
 EM == 1:
-  D_acc == 1            → grounded_success           (right answer + all gold sources cited)
-  0 < D_acc <= 0.5      → partial_parametric_success (right answer + only some gold sources cited)
-  D_acc == 0            → parametric_hallucination   (right answer + no gold sources — lucky guess)
+  0.8 <= D_acc <= 1.0  → em1_dacc_ge_0_8
+  0.5 <= D_acc < 0.8   → em1_dacc_0_5_to_0_8
+  0.2 <= D_acc < 0.5   → em1_dacc_0_2_to_0_5
+  0.0 <= D_acc < 0.2   → em1_dacc_lt_0_2
 
 EM == 0:
-  D_ret == 1:
-    D_acc == 1          → execution_failed            (found + cited gold, wrong final answer)
-    D_acc == 0          → discovery_reasoning_failed  (gold retrieved but not recognised/cited)
-  D_ret == 0:
-    sources == []       → hallucination               (nothing found, nothing cited, wrong)
-    sources != []       → search_failed               (cited something, but gold never retrieved)
+  0.8 <= D_acc <= 1.0  → em0_dacc_ge_0_8
+  0.5 <= D_acc < 0.8   → em0_dacc_0_5_to_0_8
+  0.2 <= D_acc < 0.5   → em0_dacc_0_2_to_0_5
+  0.0 <= D_acc < 0.2   → em0_dacc_lt_0_2
 ```
 
 **Inputs:** `results/traces/`, `results/`, `tasks_mini/` (delegated to `discovery_metrics.py`)
 
-**Output:** Printed table of counts and percentages for all seven labels.
+**Output:** Printed table of counts and percentages for all labels.
+
+### 3b. `failure_attribution_deciles.py` — EM × D_acc deciles
+
+**What it computes:** Same as above, but with 0.1-wide `D_acc` bins:
+`[0.0,0.1)`, `[0.1,0.2)`, …, `[0.9,1.0]`, crossed with `EM ∈ {0,1}`.
 
 ---
 
@@ -139,7 +142,7 @@ EM == 0:
 |--------|---------------------|-------------|
 | EM rate bar chart (condition × model) | `generate_figures.py::fig_em_bar` | `compute_em.py` output |
 | D_ret / D_acc heatmap | `generate_figures.py::fig_discovery_heatmap` | `discovery_metrics.py` output |
-| Failure attribution pie/stacked bar | `generate_figures.py::fig_failure_pie` | `failure_attribution.py` output |
+| EM × D_acc attribution stacked bar + heatmap | `generate_figures.py` (Fig 3 / Fig 3b) | `failure_attribution.py` output |
 | Provenance Sankey / stacked bar | `generate_figures.py::fig_provenance` | `provenance.py` output |
 | Cost vs. EM scatter | `generate_figures.py::fig_cost_scatter` | `efficiency.py` output |
 

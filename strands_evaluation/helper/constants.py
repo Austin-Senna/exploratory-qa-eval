@@ -57,6 +57,9 @@ MODEL_PRICING = {
         # OpenAI (example pricing - update with actual values)
         "gpt-5.2": {"input": 1.75, "output": 14.00},
         "gpt-5-mini": {"input": 0.25, "output": 2.00},
+        # Alias keys for provider-prefixed model_name values
+        "openai/gpt-5.2": {"input": 1.75, "output": 14.00},
+        "openai/gpt-5-mini": {"input": 0.25, "output": 2.00},
 
         # AWS Bedrock Claude models
         "bedrock/claude-opus-4.5": {"input": 5.00, "output": 25.00},
@@ -125,6 +128,12 @@ DO NOT:
   - answer: wrap in square brackets e.g. [42]
   - reasoning: brief explanation of how you found the answer
   - sources: list of dataset IDs you used (e.g. ["public-school-locations-current-23297", "Sal_Khan"])
+
+## SEARCH STRATEGY GUIDE
+Use the tool that matches what you know:
+1. search_prefix — when you know part of a dataset/program/entity name
+2. search_value — broad lexical discovery and query reformulation
+3. search_schema — when you need exact field/table-name matching
 
 ## OUTPUT LIMITS — read_file, query_file, execute_code
 These tools cap their output at ~24,000 characters (~6k tokens) to protect context.

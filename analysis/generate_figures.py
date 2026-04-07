@@ -5,7 +5,8 @@ Generate all paper figures using matplotlib/seaborn.
 Figures produced:
   fig1_em_comparison.pdf     — EM rate by condition × model (grouped bar)
   fig2_discovery_metrics.pdf — D_ret vs D_acc by condition
-  fig3_failure_breakdown.pdf — Stacked bar: failure attribution per condition
+  fig3_failure_breakdown.pdf — 100% stacked bar: EM × D_acc attribution per condition
+  fig3b_failure_by_model.pdf — Heatmap: EM × D_acc attribution per condition × model
   fig4_backend_provenance.pdf — Condition A: first-hit backend pie chart
   fig5_query_drift.pdf        — Condition B: Jaccard similarity distribution
   fig6_cost_vs_em.pdf         — Cost-accuracy frontier scatter
@@ -17,10 +18,32 @@ Usage:
                                         [--tasks-dir tasks_mini] [--output-dir figures]
 """
 import argparse
-import json
 import sys
 from collections import defaultdict
 from pathlib import Path
+
+
+_FAILURE_COLORS = {
+    "em1_dacc_ge_0_8": "#1A9850",
+    "em1_dacc_0_5_to_0_8": "#66BD63",
+    "em1_dacc_0_2_to_0_5": "#A6D96A",
+    "em1_dacc_lt_0_2": "#D9EF8B",
+    "em0_dacc_ge_0_8": "#D73027",
+    "em0_dacc_0_5_to_0_8": "#F46D43",
+    "em0_dacc_0_2_to_0_5": "#FDAE61",
+    "em0_dacc_lt_0_2": "#FEE08B",
+}
+
+_FAILURE_LABEL_TEXT = {
+    "em1_dacc_ge_0_8": "EM=1, 0.8<=D_acc<=1.0",
+    "em1_dacc_0_5_to_0_8": "EM=1, 0.5<=D_acc<0.8",
+    "em1_dacc_0_2_to_0_5": "EM=1, 0.2<=D_acc<0.5",
+    "em1_dacc_lt_0_2": "EM=1, D_acc<0.2",
+    "em0_dacc_ge_0_8": "EM=0, 0.8<=D_acc<=1.0",
+    "em0_dacc_0_5_to_0_8": "EM=0, 0.5<=D_acc<0.8",
+    "em0_dacc_0_2_to_0_5": "EM=0, 0.2<=D_acc<0.5",
+    "em0_dacc_lt_0_2": "EM=0, D_acc<0.2",
+}
 
 
 def _import_plot_libs():
@@ -33,6 +56,22 @@ def _import_plot_libs():
     except ImportError:
         print("matplotlib/seaborn not installed. Install with: pip install matplotlib seaborn")
         sys.exit(1)
+
+
+def _present_failure_labels(grouped_counts: dict[str, dict[str, int]], label_order: list[str]) -> list[str]:
+    """Return observed labels in the configured order, with unknown labels appended."""
+    observed = {
+        label
+        for counts in grouped_counts.values()
+        for label, value in counts.items()
+        if value
+    }
+    ordered = [label for label in label_order if label in observed]
+    return ordered + sorted(observed - set(label_order))
+
+
+def _failure_label_text(label: str) -> str:
+    return _FAILURE_LABEL_TEXT.get(label, label)
 
 
 def main() -> None:
@@ -52,10 +91,11 @@ def main() -> None:
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    from analysis.compute_em import load_results, compute_stats
+    from analysis.compute_em import load_results, compute_stats, _count_search_calls
     from analysis.discovery_metrics import (
-        load_traces, load_task_gold_ids, compute_discovery_metrics, compute_tools_discovery
+        load_traces, load_task_gold_ids, compute_discovery_metrics, compute_tools_discovery, make_task_stem_key
     )
+    from analysis.failure_attribution import _LABEL_ORDER, classify_failure
 
     records = load_results(args.results_dir)
     em_table = compute_stats(records)
@@ -91,63 +131,184 @@ def main() -> None:
         print(f"Saved fig1_em_comparison.pdf")
 
     # -----------------------------------------------------------------------
-    # Fig 2: D_ret vs D_acc by condition
+    # Fig 2: D_ret vs D_acc by condition × model (grouped bar)
     # -----------------------------------------------------------------------
-    traces = load_traces(args.traces_dir)
     task_gold = load_task_gold_ids(args.tasks_dir)
-    disc = compute_discovery_metrics(traces, task_gold)
+    traces_root = Path(args.traces_dir)
 
-    if disc["aggregate"]:
-        agg = disc["aggregate"]
-        fig, ax = plt.subplots(figsize=(5, 5))
-        ax.bar(["D_ret", "D_acc"], [agg["D_ret"], agg["D_acc"]], color=["steelblue", "coral"])
-        ax.set_ylim(0, 1)
+    # Collect D_ret, D_acc per (condition, model)
+    discovery_by_cm: dict = {}
+    for condition_dir in sorted(traces_root.iterdir()):
+        if not condition_dir.is_dir():
+            continue
+        cond_name = condition_dir.name
+        for model_dir in condition_dir.iterdir():
+            if not model_dir.is_dir():
+                continue
+            model_name = model_dir.name
+            cond_traces = load_traces(str(model_dir))
+            if cond_traces:
+                disc = compute_discovery_metrics(cond_traces, task_gold)
+                if disc["aggregate"]:
+                    discovery_by_cm[(cond_name, model_name)] = disc["aggregate"]
+
+    if discovery_by_cm:
+        conditions = sorted(set(k[0] for k in discovery_by_cm))
+        models = sorted(set(k[1] for k in discovery_by_cm))
+
+        # Create grouped bar chart for D_ret and D_acc
+        x = range(len(models))
+        width = 0.35 / max(len(conditions), 1)
+        fig, ax = plt.subplots(figsize=(12, 6))
+
+        for i, cond in enumerate(conditions):
+            d_rets = [discovery_by_cm.get((cond, m), {}).get("D_ret", 0) for m in models]
+            d_accs = [discovery_by_cm.get((cond, m), {}).get("D_acc", 0) for m in models]
+
+            offset_base = (i - len(conditions) / 2 + 0.5) * width * 2
+            bars_ret = ax.bar([xi + offset_base - width / 2 for xi in x], d_rets,
+                              width=width * 0.9, label=f"{cond.upper()} D_ret", alpha=0.8)
+            bars_acc = ax.bar([xi + offset_base + width / 2 for xi in x], d_accs,
+                              width=width * 0.9, label=f"{cond.upper()} D_acc", alpha=0.8, hatch="//")
+
+            for bar in list(bars_ret) + list(bars_acc):
+                h = bar.get_height()
+                if h > 0:
+                    ax.text(bar.get_x() + bar.get_width() / 2, h + 0.01,
+                            f"{h:.2f}", ha="center", va="bottom", fontsize=7, rotation=45)
+
+        ax.set_xticks(list(x))
+        ax.set_xticklabels([m.replace("bedrock_", "").replace("-arn", "") for m in models],
+                          rotation=20, ha="right")
+        ax.set_ylim(0, 1.15)
         ax.set_ylabel("Rate")
-        ax.set_title("Discovery Metrics")
-        for i, v in enumerate([agg["D_ret"], agg["D_acc"]]):
-            ax.text(i, v + 0.02, f"{v:.3f}", ha="center")
+        ax.set_title("Discovery Metrics (D_ret & D_acc) by Condition × Model")
+        ax.legend(loc="upper right", fontsize=8, ncol=2)
         fig.tight_layout()
         fig.savefig(output_dir / "fig2_discovery_metrics.pdf")
         plt.close(fig)
         print("Saved fig2_discovery_metrics.pdf")
 
     # -----------------------------------------------------------------------
-    # Fig 3: Failure attribution stacked bar
+    # Fig 3: EM × D_acc attribution by condition (100% stacked)
     # -----------------------------------------------------------------------
-    if records:
-        from analysis.failure_attribution import classify_failure
+    # Load all traces for failure classification
+    all_traces = load_traces(args.traces_dir)
 
+    if records:
         failure_by_cond: dict = defaultdict(lambda: defaultdict(int))
-        task_metrics_by_id = {m["task_id"]: m for m in disc["task_metrics"]}
+        failure_by_cm: dict = defaultdict(lambda: defaultdict(int))
+        totals_by_cm: dict = defaultdict(int)
+        task_metrics_by_cm: dict = {}
+        for condition_dir in sorted(traces_root.iterdir()):
+            if not condition_dir.is_dir():
+                continue
+            cond_name = condition_dir.name
+            for model_dir in sorted(condition_dir.iterdir()):
+                if not model_dir.is_dir():
+                    continue
+                model_name = model_dir.name
+                cm_key = f"{cond_name}/{model_name}"
+                model_traces = load_traces(str(model_dir))
+                if not model_traces:
+                    continue
+                disc = compute_discovery_metrics(model_traces, task_gold)
+                task_metrics_by_cm[cm_key] = {
+                    m["task_id"]: m for m in disc["task_metrics"]
+                }
+
         for r in records:
             cond = r.get("condition", "?")
-            tid = str(r.get("task_id", ""))
-            m = task_metrics_by_id.get(tid, {})
-            label = classify_failure(r, m.get("d_ret", 0), m.get("d_acc", 0))
+            model = r.get("model_label", r.get("model", "?"))
+            model_label = model.split("/")[-1].replace("bedrock_", "").replace("-arn", "")
+            cm_key = f"{cond}/{model}"
+            cm_label = f"{cond}/{model_label}"
+            tid = make_task_stem_key(str(r.get("task_id", "")))
+            m = task_metrics_by_cm.get(cm_key, {}).get(tid, {})
+            label = classify_failure(
+                r,
+                m.get("d_ret", 0),
+                m.get("d_acc", 0),
+                num_read_calls=m.get("num_read_calls", 0),
+            )
             failure_by_cond[cond][label] += 1
+            failure_by_cm[cm_label][label] += 1
+            totals_by_cm[cm_label] += 1
 
-        categories = [
-            "grounded_success", "partial_parametric_hallucination",
-            "heavy_parametric_hallucination", "parametric_hallucination",
-            "execution_failed", "search_not_read", "hallucination", "search_failed",
-        ]
-        colors = ["#2ecc71", "#27ae60", "#f39c12", "#e67e22", "#3498db", "#e74c3c", "#9b59b6", "#95a5a6"]
+        failure_labels = _present_failure_labels(
+            failure_by_cm or failure_by_cond,
+            list(_LABEL_ORDER),
+        )
+
         conds = sorted(failure_by_cond)
 
         if conds:
             fig, ax = plt.subplots(figsize=(7, 5))
             bottoms = [0] * len(conds)
-            for cat, color in zip(categories, colors):
-                vals = [failure_by_cond[c].get(cat, 0) for c in conds]
-                ax.bar(conds, vals, bottom=bottoms, label=cat, color=color)
+            totals_by_cond = {
+                cond: sum(failure_by_cond[cond].values())
+                for cond in conds
+            }
+            for cat in failure_labels:
+                vals = [
+                    100 * failure_by_cond[c].get(cat, 0) / totals_by_cond[c]
+                    if totals_by_cond[c] else 0.0
+                    for c in conds
+                ]
+                ax.bar(
+                    conds,
+                    vals,
+                    bottom=bottoms,
+                    label=_failure_label_text(cat),
+                    color=_FAILURE_COLORS.get(cat, "#CB181D"),
+                )
                 bottoms = [bottoms[i] + vals[i] for i in range(len(conds))]
-            ax.set_ylabel("Number of Tasks")
-            ax.set_title("Failure Attribution by Condition")
-            ax.legend(loc="upper right")
+            ax.set_ylabel("Tasks (%)")
+            ax.set_ylim(0, 100)
+            ax.set_title("EM × D_acc Attribution by Condition")
+            ax.legend(loc="upper left", bbox_to_anchor=(1.02, 1), fontsize=8)
             fig.tight_layout()
             fig.savefig(output_dir / "fig3_failure_breakdown.pdf")
             plt.close(fig)
             print("Saved fig3_failure_breakdown.pdf")
+
+        # -----------------------------------------------------------------------
+        # Fig 3b: EM × D_acc attribution by condition × model (heatmap)
+        # -----------------------------------------------------------------------
+        cm_keys = sorted(failure_by_cm)
+        if cm_keys:
+            import numpy as np
+
+            matrix = np.zeros((len(failure_labels), len(cm_keys)))
+            for i, cat in enumerate(failure_labels):
+                for j, cm in enumerate(cm_keys):
+                    matrix[i, j] = (
+                        100 * failure_by_cm[cm].get(cat, 0) / totals_by_cm[cm]
+                        if totals_by_cm[cm] else 0.0
+                    )
+
+            fig, ax = plt.subplots(figsize=(max(8, len(cm_keys) * 1.2), max(4.5, len(failure_labels) * 0.75)))
+            im = ax.imshow(matrix, aspect="auto", cmap="YlGnBu", vmin=0, vmax=100)
+            plt.colorbar(im, ax=ax, label="Tasks (%)")
+
+            ax.set_xticks(range(len(cm_keys)))
+            ax.set_xticklabels(cm_keys, rotation=25, ha="right")
+            ax.set_yticks(range(len(failure_labels)))
+            ax.set_yticklabels([_failure_label_text(label) for label in failure_labels], fontsize=9)
+            ax.set_title("EM × D_acc Attribution by Condition × Model")
+
+            for i in range(len(failure_labels)):
+                for j in range(len(cm_keys)):
+                    val = matrix[i, j]
+                    if val <= 0:
+                        continue
+                    text_color = "white" if val >= 50 else "black"
+                    ax.text(j, i, f"{val:.1f}", ha="center", va="center", fontsize=7, color=text_color)
+
+            fig.tight_layout()
+            fig.savefig(output_dir / "fig3b_failure_by_model.pdf")
+            plt.close(fig)
+            print("Saved fig3b_failure_by_model.pdf")
 
     # -----------------------------------------------------------------------
     # Fig 6: Cost vs EM frontier
@@ -174,7 +335,7 @@ def main() -> None:
     # Fig 7: Tool latency CDF
     # -----------------------------------------------------------------------
     by_tool: dict = defaultdict(list)
-    for t in traces.values():
+    for t in all_traces.values():
         for trace in t:
             tool = trace.get("tool", "?")
             lat = trace.get("latency_ms", 0)
@@ -238,6 +399,49 @@ def main() -> None:
         fig.savefig(output_dir / fname)
         plt.close(fig)
         print(f"Saved {fname}")
+
+    # -----------------------------------------------------------------------
+    # Fig 8b: Per-search-tool precision & recall — per condition × model
+    # -----------------------------------------------------------------------
+    for condition_dir in sorted(traces_root.iterdir()):
+        if not condition_dir.is_dir():
+            continue
+        cond_name = condition_dir.name
+        for model_dir in condition_dir.iterdir():
+            if not model_dir.is_dir():
+                continue
+            model_name = model_dir.name.replace("bedrock_", "").replace("-arn", "")
+            cm_traces = load_traces(str(model_dir))
+            if not cm_traces:
+                continue
+            tools_disc = compute_tools_discovery(cm_traces, task_gold)
+            if not tools_disc:
+                continue
+            tool_names = sorted(tools_disc.keys())
+            precisions = [tools_disc[t].get("avg_precision", 0) for t in tool_names]
+            recalls = [tools_disc[t].get("avg_recall", 0) for t in tool_names]
+
+            x = range(len(tool_names))
+            width = 0.35
+            fig, ax = plt.subplots(figsize=(max(6, len(tool_names) * 1.5), 5))
+            bars_p = ax.bar([xi - width / 2 for xi in x], precisions, width, label="Avg Precision", color="steelblue")
+            bars_r = ax.bar([xi + width / 2 for xi in x], recalls, width, label="Avg Recall", color="coral")
+            for bar in list(bars_p) + list(bars_r):
+                h = bar.get_height()
+                if h > 0:
+                    ax.text(bar.get_x() + bar.get_width() / 2, h + 0.01,
+                            f"{h:.2f}", ha="center", va="bottom", fontsize=8)
+            ax.set_xticks(list(x))
+            ax.set_xticklabels(tool_names, rotation=20, ha="right")
+            ax.set_ylim(0, 1.1)
+            ax.set_ylabel("Score")
+            ax.set_title(f"Search Tool Precision & Recall — {cond_name.upper()}/{model_name}")
+            ax.legend()
+            fig.tight_layout()
+            fname = f"fig8b_{cond_name}_{model_name}_tool_precision_recall.pdf"
+            fig.savefig(output_dir / fname)
+            plt.close(fig)
+            print(f"Saved {fname}")
 
     # -----------------------------------------------------------------------
     # Fig 9: Avg search calls per condition × model
@@ -306,6 +510,57 @@ def main() -> None:
         fig.savefig(output_dir / "fig10_search_depth_curve.pdf")
         plt.close(fig)
         print("Saved fig10_search_depth_curve.pdf")
+
+    # -----------------------------------------------------------------------
+    # Fig 10b: Search depth curve per model within each condition
+    # -----------------------------------------------------------------------
+    from analysis.search_depth import _assign_bin, _BINS
+    # Group records by (condition, model)
+    records_by_cm: dict = defaultdict(list)
+    for r in depth_records:
+        cond = r.get("condition", "?")
+        model = r.get("model", "?").split("/")[-1].replace("bedrock_", "").replace("-arn", "")
+        records_by_cm[(cond, model)].append(r)
+
+    for (cond, model), cm_records in sorted(records_by_cm.items()):
+        # Compute search depth curve for this (condition, model)
+        bin_data: dict = defaultdict(list)
+        for r in cm_records:
+            em = r.get("exact_match")
+            if em is None:
+                continue
+            search_calls = _count_search_calls(r)
+            bin_label = _assign_bin(search_calls)
+            bin_data[bin_label].append(float(em))
+
+        if not bin_data:
+            continue
+
+        bin_labels = [label for label, _ in _BINS]
+        xs = []
+        ys = []
+        for i, label in enumerate(bin_labels):
+            vals = bin_data.get(label, [])
+            if vals:
+                xs.append(i)
+                ys.append(sum(vals) / len(vals) * 100)
+
+        if xs:
+            fig, ax = plt.subplots(figsize=(8, 5))
+            ax.plot(xs, ys, marker="o", color="steelblue")
+            for xi, yi in zip(xs, ys):
+                ax.annotate(f"{yi:.1f}%", (xi, yi), textcoords="offset points",
+                            xytext=(0, 6), ha="center", fontsize=8)
+            ax.set_xticks(range(len(bin_labels)))
+            ax.set_xticklabels(bin_labels)
+            ax.set_xlabel("Search Calls per Task")
+            ax.set_ylabel("Mean EM (%)")
+            ax.set_title(f"Search Depth Curve — {cond.upper()}/{model}")
+            fig.tight_layout()
+            fname = f"fig10b_{cond}_{model}_search_depth.pdf"
+            fig.savefig(output_dir / fname)
+            plt.close(fig)
+            print(f"Saved {fname}")
 
     # -----------------------------------------------------------------------
     # Fig 11: Planning overhead — Condition B dual-axis (EM% + output tokens vs cycle bin)
@@ -386,6 +641,56 @@ def main() -> None:
         fig.savefig(output_dir / "fig12_reasoning_density.pdf")
         plt.close(fig)
         print("Saved fig12_reasoning_density.pdf")
+
+    # -----------------------------------------------------------------------
+    # Fig 12b: Reasoning density per model within each condition
+    # -----------------------------------------------------------------------
+    from analysis.reasoning_density import _assign_bin as _assign_density_bin, _BINS as _DENSITY_BINS
+
+    for (cond, model), cm_records in sorted(records_by_cm.items()):
+        # Compute reasoning density curve for this (condition, model)
+        bin_data: dict = defaultdict(list)
+        for r in cm_records:
+            em = r.get("exact_match")
+            if em is None:
+                continue
+            task_id = str(r.get("task_id", ""))
+            p = Path(task_id)
+            key = f"{p.parent.name}/{p.stem}"
+            n_docs = task_gold_counts.get(key)
+            if n_docs is None:
+                continue
+            bin_label = _assign_density_bin(n_docs)
+            bin_data[bin_label].append(float(em))
+
+        if not bin_data:
+            continue
+
+        density_bin_labels = [label for label, _ in _DENSITY_BINS]
+        xs = []
+        ys = []
+        for i, label in enumerate(density_bin_labels):
+            vals = bin_data.get(label, [])
+            if vals:
+                xs.append(i)
+                ys.append(sum(vals) / len(vals) * 100)
+
+        if xs:
+            fig, ax = plt.subplots(figsize=(8, 5))
+            ax.plot(xs, ys, marker="o", color="steelblue")
+            for xi, yi in zip(xs, ys):
+                ax.annotate(f"{yi:.1f}%", (xi, yi), textcoords="offset points",
+                            xytext=(0, 6), ha="center", fontsize=8)
+            ax.set_xticks(range(len(density_bin_labels)))
+            ax.set_xticklabels(density_bin_labels)
+            ax.set_xlabel("Number of Gold Documents per Task")
+            ax.set_ylabel("Mean EM (%)")
+            ax.set_title(f"EM vs. Reasoning Density — {cond.upper()}/{model}")
+            fig.tight_layout()
+            fname = f"fig12b_{cond}_{model}_reasoning_density.pdf"
+            fig.savefig(output_dir / fname)
+            plt.close(fig)
+            print(f"Saved {fname}")
 
     # -----------------------------------------------------------------------
     # Fig 13: Tool error rate heatmap — rows=tools, cols=condition×model

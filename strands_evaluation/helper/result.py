@@ -2,6 +2,7 @@
 AgentResult dataclass for the Strands evaluation runner.
 """
 from dataclasses import dataclass, field
+import logging
 from typing import Any, Dict, List, Optional, Tuple
 
 from strands_evaluation.helper.constants import MODEL_PRICING
@@ -10,6 +11,8 @@ from strands_evaluation.helper.constants import MODEL_PRICING
 _API_TOOL_NAMES = {"search", "search_keyword", "list_files", "peek_file", "query_file", "download"}
 # Condition A (augmented search backends — sparse/hybrid/graph)
 _CONDITION_A_TOOL_NAMES = {"search_sparse", "search_hybrid", "search_graph"}
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -56,13 +59,30 @@ class AgentResult:
         return self.get_price()
 
     def get_price(self) -> float:
-        pricing = MODEL_PRICING.get(self.model_name)
-        if not pricing:
-            return 0.0
-        return (
-            pricing["input"] * self.input_tokens / 1_000_000
-            + pricing["output"] * self.output_tokens / 1_000_000
-        )
+        candidates: List[str] = []
+        model_key = str(self.model_name) if self.model_name is not None else ""
+        if model_key:
+            candidates.append(model_key)
+            if "/" in model_key:
+                suffix_key = model_key.split("/", 1)[1].strip()
+                if suffix_key and suffix_key not in candidates:
+                    candidates.append(suffix_key)
+
+        for key in candidates:
+            pricing = MODEL_PRICING.get(key)
+            if pricing:
+                return (
+                    pricing["input"] * self.input_tokens / 1_000_000
+                    + pricing["output"] * self.output_tokens / 1_000_000
+                )
+
+        if model_key:
+            logger.warning(
+                "No pricing configured for model_name=%s. Tried keys: %s",
+                model_key,
+                ", ".join(candidates) if candidates else "(none)",
+            )
+        return 0.0
 
     def get_tool_counts(self) -> List[Dict[str, Any]]:
         if not self.tool_metrics:

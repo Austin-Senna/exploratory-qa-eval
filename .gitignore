@@ -9,3 +9,4 @@ setup_credentials.sh
 analysis_results/
 *.pem
 paper/
+lance_table_descriptions

@@ -29,7 +29,7 @@ from analysis.discovery_metrics import (
     compute_per_folder_discovery,
     compute_tools_discovery,
 )
-from analysis.failure_attribution import classify_failure
+from analysis.failure_attribution import classify_failure, _LABEL_ORDER
 from analysis.provenance import compute_provenance
 from analysis.search_depth import compute_search_depth_curve
 from analysis.planning_overhead import compute_planning_overhead
@@ -145,12 +145,17 @@ def run_failure(results_dir: str, traces_dir: str, tasks_dir: str) -> dict:
             counts: Counter = Counter()
             for m in metrics["task_metrics"]:
                 result = ar.get(m["task_id"], {})
-                label = classify_failure(result, m["d_ret"], m["d_acc"])
+                label = classify_failure(
+                    result,
+                    m["d_ret"],
+                    m["d_acc"],
+                    num_read_calls=m.get("num_read_calls", 0),
+                )
                 counts[label] += 1
             total = sum(counts.values())
             out[key] = {
                 label: {"n": counts.get(label, 0), "pct": round(100 * counts.get(label, 0) / total, 1) if total else 0}
-                for label in ["grounded_success", "partial_parametric_hallucination", "heavy_parametric_hallucination", "parametric_hallucination", "execution_failed_tool_error", "execution_failed_reasoning", "search_not_read", "hallucination", "search_failed_budget", "search_failed_quality"]
+                for label in _LABEL_ORDER
             }
             out[key]["total"] = total
     return out
@@ -335,16 +340,14 @@ def build_summary(em: dict, discovery: dict, failure: dict, efficiency: dict, se
             row["dacc_avg_recall"] = round(d.get("avg_recall", 0), 3)
         if key in failure:
             f = failure[key]
-            row["pct_grounded_success"] = f.get("grounded_success", {}).get("pct")
-            row["pct_partial_parametric"] = f.get("partial_parametric_hallucination", {}).get("pct")
-            row["pct_heavy_parametric"] = f.get("heavy_parametric_hallucination", {}).get("pct")
-            row["pct_parametric_hallucination"] = f.get("parametric_hallucination", {}).get("pct")
-            row["pct_execution_failed_tool_error"] = f.get("execution_failed_tool_error", {}).get("pct")
-            row["pct_execution_failed_reasoning"] = f.get("execution_failed_reasoning", {}).get("pct")
-            row["pct_search_not_read"] = f.get("search_not_read", {}).get("pct")
-            row["pct_hallucination"] = f.get("hallucination", {}).get("pct")
-            row["pct_search_failed_budget"] = f.get("search_failed_budget", {}).get("pct")
-            row["pct_search_failed_quality"] = f.get("search_failed_quality", {}).get("pct")
+            row["pct_em1_dacc_ge_0_8"] = f.get("em1_dacc_ge_0_8", {}).get("pct")
+            row["pct_em1_dacc_0_5_to_0_8"] = f.get("em1_dacc_0_5_to_0_8", {}).get("pct")
+            row["pct_em1_dacc_0_2_to_0_5"] = f.get("em1_dacc_0_2_to_0_5", {}).get("pct")
+            row["pct_em1_dacc_lt_0_2"] = f.get("em1_dacc_lt_0_2", {}).get("pct")
+            row["pct_em0_dacc_ge_0_8"] = f.get("em0_dacc_ge_0_8", {}).get("pct")
+            row["pct_em0_dacc_0_5_to_0_8"] = f.get("em0_dacc_0_5_to_0_8", {}).get("pct")
+            row["pct_em0_dacc_0_2_to_0_5"] = f.get("em0_dacc_0_2_to_0_5", {}).get("pct")
+            row["pct_em0_dacc_lt_0_2"] = f.get("em0_dacc_lt_0_2", {}).get("pct")
         if tool_errors is not None and key in tool_errors:
             te = tool_errors[key]
             for tool_name in ("query_file", "execute_code", "peek_file"):
@@ -442,7 +445,8 @@ def main() -> None:
     for row in summary:
         em_pct = f"{row.get('em', 0)*100:.1f}%" if row.get('em') is not None else "N/A"
         d_ret = f"{row.get('D_ret', 0):.2f}" if row.get('D_ret') is not None else "N/A"
-        print(f"  {row['condition_model']:<55} EM={em_pct}  D_ret={d_ret}  grounded={row.get('pct_grounded_success')}%")
+        em1_hi = row.get("pct_em1_dacc_ge_0_8")
+        print(f"  {row['condition_model']:<55} EM={em_pct}  D_ret={d_ret}  em1_dacc_ge_0_8={em1_hi}%")
 
     print("Generating figures...")
     generate_figs()

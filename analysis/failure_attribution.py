@@ -1,16 +1,14 @@
 #!/usr/bin/env python3
 """
-Classify each task into a success mode or failure mode using the expanded taxonomy.
+Classify each task into EM × D_acc threshold bins.
 
-Success modes (EM == 1):
-  grounded_success              — EM=1, D_acc=1 (right answer, agent read gold data)
-  parametric_hallucination      — EM=1, D_acc=0 (right answer, no gold data read — lucky guess)
+Threshold bins:
+  - d_acc < 0.2
+  - 0.2 <= d_acc < 0.5
+  - 0.5 <= d_acc < 0.8
+  - 0.8 <= d_acc <= 1.0
 
-Failure modes (EM == 0):
-  execution_failed              — EM=0, D_ret=1, D_acc=1 (found + read gold, but wrong final answer)
-  search_not_read               — EM=0, D_ret=1, D_acc=0 (gold in search results, agent never opened it)
-  hallucination                 — EM=0, D_ret=0, sources=[] (nothing found, nothing cited, wrong)
-  search_failed                 — EM=0, D_ret=0, sources!=[] (cited something, but gold never retrieved)
+Each bin is crossed with EM in {0, 1}.
 
 Usage:
     python analysis/failure_attribution.py [--traces-dir results/traces] [--results-dir results]
@@ -23,74 +21,57 @@ from pathlib import Path
 
 # Display order for the summary table
 _LABEL_ORDER = [
-    # Success modes
-    "grounded_success",
-    "partial_parametric_hallucination",
-    "heavy_parametric_hallucination",
-    "parametric_hallucination",
-    # Failure modes
-    "execution_failed_tool_error",
-    "execution_failed_reasoning",
-    "search_not_read",
-    "hallucination",
-    "search_failed_budget",
-    "search_failed_quality",
+    "em1_dacc_ge_0_8",
+    "em1_dacc_0_5_to_0_8",
+    "em1_dacc_0_2_to_0_5",
+    "em1_dacc_lt_0_2",
+    "em0_dacc_ge_0_8",
+    "em0_dacc_0_5_to_0_8",
+    "em0_dacc_0_2_to_0_5",
+    "em0_dacc_lt_0_2",
 ]
 
-# Legacy label kept for callers that still reference the unsplit bucket
-_EXECUTION_FAILED_TOOLS = {"query_file", "execute_code", "grep_file"}
+_DACC_EPS = 1e-9
+
+
+def _condition_model_from_path(jsonl_path: Path) -> tuple[str, str]:
+    parts = jsonl_path.parts
+    condition = parts[-3] if len(parts) >= 3 else "unknown"
+    model = parts[-2] if len(parts) >= 2 else "unknown"
+    return condition, model
 
 
 def classify_failure(
     task_result: dict,
     d_ret: int,
-    d_acc: int,
+    d_acc: float,
     max_tool_calls: int = 30,
-    tool_counts: list | None = None,
+    num_read_calls: int | None = None,
 ) -> str:
-    """Return the taxonomy label for a single task result.
+    """Return the EM × D_acc threshold-bin label for a single task result.
 
     Args:
         task_result: row from agent_results.jsonl
-        d_ret: 1 if any gold dataset appeared in search results, else 0
-        d_acc: 1 if agent actually opened/queried a gold dataset via a read tool, else 0
-        max_tool_calls: budget limit (default 30); used to distinguish budget vs. quality failures
-        tool_counts: list of {name, call_count, success_count} entries from agent_results.jsonl;
-                     if None, falls back to task_result["tool_counts"]
+        d_ret: unused in this taxonomy; kept for API compatibility
+        d_acc: fraction of gold datasets accessed via a read tool (0.0-1.0)
+        max_tool_calls: unused in this taxonomy; kept for API compatibility
+        num_read_calls: unused in this taxonomy; kept for API compatibility
     """
+    _ = d_ret, max_tool_calls, num_read_calls
     em = int(bool(task_result.get("exact_match", 0)))
-    sources = task_result.get("sources_used", [])
+    d_acc_val = 0.0 if d_acc is None else float(d_acc)
+    d_acc = max(0.0, min(1.0, d_acc_val))
 
-    # --- Success modes ---
-    if em:
-        if d_acc >= 0.8:
-            return "grounded_success"
-        if d_acc >= 0.5:
-            return "partial_parametric_hallucination"
-        if d_acc >= 0.2:
-            return "heavy_parametric_hallucination"
-        return "parametric_hallucination"
+    if d_acc >= 0.8 - _DACC_EPS:
+        d_acc_bin = "dacc_ge_0_8"
+    elif d_acc >= 0.5 - _DACC_EPS:
+        d_acc_bin = "dacc_0_5_to_0_8"
+    elif d_acc >= 0.2 - _DACC_EPS:
+        d_acc_bin = "dacc_0_2_to_0_5"
+    else:
+        d_acc_bin = "dacc_lt_0_2"
 
-    # --- Failure modes ---
-    if d_ret == 1:
-        if d_acc == 1:
-            # Found gold, read it, still wrong — sub-type by whether a tool errored
-            tc = tool_counts if tool_counts is not None else task_result.get("tool_counts", [])
-            had_tool_error = any(
-                t.get("name") in _EXECUTION_FAILED_TOOLS
-                and t.get("call_count", 0) > t.get("success_count", 0)
-                for t in tc
-            )
-            return "execution_failed_tool_error" if had_tool_error else "execution_failed_reasoning"
-        return "search_not_read"        # found in search, never opened it
-
-    # d_ret == 0
-    if not sources:
-        return "hallucination"
-    # Gold never retrieved — distinguish budget exhaustion from retrieval quality failure
-    if task_result.get("tool_calls_total", 0) >= max_tool_calls:
-        return "search_failed_budget"   # ran out of budget before finding gold
-    return "search_failed_quality"      # had budget remaining; retrieval quality issue
+    return f"em{em}_{d_acc_bin}"
 
 
 def main() -> None:
@@ -103,18 +84,20 @@ def main() -> None:
     import sys
     sys.path.insert(0, str(Path(__file__).parent.parent))
     from analysis.discovery_metrics import (
-        load_traces,
+        load_traces_with_context,
         load_task_gold_ids,
         compute_discovery_metrics,
+        make_condition_model_task_key,
     )
 
-    traces = load_traces(args.traces_dir)
     task_gold = load_task_gold_ids(args.tasks_dir)
+    traces = load_traces_with_context(args.traces_dir)
     metrics = compute_discovery_metrics(traces, task_gold)
 
     # Load agent results for EM scores and sources_used
     agent_results: dict = {}
     for jsonl_path in Path(args.results_dir).rglob("agent_results.jsonl"):
+        condition, model = _condition_model_from_path(jsonl_path)
         with open(jsonl_path) as f:
             for line in f:
                 line = line.strip()
@@ -123,19 +106,18 @@ def main() -> None:
                 r = json.loads(line)
                 task_id = str(r.get("task_id", ""))
                 if task_id:
-                    p = Path(task_id)
-                    agent_results[f"{p.parent.name}/{p.stem}"] = r
+                    agent_results[make_condition_model_task_key(condition, model, task_id)] = r
 
     counts: Counter = Counter()
     for m in metrics["task_metrics"]:
         task_id = m["task_id"]
         ar = agent_results.get(task_id, {})
-        label = classify_failure(ar, m["d_ret"], m["d_acc"])
+        label = classify_failure(ar, m["d_ret"], m["d_acc"], num_read_calls=m.get("num_read_calls", 0))
         counts[label] += 1
         m["failure_type"] = label
 
     total = sum(counts.values())
-    print(f"\nFailure / Success Attribution (n={total}):")
+    print(f"\nEM × D_acc Threshold Attribution (n={total}):")
     print(f"  {'Label':<30} {'N':>4}  {'%':>6}")
     print(f"  {'-'*42}")
     for label in _LABEL_ORDER:

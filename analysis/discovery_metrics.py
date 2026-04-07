@@ -16,6 +16,17 @@ from pathlib import Path
 _READ_TOOLS = {"read_file", "peek_file", "peek_files", "grep_file", "query_file"}
 
 
+def make_task_stem_key(task_id: str) -> str:
+    """Return the normalized "{task_dir}/{task_name}" key used across analyses."""
+    p = Path(str(task_id))
+    return f"{p.parent.name}/{p.stem}"
+
+
+def make_condition_model_task_key(condition: str, model: str, task_id: str) -> str:
+    """Return a stable composite key for multi-run joins."""
+    return f"{condition}/{model}/{make_task_stem_key(task_id)}"
+
+
 def load_traces(traces_dir: str) -> dict[str, list]:
     """Load all trace JSONL files. Returns {task_id: [trace_records]}.
 
@@ -29,6 +40,25 @@ def load_traces(traces_dir: str) -> dict[str, list]:
                 line = line.strip()
                 if line:
                     traces[task_id].append(json.loads(line))
+    return dict(traces)
+
+
+def load_traces_with_context(traces_dir: str) -> dict[str, list]:
+    """Load trace JSONLs keyed by "{condition}/{model}/{task_dir}/{task_name}"."""
+    traces: dict = defaultdict(list)
+    for jsonl_path in Path(traces_dir).rglob("*.jsonl"):
+        parts = jsonl_path.parts
+        if len(parts) < 4:
+            continue
+        condition = parts[-4]
+        model = parts[-3]
+        task_key = f"{jsonl_path.parent.name}/{jsonl_path.stem}"
+        composite_key = f"{condition}/{model}/{task_key}"
+        with open(jsonl_path) as f:
+            for line in f:
+                line = line.strip()
+                if line:
+                    traces[composite_key].append(json.loads(line))
     return dict(traces)
 
 
@@ -113,13 +143,15 @@ def compute_discovery_metrics(
 
 def _resolve_gold(task_id: str, task_gold: dict[str, list]) -> list:
     """Match a trace task_id ("k-2-d-1/task_1") to a gold entry."""
+    if task_id.count("/") >= 3:
+        task_id = "/".join(task_id.split("/")[-2:])
     # Exact match
     if task_id in task_gold:
         return task_gold[task_id]
     # Match on "{parent.name}/{stem}" from full path keys
     for path_key in task_gold:
         p = Path(path_key)
-        if f"{p.parent.name}/{p.stem}" == task_id:
+        if make_task_stem_key(path_key) == task_id:
             return task_gold[path_key]
     return []
 

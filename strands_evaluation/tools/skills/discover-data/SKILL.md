@@ -18,6 +18,12 @@ Use search to get dataset IDs, then `list_files` to inspect structure.
 - **Lexical pivot**: swap broad concept for agency term (e.g. "food stamps" → "SNAP", "unemployment benefits" → "ETA")
 - **Granularity pivot**: if city-level fails, search state-level and filter in code
 - **Proxy pivot**: if exact metric missing, find a standard proxy (e.g. "median income" for "poverty rate")
+- Prefer `search_prefix` when you know likely dataset/program/entity fragments; otherwise use `search_value` first and use `search_schema` to verify column-oriented hypotheses.
+- Build dataset-shaped queries with: `source/program + grain + metric + time`.
+  - Better: `Texas county prison admissions fiscal year`
+  - Worse: `people entering prison system county`
+  - Better: `NYC school progress report grades District 6 elementary school 2007-2011`
+  - Worse: `NYC elementary school District 6 grade A 2007-2011`
 
 ---
 

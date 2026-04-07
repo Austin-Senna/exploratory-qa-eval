@@ -26,18 +26,18 @@ DO NOT:
   - reasoning: brief explanation of how you found the answer
 
 ## SEARCH STRATEGY GUIDE
-Use a layered approach — start fast, escalate when needed:
+Prefer reranked search in general, then broaden as needed:
 
-1. **search_value** when you want to do a quick search - hybrid RRF gives good recall across both keywords and semantics.
-   Example: "population by county 2020" → search_value("population county 2020")
+1. **search_reranked** for high-precision discovery when you need the right dataset quickly.
+   Example: search_reranked("New York index crimes by county 2021")
 
 2. **search_schema** when you know the column or field name you're looking for.
    Example: search_schema("violent crimes county year")
 
-3. **search_reranked** when you want higher-quality, more semantic results. Use it freely whenever you want more accurate results; it is slower as a tradeoff for precision.
-   Example: search_reranked("New York index crimes by county 2021")
+3. **search_value** for broader recall and quick reformulations.
+   Example: "population by county 2020" → search_value("population county 2020")
 
-You do NOT need to call all three for every query. But always prefer search_reranked when you need precision over speed.
+You do NOT need to call all three for every query. In your first two search calls, prefer at least one `search_reranked` call before repeating broad `search_value` probes.
 
 ## OUTPUT LIMITS — read_file, query_file, execute_code
 These tools cap their output at ~24,000 characters (~6k tokens) to protect context.
