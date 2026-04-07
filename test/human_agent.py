@@ -13,6 +13,7 @@ Usage:
 """
 
 import argparse
+import csv
 import json
 import random
 import re
@@ -22,9 +23,9 @@ import time
 from pathlib import Path
 
 # ---------------------------------------------------------------------------
-# Bootstrap path so we can import from strands_evaluation/
+# Bootstrap path so we can import from repo-local strands_evaluation/
 # ---------------------------------------------------------------------------
-_ROOT = Path(__file__).resolve().parent
+_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(_ROOT))
 
 from strands_evaluation.tools import agent_tools  # noqa: E402
@@ -56,13 +57,30 @@ def _short(obj, max_chars=2000):
     return s
 
 
+def _parse_csv_input(raw: str) -> list[str]:
+    """
+    Parse a comma-separated input line with CSV semantics.
+
+    This allows entries containing commas when quoted, e.g.
+    "Austin,_Texas",vsrr-provisional-drug-overdose-death-counts
+    """
+    raw = (raw or "").strip()
+    if not raw:
+        return []
+    try:
+        row = next(csv.reader([raw], skipinitialspace=True))
+    except Exception:
+        return [raw] if raw else []
+    return [item.strip() for item in row if item and item.strip()]
+
+
 # ---------------------------------------------------------------------------
 # Tool wrappers with friendly I/O
 # ---------------------------------------------------------------------------
 
 def cmd_search():
-    raw = input("  prefixes (comma-separated): ").strip()
-    prefixes = [p.strip() for p in raw.split(",") if p.strip()]
+    raw = input("  prefixes (comma-separated; quote items containing commas): ").strip()
+    prefixes = _parse_csv_input(raw)
     if not prefixes:
         print("  [!] No prefixes given.")
         return
@@ -73,8 +91,8 @@ def cmd_search():
 
 
 def cmd_search_keyword():
-    raw = input("  keywords (comma-separated): ").strip()
-    keywords = [k.strip() for k in raw.split(",") if k.strip()]
+    raw = input("  keywords (comma-separated; quote items containing commas): ").strip()
+    keywords = _parse_csv_input(raw)
     if not keywords:
         print("  [!] No keywords given.")
         return
@@ -87,8 +105,8 @@ def cmd_search_keyword():
 
 
 def cmd_list_files():
-    raw = input("  dataset_ids (comma-separated): ").strip()
-    ids = [d.strip() for d in raw.split(",") if d.strip()]
+    raw = input("  dataset_ids (comma-separated; quote IDs containing commas): ").strip()
+    ids = _parse_csv_input(raw)
     if not ids:
         print("  [!] No dataset ids given.")
         return
@@ -206,7 +224,16 @@ def cmd_search_sparse():
         return
     top_k_raw = input("  top_k [10]: ").strip()
     top_k = int(top_k_raw) if top_k_raw.isdigit() else 10
-    from strands_evaluation.tools.external.search_tools import search_sparse
+    try:
+        # Condition B sparse backend
+        from strands_evaluation.tools.external.search_b_tools import search_value as search_sparse
+    except Exception as e:
+        print(
+            "  [ERROR] sparse backend unavailable "
+            "(missing external-tools/hybrid_search/api.py or its deps): "
+            f"{e}"
+        )
+        return
     t0 = time.time()
     result = search_sparse(query=query, top_k=top_k)
     print(f"  [{time.time()-t0:.1f}s]")
@@ -220,7 +247,16 @@ def cmd_search_hybrid():
         return
     top_k_raw = input("  top_k [10]: ").strip()
     top_k = int(top_k_raw) if top_k_raw.isdigit() else 10
-    from strands_evaluation.tools.external.search_tools import search_hybrid
+    try:
+        # Condition A hybrid backend
+        from strands_evaluation.tools.external.search_a_tools import search_value as search_hybrid
+    except Exception as e:
+        print(
+            "  [ERROR] hybrid backend unavailable "
+            "(missing external-tools/hybrid_search/api.py or its deps): "
+            f"{e}"
+        )
+        return
     t0 = time.time()
     result = search_hybrid(query=query, top_k=top_k)
     print(f"  [{time.time()-t0:.1f}s]")
@@ -232,7 +268,16 @@ def cmd_search_graph():
     if not query:
         print("  [!] Query required.")
         return
-    from strands_evaluation.tools.external.search_tools import search_graph
+    try:
+        # Legacy optional backend; not present in all checkouts.
+        from strands_evaluation.tools.external.search_tools import search_graph
+    except Exception as e:
+        print(
+            "  [ERROR] graph backend unavailable "
+            "(legacy module strands_evaluation.tools.external.search_tools is missing): "
+            f"{e}"
+        )
+        return
     t0 = time.time()
     result = search_graph(query=query)
     print(f"  [{time.time()-t0:.1f}s]")

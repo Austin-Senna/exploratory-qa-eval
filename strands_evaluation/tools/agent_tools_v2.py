@@ -35,6 +35,7 @@ from .agent_tools import (  # noqa: F401 — re-exported
     _get_s3_client,
     _get_sandbox_dir,
     _resolve_dataset_folder,
+    s3_access_mode,
     BUCKET,
     REGION,
     SANDBOX_BASE_DIR,
@@ -81,14 +82,23 @@ def _duckdb_connection() -> duckdb.DuckDBPyConnection:
     conn = duckdb.connect(":memory:")
     conn.execute("INSTALL httpfs")
     conn.execute("LOAD httpfs")
-    aws_key = os.getenv("AWS_ACCESS_KEY_ID", "")
-    aws_secret = os.getenv("AWS_SECRET_ACCESS_KEY", "")
     region = os.getenv("AWS_DEFAULT_REGION", REGION)
     conn.execute(f"SET s3_region='{region}'")
-    if aws_key:
-        conn.execute(f"SET s3_access_key_id='{aws_key}'")
-    if aws_secret:
-        conn.execute(f"SET s3_secret_access_key='{aws_secret}'")
+    if s3_access_mode() == "unsigned":
+        # Keep DuckDB S3 access anonymous for public buckets.
+        conn.execute("SET s3_access_key_id=''")
+        conn.execute("SET s3_secret_access_key=''")
+        conn.execute("SET s3_session_token=''")
+    else:
+        aws_key = os.getenv("AWS_ACCESS_KEY_ID", "")
+        aws_secret = os.getenv("AWS_SECRET_ACCESS_KEY", "")
+        aws_session = os.getenv("AWS_SESSION_TOKEN", "")
+        if aws_key:
+            conn.execute(f"SET s3_access_key_id='{aws_key}'")
+        if aws_secret:
+            conn.execute(f"SET s3_secret_access_key='{aws_secret}'")
+        if aws_session:
+            conn.execute(f"SET s3_session_token='{aws_session}'")
     return conn
 
 

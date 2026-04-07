@@ -13,6 +13,7 @@ Folders: wikipedia/, datagov/
 """
 
 import os
+import json
 import re
 import sys
 import tempfile
@@ -23,6 +24,9 @@ from pathlib import Path
 from typing import Optional, Dict, Any, List
 from strands import tool
 import boto3
+from botocore import UNSIGNED
+from botocore.config import Config
+from botocore.exceptions import ClientError
 import requests
 from dotenv import load_dotenv
 
@@ -43,6 +47,10 @@ _TOOL_RESULT_CHAR_CAP = 24_000  # ~6k tokens — prevents single result overflow
 _SANDBOX_DIR = None
 # Optional override to force a specific sandbox directory (set by callers for isolation)
 _SANDBOX_OVERRIDE = None
+# Cached S3 clients and resolved access mode
+_S3_SIGNED_CLIENT = None
+_S3_UNSIGNED_CLIENT = None
+_S3_CLIENT_MODE: Optional[str] = None  # signed | unsigned
 
 # Slot written by submit_answer; read back by SubmitAnswerPlugin in agent.py
 _submitted_answer: Optional[Dict[str, Any]] = None
@@ -86,14 +94,111 @@ def set_sandbox_dir(path: Path) -> None:
     _SANDBOX_DIR = _SANDBOX_OVERRIDE
 
 
+def _build_s3_client(unsigned: bool):
+    """Build an S3 client in signed or unsigned mode."""
+    s3_config = {"addressing_style": "path"}
+    if unsigned:
+        return boto3.client(
+            "s3",
+            region_name=REGION,
+            config=Config(signature_version=UNSIGNED, s3=s3_config),
+        )
+
+    kwargs: Dict[str, Any] = {
+        "region_name": REGION,
+        "config": Config(s3=s3_config),
+    }
+    access_key = os.getenv("AWS_ACCESS_KEY_ID")
+    secret_key = os.getenv("AWS_SECRET_ACCESS_KEY")
+    session_token = os.getenv("AWS_SESSION_TOKEN")
+    if access_key and secret_key:
+        kwargs["aws_access_key_id"] = access_key
+        kwargs["aws_secret_access_key"] = secret_key
+        if session_token:
+            kwargs["aws_session_token"] = session_token
+    return boto3.client("s3", **kwargs)
+
+
+def _get_signed_s3_client():
+    global _S3_SIGNED_CLIENT
+    if _S3_SIGNED_CLIENT is None:
+        _S3_SIGNED_CLIENT = _build_s3_client(unsigned=False)
+    return _S3_SIGNED_CLIENT
+
+
+def _get_unsigned_s3_client():
+    global _S3_UNSIGNED_CLIENT
+    if _S3_UNSIGNED_CLIENT is None:
+        _S3_UNSIGNED_CLIENT = _build_s3_client(unsigned=True)
+    return _S3_UNSIGNED_CLIENT
+
+
+def _requested_s3_mode() -> str:
+    """
+    Read requested S3 mode from env.
+
+    Values:
+      - auto (default): signed first, fallback to unsigned on AccessDenied
+      - signed: force signed requests
+      - unsigned/public/anonymous/no-sign-request: force unsigned requests
+    """
+    raw = (os.getenv("S3_ACCESS_MODE", "auto") or "auto").strip().lower()
+    if raw in {"signed", "private"}:
+        return "signed"
+    if raw in {"unsigned", "public", "anonymous", "anon", "no-sign-request"}:
+        return "unsigned"
+    return "auto"
+
+
+def _should_fallback_to_unsigned(exc: Exception) -> bool:
+    """Return True when signed auth failed and public fallback should be attempted."""
+    if isinstance(exc, ClientError):
+        code = (exc.response or {}).get("Error", {}).get("Code", "")
+        if code in {"AccessDenied", "InvalidAccessKeyId", "SignatureDoesNotMatch"}:
+            return True
+    msg = str(exc).lower()
+    return "accessdenied" in msg or "explicit deny" in msg
+
+
 def _get_s3_client():
-    """Get authenticated S3 client."""
-    return boto3.client(
-        's3',
-        region_name=REGION,
-        aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
-        aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY')
-    )
+    """
+    Get S3 client.
+
+    In auto mode, probe signed once and fallback to unsigned if signed auth is
+    denied. This supports public buckets when IAM credentials are explicitly
+    denied by policy.
+    """
+    global _S3_CLIENT_MODE
+
+    requested = _requested_s3_mode()
+    if requested == "signed":
+        _S3_CLIENT_MODE = "signed"
+        return _get_signed_s3_client()
+    if requested == "unsigned":
+        _S3_CLIENT_MODE = "unsigned"
+        return _get_unsigned_s3_client()
+
+    if _S3_CLIENT_MODE == "signed":
+        return _get_signed_s3_client()
+    if _S3_CLIENT_MODE == "unsigned":
+        return _get_unsigned_s3_client()
+
+    signed = _get_signed_s3_client()
+    try:
+        signed.list_objects_v2(Bucket=BUCKET, Prefix=f"{FOLDERS[0]}/", MaxKeys=1)
+        _S3_CLIENT_MODE = "signed"
+        return signed
+    except Exception as exc:
+        if _should_fallback_to_unsigned(exc):
+            _S3_CLIENT_MODE = "unsigned"
+            return _get_unsigned_s3_client()
+        raise
+
+
+def s3_access_mode() -> str:
+    """Return resolved S3 access mode after client initialization."""
+    _get_s3_client()
+    return _S3_CLIENT_MODE or "signed"
 
 
 def _get_sandbox_dir() -> Path:
