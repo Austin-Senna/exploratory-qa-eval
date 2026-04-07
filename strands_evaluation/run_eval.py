@@ -299,7 +299,7 @@ def print_comparison_table(results: dict) -> None:
 
 def _run_continue(args, agent_config, run_config) -> None:
     """Re-run evaluation over task_set, skipping already-recorded tasks."""
-    condition = args.condition
+    condition = run_config.condition_config.condition
     safe_model = _display_name(agent_config)
     results_dir = os.path.join(_results_root(run_config), condition, safe_model)
     csv_path = os.path.join(results_dir, "eval_results.csv")
@@ -442,6 +442,8 @@ def main() -> None:
     # Condition flags (ConditionConfig)
     parser.add_argument("--condition", choices=["baseline", "a", "b"], default="baseline",
                         help="Experiment condition: 'a' (tools-rich), 'b' (planning-rich), or 'baseline'")
+    parser.add_argument("--plan", choices=["imperative", "soft"], default="soft",
+                        help="Plan skill mode for Condition B (default: soft)")
     parser.add_argument("--sparse-backend", choices=["bm25", "splade"], default="bm25",
                         help="Sparse search backend for Condition A (default: bm25)")
     parser.add_argument("--results-output-dir", default="results",
@@ -464,8 +466,12 @@ def main() -> None:
         max_tokens=args.max_tokens,
     )
     safe_model_name = _display_name(agent_config)
+    condition_label = args.condition
+    if args.condition == "b":
+        # Keep base condition for tool selection, but isolate outputs by plan mode.
+        condition_label = f"b__plan-{args.plan}"
     traces_root = os.path.join(args.results_output_dir, "traces")
-    trace_dir = os.path.join(traces_root, args.condition, safe_model_name)
+    trace_dir = os.path.join(traces_root, condition_label, safe_model_name)
 
     run_config = RunConfig(
         results_output_dir=args.results_output_dir,
@@ -473,9 +479,10 @@ def main() -> None:
         sliding_window_k=args.sliding_window,
         timeout_seconds=args.timeout,
         condition_config=ConditionConfig(
-            condition=args.condition,
+            condition=condition_label,
             base_condition=args.condition,
             sparse_backend=args.sparse_backend,
+            plan_mode=args.plan,
             trace_output_dir=trace_dir,
         ),
     )

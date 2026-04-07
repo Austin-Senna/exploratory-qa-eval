@@ -29,9 +29,12 @@ def _variant_condition_label(
     *,
     k: Optional[int],
     search_calls: Optional[int],
+    plan_mode: str,
     search_descriptions: str,
 ) -> str:
     parts = [search_descriptions]
+    if base_condition == "b":
+        parts.append(f"plan-{plan_mode}")
     if k is not None:
         parts.append(f"k{k}")
     if search_calls is not None:
@@ -133,6 +136,12 @@ def main() -> None:
         help="Base condition before variant suffixing: baseline | a | b",
     )
     parser.add_argument(
+        "--plan",
+        choices=["imperative", "soft"],
+        default="soft",
+        help="Plan skill mode for Condition B (default: soft).",
+    )
+    parser.add_argument(
         "--sparse-backend",
         choices=["bm25", "splade"],
         default="bm25",
@@ -185,6 +194,7 @@ def main() -> None:
         args.condition,
         k=args.k,
         search_calls=args.search_calls,
+        plan_mode=args.plan,
         search_descriptions=args.search_descriptions,
     )
     condition_label = f"{variant_condition}/{args.condition}"
@@ -211,14 +221,16 @@ def main() -> None:
             condition=condition_label,
             base_condition=args.condition,
             sparse_backend=args.sparse_backend,
+            plan_mode=args.plan,
             trace_output_dir=trace_dir,
         ),
     )
 
     logger.info(
-        "Search eval variant: %s (base=%s, k=%s, search_calls=%s, search_descriptions=%s, db_path=%s)",
+        "Search eval variant: %s (base=%s, plan=%s, k=%s, search_calls=%s, search_descriptions=%s, db_path=%s)",
         condition_label,
         args.condition,
+        args.plan,
         args.k,
         args.search_calls,
         args.search_descriptions,

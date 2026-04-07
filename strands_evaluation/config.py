@@ -30,6 +30,7 @@ class ConditionConfig:
     condition: str = "baseline"          # "a", "b", or "baseline"
     base_condition: Optional[str] = None # optional explicit base condition for variant labels
     sparse_backend: str = "bm25"         # "bm25" or "splade" (Condition A)
+    plan_mode: str = "soft"              # "soft" or "imperative" (Condition B plan-agent skill)
     trace_output_dir: str = "results/traces"
 
 

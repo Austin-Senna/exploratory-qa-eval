@@ -472,10 +472,28 @@ class DataLakeAgent:
             LoggingPlugin(),
         ])
         if condition == "b":
+            plan_mode = getattr(cond, "plan_mode", "soft")
+            if plan_mode not in {"soft", "imperative"}:
+                raise ValueError(f"Unknown plan_mode '{plan_mode}'. Expected: soft | imperative")
+            plan_skill_path = (
+                "strands_evaluation/tools/skill_imperative/plan-agent"
+                if plan_mode == "imperative"
+                else "strands_evaluation/tools/skills/plan-agent"
+            )
+            discover_skill_path = (
+                "strands_evaluation/tools/skill_imperative/discover-data"
+                if plan_mode == "imperative"
+                else "strands_evaluation/tools/skills/discover-data"
+            )
+            query_skill_path = (
+                "strands_evaluation/tools/skill_imperative/query-data"
+                if plan_mode == "imperative"
+                else "strands_evaluation/tools/skills/query-data"
+            )
             plugins.append(AgentSkills(skills=[
-                "strands_evaluation/tools/skills/plan-agent",
-                "strands_evaluation/tools/skills/discover-data",
-                "strands_evaluation/tools/skills/query-data",
+                plan_skill_path,
+                discover_skill_path,
+                query_skill_path,
             ]))
             if self.run_config.max_consecutive_category > 0:
                 plugins.append(
