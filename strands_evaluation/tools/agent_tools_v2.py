@@ -207,7 +207,10 @@ def peek_files(
 
     Args:
         files:    List of dicts, each with 'dataset_id' and 'file_path'.
+                  Also accepts 'path' as an alias for 'file_path' so raw
+                  list_files output can be passed directly.
                   Example: [{"dataset_id": "census", "file_path": "files/data.txt"}]
+                  Example: [{"dataset_id": "census", "path": "files/data.txt"}]
         max_rows: Maximum preview rows per file (default 20)
 
     Returns:
@@ -215,15 +218,15 @@ def peek_files(
         and 'count'.
     """
     if not isinstance(files, list) or not files:
-        return {"error": "files must be a non-empty list of {dataset_id, file_path} dicts"}
+        return {"error": "files must be a non-empty list of {dataset_id, file_path|path} dicts"}
 
     results = []
     for spec in files:
         if not isinstance(spec, dict):
-            results.append({"error": "each entry must be a dict with dataset_id and file_path"})
+            results.append({"error": "each entry must be a dict with dataset_id and file_path|path"})
             continue
         ds = spec.get("dataset_id", "")
-        fp = spec.get("file_path", "")
+        fp = spec.get("file_path") or spec.get("path") or ""
         results.append(peek_file(ds, fp, max_rows))
 
     return {"results": results, "count": len(results)}

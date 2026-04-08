@@ -61,11 +61,14 @@ Dataset IDs are normalized: S3 prefix `s3://lakeqa-yc4103-datalake/` stripped, f
 
 ## 2. `discovery_metrics.py` — D_ret and D_acc
 
-**What it computes:** One binary retrieval metric and one continuous access metric per task.
+**What it computes:** Coverage and precision-style retrieval/access metrics per task.
 
 **Metric definitions:**
-- **D_ret** (retrieval discovery): 1 if any gold dataset ID appeared in any search tool result during the task, 0 otherwise. Determined from `result_dataset_ids` in search trace records.
-- **D_acc** (D_accessed): fraction of gold datasets accessed by the agent via read tools — `|read ∩ gold| / |gold|` (0.0–1.0). Used as a continuous score in the failure taxonomy.
+- **D_ret** (retrieval gold coverage): fraction of gold datasets retrieved by search results — `|retrieved ∩ gold| / |gold|` (0.0–1.0).
+- **D_ret_hit_rate** (legacy binary hit): 1 if any gold dataset appeared in any search result for the task, 0 otherwise; aggregated as mean over tasks.
+- **D_ret_precision**: fraction of retrieved datasets that are gold — `|retrieved ∩ gold| / |retrieved|`.
+- **D_acc** (access gold coverage): fraction of gold datasets accessed via read tools — `|read ∩ gold| / |gold|` (0.0–1.0). Used in the failure taxonomy.
+- **D_acc_precision**: fraction of accessed datasets that are gold — `|read ∩ gold| / |read|`.
 
 **Inputs:**
 - `results/traces/{condition}/{model}/{task_id}.jsonl` — per-call trace records

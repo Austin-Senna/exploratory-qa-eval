@@ -2,8 +2,8 @@
 """
 Compute discovery metrics D_ret, D_acc, precision/recall/F1 from trace JSONL files.
 
-D_ret: fraction of tasks where at least one gold dataset appeared in any search result
-D_acc: fraction of tasks where the agent actually opened/queried a gold dataset via a read tool
+D_ret: retrieval gold coverage per task = |retrieved_gold ∩ gold| / |gold|
+D_acc: access gold recall per task = |read_gold ∩ gold| / |gold|
 
 Usage:
     python analysis/discovery_metrics.py [--traces-dir results/traces] [--tasks-dir tasks_mini]
@@ -13,7 +13,7 @@ import json
 from collections import defaultdict
 from pathlib import Path
 
-_READ_TOOLS = {"read_file", "peek_file", "peek_files", "grep_file", "query_file"}
+_READ_TOOLS = {"read_file", "grep_file", "query_file"}
 
 
 def make_task_stem_key(task_id: str) -> str:
@@ -79,13 +79,26 @@ def compute_discovery_metrics(
         search_traces = [t for t in task_traces if t.get("tool") not in _READ_TOOLS and t.get("tool") != "submit_answer"]
         submit_record = next((t for t in task_traces if t.get("tool") == "submit_answer"), None)
 
-        # D_ret: did any search result contain a gold dataset?
+        # D_ret coverage: how much of the gold set was retrieved by search results?
+        # Also keep hit/precision-style companions:
+        # - d_ret_hit: was any gold retrieved at all? (legacy binary)
+        # - d_ret_precision: how much of retrieved set is gold? (mentor's "7/70 vs 7/10")
         all_result_ids: set = set()
+        all_result_ids_total_count = 0
         for trace in search_traces:
-            all_result_ids.update(trace.get("result_dataset_ids", []))
+            result_ids = trace.get("result_dataset_ids", [])
+            all_result_ids.update(result_ids)
+            all_result_ids_total_count += len(result_ids)
 
         retrieved_gold = all_result_ids & gold_ids
-        d_ret = int(bool(retrieved_gold))
+        d_ret = len(retrieved_gold) / len(gold_ids) if gold_ids else 0.0
+        d_ret_hit = int(bool(retrieved_gold))
+        d_ret_precision = len(retrieved_gold) / len(all_result_ids) if all_result_ids else 0.0
+        d_ret_f1 = (
+            2 * d_ret_precision * d_ret / (d_ret_precision + d_ret)
+            if (d_ret_precision + d_ret) > 0
+            else 0.0
+        )
 
         # Precision / Recall: per-call average (standard IR)
         # Compute P/R for each individual search call, then average across calls.
@@ -102,24 +115,43 @@ def compute_discovery_metrics(
         recall = sum(call_recalls) / len(call_recalls) if call_recalls else 0.0
         f1 = (2 * precision * recall / (precision + recall)) if (precision + recall) > 0 else 0.0
 
-        # D_acc: did the agent actually open/query a gold dataset via a read tool?
+        # D_acc read metrics:
+        # - d_acc_recall (legacy D_acc): how much of the gold set was accessed
+        # - d_acc_precision: how much of accessed set is gold
+        # - d_acc_f1: harmonic mean of read precision/recall
         read_records = [t for t in task_traces if t.get("tool") in _READ_TOOLS]
         all_read_ids: set = set()
         for rec in read_records:
             all_read_ids.update(rec.get("read_dataset_ids", []))
         read_gold = all_read_ids & gold_ids
         d_acc = len(read_gold) / len(gold_ids) if gold_ids else 0.0
+        d_acc_precision = len(read_gold) / len(all_read_ids) if all_read_ids else 0.0
+        d_acc_recall = d_acc
+        d_acc_f1 = (
+            2 * d_acc_precision * d_acc_recall / (d_acc_precision + d_acc_recall)
+            if (d_acc_precision + d_acc_recall) > 0
+            else 0.0
+        )
 
         task_metrics.append({
             "task_id": task_id,
-            "gold_ids": list(gold_ids),
+            "gold_ids": sorted(gold_ids),
+            "retrieved_dataset_ids": sorted(all_result_ids),
+            "retrieved_gold_dataset_ids": sorted(retrieved_gold),
             "d_ret": d_ret,
+            "d_ret_hit": d_ret_hit,
+            "d_ret_precision": d_ret_precision,
+            "d_ret_f1": d_ret_f1,
             "d_acc": d_acc,
+            "d_acc_precision": d_acc_precision,
+            "d_acc_recall": d_acc_recall,
+            "d_acc_f1": d_acc_f1,
             "precision": precision,
             "recall": recall,
             "f1": f1,
             "num_search_calls": len(search_traces),
             "num_results_total": len(all_result_ids),
+            "num_results_total_non_unique": all_result_ids_total_count,
             "num_read_calls": len(read_records),
         })
 
@@ -130,7 +162,13 @@ def compute_discovery_metrics(
     agg = {
         "n": n,
         "D_ret": sum(m["d_ret"] for m in task_metrics) / n,
+        "D_ret_hit_rate": sum(m["d_ret_hit"] for m in task_metrics) / n,
+        "D_ret_precision": sum(m["d_ret_precision"] for m in task_metrics) / n,
+        "D_ret_f1": sum(m["d_ret_f1"] for m in task_metrics) / n,
         "D_acc": sum(m["d_acc"] for m in task_metrics) / n,
+        "D_acc_precision": sum(m["d_acc_precision"] for m in task_metrics) / n,
+        "D_acc_recall": sum(m["d_acc_recall"] for m in task_metrics) / n,
+        "D_acc_f1": sum(m["d_acc_f1"] for m in task_metrics) / n,
         "avg_precision": sum(m["precision"] for m in task_metrics) / n,
         "avg_recall": sum(m["recall"] for m in task_metrics) / n,
         "avg_f1": sum(m["f1"] for m in task_metrics) / n,
@@ -309,10 +347,14 @@ def main() -> None:
 
     print(f"\nAggregate Discovery Metrics (n={agg['n']}):")
     print(f"  D_ret (retrieval coverage): {agg['D_ret']:.3f}")
-    print(f"  D_acc (gold dataset read):  {agg['D_acc']:.3f}")
-    print(f"  Avg Precision:               {agg['avg_precision']:.3f}")
-    print(f"  Avg Recall:                  {agg['avg_recall']:.3f}")
-    print(f"  Avg F1:                      {agg['avg_f1']:.3f}")
+    print(f"  D_ret F1:                   {agg['D_ret_f1']:.3f}")
+    print(f"  D_acc (read recall):         {agg['D_acc']:.3f}")
+    print(f"  D_acc precision:             {agg['D_acc_precision']:.3f}")
+    print(f"  D_acc recall:                {agg['D_acc_recall']:.3f}")
+    print(f"  D_acc F1:                    {agg['D_acc_f1']:.3f}")
+    print(f"  Search avg precision:        {agg['avg_precision']:.3f}")
+    print(f"  Search avg recall:           {agg['avg_recall']:.3f}")
+    print(f"  Search avg F1:               {agg['avg_f1']:.3f}")
     print(f"  Avg Search Calls/Task:       {agg['avg_search_calls']:.1f}")
     print(f"  Avg Read Calls/Task:         {agg['avg_read_calls']:.1f}")
 

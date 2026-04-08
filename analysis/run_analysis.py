@@ -336,8 +336,17 @@ def build_summary(em: dict, discovery: dict, failure: dict, efficiency: dict, se
             row["D_ret"] = round(d.get("D_ret", 0), 3)
             row["D_acc"] = round(d.get("D_acc", 0), 3)
             row["exploration_gap"] = round(d.get("D_ret", 0) - d.get("D_acc", 0), 3)
-            row["dacc_avg_precision"] = round(d.get("avg_precision", 0), 3)
-            row["dacc_avg_recall"] = round(d.get("avg_recall", 0), 3)
+            # Read/access quality (D_acc family)
+            row["dacc_precision"] = round(d.get("D_acc_precision", 0), 3)
+            row["dacc_recall"] = round(d.get("D_acc_recall", d.get("D_acc", 0)), 3)
+            row["dacc_f1"] = round(d.get("D_acc_f1", 0), 3)
+            # Search-call quality (legacy metrics, renamed for clarity)
+            row["search_avg_precision"] = round(d.get("avg_precision", 0), 3)
+            row["search_avg_recall"] = round(d.get("avg_recall", 0), 3)
+            row["search_avg_f1"] = round(d.get("avg_f1", 0), 3)
+            # Back-compat aliases used by older notebooks/scripts.
+            row["dacc_avg_precision"] = row["dacc_precision"]
+            row["dacc_avg_recall"] = row["dacc_recall"]
         if key in failure:
             f = failure[key]
             row["pct_em1_dacc_ge_0_8"] = f.get("em1_dacc_ge_0_8", {}).get("pct")
@@ -383,31 +392,50 @@ def main() -> None:
     parser.add_argument("--traces-dir", default="results/traces")
     parser.add_argument("--tasks-dir", default="tasks_mini")
     parser.add_argument("--output-dir", default="analysis_results")
+    parser.add_argument(
+        "--model-filter",
+        default=None,
+        help="Substring filter on model name (comma-separated OR). e.g. 'haiku,sonnet'.",
+    )
     args = parser.parse_args()
+
+    model_filters = [s.strip().lower() for s in args.model_filter.split(",")] if args.model_filter else None
+
+    def _keep_model(name: str) -> bool:
+        if not model_filters:
+            return True
+        n = (name or "").lower()
+        return any(f in n for f in model_filters)
+
 
     out_dir = Path(args.output_dir)
     out_dir.mkdir(exist_ok=True)
 
+    def _filter_cm_dict(d: dict) -> dict:
+        if not model_filters:
+            return d
+        return {k: v for k, v in d.items() if _keep_model(k.split("/", 1)[-1])}
+
     print("Running EM/F1...")
-    em = run_em(args.results_dir)
+    em = _filter_cm_dict(run_em(args.results_dir))
 
     print("Running discovery metrics...")
-    discovery = run_discovery(args.traces_dir, args.tasks_dir)
+    discovery = _filter_cm_dict(run_discovery(args.traces_dir, args.tasks_dir))
 
     print("Running failure attribution...")
-    failure = run_failure(args.results_dir, args.traces_dir, args.tasks_dir)
+    failure = _filter_cm_dict(run_failure(args.results_dir, args.traces_dir, args.tasks_dir))
 
     print("Running efficiency...")
-    efficiency = run_efficiency(args.results_dir)
+    efficiency = _filter_cm_dict(run_efficiency(args.results_dir))
 
     print("Running provenance (Condition A)...")
-    provenance = run_provenance(args.traces_dir, args.tasks_dir)
+    provenance = _filter_cm_dict(run_provenance(args.traces_dir, args.tasks_dir))
 
     print("Running tools discovery...")
-    tools_discovery = run_tools_discovery(args.traces_dir, args.tasks_dir)
+    tools_discovery = _filter_cm_dict(run_tools_discovery(args.traces_dir, args.tasks_dir))
 
     print("Running search depth curve...")
-    search_depth = run_search_depth(args.results_dir)
+    search_depth = run_search_depth(args.results_dir)  # keyed by condition only
 
     print("Running planning overhead (Condition B)...")
     planning_overhead = run_planning_overhead(args.results_dir)
@@ -416,7 +444,7 @@ def main() -> None:
     reasoning_density = run_reasoning_density(args.results_dir, args.tasks_dir)
 
     print("Running tool error rates...")
-    tool_errors = run_tool_errors(args.results_dir)
+    tool_errors = _filter_cm_dict(run_tool_errors(args.results_dir))
 
     print("Building summary...")
     summary = build_summary(em, discovery, failure, efficiency, search_depth, reasoning_density, tool_errors)
@@ -449,7 +477,15 @@ def main() -> None:
         print(f"  {row['condition_model']:<55} EM={em_pct}  D_ret={d_ret}  em1_dacc_ge_0_8={em1_hi}%")
 
     print("Generating figures...")
-    generate_figs()
+    if model_filters:
+        old_argv = sys.argv
+        sys.argv = [old_argv[0], "--model-filter", args.model_filter]
+        try:
+            generate_figs()
+        finally:
+            sys.argv = old_argv
+    else:
+        generate_figs()
 
 
 if __name__ == "__main__":

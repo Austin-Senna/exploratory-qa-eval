@@ -33,14 +33,18 @@ def _variant_condition_label(
     search_descriptions: str,
 ) -> str:
     parts = [search_descriptions]
-    if base_condition == "b":
-        parts.append(f"plan-{plan_mode}")
     if k is not None:
         parts.append(f"k{k}")
     if search_calls is not None:
         parts.append(f"sc{search_calls}")
-    _ = base_condition  # retained for stable call signature with existing call sites
+    _ = base_condition, plan_mode  # retained for stable call signature with existing call sites
     return "_".join(parts)
+
+
+def _base_condition_label(base_condition: str, plan_mode: str) -> str:
+    if base_condition == "b":
+        return f"b_plan_{plan_mode}"
+    return base_condition
 
 
 def _run_continue(args, agent_config, run_config) -> None:
@@ -197,7 +201,8 @@ def main() -> None:
         plan_mode=args.plan,
         search_descriptions=args.search_descriptions,
     )
-    condition_label = f"{variant_condition}/{args.condition}"
+    base_condition_label = _base_condition_label(args.condition, args.plan)
+    condition_label = f"{variant_condition}/{base_condition_label}"
 
     agent_config = AgentConfig(
         model_name=args.model_name,

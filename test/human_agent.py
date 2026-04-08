@@ -3,7 +3,8 @@
 Interactive human-agent REPL.
 
 Lets you manually run a benchmark task using the same tools the LLM agent has:
-  search, search_keyword, list_files, peek_file, download, execute_code, submit_answer
+  search, search_keyword, list_files, peek_file, peek_files, read_file,
+  grep_file, query_file, download, execute_code, submit_answer
   sparse, hybrid, graph  (new search backends from Condition A/B)
 
 Usage:
@@ -28,9 +29,15 @@ from pathlib import Path
 _ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(_ROOT))
 
-from strands_evaluation.tools import agent_tools  # noqa: E402
 from strands_evaluation.tools.agent_tools_v2 import (  # noqa: E402
+    search,
+    search_keyword,
+    list_files,
     peek_file, peek_files, read_file, grep_file, query_file,
+    download,
+    execute_code,
+    get_sandbox_info,
+    set_sandbox_dir,
 )
 
 # ---------------------------------------------------------------------------
@@ -85,7 +92,7 @@ def cmd_search():
         print("  [!] No prefixes given.")
         return
     t0 = time.time()
-    result = agent_tools.search(prefixes)
+    result = search(prefixes)
     print(f"  [{time.time()-t0:.1f}s]")
     print(_short(result))
 
@@ -99,7 +106,7 @@ def cmd_search_keyword():
     limit_raw = input("  limit [20]: ").strip()
     limit = int(limit_raw) if limit_raw.isdigit() else 20
     t0 = time.time()
-    result = agent_tools.search_keyword(keywords, limit=limit)
+    result = search_keyword(keywords, limit=limit)
     print(f"  [{time.time()-t0:.1f}s]")
     print(_short(result))
 
@@ -111,7 +118,7 @@ def cmd_list_files():
         print("  [!] No dataset ids given.")
         return
     t0 = time.time()
-    result = agent_tools.list_files(ids)
+    result = list_files(ids)
     print(f"  [{time.time()-t0:.1f}s]")
     print(_short(result))
 
@@ -124,6 +131,25 @@ def cmd_peek_file():
         return
     t0 = time.time()
     result = peek_file(dataset_id, file_path)
+    print(f"  [{time.time()-t0:.1f}s]")
+    print(_short(result))
+
+
+def cmd_peek_files():
+    print("  Enter files to peek. Empty dataset_id to stop.")
+    files = []
+    while True:
+        d = input("    dataset_id: ").strip()
+        if not d:
+            break
+        f = input("    file_path: ").strip()
+        if f:
+            files.append({"dataset_id": d, "file_path": f})
+    if not files:
+        print("  [!] Nothing to peek.")
+        return
+    t0 = time.time()
+    result = peek_files(files)
     print(f"  [{time.time()-t0:.1f}s]")
     print(_short(result))
 
@@ -184,7 +210,7 @@ def cmd_download():
         print("  [!] Nothing to download.")
         return
     t0 = time.time()
-    result = agent_tools.download(files)
+    result = download(files)
     print(f"  [{time.time()-t0:.1f}s]")
     print(_short(result))
 
@@ -202,7 +228,7 @@ def cmd_execute_code():
         print("  [!] No code entered.")
         return
     t0 = time.time()
-    result = agent_tools.execute_code(code)
+    result = execute_code(code)
     print(f"  [{time.time()-t0:.1f}s]")
     if "output" in result:
         print(result["output"])
@@ -214,7 +240,7 @@ def cmd_execute_code():
 
 
 def cmd_sandbox_info():
-    _pp(agent_tools.get_sandbox_info())
+    _pp(get_sandbox_info())
 
 
 def cmd_search_sparse():
@@ -293,6 +319,7 @@ COMMANDS = {
     "kw":       ("search_keyword — keyword/FTS search",            cmd_search_keyword),
     "ls":       ("list_files in dataset(s)",                       cmd_list_files),
     "peek":     ("peek_file — structure/sample preview",           cmd_peek_file),
+    "peeks":    ("peek_files — batch structure/sample preview",    cmd_peek_files),
     "read":     ("read_file — paginated line reader",              cmd_read_file),
     "grep":     ("grep_file — regex search over S3 stream",         cmd_grep_file),
     "query":    ("query_file — SQL query via DuckDB httpfs",        cmd_query_file),
@@ -337,7 +364,7 @@ def pick_random_task() -> str:
 
 def run_repl(question: str, answer: str | None):
     sandbox = Path(_ROOT) / ".sandbox" / f"human_{int(time.time())}"
-    agent_tools.set_sandbox_dir(sandbox)
+    set_sandbox_dir(sandbox)
 
     _banner(f"QUESTION:\n{question}")
     print_help()
