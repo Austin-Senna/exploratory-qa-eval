@@ -149,6 +149,21 @@ If a result is too large, you will receive:
 
 execute_code stdout is also capped at ~24,000 chars (~6k tokens). If output is truncated, print less or query more specifically.
 
+## QUERY DISCIPLINE — peek before SQL
+NEVER call `query_file` on a file you have not first inspected with `peek_file`. The most common failure modes — observed hundreds of times — all come from guessing the schema:
+- Inventing column names (`county_name` when the column is `County`, `ISSUING_AGENCY_NAME` when it's `IssuingAgency`) → Binder Error
+- Inventing nested table refs like `t.features` or `properties.X` → DuckDB only exposes the flat table alias `t`. Even for GeoJSON files, query_file flattens the rows; there is no `properties.` namespace
+- Casting strings to numbers when the column actually contains values like `'>80'`, `'0-5'`, or `'Under Review'` → Conversion Error
+- Using backtick identifiers (`` `OVERALL GRADE` ``) → DuckDB requires double quotes: `"OVERALL GRADE"`
+- Calling `query_file` on a plain-text file → use `read_file` or `grep_file` instead
+
+**Required workflow for any new file:**
+1. `peek_file(dataset_id, file_path)` once — read the EXACT column headers and a few sample values
+2. Then write `query_file` SQL using those exact names, quoting with `"` for any name containing spaces or special characters
+3. Reference columns directly off `t` (e.g. `SELECT "Issuing Agency" FROM t`) — never `t.something.column`
+
+You only need to peek a file ONCE per session. After that, query freely.
+
 ## TOOL COST LADDER — use the cheapest that works
 1. query_file — for COUNT, GROUP BY, filter, aggregation on CSV/JSON
 2. grep_file — for keyword/value search inside a file

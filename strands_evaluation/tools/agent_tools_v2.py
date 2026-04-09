@@ -11,10 +11,14 @@ Bucket: lakeqa-yc4103-datalake
 Folders: wikipedia/, datagov/
 """
 
-import os
+import base64
+import datetime
+import decimal
 import json
+import os
 import re
 import traceback
+import uuid
 from collections import deque
 from typing import Any, Dict, List
 
@@ -100,6 +104,107 @@ def _duckdb_connection() -> duckdb.DuckDBPyConnection:
         if aws_session:
             conn.execute(f"SET s3_session_token='{aws_session}'")
     return conn
+
+
+_MAX_OBJECT_SIZE_RE = re.compile(
+    r'"maximum_object_size".*?bytes\s*exceeded.*?\(>(\d+)\s*bytes\)',
+    re.DOTALL,
+)
+
+
+def _rewrite_query_error(raw: str) -> str:
+    """
+    Rewrite low-level DuckDB error strings into actionable remediation hints
+    so the agent stops thrashing on platform-side limits.
+
+    The headline case: when DuckDB's read_json_auto rejects a JSON object
+    larger than `maximum_object_size`, the stock hint says "Try increasing
+    maximum_object_size" — which is misleading because the cap is hard-coded
+    in this module and the agent cannot change it. Logs show the agent then
+    retries the same query, malforms a download call, or pivots to peek_file
+    which doesn't help. The right remediation is the same one used by the
+    pre-check at line 483: download the file and process it with execute_code.
+    """
+    m = _MAX_OBJECT_SIZE_RE.search(raw)
+    if m:
+        observed = m.group(1)
+        return (
+            f"File contains a JSON object larger than the 100 MB query limit "
+            f"({observed} bytes observed). query_file cannot stream it. "
+            "Use download to fetch the file, then execute_code with a "
+            "streaming JSON parser (e.g. ijson) or pandas.read_json with "
+            "chunksize."
+        )
+    if "Timeout was reached" in raw and "HTTP GET" in raw:
+        return (
+            "S3 read timed out — file is likely too large to query directly "
+            "over httpfs. Use download to fetch it locally, then execute_code "
+            "to process it. Original: " + raw
+        )
+    if "Parser Error" in raw and "`" in raw:
+        # Agent is using MySQL-style backtick identifiers; DuckDB requires
+        # double quotes. Observed ~17 times in production logs.
+        return (
+            'DuckDB uses double quotes for identifiers, not backticks. '
+            'Replace `column name` with "column name" in your SQL. '
+            "Original: " + raw
+        )
+    return raw
+
+
+def _rewrite_unqueryable_family_error(family: str) -> str:
+    """
+    Replace the bare "File family '<X>' is not queryable with SQL" message
+    with a hint naming the right tool to use instead. The agent has no way
+    to know that text files should go through grep/read/peek; spell it out.
+    """
+    if family == "text":
+        return (
+            "File contents are plain text — query_file only handles CSV and "
+            "JSON. Use peek_file to inspect structure, grep_file to search "
+            "for specific values, or read_file to load lines directly."
+        )
+    return (
+        f"File family '{family}' is not queryable with SQL via query_file "
+        "(only CSV and JSON are supported). Use peek_file to inspect what "
+        "the file actually contains, then pick a tool that matches its "
+        "format (read_file for text, download + execute_code for binary "
+        "or unsupported formats)."
+    )
+
+
+def _to_json_safe(value: Any) -> Any:
+    """
+    Convert DuckDB row values into JSON-serializable primitives.
+
+    DuckDB returns native Python types for SQL DATE / TIMESTAMP / TIME / INTERVAL /
+    DECIMAL / UUID / BLOB columns, which json.dumps cannot serialize. Without
+    this conversion, even `SELECT * FROM t LIMIT 1` against any table with a
+    date column raises `Object of type date is not JSON serializable`.
+    """
+    if value is None or isinstance(value, (bool, int, float, str)):
+        return value
+    if isinstance(value, datetime.datetime):
+        return value.isoformat()
+    if isinstance(value, datetime.date):
+        return value.isoformat()
+    if isinstance(value, datetime.time):
+        return value.isoformat()
+    if isinstance(value, datetime.timedelta):
+        return value.total_seconds()
+    if isinstance(value, decimal.Decimal):
+        return str(value)
+    if isinstance(value, uuid.UUID):
+        return str(value)
+    if isinstance(value, (bytes, bytearray, memoryview)):
+        return base64.b64encode(bytes(value)).decode("ascii")
+    if isinstance(value, dict):
+        return {str(k): _to_json_safe(v) for k, v in value.items()}
+    if isinstance(value, (list, tuple, set, frozenset)):
+        return [_to_json_safe(v) for v in value]
+    # Fallback for unexpected types (e.g., numpy scalars). Stringify rather
+    # than crash — surfaces the value while keeping the tool call alive.
+    return str(value)
 
 
 # ---------------------------------------------------------------------------
@@ -493,7 +598,7 @@ def query_file(
     elif family == "json":
         reader = f"read_json_auto('{s3_uri}', maximum_object_size=104857600)"
     else:
-        return {"error": f"File family '{family}' is not queryable with SQL"}
+        return {"error": _rewrite_unqueryable_family_error(family)}
 
     try:
         conn = _duckdb_connection()
@@ -506,10 +611,13 @@ def query_file(
         truncated = len(rows) > _QUERY_ROW_CAP
         if truncated:
             rows = rows[:_QUERY_ROW_CAP]
+        # Convert rows to JSON-safe primitives up front so DATE / TIMESTAMP /
+        # DECIMAL / UUID / BLOB columns don't crash json.dumps below.
+        safe_rows = [[_to_json_safe(v) for v in r] for r in rows]
         result = {
             "columns": columns,
-            "rows": [list(r) for r in rows],
-            "row_count": len(rows),
+            "rows": safe_rows,
+            "row_count": len(safe_rows),
             "truncated": truncated,
         }
         result_json = json.dumps(result)
@@ -523,19 +631,19 @@ def query_file(
             # Pack as many rows as fit within the budget
             budget = _TOOL_RESULT_CHAR_CAP - 600  # headroom for metadata fields
             char_count, capped_rows = 0, []
-            for row in rows:
-                row_json = json.dumps(list(row))
+            for row in safe_rows:
+                row_json = json.dumps(row)
                 if char_count + len(row_json) + 2 > budget:
                     break
-                capped_rows.append(list(row))
+                capped_rows.append(row)
                 char_count += len(row_json) + 2
-            avg_row_bytes = len(result_json) // max(len(rows), 1)
+            avg_row_bytes = len(result_json) // max(len(safe_rows), 1)
             return {
                 "truncated": True,
                 "truncation_note": (
                     f"Result too large for context ({size // 1024}KB source file, "
                     f"~{int(size / max(1, avg_row_bytes))} rows estimated). "
-                    f"Showing {len(capped_rows)} of {len(rows)} rows within the 16k limit. "
+                    f"Showing {len(capped_rows)} of {len(safe_rows)} rows within the 16k limit. "
                     f"Full result written to: {dump_path} (use execute_code to read it). "
                     "Prefer: query_file with SELECT specific columns + WHERE/GROUP BY/LIMIT "
                     "for aggregates, or grep_file for searching specific values."
@@ -550,7 +658,10 @@ def query_file(
             }
         return result
     except Exception as e:
-        return {"error": f"Query failed: {e}", "traceback": traceback.format_exc()}
+        return {
+            "error": f"Query failed: {_rewrite_query_error(str(e))}",
+            "traceback": traceback.format_exc(),
+        }
 
 
 # ---------------------------------------------------------------------------
