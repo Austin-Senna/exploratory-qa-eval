@@ -20,7 +20,7 @@ class CategoryStagnationHandler(SteeringHandler):
         # so they get a higher threshold than search.
         self.tool_categories = {
             "search": {"search", "search_keyword", "search_prefix", "search_value", "search_schema", "search_reranked"},
-            "inspect": {"list_files", "peek_file", "peek_files", "get_sandbox_info", "read_file"},
+            "inspect": {"list_files", "peek_file", "peek_multiple", "get_sandbox_info", "read_file"},
             "execute": {"execute_code", "query_file", "grep_file"},
         }
         self.category_thresholds = {

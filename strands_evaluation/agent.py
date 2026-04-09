@@ -59,7 +59,7 @@ from strands_evaluation.tools.agent_tools_v2 import (
     grep_file,
     list_files,
     peek_file,
-    peek_files,
+    peek_multiple,
     query_file,
     read_file,
     set_sandbox_dir,
@@ -390,7 +390,7 @@ class DataLakeAgent:
 
         # Core data-manipulation tools shared across all conditions
         _data_tools = [
-            list_files, peek_file, peek_files, read_file, grep_file,
+            list_files, peek_file, peek_multiple, read_file, grep_file,
             query_file, download, execute_code, get_sandbox_info, cleanup_sandbox,
             submit_answer,
         ]

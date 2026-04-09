@@ -33,7 +33,7 @@ Do NOT start with `search_prefix` if you're guessing — use `search_value` firs
 
 When a search returns a **dataset ID** (not a direct file URI), call `list_files` to see its contents. **Never guess file paths** — guessed paths fail silently or hit the wrong file.
 
-After `list_files` returns, call `peek_files` with all file paths at once (one tool call, not one per file).
+After `list_files` returns, call `peek_multiple` with all file paths at once (one tool call, not one per file). The signature is `peek_multiple(files=[{dataset_id, file_path}, ...])` — for a single file use `peek_file` instead.
 
 ### Two dataset types to recognize:
 
@@ -44,7 +44,7 @@ After `list_files` returns, call `peek_files` with all file paths at once (one t
 
 ## Step 4: Verify Before You Trust
 
-If the dataset name is **ambiguous or unfamiliar**, run `peek_files` before querying to confirm it's what you think it is. Dataset names can be misleading — two datasets with similar names may cover different states or time periods.
+If the dataset name is **ambiguous or unfamiliar**, run `peek_file` (or `peek_multiple` for several at once) before querying to confirm it's what you think it is. Dataset names can be misleading — two datasets with similar names may cover different states or time periods.
 
 To verify:
 

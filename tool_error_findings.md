@@ -9,6 +9,24 @@ Aggregates also in `analysis_results_search/tool_errors.json`.
 
 A "peek before query" rule plus a one-shot example of the correct `download({files:[...]})` envelope would eliminate roughly half of all errors.
 
+## Status — fixes shipped this session
+
+| Fix | Errors addressed | Where |
+|---|---|---|
+| ✅ **JSON serializer crash on DATE/TIMESTAMP/UUID** in `query_file` | ~93 | `agent_tools_v2.py` `_to_json_safe` helper + applied to row conversion |
+| ✅ **`maximum_object_size` rewrite** with actionable `download + execute_code` hint | ~73 | `agent_tools_v2.py` `_rewrite_query_error` |
+| ✅ **S3 IO Timeout rewrite** with `download` hint | ~50 | `agent_tools_v2.py` `_rewrite_query_error` |
+| ✅ **Text-family error message** rewrite — names `peek_file`/`grep_file`/`read_file` | ~22 | `agent_tools_v2.py` `_rewrite_unqueryable_family_error` |
+| ✅ **Backtick identifiers auto-fixed at source** + Parser Error rewrite as belt-and-suspenders | ~17 | `agent_tools_v2.py` `_normalize_sql_backticks` (state machine that converts `` `col` `` → `"col"` while preserving backticks inside `'...'` and `"..."` literals) called at the top of `query_file`; `_rewrite_query_error` still catches anything that slips through |
+| ✅ **"QUERY DISCIPLINE — peek before SQL" rule** added to all three prompts (baseline, a, b) | ~310 (Binder + Conversion + Parser + file-family + file-too-large-retry + strptime, prevention not yet measured) | `strands_evaluation/helper/constants.py:151–168`, `prompts/condition_a.txt:56–71`, `prompts/condition_b.txt:59–74` |
+| ✅ **Renamed `peek_files` → `peek_multiple`** + rewrote both peek docstrings with explicit "ONE file" vs "SEVERAL files" framing and a CORRECT/WRONG envelope example | ~36 (92% malform rate on the plural) | `agent_tools_v2.py` `peek_multiple` def + docstrings; propagated through `agent.py`, both instrumentation plugins, all 3 prompts, all 4 skill files, `human_agent.py`, and `tool_error_analysis.py` (kept `peek_files` in the analysis tool set for back-compat with historical eval data) |
+
+**Total `query_file` + `peek_multiple` errors addressed: ~601 of ~705 (~85%)** if the prompt rule and rename land as expected. The platform-side rewrites (~255 errors) and the rename (~36) are direct fixes; the prompt rule (~310 errors) is preventive and needs an eval run to confirm impact.
+
+**Tests**: `test/test_query_file_json_safe.py` — 25 unit tests covering `_to_json_safe`, `_rewrite_query_error`, `_rewrite_unqueryable_family_error`, and the `peek_files → peek_multiple` rename. All pass. Sibling tests (`test_s3_public_bucket_mode.py`, `test_pricing_lookup.py`) still green.
+
+**Still TODO**: `download` malforms (~132), `read_file` `wikipedia/` hallucinations (~38), `execute_code` bad assumptions (~37), Lance phrase-query bug (~25 — platform), `peek_file` 404 path-guessing (~18).
+
 ## Error rates (from `tool_errors.json`)
 
 | Tool | naive_k5/baseline | naive_k5/b_plan_soft | description_k5/baseline | description_k5/b_plan_soft |
@@ -30,18 +48,20 @@ A "peek before query" rule plus a one-shot example of the correct `download({fil
 
 ## TOOL: query_file — 21.6% error rate (~669/3100). Biggest bucket.
 
-| # | Failure mode | ~Count | Fault | Example |
-|---|---|---|---|---|
-| 1 | **Binder Error — invented columns / tables** | ~253 | AGENT | `query_file({"sql":"SELECT properties.ISSUING_AGENCY_NAME ... FROM t.features"})` → `Referenced table "properties" not found! Candidate tables: "t"`. Also: `county_name` vs `County`, `"SCHOOL LEVEL"` vs `"SCHOOL LEVEL*"`, `"Count of Offers"` vs `"Number of Offers"`. |
-| 2 | **JSON serializer crash on DATE / TIMESTAMP / UUID** | ~93 | PLATFORM | Even `SELECT * FROM t LIMIT 1` blows up: `Object of type date is not JSON serializable`. Tool-layer bug — fires on the simplest valid query. |
-| 3 | **`maximum_object_size 104857600 bytes exceeded`** | ~73 | MIXED | 100 MB DuckDB-on-S3 cap. Agent has been told "use download + execute_code" and keeps retrying anyway. |
-| 4 | **S3 IO Timeout** | ~50 | PLATFORM | Multi-hundred-MB CSVs (parking violations, prison releases, school locations). |
-| 5 | **`File family 'text' is not queryable with SQL`** | 22 | AGENT | `query_file({"file_path":"files/0.txt", "sql":"SELECT * FROM t LIMIT 5"})`. Should `peek_file` first. |
-| 6 | **`File too large to query directly … Use download + execute_code instead`** | ~21 | AGENT | Tool literally tells the agent the fix; agent ignores it. |
-| 7 | **Conversion Error** | ~19 | AGENT | `CAST("Count of Offers" AS INT)` on `'0-5'`; `replace(PercentMetStandard,'%','')::DOUBLE` on `'>80'` / `'Under Review'`. |
-| 8 | **Parser Error** | ~17 | AGENT | Backtick identifiers (`` `OVERALL GRADE` ``) — DuckDB rejects them. Bad `SELECT col alias` lacking AS. |
-| 9 | **Bad strptime format** | ~11 | AGENT | `strptime(x,'%m/%d/%Y')` on values already `2015-01-10`. |
-| 10 | **Misc (Catalog Error / OOM / 'not array' / Not implemented)** | <10 | mixed | |
+| # | Failure mode | ~Count | Fault | Status | Example |
+|---|---|---|---|---|---|
+| 1 | **Binder Error — invented columns / tables** | ~253 | AGENT | 🟡 Prompt rule shipped — measure next eval | `query_file({"sql":"SELECT properties.ISSUING_AGENCY_NAME ... FROM t.features"})` → `Referenced table "properties" not found! Candidate tables: "t"`. Also: `county_name` vs `County`, `"SCHOOL LEVEL"` vs `"SCHOOL LEVEL*"`, `"Count of Offers"` vs `"Number of Offers"`. |
+| 2 | **JSON serializer crash on DATE / TIMESTAMP / UUID** | ~93 | PLATFORM | ✅ FIXED (`_to_json_safe`) | Even `SELECT * FROM t LIMIT 1` blows up: `Object of type date is not JSON serializable`. Tool-layer bug — fires on the simplest valid query. |
+| 3 | **`maximum_object_size 104857600 bytes exceeded`** | ~73 | MIXED | ✅ FIXED (`_rewrite_query_error`) | 100 MB DuckDB-on-S3 cap. Was bouncing through DuckDB's "Try increasing maximum_object_size" hint; now rewrites to "use download + execute_code". |
+| 4 | **S3 IO Timeout** | ~50 | PLATFORM | ✅ FIXED (`_rewrite_query_error`) | Multi-hundred-MB CSVs (parking violations, prison releases, school locations). Now rewrites to suggest `download`. |
+| 5 | **`File family 'text' is not queryable with SQL`** | 22 | AGENT | ✅ FIXED (`_rewrite_unqueryable_family_error`) | `query_file({"file_path":"files/0.txt", "sql":"SELECT * FROM t LIMIT 5"})`. Now tells agent to use `peek_file` / `grep_file` / `read_file`. |
+| 6 | **`File too large to query directly … Use download + execute_code instead`** | ~21 | AGENT | 🟡 Prompt rule shipped — message was already correct | Tool already suggested the fix; agent was ignoring it. New peek-before-query rule should reduce repeat retries. |
+| 7 | **Conversion Error** | ~19 | AGENT | 🟡 Prompt rule shipped | `CAST("Count of Offers" AS INT)` on `'0-5'`; `replace(PercentMetStandard,'%','')::DOUBLE` on `'>80'` / `'Under Review'`. Peek-before-query rule names this as failure mode. |
+| 8 | **Parser Error** | ~17 | AGENT | ✅ FIXED at source (`_normalize_sql_backticks`) + error rewrite + 🟡 prompt rule | Backtick identifiers (`` `OVERALL GRADE` ``) — DuckDB rejects them. Now silently rewritten to double quotes BEFORE execution by a state machine that respects string literals. Belt-and-suspenders: error rewrite still fires if something slips through; prompt rule names backticks explicitly. |
+| 9 | **Bad strptime format** | ~11 | AGENT | 🟡 Prompt rule shipped | `strptime(x,'%m/%d/%Y')` on values already `2015-01-10`. Peek-before-query rule should help; not directly addressed. |
+| 10 | **Misc (Catalog Error / OOM / 'not array' / Not implemented)** | <10 | mixed | — | |
+
+Legend: ✅ direct fix landed and tested · 🟡 prompt rule shipped, awaiting eval-run measurement · ⬜ not addressed
 
 ## TOOL: download — 41.4% (156/377). ~100% agent-fault.
 
@@ -71,9 +91,11 @@ Tool logical error: {"error": "Dataset not found or ambiguous: wikipedia/Logan_F
 ```
 The same hallucinated `wikipedia/` prefix bleeds into `peek_file` (2 errors) and `grep_file` (1 error).
 
-## TOOL: peek_files — 92.3% (36/39). Catastrophic but tiny sample.
+## TOOL: peek_files — 92.3% (36/39). Catastrophic but tiny sample. ✅ FIXED via rename.
 
-**36/36 = missing `files` wrapper.** The agent confuses `peek_file` (singular: `dataset_id`+`file_path`) with `peek_files` (plural: `files: [...]`). Example: `peek_files({"max_rows": 5})` with no files at all. One call used the wrong key (`entries` instead of `files`).
+**36/36 = missing `files` wrapper.** The agent confused `peek_file` (singular: `dataset_id`+`file_path`) with `peek_files` (plural: `files: [...]`). Example: `peek_files({"max_rows": 5})` with no files at all. One call used the wrong key (`entries` instead of `files`).
+
+**Fix shipped**: renamed to `peek_multiple` and rewrote both docstrings with explicit "ONE file" vs "SEVERAL files" framing. The new `peek_multiple` docstring includes a CORRECT/WRONG block showing the exact envelope shape, and the validation error returned on misuse names the alternative tool by name. Test pinned in `test/test_query_file_json_safe.py::TestPeekMultipleRename`.
 
 ## TOOL: peek_file — 1.0% (~21/2160)
 
@@ -114,16 +136,16 @@ No errors. The one tool the agent cannot misuse.
 ## Recommended fixes
 
 ### Agent-side (prompt / scaffolding)
-1. **"Peek before query" rule.** Force a `peek_file` (or `search_schema`) on every new dataset before the first `query_file`. Eliminates Binder + Conversion + Parser + file-family errors — roughly half of all tool errors.
-2. **One-shot envelope examples** for `download` and `peek_files`. The agent consistently flattens these into the wrong shape — show it the right one in the system prompt.
-3. **Disambiguate `peek_file` vs `peek_files`.** 92% failure on the plural confirms the agent doesn't internalize the distinction. Either rename one or unify the signature.
-4. **Stop the `wikipedia/<Page>` hallucination.** Either (a) document that dataset_ids are bare names, or (b) have the platform auto-strip the `wikipedia/` prefix and resolve, since the agent already knows the right ID one turn later via `search_prefix`.
-5. **Respect tool guidance.** When `query_file` says "use download + execute_code instead," the agent should switch tactics — currently it retries the same call.
+1. ✅ **"Peek before query" rule.** Added as `## QUERY DISCIPLINE — peek before SQL` section in all three prompts (baseline, a, b). Names the actual mistakes (Binder, nested table refs, string→number casts, backticks, text-on-SQL) so the agent recognizes them. Should eliminate Binder + Conversion + Parser + file-family errors — roughly half of all tool errors. Impact to be measured in next eval run.
+2. 🟡 **One-shot envelope examples** for `download` and `peek_multiple`. The `peek_multiple` half is done — the renamed tool's docstring now contains a CORRECT/WRONG envelope example. `download` is still TODO.
+3. ✅ **Disambiguate `peek_file` vs `peek_files`.** Renamed `peek_files` → `peek_multiple` and rewrote both docstrings. The new docstring's CORRECT/WRONG block + the validation error message both name the alternative tool explicitly. Test pinned.
+4. ⬜ **Stop the `wikipedia/<Page>` hallucination.** Either (a) document that dataset_ids are bare names, or (b) have the platform auto-strip the `wikipedia/` prefix and resolve, since the agent already knows the right ID one turn later via `search_prefix`.
+5. ✅ **Respect tool guidance.** When `query_file` says "use download + execute_code instead," the agent now gets a clearer signal: the `maximum_object_size` and IO-timeout error rewrites surface the actionable hint instead of DuckDB's misleading "Try increasing maximum_object_size".
 
 ### Platform-side
-1. **Fix the JSON serializer for DATE / TIMESTAMP / UUID** in `query_file`. ~14% of all `query_file` errors fire on the simplest valid query and have nothing to do with the agent.
-2. **Rebuild the Lance index with positions** so phrase queries in `search_value` / `search_schema` work.
-3. **Either raise the 100 MB DuckDB-on-S3 cap or surface the remediation more loudly** so the agent doesn't burn turns retrying.
+1. ✅ **Fix the JSON serializer for DATE / TIMESTAMP / UUID** in `query_file`. Fixed via `_to_json_safe` helper that converts `datetime.date/datetime/time`, `Decimal`, `UUID`, and `bytes` to JSON-safe primitives before serialization.
+2. ⬜ **Rebuild the Lance index with positions** so phrase queries in `search_value` / `search_schema` work.
+3. ✅ **Surface the remediation more loudly** for the 100 MB DuckDB-on-S3 cap. Done via `_rewrite_query_error` — the cap itself is unchanged but the error message now explicitly tells the agent to download and use execute_code.
 
 ---
 

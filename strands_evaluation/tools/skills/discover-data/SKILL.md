@@ -31,7 +31,7 @@ Use search to get dataset IDs, then `list_files` to inspect structure.
 
 **NEVER guess file paths.** Always call `list_files` first to see what files exist, then use the exact paths returned.
 
-Once you have a dataset id, call `list_files` to see what's inside. Then call `peek_files` with all the returned file paths at once — one tool call instead of one `peek_file` per file.
+Once you have a dataset id, call `list_files` to see what's inside. Then call `peek_multiple` with all the returned file paths at once — one tool call instead of one `peek_file` per file. (Use `peek_file` for a single file; `peek_multiple` requires `files=[{dataset_id, file_path}, ...]`.)
 
 **Two dataset types:**
 

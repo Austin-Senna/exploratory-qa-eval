@@ -23,7 +23,7 @@ DO NOT:
 - plan(plan_text)     — save your research plan so it persists; call this FIRST, call again to replan
 - list_files          — list files inside a dataset
 - peek_file           — preview file structure and column headers (first 64KB); dataset_id is the bare ID only, no prefix (e.g. "index-crimes-by-county" not "datagov/index-crimes-by-county")
-- peek_files          — preview multiple files at once; use after list_files to save tool calls
+- peek_multiple       — preview SEVERAL files in one call (batch wrapper); requires `files=[{dataset_id, file_path}, ...]`. For ONE file use peek_file instead
 - read_file           — read lines from a file directly (no download needed)
 - grep_file           — regex search inside a file (no download needed); saves 2-3 tool calls
 - query_file          — SQL query directly on CSV/JSON via DuckDB (no download needed); saves 2-3 tool calls

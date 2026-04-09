@@ -15,6 +15,7 @@ import unittest
 import uuid
 
 from strands_evaluation.tools.agent_tools_v2 import (
+    _normalize_sql_backticks,
     _rewrite_query_error,
     _rewrite_unqueryable_family_error,
     _to_json_safe,
@@ -169,6 +170,102 @@ class TestRewriteQueryError(unittest.TestCase):
         # unchanged so we don't mislead the agent.
         raw = "Parser Error: syntax error at or near \"FRUM\""
         self.assertEqual(_rewrite_query_error(raw), raw)
+
+
+class TestNormalizeSqlBackticks(unittest.TestCase):
+    """
+    Auto-fix MySQL-style backtick identifiers in agent SQL by converting them
+    to DuckDB's double-quoted identifier syntax. Eliminates the ~17 backtick
+    Parser Errors per eval at the source instead of after the fact. Must NOT
+    touch backticks that appear inside string literals.
+    """
+
+    def test_simple_backtick_identifier_is_converted(self):
+        self.assertEqual(
+            _normalize_sql_backticks("SELECT `col` FROM t"),
+            'SELECT "col" FROM t',
+        )
+
+    def test_identifier_with_spaces_is_converted(self):
+        self.assertEqual(
+            _normalize_sql_backticks("SELECT `OVERALL GRADE`, COUNT(*) FROM t GROUP BY 1"),
+            'SELECT "OVERALL GRADE", COUNT(*) FROM t GROUP BY 1',
+        )
+
+    def test_multiple_identifiers_are_converted(self):
+        self.assertEqual(
+            _normalize_sql_backticks("SELECT `a`, `b`, `c` FROM `tbl`"),
+            'SELECT "a", "b", "c" FROM "tbl"',
+        )
+
+    def test_no_backticks_unchanged(self):
+        sql = 'SELECT col FROM t WHERE x = 1'
+        self.assertEqual(_normalize_sql_backticks(sql), sql)
+
+    def test_backtick_inside_single_quoted_literal_is_preserved(self):
+        # The literal contains an apostrophe-like backtick — must not be touched
+        sql = "SELECT * FROM t WHERE name = 'O`Brien'"
+        self.assertEqual(_normalize_sql_backticks(sql), sql)
+
+    def test_mixed_identifier_and_literal_with_backtick(self):
+        self.assertEqual(
+            _normalize_sql_backticks(
+                "SELECT `name` FROM t WHERE label = 'has`backtick' AND `id` = 1"
+            ),
+            'SELECT "name" FROM t WHERE label = \'has`backtick\' AND "id" = 1',
+        )
+
+    def test_escaped_single_quote_inside_literal(self):
+        # SQL escapes single quotes by doubling them: 'it''s' is the literal "it's"
+        # Backticks inside that literal must still be preserved.
+        sql = "SELECT `col` FROM t WHERE x = 'it''s `code`'"
+        self.assertEqual(
+            _normalize_sql_backticks(sql),
+            'SELECT "col" FROM t WHERE x = \'it\'\'s `code`\'',
+        )
+
+    def test_backtick_inside_double_quoted_identifier_is_preserved(self):
+        # An identifier already double-quoted that happens to contain a literal
+        # backtick should be left alone.
+        sql = 'SELECT "weird`col" FROM t'
+        self.assertEqual(_normalize_sql_backticks(sql), sql)
+
+    def test_empty_sql(self):
+        self.assertEqual(_normalize_sql_backticks(""), "")
+
+    def test_only_backticks(self):
+        self.assertEqual(_normalize_sql_backticks("``"), '""')
+
+
+class TestPeekMultipleRename(unittest.TestCase):
+    """
+    Regression: peek_files (plural) was malformed in 92% of agent calls because
+    its name and signature collided with peek_file (singular). It was renamed
+    to peek_multiple. This test pins the rename so it can't silently revert.
+    """
+
+    def test_peek_multiple_is_importable(self):
+        from strands_evaluation.tools.agent_tools_v2 import peek_multiple  # noqa: F401
+
+    def test_peek_files_is_no_longer_exported(self):
+        import strands_evaluation.tools.agent_tools_v2 as mod
+        self.assertNotIn("peek_files", mod.__all__)
+        self.assertIn("peek_multiple", mod.__all__)
+        self.assertFalse(hasattr(mod, "peek_files"))
+
+    def test_peek_multiple_validates_files_argument(self):
+        from strands_evaluation.tools.agent_tools_v2 import peek_multiple
+        # The actual @tool decorator wraps the function — call the underlying
+        # function directly via .original_function if present, else via the
+        # wrapper.
+        fn = getattr(peek_multiple, "original_function", peek_multiple)
+        # Empty/missing files should yield an actionable error message that
+        # explains the right shape (the malformation we're trying to prevent).
+        result = fn(files=[])
+        self.assertIn("error", result)
+        self.assertIn("peek_multiple", result["error"])
+        self.assertIn("peek_file", result["error"])  # mentions the alternative
+        self.assertIn("files=[", result["error"])    # shows the right shape
 
 
 class TestRewriteUnqueryableFamilyError(unittest.TestCase):

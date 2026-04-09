@@ -19,12 +19,15 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 
-# Tools we care about for error rate reporting (data access tools only)
+# Tools we care about for error rate reporting (data access tools only).
+# Keep both "peek_files" (historical, pre-rename) and "peek_multiple" (current)
+# so analysis still aggregates older eval runs correctly.
 _DATA_TOOLS = {
     "query_file",
     "execute_code",
     "peek_file",
     "peek_files",
+    "peek_multiple",
     "grep_file",
     "read_file",
     "download",

@@ -112,6 +112,59 @@ _MAX_OBJECT_SIZE_RE = re.compile(
 )
 
 
+def _normalize_sql_backticks(sql: str) -> str:
+    """
+    Convert MySQL-style backtick identifiers to DuckDB's double-quoted form.
+
+    Agents trained on MySQL/SQLite repeatedly write `` `column name` `` even
+    though DuckDB only accepts `"column name"`. Observed ~17 times in eval
+    logs as Parser Errors. Auto-fix at the source eliminates the round-trip.
+
+    Carefully preserves backticks that fall INSIDE single-quoted string
+    literals (e.g. `WHERE name = 'O\\`Brien'`) and inside already-double-
+    quoted identifiers (e.g. `"weird\\`col"`). Handles escaped single quotes
+    (`''`) inside literals.
+    """
+    out: List[str] = []
+    in_single = False
+    in_double = False
+    i = 0
+    n = len(sql)
+    while i < n:
+        ch = sql[i]
+        if in_single:
+            if ch == "'":
+                # `''` is an escaped single quote inside a literal
+                if i + 1 < n and sql[i + 1] == "'":
+                    out.append("''")
+                    i += 2
+                    continue
+                in_single = False
+            out.append(ch)
+        elif in_double:
+            if ch == '"':
+                # `""` is an escaped double quote inside an identifier
+                if i + 1 < n and sql[i + 1] == '"':
+                    out.append('""')
+                    i += 2
+                    continue
+                in_double = False
+            out.append(ch)
+        else:
+            if ch == "'":
+                in_single = True
+                out.append(ch)
+            elif ch == '"':
+                in_double = True
+                out.append(ch)
+            elif ch == "`":
+                out.append('"')
+            else:
+                out.append(ch)
+        i += 1
+    return "".join(out)
+
+
 def _rewrite_query_error(raw: str) -> str:
     """
     Rewrite low-level DuckDB error strings into actionable remediation hints
@@ -218,13 +271,19 @@ def peek_file(
     max_rows: int = 20,
 ) -> Dict[str, Any]:
     """
-    Inspect a file with a budget range-GET: detects content family (csv/json/text),
-    returns column headers and a preview without downloading the full file.
+    Inspect a SINGLE file via a budget range-GET. Returns the content family
+    (csv/json/text), column headers, and a preview — no full download.
+
+    USE THIS for one file at a time. For multiple files in one call, use
+    `peek_multiple` instead (different signature: takes a `files` list).
 
     Args:
-        dataset_id: Dataset identifier (e.g. "Barack_Obama")
-        file_path:  Relative path within the dataset (e.g. "files/data.txt")
+        dataset_id: ONE dataset identifier as a bare string, e.g. "Barack_Obama"
+        file_path:  ONE relative path within the dataset, e.g. "files/data.txt"
         max_rows:   Maximum preview rows to include (default 20)
+
+    Example call:
+        peek_file(dataset_id="index-crimes-by-county", file_path="files/rows.txt")
 
     Returns:
         Dict with keys: family, preview_text, header_columns, row_count_estimate,
@@ -299,31 +358,50 @@ def peek_file(
 
 
 # ---------------------------------------------------------------------------
-# Tool 1b: peek_files (batch wrapper)
+# Tool 1b: peek_multiple (batch wrapper around peek_file)
 # ---------------------------------------------------------------------------
 
 @tool
-def peek_files(
+def peek_multiple(
     files: List[Dict[str, str]],
     max_rows: int = 20,
 ) -> Dict[str, Any]:
     """
-    Inspect multiple files at once. Calls peek_file for each entry.
+    Inspect SEVERAL files in ONE call — a batch wrapper around peek_file.
+
+    USE THIS only when you already know which multiple files you need
+    (e.g. immediately after `list_files` returned several paths). For a
+    single file, use `peek_file` instead — its signature is simpler.
+
+    REQUIRED ARGUMENT SHAPE: You MUST pass a `files` list of dicts, NOT
+    `dataset_id`/`file_path` directly:
+
+        CORRECT:
+            peek_multiple(files=[
+                {"dataset_id": "census-2021", "file_path": "files/rows.txt"},
+            ])
+        WRONG (these will all error):
+            peek_multiple(max_rows=5)                             # missing files
 
     Args:
-        files:    List of dicts, each with 'dataset_id' and 'file_path'.
-                  Also accepts 'path' as an alias for 'file_path' so raw
-                  list_files output can be passed directly.
-                  Example: [{"dataset_id": "census", "file_path": "files/data.txt"}]
-                  Example: [{"dataset_id": "census", "path": "files/data.txt"}]
-        max_rows: Maximum preview rows per file (default 20)
+        files:    NON-EMPTY list of dicts. Each dict needs 'dataset_id' and
+                  'file_path'. The key 'path' is also accepted as an alias for
+                  'file_path' so raw list_files output can be passed directly.
+        max_rows: Maximum preview rows per file (default 20).
 
     Returns:
-        Dict with 'results' list (one entry per file, same shape as peek_file),
+        Dict with 'results' list (one entry per file, same shape as peek_file)
         and 'count'.
     """
     if not isinstance(files, list) or not files:
-        return {"error": "files must be a non-empty list of {dataset_id, file_path|path} dicts"}
+        return {
+            "error": (
+                "peek_multiple requires a non-empty `files` list of "
+                "{dataset_id, file_path} dicts. For a single file, call "
+                "peek_file(dataset_id, file_path) instead. Example: "
+                'peek_multiple(files=[{"dataset_id": "census", "file_path": "files/rows.txt"}])'
+            )
+        }
 
     results = []
     for spec in files:
@@ -573,6 +651,11 @@ def query_file(
     if not sql or not sql.strip():
         return {"error": "sql is required"}
 
+    # Auto-fix MySQL-style backtick identifiers — DuckDB only accepts double
+    # quotes. Preserves backticks inside string literals. Eliminates ~17
+    # Parser Errors per eval at the source.
+    sql = _normalize_sql_backticks(sql)
+
     folder = _resolve_dataset_folder(dataset_id)
     if folder is None:
         return {"error": f"Dataset not found or ambiguous: {dataset_id}"}
@@ -755,7 +838,7 @@ def summarize_context(
 __all__ = [
     # v2-new
     "peek_file",
-    "peek_files",
+    "peek_multiple",
     "read_file",
     "grep_file",
     "query_file",

@@ -3,7 +3,7 @@
 Interactive human-agent REPL.
 
 Lets you manually run a benchmark task using the same tools the LLM agent has:
-  search, search_keyword, list_files, peek_file, peek_files, read_file,
+  search, search_keyword, list_files, peek_file, peek_multiple, read_file,
   grep_file, query_file, download, execute_code, submit_answer
   sparse, hybrid, graph  (new search backends from Condition A/B)
 
@@ -33,7 +33,7 @@ from strands_evaluation.tools.agent_tools_v2 import (  # noqa: E402
     search,
     search_keyword,
     list_files,
-    peek_file, peek_files, read_file, grep_file, query_file,
+    peek_file, peek_multiple, read_file, grep_file, query_file,
     download,
     execute_code,
     get_sandbox_info,
@@ -135,7 +135,7 @@ def cmd_peek_file():
     print(_short(result))
 
 
-def cmd_peek_files():
+def cmd_peek_multiple():
     print("  Enter files to peek. Empty dataset_id to stop.")
     files = []
     while True:
@@ -149,7 +149,7 @@ def cmd_peek_files():
         print("  [!] Nothing to peek.")
         return
     t0 = time.time()
-    result = peek_files(files)
+    result = peek_multiple(files)
     print(f"  [{time.time()-t0:.1f}s]")
     print(_short(result))
 
@@ -319,7 +319,7 @@ COMMANDS = {
     "kw":       ("search_keyword — keyword/FTS search",            cmd_search_keyword),
     "ls":       ("list_files in dataset(s)",                       cmd_list_files),
     "peek":     ("peek_file — structure/sample preview",           cmd_peek_file),
-    "peeks":    ("peek_files — batch structure/sample preview",    cmd_peek_files),
+    "peeks":    ("peek_multiple — batch structure/sample preview", cmd_peek_multiple),
     "read":     ("read_file — paginated line reader",              cmd_read_file),
     "grep":     ("grep_file — regex search over S3 stream",         cmd_grep_file),
     "query":    ("query_file — SQL query via DuckDB httpfs",        cmd_query_file),
