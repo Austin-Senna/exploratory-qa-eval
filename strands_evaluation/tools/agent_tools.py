@@ -633,29 +633,51 @@ def download(files: List[Dict[str, str]]) -> Dict[str, Any]:
     """
     Download one or more files from S3 to the local sandbox directory.
 
+    REQUIRED ARGUMENT SHAPE — read carefully. You MUST pass a `files` list of
+    dicts. Do NOT pass `dataset_id` / `file_path` directly at the top level.
+
+        CORRECT (multiple files, up to 5):
+            download(files=[
+                {"dataset_id": "Barack_Obama", "file_path": "content.txt"},
+                {"dataset_id": "climate-data", "file_path": "files/data.txt"},
+            ])
+
+        WRONG (these will all error — observed in eval logs):
+            download(dataset_id="Barack_Obama", file_path="content.txt")
+            download({})                                            # empty payload
+
+
+    Maximum 5 files per call. If you need more, split into multiple `download`
+    calls — there is no batch override.
+
     Args:
-        files: List of file specifications, each with 'dataset_id' and 'file_path'.
-               Maximum 5 files per call.
-               Example: [{"dataset_id": "Barack_Obama", "file_path": "table_0.csv"}]
+        files: NON-EMPTY list of dicts (max length 5). Each dict needs
+               'dataset_id' (the bare dataset id, no folder prefix) and
+               'file_path' (the relative path within the dataset).
 
     Returns:
-        Dict with 'downloaded' list of successful downloads and 'sandbox_dir'
-
-    Example:
-        >>> download([{"dataset_id": "Barack_Obama", "file_path": "table_0.csv"}])
-        >>> download([
-        ...     {"dataset_id": "Barack_Obama", "file_path": "content.txt"},
-        ...     {"dataset_id": "climate-data", "file_path": "data.csv"}
-        ... ])
+        Dict with 'downloaded' list of successful downloads, 'download_count',
+        'sandbox_dir', and (if any failed) 'errors'.
     """
     if not isinstance(files, list):
-        return {'error': "files must be a list of {dataset_id, file_path} objects"}
+        return {'error': (
+            "download requires `files` to be a list of dicts, not a single "
+            "dict or other value. Example: "
+            'download(files=[{"dataset_id": "Barack_Obama", "file_path": "content.txt"}])'
+        )}
 
     if len(files) > 5:
-        return {'error': "Maximum 5 files per download call"}
+        return {'error': (
+            f"Maximum 5 files per download call (got {len(files)}). "
+            "Split your request into multiple download calls — there is no "
+            "batch override."
+        )}
 
     if len(files) == 0:
-        return {'error': "files list cannot be empty"}
+        return {'error': (
+            "download requires a non-empty `files` list. Example: "
+            'download(files=[{"dataset_id": "Barack_Obama", "file_path": "content.txt"}])'
+        )}
 
     s3 = _get_s3_client()
     sandbox = _get_sandbox_dir()
@@ -751,6 +773,96 @@ def get_sandbox_info() -> Dict[str, Any]:
 # =============================================================================
 # Tool 3: Execute Code (Python Sandbox)
 # =============================================================================
+
+def _rewrite_execute_code_error(error_str: str, traceback_str: str) -> Optional[str]:
+    """
+    Pattern-match common execute_code failure modes and return a one-line
+    actionable hint for the agent. Returns None when the error doesn't match
+    any known pattern.
+
+    Each pattern below maps to a real failure observed in eval logs (see
+    tool_error_findings.md). The hint is appended to the error result as a
+    separate `hint` field — the original `error` and `traceback` are unchanged.
+    """
+    if not error_str:
+        return None
+
+    combined = f"{error_str}\n{traceback_str or ''}"
+
+    # KeyError: 'features' — agent assumes any JSON file is a GeoJSON
+    # FeatureCollection. ~4 errors per eval.
+    if "KeyError: 'features'" in combined:
+        return (
+            "Not all JSON files are GeoJSON FeatureCollections. Use peek_file "
+            "to confirm the top-level shape (json_keys) before assuming "
+            "data['features']."
+        )
+
+    # JSONDecodeError on the first byte — agent ran json.load on a non-JSON
+    # file (often a CSV with .txt extension). ~7 errors per eval.
+    if "JSONDecodeError" in combined and "line 1 column 1" in combined:
+        return (
+            "File is not valid JSON. Use peek_file to check the family — many "
+            "`.txt` files in this lake are CSV, not JSON."
+        )
+
+    # TypeError: NoneType + str — `.get(key)` returned None and was concatenated.
+    # ~6 errors per eval.
+    if "TypeError: unsupported operand type(s) for +: 'NoneType' and 'str'" in combined:
+        return (
+            "A `.get(key)` returned None and was used in string concatenation. "
+            "Confirm the field exists with peek_file (json_keys / header_columns) "
+            "before assuming it's present."
+        )
+
+    # pandas 3.0 removed infer_datetime_format — argument is auto-detected now.
+    if "infer_datetime_format" in combined and "unexpected keyword argument" in combined:
+        return (
+            "pandas 3.0 removed `infer_datetime_format` — datetime format is "
+            "auto-detected now. Drop the argument and call to_datetime(s, errors='coerce')."
+        )
+
+    # Empty-iterable reductions — empty dataframe / filter result.
+    if (
+        "max() iterable argument is empty" in combined
+        or "min() iterable argument is empty" in combined
+        or "max() arg is an empty sequence" in combined
+        or "min() arg is an empty sequence" in combined
+        or "argmax of an empty sequence" in combined
+    ):
+        return (
+            "The iterable is empty (likely an empty filter result or dataframe). "
+            "Check `len(...)` or `if not df.empty` before reducing."
+        )
+
+    # pandas Usecols mismatch — agent guessed column names without peeking.
+    if "Usecols do not match columns" in combined:
+        return (
+            "Column names in `usecols` don't exist in the file. Use peek_file "
+            "to see the real header_columns before naming columns in read_csv."
+        )
+
+    # ModuleNotFoundError — list what IS available so the agent doesn't
+    # repeatedly try other modules.
+    mnfe_match = re.search(r"ModuleNotFoundError: No module named '([^']+)'", combined)
+    if mnfe_match:
+        module = mnfe_match.group(1)
+        return (
+            f"`{module}` is not available in the sandbox. Pre-installed modules: "
+            "pandas, json, csv, os, glob, re, pathlib, ijson. The sandbox blocks "
+            "network access, so pip install is not possible — use what's available."
+        )
+
+    # XML parser on non-XML file — usually a JSON or CSV.
+    if "ParseError" in combined and "not well-formed" in combined:
+        return (
+            "XML parser hit a non-XML file. Use peek_file to check the family "
+            "before parsing."
+        )
+
+    return None
+
+
 @tool
 def execute_code(code: str) -> Dict[str, Any]:
     """
@@ -758,13 +870,18 @@ def execute_code(code: str) -> Dict[str, Any]:
 
     The code runs with:
     - Working directory set to the sandbox directory
-    - Pre-imported: pandas, json, csv, os, glob, re
-    - Variable `SANDBOX_DIR` pointing to the sandbox directory
+    - Pre-imported: pandas, json, csv, os, glob, re, pathlib, ijson
+    - Variable `SANDBOX_DIR` pointing to the sandbox directory (also available
+      as os.environ['SANDBOX_DIR'])
     - Variable `FILES` containing list of downloaded file paths
 
     Write your analysis code and print() results. The printed output will be returned.
     You can use this tool both to query data and to view/preview files (txt, csv, etc).
     Note: execution has a timeout; avoid inefficient code.
+
+    For large JSON files (100+ MB), use the pre-imported `ijson` module to
+    stream-parse without loading everything into memory:
+        for feat in ijson.items(open(path, 'rb'), 'features.item'): ...
 
     Args:
         code: Python code to execute
@@ -818,7 +935,9 @@ def execute_code(code: str) -> Dict[str, Any]:
 
     _socket.socket = _blocked_socket
 
-    # Pre-import common libraries
+    # Pre-import common libraries. ijson is included so the agent can
+    # stream-parse 100+ MB JSON files without ModuleNotFoundError (~8 errors
+    # per eval before this).
     pre_imports = """
 import pandas as pd
 import json
@@ -826,6 +945,7 @@ import csv
 import os
 import glob
 import re
+import ijson
 from pathlib import Path
 """
 
@@ -833,6 +953,11 @@ from pathlib import Path
     old_stdout = sys.stdout
     old_stderr = sys.stderr
     old_cwd = os.getcwd()
+    # Save and set SANDBOX_DIR in os.environ — the agent frequently writes
+    # `os.environ['SANDBOX_DIR']` instead of using the injected local
+    # (~14 KeyError per eval). Both forms now work.
+    _prev_sandbox_env = os.environ.get('SANDBOX_DIR')
+    os.environ['SANDBOX_DIR'] = str(sandbox)
 
     stdout_capture = StringIO()
     stderr_capture = StringIO()
@@ -887,20 +1012,31 @@ from pathlib import Path
     except BaseException as e:
         # Catch BaseException to handle SystemExit, KeyboardInterrupt, etc.
         # that the agent's code might raise (these bypass "except Exception")
-        return {
+        error_str = f"{type(e).__name__}: {str(e)}"
+        traceback_str = traceback.format_exc()
+        result = {
             'output': stdout_capture.getvalue(),
-            'error': f"{type(e).__name__}: {str(e)}",
-            'traceback': traceback.format_exc(),
+            'error': error_str,
+            'traceback': traceback_str,
             'success': False,
             'sandbox_dir': str(sandbox),
             'sandbox_files': sandbox_files,
             'datasets_in_sandbox': sorted(datasets_in_sandbox)
         }
+        hint = _rewrite_execute_code_error(error_str, traceback_str)
+        if hint:
+            result['hint'] = hint
+        return result
     finally:
         sys.stdout = old_stdout
         sys.stderr = old_stderr
         os.chdir(old_cwd)
         _socket.socket = _original_socket  # Restore network access
+        # Restore the prior SANDBOX_DIR env var (or remove if it wasn't set)
+        if _prev_sandbox_env is None:
+            os.environ.pop('SANDBOX_DIR', None)
+        else:
+            os.environ['SANDBOX_DIR'] = _prev_sandbox_env
 
 
 # =============================================================================
@@ -938,8 +1074,4 @@ __all__ = [
     'execute_code',
     'cleanup_sandbox',
     'set_sandbox_dir',
-    'search_value',
-    'search_field',
-    'search_field_and_value',
-    'neighbor',
 ]

@@ -260,6 +260,33 @@ def _to_json_safe(value: Any) -> Any:
     return str(value)
 
 
+def _strip_folder_prefix(dataset_id: str) -> str:
+    """
+    Silently strip a hallucinated leading `wikipedia/` or `datagov/` prefix
+    from a dataset_id.
+
+    The agent frequently constructs dataset ids of the form `wikipedia/<page>`
+    after seeing a Wikipedia mention (~38 read_file errors per eval, plus a
+    handful in peek_file/grep_file). The actual dataset_id is the bare name
+    (e.g. `Logan_Fontenelle`), which the agent already knows one turn later
+    via search_prefix. Per tool_error_findings.md the recommended fix is to
+    auto-strip the prefix and resolve.
+
+    Strips a single optional leading slash, then a case-insensitive
+    `wikipedia/` or `datagov/` segment. Idempotent. Returns the input
+    unchanged for empty/None or strings that don't start with one of the
+    known folder prefixes.
+    """
+    if not dataset_id or not isinstance(dataset_id, str):
+        return dataset_id
+    candidate = dataset_id.lstrip("/")
+    lowered = candidate.lower()
+    for folder in ("wikipedia/", "datagov/"):
+        if lowered.startswith(folder):
+            return candidate[len(folder):]
+    return dataset_id
+
+
 # ---------------------------------------------------------------------------
 # Tool 1: peek_file
 # ---------------------------------------------------------------------------
@@ -293,6 +320,8 @@ def peek_file(
         return {"error": "dataset_id is required"}
     if not file_path:
         return {"error": "file_path is required"}
+
+    dataset_id = _strip_folder_prefix(dataset_id)
 
     folder = _resolve_dataset_folder(dataset_id)
     if folder is None:
@@ -445,6 +474,8 @@ def read_file(
 
     max_lines = min(max_lines, 10_000)
 
+    dataset_id = _strip_folder_prefix(dataset_id)
+
     folder = _resolve_dataset_folder(dataset_id)
     if folder is None:
         return {"error": f"Dataset not found or ambiguous: {dataset_id}"}
@@ -547,6 +578,8 @@ def grep_file(
         pattern = re.compile(regex_pattern, re.IGNORECASE)
     except re.error as e:
         return {"error": f"Invalid regex pattern: {e}"}
+
+    dataset_id = _strip_folder_prefix(dataset_id)
 
     folder = _resolve_dataset_folder(dataset_id)
     if folder is None:
