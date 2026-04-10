@@ -1,81 +1,79 @@
 ---
 name: plan-agent
-description: Planning framework for decomposing multi-hop data lake questions into ordered sub-tasks with search strategies
+description: Planning framework for decomposing multi-hop data lake questions into ordered sub-tasks with search strategies. ALWAYS load this skill first before calling plan() or any search tool. If you skip planning, you will waste tool calls on dead ends.
 ---
 
-## When to Use This Skill
+## Rule #1: Plan Before You Search
 
-Activate this skill at the start of a complex multi-hop question before searching. Use it to decompose the question into concrete steps so you don't waste tool calls on dead ends.
+Call `plan()` as your **first action** on every new question. Do NOT call `search_value`, `search_schema`, or `search_prefix` until you have a saved plan.
 
----
-
-## 4-Step Decomposition
-
-Break the question into these phases:
-
-1. **Entity resolution** — what government terms, program names, or geographic IDs are involved?
-   - Example: "food stamps" → "SNAP"; "unemployment benefits" → "ETA / UI beneficiaries"; city name → look up county and state FIPS code
-2. **Dataset discovery** — what distinct datasets are needed? For each, write a specific search query.
-   - Example: "public school counts by county" → `search_sparse("public school locations NCES")`
-3. **Relational mapping** — if combining datasets, identify the join key and confirm it exists in both
-   - Example: "join on STFIP (state FIPS) and NMCNTY (county name)"
-4. **Execution plan** — what specific operations yield the final answer?
-   - Example: "GROUP BY county, COUNT(*), filter WHERE STFIP='06', take top 3"
-
-Write out your plan as numbered sub-tasks before taking any search actions.
+A plan forces you to think about what you actually need before burning tool calls. Without one, you'll chase irrelevant datasets.
 
 ---
 
-## Sub-Task Format
+## How to Decompose a Question
 
-For each sub-task, specify:
-- What information is needed
-- Suggested search query or tool call
-- Expected dataset type (Wikipedia article, NCES school data, census, economic, etc.)
+Break it into 3-7 numbered sub-tasks across four phases:
 
-Example:
+1. **Entity resolution** — Translate the question's terms into government vocabulary.
+   - "food stamps" -> SNAP; "unemployment" -> ETA / UI beneficiaries
+   - City names -> county + state FIPS codes
+   - If you don't know the official term, your first sub-task is a Wikipedia or search lookup.
+
+2. **Dataset discovery** — For each dataset you need, write a specific search query.
+   - Shape queries as: `source/program + grain + metric + time`
+   - Better: `Texas county prison admissions fiscal year`
+   - Worse: `people entering prison system county`
+
+3. **Join mapping** — If combining datasets, name the join key and confirm it exists in both before querying.
+
+4. **Extraction** — What SQL or code produces the final number?
+   - Be specific: `GROUP BY county, COUNT(*), WHERE STFIP='06', top 3`
+
+Keep plans to 3-7 sub-tasks. Do not hallucinate dataset names.
+
+### Plan Format
+
+Every sub-task MUST have a **goal** and a **tool**. For risky steps, add an inline fallback with `-> else:`.
+
 ```
-1. Find the city/state of Khan Academy headquarters | search_sparse("Khan Academy") | Wikipedia
-2. Look up the state FIPS code for California | grep_file on school district dataset | datagov NCES
-3. Get top-3 counties by public school count in STFIP=06 | query_file GROUP BY county | datagov NCES
+1. Find Khan Academy HQ city/state | search_value("Khan Academy")
+     -> else: search_prefix("khan-academy")
+2. Resolve state to FIPS code | grep_file on NCES dataset
+     -> else: search_value("state FIPS codes") for a lookup table
+3. Count public schools by county in that state | query_file GROUP BY
+4. If county-level data missing, get state total | query_file WHERE STFIP=...
+     -> else: search for alternative school dataset via search_schema("school")
 ```
 
-Keep plans to 3-5 sub-tasks. Do not hallucinate dataset names.
+Do not write vague sub-tasks like "find relevant data" — name what you're looking for and which tool gets it. Fallbacks are optional but recommended for discovery steps where the first search may miss.
 
 ---
 
 ## When to Replan
 
-Revise your plan when:
-- You have completed 3+ sub-tasks and still haven't found a key dataset
-- Search results don't match what you expected
-- You have partial information and need to refocus on what's still missing
+Call `plan()` again in any of these situations:
 
-When replanning, summarize what you've found so far and identify the specific gap, then reformulate your remaining sub-tasks.
+1. **Plan completed, answer not found** — You finished all sub-tasks (including fallbacks) but still can't answer the question. Summarize what you found, identify what's missing, and write a new plan targeting the gap.
 
----
+2. **Before final extraction** — Once you've found your datasets and confirmed columns, replan as a sanity check. Write a focused 1-2 step plan for the exact query/code that produces the final answer. This catches misaligned assumptions before you burn your last tool calls.
 
-## Search Reformulation When Stuck
+3. **Dead end — pivot to alternative info** — The dataset you need doesn't seem to exist and your inline fallbacks are exhausted. Instead of repeating failed searches, replan around alternative information. Ask: "What *other* data could answer this question indirectly?" Then write sub-tasks to find that instead.
 
-If a search returns poor results, try in order:
-1. **Lexical pivot**: swap broad concept for agency/program term (e.g. "school count" → "NCES public school locations")
-2. **Granularity pivot**: search state-level if county-level fails; filter in code
-3. **Proxy pivot**: find a standard proxy metric if exact one is unavailable
+When replanning: summarize what you've found so far, name the specific gap, then write new sub-tasks for the gap only.
 
 ---
 
-## Context Management — summarize_context
+## Search Reformulation (When Stuck)
 
-If you have made many tool calls and the conversation is getting long, call `summarize_context` to free context without losing findings:
+Try these pivots in order:
 
-```
-summarize_context(
-  summary="Found dataset X (id: ...). Column Y contains the target values. Computed Z=42 for sub-task 1. Still need: sub-task 2.",
-  drop_messages=16
-)
-```
+1. **Lexical pivot** — Swap broad terms for agency/program names (e.g. "school count" -> "NCES public school locations")
+2. **Granularity pivot** — Search state-level if county-level returns nothing; filter down in code
+3. **Proxy pivot** — If the exact metric doesn't exist, find a standard proxy (e.g. "median income" for "poverty level")
 
-- Write your findings thoroughly — this summary replaces the dropped messages as permanent memory
-- Your summary is anchored at position 0 and will not be truncated
-- Use `drop_messages=10` for light cleanup, `20+` for heavy cleanup
-- Call this proactively when the conversation is getting long, before large queries that will add more context
+---
+
+## Context Cleanup
+
+If you've made 10+ tool calls, call `summarize_context` before continuing. Write all findings into the summary — dataset IDs, column names, computed values, remaining gaps. This becomes your permanent memory after old messages are dropped.

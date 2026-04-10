@@ -1,129 +1,80 @@
 ---
 name: query-data
-description: How to extract data from files — use query_file or grep_file before downloading to save tool calls
+description: How to extract data from files — use query_file or grep_file before downloading. Load this skill before any query_file, grep_file, read_file, or execute_code call. Reload after query failures or before your final extraction step.
 ---
 
-## Tool Cost Ladder — Use the Cheapest That Works
+## Rule #1: Use the Cheapest Tool That Works
 
-| Tool | Use when | Tool calls saved |
-|------|----------|-----------------|
-| `query_file` | COUNT, GROUP BY, filter, aggregate on CSV/JSON | saves 2-3 vs download+execute |
-| `grep_file` | find rows with a value, check column names exist | saves 2-3 vs download+execute |
-| `read_file` | inspect text files, read Wikipedia content.txt | saves 1-2 vs download |
-| `download + execute_code` | joins across files, complex multi-step pandas | required |
+| Tool | When to use | Calls saved |
+|---|---|---|
+| `query_file` | COUNT, GROUP BY, filter, aggregate on CSV/JSON | 2–3 |
+| `grep_file` | Find rows by value, check if a column exists | 2–3 |
+| `read_file` | Inspect text files, read Wikipedia content | 1–2 |
+| `download` + `execute_code` | Multi-file joins, complex pandas transforms | 0 (last resort) |
 
-**Wrong (3+ tool calls):** download → execute_code → pd.read_csv → df.groupby()
-**Right (1 tool call):** `query_file("SELECT NMCNTY, COUNT(*) FROM t WHERE STFIP='06' GROUP BY NMCNTY ORDER BY 2 DESC LIMIT 5")`
-
-Only use `execute_code` when genuinely required: multi-file joins, complex transforms, iterative analysis.
+Do NOT download a file just to run a simple aggregation. `query_file` does it in one call.
 
 ---
 
-## Before Writing Any Code — Verify Column Names
+## Rule #2: Check Column Names First — Every Time
 
-**Always check column names before writing any query or pandas code.** The most common failure is referencing a column that does not exist.
+Never assume column names from the question text. Government files use codes. Two equally good ways to check:
 
-```sql
--- Run this first, every time:
-SELECT * FROM t LIMIT 1
-```
+- **`peek_file`** (one file) or **`peek_multiple`** (many files at once) — fast if you already have dataset IDs from search. Shows headers and first rows. `peek_multiple` requires `files=[{dataset_id, file_path}, ...]`.
+- **`SELECT * FROM t LIMIT 1`** — use via `query_file` when you're already in query mode or need to see actual values alongside column names.
 
-Or use `peek_file` for a quick header preview. Never assume column names from the question text — files use government codes.
+Common name mismatches:
 
-**Common column name gotchas:**
-
-| What you might guess | What it might actually be |
+| You might guess | It might actually be |
 |---|---|
-| `state` | `STFIP`, `ST_FIPS`, `state_code`, `STATE`, `st` |
-| `county` | `NMCNTY`, `COUNTY`, `county_name`, `CTY_NAME`, `CTYNAME` |
-| `year` | `YEAR`, `fiscal_year`, `report_year`, `YEAR_REPORTED`, `SURVEY_YEAR` |
-| `count` / `value` | varies widely — always check |
-| `school_name` | `SCHNAM`, `SCH_NAME`, `NAME`, `INSTNM` |
+| `state` | `STFIP`, `ST_FIPS`, `state_code`, `STATE` |
+| `county` | `NMCNTY`, `COUNTY`, `CTY_NAME`, `CTYNAME` |
+| `year` | `YEAR`, `fiscal_year`, `SURVEY_YEAR` |
+| `school_name` | `SCHNAM`, `SCH_NAME`, `INSTNM` |
 
 ---
 
 ## Common Errors and Fixes
 
-**"Referenced column X not found" / Binder Error**
-→ Column name is wrong. Run `SELECT * FROM t LIMIT 1` to see the actual names, then rewrite.
+**"Referenced column X not found"**
+-> You guessed a column name. Check columns with `peek_file` (or `peek_multiple` for several files) or `SELECT * FROM t LIMIT 1` and rewrite.
 
-**"maximum_object_size exceeded" (~100MB limit)**
-→ File too large for direct DuckDB query. Use `download` + `execute_code` with column selection:
-```python
-import pandas as pd
-df = pd.read_csv("/path/to/file.csv", usecols=["col1", "col2"])
-```
-Or add a `WHERE` clause to filter rows before the size limit is hit.
+**"maximum_object_size exceeded" (~100MB)**
+-> File too large for DuckDB. Download it, then use `pd.read_csv(path, usecols=[...])` to load only the columns you need.
 
-**`KeyError: 'COLUMN_NAME'` in execute_code**
-→ Column name mismatch between peek preview and the actual downloaded file. Always print column names at the top of every execute_code block:
-```python
-print(df.columns.tolist())
-```
-
-**UTF-8 BOM or encoding error in execute_code**
-→ File has a BOM marker. Use:
-```python
-df = pd.read_csv(filepath, encoding='utf-8-sig')
-# or if that fails:
-df = pd.read_csv(filepath, encoding='latin-1')
-```
-
-**Empty DataFrame after filter or merge**
-→ Type mismatch. FIPS codes are often stored as strings (`"06"`) but may load as integers (`6`). Cast explicitly:
+**Empty DataFrame after filter**
+-> Type mismatch. FIPS codes load as integers (`6`) but are stored as strings (`"06"`). Cast explicitly:
 ```python
 df['STFIP'] = df['STFIP'].astype(str).str.zfill(2)
 ```
+
+**Encoding errors**
+-> Try `encoding='utf-8-sig'`, then `encoding='latin-1'`.
 
 ---
 
 ## execute_code Checklist
 
-Before submitting execute_code, verify:
-- [ ] Reload the file at the top — state does NOT persist between calls
-- [ ] Print `df.columns.tolist()` to confirm column names
-- [ ] Print `df.head(2)` before any filtering to confirm data loaded correctly
-- [ ] Always `print()` the final result — silent code produces nothing
-- [ ] Cast FIPS codes to `str` if comparing to string values (`"06"` not `6`)
-- [ ] If joining two files, print `df1.dtypes` and `df2.dtypes` first to catch type mismatches
+Before submitting any `execute_code` call, verify:
+
+1. Reload the file at the top — state does NOT persist between calls
+2. Print `df.columns.tolist()` immediately after loading
+3. Print `df.head(2)` before any filtering
+4. Always `print()` your final result — silent code produces nothing
+5. Cast FIPS codes to `str` before comparing
 
 ---
 
-## Output Limits — query_file, read_file, execute_code
+## Handling Truncated Output
 
-These tools cap output at ~24,000 characters (~6k tokens). If a result is too large you will get:
-- `truncation_note` describing how many rows/lines fit within the limit
-- `local_result_path` — path to the full result dumped in the sandbox
+`query_file`, `read_file`, and `execute_code` cap output at ~24K characters. If you see a `truncation_note`:
 
-**Recovery options (in order of preference):**
-1. Rewrite the query to return less: add `WHERE`, `GROUP BY`, select specific columns, use `LIMIT`
-2. Use `grep_file` to find a specific value instead of reading all rows
-3. Access the dump directly:
-   ```python
-   import json
-   data = json.load(open('<local_result_path>'))
-   rows = data['rows']    # list of lists
-   cols = data['columns'] # column names
-   print(cols)
-   print(rows[:5])
-   ```
-
-execute_code stdout is also capped. If truncated, print a summary (`df.describe()`, `df.head()`) instead of the full dataframe.
-
----
-
-## query_file Examples
-
-```sql
--- Check column names before writing real query
-SELECT * FROM t LIMIT 1
-
--- Count by group, top 5
-SELECT NMCNTY, COUNT(*) as cnt FROM t WHERE STFIP='53' GROUP BY NMCNTY ORDER BY cnt DESC LIMIT 5
-
--- Filter and aggregate
-SELECT SUM(beneficiaries) FROM t WHERE year=2020 AND state='CA'
-
--- Check distinct values
-SELECT DISTINCT year FROM t ORDER BY year
+1. **Tighten the query** — add `WHERE`, `GROUP BY`, select fewer columns, use `LIMIT`
+2. **Use `grep_file`** to find a specific value instead of reading all rows
+3. **Read the full dump** from `local_result_path`:
+```python
+import json
+data = json.load(open('<local_result_path>'))
+print(data['columns'])
+print(data['rows'][:5])
 ```

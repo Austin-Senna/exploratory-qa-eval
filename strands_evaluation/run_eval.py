@@ -442,8 +442,6 @@ def main() -> None:
     # Condition flags (ConditionConfig)
     parser.add_argument("--condition", choices=["baseline", "a", "b"], default="baseline",
                         help="Experiment condition: 'a' (tools-rich), 'b' (planning-rich), or 'baseline'")
-    parser.add_argument("--plan", choices=["imperative", "soft"], default="soft",
-                        help="Plan skill mode for Condition B (default: soft)")
     parser.add_argument("--sparse-backend", choices=["bm25", "splade"], default="bm25",
                         help="Sparse search backend for Condition A (default: bm25)")
     parser.add_argument("--results-output-dir", default="results",
@@ -467,9 +465,6 @@ def main() -> None:
     )
     safe_model_name = _display_name(agent_config)
     condition_label = args.condition
-    if args.condition == "b":
-        # Keep base condition for tool selection, but isolate outputs by plan mode.
-        condition_label = f"b__plan-{args.plan}"
     traces_root = os.path.join(args.results_output_dir, "traces")
     trace_dir = os.path.join(traces_root, condition_label, safe_model_name)
 
@@ -482,7 +477,6 @@ def main() -> None:
             condition=condition_label,
             base_condition=args.condition,
             sparse_backend=args.sparse_backend,
-            plan_mode=args.plan,
             trace_output_dir=trace_dir,
         ),
     )
