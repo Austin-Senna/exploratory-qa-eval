@@ -1,0 +1,33 @@
+{
+  "original_final_question": "Can you find the Manhattan neighborhood where the only NYC elementary school in District 3 that ranked in the top 3 by performance category score in all four consecutive years from 2006-2010. There is a museum that is a notable structure in that neighborhood and is adjacent to the Central Park, in what year is that museum built?. Your response should be in the format [Answer].",
+  "dataset_sequence": [
+    "2006-2007-school-progress-report",
+    "2007-2008-school-progress-report",
+    "2008-2009-school-progress-report",
+    "2009-2010-school-progress-report",
+    "2013-2014-school-locations",
+    "Upper_West_Side",
+    "Central_Park",
+    "American_Museum_of_Natural_History"
+  ],
+  "reasoning_chain_text": "1. Which NYC elementary schools in District 3 ranked in the top 3 by performance category score in 2006-07?\n2. Which NYC elementary schools in District 3 ranked in the top 3 by performance category score in 2007-08?\n3. Which NYC elementary schools in District 3 ranked in the top 3 by performance category score in 2008-09?\n4. Which NYC elementary schools in District 3 ranked in the top 3 by performance category score in 2009-10?\n5. In which neighborhood is <intersection of node_1, node_2, node_3, node_4: PS 009 Sarah Anderson> located?\n6. What are some notable structures that is a museum in <node_5 answer: Upper West Side>?\n7. Which museums are located adjacent to Central Park?\n8. In what year was <intersection of node_6, node_7: American Museum of Natural History> established?",
+  "original_reasoning_chain": [
+    "HOP 1 (d=4 superlative - nodes 1,2,3,4 all independent, all data.gov from different years):",
+    "  Node 1: Progress report 2006-07 \u2192 {PS 009, PS 199, PS 180}",
+    "  Node 2: Progress report 2007-08 \u2192 {PS 009, PS 166, PS 087}",
+    "  Node 3: Progress report 2008-09 \u2192 {PS 009, PS 163, PS 087}",
+    "  Node 4: Progress report 2009-10 \u2192 {PS 009, PS 199, PS 163}",
+    "  Intersection(1,2,3,4) \u2192 PS 009 Sarah Anderson (only school in top 3 all 4 years)",
+    "",
+    "HOP 2 (d=2 - nodes 6,7 depend on node 5, mix of data.gov and Wikipedia):",
+    "  Node 5: School locations (data.gov) \u2192 PS 009 is in Upper West Side",
+    "  Node 6: Upper West Side Wikipedia \u2192 museums in neighborhood \u2192 {AMNH, Lincoln Center}",
+    "  Node 7: Central Park Wikipedia \u2192 museums adjacent to park \u2192 {AMNH, Metropolitan Museum of Art}",
+    "  Intersection(6,7) \u2192 American Museum of Natural History (only museum in both Upper West Side AND adjacent to Central Park)",
+    "",
+    "HOP 3 (d=1 - depends on hop 2 result, Wikipedia):",
+    "  Node 8: AMNH Wikipedia \u2192 established in 1869",
+    "",
+    "Final answer: 1869"
+  ]
+}

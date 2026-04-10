@@ -1,0 +1,26 @@
+{
+  "original_final_question": "Among the United States Park Police, United States Capitol Police, and U.S. Secret Service Uniform Division, which had the highest average number of January moving violations from 2019 to 2021? That agency is operated by which federal agency, and that agency sits within which U.S. department? Who is the head of that department? Return the name only. Your response should be in the format [Answer].",
+  "dataset_sequence": [
+    "moving-violations-issued-in-january-2019",
+    "moving-violations-issued-in-january-2020",
+    "moving-violations-issued-in-january-2021",
+    "United_States_Park_Police",
+    "National_Park_Service",
+    "United_States_Department_of_the_Interior"
+  ],
+  "reasoning_chain_text": "1. Among the United States Park Police, United States Capitol Police, and U.S. Secret Service Uniform Division, which had the highest average number of January moving violations from 2019-2021? (Filter for this node: ISSUING_AGENCY_NAME in {UNITED STATES PARK POLICE, UNITED STATES CAPITOL POLICE, US. SECRET SERVICE UNIFORM DIVISION}; count rows by ISSUING_AGENCY_NAME.)\n2. Among the United States Park Police, United States Capitol Police, and U.S. Secret Service Uniform Division, which had the highest average number of January moving violations from 2019-2021? (Filter for this node: ISSUING_AGENCY_NAME in {UNITED STATES PARK POLICE, UNITED STATES CAPITOL POLICE, US. SECRET SERVICE UNIFORM DIVISION}; count rows by ISSUING_AGENCY_NAME.)\n3. Among the United States Park Police, United States Capitol Police, and U.S. Secret Service Uniform Division, which had the highest average number of January moving violations from 2019-2021? (Filter for this node: ISSUING_AGENCY_NAME in {UNITED STATES PARK POLICE, UNITED STATES CAPITOL POLICE, US. SECRET SERVICE UNIFORM DIVISION}; count rows by ISSUING_AGENCY_NAME.)\n4. Which federal agency operates the United States Park Police (from hop 1)?\n5. The agency (from hop 2) is within which U.S. department?\n6. Who is the head of the department (from hop 3)?",
+  "original_reasoning_chain": [
+    "HOP 1 (d=3): Compare January moving-violation counts for the three agencies in 2019-2021",
+    "  Node 1: 2019 moving violations",
+    "  Node 2: 2020 moving violations",
+    "  Node 3: 2021 moving violations; average is highest for UNITED STATES PARK POLICE",
+    "  Result: UNITED STATES PARK POLICE",
+    "HOP 2 (d=1): Identify the federal agency that operates the United States Park Police",
+    "  Node 4: Operated by the National Park Service",
+    "HOP 3 (d=1): Identify the U.S. department that contains the National Park Service",
+    "  Node 5: National Park Service is within the United States Department of the Interior",
+    "HOP 4 (d=1): Identify the head of the United States Department of the Interior",
+    "  Node 6: The current interior secretary is Doug Burgum",
+    "Final answer: Doug Burgum"
+  ]
+}

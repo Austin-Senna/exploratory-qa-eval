@@ -9,7 +9,7 @@ Use the same relative path as `tasks_mini`, replacing the root folder:
 - Plan: `plans_mini/k-5-d-3/task_1.json`
 
 ## Required file format
-Each plan file must be JSON with **exactly these required fields**:
+Each plan file must be JSON and must include these required fields:
 
 ```json
 {
@@ -27,6 +27,12 @@ Each plan file must be JSON with **exactly these required fields**:
   - Keep this as scaffolding instructions only.
   - Do **not** include final answers, computed values, or phrases like `Final answer:`.
   - Do **not** include node labels like `Node 1:`.
+
+## Optional convenience fields
+These fields are optional and ignored by ideal-mode loaders, but useful for review:
+
+- `original_final_question`: verbatim `question` copied from the source task file.
+- `original_reasoning_chain`: verbatim `reasoning_chain` copied from the source task file.
 
 ## Current behavior in `search_ideal.py`
 - `search_ideal` is the only search tool in ideal search mode.

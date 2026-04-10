@@ -1,7 +1,9 @@
 """Ideal planning helpers and tool surface.
 
 In ideal management mode, plans are loaded from plans_mini and treated as the
-canonical source of reasoning and dataset order.
+canonical source of reasoning and dataset order. The reasoning chain is
+planning context: the agent may reuse/copy it when accurate, but should prefer
+to produce a clearer, execution-ready plan.
 """
 
 from __future__ import annotations
@@ -35,7 +37,7 @@ def inject_reasoning_chain_prompt(
     *,
     task_id: str = "",
 ) -> str:
-    """Append the gold reasoning chain to prompt context for ideal mode."""
+    """Append the gold reasoning chain as planning context for ideal mode."""
     chain_text = format_reasoning_chain(reasoning_chain)
     if not chain_text:
         return system_prompt
@@ -43,8 +45,8 @@ def inject_reasoning_chain_prompt(
     task_suffix = f" ({task_id})" if task_id else ""
     section = (
         f"\n\n## GOLD REASONING CHAIN{task_suffix}\n"
-        "Treat this as the canonical reasoning plan for this task. "
-        "Use tools to verify and execute it efficiently.\n"
+        "Treat this as planning context for the task. "
+        "You may copy it when accurate, but prefer a clearer execution plan.\n"
         f"{chain_text}"
     )
     return system_prompt.rstrip() + section
@@ -52,20 +54,22 @@ def inject_reasoning_chain_prompt(
 
 @tool(context=True)
 def plan_ideal(plan_text: str, tool_context: ToolContext) -> str:
-    """Load ideal target chain and require a step-by-step execution plan."""
+    """Load file-backed reasoning context and ask agent to generate an ideal plan."""
     _ = plan_text  # File-backed only: manual plan text is ignored by design.
     global _BASE_PROMPT
 
     plan = load_plan_for_context()
     plan_block = (
-        "Target reasoning chain:\n"
+        "Target reasoning chain (planning context):\n"
         f"{plan.reasoning_chain_text}\n\n"
         "STEP-BY-STEP PLANNING DIRECTIVE:\n"
-        "Before additional retrieval/execution, write a numbered execution plan that explains how you will reach the target reasoning chain.\n"
+        "Before additional retrieval/execution, write a numbered execution plan based on this reasoning chain.\n"
+        "You may copy chain steps when they are already correct.\n"
+        "Prefer improving the plan with clearer execution actions, validations, and expected intermediate outputs.\n"
         "Requirements for that plan:\n"
         "1. Keep steps in dataset_sequence order.\n"
-        "2. For each step, name what must be verified/computed.\n"
-        "3. Do not just copy the target reasoning chain; explain concrete execution actions."
+        "2. For each step, state what must be verified/computed.\n"
+        "3. Produce an execution-ready plan in your own words where possible; copy only when it improves clarity."
     )
 
     agent = tool_context.agent
@@ -73,7 +77,11 @@ def plan_ideal(plan_text: str, tool_context: ToolContext) -> str:
     if not _BASE_PROMPT or "\n\n## IDEAL PLAN\n" not in current:
         _BASE_PROMPT = current
     agent.system_prompt = _BASE_PROMPT + "\n\n## IDEAL PLAN\n" + plan_block
-    return "Ideal plan target loaded. Now produce a numbered step-by-step execution plan to reach the target reasoning chain, then continue."
+    return (
+        "Ideal plan context loaded. "
+        "Now produce a numbered execution plan from the reasoning chain; "
+        "copying is allowed, but a clearer execution-ready plan is preferred."
+    )
 
 
 __all__ = [

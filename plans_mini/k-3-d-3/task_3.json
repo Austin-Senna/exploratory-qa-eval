@@ -1,0 +1,31 @@
+{
+  "original_final_question": "Can you find me the NYC elementary school in District 15 that ranked in the top 2 by performance category score over each school year from 2010-13. For the neighborhood this elementary school is located in, which park is this neighborhood bounded by? Report the size of this park in arce. Your response should be in the format [Answer].",
+  "dataset_sequence": [
+    "2010-2011-school-progress-report",
+    "2011-2012-school-progress-report-all-schools",
+    "2012-2013-citywide-progress-report",
+    "2013-2014-school-locations",
+    "Park_Slope",
+    "Prospect_Park_(Brooklyn)"
+  ],
+  "reasoning_chain_text": "1. Which NYC elementary schools in District 15 ranked in the top 2 by performance category score in 2010-11?\n2. Which NYC elementary schools in District 15 ranked in the top 2 by performance category score in 2011-12?\n3. Which NYC elementary schools in District 15 ranked in the top 2 by performance category score in 2012-13?\n4. What is the zip code where is <intersection of node_1, node_2, node_3: PS 321 William Penn> located?\n5. Which park is the neighborhood corresponding to the zip code in <node_4 answer> bounded by?\n6. What is the size of the park in <node_5 answer>? Answer in acre",
+  "original_reasoning_chain": [
+    "HOP 1 (d=3 superlative - nodes 1,2,3 all independent):",
+    "  Node 1: Progress report 2010-11, top 2 District 15 \u2192 {PS 321, PS 107}",
+    "  Node 2: Progress report 2011-12, top 2 District 15 \u2192 {PS 321, PS 10}",
+    "  Node 3: Progress report 2012-13, top 2 District 15 \u2192 {PS 321, PS 10}",
+    "  Intersection(1,2,3) \u2192 PS 321 William Penn (only school in top 2 all 3 years)",
+    "  Note: PS 107 not in top 2 in 2011-12 or 2012-13; PS 10 not in top 2 in 2010-11",
+    "",
+    "HOP 2 (chain - nodes 4 depend on hop 1 result):",
+    "  Node 4: School locations \u2192 PS 321 is in zip code 11215",
+    "HOP 3 (chain - nodes 5 depend on hop 2 result):",
+    "  Node 5: Park Slope, Brooklyn contains zip code 11215",
+    "  Node 5: Wikipedia Park Slope \u2192 Bordered by Prospect Park",
+    "",
+    "HOP 4 (chain - node 6 depends on node 5):",
+    "  Node 6: Wikipedia Prospect Park \u2192 526-acre",
+    "",
+    "Final answer: 526"
+  ]
+}

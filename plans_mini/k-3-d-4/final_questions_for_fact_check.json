@@ -1,0 +1,42 @@
+[
+  {
+    "task": "task_1.json",
+    "question": "I'm analyzing the DC Ward that had the lowest average crime count from 2018 to 2021. Find the county in Maryland containing areas sharing a name with the neighborhoods in this ward. Report the rank of the average household income in U.S. in 2020. Your response should be in the format [Answer]."
+  },
+  {
+    "task": "task_10.json",
+    "question": "Across years 2015-16 through 2018-19, which Texas counties are consistently in the top five for total lunch serves in the Seamless Summer Option program? Among those counties, identify the two with the largest percentage decreases in day care home meal reimbursements from 2018-19 to 2020-21. For those two counties, compute the average child center enrollment across 2018-19 and 2019-20 and report the smaller average enrollment value. Return the number only. Your response should be in the format [Answer]."
+  },
+  {
+    "task": "task_2.json",
+    "question": "Can you tell me which high school had a consistently top 3 number of violent/disruptive incident reported between 2010 and 2014? The borough containing that high school also has a suspension bridge that connects to NYC, what is the name of that suspension bridge?. Your response should be in the format [Answer]."
+  },
+  {
+    "task": "task_3.json",
+    "question": "Can you find the Manhattan neighborhood where the only NYC elementary school in District 3 that ranked in the top 3 by performance category score in all four consecutive years from 2006-2010. There is a museum that is a notable structure in that neighborhood and is adjacent to the Central Park, in what year is that museum built?. Your response should be in the format [Answer]."
+  },
+  {
+    "task": "task_4.json",
+    "question": "In what year was the university founded where the civil rights leader after whom the only NYC elementary school that received an 'A' consistently from 2007-2011 in District 6 is named after earned his bachelor's degree? Your response should be in the format [Answer]."
+  },
+  {
+    "task": "task_5.json",
+    "question": "Can you tell me the year this city was incorporated? This city is the county seat of the county with the highest number of veterans receiving disability compensation in 2023 within a state. The state it's in is a Mountain state that borders Mexico and is one of the Four Corners states. It also had between 4000 and 6000 veterans receiving pensions in 2020. Your response should be in the format [Answer]."
+  },
+  {
+    "task": "task_6.json",
+    "question": "Find the New England state had between 200 and 400 veteran pension recipients in both 2020 and 2021, and between 150 and 300 in 2023. What year was its capital city chartered? Only report the year in your answer. Your response should be in the format [Answer]."
+  },
+  {
+    "task": "task_7.json",
+    "question": "Find the Missouri state agency with 3rd average spending from 2007-10. Identify the city where its Southwest district is based. What highway was born in that city? Return the highway name only. Your response should be in the format [Answer]."
+  },
+  {
+    "task": "task_8.json",
+    "question": "Among Texas counties in the top five for average capital outlay spending from 2018 to 2021, identify the two highest by average prison releases in 2019 and 2020. For those two counties, compute the percentage increase in VA disability compensation recipients from 2020 to 2023, then report the larger increase percentage rounded to the nearest integer. Return the integer only. Your response should be in the format [Answer]."
+  },
+  {
+    "task": "task_9.json",
+    "question": "Which original Texas county is also in the top five for average capital outlay spending from 2018 to 2021? Among those counties, which one had the lowest average criminal releases across 2019 and 2020? Return the county name only. Your response should be in the format [Answer]."
+  }
+]

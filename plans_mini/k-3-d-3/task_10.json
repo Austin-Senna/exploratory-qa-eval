@@ -1,0 +1,39 @@
+{
+  "original_final_question": "Identify the Chicago library branch that ranked in the top five for circulation and visitors, and top three for computer sessions, every year from 2019 to 2021. Return the branch name only. Your response should be in the format [Answer].",
+  "dataset_sequence": [
+    "libraries-2019-circulation-by-location",
+    "libraries-2020-circulation-by-location",
+    "libraries-2021-circulation-by-location",
+    "libraries-2019-visitors-by-location",
+    "libraries-2020-visitors-by-location",
+    "libraries-2021-visitors-by-location",
+    "libraries-2019-computer-sessions-by-location",
+    "libraries-2020-computer-sessions-by-location",
+    "libraries-2021-computer-sessions-by-location"
+  ],
+  "reasoning_chain_text": "1. Which branches (with physical addresses) were in the top 5 by YTD circulation in the given year? (Filter for this node: keep rows with non-null ADDRESS; group by LOCATION; sum YTD; sort YTD desc; take top 5.)\n2. Which branches (with physical addresses) were in the top 5 by YTD circulation in the given year? (Filter for this node: keep rows with non-null ADDRESS; group by BRANCH; sum YTD; sort YTD desc; take top 5.)\n3. Which branches (with physical addresses) were in the top 5 by YTD circulation in the given year? (Filter for this node: keep rows with non-null ADDRESS; group by BRANCH; sum YTD; sort YTD desc; take top 5.)\n4. Among the branches (from hop 1), which were in the top 5 by YTD visitors in the given year? (Filter for this node: keep rows with non-null ADDRESS; group by LOCATION; sum YTD; sort YTD desc; take top 5 overall.)\n5. Among the branches (from hop 1), which were in the top 5 by YTD visitors in the given year? (Filter for this node: keep rows with non-null ADDRESS; group by BRANCH; sum YTD; sort YTD desc; take top 5 overall.)\n6. Among the branches (from hop 1), which were in the top 5 by YTD visitors in the given year? (Filter for this node: keep rows with non-null ADDRESS; group by BRANCH; sum YTD; sort YTD desc; take top 5 overall.)\n7. Among the branches (from hop 2), which were in the top 3 by YTD computer sessions in the given year? (Filter for this node: keep rows with non-null ADDRESS; group by LOCATION; sum YTD; sort YTD desc; take top 3 overall.)\n8. Among the branches (from hop 2), which were in the top 3 by YTD computer sessions in the given year? (Filter for this node: keep rows with non-null ADDRESS; group by BRANCH; sum YTD; sort YTD desc; take top 3 overall.)\n9. Among the branches (from hop 2), which were in the top 3 by YTD computer sessions in the given year? (Filter for this node: keep rows with non-null ADDRESS; group by BRANCH; sum YTD; sort YTD desc; take top 3 overall.)",
+  "original_reasoning_chain": [
+    "HOP 1 (d=3, circulation 2019-2021 - nodes 1-3):",
+    "  Question: Which branches (with physical addresses) were in the top 5 by YTD circulation in the given year?",
+    "  Node 1: 2019 top 5 -> {HAROLD WASHINGTON LIBRARY CENTER, Sulzer Regional Library, Edgewater, Lincoln Belmont, Lincoln Park}",
+    "  Node 2: 2020 top 5 -> {Harold Washington Library Center, Sulzer Regional Library, Lincoln Belmont, Edgewater, Northtown}",
+    "  Node 3: 2021 top 5 -> {Harold Washington Library Center, Sulzer Regional Library, Lincoln Belmont, Edgewater, Lincoln Park}",
+    "  Answer: Intersection across 2019-2021 -> {Sulzer Regional Library, Edgewater, Lincoln Belmont}",
+    "",
+    "HOP 2 (d=3, visitors 2019-2021 - nodes 4-6):",
+    "  Question: Among the branches (from hop 1), which were in the top 5 by YTD visitors in the given year?",
+    "  Node 4: 2019 top 5 -> {Harold Washtington Library Center, Sulzer Regional Library, Chinatown, Woodson Regional Library, Edgewater}",
+    "  Node 5: 2020 top 5 -> {Harold Washtington Library Center, Sulzer Regional Library, Edgewater, Woodson Regional Library, Rogers Park}",
+    "  Node 6: 2021 top 5 -> {Harold Washtington Library Center, Sulzer Regional Library, Edgewater, Chinatown, Logan Square}",
+    "  Answer: Intersection with hop 1 -> {Sulzer Regional Library, Edgewater}",
+    "",
+    "HOP 3 (d=3, computer sessions 2019-2021 - nodes 7-9):",
+    "  Question: Among the branches (from hop 2), which were in the top 3 by YTD computer sessions in the given year?",
+    "  Node 7: 2019 top 3 -> {HAROLD WASHINGTON LIBRARY CENTER, Woodson Regional Library, Sulzer Regional Library}",
+    "  Node 8: 2020 top 3 -> {Harold Washington Library Center, Woodson Regional Library, Sulzer Regional Library}",
+    "  Node 9: 2021 top 3 -> {Harold Washington Library Center, Woodson Regional Library, Sulzer Regional Library}",
+    "  Answer: Intersection with hop 2 -> {Sulzer Regional Library}",
+    "",
+    "Final answer: Sulzer Regional Library"
+  ]
+}

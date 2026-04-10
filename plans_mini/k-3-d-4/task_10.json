@@ -1,0 +1,34 @@
+{
+  "original_final_question": "Across years 2015-16 through 2018-19, which Texas counties are consistently in the top five for total lunch serves in the Seamless Summer Option program? Among those counties, identify the two with the largest percentage decreases in day care home meal reimbursements from 2018-19 to 2020-21. For those two counties, compute the average child center enrollment across 2018-19 and 2019-20 and report the smaller average enrollment value. Return the number only. Your response should be in the format [Answer].",
+  "dataset_sequence": [
+    "summer-meal-programs-seamless-summer-option-sso-meal-count-information-program-period-2016",
+    "summer-meal-programs-seamless-summer-option-sso-meal-count-information-program-period-2017",
+    "summer-meal-programs-seamless-summer-option-sso-meal-count-information-program-period-2018",
+    "summer-meal-programs-seamless-summer-option-sso-meal-count-information-program-period-2019",
+    "child-and-adult-care-food-programs-cacfp-day-care-homes-meal-reimbursement-program-ye-2018",
+    "child-and-adult-care-food-programs-cacfp-day-care-homes-meal-reimbursement-program-ye-2020",
+    "child-and-adult-care-food-program-cacfp-child-centers-meal-reimbursement-program-year-2018",
+    "child-and-adult-care-food-program-cacfp-child-centers-meal-reimbursement-program-year-2019"
+  ],
+  "reasoning_chain_text": "1. Which Texas counties were in the top five for SSO LunchTotal in every program year from 2015-2016 through 2018-2019? (Filter for this node: ProgramYear == 2015-2016; group by SiteCounty; sum LunchTotal; rank by total; keep top 5.)\n2. Which Texas counties were in the top five for SSO LunchTotal in every program year from 2015-2016 through 2018-2019? (Filter for this node: ProgramYear == 2016-2017; group by SiteCounty; sum LunchTotal; rank by total; keep top 5.)\n3. Which Texas counties were in the top five for SSO LunchTotal in every program year from 2015-2016 through 2018-2019? (Filter for this node: ProgramYear == 2017-2018; group by SiteCounty; sum LunchTotal; rank by total; keep top 5.)\n4. Which Texas counties were in the top five for SSO LunchTotal in every program year from 2015-2016 through 2018-2019? (Filter for this node: ProgramYear == 2018-2019; group by SiteCounty; sum LunchTotal; rank by total; keep top 5.)\n5. Among {Harris, Hidalgo, Dallas, Cameron} (from hop 1), which counties had the largest percentage decrease in CACFP day care home meal reimbursements between the 2018-2019 and 2020-2021 program years? (Filter for this node: ProgramYear == 2018-2019; group by SiteCounty; sum TotalMealReimbursement.)\n6. Among {Harris, Hidalgo, Dallas, Cameron} (from hop 1), which counties had the largest percentage decrease in CACFP day care home meal reimbursements between the 2018-2019 and 2020-2021 program years? (Filter for this node: ProgramYear == 2020-2021; group by SiteCounty; sum TotalMealReimbursement.)\n7. Among {Hidalgo, Cameron} (from hop 2), which county had the higher average CACFP child-center EnrollmentQty across the 2018-2019 and 2019-2020 program years? (Filter for this node: ProgramYear == 2018-2019; group by SiteCounty; sum EnrollmentQty.)\n8. Among {Hidalgo, Cameron} (from hop 2), which county had the higher average CACFP child-center EnrollmentQty across the 2018-2019 and 2019-2020 program years? (Filter for this node: ProgramYear == 2019-2020; group by SiteCounty; sum EnrollmentQty.)",
+  "original_reasoning_chain": [
+    "HOP 1 (d=4, SSO LunchTotal 2015-2016 to 2018-2019 - nodes 1-4):",
+    "  Node 1 (2015-2016): top five LunchTotal counties -> {Harris, Hidalgo, Dallas, Cameron, El Paso}",
+    "  Node 2 (2016-2017): top five LunchTotal counties -> {Hidalgo, Harris, Dallas, Cameron, Bexar}",
+    "  Node 3 (2017-2018): top five LunchTotal counties -> {Hidalgo, Harris, Dallas, Cameron, Bexar}",
+    "  Node 4 (2018-2019): top five LunchTotal counties -> {Hidalgo, Harris, Dallas, Bexar, Cameron}",
+    "  Intersection: {Harris, Hidalgo, Dallas, Cameron}",
+    "",
+    "HOP 2 (d=2, CACFP day care homes reimbursements 2018-2019 vs 2020-2021 - nodes 5-6):",
+    "  Node 5 totals (2018-2019): Harris 8,757,796.13; Dallas 2,835,278.75; Hidalgo 1,202,699.73; Cameron 392,489.51",
+    "  Node 6 totals (2020-2021): Harris 7,558,597.77; Dallas 2,393,411.26; Hidalgo 971,063.56; Cameron 330,003.06",
+    "  Percent decreases: Hidalgo -19.26%, Cameron -15.92%, Dallas -15.58%, Harris -13.69% -> two largest decreases {Hidalgo, Cameron}",
+    "",
+    "HOP 3 (d=2, CACFP child centers EnrollmentQty 2018-2019 vs 2019-2020 - nodes 7-8):",
+    "  Node 7 totals (2018-2019): Cameron 7,620,183; Hidalgo 1,661,128",
+    "  Node 8 totals (2019-2020): Cameron 1,076,746; Hidalgo 1,477,805",
+    "  Average EnrollmentQty: Cameron 4,348,464.5 vs Hidalgo 1,569,466.5",
+    "  Smaller average EnrollmentQty: 1,569,466.5",
+    "  Final answer: 1569466.5"
+  ]
+}

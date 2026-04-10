@@ -1,0 +1,40 @@
+{
+  "original_final_question": "Identify the Chicago city department that consistently ranked in the top five for ordinance appropriations (with non-zero budget) and also had the highest average salary budget recommendations from 2019 to 2021. Return the department name only. Your response should be in the format [Answer].",
+  "dataset_sequence": [
+    "budget-2019-budget-ordinance-appropriations",
+    "budget-2020-budget-ordinance-appropriations",
+    "budget-2021-budget-ordinance-appropriations",
+    "budget-2019-budget-ordinance-positions-and-salaries",
+    "budget-2020-budget-ordinance-positions-and-salaries",
+    "budget-2021-budget-ordinance-positions-and-salaries",
+    "budget-2019-budget-recommendations-positions-and-salaries",
+    "budget-2020-budget-recommendations-positions-and-salaries",
+    "budget-2021-budget-recommendations-positions-and-salaries"
+  ],
+  "reasoning_chain_text": "1. Which department numbers were in the top 5 by total ordinance appropriation in each year 2019-2021? (Filter for this node: group by DEPARTMENT NUMBER; sum 2019 ORDINANCE (AMOUNT $); rank desc; take top 5.)\n2. Which department numbers were in the top 5 by total ordinance appropriation in each year 2019-2021? (Filter for this node: group by DEPARTMENT NUMBER; sum 2020 ORDINANCE (AMOUNT $); rank desc; take top 5.)\n3. Which department numbers were in the top 5 by total ordinance appropriation in each year 2019-2021? (Filter for this node: group by DEPARTMENT NUMBER; sum 2021 ORDINANCE (AMOUNT $); rank desc; take top 5.)\n4. For the department numbers (from hop 1), what were the total budgeted amounts in the Budget Ordinance Positions and Salaries dataset for each year 2019-2021? (Filter for this node: DEPARTMENT CODE in hop 1 intersection {99, 57, 85, 50}; sum TOTAL BUDGETED AMOUNT by DEPARTMENT CODE.)\n5. For the department numbers (from hop 1), what were the total budgeted amounts in the Budget Ordinance Positions and Salaries dataset for each year 2019-2021? (Filter for this node: DEPARTMENT CODE in hop 1 intersection {99, 57, 85, 50}; sum TOTAL BUDGETED AMOUNT by DEPARTMENT CODE.)\n6. For the department numbers (from hop 1), what were the total budgeted amounts in the Budget Ordinance Positions and Salaries dataset for each year 2019-2021? (Filter for this node: DEPARTMENT CODE in hop 1 intersection {99, 57, 85, 50}; sum TOTAL BUDGETED AMOUNT by DEPARTMENT CODE.)\n7. For the department codes (from hop 2), what were the total budgeted amounts in the Budget Recommendations Positions and Salaries dataset for each year 2019-2021? (Filter for this node: DEPARTMENT CODE in hop 2 list {57, 85, 50}; sum TOTAL BUDGETED AMOUNT by DEPARTMENT CODE.)\n8. For the department codes (from hop 2), what were the total budgeted amounts in the Budget Recommendations Positions and Salaries dataset for each year 2019-2021? (Filter for this node: DEPARTMENT CODE in hop 2 list {57, 85, 50}; sum TOTAL BUDGETED AMOUNT by DEPARTMENT CODE.)\n9. For the department codes (from hop 2), what were the total budgeted amounts in the Budget Recommendations Positions and Salaries dataset for each year 2019-2021? (Filter for this node: DEPARTMENT CODE in hop 2 list {57, 85, 50}; sum TOTAL BUDGETED AMOUNT by DEPARTMENT CODE.)",
+  "original_reasoning_chain": [
+    "HOP 1 (d=3, Chicago budget ordinance appropriations 2019-2021 - nodes 1-3):",
+    "  Question: Which department numbers were in the top 5 by total ordinance appropriation in each year 2019-2021?",
+    "  Node 1: 2019 top 5 -> {99 FINANCE GENERAL, 57 CPD, 85 AVIATION, 59 CFD, 50 DFSS}",
+    "  Node 2: 2020 top 5 -> {99 FINANCE GENERAL, 57 CPD, 85 AVIATION, 50 DFSS, 59 CFD}",
+    "  Node 3: 2021 top 5 -> {99 FINANCE GENERAL, 57 CPD, 85 CDA, 50 DFSS, 84 CDOT}",
+    "  Answer: Intersection across 2019-2021 -> {99, 57, 85, 50}",
+    "",
+    "HOP 2 (d=3, Chicago budget ordinance positions and salaries 2019-2021 - nodes 4-6):",
+    "  Question: For the department numbers (from hop 1), what were the total budgeted amounts in the Budget Ordinance Positions and Salaries dataset for each year 2019-2021?",
+    "  Node 4: 2019 totals -> 57 $1,293,487,079.00; 85 $144,020,555.00; 50 $42,342,535.00; 99 $0.00",
+    "  Node 5: 2020 totals -> 57 $1,308,621,421.00; 85 $159,362,510.00; 50 $42,996,687.00; 99 $0.00",
+    "  Node 6: 2021 totals -> 57 $1,277,019,448.00; 85 $158,941,618.00; 50 $43,046,519.00; 99 $0.00",
+    "  Answer: Nonzero across all three years -> {57, 85, 50}",
+    "",
+    "HOP 3 (d=3, Chicago budget recommendations positions and salaries 2019-2021 - nodes 7-9):",
+    "  Question: For the department codes (from hop 2), what were the total budgeted amounts in the Budget Recommendations Positions and Salaries dataset for each year 2019-2021?",
+    "  Node 7: 2019 totals -> 57 Chicago Police Department $1,293,460,481.00; 85 Chicago Department of Aviation $144,015,863.00; 50 Department of Family and Support Services $42,342,535.00",
+    "  Node 8: 2020 totals -> 57 Chicago Police Department $1,308,615,601.00; 85 Chicago Department of Aviation $159,389,114.00; 50 Department of Family and Support Services $42,996,687.00",
+    "  Node 9: 2021 totals -> 57 Chicago Police Department $1,277,090,115.00; 85 Chicago Department of Aviation $158,946,654.00; 50 Department of Family and Support Services $43,048,415.00",
+    "  Average totals 2019-2021 -> 57 $1,293,055,399.00; 85 $154,117,210.33; 50 $42,795,879.00",
+    "  Answer: Chicago Police Department",
+    "",
+    "Final answer: Chicago Police Department"
+  ]
+}

@@ -1,10 +1,10 @@
 {
   "original_final_question": "Can you tell me which has the greatest number of incidents in 2022 among (1) counts by division level for New Orleans Police Department cases where officers applied force, (2) the count of dispatch-system incident records from the Austin Police Department sector with the most searches (excluding Sector Unknown), and (3) the maximum count of incidents where officers applied force across Austin Police Department council districts? Report the greatest number. Your response should be in the format [Answer].",
   "dataset_sequence": [
-    "apd-computer-aided-dispatch-incidents",
+    "nopd-use-of-force-incidents",
     "apd-searches-by-type",
-    "apd-use-of-force",
-    "nopd-use-of-force-incidents"
+    "apd-computer-aided-dispatch-incidents",
+    "apd-use-of-force"
   ],
   "reasoning_chain_text": "1. Compute 2022 maximum NOPD use-of-force incident count by division.\\n2. In 2022 APD searches-by-type data, identify the sector with the most searches, excluding Sector Unknown.\\n3. Use that sector to count 2022 APD CAD incidents.\\n4. Compute 2022 maximum APD use-of-force incident count by council district.\\n5. Compare the three derived counts and return the greatest number.",
   "original_reasoning_chain": [

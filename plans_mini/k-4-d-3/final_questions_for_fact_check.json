@@ -1,0 +1,42 @@
+[
+  {
+    "task": "task_1.json",
+    "question": "In which Virginia county is the NASA facility of a system developed? This system was used in the 2007 USGS topographic survey of the national monument honoring a U.S. president born in Virginia who also held a general officer rank and appears on current U.S. currency. Your response should be in the format [Answer]."
+  },
+  {
+    "task": "task_10.json",
+    "question": "Among the United States Park Police, United States Capitol Police, and U.S. Secret Service Uniform Division, which had the highest average number of January moving violations from 2019 to 2021? That agency is operated by which federal agency, and that agency sits within which U.S. department? Who is the head of that department? Return the name only. Your response should be in the format [Answer]."
+  },
+  {
+    "task": "task_2.json",
+    "question": "Can you find out the Manhattan neighborhood containing a top 7 high school from 2007-2010 by overall score. Then, find out which NYC structure was built with what this neighborhood is named after and was designed by Stanford White. Report in what year is this structure designed. Your response should be in the format [Answer]."
+  },
+  {
+    "task": "task_3.json",
+    "question": "I am analyzing a specific New York State county which supports a significant population, reporting between 29,000 and 75,000 households on SNAP, 350 to 600 children in foster care, and 5,000 to 18,000 adults in mental health programs. Operationally, it manages a Temporary Assistance caseload of 4,000 to 6,000 using a staff of 600 to 1,000, while processing between 200 and 400 new case openings per month. What year was its county seat incorporated as a city? Please return the year only. Your response should be in the format [Answer]."
+  },
+  {
+    "task": "task_4.json",
+    "question": "Find the New York counties outside of NYC had over 90 youth detention admissions in 2015, a jail census under 750 in 2021, and over 65,500 basic STAR tax exemptions in 2022. Between them, identify the county with the highest 2021 violent crime count. In what year was its county seat incorporated as a city? Please return the year only. Your response should be in the format [Answer]."
+  },
+  {
+    "task": "task_5.json",
+    "question": "Find the Iowa counties met the following criteria in 2019: unemployment above 2.9%, biofuel distribution above 12%, and personal income above $4 billion. Compare the 2020 census populations of their county seats and report the population of the county seat for the most populous county? Only return the population number. Your response should be in the format [Answer]."
+  },
+  {
+    "task": "task_6.json",
+    "question": "Across 2021-2023, which Missouri state agency stayed in the top five for professional services spending and also had the highest average employee count? In its headquarters city, what historically Black university is located? Return the university name only. Your response should be in the format [Answer]."
+  },
+  {
+    "task": "task_7.json",
+    "question": "Among the Missouri Department of Corrections, the Missouri Department of Social Services, and the Missouri Department of Transportation, which had the highest average employee count from 2021 through 2023? In that agency's headquarters city, a historically Black university was founded. Who founded that university? Return the name only. Your response should be in the format [Answer]."
+  },
+  {
+    "task": "task_8.json",
+    "question": "Across 2019-2021, identify the Texas counties that consistently rank in the top five for capital outlay spending and also rank in the statewide top five for prisoner releases from the Department of Criminal Justice in each of those years. Among that set, the county with the highest average intake counts from the Department of Criminal Justice over 2019-2021 has what county seat? Return the city name only. Your response should be in the format [Answer]."
+  },
+  {
+    "task": "task_9.json",
+    "question": "Across January 2019-2021, identify the issuing agencies that consistently ranked in the top 20 by total parking-violation fines. From those, keep only the U.S. national law-enforcement bodies and find which had the highest average number of January moving violations from 2019-2021. That agency is operated by a federal agency within a U.S. department. What is the department's name? Return the department name only. Your response should be in the format [Answer]."
+  }
+]

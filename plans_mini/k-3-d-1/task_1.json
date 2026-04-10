@@ -2,8 +2,8 @@
   "original_final_question": "I'm trying to estimate how many taser-use incidents per century Austin has using 2023 data. Find the Austin Police Department sector (excluding Unknown) with the most searches, then within that sector find the council district with the most dispatch-system incident records in 2023. Count the 2023 incidents in that district where officers applied force and tasers were used, then use Austin's incorporation year to compute the average per century. Please return only the rounded integer in the format [Answer]. Your response should be in the format [Answer].",
   "dataset_sequence": [
     "Austin,_Texas",
-    "apd-computer-aided-dispatch-incidents",
     "apd-searches-by-type",
+    "apd-computer-aided-dispatch-incidents",
     "apd-use-of-force"
   ],
   "reasoning_chain_text": "1. In 2023 APD searches-by-type data, find the sector with the most searches, excluding Unknown.\\n2. In 2023 APD dispatch incidents, within that sector, find the council district with the highest incident count.\\n3. In 2023 APD use-of-force data, count incidents in that district where tasers were used.\\n4. Use Austin incorporation year to compute incidents per century and return the rounded integer.",

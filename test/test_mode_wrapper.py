@@ -3,7 +3,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from strands_evaluation.config import RunConfig
-from strands_evaluation.agent_with_mode import build_mode_bundle
+from strands_evaluation.agent_with_mode import build_mode_bundle, management_skill_paths
 from strands_evaluation.tools.external.ideal.plan_store import set_plans_root
 
 
@@ -36,6 +36,13 @@ class TestModeWrapper(unittest.TestCase):
         bundle = build_mode_bundle(cfg, data_tools=[])
         self.assertIn("search_reranked", bundle.search_tool_names)
         self.assertNotIn("search_ideal", bundle.search_tool_names)
+
+    def test_management_skill_paths_use_plan_ideal_for_ideal_mode(self):
+        ideal_skills = management_skill_paths("ideal")
+        standard_skills = management_skill_paths("standard")
+        self.assertIn("strands_evaluation/tools/skills/plan-ideal", ideal_skills)
+        self.assertNotIn("strands_evaluation/tools/skills/plan-agent", ideal_skills)
+        self.assertIn("strands_evaluation/tools/skills/plan-agent", standard_skills)
 
     def test_ideal_management_uses_condition_b_stack_with_plan_swap(self):
         cfg = RunConfig(

@@ -112,6 +112,10 @@ except ImportError:
 # ---------------------------------------------------------------------------
 
 _MODES = {"naive", "standard", "ideal"}
+_PLAN_AGENT_SKILL = "strands_evaluation/tools/skills/plan-agent"
+_PLAN_IDEAL_SKILL = "strands_evaluation/tools/skills/plan-ideal"
+_DISCOVER_DATA_SKILL = "strands_evaluation/tools/skills/discover-data"
+_QUERY_DATA_SKILL = "strands_evaluation/tools/skills/query-data"
 
 
 @dataclass
@@ -129,6 +133,13 @@ def _normalize_mode(value: Optional[str], default: str, label: str) -> str:
     if mode not in _MODES:
         raise ValueError(f"Unsupported {label} mode '{value}'. Expected one of: {', '.join(sorted(_MODES))}")
     return mode
+
+
+def management_skill_paths(mode: Optional[str]) -> List[str]:
+    """Return skill paths for management mode with ideal-specific planning skill."""
+    management_mode = _normalize_mode(mode, "standard", "agent_management")
+    planning_skill = _PLAN_IDEAL_SKILL if management_mode == "ideal" else _PLAN_AGENT_SKILL
+    return [planning_skill, _DISCOVER_DATA_SKILL, _QUERY_DATA_SKILL]
 
 
 def build_search(
@@ -347,6 +358,7 @@ class DataLakeAgent:
             search_tool_names = mode_bundle.search_tool_names
             enable_skills = mode_bundle.enable_skills
             enable_stagnation = mode_bundle.enable_stagnation
+            skill_paths = management_skill_paths(mode_bundle.modes["agent_management"])
             logger.info(
                 "Ablation modes active: search_tool=%s search_results=%s agent_management=%s",
                 mode_bundle.modes["search_tool"],
@@ -366,6 +378,7 @@ class DataLakeAgent:
                 tools = search_tools + _data_tools
                 enable_skills = False
                 enable_stagnation = False
+                skill_paths = management_skill_paths("naive")
 
             elif condition == "b" and _CONDITION_B_TOOLS_AVAILABLE:
                 # Condition B (planning-rich): sparse search + prefix + plan tool + skills
@@ -380,6 +393,7 @@ class DataLakeAgent:
                 tools = search_tools + [plan] + _data_tools + [summarize_context]
                 enable_skills = True
                 enable_stagnation = True
+                skill_paths = management_skill_paths("standard")
 
             else:
                 # Baseline: Condition B search tools (BM25 + schema + prefix) without any context tools
@@ -393,6 +407,7 @@ class DataLakeAgent:
                 tools = search_tools + _data_tools
                 enable_skills = False
                 enable_stagnation = False
+                skill_paths = management_skill_paths("naive")
 
             search_tool_names = search_tool_names_in_legacy(search_tools)
 
@@ -438,11 +453,7 @@ class DataLakeAgent:
             LoggingPlugin(),
         ])
         if enable_skills:
-            plugins.append(AgentSkills(skills=[
-                "strands_evaluation/tools/skills/plan-agent",
-                "strands_evaluation/tools/skills/discover-data",
-                "strands_evaluation/tools/skills/query-data",
-            ]))
+            plugins.append(AgentSkills(skills=skill_paths))
             if enable_stagnation and self.run_config.max_consecutive_category > 0:
                 plugins.append(
                     CategoryStagnationHandler(self.run_config.max_consecutive_category)

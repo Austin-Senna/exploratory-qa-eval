@@ -1,10 +1,10 @@
 {
   "original_final_question": "First identify the year that has the highest total number of individuals receiving regular unemployment insurance benefits starting from 2001. From the top three Texas counties by average state expenditure from 2018 to that year, which county ranks third by average state expenditure? Only report the county name in `County` format. Your response should be in the format [Answer].",
   "dataset_sequence": [
+    "unemployment-insurance-beneficiaries-and-benefit-amounts-paid-beginning-2001",
     "texas-state-expenditures-by-county-2018",
     "texas-state-expenditures-by-county-2019",
-    "texas-state-expenditures-by-county-2020",
-    "unemployment-insurance-beneficiaries-and-benefit-amounts-paid-beginning-2001"
+    "texas-state-expenditures-by-county-2020"
   ],
   "reasoning_chain_text": "1. Determine the year with the highest total unemployment-benefit beneficiaries since 2001.\\n2. From 2018 through that year, aggregate Texas state expenditures by county for each year.\\n3. Compute average expenditure by county across the selected years and rank descending.\\n4. Return the county ranked third among the top three averages.",
   "original_reasoning_chain": [

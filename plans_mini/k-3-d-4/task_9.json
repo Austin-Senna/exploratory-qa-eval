@@ -1,0 +1,32 @@
+{
+  "original_final_question": "Which original Texas county is also in the top five for average capital outlay spending from 2018 to 2021? Among those counties, which one had the lowest average criminal releases across 2019 and 2020? Return the county name only. Your response should be in the format [Answer].",
+  "dataset_sequence": [
+    "List_of_counties_in_Texas",
+    "texas-state-expenditures-by-county-2018",
+    "texas-state-expenditures-by-county-2019",
+    "texas-state-expenditures-by-county-2020",
+    "texas-state-expenditures-by-county-2021",
+    "texas-department-of-criminal-justice-releases-fy-2019",
+    "texas-department-of-criminal-justice-releases-fy-2020"
+  ],
+  "reasoning_chain_text": "1. Which counties were among the original 23 counties of Texas?\n2. Which Texas counties were in the top 5 by average Capital Outlay expenditures across 2018-2021? (Filter for this node: Fiscal Year == 2018; Major Spending Category contains 'CAPITAL OUTLAY' (including 'HIGHWAY CONSTRUCTION-CAPITAL OUTLAY'); non-empty County; sum Amount by County.)\n3. Which Texas counties were in the top 5 by average Capital Outlay expenditures across 2018-2021? (Filter for this node: Fiscal Year == 2019; Major Spending Category contains 'CAPITAL OUTLAY' (including 'HIGHWAY CONSTRUCTION-CAPITAL OUTLAY'); non-empty County; sum Amount by County.)\n4. Which Texas counties were in the top 5 by average Capital Outlay expenditures across 2018-2021? (Filter for this node: Fiscal Year == 2020; Major Spending Category contains 'CAPITAL OUTLAY' (including 'HIGHWAY CONSTRUCTION-CAPITAL OUTLAY'); non-empty County; sum Amount by County.)\n5. Which Texas counties were in the top 5 by average Capital Outlay expenditures across 2018-2021? (Filter for this node: Fiscal Year == 2021; Major Spending Category contains 'CAPITAL OUTLAY' (including 'HIGHWAY CONSTRUCTION-CAPITAL OUTLAY'); non-empty County; sum Amount by County.)\n6. For the counties in <intersection of node_1 and aggregation of nodes 2-5>, what were the Texas Department of Criminal Justice release counts in 2019 and 2020? (Filter for this node: County in {Harris, Bexar}; count rows by County.)\n7. For the counties in <intersection of node_1 and aggregation of nodes 2-5>, what were the Texas Department of Criminal Justice release counts in 2019 and 2020? (Filter for this node: County in {Harris, Bexar}; count rows by County.)",
+  "original_reasoning_chain": [
+    "HOP 1 (d=1, Wikipedia List_of_counties_in_Texas - node 1):",
+    "  Node 1: Original 23 counties include Bexar and Harris among others",
+    "",
+    "HOP 2 (d=4, Texas Capital Outlay expenditures by county 2018-2021 - nodes 2-5):",
+    "  Node 2: 2018 top 5 -> Harris, Dallas, Travis, Montgomery, Bexar",
+    "  Node 3: 2019 top 5 -> Harris, Dallas, Travis, Montgomery, Bexar",
+    "  Node 4: 2020 top 5 -> Harris, Dallas, Travis, Montgomery, Bexar",
+    "  Node 5: 2021 top 5 -> Harris, Dallas, Travis, Montgomery, Bexar",
+    "  Result: {Harris, Dallas, Travis, Montgomery, Bexar}",
+    "  Intersection with original 23 -> {Harris, Bexar}",
+    "",
+    "HOP 3 (d=2, TDCJ releases FY2019-FY2020 - nodes 6-7):",
+    "  Node 6: 2019 releases -> Harris 9,029; Bexar 4,545",
+    "  Node 7: 2020 releases -> Harris 7,059; Bexar 3,917",
+    "  Average releases: Harris 8,044; Bexar 4,231",
+    "  Lowest average releases: Bexar County",
+    "  Final answer: Bexar County"
+  ]
+}

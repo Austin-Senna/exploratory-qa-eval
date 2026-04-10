@@ -1,0 +1,26 @@
+{
+  "original_final_question": "For the NYC high school that ranked in the top 7 by overall score in all three school years: 2006-07 and 2009-11, find the neighborhood named after this high school. Finally report the New York village where the builder of the earliest constructed bridge that connects this neighborhood with the mainland is buried. Your response should be in the format [Answer].",
+  "dataset_sequence": [
+    "2006-2007-school-progress-report",
+    "2009-2010-school-progress-report",
+    "2010-2011-school-progress-report",
+    "Marble_Hill,_Manhattan",
+    "Frederick_Philipse"
+  ],
+  "reasoning_chain_text": "1. Which high schools were in the top 7 by overall score in 2006-07?\n2. Which high schools were in the top 7 by overall score in 2009-10?\n3. Which high schools were in the top 7 by overall score in 2010-11?\n4. Who built the earliest constructed bridge that connects the neighborhood named after <intersection of node_1, node_2, node_3> with the mainland?\n5. In which village is <node_4 answer> buried?",
+  "original_reasoning_chain": [
+    "HOP 1 (d=3, NYC high school top-7 overall score - nodes 1-3):",
+    "  Node 1 (2006-07): Top 7 -> {Manhattan Bridges, Bedford Academy, Marble Hill, Contemporary Arts, Bronx Aerospace, Eleanor Roosevelt, Bronx Academy of Letters}",
+    "  Node 2 (2009-10): Top 7 -> {Theatre Arts Production Company, Brooklyn International, Williamsburg Prep, Marble Hill, Williamsburg Architecture, Manhattan Village, Violin and Dance}",
+    "  Node 3 (2010-11): Top 7 -> {Brooklyn International, Manhattan Village, It Takes a Village, Williamsburg Architecture, Manhattan Bridges, Academy of Finance, Marble Hill}",
+    "  Intersection(1,2,3) -> Marble Hill High School for International Studies",
+    "",
+    "HOP 2 (d=1, Wikipedia - node 4 depends on hop 1):",
+    "  Node 4: Earliest constructed bridge connecting Marble Hill to the mainland (King's Bridge, 1693) was built by Frederick Philipse",
+    "",
+    "HOP 3 (d=1, Wikipedia - node 5 depends on node 4):",
+    "  Node 5: Frederick Philipse is buried in Sleepy Hollow",
+    "",
+    "Final answer: Sleepy Hollow"
+  ]
+}
