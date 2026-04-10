@@ -108,17 +108,73 @@ def _build_openai(c: AgentConfig) -> Any:
     # Optional: AgentConfig.openai_base_url for Azure / vLLM / other compatible APIs
     from strands.models.openai import OpenAIModel
 
-    kwargs = dict(
-        model_id=c.model_id,
-        temperature=c.temperature,
-        max_tokens=c.max_tokens,
-        **c.extra_model_kwargs,
-    )
+    # OpenAIModel expects request fields under `params` and transport/auth fields
+    # under `client_args`. Passing raw top-level keys is ignored by Strands.
+    extras = dict(c.extra_model_kwargs or {})
+
+    explicit_params = extras.pop("params", {})
+    if explicit_params is None:
+        explicit_params = {}
+    if not isinstance(explicit_params, dict):
+        raise ValueError("AgentConfig.extra_model_kwargs['params'] must be a dict when provided")
+
+    explicit_client_args = extras.pop("client_args", {})
+    if explicit_client_args is None:
+        explicit_client_args = {}
+    if not isinstance(explicit_client_args, dict):
+        raise ValueError("AgentConfig.extra_model_kwargs['client_args'] must be a dict when provided")
+
+    client_args = dict(explicit_client_args)
+    # Backward-compat: if these were passed in extra_model_kwargs, treat as client args.
+    for key in (
+        "api_key",
+        "base_url",
+        "organization",
+        "project",
+        "timeout",
+        "max_retries",
+        "default_headers",
+        "default_query",
+        "http_client",
+        "websocket_base_url",
+    ):
+        if key in extras:
+            client_args[key] = extras.pop(key)
+
+    params = dict(explicit_params)
+    # Backward-compat: treat remaining extra_model_kwargs as request params.
+    params.update(extras)
+
+    # Sensible defaults if not explicitly overridden.
+    # GPT-5-class OpenAI reasoning models may reject explicit temperature values
+    # (including 0.0) and require provider defaults. Only pass through when
+    # caller sets a non-default value.
+    if "temperature" not in params and c.temperature not in (None, 0.0):
+        params["temperature"] = c.temperature
+    if (
+        "max_completion_tokens" not in params
+        and "max_tokens" not in params
+        and c.max_tokens is not None
+    ):
+        params["max_completion_tokens"] = c.max_tokens
+
+    # Convenience alias: accept Responses-style reasoning dict and map to chat param.
+    reasoning = params.get("reasoning")
+    if isinstance(reasoning, dict) and "reasoning_effort" not in params and "effort" in reasoning:
+        params["reasoning_effort"] = reasoning["effort"]
+
     api_key = c.openai_api_key or os.getenv("OPENAI_API_KEY")
-    if api_key:
-        kwargs["api_key"] = api_key
-    if c.openai_base_url:
-        kwargs["base_url"] = c.openai_base_url
+    if api_key and "api_key" not in client_args:
+        client_args["api_key"] = api_key
+    if c.openai_base_url and "base_url" not in client_args:
+        client_args["base_url"] = c.openai_base_url
+
+    kwargs: dict[str, Any] = {"model_id": c.model_id}
+    if params:
+        kwargs["params"] = params
+
+    if client_args:
+        return OpenAIModel(client_args=client_args, **kwargs)
     return OpenAIModel(**kwargs)
 
 

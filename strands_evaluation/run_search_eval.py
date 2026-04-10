@@ -123,6 +123,12 @@ def main() -> None:
     )
     parser.add_argument("--temperature", type=float, default=0.0)
     parser.add_argument("--max-tokens", type=int, default=8096)
+    parser.add_argument(
+        "--reasoning-effort",
+        choices=["none", "minimal", "low", "medium", "high", "xhigh"],
+        default=None,
+        help="Optional reasoning effort for OpenAI chat models (passed as reasoning_effort).",
+    )
 
     # RunConfig core
     parser.add_argument("--max-tool-calls", type=int, default=30, help="Max tool calls per task")
@@ -194,10 +200,15 @@ def main() -> None:
     base_condition_label = _base_condition_label(args.condition)
     condition_label = f"{variant_condition}/{base_condition_label}"
 
+    extra_model_kwargs = {}
+    if args.reasoning_effort is not None:
+        extra_model_kwargs["reasoning_effort"] = args.reasoning_effort
+
     agent_config = AgentConfig(
         model_name=args.model_name,
         temperature=args.temperature,
         max_tokens=args.max_tokens,
+        extra_model_kwargs=extra_model_kwargs,
     )
     safe_model_name = base_eval._display_name(agent_config)
     traces_root = os.path.join(args.results_output_dir, "traces")
