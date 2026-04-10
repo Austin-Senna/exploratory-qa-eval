@@ -1,0 +1,21 @@
+{
+  "dataset_sequence": [
+    "building-permits-in-2022",
+    "building-permits-in-2023",
+    "building-permits-in-2024",
+    "crime-incidents-in-2022",
+    "crime-incidents-in-2023",
+    "crime-incidents-in-2024"
+  ],
+  "reasoning_chain_text": "1. For each year 2022 through 2024, find the top four wards by building-permit count and intersect across years.\\n2. For wards in this intersection, count crime incidents for each year 2022 through 2024.\\n3. Compute average crime-incident count per ward across the three years and rank descending.\\n4. Return the top two wards in Ward X, Ward Y format.",
+  "original_reasoning_chain": [
+    "HOP 1 (d=3, data.gov - nodes 1-3):",
+    "  Nodes 1-3: Top 4 permit wards 2022–2024 -> {Ward 2, Ward 4, Ward 5, Ward 6}",
+    "",
+    "HOP 2 (d=3, data.gov - nodes 4-6 depend on hop 1):",
+    "  Nodes 4-6: Average crime incidents 2022–2024 -> top two Ward 5 and Ward 2",
+    "",
+    "Final answer: Ward 2, Ward 5"
+  ],
+  "original_ifnal_question": "Among DC wards that were in the top four for building permits in each year 2022–2024, which two wards had the highest average crime-incident counts across 2022–2024? List in `Ward X, Ward Y` format. Your response should be in the format [Answer]."
+}

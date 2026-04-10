@@ -17,7 +17,7 @@ from strands.tools.decorator import DecoratedFunctionTool
 
 logger = logging.getLogger(__name__)
 
-_QUERY_TOOLS = {"search_value", "search_schema", "search_reranked"}
+_QUERY_TOOLS = {"search_value", "search_schema", "search_reranked", "search_ideal"}
 _PREFIX_TOOLS = {"search_prefix"}
 _SEARCH_TOOL_NAMES = _QUERY_TOOLS | _PREFIX_TOOLS
 
@@ -324,4 +324,3 @@ def search_tool_names_in(tools: Sequence[DecoratedFunctionTool]) -> Tuple[str, .
         if t.tool_spec.get("name") in _SEARCH_TOOL_NAMES
     ]
     return tuple(dict.fromkeys(names))
-

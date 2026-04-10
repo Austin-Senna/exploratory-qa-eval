@@ -1,0 +1,24 @@
+{
+  "dataset_sequence": [
+    "report-card-enrollment-2018-19-school-year",
+    "report-card-enrollment-2019-20-school-year",
+    "report-card-enrollment-2020-21-school-year",
+    "report-card-enrollment-2021-22-school-year",
+    "report-card-assessment-data-2021-22-school-year"
+  ],
+  "reasoning_chain_text": "1. For each school year from 2018-19 through 2021-22, identify Washington counties with low-income enrollment between 32 and 40 percent.\\n2. Intersect county sets across all four years.\\n3. For 2021-22 assessment data, compute district-average math proficiency by county for counties in the intersection.\\n4. Keep counties with average proficiency above 40 percent.\\n5. Return county names in alphabetical order, separated by comma and space.",
+  "original_reasoning_chain": [
+    "HOP 1 (d=4, data.gov intersection - nodes 1-4):",
+    "  Node 1: 2018-19 Low-Income 32-40% -> {Island, King, Kitsap, San Juan, Snohomish, Whitman}",
+    "  Node 2: 2019-20 Low-Income 32-40% -> {Island, King, Kitsap, San Juan, Snohomish, Whitman}",
+    "  Node 3: 2020-21 Low-Income 32-40% -> {Island, King, Kitsap, San Juan, Snohomish, Thurston, Whitman}",
+    "  Node 4: 2021-22 Low-Income 32-40% -> {King, Kitsap, San Juan, Whitman}",
+    "  Intersection -> {King, Kitsap, San Juan, Whitman}",
+    "",
+    "HOP 2 (d=1, data.gov filter - node 5 depends on hop 1):",
+    "  Node 5: 2021-22 Math proficiency >40% -> King, Kitsap, Whitman",
+    "",
+    "Final answer: King, Kitsap, Whitman"
+  ],
+  "original_ifnal_question": "Among Washington counties with low-income student enrollment between 32-40% in every school year from 2018-19 through 2021-22, which had district-average Math proficiency above 40% in 2021-22? List the county names in alphabetical order separated by `, `. Your response should be in the format [Answer]."
+}

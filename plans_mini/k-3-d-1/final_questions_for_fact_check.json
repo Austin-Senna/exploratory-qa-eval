@@ -1,0 +1,22 @@
+[
+  {
+    "task": "task_1.json",
+    "question": "I'm trying to estimate how many taser-use incidents per century Austin has using 2023 data. Find the Austin Police Department sector (excluding Unknown) with the most searches, then within that sector find the council district with the most dispatch-system incident records in 2023. Count the 2023 incidents in that district where officers applied force and tasers were used, then use Austin's incorporation year to compute the average per century. Please return only the rounded integer in the format [Answer]. Your response should be in the format [Answer]."
+  },
+  {
+    "task": "task_2.json",
+    "question": "I'm considering living in Brightwood, Washington, D.C. Identify the ward Brightwood belongs to, find the most common offense in that ward in 2020, and report the percentage of incidents for that same offense from 2020 to that of the next year. Rounded to the nearest integer. Your response should be in the format [Answer]."
+  },
+  {
+    "task": "task_3.json",
+    "question": "A student group is planning a campus visit to the University of Alabama and needs to complete a reimbursement form that requires the capital city of the state where the university is located: first determine the city where the university is located, then identify the U.S. state that contains that city, and finally find the capital of that state—what is that capital city (only report the final city name)?. Your response should be in the format [Answer]."
+  },
+  {
+    "task": "task_4.json",
+    "question": "Which county seat corresponds to the New York county that recorded more violent crimes in the year (within 2017-2022) that has the lowest total ridership reported by the Rochester Genesee Regional Transportation Authority when comparing Erie County and Westchester County? Return the city name only. Your response should be in the format [Answer]."
+  },
+  {
+    "task": "task_5.json",
+    "question": "Which county seat corresponds to the New York county that recorded more violent crimes in the year (within 2017-2022) that has the highest total Charter flight passengers over Los Angeles international airports when comparing Erie County and Westchester County? Return the city name only. Your response should be in the format [Answer]."
+  }
+]

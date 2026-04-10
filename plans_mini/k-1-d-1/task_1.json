@@ -1,0 +1,11 @@
+{
+  "dataset_sequence": [
+    "unemployment-insurance-beneficiaries-and-benefit-amounts-paid-beginning-2001"
+  ],
+  "reasoning_chain_text": "1. Sum beneficiaries by year and select the maximum.",
+  "original_reasoning_chain": [
+    "Node 1: Sum Beneficiaries by Year and select the maximum total; the peak year is 2020.",
+    "Final answer: 2020"
+  ],
+  "original_ifnal_question": "Which year has the highest total number of individuals receiving regular unemployment insurance benefits starting from 2001? Your response should be in the format [Answer]."
+}

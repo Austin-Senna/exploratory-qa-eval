@@ -1,0 +1,42 @@
+[
+  {
+    "task": "task_1.json",
+    "question": "Among NY counties that have at least 65 'Poor' bridges, at least 50 fire departments, at least 100 bank ATMs, and at least 1.0 MW of operational renewable energy capacity, which county had more violent crimes in 2021? Return the county name only. Your response should be in the format [Answer]."
+  },
+  {
+    "task": "task_10.json",
+    "question": "Among Washington counties with low-income student enrollment between 32-40% in every school year from 2018-19 through 2021-22, which are not the most populous county in the state? List the county names in alphabetical order separated by `, `. Your response should be in the format [Answer]."
+  },
+  {
+    "task": "task_2.json",
+    "question": "Which Texas cities had diabetes prevalence above 12% in each year from 2016 through 2019 and also had 2020 Census populations under 100,000? List the city names in alphabetical order separated by `, `. Your response should be in the format [Answer]."
+  },
+  {
+    "task": "task_3.json",
+    "question": "Which person was the first civilian superintendent of the Chicago department with the highest average overtime from 2018 through 2021? Return the person's name only. Your response should be in the format [Answer]."
+  },
+  {
+    "task": "task_4.json",
+    "question": "Which counties from the Washington school districts that met ELA performance >= 68% for all students, all grades in each year from 2014-15 through 2017-18 are in Eastern Washington? List the county names in alphabetical order separated by `, `. Your response should be in the format [Answer]."
+  },
+  {
+    "task": "task_5.json",
+    "question": "From the Washington school districts that met ELA performance >= 68% for all students, all grades in each year from 2014-15 through 2017-18, which county both borders Idaho and had a 2020 population under 300,000? Return the county name only. Your response should be in the format [Answer]."
+  },
+  {
+    "task": "task_6.json",
+    "question": "From the Texas counties with 700-4,600 people entering the state prison system in each fiscal year from 2019-2022, which had 2020 census population under 900,000? List the county names in alphabetical order separated by `, `. Your response should be in the format [Answer]."
+  },
+  {
+    "task": "task_7.json",
+    "question": "From the Texas counties with 700-4,600 people entering the state prison system in each fiscal year from 2019-2022, which county is listed as part of West Texas? Return the county name only. Your response should be in the format [Answer]."
+  },
+  {
+    "task": "task_8.json",
+    "question": "From the Texas counties with 700-4,600 people entering the state prison system in each fiscal year from 2019-2022, which county is located in South Texas? Report that county's seat city only. Your response should be in the format [Answer]."
+  },
+  {
+    "task": "task_9.json",
+    "question": "Among Washington counties with low-income student enrollment between 32-40% in every school year from 2018-19 through 2021-22, which had district-average Math proficiency above 40% in 2021-22? List the county names in alphabetical order separated by `, `. Your response should be in the format [Answer]."
+  }
+]

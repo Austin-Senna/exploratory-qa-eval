@@ -1,0 +1,11 @@
+{
+  "dataset_sequence": [
+    "vsrr-provisional-drug-overdose-death-counts"
+  ],
+  "reasoning_chain_text": "1. Sum December overdose deaths by year and select the maximum.",
+  "original_reasoning_chain": [
+    "Node 1: Sum December 12 month-ending overdose deaths by Year and select the maximum; the peak year is 2022.",
+    "Final answer: 2022"
+  ],
+  "original_ifnal_question": "Which year from 2015-2023 has the highest total number of drug overdose deaths across U.S. states, using December 12 month-ending values and excluding the U.S. total? Your response should be in the format [Answer]."
+}

@@ -12,13 +12,15 @@ import concurrent.futures
 import json
 import os
 import time
+from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 from strands import Agent
 from strands.agent.conversation_manager import SlidingWindowConversationManager
 from strands.tools.executors import SequentialToolExecutor, ConcurrentToolExecutor
+from strands.tools.decorator import DecoratedFunctionTool
 from strands.vended_plugins.skills import AgentSkills
 
 import logging
@@ -67,9 +69,21 @@ from strands_evaluation.tools.agent_tools_v2 import (
 )
 from strands_evaluation.tools.agent_tools import download
 from strands_evaluation.tools.external.plan_tools import plan
+from strands_evaluation.tools.external.ideal.plan_ideal import (
+    inject_reasoning_chain_prompt,
+    plan_ideal,
+)
+from strands_evaluation.tools.external.ideal.plan_store import (
+    load_plan_for_task,
+    set_task_context as set_ideal_plan_task_context,
+)
+from strands_evaluation.tools.external.ideal.search_wrapper import (
+    build_search_tools as build_search_tools_by_mode,
+    search_tool_names_in as search_tool_names_in_mode,
+)
 from strands_evaluation.tools.external.search_eval_tools import (
     build_search_tools,
-    search_tool_names_in,
+    search_tool_names_in as search_tool_names_in_legacy,
 )
 
 logger = logging.getLogger(__name__)
@@ -96,6 +110,136 @@ try:
     _CONDITION_B_TOOLS_AVAILABLE = True
 except ImportError:
     pass
+
+# ---------------------------------------------------------------------------
+# Mode composition (inlined in this module)
+# ---------------------------------------------------------------------------
+
+_MODES = {"naive", "standard", "ideal"}
+
+
+@dataclass
+class ModeBundle:
+    tools: List[Any]
+    system_prompt: str
+    search_tool_names: Tuple[str, ...]
+    enable_skills: bool
+    enable_stagnation: bool
+    modes: Dict[str, str]
+
+
+def _normalize_mode(value: Optional[str], default: str, label: str) -> str:
+    mode = (value or default).strip().lower()
+    if mode not in _MODES:
+        raise ValueError(f"Unsupported {label} mode '{value}'. Expected one of: {', '.join(sorted(_MODES))}")
+    return mode
+
+
+def _resolve_search_base_tools(search_tool_mode: str) -> List[DecoratedFunctionTool]:
+    if search_tool_mode == "naive":
+        from strands_evaluation.tools.external.search_b_tools import (
+            search_schema as search_schema_sparse,
+            search_value as search_value_sparse,
+        )
+
+        return [search_value_sparse, search_schema_sparse, search_prefix]
+
+    if search_tool_mode == "standard":
+        from strands_evaluation.tools.external.search_a_tools import (
+            search_schema as search_schema_hybrid,
+            search_value as search_value_hybrid,
+        )
+
+        # Standard = hybrid BM25+dense without cross-encoder reranking.
+        return [search_value_hybrid, search_schema_hybrid, search_prefix]
+
+    from strands_evaluation.tools.external.ideal.search_ideal import (
+        search_ideal as search_ideal_tool,
+    )
+
+    # Ideal mode exposes exactly one search tool.
+    return [search_ideal_tool]
+
+
+def _resolve_management(
+    management_mode: str,
+    *,
+    base_prompt: str,
+    task_context: Optional[Dict[str, Any]],
+) -> tuple[str, List[Any], bool, bool]:
+    if management_mode == "naive":
+        return base_prompt, [], False, False
+
+    if management_mode == "standard":
+        prompt = _load_condition_prompt("b", fallback=base_prompt)
+        return prompt, [plan, summarize_context], True, True
+
+    # ideal
+    prompt = _load_condition_prompt("b", fallback=base_prompt)
+    task_context = task_context or {}
+    task_id = str(task_context.get("task_id", ""))
+    plan = load_plan_for_task(task_id)
+    prompt = inject_reasoning_chain_prompt(
+        prompt,
+        plan.reasoning_chain_text,
+        task_id=task_id,
+    )
+    prompt = (
+        prompt.rstrip()
+        + "\n\n## IDEAL SEARCH TOOLING OVERRIDE\n"
+        "- In this mode, only `search_ideal(query, top_k)` is available for search.\n"
+        "- `search_value`, `search_schema`, and `search_prefix` are not available.\n"
+        "- `search_ideal` follows plans_mini dataset_sequence strictly, one dataset per call."
+    )
+    return prompt, [plan_ideal], False, False
+
+
+def build_mode_bundle(
+    run_config: RunConfig,
+    *,
+    data_tools: Sequence[Any],
+    task_context: Optional[Dict[str, Any]] = None,
+) -> ModeBundle:
+    """Build final tools/prompt/plugin toggles from multi-axis ablation modes."""
+    search_tool_mode = _normalize_mode(run_config.search_tool_mode, "standard", "search_tool")
+    search_results_mode = _normalize_mode(run_config.search_results_mode, "standard", "search_results")
+    agent_management_mode = _normalize_mode(run_config.agent_management_mode, "standard", "agent_management")
+
+    # Keep shared ideal task context in sync for plan loading (management/search).
+    if search_tool_mode == "ideal" or agent_management_mode == "ideal":
+        set_ideal_plan_task_context(task_context or {})
+
+    if search_tool_mode == "ideal":
+        import strands_evaluation.tools.external.ideal.search_ideal as search_ideal
+
+        search_ideal.set_task_context(task_context or {})
+
+    raw_search_tools = _resolve_search_base_tools(search_tool_mode)
+    search_tools = build_search_tools_by_mode(
+        raw_search_tools,
+        fixed_k=run_config.search_k,
+        results_mode=search_results_mode,
+    )
+
+    system_prompt, management_tools, enable_skills, enable_stagnation = _resolve_management(
+        agent_management_mode,
+        base_prompt=run_config.system_prompt,
+        task_context=task_context,
+    )
+
+    tools = list(search_tools) + list(management_tools) + list(data_tools)
+    return ModeBundle(
+        tools=tools,
+        system_prompt=system_prompt,
+        search_tool_names=search_tool_names_in_mode(search_tools),
+        enable_skills=enable_skills,
+        enable_stagnation=enable_stagnation,
+        modes={
+            "search_tool": search_tool_mode,
+            "search_results": search_results_mode,
+            "agent_management": agent_management_mode,
+        },
+    )
 
 
 # Shared callback tracking and plugin classes are defined in
@@ -166,13 +310,23 @@ class DataLakeAgent:
         self,
         telemetry: "TelemetryTracker",
         trace_attributes: Optional[Dict[str, Any]] = None,
+        task_context: Optional[Dict[str, Any]] = None,
     ) -> tuple:
         cond = self.run_config.condition_config
         condition = _resolve_condition(cond)
-        if condition == "a" and not _CONDITION_A_TOOLS_AVAILABLE:
-            raise RuntimeError("Condition A search tools are unavailable (import failed).")
-        if condition in {"baseline", "b"} and not _CONDITION_B_TOOLS_AVAILABLE:
-            raise RuntimeError("Condition B/Baseline search tools are unavailable (import failed).")
+        mode_overrides_enabled = any(
+            [
+                self.run_config.search_tool_mode,
+                self.run_config.search_results_mode,
+                self.run_config.agent_management_mode,
+            ]
+        )
+
+        if not mode_overrides_enabled:
+            if condition == "a" and not _CONDITION_A_TOOLS_AVAILABLE:
+                raise RuntimeError("Condition A search tools are unavailable (import failed).")
+            if condition in {"baseline", "b"} and not _CONDITION_B_TOOLS_AVAILABLE:
+                raise RuntimeError("Condition B/Baseline search tools are unavailable (import failed).")
 
         # Core data-manipulation tools shared across all conditions
         _data_tools = [
@@ -181,41 +335,65 @@ class DataLakeAgent:
             submit_answer,
         ]
 
-        if condition == "a" and _CONDITION_A_TOOLS_AVAILABLE:
-            # Condition A (tools-rich): hybrid RRF + schema + reranked + shared baseline tools
-            raw_search_tools = [search_value_a, search_schema, search_reranked, search_prefix]
-            system_prompt = _load_condition_prompt("a", fallback=self.run_config.system_prompt)
-            search_tools = build_search_tools(
-                raw_search_tools,
-                fixed_k=self.run_config.search_k,
-                search_descriptions=self.run_config.search_descriptions,
+        if mode_overrides_enabled:
+            mode_bundle = build_mode_bundle(
+                self.run_config,
+                data_tools=_data_tools,
+                task_context=task_context,
             )
-            tools = search_tools + _data_tools
-
-        elif condition == "b" and _CONDITION_B_TOOLS_AVAILABLE:
-            # Condition B (planning-rich): sparse search + prefix + plan tool + skills
-            # summarize_context only given to B — longer planning loops benefit from manual context control
-            raw_search_tools = [search_value_b, search_schema_b, search_prefix]
-            system_prompt = _load_condition_prompt("b", fallback=self.run_config.system_prompt)
-            search_tools = build_search_tools(
-                raw_search_tools,
-                fixed_k=self.run_config.search_k,
-                search_descriptions=self.run_config.search_descriptions,
+            tools = mode_bundle.tools
+            system_prompt = mode_bundle.system_prompt
+            search_tool_names = mode_bundle.search_tool_names
+            enable_skills = mode_bundle.enable_skills
+            enable_stagnation = mode_bundle.enable_stagnation
+            logger.info(
+                "Ablation modes active: search_tool=%s search_results=%s agent_management=%s",
+                mode_bundle.modes["search_tool"],
+                mode_bundle.modes["search_results"],
+                mode_bundle.modes["agent_management"],
             )
-            tools = search_tools + [plan] + _data_tools + [summarize_context]
-
         else:
-            # Baseline: Condition B search tools (BM25 + schema + prefix) without any context tools
-            raw_search_tools = [search_value_b, search_schema_b, search_prefix]
-            system_prompt = self.run_config.system_prompt
-            search_tools = build_search_tools(
-                raw_search_tools,
-                fixed_k=self.run_config.search_k,
-                search_descriptions=self.run_config.search_descriptions,
-            )
-            tools = search_tools + _data_tools
+            if condition == "a" and _CONDITION_A_TOOLS_AVAILABLE:
+                # Condition A (tools-rich): hybrid RRF + schema + reranked + shared baseline tools
+                raw_search_tools = [search_value_a, search_schema, search_reranked, search_prefix]
+                system_prompt = _load_condition_prompt("a", fallback=self.run_config.system_prompt)
+                search_tools = build_search_tools(
+                    raw_search_tools,
+                    fixed_k=self.run_config.search_k,
+                    search_descriptions=self.run_config.search_descriptions,
+                )
+                tools = search_tools + _data_tools
+                enable_skills = False
+                enable_stagnation = False
 
-        search_tool_names = search_tool_names_in(search_tools)
+            elif condition == "b" and _CONDITION_B_TOOLS_AVAILABLE:
+                # Condition B (planning-rich): sparse search + prefix + plan tool + skills
+                # summarize_context only given to B — longer planning loops benefit from manual context control
+                raw_search_tools = [search_value_b, search_schema_b, search_prefix]
+                system_prompt = _load_condition_prompt("b", fallback=self.run_config.system_prompt)
+                search_tools = build_search_tools(
+                    raw_search_tools,
+                    fixed_k=self.run_config.search_k,
+                    search_descriptions=self.run_config.search_descriptions,
+                )
+                tools = search_tools + [plan] + _data_tools + [summarize_context]
+                enable_skills = True
+                enable_stagnation = True
+
+            else:
+                # Baseline: Condition B search tools (BM25 + schema + prefix) without any context tools
+                raw_search_tools = [search_value_b, search_schema_b, search_prefix]
+                system_prompt = self.run_config.system_prompt
+                search_tools = build_search_tools(
+                    raw_search_tools,
+                    fixed_k=self.run_config.search_k,
+                    search_descriptions=self.run_config.search_descriptions,
+                )
+                tools = search_tools + _data_tools
+                enable_skills = False
+                enable_stagnation = False
+
+            search_tool_names = search_tool_names_in_legacy(search_tools)
 
         system_prompt = _inject_search_budget_prompt(
             system_prompt,
@@ -258,13 +436,13 @@ class DataLakeAgent:
             SubmitAnswerPlugin(),
             LoggingPlugin(),
         ])
-        if condition == "b":
+        if enable_skills:
             plugins.append(AgentSkills(skills=[
                 "strands_evaluation/tools/skills/plan-agent",
                 "strands_evaluation/tools/skills/discover-data",
                 "strands_evaluation/tools/skills/query-data",
             ]))
-            if self.run_config.max_consecutive_category > 0:
+            if enable_stagnation and self.run_config.max_consecutive_category > 0:
                 plugins.append(
                     CategoryStagnationHandler(self.run_config.max_consecutive_category)
                 )
@@ -287,6 +465,7 @@ class DataLakeAgent:
         self,
         question: str,
         session_id: Optional[str] = None,
+        task_context: Optional[Dict[str, Any]] = None,
     ) -> AgentResult:
         start = time.time()
 
@@ -310,7 +489,11 @@ class DataLakeAgent:
         )
 
         try:
-            agent, read_tracer = self._build_agent(telemetry, trace_attributes=trace_attributes)
+            agent, read_tracer = self._build_agent(
+                telemetry,
+                trace_attributes=trace_attributes,
+                task_context=task_context,
+            )
             response = agent(question)
 
             submitted = get_submitted_answer()
@@ -397,11 +580,14 @@ def _run_task_worker(
         task_id=task.get("id"),
     )
 
-    # Eagerly load the hybrid search DB + embedding model + cross-encoder reranker once
-    # per worker process (singletons in api.py guard against re-loading on subsequent tasks).
+    # Eagerly load search backend state once per worker process.
+    # For ablation runs, mode overrides drive setup. For legacy runs, condition drives setup.
+    mode_search_tool = (run_config.search_tool_mode or "").strip().lower() or None
     condition = _resolve_condition(run_config.condition_config)
+    if mode_search_tool is None:
+        mode_search_tool = "standard" if condition == "a" else "naive"
 
-    if condition == "a" and _CONDITION_A_TOOLS_AVAILABLE:
+    if mode_search_tool == "standard" and _CONDITION_A_TOOLS_AVAILABLE:
         try:
             import strands_evaluation.tools.external.search_a_tools as _sa
             if run_config.search_db_path:
@@ -410,14 +596,24 @@ def _run_task_worker(
         except Exception as e:
             logger.warning(f"Hybrid search setup failed: {e}")
 
-    if condition == "b" and _CONDITION_B_TOOLS_AVAILABLE:
-        try:
-            import strands_evaluation.tools.external.search_b_tools as _sb
-            if run_config.search_db_path:
+    if mode_search_tool == "naive" and _CONDITION_B_TOOLS_AVAILABLE:
+        # NOTE: do not call search_b_tools.setup() for naive mode.
+        # setup() triggers external-tools/hybrid_search/api.setup(), which eagerly
+        # loads embedding/reranker models that are unnecessary for sparse-only
+        # search paths and can heavily impact worker startup and memory.
+        if run_config.search_db_path:
+            try:
+                import strands_evaluation.tools.external.search_b_tools as _sb
+
                 _sb.set_db_path(run_config.search_db_path)
-            _sb.setup()
-        except Exception as e:
-            logger.warning(f"Sparse search setup failed: {e}")
+            except Exception as e:
+                logger.warning(f"Sparse search path override failed: {e}")
+
+    if mode_search_tool == "ideal":
+        if run_config.search_db_path:
+            import strands_evaluation.tools.external.ideal.search_ideal as _si
+
+            _si.set_db_path(run_config.search_db_path)
 
     try:
         logger.info(f"Starting task {task_index + 1}: {task.get('question', '')[:80]}...")
@@ -429,7 +625,17 @@ def _run_task_worker(
         task_id = task.get("id", str(task_index))
         set_trace_context(task_id, gold_ids, cond.trace_output_dir)
 
-        result = da.run(task["question"])
+        task_context = {
+            "task_id": task_id,
+            "datasets_used": gold_ids,
+            "reasoning_chain": task.get("reasoning_chain", []),
+        }
+        if mode_search_tool == "ideal":
+            import strands_evaluation.tools.external.ideal.search_ideal as _si
+
+            _si.set_task_context(task_context)
+
+        result = da.run(task["question"], task_context=task_context)
 
         result_dict: Dict[str, Any] = {
             "task_id": task.get("id", task_index),

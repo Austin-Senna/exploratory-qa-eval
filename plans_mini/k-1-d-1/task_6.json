@@ -1,0 +1,11 @@
+{
+  "dataset_sequence": [
+    "cta-ridership-bus-routes-monthly-day-type-averages-totals"
+  ],
+  "reasoning_chain_text": "1. Sum CTA bus route ridership by year from 2005 to 2010 and select the minimum.",
+  "original_reasoning_chain": [
+    "Node 1: Sum MonthTotal by year (2005-2010) and select the minimum; the lowest year is 2006.",
+    "Final answer: 2006"
+  ],
+  "original_ifnal_question": "Which year from 2005-2010 has the lowest total CTA bus route ridership? Your response should be in the format [Answer]."
+}

@@ -1,7 +1,7 @@
 """Ideal planning helpers and tool surface.
 
-In ideal management mode, the runner can inject a gold reasoning chain directly
-into the system prompt. `plan_ideal` is a companion tool for explicit updates.
+In ideal management mode, plans are loaded from plans_mini and treated as the
+canonical source of reasoning and dataset order.
 """
 
 from __future__ import annotations
@@ -10,6 +10,8 @@ from typing import Any, Iterable
 
 from strands import tool
 from strands.types.tools import ToolContext
+
+from strands_evaluation.tools.external.ideal.plan_store import load_plan_for_context
 
 _BASE_PROMPT: str = ""
 
@@ -50,14 +52,28 @@ def inject_reasoning_chain_prompt(
 
 @tool(context=True)
 def plan_ideal(plan_text: str, tool_context: ToolContext) -> str:
-    """Persist an ideal plan section into the active system prompt."""
+    """Load ideal target chain and require a step-by-step execution plan."""
+    _ = plan_text  # File-backed only: manual plan text is ignored by design.
     global _BASE_PROMPT
+
+    plan = load_plan_for_context()
+    plan_block = (
+        "Target reasoning chain:\n"
+        f"{plan.reasoning_chain_text}\n\n"
+        "STEP-BY-STEP PLANNING DIRECTIVE:\n"
+        "Before additional retrieval/execution, write a numbered execution plan that explains how you will reach the target reasoning chain.\n"
+        "Requirements for that plan:\n"
+        "1. Keep steps in dataset_sequence order.\n"
+        "2. For each step, name what must be verified/computed.\n"
+        "3. Do not just copy the target reasoning chain; explain concrete execution actions."
+    )
+
     agent = tool_context.agent
     current = agent.system_prompt
     if not _BASE_PROMPT or "\n\n## IDEAL PLAN\n" not in current:
         _BASE_PROMPT = current
-    agent.system_prompt = _BASE_PROMPT + "\n\n## IDEAL PLAN\n" + str(plan_text or "").strip()
-    return "Ideal plan recorded."
+    agent.system_prompt = _BASE_PROMPT + "\n\n## IDEAL PLAN\n" + plan_block
+    return "Ideal plan target loaded. Now produce a numbered step-by-step execution plan to reach the target reasoning chain, then continue."
 
 
 __all__ = [
@@ -65,4 +81,3 @@ __all__ = [
     "format_reasoning_chain",
     "inject_reasoning_chain_prompt",
 ]
-

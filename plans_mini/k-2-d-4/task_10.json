@@ -1,0 +1,25 @@
+{
+  "dataset_sequence": [
+    "report-card-enrollment-2018-19-school-year",
+    "report-card-enrollment-2019-20-school-year",
+    "report-card-enrollment-2020-21-school-year",
+    "report-card-enrollment-2021-22-school-year",
+    "King_County,_Washington"
+  ],
+  "reasoning_chain_text": "1. For each school year from 2018-19 through 2021-22, identify Washington counties with low-income enrollment between 32 and 40 percent.\\n2. Intersect county sets across all four years.\\n3. Identify the most populous county in Washington state.\\n4. Exclude that county and return the remaining county names in alphabetical order, separated by comma and space.",
+  "original_reasoning_chain": [
+    "HOP 1 (d=4, data.gov intersection - nodes 1-4):",
+    "  Node 1: 2018-19 Low-Income 32-40% -> {Island, King, Kitsap, San Juan, Snohomish, Whitman}",
+    "  Node 2: 2019-20 Low-Income 32-40% -> {Island, King, Kitsap, San Juan, Snohomish, Whitman}",
+    "  Node 3: 2020-21 Low-Income 32-40% -> {Island, King, Kitsap, San Juan, Snohomish, Thurston, Whitman}",
+    "  Node 4: 2021-22 Low-Income 32-40% -> {King, Kitsap, San Juan, Whitman}",
+    "  Intersection -> {King, Kitsap, San Juan, Whitman}",
+    "",
+    "HOP 2 (d=1, Wikipedia - node 5 depends on hop 1):",
+    "  Node 5: King is the most populous county in Washington -> exclude King",
+    "  Result: Kitsap, San Juan, Whitman",
+    "",
+    "Final answer: Kitsap, San Juan, Whitman"
+  ],
+  "original_ifnal_question": "Among Washington counties with low-income student enrollment between 32-40% in every school year from 2018-19 through 2021-22, which are not the most populous county in the state? List the county names in alphabetical order separated by `, `. Your response should be in the format [Answer]."
+}

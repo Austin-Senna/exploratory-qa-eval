@@ -1,0 +1,18 @@
+{
+  "dataset_sequence": [
+    "Brightwood_(Washington,_D.C.)",
+    "crime-incidents-in-2020",
+    "crime-incidents-in-2021"
+  ],
+  "reasoning_chain_text": "1. Identify the ward that Brightwood belongs to.\\n2. In 2020 crime-incidents data, find the most common offense in that ward.\\n3. For the same offense and ward, compare 2020 and 2021 counts.\\n4. Compute the requested percentage from 2020 to the next year and return the nearest integer.",
+  "original_reasoning_chain": [
+    "Node 1: Brightwood is in Washington, D.C. Ward 4.",
+    "Node 2 depends on node 1: In 2020 within Ward 4, the most common offense is THEFT F/AUTO.",
+    "Node 3 depends on node 2: 2021 Ward 4 incidents for THEFT F/AUTO = 996.",
+    "Node 4 depends on node 1: In 2020 within Ward 4, the incident count of the most common offense = 1,070.",
+    "Compute percent of 2020 level in 2021: 996 / 1070 * 100 ≈ 93.08%.",
+    "Round to nearest whole percent: 93.",
+    "Final answer: 93"
+  ],
+  "original_ifnal_question": "I'm considering living in Brightwood, Washington, D.C. Identify the ward Brightwood belongs to, find the most common offense in that ward in 2020, and report the percentage of incidents for that same offense from 2020 to that of the next year. Rounded to the nearest integer. Your response should be in the format [Answer]."
+}

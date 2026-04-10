@@ -50,10 +50,15 @@ def _display_name(agent_config) -> str:
     """Return a clean, human-readable slug for use in paths.
 
     Prefers model_name (e.g. 'bedrock/claude-haiku-4.5-arn') over raw model_id
-    so ARN-based models don't produce garbage directory names.
+    so ARN-based models don't produce garbage directory names. Appends
+    reasoning_effort when set (e.g. 'openai_gpt-5.2-xhigh').
     """
     name = agent_config.model_name or agent_config.model_id
-    return _sanitize_model_name(name)
+    slug = _sanitize_model_name(name)
+    effort = (agent_config.extra_model_kwargs or {}).get("reasoning_effort")
+    if effort:
+        slug = f"{slug}-{effort}"
+    return slug
 
 
 def _results_root(run_config: RunConfig) -> str:

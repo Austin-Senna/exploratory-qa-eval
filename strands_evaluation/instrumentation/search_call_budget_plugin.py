@@ -13,6 +13,7 @@ _DEFAULT_SEARCH_TOOLS = {
     "search_schema",
     "search_reranked",
     "search_prefix",
+    "search_ideal",
 }
 
 
@@ -63,4 +64,3 @@ class SearchCallBudgetHandler(SteeringHandler):
                 "then call submit_answer."
             )
         )
-

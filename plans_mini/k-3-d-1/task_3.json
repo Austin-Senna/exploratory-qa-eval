@@ -1,0 +1,15 @@
+{
+  "dataset_sequence": [
+    "University_of_Alabama",
+    "Tuscaloosa,_Alabama",
+    "Alabama"
+  ],
+  "reasoning_chain_text": "1. Determine the city where the University of Alabama is located.\\n2. Determine the U.S. state containing that city.\\n3. Find the capital city of that state and return only the final city name.",
+  "original_reasoning_chain": [
+    "Node 1: Identify the city where the University of Alabama is located → Tuscaloosa.",
+    "Node 2 depends on node 1: Determine which U.S. state contains Tuscaloosa → Alabama.",
+    "Node 3 depends on node 2: Find the capital city of Alabama → Montgomery.",
+    "Final answer: Montgomery."
+  ],
+  "original_ifnal_question": "A student group is planning a campus visit to the University of Alabama and needs to complete a reimbursement form that requires the capital city of the state where the university is located: first determine the city where the university is located, then identify the U.S. state that contains that city, and finally find the capital of that state—what is that capital city (only report the final city name)?. Your response should be in the format [Answer]."
+}

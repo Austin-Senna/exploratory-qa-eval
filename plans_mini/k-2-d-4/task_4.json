@@ -1,0 +1,24 @@
+{
+  "dataset_sequence": [
+    "report-card-assessment-data-2014-15-school-year",
+    "report-card-assessment-data-2015-16-school-year",
+    "report-card-assessment-data-2016-17-school-year",
+    "report-card-assessment-data-2017-18-school-year",
+    "Eastern_Washington"
+  ],
+  "reasoning_chain_text": "1. For each school year 2014-15 through 2017-18, find Washington school districts with ELA performance at least 68 percent for all students and all grades.\\n2. Intersect district sets across all four years.\\n3. Map the qualifying districts to counties.\\n4. Keep counties that are in Eastern Washington.\\n5. Return county names in alphabetical order, separated by comma and space.",
+  "original_reasoning_chain": [
+    "HOP 1 (d=4, data.gov intersection - nodes 1-4):",
+    "  Node 1: 2014-15 districts with ELA >= 68%",
+    "  Node 2: 2015-16 districts with ELA >= 68%",
+    "  Node 3: 2016-17 districts with ELA >= 68%",
+    "  Node 4: 2017-18 districts with ELA >= 68%",
+    "  Intersection -> counties {King, Clark, Pierce, Whitman, Thurston, Spokane}",
+    "",
+    "HOP 2 (d=1, Wikipedia - node 5 depends on hop 1 counties):",
+    "  Node 5: Eastern Washington counties among those -> Whitman County, Spokane County",
+    "",
+    "Final answer: Spokane County, Whitman County"
+  ],
+  "original_ifnal_question": "Which counties from the Washington school districts that met ELA performance >= 68% for all students, all grades in each year from 2014-15 through 2017-18 are in Eastern Washington? List the county names in alphabetical order separated by `, `. Your response should be in the format [Answer]."
+}

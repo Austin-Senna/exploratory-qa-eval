@@ -19,7 +19,15 @@ class CategoryStagnationHandler(SteeringHandler):
         # execute/inspect tasks naturally chain (query multiple datasets in a row),
         # so they get a higher threshold than search.
         self.tool_categories = {
-            "search": {"search", "search_keyword", "search_prefix", "search_value", "search_schema", "search_reranked"},
+            "search": {
+                "search",
+                "search_keyword",
+                "search_prefix",
+                "search_value",
+                "search_schema",
+                "search_reranked",
+                "search_ideal",
+            },
             "inspect": {"list_files", "peek_file", "peek_multiple", "get_sandbox_info", "read_file"},
             "execute": {"execute_code", "query_file", "grep_file"},
         }

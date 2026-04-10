@@ -1,0 +1,21 @@
+{
+  "dataset_sequence": [
+    "texas-state-expenditures-by-county-2019",
+    "texas-state-expenditures-by-county-2020",
+    "texas-state-expenditures-by-county-2021",
+    "texas-department-of-criminal-justice-releases-fy-2019",
+    "texas-department-of-criminal-justice-releases-fy-2020",
+    "texas-department-of-criminal-justice-releases-fy-2021"
+  ],
+  "reasoning_chain_text": "1. For each year 2019 through 2021, find the top five Texas counties by Capital Outlay spending.\\n2. Intersect those county sets across the three years.\\n3. For each year 2019 through 2021, find the overall top five counties by TDCJ releases.\\n4. Intersect the release-based set with the Capital Outlay intersection.\\n5. Return the final county names in alphabetical order, separated by comma and space.",
+  "original_reasoning_chain": [
+    "HOP 1 (d=3, data.gov - nodes 1-3):",
+    "  Nodes 1-3: Top 5 Capital Outlay counties 2019–2021 -> intersection {Harris, Travis, Dallas, Bexar}",
+    "",
+    "HOP 2 (d=3, data.gov - nodes 4-6 depend on hop 1):",
+    "  Nodes 4-6: Counties in top 5 DOC releases 2019–2021 -> intersection {Harris, Dallas, Bexar}",
+    "",
+    "Final answer: Bexar, Dallas, Harris"
+  ],
+  "original_ifnal_question": "Which Texas counties were in the top five for Capital Outlay spending in each year from 2019 to 2021 and also in the overall top five for TDCJ releases in each year from 2019 to 2021? List the county names in alphabetical order separated by `, `. Your response should be in the format [Answer]."
+}

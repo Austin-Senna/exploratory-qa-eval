@@ -34,7 +34,7 @@ def load_results(results_dir: str) -> list[dict]:
 
 _SEARCH_TOOL_NAMES = {
     "search_value", "search_schema", "search_reranked",
-    "search_prefix", "search", "search_keyword",
+    "search_prefix", "search_ideal", "search", "search_keyword",
 }
 
 
