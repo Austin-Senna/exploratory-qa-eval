@@ -1,4 +1,5 @@
 {
+  "original_final_question": "Among Bexar, El Paso, Hidalgo, and Montgomery counties, which county is part of the under-900,000 population group (2020 census) and is listed as part of West Texas? Return the county name only. Your response should be in the format [Answer].",
   "dataset_sequence": [
     "2020-census-redistricting-data-all-texas-counties",
     "West_Texas"
@@ -12,6 +13,5 @@
     "  Node 2: West Texas list includes El Paso -> El Paso",
     "",
     "Final answer: El Paso"
-  ],
-  "original_ifnal_question": "Among Bexar, El Paso, Hidalgo, and Montgomery counties, which county is part of the under-900,000 population group (2020 census) and is listed as part of West Texas? Return the county name only. Your response should be in the format [Answer]."
+  ]
 }

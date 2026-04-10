@@ -1,4 +1,5 @@
 {
+  "original_final_question": "Among NY counties that have at least 65 'Poor' bridges, at least 50 fire departments, at least 100 bank ATMs, and at least 1.0 MW of operational renewable energy capacity, which county had more violent crimes in 2021? Return the county name only. Your response should be in the format [Answer].",
   "dataset_sequence": [
     "bridge-conditions-nys-department-of-transportation",
     "fire-department-directory-for-new-york-state",
@@ -20,6 +21,5 @@
     "  Comparison: 3,493 > 1,520 -> Erie County",
     "",
     "Final answer: Erie County"
-  ],
-  "original_ifnal_question": "Among NY counties that have at least 65 'Poor' bridges, at least 50 fire departments, at least 100 bank ATMs, and at least 1.0 MW of operational renewable energy capacity, which county had more violent crimes in 2021? Return the county name only. Your response should be in the format [Answer]."
+  ]
 }

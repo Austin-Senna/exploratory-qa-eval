@@ -1,4 +1,5 @@
 {
+  "original_final_question": "Can you find the counties where the top 3 community colleges by average contract count from FY 2014 to FY 2016 in the 18th-largest U.S. state by area are located in. What is the highest average contract count among those top three colleges, rounded to the nearest integer? Only report the rounded number in `Number` format. Your response should be in the format [Answer].",
   "dataset_sequence": [
     "Washington_(state)",
     "agency-contracts-fiscal-year-2014",
@@ -21,6 +22,5 @@
     "  Result: Highest average is 2614.7 -> rounded to 2615",
     "",
     "Final answer: 2615"
-  ],
-  "original_ifnal_question": "Can you find the counties where the top 3 community colleges by average contract count from FY 2014 to FY 2016 in the 18th-largest U.S. state by area are located in. What is the highest average contract count among those top three colleges, rounded to the nearest integer? Only report the rounded number in `Number` format. Your response should be in the format [Answer]."
+  ]
 }

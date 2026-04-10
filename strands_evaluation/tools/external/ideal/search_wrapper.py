@@ -181,8 +181,6 @@ def reshape_search_payload(payload: Any, mode: str) -> Any:
             out: Dict[str, Any] = {}
             if uri:
                 out["uri"] = uri
-            if dataset_id:
-                out["dataset_id"] = dataset_id
             shaped.append(out)
             continue
 

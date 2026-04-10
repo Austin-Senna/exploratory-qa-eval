@@ -1,4 +1,5 @@
 {
+  "original_final_question": "Which counties from the Washington school districts that met ELA performance >= 68% for all students, all grades in each year from 2014-15 through 2017-18 are in Eastern Washington? List the county names in alphabetical order separated by `, `. Your response should be in the format [Answer].",
   "dataset_sequence": [
     "report-card-assessment-data-2014-15-school-year",
     "report-card-assessment-data-2015-16-school-year",
@@ -19,6 +20,5 @@
     "  Node 5: Eastern Washington counties among those -> Whitman County, Spokane County",
     "",
     "Final answer: Spokane County, Whitman County"
-  ],
-  "original_ifnal_question": "Which counties from the Washington school districts that met ELA performance >= 68% for all students, all grades in each year from 2014-15 through 2017-18 are in Eastern Washington? List the county names in alphabetical order separated by `, `. Your response should be in the format [Answer]."
+  ]
 }

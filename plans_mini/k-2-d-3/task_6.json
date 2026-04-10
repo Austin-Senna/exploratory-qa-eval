@@ -1,4 +1,5 @@
 {
+  "original_final_question": "Among agencies appearing in the top 20 for total January parking-violation fine amounts in 2019–2021 that are U.S. national law-enforcement bodies, which agency had the highest average number of January moving violations from 2019–2021? Return the agency name only. Your response should be in the format [Answer].",
   "dataset_sequence": [
     "parking-violations-issued-in-january-2019",
     "parking-violations-issued-in-january-2020",
@@ -16,6 +17,5 @@
     "  Nodes 4-6: January moving violations 2019–2021 -> highest average is UNITED STATES PARK POLICE",
     "",
     "Final answer: UNITED STATES PARK POLICE"
-  ],
-  "original_ifnal_question": "Among agencies appearing in the top 20 for total January parking-violation fine amounts in 2019–2021 that are U.S. national law-enforcement bodies, which agency had the highest average number of January moving violations from 2019–2021? Return the agency name only. Your response should be in the format [Answer]."
+  ]
 }

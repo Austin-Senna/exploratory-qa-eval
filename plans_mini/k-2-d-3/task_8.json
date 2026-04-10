@@ -1,4 +1,5 @@
 {
+  "original_final_question": "Which Chicago Public Library branches were in the top five for YTD circulation in each year 2019–2021 and also in the top five for YTD visitors in each year 2019–2021? List the branch names in alphabetical order separated by `, `. Your response should be in the format [Answer].",
   "dataset_sequence": [
     "libraries-2019-circulation-by-location",
     "libraries-2020-circulation-by-location",
@@ -16,6 +17,5 @@
     "  Nodes 4-6: Top 5 visitors 2019–2021 -> intersection with hop 1 -> {Sulzer Regional Library, Edgewater}",
     "",
     "Final answer: Edgewater, Sulzer Regional Library"
-  ],
-  "original_ifnal_question": "Which Chicago Public Library branches were in the top five for YTD circulation in each year 2019–2021 and also in the top five for YTD visitors in each year 2019–2021? List the branch names in alphabetical order separated by `, `. Your response should be in the format [Answer]."
+  ]
 }

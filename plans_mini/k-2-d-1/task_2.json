@@ -1,4 +1,5 @@
 {
+  "original_final_question": "What percentage of the population aged 65 or older in 2022 was in the Texas county that contains McAllen? Only report the percentage in `Number` format (e.g., 12.3). Your response should be in the format [Answer].",
   "dataset_sequence": [
     "McAllen,_Texas",
     "aps-1-1-texas-adult-populations-at-risk-by-county-region-fy2013-fy2022"
@@ -12,6 +13,5 @@
     "  Node 2: Hidalgo County population aged 65+ in 2022 -> 12.3%",
     "",
     "Final answer: 12.3"
-  ],
-  "original_ifnal_question": "What percentage of the population aged 65 or older in 2022 was in the Texas county that contains McAllen? Only report the percentage in `Number` format (e.g., 12.3). Your response should be in the format [Answer]."
+  ]
 }

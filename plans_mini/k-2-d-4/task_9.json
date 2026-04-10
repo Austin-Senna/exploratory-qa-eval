@@ -1,4 +1,5 @@
 {
+  "original_final_question": "Among Washington counties with low-income student enrollment between 32-40% in every school year from 2018-19 through 2021-22, which had district-average Math proficiency above 40% in 2021-22? List the county names in alphabetical order separated by `, `. Your response should be in the format [Answer].",
   "dataset_sequence": [
     "report-card-enrollment-2018-19-school-year",
     "report-card-enrollment-2019-20-school-year",
@@ -19,6 +20,5 @@
     "  Node 5: 2021-22 Math proficiency >40% -> King, Kitsap, Whitman",
     "",
     "Final answer: King, Kitsap, Whitman"
-  ],
-  "original_ifnal_question": "Among Washington counties with low-income student enrollment between 32-40% in every school year from 2018-19 through 2021-22, which had district-average Math proficiency above 40% in 2021-22? List the county names in alphabetical order separated by `, `. Your response should be in the format [Answer]."
+  ]
 }

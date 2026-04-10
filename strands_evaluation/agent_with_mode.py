@@ -69,12 +69,8 @@ from strands_evaluation.tools.agent_tools_v2 import (
 )
 from strands_evaluation.tools.agent_tools import download
 from strands_evaluation.tools.external.plan_tools import plan
-from strands_evaluation.tools.external.ideal.plan_ideal import (
-    inject_reasoning_chain_prompt,
-    plan_ideal,
-)
+from strands_evaluation.tools.external.ideal.plan_ideal import plan_ideal
 from strands_evaluation.tools.external.ideal.plan_store import (
-    load_plan_for_task,
     set_task_context as set_ideal_plan_task_context,
 )
 from strands_evaluation.tools.external.ideal.search_wrapper import (
@@ -135,8 +131,17 @@ def _normalize_mode(value: Optional[str], default: str, label: str) -> str:
     return mode
 
 
-def _resolve_search_base_tools(search_tool_mode: str) -> List[DecoratedFunctionTool]:
-    if search_tool_mode == "naive":
+def build_search(
+    mode: str,
+    *,
+    task_context: Optional[Dict[str, Any]] = None,
+) -> List[DecoratedFunctionTool]:
+    """Return the base search tool surface for a mode."""
+    search_mode = _normalize_mode(mode, "standard", "search_tool")
+
+    if search_mode == "naive":
+        if not _CONDITION_B_TOOLS_AVAILABLE:
+            raise RuntimeError("Condition B search tools are unavailable (import failed).")
         from strands_evaluation.tools.external.search_b_tools import (
             search_schema as search_schema_sparse,
             search_value as search_value_sparse,
@@ -144,54 +149,57 @@ def _resolve_search_base_tools(search_tool_mode: str) -> List[DecoratedFunctionT
 
         return [search_value_sparse, search_schema_sparse, search_prefix]
 
-    if search_tool_mode == "standard":
+    if search_mode == "standard":
+        if not _CONDITION_A_TOOLS_AVAILABLE:
+            raise RuntimeError("Condition A search tools are unavailable (import failed).")
         from strands_evaluation.tools.external.search_a_tools import (
             search_schema as search_schema_hybrid,
             search_value as search_value_hybrid,
+            search_reranked as search_reranked_hybrid,
         )
 
-        # Standard = hybrid BM25+dense without cross-encoder reranking.
-        return [search_value_hybrid, search_schema_hybrid, search_prefix]
+        return [search_value_hybrid, search_schema_hybrid, search_reranked_hybrid, search_prefix]
 
-    from strands_evaluation.tools.external.ideal.search_ideal import (
-        search_ideal as search_ideal_tool,
-    )
+    import strands_evaluation.tools.external.ideal.search_ideal as search_ideal
 
-    # Ideal mode exposes exactly one search tool.
-    return [search_ideal_tool]
+    search_ideal.set_task_context(task_context or {})
+    return [search_ideal.search_ideal]
 
 
-def _resolve_management(
-    management_mode: str,
+def build_management(
+    mode: str,
     *,
     base_prompt: str,
     task_context: Optional[Dict[str, Any]],
 ) -> tuple[str, List[Any], bool, bool]:
+    """Return prompt, management tools, and behavior toggles for a mode."""
+    management_mode = _normalize_mode(mode, "standard", "agent_management")
+
     if management_mode == "naive":
         return base_prompt, [], False, False
 
+    prompt = _load_condition_prompt("b", fallback=base_prompt)
     if management_mode == "standard":
-        prompt = _load_condition_prompt("b", fallback=base_prompt)
         return prompt, [plan, summarize_context], True, True
 
-    # ideal
-    prompt = _load_condition_prompt("b", fallback=base_prompt)
-    task_context = task_context or {}
-    task_id = str(task_context.get("task_id", ""))
-    plan = load_plan_for_task(task_id)
-    prompt = inject_reasoning_chain_prompt(
-        prompt,
-        plan.reasoning_chain_text,
-        task_id=task_id,
+    # ideal = Condition-B management with plan swapped to plan_ideal.
+    set_ideal_plan_task_context(task_context or {})
+    return prompt, [plan_ideal, summarize_context], True, True
+
+
+def build_results(
+    mode: str,
+    *,
+    base_search_tools: Sequence[DecoratedFunctionTool],
+    fixed_k: Optional[int],
+) -> List[DecoratedFunctionTool]:
+    """Apply fixed-k and payload-shaping wrappers to search tools."""
+    results_mode = _normalize_mode(mode, "standard", "search_results")
+    return build_search_tools_by_mode(
+        base_search_tools,
+        fixed_k=fixed_k,
+        results_mode=results_mode,
     )
-    prompt = (
-        prompt.rstrip()
-        + "\n\n## IDEAL SEARCH TOOLING OVERRIDE\n"
-        "- In this mode, only `search_ideal(query, top_k)` is available for search.\n"
-        "- `search_value`, `search_schema`, and `search_prefix` are not available.\n"
-        "- `search_ideal` follows plans_mini dataset_sequence strictly, one dataset per call."
-    )
-    return prompt, [plan_ideal], False, False
 
 
 def build_mode_bundle(
@@ -205,23 +213,16 @@ def build_mode_bundle(
     search_results_mode = _normalize_mode(run_config.search_results_mode, "standard", "search_results")
     agent_management_mode = _normalize_mode(run_config.agent_management_mode, "standard", "agent_management")
 
-    # Keep shared ideal task context in sync for plan loading (management/search).
     if search_tool_mode == "ideal" or agent_management_mode == "ideal":
         set_ideal_plan_task_context(task_context or {})
 
-    if search_tool_mode == "ideal":
-        import strands_evaluation.tools.external.ideal.search_ideal as search_ideal
-
-        search_ideal.set_task_context(task_context or {})
-
-    raw_search_tools = _resolve_search_base_tools(search_tool_mode)
-    search_tools = build_search_tools_by_mode(
-        raw_search_tools,
+    raw_search_tools = build_search(search_tool_mode, task_context=task_context)
+    search_tools = build_results(
+        search_results_mode,
+        base_search_tools=raw_search_tools,
         fixed_k=run_config.search_k,
-        results_mode=search_results_mode,
     )
-
-    system_prompt, management_tools, enable_skills, enable_stagnation = _resolve_management(
+    system_prompt, management_tools, enable_skills, enable_stagnation = build_management(
         agent_management_mode,
         base_prompt=run_config.system_prompt,
         task_context=task_context,

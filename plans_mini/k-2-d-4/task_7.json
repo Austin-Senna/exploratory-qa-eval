@@ -1,4 +1,5 @@
 {
+  "original_final_question": "From the Texas counties with 700-4,600 people entering the state prison system in each fiscal year from 2019-2022, which county is listed as part of West Texas? Return the county name only. Your response should be in the format [Answer].",
   "dataset_sequence": [
     "texas-department-of-criminal-justice-receives-fy-2019",
     "texas-department-of-criminal-justice-receives-fy-2020",
@@ -19,6 +20,5 @@
     "  Node 5: West Texas list includes El Paso -> El Paso",
     "",
     "Final answer: El Paso"
-  ],
-  "original_ifnal_question": "From the Texas counties with 700-4,600 people entering the state prison system in each fiscal year from 2019-2022, which county is listed as part of West Texas? Return the county name only. Your response should be in the format [Answer]."
+  ]
 }

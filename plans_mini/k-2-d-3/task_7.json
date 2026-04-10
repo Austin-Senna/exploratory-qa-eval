@@ -1,4 +1,5 @@
 {
+  "original_final_question": "Which Chicago department codes were in the top five by ordinance appropriations in each year 2019–2021 and also had nonzero total budgeted amounts in the Budget Ordinance Positions and Salaries data across those years? List the department codes in ascending order separated by `, `. Your response should be in the format [Answer].",
   "dataset_sequence": [
     "budget-2019-budget-ordinance-appropriations",
     "budget-2020-budget-ordinance-appropriations",
@@ -16,6 +17,5 @@
     "  Nodes 4-6: Nonzero totals across 2019–2021 -> {57, 85, 50}",
     "",
     "Final answer: 50, 57, 85"
-  ],
-  "original_ifnal_question": "Which Chicago department codes were in the top five by ordinance appropriations in each year 2019–2021 and also had nonzero total budgeted amounts in the Budget Ordinance Positions and Salaries data across those years? List the department codes in ascending order separated by `, `. Your response should be in the format [Answer]."
+  ]
 }

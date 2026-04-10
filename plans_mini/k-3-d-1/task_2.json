@@ -1,4 +1,5 @@
 {
+  "original_final_question": "I'm considering living in Brightwood, Washington, D.C. Identify the ward Brightwood belongs to, find the most common offense in that ward in 2020, and report the percentage of incidents for that same offense from 2020 to that of the next year. Rounded to the nearest integer. Your response should be in the format [Answer].",
   "dataset_sequence": [
     "Brightwood_(Washington,_D.C.)",
     "crime-incidents-in-2020",
@@ -13,6 +14,5 @@
     "Compute percent of 2020 level in 2021: 996 / 1070 * 100 ≈ 93.08%.",
     "Round to nearest whole percent: 93.",
     "Final answer: 93"
-  ],
-  "original_ifnal_question": "I'm considering living in Brightwood, Washington, D.C. Identify the ward Brightwood belongs to, find the most common offense in that ward in 2020, and report the percentage of incidents for that same offense from 2020 to that of the next year. Rounded to the nearest integer. Your response should be in the format [Answer]."
+  ]
 }

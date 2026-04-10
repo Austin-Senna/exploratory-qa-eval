@@ -1,4 +1,5 @@
 {
+  "original_final_question": "Among Bexar, El Paso, Hidalgo, and Montgomery counties, which have 2020 census population under 900,000 and are not in the Houston metropolitan area? List the county names in alphabetical order separated by `, `. Your response should be in the format [Answer].",
   "dataset_sequence": [
     "2020-census-redistricting-data-all-texas-counties",
     "Montgomery_County,_Texas"
@@ -13,6 +14,5 @@
     "  Result: El Paso, Hidalgo",
     "",
     "Final answer: El Paso, Hidalgo"
-  ],
-  "original_ifnal_question": "Among Bexar, El Paso, Hidalgo, and Montgomery counties, which have 2020 census population under 900,000 and are not in the Houston metropolitan area? List the county names in alphabetical order separated by `, `. Your response should be in the format [Answer]."
+  ]
 }

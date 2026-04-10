@@ -1,4 +1,5 @@
 {
+  "original_final_question": "Which year from 2005-2010 has the lowest total CTA 'L' station entries? Your response should be in the format [Answer].",
   "dataset_sequence": [
     "cta-ridership-l-station-entries-monthly-day-type-averages-totals"
   ],
@@ -6,6 +7,5 @@
   "original_reasoning_chain": [
     "Node 1: Sum monthtotal by year (2005-2010) and select the minimum; the lowest year is 2005.",
     "Final answer: 2005"
-  ],
-  "original_ifnal_question": "Which year from 2005-2010 has the lowest total CTA 'L' station entries? Your response should be in the format [Answer]."
+  ]
 }

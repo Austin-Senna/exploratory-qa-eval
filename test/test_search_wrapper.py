@@ -24,7 +24,7 @@ class TestSearchWrapperPayload(unittest.TestCase):
         }
         out = reshape_search_payload(payload, "naive")
         self.assertEqual(out["count"], 1)
-        self.assertEqual(list(out["results"][0].keys()), ["uri", "dataset_id"])
+        self.assertEqual(list(out["results"][0].keys()), ["uri"])
 
     def test_standard_mode_truncates_to_200_words(self):
         long_text = " ".join([f"w{i}" for i in range(400)])

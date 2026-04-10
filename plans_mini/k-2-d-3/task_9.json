@@ -1,4 +1,5 @@
 {
+  "original_final_question": "Among DC wards that were in the top four for building permits in each year 2022–2024, which two wards had the highest average crime-incident counts across 2022–2024? List in `Ward X, Ward Y` format. Your response should be in the format [Answer].",
   "dataset_sequence": [
     "building-permits-in-2022",
     "building-permits-in-2023",
@@ -16,6 +17,5 @@
     "  Nodes 4-6: Average crime incidents 2022–2024 -> top two Ward 5 and Ward 2",
     "",
     "Final answer: Ward 2, Ward 5"
-  ],
-  "original_ifnal_question": "Among DC wards that were in the top four for building permits in each year 2022–2024, which two wards had the highest average crime-incident counts across 2022–2024? List in `Ward X, Ward Y` format. Your response should be in the format [Answer]."
+  ]
 }
