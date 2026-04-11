@@ -56,6 +56,32 @@ class TestPlanIdealFileBacked(unittest.TestCase):
             self.assertNotIn("Dataset sequence:", fake_agent.system_prompt)
             self.assertNotIn("manual should be ignored", fake_agent.system_prompt)
 
+    def test_plan_ideal_joins_list_backed_reasoning_chain(self):
+        with TemporaryDirectory() as tmpdir:
+            plans_root = Path(tmpdir) / "plans_mini"
+            target = plans_root / "k-1-d-1"
+            target.mkdir(parents=True, exist_ok=True)
+            (target / "task_3.json").write_text(
+                json.dumps(
+                    {
+                        "dataset_sequence": ["ds_a", "ds_b"],
+                        "reasoning_chain_text": [
+                            "1. First file-backed step.",
+                            "2. Second file-backed step.",
+                        ],
+                    }
+                )
+            )
+
+            set_plans_root(plans_root)
+            set_task_context({"task_id": "tasks_mini/k-1-d-1/task_3.json"})
+
+            fake_agent = _FakeAgent("BASE")
+            fake_ctx = _FakeToolContext(fake_agent)
+            plan_ideal("manual should be ignored", tool_context=fake_ctx)
+
+            self.assertIn("1. First file-backed step.\n2. Second file-backed step.", fake_agent.system_prompt)
+
 
 if __name__ == "__main__":
     unittest.main()

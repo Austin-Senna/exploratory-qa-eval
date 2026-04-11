@@ -1,0 +1,44 @@
+{
+  "dataset_sequence": [
+    "Springfield,_Missouri",
+    "500-cities-local-data-for-better-health-2016-release",
+    "500-cities-local-data-for-better-health-2018-release",
+    "employee-overtime-and-supplemental-earnings-2014",
+    "employee-overtime-and-supplemental-earnings-2015",
+    "employee-overtime-and-supplemental-earnings-2016",
+    "employee-overtime-and-supplemental-earnings-2017",
+    "Chicago_Police_Department"
+  ],
+  "reasoning_chain_text": [
+    "1. Using the city page in this task, identify the highway born there and the two terminus cities of that highway.",
+    "2. In the 2016 city health release, compare binge drinking prevalence for those two cities.",
+    "3. In the 2018 city health release, keep the city that again has the higher binge drinking prevalence.",
+    "4. For 2014 overtime data, calculate overtime totals by department for that city.",
+    "5. For 2015 overtime data, calculate overtime totals by department for that city.",
+    "6. For 2016 overtime data, calculate overtime totals by department for that city.",
+    "7. For 2017 overtime data, calculate overtime totals by department for that city and combine the 2014-2017 totals to identify the department with the highest cumulative overtime.",
+    "8. Using the page for that department, return its 2025 starting salary."
+  ],
+  "original_final_question": "Can you first find the terminus cities of Route 66, among the citites, which one had higher binge drinking prevalence in both 2016 and 2018 city health data? For that city, identify the department with the highest total overtime costs from 2014 to 2017, then report the starting salary of that department in 2025. Return the dollar amount only. Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    "HOP 1 (d=1, Wikipedia Springfield,_Missouri - node 1):",
+    "  Node 1: Route 66 was the Chicago-to-Los Angeles highway",
+    "  Result: termini are Chicago and Los Angeles",
+    "",
+    "HOP 2 (d=2, 500-Cities health data 2016 and 2018 - nodes 2-3):",
+    "  Node 2: 2016 binge drinking - Chicago 20.1%, Los Angeles 15.9% -> Chicago higher",
+    "  Node 3: 2018 binge drinking - Chicago 21.5%, Los Angeles 16.7% -> Chicago higher",
+    "  Result: Chicago",
+    "",
+    "HOP 3 (d=4, Chicago Employee Overtime 2014-2017 - nodes 4-7):",
+    "  Node 4: 2014 overtime -> Police #1",
+    "  Node 5: 2015 overtime -> Police #1",
+    "  Node 6: 2016 overtime -> Police #1",
+    "  Node 7: 2017 overtime -> Police #1",
+    "  Result: Police (department with highest overtime)",
+    "",
+    "HOP 4 (d=1, Wikipedia Chicago_Police_Department - node 8):",
+    "  Node 8: Starting salary in 2025 for Chicago police officers is $61,782",
+    "  Final answer: 61782"
+  ]
+}

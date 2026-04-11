@@ -8,7 +8,14 @@
     "Carnegie_Hill",
     "Andrew_Carnegie"
   ],
-  "reasoning_chain_text": "1. Which NYC elementary schools in District 2 ranked in the top 3 by performance category score in 2010-11?\n2. Which NYC elementary schools in District 2 ranked in the top 3 by performance category score in 2011-12?\n3. Which NYC elementary schools in District 2 ranked in the top 3 by performance category score in 2012-13?\n4. In which Manhattan neighborhood is <intersection of node_1, node_2, node_3: PS 77 Lower Lab School> located?\n5. After whom is <node_4 answer> named?\n6. In what year was <node_5 answer> born?",
+  "reasoning_chain_text": [
+    "1. Identify NYC elementary schools in District 2 that ranked in the top 3 by performance category score in 2010-11.",
+    "2. Identify NYC elementary schools in District 2 that ranked in the top 3 by performance category score in 2011-12.",
+    "3. Identify NYC elementary schools in District 2 that ranked in the top 3 by performance category score in 2012-13.",
+    "4. Using the school locations dataset, determine the Manhattan neighborhood of the elementary school common to steps 1-3.",
+    "5. Using that neighborhood's reference page, determine who it is named after.",
+    "6. Using that person's reference page, determine the year of birth."
+  ],
   "original_reasoning_chain": [
     "HOP 1 (d=3 superlative - nodes 1,2,3 all independent):",
     "  Node 1: Progress report 2010-11 \u2192 {PS 77, PS 158, PS 290}",

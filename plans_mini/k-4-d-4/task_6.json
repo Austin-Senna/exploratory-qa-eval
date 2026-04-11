@@ -1,0 +1,50 @@
+{
+  "dataset_sequence": [
+    "2015-2016-shsat-admissions-test-offers-by-sending-school",
+    "2016-2017-school-locations",
+    "2016-2017-shsat-admissions-test-offers-by-sending-school",
+    "2017-2018-shsat-admissions-test-offers-by-sending-school",
+    "2018-2019-shsat-admissions-test-offers-by-sending-school",
+    "Louis_Pasteur",
+    "Marie_Curie",
+    "Nathaniel_Hawthorne",
+    "Pasteur_Institute"
+  ],
+  "reasoning_chain_text": [
+    "1. For 2015-16 SHSAT offers, identify schools with at least 50 offers.",
+    "2. Using 2016-17 school locations, determine which relevant middle schools are in Queens District 26.",
+    "3. For 2016-17 SHSAT offers, keep Queens District 26 schools with at least 50 offers again.",
+    "4. For 2017-18 SHSAT offers, keep Queens District 26 schools with at least 50 offers again.",
+    "5. For 2018-19 SHSAT offers, intersect the four yearly offer filters to keep the qualifying Queens District 26 middle schools.",
+    "6. Using the first scientist page in this task, confirm that the school bearing this name honors a scientist and record the birth year.",
+    "7. Using the second scientist page in this task, confirm that the school bearing this name honors a scientist and record the birth year.",
+    "8. Using the third person page in this task, determine whether the school bearing this name honors a scientist.",
+    "9. Using the research institute page associated with the older qualifying scientist, return the year it was founded and first directed."
+  ],
+  "original_final_question": "Which New York City middle schools located in Queens District 26 had (1) at least 50 offers to specialized high schools on specialized high school admissions test in every school year from 2015-19, and (2) are named after scientists. In what year was the research institute founded and first directed by the older of these two scientists? Please return the year only. Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    "HOP 1 (d=4, data.gov SHSAT data - nodes 1-4):",
+    "  Node 1: SHSAT offers SY2015-16 >= 50 -> 27 schools (including 4 District 26 schools)",
+    "  Node 2: SHSAT offers SY2016-17 >= 50 -> 27 schools (including 4 District 26 schools)",
+    "  Node 3: SHSAT offers SY2017-18 >= 50 -> 28 schools (including 4 District 26 schools)",
+    "  Node 4: SHSAT offers SY2018-19 >= 50 -> 23 schools (including 4 District 26 schools)",
+    "  Intersection of nodes 1-4: Schools meeting criterion all 4 years -> 21 schools",
+    "",
+    "HOP 2 (d=1, data.gov School Locations - node 5):",
+    "  Node 5 (School Locations): Filter to Queens District 26 -> 4 schools (Pasteur, Hawthorne, Curie, Ryan)",
+    "",
+    "HOP 3 (d=3, Wikipedia - nodes 6-8):",
+    "  Node 6 (Wikipedia Louis_Pasteur): Pasteur was a scientist, born December 27, 1822",
+    "  Node 7 (Wikipedia Marie_Curie): Curie was a scientist, born November 7, 1867",
+    "  Node 8 (Wikipedia Nathaniel_Hawthorne): Hawthorne was NOT a scientist (novelist)",
+    "  Note: George J. Ryan has no Wikipedia article and cannot be verified as a scientist",
+    "  Filter: Scientists only -> Pasteur (born 1822), Curie (born 1867) = 2 scientists",
+    "  Superlative: Older (earlier birth year) -> Pasteur (1822) vs Curie (1867) -> Louis Pasteur is older",
+    "  Result: Louis Pasteur selected",
+    "",
+    "HOP 4 (d=1, Wikipedia Pasteur Institute - node 9):",
+    "  Node 9: Louis Pasteur founded the Pasteur Institute in 1887 and was its first director until his death",
+    "",
+    "Final answer: 1887"
+  ]
+}

@@ -7,7 +7,13 @@
     "2012-2013-school-locations",
     "East_Flatbush,_Brooklyn"
   ],
-  "reasoning_chain_text": "1. Which NYC high schools were in the top 3 by overall score in 2011-12?\n2. Which NYC high schools were in the top 3 by overall score in 2012-13?\n3. Which schools from <intersection of node_1, node_2> had an A grade in the 2010-11 Progress Report?\n4. What is the ZIP code of <node_3 answer>?\n5. What percentage does White people contribute to the racial makeup of the neighborhood whose primary ZIP code is <node_4 answer> based on data in 2010 census?",
+  "reasoning_chain_text": [
+    "1. Identify NYC high schools in the top 3 by overall score in 2011-12.",
+    "2. Identify NYC high schools in the top 3 by overall score in 2012-13.",
+    "3. Using the high school performance directory, keep the school common to steps 1-2 that had an A grade in the 2010-11 progress report.",
+    "4. Using the school locations dataset, determine the ZIP code of the school that remains after step 3.",
+    "5. Using the neighborhood reference page whose primary ZIP code matches step 4, determine the percentage of White residents in the 2010 census."
+  ],
   "original_reasoning_chain": [
     "HOP 1 (d=2, NYC high school top-3 overall score - nodes 1-2):",
     "  Node 1 (2011-12): Top 3 -> {It Takes a Village Academy, Academy for Careers in Television and Film, Manhattan Village Academy}",

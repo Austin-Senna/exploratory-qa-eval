@@ -8,7 +8,14 @@
     "fy-2023-disability-compensation-recipients-by-county",
     "Phoenix,_Arizona"
   ],
-  "reasoning_chain_text": "1. Which US states are Mountain states?\n2. Which US states border Mexico?\n3. Which US states share the Four Corners region?\n4. Which US states had between 4,000 and 6,000 VA pension recipients in fiscal year 2020?\n5. Which county in <intersection of node_1, node_2, node_3, node_4: Arizona> has the most VA disability compensation recipients in FY 2023?\n6. In what year was the county seat of <node_5 answer: Maricopa County> incorporated as a city?",
+  "reasoning_chain_text": [
+    "1. Identify the U.S. states classified as Mountain states.",
+    "2. Identify the U.S. states that border Mexico.",
+    "3. Identify the U.S. states that share the Four Corners region.",
+    "4. Identify the states with between 4,000 and 6,000 veteran pension recipients in fiscal year 2020, then keep the state that also appears in steps 1 through 3.",
+    "5. Within the state remaining after step 4, find the county with the most 2023 disability compensation recipients.",
+    "6. Using the city article in this dataset, confirm it is the county seat of the county from step 5 and return its incorporation year."
+  ],
   "original_reasoning_chain": [
     "HOP 1 (d=4 intersection - nodes 1,2,3,4 all independent, mix of Wikipedia and data.gov):",
     "  Node 1 (Wikipedia): Mountain states \u2192 {AZ, CO, ID, MT, NV, NM, UT, WY}",

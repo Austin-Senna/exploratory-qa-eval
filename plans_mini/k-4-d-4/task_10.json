@@ -1,0 +1,49 @@
+{
+  "dataset_sequence": [
+    "texas-state-expenditures-by-county-2018",
+    "texas-state-expenditures-by-county-2019",
+    "texas-state-expenditures-by-county-2020",
+    "texas-state-expenditures-by-county-2021",
+    "texas-department-of-criminal-justice-releases-fy-2019",
+    "texas-department-of-criminal-justice-releases-fy-2020",
+    "fy-2020-disability-compensation-recipients-by-county",
+    "fy-2023-disability-compensation-recipients-by-county",
+    "Harris_County,_Texas"
+  ],
+  "reasoning_chain_text": [
+    "1. For 2018 Texas state expenditures by county, record counties with high capital outlay spending relevant to the top-five comparison.",
+    "2. For 2019 Texas state expenditures by county, record counties with high capital outlay spending relevant to the top-five comparison.",
+    "3. For 2020 Texas state expenditures by county, record counties with high capital outlay spending relevant to the top-five comparison.",
+    "4. For 2021 Texas state expenditures by county, combine the 2018-2021 capital outlay results to determine the counties that rank in the top five by average spending.",
+    "5. For fiscal year 2019 prison-release data, record release counts for those counties.",
+    "6. For fiscal year 2020 prison-release data, compute average releases across 2019-20 for those counties and keep the top two.",
+    "7. For fiscal year 2020 disability compensation data, record recipient counts for the two remaining counties.",
+    "8. For fiscal year 2023 disability compensation data, compute each remaining county's change from 2020 to 2023 and keep the county with the larger increase.",
+    "9. Using the remaining county page, return its county seat."
+  ],
+  "original_final_question": "Among Texas counties that were in the top five for average capital outlay spending from 2018 to 2021, identify the two highest by average prison releases in 2019-20. Of those two, pick the county with the larger increase in veterans affairs disability compensation recipients from 2020 to 2023. What is the county seat of that county? Return the county seat name only. Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    "HOP 1 (d=4, Texas Capital Outlay expenditures by county 2018-2021 - nodes 1-4):",
+    "  Node 1: 2018 Capital Outlay totals -> Harris, Dallas, Travis, Montgomery, Bexar",
+    "  Node 2: 2019 Capital Outlay totals -> Harris, Dallas, Travis, Montgomery, Bexar",
+    "  Node 3: 2020 Capital Outlay totals -> Harris, Dallas, Travis, Montgomery, Bexar",
+    "  Node 4: 2021 Capital Outlay totals -> Harris, Dallas, Travis, Montgomery, Bexar",
+    "  Result: {Harris, Dallas, Travis, Montgomery, Bexar}",
+    "",
+    "HOP 2 (d=2, TDCJ releases 2019-2020 - nodes 5-6):",
+    "  Node 5: 2019 releases -> Harris 9,029; Dallas 5,355; Bexar 4,545; Travis 1,857; Montgomery 1,315",
+    "  Node 6: 2020 releases -> Harris 7,059; Dallas 4,540; Bexar 3,917; Travis 1,596; Montgomery 1,250",
+    "  Average releases: Harris 8,044; Dallas 4,947.5 (top two)",
+    "  Result: {Harris, Dallas}",
+    "",
+    "HOP 3 (d=2, Disability compensation recipients 2020 and 2023 - nodes 7-8):",
+    "  Node 7: 2020 recipients -> Harris 49,804; Dallas 26,317",
+    "  Node 8: 2023 recipients -> Harris 54,266; Dallas 25,704",
+    "  Change: Harris +4,462; Dallas -613 -> Harris has the larger increase",
+    "  Result: Harris County, Texas",
+    "",
+    "HOP 4 (d=1, Wikipedia Harris_County,_Texas - node 9):",
+    "  Node 9: County seat of Harris County -> Houston",
+    "  Final answer: Houston"
+  ]
+}

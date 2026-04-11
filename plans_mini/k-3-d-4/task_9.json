@@ -9,7 +9,15 @@
     "texas-department-of-criminal-justice-releases-fy-2019",
     "texas-department-of-criminal-justice-releases-fy-2020"
   ],
-  "reasoning_chain_text": "1. Which counties were among the original 23 counties of Texas?\n2. Which Texas counties were in the top 5 by average Capital Outlay expenditures across 2018-2021? (Filter for this node: Fiscal Year == 2018; Major Spending Category contains 'CAPITAL OUTLAY' (including 'HIGHWAY CONSTRUCTION-CAPITAL OUTLAY'); non-empty County; sum Amount by County.)\n3. Which Texas counties were in the top 5 by average Capital Outlay expenditures across 2018-2021? (Filter for this node: Fiscal Year == 2019; Major Spending Category contains 'CAPITAL OUTLAY' (including 'HIGHWAY CONSTRUCTION-CAPITAL OUTLAY'); non-empty County; sum Amount by County.)\n4. Which Texas counties were in the top 5 by average Capital Outlay expenditures across 2018-2021? (Filter for this node: Fiscal Year == 2020; Major Spending Category contains 'CAPITAL OUTLAY' (including 'HIGHWAY CONSTRUCTION-CAPITAL OUTLAY'); non-empty County; sum Amount by County.)\n5. Which Texas counties were in the top 5 by average Capital Outlay expenditures across 2018-2021? (Filter for this node: Fiscal Year == 2021; Major Spending Category contains 'CAPITAL OUTLAY' (including 'HIGHWAY CONSTRUCTION-CAPITAL OUTLAY'); non-empty County; sum Amount by County.)\n6. For the counties in <intersection of node_1 and aggregation of nodes 2-5>, what were the Texas Department of Criminal Justice release counts in 2019 and 2020? (Filter for this node: County in {Harris, Bexar}; count rows by County.)\n7. For the counties in <intersection of node_1 and aggregation of nodes 2-5>, what were the Texas Department of Criminal Justice release counts in 2019 and 2020? (Filter for this node: County in {Harris, Bexar}; count rows by County.)",
+  "reasoning_chain_text": [
+    "1. Identify the original counties of Texas.",
+    "2. For 2018 Texas state expenditures, identify the counties in the top five for capital outlay spending.",
+    "3. For 2019 Texas state expenditures, identify the counties in the top five for capital outlay spending.",
+    "4. For 2020 Texas state expenditures, identify the counties in the top five for capital outlay spending.",
+    "5. For 2021 Texas state expenditures, identify the counties in the top five for capital outlay spending and keep the counties that appear in all four yearly top-five lists.",
+    "6. For the counties that appear in both step 1 and step 5, get the 2019 criminal release counts.",
+    "7. For those same counties, get the 2020 criminal release counts and return the county with the lowest average across steps 6 and 7."
+  ],
   "original_reasoning_chain": [
     "HOP 1 (d=1, Wikipedia List_of_counties_in_Texas - node 1):",
     "  Node 1: Original 23 counties include Bexar and Harris among others",

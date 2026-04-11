@@ -1,0 +1,46 @@
+{
+  "dataset_sequence": [
+    "2015-property-tax-roll",
+    "2016-property-tax-roll",
+    "2017-property-tax-roll",
+    "2018-property-tax-roll",
+    "Brown_University",
+    "Moses_Brown",
+    "Moses_Brown_Ives",
+    "national-incorporated-places-and-counties"
+  ],
+  "reasoning_chain_text": [
+    "1. For the 2015 Providence property tax roll, identify hospital properties with assessed value between $6.9 million and $7.3 million.",
+    "2. For the 2016 Providence property tax roll, identify hospital properties with assessed value between $6.9 million and $7.3 million.",
+    "3. For the 2017 Providence property tax roll, identify hospital properties with assessed value between $6.9 million and $7.3 million.",
+    "4. For the 2018 Providence property tax roll, intersect the 2015-2018 hospital-property sets to keep the properties that stay in range every year.",
+    "5. Using the university page in this task, determine whether one remaining property is an Ivy League university and exclude it.",
+    "6. Using the person page in this task, identify the grandfather of the person for whom the benefactor was named.",
+    "7. Using the benefactor page in this task, determine whom that benefactor was named after and connect it to the surviving property.",
+    "8. Using the incorporated-places data, exclude any remaining property whose owner name matches an incorporated Rhode Island city, then return the grandfather identified earlier."
+  ],
+  "original_final_question": "Among Providence hospital properties, only one met the following criteria: it had an assessed value consistently between $6.9 million and $7.3 million from 2015 through 2018, and it is neither an Ivy League university nor named after an incorporated Rhode Island city. The benefactor associated with this property was named in honor of another person. Who was that person's grandfather?. Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    "HOP 1 (d=4, data.gov superlative - nodes 1-4):",
+    "  Node 1: Providence properties with $6.9M-$7.3M assessment in 2015 -> 9 properties",
+    "  Node 2: Providence properties with $6.9M-$7.3M assessment in 2016 -> 18 properties",
+    "  Node 3: Providence properties with $6.9M-$7.3M assessment in 2017 -> 19 properties",
+    "  Node 4: Providence properties with $6.9M-$7.3M assessment in 2018 -> 21 properties",
+    "  Intersection of nodes 1-4: Properties meeting criterion all 4 years -> {City of Providence, RI Hospital, Brown University}",
+    "",
+    "HOP 2 (d=2, mixed data.gov + Wikipedia - nodes 5-6 filter the intersection):",
+    "  Node 5 (data.gov): Check if owner name matches incorporated RI city -> only 'City of Providence' matches",
+    "    Filter: Owner NOT an incorporated RI city -> {RI Hospital, Brown University}",
+    "  Node 6 (Wikipedia): Brown University -> IS an Ivy League university",
+    "    Filter: NOT an Ivy League university -> {City of Providence, RI Hospital}",
+    "  Intersection of filters: {RI Hospital, Brown University} AND {City of Providence, RI Hospital} -> {RI Hospital}",
+    "",
+    "HOP 3 (d=1, Wikipedia - node 7):",
+    "  Node 7: Moses Brown Ives created a bequest that provided early funding for Rhode Island Hospital and was named after Moses Brown",
+    "",
+    "HOP 4 (d=1, Wikipedia - node 8):",
+    "  Node 8: Moses Brown (after whom Moses Brown Ives was named) had grandfather James Brown (1666-1732)",
+    "",
+    "Final answer: James Brown"
+  ]
+}

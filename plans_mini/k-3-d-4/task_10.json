@@ -10,7 +10,16 @@
     "child-and-adult-care-food-program-cacfp-child-centers-meal-reimbursement-program-year-2018",
     "child-and-adult-care-food-program-cacfp-child-centers-meal-reimbursement-program-year-2019"
   ],
-  "reasoning_chain_text": "1. Which Texas counties were in the top five for SSO LunchTotal in every program year from 2015-2016 through 2018-2019? (Filter for this node: ProgramYear == 2015-2016; group by SiteCounty; sum LunchTotal; rank by total; keep top 5.)\n2. Which Texas counties were in the top five for SSO LunchTotal in every program year from 2015-2016 through 2018-2019? (Filter for this node: ProgramYear == 2016-2017; group by SiteCounty; sum LunchTotal; rank by total; keep top 5.)\n3. Which Texas counties were in the top five for SSO LunchTotal in every program year from 2015-2016 through 2018-2019? (Filter for this node: ProgramYear == 2017-2018; group by SiteCounty; sum LunchTotal; rank by total; keep top 5.)\n4. Which Texas counties were in the top five for SSO LunchTotal in every program year from 2015-2016 through 2018-2019? (Filter for this node: ProgramYear == 2018-2019; group by SiteCounty; sum LunchTotal; rank by total; keep top 5.)\n5. Among {Harris, Hidalgo, Dallas, Cameron} (from hop 1), which counties had the largest percentage decrease in CACFP day care home meal reimbursements between the 2018-2019 and 2020-2021 program years? (Filter for this node: ProgramYear == 2018-2019; group by SiteCounty; sum TotalMealReimbursement.)\n6. Among {Harris, Hidalgo, Dallas, Cameron} (from hop 1), which counties had the largest percentage decrease in CACFP day care home meal reimbursements between the 2018-2019 and 2020-2021 program years? (Filter for this node: ProgramYear == 2020-2021; group by SiteCounty; sum TotalMealReimbursement.)\n7. Among {Hidalgo, Cameron} (from hop 2), which county had the higher average CACFP child-center EnrollmentQty across the 2018-2019 and 2019-2020 program years? (Filter for this node: ProgramYear == 2018-2019; group by SiteCounty; sum EnrollmentQty.)\n8. Among {Hidalgo, Cameron} (from hop 2), which county had the higher average CACFP child-center EnrollmentQty across the 2018-2019 and 2019-2020 program years? (Filter for this node: ProgramYear == 2019-2020; group by SiteCounty; sum EnrollmentQty.)",
+  "reasoning_chain_text": [
+    "1. Identify the Texas counties in the top five for SSO lunch serves in program year 2015-2016.",
+    "2. Identify the Texas counties in the top five for SSO lunch serves in program year 2016-2017.",
+    "3. Identify the Texas counties in the top five for SSO lunch serves in program year 2017-2018.",
+    "4. Identify the Texas counties in the top five for SSO lunch serves in program year 2018-2019 and keep the counties that appear in all four yearly lists.",
+    "5. For the counties remaining after step 4, get their 2018-2019 day care home reimbursement totals.",
+    "6. For those same counties, get their 2020-2021 day care home reimbursement totals and determine which two have the largest percentage decreases across steps 5 and 6.",
+    "7. For the two counties identified in step 6, get their 2018-2019 child center enrollment totals.",
+    "8. For those same counties, get their 2019-2020 child center enrollment totals and return the smaller average enrollment across steps 7 and 8."
+  ],
   "original_reasoning_chain": [
     "HOP 1 (d=4, SSO LunchTotal 2015-2016 to 2018-2019 - nodes 1-4):",
     "  Node 1 (2015-2016): top five LunchTotal counties -> {Harris, Hidalgo, Dallas, Cameron, El Paso}",

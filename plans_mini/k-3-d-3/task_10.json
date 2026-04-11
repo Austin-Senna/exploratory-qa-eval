@@ -11,7 +11,17 @@
     "libraries-2020-computer-sessions-by-location",
     "libraries-2021-computer-sessions-by-location"
   ],
-  "reasoning_chain_text": "1. Which branches (with physical addresses) were in the top 5 by YTD circulation in the given year? (Filter for this node: keep rows with non-null ADDRESS; group by LOCATION; sum YTD; sort YTD desc; take top 5.)\n2. Which branches (with physical addresses) were in the top 5 by YTD circulation in the given year? (Filter for this node: keep rows with non-null ADDRESS; group by BRANCH; sum YTD; sort YTD desc; take top 5.)\n3. Which branches (with physical addresses) were in the top 5 by YTD circulation in the given year? (Filter for this node: keep rows with non-null ADDRESS; group by BRANCH; sum YTD; sort YTD desc; take top 5.)\n4. Among the branches (from hop 1), which were in the top 5 by YTD visitors in the given year? (Filter for this node: keep rows with non-null ADDRESS; group by LOCATION; sum YTD; sort YTD desc; take top 5 overall.)\n5. Among the branches (from hop 1), which were in the top 5 by YTD visitors in the given year? (Filter for this node: keep rows with non-null ADDRESS; group by BRANCH; sum YTD; sort YTD desc; take top 5 overall.)\n6. Among the branches (from hop 1), which were in the top 5 by YTD visitors in the given year? (Filter for this node: keep rows with non-null ADDRESS; group by BRANCH; sum YTD; sort YTD desc; take top 5 overall.)\n7. Among the branches (from hop 2), which were in the top 3 by YTD computer sessions in the given year? (Filter for this node: keep rows with non-null ADDRESS; group by LOCATION; sum YTD; sort YTD desc; take top 3 overall.)\n8. Among the branches (from hop 2), which were in the top 3 by YTD computer sessions in the given year? (Filter for this node: keep rows with non-null ADDRESS; group by BRANCH; sum YTD; sort YTD desc; take top 3 overall.)\n9. Among the branches (from hop 2), which were in the top 3 by YTD computer sessions in the given year? (Filter for this node: keep rows with non-null ADDRESS; group by BRANCH; sum YTD; sort YTD desc; take top 3 overall.)",
+  "reasoning_chain_text": [
+    "1. For 2019, identify Chicago library branches with physical addresses in the top 5 by YTD circulation.",
+    "2. For 2020, identify Chicago library branches with physical addresses in the top 5 by YTD circulation.",
+    "3. For 2021, identify Chicago library branches with physical addresses in the top 5 by YTD circulation.",
+    "4. For 2019, among the branches common to steps 1-3, keep those in the top 5 by YTD visitors.",
+    "5. For 2020, among the branches common to steps 1-3, keep those in the top 5 by YTD visitors.",
+    "6. For 2021, among the branches common to steps 1-3, keep those in the top 5 by YTD visitors.",
+    "7. For 2019, among the branches that remain after steps 4-6, keep those in the top 3 by YTD computer sessions.",
+    "8. For 2020, among the branches that remain after steps 4-6, keep those in the top 3 by YTD computer sessions.",
+    "9. For 2021, among the branches that remain after steps 4-6, keep those in the top 3 by YTD computer sessions and return the branch that remains after intersecting the 2019-2021 computer-session results."
+  ],
   "original_reasoning_chain": [
     "HOP 1 (d=3, circulation 2019-2021 - nodes 1-3):",
     "  Question: Which branches (with physical addresses) were in the top 5 by YTD circulation in the given year?",

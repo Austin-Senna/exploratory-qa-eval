@@ -18,15 +18,21 @@ Each plan file must be JSON and must include these required fields:
     "private-school-locations-current-f7d96",
     "school-district-office-locations-2021-22-d5dd7"
   ],
-  "reasoning_chain_text": "1. Sum December overdose deaths by year and select the maximum."
+  "reasoning_chain_text": [
+    "1. Identify the first qualifying school set.",
+    "2. Identify the second qualifying school set.",
+    "3. Determine the district office needed for the final lookup."
+  ]
 }
 ```
 
 - `dataset_sequence`: ordered list of **dataset IDs only** (no `datagov/` prefix, no URI).
-- `reasoning_chain_text`: canonical long-form plan text used for ideal prompt injection.
+- `reasoning_chain_text`: ordered list of numbered step strings used for ideal prompt injection.
   - Keep this as scaffolding instructions only.
   - Do **not** include final answers, computed values, or phrases like `Final answer:`.
   - Do **not** include node labels like `Node 1:`.
+  - Ideal-mode loaders join the list with `\n` before injecting it into `plan_ideal`.
+  - Legacy single-string plans are still accepted, but new or rewritten plans should use the list form.
 
 ## Optional convenience fields
 These fields are optional and ignored by ideal-mode loaders, but useful for review:

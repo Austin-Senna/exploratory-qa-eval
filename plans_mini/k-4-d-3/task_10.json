@@ -8,7 +8,14 @@
     "National_Park_Service",
     "United_States_Department_of_the_Interior"
   ],
-  "reasoning_chain_text": "1. Among the United States Park Police, United States Capitol Police, and U.S. Secret Service Uniform Division, which had the highest average number of January moving violations from 2019-2021? (Filter for this node: ISSUING_AGENCY_NAME in {UNITED STATES PARK POLICE, UNITED STATES CAPITOL POLICE, US. SECRET SERVICE UNIFORM DIVISION}; count rows by ISSUING_AGENCY_NAME.)\n2. Among the United States Park Police, United States Capitol Police, and U.S. Secret Service Uniform Division, which had the highest average number of January moving violations from 2019-2021? (Filter for this node: ISSUING_AGENCY_NAME in {UNITED STATES PARK POLICE, UNITED STATES CAPITOL POLICE, US. SECRET SERVICE UNIFORM DIVISION}; count rows by ISSUING_AGENCY_NAME.)\n3. Among the United States Park Police, United States Capitol Police, and U.S. Secret Service Uniform Division, which had the highest average number of January moving violations from 2019-2021? (Filter for this node: ISSUING_AGENCY_NAME in {UNITED STATES PARK POLICE, UNITED STATES CAPITOL POLICE, US. SECRET SERVICE UNIFORM DIVISION}; count rows by ISSUING_AGENCY_NAME.)\n4. Which federal agency operates the United States Park Police (from hop 1)?\n5. The agency (from hop 2) is within which U.S. department?\n6. Who is the head of the department (from hop 3)?",
+  "reasoning_chain_text": [
+    "1. For January 2019, count moving violations issued by the United States Park Police, the United States Capitol Police, and the U.S. Secret Service Uniform Division.",
+    "2. For January 2020, count moving violations issued by the United States Park Police, the United States Capitol Police, and the U.S. Secret Service Uniform Division.",
+    "3. For January 2021, count moving violations issued by the United States Park Police, the United States Capitol Police, and the U.S. Secret Service Uniform Division.",
+    "4. Using the reference page for the agency with the highest 2019-2021 average moving-violation count, determine which federal agency operates it.",
+    "5. Using that federal agency's reference page, determine which U.S. department contains it.",
+    "6. Using that department reference page, identify the department's head."
+  ],
   "original_reasoning_chain": [
     "HOP 1 (d=3): Compare January moving-violation counts for the three agencies in 2019-2021",
     "  Node 1: 2019 moving violations",

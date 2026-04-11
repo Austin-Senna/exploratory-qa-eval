@@ -5,11 +5,19 @@
     "2011-2012-vadir-incidents",
     "2012-2013-vadir-incidents",
     "2013-2014-vadir-incidents",
-    "Susan_E._Wagner_High_School",
     "List_of_bridges_and_tunnels_in_New_York_City",
-    "Staten_Island"
+    "Staten_Island",
+    "Susan_E._Wagner_High_School"
   ],
-  "reasoning_chain_text": "1. Which NYC high schools were in the top 3 by total VADIR incidents in 2010-11?\n2. Which NYC high schools were in the top 3 by total VADIR incidents in 2011-12?\n3. Which NYC high schools were in the top 3 by total VADIR incidents in 2012-13?\n4. Which NYC high schools were in the top 3 by total VADIR incidents in 2013-14?\n5. In which NYC borough is <intersection of node_1, node_2, node_3, node_4> located?\n6. Which bridges in NYC are suspension bridges?\n7. Which bridges connect to <node_5 answer>?",
+  "reasoning_chain_text": [
+    "1. Identify the NYC high schools in the top 3 by total VADIR incidents for 2010-2011.",
+    "2. Identify the NYC high schools in the top 3 by total VADIR incidents for 2011-2012.",
+    "3. Identify the NYC high schools in the top 3 by total VADIR incidents for 2012-2013.",
+    "4. Identify the NYC high schools in the top 3 by total VADIR incidents for 2013-2014 and determine which school appears in all four yearly lists.",
+    "5. From the NYC bridges and tunnels article, identify the suspension bridges in the city.",
+    "6. From the borough article in this dataset, identify the bridges that connect to that borough.",
+    "7. Using the high school identified in step 4, determine its borough and return the bridge that appears in both step 5 and step 6."
+  ],
   "original_reasoning_chain": [
     "Node 1: Find top 3 NYC high schools by VADIR incidents in 2010-11 \u2192 {Lehman, Jackie Robinson, Susan E Wagner}",
     "Node 2: Find top 3 NYC high schools by VADIR incidents in 2011-12 \u2192 {Lehman, Susan E Wagner, John Adams}",

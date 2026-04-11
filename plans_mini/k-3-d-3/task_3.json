@@ -8,7 +8,14 @@
     "Park_Slope",
     "Prospect_Park_(Brooklyn)"
   ],
-  "reasoning_chain_text": "1. Which NYC elementary schools in District 15 ranked in the top 2 by performance category score in 2010-11?\n2. Which NYC elementary schools in District 15 ranked in the top 2 by performance category score in 2011-12?\n3. Which NYC elementary schools in District 15 ranked in the top 2 by performance category score in 2012-13?\n4. What is the zip code where is <intersection of node_1, node_2, node_3: PS 321 William Penn> located?\n5. Which park is the neighborhood corresponding to the zip code in <node_4 answer> bounded by?\n6. What is the size of the park in <node_5 answer>? Answer in acre",
+  "reasoning_chain_text": [
+    "1. Identify NYC elementary schools in District 15 that ranked in the top 2 by performance category score in 2010-11.",
+    "2. Identify NYC elementary schools in District 15 that ranked in the top 2 by performance category score in 2011-12.",
+    "3. Identify NYC elementary schools in District 15 that ranked in the top 2 by performance category score in 2012-13.",
+    "4. Using the school locations dataset, determine the ZIP code of the elementary school common to steps 1-3.",
+    "5. Using the neighborhood reference page that matches step 4, identify the park that bounds the neighborhood.",
+    "6. Using that park's reference page, determine its size in acres."
+  ],
   "original_reasoning_chain": [
     "HOP 1 (d=3 superlative - nodes 1,2,3 all independent):",
     "  Node 1: Progress report 2010-11, top 2 District 15 \u2192 {PS 321, PS 107}",

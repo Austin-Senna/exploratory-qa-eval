@@ -5,7 +5,11 @@
     "Tuscaloosa,_Alabama",
     "Alabama"
   ],
-  "reasoning_chain_text": "1. Determine the city where the University of Alabama is located.\\n2. Determine the U.S. state containing that city.\\n3. Find the capital city of that state and return only the final city name.",
+  "reasoning_chain_text": [
+    "1. Determine the city where the University of Alabama is located.",
+    "2. Using the page for that city, determine the U.S. state containing it.",
+    "3. Using the state reference page, find its capital city and return only that final city name."
+  ],
   "original_reasoning_chain": [
     "Node 1: Identify the city where the University of Alabama is located → Tuscaloosa.",
     "Node 2 depends on node 1: Determine which U.S. state contains Tuscaloosa → Alabama.",

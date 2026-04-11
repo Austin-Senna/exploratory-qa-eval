@@ -88,12 +88,35 @@ def _validate_dataset_sequence(raw: Any, *, plan_path: Path) -> List[str]:
 
 
 def _validate_reasoning_text(raw: Any, *, plan_path: Path) -> str:
-    if not isinstance(raw, str):
-        raise ValueError(f"Invalid plan at '{plan_path}': reasoning_chain_text must be a string.")
-    text = raw.strip()
-    if not text:
-        raise ValueError(f"Invalid plan at '{plan_path}': reasoning_chain_text cannot be empty.")
-    return text
+    if isinstance(raw, str):
+        text = raw.strip()
+        if "\\n" in text and "\n" not in text:
+            text = text.replace("\\n", "\n")
+        if not text:
+            raise ValueError(f"Invalid plan at '{plan_path}': reasoning_chain_text cannot be empty.")
+        return text
+
+    if isinstance(raw, list):
+        if not raw:
+            raise ValueError(f"Invalid plan at '{plan_path}': reasoning_chain_text cannot be an empty list.")
+
+        lines: List[str] = []
+        for i, item in enumerate(raw):
+            if not isinstance(item, str):
+                raise ValueError(
+                    f"Invalid plan at '{plan_path}': reasoning_chain_text[{i}] must be a string."
+                )
+            text = item.strip()
+            if not text:
+                raise ValueError(
+                    f"Invalid plan at '{plan_path}': reasoning_chain_text[{i}] cannot be empty."
+                )
+            lines.append(text)
+        return "\n".join(lines)
+
+    raise ValueError(
+        f"Invalid plan at '{plan_path}': reasoning_chain_text must be a string or a list of strings."
+    )
 
 
 def load_plan_for_task(task_id: str) -> IdealTaskPlan:

@@ -10,7 +10,16 @@
     "Central_Park",
     "American_Museum_of_Natural_History"
   ],
-  "reasoning_chain_text": "1. Which NYC elementary schools in District 3 ranked in the top 3 by performance category score in 2006-07?\n2. Which NYC elementary schools in District 3 ranked in the top 3 by performance category score in 2007-08?\n3. Which NYC elementary schools in District 3 ranked in the top 3 by performance category score in 2008-09?\n4. Which NYC elementary schools in District 3 ranked in the top 3 by performance category score in 2009-10?\n5. In which neighborhood is <intersection of node_1, node_2, node_3, node_4: PS 009 Sarah Anderson> located?\n6. What are some notable structures that is a museum in <node_5 answer: Upper West Side>?\n7. Which museums are located adjacent to Central Park?\n8. In what year was <intersection of node_6, node_7: American Museum of Natural History> established?",
+  "reasoning_chain_text": [
+    "1. Identify the District 3 NYC elementary schools in the top 3 by performance category score for 2006-2007.",
+    "2. Identify the District 3 NYC elementary schools in the top 3 by performance category score for 2007-2008.",
+    "3. Identify the District 3 NYC elementary schools in the top 3 by performance category score for 2008-2009.",
+    "4. Identify the District 3 NYC elementary schools in the top 3 by performance category score for 2009-2010 and determine which school appears in all four yearly lists.",
+    "5. Using the school identified in step 4, determine its Manhattan neighborhood.",
+    "6. From the neighborhood article for the area found in step 5, identify museums that are notable structures there.",
+    "7. From the Central Park article, identify the museums adjacent to the park.",
+    "8. Using the museum that appears in both step 6 and step 7, return the year given in its article for when it was created or built."
+  ],
   "original_reasoning_chain": [
     "HOP 1 (d=4 superlative - nodes 1,2,3,4 all independent, all data.gov from different years):",
     "  Node 1: Progress report 2006-07 \u2192 {PS 009, PS 199, PS 180}",
