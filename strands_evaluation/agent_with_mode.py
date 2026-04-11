@@ -39,6 +39,12 @@ from strands_evaluation.instrumentation import (
 )
 from strands_evaluation.instrumentation.loop_plugin import CategoryStagnationHandler
 from strands_evaluation.helper.logger import configure_logging
+from strands_evaluation.helper.prompting import (
+    compose_baseline_prompt,
+    compose_condition_b_prompt,
+    load_condition_prompt as _shared_load_condition_prompt,
+    skill_paths_for_modes,
+)
 from strands_evaluation.helper.result import AgentResult
 from strands_evaluation.helper.sandbox import (
     _cleanup_isolated_sandbox,
@@ -112,10 +118,6 @@ except ImportError:
 # ---------------------------------------------------------------------------
 
 _MODES = {"naive", "standard", "ideal"}
-_PLAN_AGENT_SKILL = "strands_evaluation/tools/skills/plan-agent"
-_PLAN_IDEAL_SKILL = "strands_evaluation/tools/skills/plan-ideal"
-_DISCOVER_DATA_SKILL = "strands_evaluation/tools/skills/discover-data"
-_QUERY_DATA_SKILL = "strands_evaluation/tools/skills/query-data"
 
 
 @dataclass
@@ -133,13 +135,6 @@ def _normalize_mode(value: Optional[str], default: str, label: str) -> str:
     if mode not in _MODES:
         raise ValueError(f"Unsupported {label} mode '{value}'. Expected one of: {', '.join(sorted(_MODES))}")
     return mode
-
-
-def management_skill_paths(mode: Optional[str]) -> List[str]:
-    """Return skill paths for management mode with ideal-specific planning skill."""
-    management_mode = _normalize_mode(mode, "standard", "agent_management")
-    planning_skill = _PLAN_IDEAL_SKILL if management_mode == "ideal" else _PLAN_AGENT_SKILL
-    return [planning_skill, _DISCOVER_DATA_SKILL, _QUERY_DATA_SKILL]
 
 
 def build_search(
@@ -180,6 +175,7 @@ def build_search(
 def build_management(
     mode: str,
     *,
+    search_tool_mode: str,
     base_prompt: str,
     task_context: Optional[Dict[str, Any]],
 ) -> tuple[str, List[Any], bool, bool]:
@@ -187,9 +183,10 @@ def build_management(
     management_mode = _normalize_mode(mode, "standard", "agent_management")
 
     if management_mode == "naive":
-        return base_prompt, [], False, False
+        prompt = compose_baseline_prompt(search_tool_mode, fallback=base_prompt)
+        return prompt, [], False, False
 
-    prompt = _load_condition_prompt("b", fallback=base_prompt)
+    prompt = compose_condition_b_prompt(search_tool_mode, fallback=base_prompt)
     if management_mode == "standard":
         return prompt, [plan, summarize_context], True, True
 
@@ -235,6 +232,7 @@ def build_mode_bundle(
     )
     system_prompt, management_tools, enable_skills, enable_stagnation = build_management(
         agent_management_mode,
+        search_tool_mode=search_tool_mode,
         base_prompt=run_config.system_prompt,
         task_context=task_context,
     )
@@ -264,13 +262,7 @@ def build_mode_bundle(
 
 def _load_condition_prompt(condition: str, fallback: str = "") -> str:
     """Load system prompt for a condition."""
-    path = f"prompts/condition_{condition}.txt"
-    try:
-        with open(path) as f:
-            return f.read()
-    except FileNotFoundError:
-        logger.warning(f"{path} not found — using default system prompt")
-        return fallback
+    return _shared_load_condition_prompt(condition, fallback)
 
 
 def _base_condition(condition_label: str) -> str:
@@ -358,7 +350,10 @@ class DataLakeAgent:
             search_tool_names = mode_bundle.search_tool_names
             enable_skills = mode_bundle.enable_skills
             enable_stagnation = mode_bundle.enable_stagnation
-            skill_paths = management_skill_paths(mode_bundle.modes["agent_management"])
+            skill_paths = skill_paths_for_modes(
+                mode_bundle.modes["search_tool"],
+                mode_bundle.modes["agent_management"],
+            )
             logger.info(
                 "Ablation modes active: search_tool=%s search_results=%s agent_management=%s",
                 mode_bundle.modes["search_tool"],
@@ -378,13 +373,13 @@ class DataLakeAgent:
                 tools = search_tools + _data_tools
                 enable_skills = False
                 enable_stagnation = False
-                skill_paths = management_skill_paths("naive")
+                skill_paths = skill_paths_for_modes("naive", "naive")
 
             elif condition == "b" and _CONDITION_B_TOOLS_AVAILABLE:
                 # Condition B (planning-rich): sparse search + prefix + plan tool + skills
                 # summarize_context only given to B — longer planning loops benefit from manual context control
                 raw_search_tools = [search_value_b, search_schema_b, search_prefix]
-                system_prompt = _load_condition_prompt("b", fallback=self.run_config.system_prompt)
+                system_prompt = compose_condition_b_prompt("naive", fallback=self.run_config.system_prompt)
                 search_tools = build_search_tools(
                     raw_search_tools,
                     fixed_k=self.run_config.search_k,
@@ -393,12 +388,12 @@ class DataLakeAgent:
                 tools = search_tools + [plan] + _data_tools + [summarize_context]
                 enable_skills = True
                 enable_stagnation = True
-                skill_paths = management_skill_paths("standard")
+                skill_paths = skill_paths_for_modes("naive", "standard")
 
             else:
                 # Baseline: Condition B search tools (BM25 + schema + prefix) without any context tools
                 raw_search_tools = [search_value_b, search_schema_b, search_prefix]
-                system_prompt = self.run_config.system_prompt
+                system_prompt = compose_baseline_prompt("naive", fallback=self.run_config.system_prompt)
                 search_tools = build_search_tools(
                     raw_search_tools,
                     fixed_k=self.run_config.search_k,
@@ -407,7 +402,7 @@ class DataLakeAgent:
                 tools = search_tools + _data_tools
                 enable_skills = False
                 enable_stagnation = False
-                skill_paths = management_skill_paths("naive")
+                skill_paths = skill_paths_for_modes("naive", "naive")
 
             search_tool_names = search_tool_names_in_legacy(search_tools)
 
