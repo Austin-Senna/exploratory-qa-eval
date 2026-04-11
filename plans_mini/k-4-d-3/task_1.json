@@ -8,7 +8,7 @@
     "eaarl-topography-george-washington-birthplace-national-monument",
     "Wallops_Island"
   ],
-  "reasoning_chain_text": "1. Which U.S. presidents were born in Virginia?\n2. Which U.S. presidents held a general officer rank?\n3. Which U.S. presidents appear on current U.S. currency?\n4. Which national monument commemorates the birthplace of <intersection of node_1, node_2, node_3>?\n5. At which NASA facility was the EAARL system used in the 2007 USGS survey of <node_4 answer> developed?\n6. In which Virginia county is <node_5 answer> located?",
+  "reasoning_chain_text": "1. Identify U.S. presidents born in Virginia.\n2. Identify U.S. presidents who held a general officer rank.\n3. Identify U.S. presidents who appear on current U.S. currency.\n4. Using the president common to steps 1-3, determine the national monument that honors that president's birthplace.\n5. Using that monument, determine which NASA facility developed the system used in the 2007 USGS topographic survey there.\n6. Determine the Virginia county containing that NASA facility.",
   "original_reasoning_chain": [
     "Node 1: Find presidents born in Virginia \u2192 {Washington, Jefferson, Madison, Monroe, W.H. Harrison, Tyler, Taylor, Wilson}",
     "Node 2: Find presidents who held general officer rank \u2192 {Washington, Grant, Eisenhower, Jackson, W.H. Harrison, Taylor, Garfield, W.H. Taft, Pierce, Arthur, Andrew Johnson, Hayes, B. Harrison}",

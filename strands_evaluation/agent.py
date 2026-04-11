@@ -37,6 +37,12 @@ from strands_evaluation.instrumentation import (
 )
 from strands_evaluation.instrumentation.loop_plugin import CategoryStagnationHandler
 from strands_evaluation.helper.logger import configure_logging
+from strands_evaluation.helper.prompting import (
+    compose_baseline_prompt,
+    compose_condition_b_prompt,
+    load_condition_prompt as _shared_load_condition_prompt,
+    skill_paths_for_modes,
+)
 from strands_evaluation.helper.result import AgentResult
 from strands_evaluation.helper.sandbox import (
     _cleanup_isolated_sandbox,
@@ -108,13 +114,7 @@ except ImportError:
 
 def _load_condition_prompt(condition: str, fallback: str = "") -> str:
     """Load system prompt for a condition."""
-    path = f"prompts/condition_{condition}.txt"
-    try:
-        with open(path) as f:
-            return f.read()
-    except FileNotFoundError:
-        logger.warning(f"{path} not found — using default system prompt")
-        return fallback
+    return _shared_load_condition_prompt(condition, fallback)
 
 
 def _base_condition(condition_label: str) -> str:
@@ -196,7 +196,7 @@ class DataLakeAgent:
             # Condition B (planning-rich): sparse search + prefix + plan tool + skills
             # summarize_context only given to B — longer planning loops benefit from manual context control
             raw_search_tools = [search_value_b, search_schema_b, search_prefix]
-            system_prompt = _load_condition_prompt("b", fallback=self.run_config.system_prompt)
+            system_prompt = compose_condition_b_prompt("naive", fallback=self.run_config.system_prompt)
             search_tools = build_search_tools(
                 raw_search_tools,
                 fixed_k=self.run_config.search_k,
@@ -207,7 +207,7 @@ class DataLakeAgent:
         else:
             # Baseline: Condition B search tools (BM25 + schema + prefix) without any context tools
             raw_search_tools = [search_value_b, search_schema_b, search_prefix]
-            system_prompt = self.run_config.system_prompt
+            system_prompt = compose_baseline_prompt("naive", fallback=self.run_config.system_prompt)
             search_tools = build_search_tools(
                 raw_search_tools,
                 fixed_k=self.run_config.search_k,
@@ -259,11 +259,7 @@ class DataLakeAgent:
             LoggingPlugin(),
         ])
         if condition == "b":
-            plugins.append(AgentSkills(skills=[
-                "strands_evaluation/tools/skills/plan-agent",
-                "strands_evaluation/tools/skills/discover-data",
-                "strands_evaluation/tools/skills/query-data",
-            ]))
+            plugins.append(AgentSkills(skills=skill_paths_for_modes("naive", "standard")))
             if self.run_config.max_consecutive_category > 0:
                 plugins.append(
                     CategoryStagnationHandler(self.run_config.max_consecutive_category)

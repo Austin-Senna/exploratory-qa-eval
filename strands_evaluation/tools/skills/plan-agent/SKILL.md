@@ -5,7 +5,7 @@ description: Planning framework for decomposing multi-hop data lake questions in
 
 ## Rule #1: Plan Before You Search
 
-Call `plan()` as your **first action** on every new question. Do NOT call `search_value`, `search_schema`, or `search_prefix` until you have a saved plan.
+Call `plan()` as your **first action** on every new question. Do NOT call search tools until you have a saved plan.
 
 A plan forces you to think about what you actually need before burning tool calls. Without one, you'll chase irrelevant datasets.
 
@@ -34,19 +34,19 @@ Keep plans to 3-7 sub-tasks. Do not hallucinate dataset names.
 
 ### Plan Format
 
-Every sub-task MUST have a **goal** and a **tool**. For risky steps, add an inline fallback with `-> else:`.
+Every sub-task MUST have a **goal** and a **tool family**. For risky steps, add an inline fallback with `-> else:`.
 
 ```
-1. Find Khan Academy HQ city/state | search_value("Khan Academy")
-     -> else: search_prefix("khan-academy")
-2. Resolve state to FIPS code | grep_file on NCES dataset
-     -> else: search_value("state FIPS codes") for a lookup table
+1. Find Khan Academy HQ city/state | use the available search tool for entity lookup
+     -> else: reformulate with the official organization name or likely dataset title
+2. Resolve state to FIPS code | grep_file on a lookup dataset
+     -> else: use the available search tool to find a state FIPS lookup table
 3. Count public schools by county in that state | query_file GROUP BY
 4. If county-level data missing, get state total | query_file WHERE STFIP=...
-     -> else: search for alternative school dataset via search_schema("school")
+     -> else: search for an alternative school dataset using the available search tools
 ```
 
-Do not write vague sub-tasks like "find relevant data" — name what you're looking for and which tool gets it. Fallbacks are optional but recommended for discovery steps where the first search may miss.
+Do not write vague sub-tasks like "find relevant data" — name what you're looking for and which tool family gets it. Fallbacks are optional but recommended for discovery steps where the first search may miss.
 
 ---
 
@@ -70,7 +70,7 @@ Try these pivots in order:
 
 1. **Lexical pivot** — Swap broad terms for agency/program names (e.g. "school count" -> "NCES public school locations")
 2. **Granularity pivot** — Search state-level if county-level returns nothing; filter down in code
-3. **Proxy pivot** — If the exact metric doesn't exist, find a standard proxy (e.g. "median income" for "poverty level")
+3. **Proxy pivot** — If the exact metric does not exist, find a standard proxy (e.g. "median income" for "poverty level")
 
 ---
 
