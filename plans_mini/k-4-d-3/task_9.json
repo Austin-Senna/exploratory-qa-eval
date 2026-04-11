@@ -10,6 +10,8 @@
     "United_States_Park_Police",
     "National_Park_Service",
     "United_States_Department_of_the_Interior"
+    "National_Park_Service",
+    "United_States_Department_of_the_Interior"
   ],
   "reasoning_chain_text": [
     "1. For January 2019, identify the issuing agencies in the top 20 by total parking-violation fines.",

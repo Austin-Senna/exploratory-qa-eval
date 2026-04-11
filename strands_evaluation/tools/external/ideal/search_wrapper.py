@@ -186,11 +186,14 @@ def reshape_search_payload(payload: Any, mode: str) -> Any:
 
         if normalized == "standard":
             snippet = _truncate_words(_extract_search_text(row), max_words=200)
+            score = row.get("score")
             out = {}
             if uri:
                 out["uri"] = uri
             if dataset_id:
                 out["dataset_id"] = dataset_id
+            if score is not None:
+                out["score"] = score
             if snippet:
                 out["snippet"] = snippet
             shaped.append(out)

@@ -3,7 +3,12 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from strands_evaluation.config import RunConfig
-from strands_evaluation.agent_with_mode import build_mode_bundle, management_skill_paths
+from strands_evaluation.agent_with_mode import build_mode_bundle
+from strands_evaluation.helper.prompting import (
+    compose_baseline_prompt,
+    compose_condition_b_prompt,
+    skill_paths_for_modes,
+)
 from strands_evaluation.tools.external.ideal.plan_store import set_plans_root
 
 
@@ -37,12 +42,50 @@ class TestModeWrapper(unittest.TestCase):
         self.assertIn("search_reranked", bundle.search_tool_names)
         self.assertNotIn("search_ideal", bundle.search_tool_names)
 
-    def test_management_skill_paths_use_plan_ideal_for_ideal_mode(self):
-        ideal_skills = management_skill_paths("ideal")
-        standard_skills = management_skill_paths("standard")
-        self.assertIn("strands_evaluation/tools/skills/plan-ideal", ideal_skills)
-        self.assertNotIn("strands_evaluation/tools/skills/plan-agent", ideal_skills)
-        self.assertIn("strands_evaluation/tools/skills/plan-agent", standard_skills)
+    def test_condition_b_naive_prompt_mentions_sparse_search_only(self):
+        prompt = compose_condition_b_prompt("naive", fallback="BASE_PROMPT")
+        self.assertIn("search_value", prompt)
+        self.assertIn("search_schema", prompt)
+        self.assertIn("search_prefix", prompt)
+        self.assertNotIn("search_reranked", prompt)
+        self.assertNotIn("search_ideal", prompt)
+
+    def test_condition_b_standard_prompt_mentions_reranked_search(self):
+        prompt = compose_condition_b_prompt("standard", fallback="BASE_PROMPT")
+        self.assertIn("search_reranked", prompt)
+        self.assertIn("search_value", prompt)
+        self.assertIn("search_schema", prompt)
+        self.assertNotIn("search_ideal", prompt)
+
+    def test_condition_b_ideal_prompt_mentions_only_search_ideal(self):
+        prompt = compose_condition_b_prompt("ideal", fallback="BASE_PROMPT")
+        self.assertIn("search_ideal", prompt)
+        self.assertNotIn("search_reranked", prompt)
+        self.assertNotIn("search_value", prompt)
+        self.assertNotIn("search_schema", prompt)
+        self.assertNotIn("search_prefix", prompt)
+        self.assertNotIn("reasoning chain", prompt.lower())
+
+    def test_baseline_prompt_mentions_reranked_search_in_standard_mode(self):
+        prompt = compose_baseline_prompt("standard", fallback="BASE_PROMPT")
+        self.assertIn("search_reranked", prompt)
+        self.assertIn("search_value", prompt)
+        self.assertIn("search_schema", prompt)
+        self.assertNotIn("search_ideal", prompt)
+
+    def test_baseline_prompt_mentions_only_search_ideal_in_ideal_mode(self):
+        prompt = compose_baseline_prompt("ideal", fallback="BASE_PROMPT")
+        self.assertIn("search_ideal", prompt)
+        self.assertNotIn("search_reranked", prompt)
+        self.assertNotIn("reasoning chain", prompt.lower())
+
+    def test_skill_paths_are_search_and_management_aware(self):
+        standard_paths = skill_paths_for_modes("standard", "standard")
+        ideal_paths = skill_paths_for_modes("ideal", "ideal")
+        self.assertIn("strands_evaluation/tools/skills/plan-agent", standard_paths)
+        self.assertIn("strands_evaluation/tools/skills/discover-data-standard", standard_paths)
+        self.assertIn("strands_evaluation/tools/skills/plan-ideal", ideal_paths)
+        self.assertIn("strands_evaluation/tools/skills/discover-data-ideal", ideal_paths)
 
     def test_ideal_management_uses_condition_b_stack_with_plan_swap(self):
         cfg = RunConfig(
@@ -63,6 +106,78 @@ class TestModeWrapper(unittest.TestCase):
         self.assertIn("search_value", bundle.search_tool_names)
         self.assertTrue(bundle.enable_skills)
         self.assertTrue(bundle.enable_stagnation)
+
+    def test_standard_management_prompt_matches_standard_search_tools(self):
+        cfg = RunConfig(
+            search_tool_mode="standard",
+            search_results_mode="standard",
+            agent_management_mode="standard",
+            system_prompt="BASE_PROMPT",
+        )
+        bundle = build_mode_bundle(cfg, data_tools=[])
+        self.assertIn("search_reranked", bundle.system_prompt)
+        self.assertNotIn("search_ideal", bundle.system_prompt)
+
+    def test_standard_management_prompt_matches_ideal_search_tools(self):
+        with TemporaryDirectory() as tmpdir:
+            plans_root = Path(tmpdir) / "plans_mini"
+            target = plans_root / "k-1-d-1"
+            target.mkdir(parents=True, exist_ok=True)
+            (target / "task_1.json").write_text(
+                '{"dataset_sequence":["ds_one"],"reasoning_chain_text":"Step 1"}'
+            )
+            set_plans_root(plans_root)
+
+            cfg = RunConfig(
+                search_tool_mode="ideal",
+                search_results_mode="ideal",
+                agent_management_mode="standard",
+                system_prompt="BASE_PROMPT",
+            )
+            bundle = build_mode_bundle(
+                cfg,
+                data_tools=[],
+                task_context={"task_id": "tasks_mini/k-1-d-1/task_1.json"},
+            )
+            self.assertIn("search_ideal", bundle.system_prompt)
+            self.assertNotIn("search_reranked", bundle.system_prompt)
+            self.assertNotIn("search_value", bundle.system_prompt)
+
+    def test_naive_management_prompt_matches_standard_search_tools(self):
+        cfg = RunConfig(
+            search_tool_mode="standard",
+            search_results_mode="standard",
+            agent_management_mode="naive",
+            system_prompt="BASE_PROMPT",
+        )
+        bundle = build_mode_bundle(cfg, data_tools=[])
+        self.assertIn("search_reranked", bundle.system_prompt)
+        self.assertNotIn("search_ideal", bundle.system_prompt)
+
+    def test_naive_management_prompt_matches_ideal_search_tools(self):
+        with TemporaryDirectory() as tmpdir:
+            plans_root = Path(tmpdir) / "plans_mini"
+            target = plans_root / "k-1-d-1"
+            target.mkdir(parents=True, exist_ok=True)
+            (target / "task_1.json").write_text(
+                '{"dataset_sequence":["ds_one"],"reasoning_chain_text":"Step 1"}'
+            )
+            set_plans_root(plans_root)
+
+            cfg = RunConfig(
+                search_tool_mode="ideal",
+                search_results_mode="ideal",
+                agent_management_mode="naive",
+                system_prompt="BASE_PROMPT",
+            )
+            bundle = build_mode_bundle(
+                cfg,
+                data_tools=[],
+                task_context={"task_id": "tasks_mini/k-1-d-1/task_1.json"},
+            )
+            self.assertIn("search_ideal", bundle.system_prompt)
+            self.assertNotIn("search_reranked", bundle.system_prompt)
+            self.assertNotIn("reasoning chain", bundle.system_prompt.lower())
 
     def test_ideal_management_does_not_fail_without_plan_file(self):
         with TemporaryDirectory() as tmpdir:

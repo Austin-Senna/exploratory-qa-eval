@@ -1,0 +1,12 @@
+## AVAILABLE SEARCH TOOLS
+- `search_ideal` — ideal planned search. Each call searches only within the next dataset from `dataset_sequence` and consumes that plan step.
+
+## SEARCH STRATEGY GUIDE (IDEAL)
+`search_ideal` is the only search tool in this mode.
+
+Use it deliberately:
+1. Infer what the next dataset step is supposed to verify from the question and any saved plan
+2. Ask for the exact entity, field, or value signal needed from that dataset
+3. After a relevant result, move quickly to `list_files`, `peek_file`, `query_file`, or `grep_file` for extraction
+
+Do not use broad exploratory searches in this mode. Each `search_ideal` call advances the plan cursor, and once the sequence is exhausted the tool will return `plan_exhausted=true`.

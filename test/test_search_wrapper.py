@@ -33,6 +33,7 @@ class TestSearchWrapperPayload(unittest.TestCase):
                 {
                     "uri": "s3://lakeqa-yc4103-datalake/datagov/foo/files/rows.txt",
                     "document": long_text,
+                    "score": "0.123",
                 }
             ],
             "count": 1,
@@ -41,6 +42,7 @@ class TestSearchWrapperPayload(unittest.TestCase):
         snippet = out["results"][0]["snippet"]
         self.assertEqual(len(snippet.split()), 200)
         self.assertIn("uri", out["results"][0])
+        self.assertEqual(out["results"][0]["score"], "0.123")
 
     def test_ideal_mode_adds_description_when_available(self):
         first = json.loads(Path("table_descriptions.jsonl").read_text().splitlines()[0])
