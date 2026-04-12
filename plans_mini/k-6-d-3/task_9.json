@@ -1,0 +1,30 @@
+{
+  "dataset_sequence": [
+    "libraries-2019-computer-sessions-by-location",
+    "libraries-2020-computer-sessions-by-location",
+    "libraries-2021-computer-sessions-by-location",
+    "libraries-2021-visitors-by-location",
+    "Carter_G._Woodson_Regional_Library",
+    "Carter_G._Woodson",
+    "Harvard_University"
+  ],
+  "reasoning_chain_text": [
+    "1. Identify Chicago library branches in the top five by total computer sessions in 2019.",
+    "2. From those branches, keep the Chicago library branches that again rank in the top five by total computer sessions in 2020.",
+    "3. From those branches, keep the Chicago library branches that again rank in the top five by total computer sessions in 2021.",
+    "4. Among those branches, identify which has the fewest visitors in 2021.",
+    "5. Determine who that Chicago library branch is named after.",
+    "6. Determine where that person earned a PhD.",
+    "7. Return the river that university is located on."
+  ],
+  "original_final_question": "Across 2019\u20132021, find the Chicago Public Libraries that consistently appear in the top five by total annual computer sessions. Among them, which one has the fewest visitors in 2021. Next, find the person it is named after, identify the university where that person earned a PhD, then report the river that university is located. Answer with the river name only. Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    "Nodes 1\u20133: Identify the top five library locations by annual computer sessions for 2019, 2020, and 2021.",
+    "Node 4 depends on nodes 1\u20133: Intersect those top-five lists, then use 2021 visitor totals to select the location with the fewest visitors (Woodson Regional Library).",
+    "Node 5 depends on node 4: Identify the Wikipedia title used for the Woodson Regional Library (Carter G. Woodson Regional Library).",
+    "Node 6 depends on node 5: Identify whom that library is named for (Carter G. Woodson).",
+    "Node 7 depends on node 6: Identify the university where Carter G. Woodson obtained a PhD (Harvard University).",
+    "Node 8 depends on node 7: Identify the river Harvard University is located along (Charles River).",
+    "Final answer: Charles River."
+  ]
+}

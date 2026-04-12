@@ -13,11 +13,9 @@
     "1. Identify the two most populous Texas counties in 2024.",
     "2. For the counties from step 1, record disability compensation recipient counts for 2020.",
     "3. For the same counties, record disability compensation recipient counts for 2023 and determine which county has the larger increase from step 2.",
-    "4. Using the county article corresponding to the county identified in step 3, determine its county seat.",
-    "5. From that city, identify the UH System universities located there.",
-    "6. Using the first university article in the sequence after step 5, determine its founding year.",
-    "7. Using the second university article in the sequence after step 5, determine its founding year.",
-    "8. Using the third university article in the sequence after step 5, determine its founding year and return the one founded earliest."
+    "4. Determine the county seat of the county identified in step 3.",
+    "5. In that city, identify the UH System universities located there.",
+    "6. For the universities from step 5, determine each founding year and return the one founded earliest."
   ],
   "original_final_question": "Among the two most populous Texas counties in 2024, which of those had a larger increase in veterans disability compensation recipients from 2020 to 2023? What is that county's seat, and which UHouston System university in that city was founded earliest? Return the university name only. Your response should be in the format [Answer].",
   "original_reasoning_chain": [

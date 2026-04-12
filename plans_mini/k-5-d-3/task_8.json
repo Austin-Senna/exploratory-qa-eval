@@ -12,10 +12,10 @@
     "1. Compare employee counts for the named Missouri agencies in 2021.",
     "2. Compare employee counts for the same agencies in 2022.",
     "3. Compare employee counts for the same agencies in 2023 and determine which one has the highest average across steps 1 through 3.",
-    "4. Using the agency article in dataset position 4, verify it matches the agency identified in step 3 and determine its headquarters city.",
-    "5. Using the city article in dataset position 5, verify it matches the city from step 4 and identify the historically Black university located there.",
-    "6. Using the university article in dataset position 6, verify it matches the university from step 5 and determine who founded it.",
-    "7. Using the founder article in dataset position 7, verify it matches the founder from step 6 and determine the year this person died."
+    "4. Determine the headquarters city of the agency identified in step 3.",
+    "5. Identify the historically Black university in that city.",
+    "6. Determine who founded that university.",
+    "7. Determine the year that founder died."
   ],
   "original_final_question": "Among the Missouri Department of Corrections, the Missouri Department of Social Services, and the Missouri Department of Transportation, which had the highest average employee count from 2021 through 2023? In that agency's headquarters city, who founded the historically Black university there? In what year did this person die? Return the year only. Your response should be in the format [Answer].",
   "original_reasoning_chain": [

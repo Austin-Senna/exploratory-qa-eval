@@ -84,15 +84,21 @@ This is the ideal search tool.
 - The tool surface is:
   - `search_ideal(query, top_k=10)`
 - On task setup it loads the plan file and resets an internal cursor.
-- Each call consumes exactly one dataset from `dataset_sequence`.
-- Search is restricted to that dataset only.
+- In ideal mode this is the only search tool.
+- Each call consumes up to five datasets from `dataset_sequence`.
+- Search is restricted to those datasets only.
+- It should be used until exhaustion; the agent will most likely need all the datasets.
 - Returned payload includes:
   - `results`
   - `count`
   - `dataset_id`
+  - `dataset_ids`
   - `plan_step_index`
   - `plan_step_number`
+  - `plan_step_indexes`
+  - `plan_step_numbers`
   - `plan_steps_total`
+  - `datasets_per_call`
   - `plan_exhausted`
 - Once all datasets are consumed, it returns empty results with `plan_exhausted=true`.
 

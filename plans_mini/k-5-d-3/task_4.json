@@ -15,19 +15,15 @@
     "Sheldon_Independent_School_District"
   ],
   "reasoning_chain_text": [
-    "1. For 2018 Texas state expenditures, record total spending by county.",
-    "2. For 2019 Texas state expenditures, record total spending by county.",
-    "3. For 2020 Texas state expenditures, record total spending by county and determine which three counties have the highest average expenditure across steps 1 through 3.",
-    "4. Using the county article in dataset position 4, verify it matches one of the counties from step 3 and determine its county seat.",
-    "5. Using the county article in dataset position 5, verify it matches one of the counties from step 3 and determine its county seat.",
-    "6. Using the county article in dataset position 6, verify it matches one of the counties from step 3 and determine its county seat.",
-    "7. Using the city article in dataset position 7, verify it matches the county seat from step 4 and determine when that county seat was incorporated.",
-    "8. Using the city article in dataset position 8, verify it matches the county seat from step 5 and determine when that county seat was incorporated.",
-    "9. Using the city article in dataset position 9, verify it matches the county seat from step 6 and determine when that county seat was incorporated, then keep the county whose seat was incorporated earliest.",
-    "10. For the county remaining after step 9, record district-level identified student percentages for program year 2018-2019.",
-    "11. For the same county, record district-level identified student percentages for program year 2019-2020.",
-    "12. For the same county, record district-level identified student percentages for program year 2020-2021 and determine which independent school district has the highest average across steps 10 through 12.",
-    "13. Using the school district identified in step 12, return the year it became independent."
+    "1. Record total state spending by county in 2018.",
+    "2. Record total state spending by county in 2019.",
+    "3. Record total state spending by county in 2020, then determine which three counties have the highest average across steps 1 through 3.",
+    "4. For the counties from step 3, determine each county seat.",
+    "5. For the county seats from step 4, determine when each was incorporated and keep the county whose seat was incorporated earliest.",
+    "6. In the county remaining after step 5, record district-level identified student percentages for 2018-2019.",
+    "7. In the same county, record district-level identified student percentages for 2019-2020.",
+    "8. In the same county, record district-level identified student percentages for 2020-2021 and determine which independent school district has the highest average across steps 6 through 8.",
+    "9. Using the school district identified in step 8, return the year it became independent."
   ],
   "original_final_question": "From the top three Texas counties by average state expenditure from 2018 to 2020, identify the county with the oldest incorporated county seat. In that county, identify the independent school district that had the highest average identified student percentage between 2018 and 2021. What year did that school district become independent? Please return the year only. Your response should be in the format [Answer].",
   "original_reasoning_chain": [

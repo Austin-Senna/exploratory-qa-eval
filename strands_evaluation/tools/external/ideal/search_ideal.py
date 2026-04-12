@@ -1,8 +1,8 @@
-"""Ideal search tool for file-backed, step-ordered dataset traversal.
+"""Ideal search tool for step-ordered dataset traversal.
 
-In ideal mode this is the *only* search tool. Each call consumes one dataset
-from ``plans_mini/.../task_*.json`` -> ``dataset_sequence`` and searches only
-within that dataset.
+In ideal mode this is the *only* search tool. Each call consumes up to five
+datasets and searches only within those datasets.
+Use it until exhaustion. You will most likely need all the datasets.
 """
 
 from __future__ import annotations
@@ -34,6 +34,7 @@ logger = logging.getLogger(__name__)
 _TASK_CONTEXT: Dict[str, Any] = {}
 _CURRENT_PLAN: Optional[IdealTaskPlan] = None
 _PLAN_CURSOR: int = 0
+_DATASETS_PER_CALL: int = 5
 
 
 def set_db_path(path: str) -> None:
@@ -139,7 +140,10 @@ def _search_dataset(query: str, dataset_id: str, top_k: int) -> List[Dict[str, A
 
 @tool
 def search_ideal(query: str, top_k: int = 10) -> dict:
-    """Ideal-mode search: consume next dataset in sequence and search only within it."""
+    """Ideal-mode search: consume up to five datasets and search only within them.
+
+    Use this until exhaustion. You will most likely need all the datasets.
+    """
     global _PLAN_CURSOR
     plan = _require_plan()
 
@@ -155,39 +159,55 @@ def search_ideal(query: str, top_k: int = 10) -> dict:
             "plan_step_index": _PLAN_CURSOR,
             "plan_steps_total": total_steps,
             "plan_exhausted": True,
-            "note": "dataset_sequence exhausted; no further ideal search datasets remain.",
+            "note": "ideal search exhausted; no further datasets remain for this task.",
         }
 
     step_index = _PLAN_CURSOR
-    dataset_id = plan.dataset_sequence[step_index]
-    _PLAN_CURSOR += 1  # strict iterator: every search_ideal call consumes exactly one step.
+    dataset_ids = plan.dataset_sequence[step_index : step_index + _DATASETS_PER_CALL]
+    _PLAN_CURSOR += len(dataset_ids)  # strict iterator: every call consumes the next dataset batch.
 
-    try:
-        results = _search_dataset(query, dataset_id, requested_top_k)
-        payload: Dict[str, Any] = {
-            "results": results,
-            "count": len(results),
-            "query": query,
-            "task_id": plan.task_id,
-            "plan_path": str(plan.plan_path),
-            "dataset_id": dataset_id,
-            "plan_step_index": step_index,
-            "plan_step_number": step_index + 1,
-            "plan_steps_total": total_steps,
-            "plan_exhausted": _PLAN_CURSOR >= total_steps,
-        }
-        return payload
-    except Exception as exc:
-        return {
-            "error": str(exc),
-            "results": [],
-            "count": 0,
-            "query": query,
-            "task_id": plan.task_id,
-            "plan_path": str(plan.plan_path),
-            "dataset_id": dataset_id,
-            "plan_step_index": step_index,
-            "plan_step_number": step_index + 1,
-            "plan_steps_total": total_steps,
-            "plan_exhausted": _PLAN_CURSOR >= total_steps,
-        }
+    all_results: List[Dict[str, Any]] = []
+    batch_errors: List[Dict[str, Any]] = []
+    for offset, dataset_id in enumerate(dataset_ids):
+        dataset_step_index = step_index + offset
+        try:
+            dataset_results = _search_dataset(query, dataset_id, requested_top_k)
+        except Exception as exc:
+            batch_errors.append(
+                {
+                    "dataset_id": dataset_id,
+                    "plan_step_index": dataset_step_index,
+                    "plan_step_number": dataset_step_index + 1,
+                    "error": str(exc),
+                }
+            )
+            continue
+
+        for row in dataset_results:
+            enriched_row = dict(row)
+            enriched_row["plan_step_index"] = dataset_step_index
+            enriched_row["plan_step_number"] = dataset_step_index + 1
+            all_results.append(enriched_row)
+
+    payload: Dict[str, Any] = {
+        "results": all_results,
+        "count": len(all_results),
+        "query": query,
+        "task_id": plan.task_id,
+        "plan_path": str(plan.plan_path),
+        "dataset_id": dataset_ids[0],
+        "dataset_ids": dataset_ids,
+        "plan_step_index": step_index,
+        "plan_step_number": step_index + 1,
+        "plan_step_indexes": list(range(step_index, step_index + len(dataset_ids))),
+        "plan_step_numbers": list(range(step_index + 1, step_index + len(dataset_ids) + 1)),
+        "plan_steps_total": total_steps,
+        "datasets_per_call": _DATASETS_PER_CALL,
+        "plan_exhausted": _PLAN_CURSOR >= total_steps,
+    }
+    if batch_errors:
+        payload["errors"] = batch_errors
+        payload["error"] = "; ".join(
+            f"{item['dataset_id']}: {item['error']}" for item in batch_errors
+        )
+    return payload

@@ -17,9 +17,9 @@
     "4. For the agencies remaining after step 3, record employee counts for 2021.",
     "5. For the same agencies, record employee counts for 2022.",
     "6. For the same agencies, record employee counts for 2023 and determine which one has the highest average across steps 4 through 6.",
-    "7. Using the agency article in dataset position 7, verify it matches the agency identified in step 6 and determine its headquarters city.",
-    "8. Using the city article in dataset position 8, verify it matches the city from step 7 and identify the historically Black university located there.",
-    "9. Using the university article in dataset position 9, verify it matches the university from step 8 and determine who founded it."
+    "7. Determine the headquarters city of the agency identified in step 6.",
+    "8. Identify the historically Black university in that city.",
+    "9. Determine who founded that university."
   ],
   "original_final_question": "Across 2021-2023, which Missouri state agency stayed in the top five for professional services spending and also had the highest average employee count? In its headquarters city, a historically Black university was founded. Who founded that university? Return the name only. Your response should be in the format [Answer].",
   "original_reasoning_chain": [

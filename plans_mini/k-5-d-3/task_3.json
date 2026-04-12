@@ -14,14 +14,13 @@
   "reasoning_chain_text": [
     "1. For fiscal year 2014 Washington agency contracts, record contract counts for community colleges.",
     "2. For fiscal year 2015 Washington agency contracts, record contract counts for community colleges.",
-    "3. For fiscal year 2016 Washington agency contracts, record contract counts for community colleges and determine the top three colleges by average contract count across steps 1 through 3.",
-    "4. From the Seattle Colleges District article, determine its Washington county.",
-    "5. From this college article, determine its Washington county.",
-    "6. From the Community Colleges of Spokane article, determine its Washington county.",
-    "7. Using the first county article in the sequence, note its 2020 population and county seat.",
-    "8. Using the second county article in the sequence, note its 2020 population and county seat, then compare it with step 7 to keep the more populous county and its seat.",
-    "9. In the county seat remaining after step 8, identify the building with the highest average greenhouse gas emissions from 2015 through 2023.",
-    "10. Return the year that building was built."
+    "3. For fiscal year 2016 Washington agency contracts, record contract counts for community colleges, compute each college's average contract count across steps 1 through 3, and determine the top three colleges by that three-year average.",
+    "4. For the college with the highest average from step 3, determine its Washington county.",
+    "5. For the college with the second-highest average from step 3, determine its Washington county.",
+    "6. For the college with the third-highest average from step 3, determine its Washington county.",
+    "7. Note the 2020 population and county seat of the Washington counties in steps 4-6, then keep the more populous county and its seat.",
+    "8. In that county seat, identify the building with the highest average greenhouse gas emissions from 2015 through 2023.",
+    "9. Return the year that building was built."
   ],
   "original_final_question": "Can you find the counties where the top 3 community colleges by average contract count from FY 2014 to FY 2016 in Washington are located in. In those counties, narrow the scope down by choosing the county with the most population according to the 2020 census. In its county seat, what is the building with the highest average greenhouse gas emissions (2015-2023)? Finally, only report the year where this building is built. Your response should be in the format [Answer].",
   "original_reasoning_chain": [

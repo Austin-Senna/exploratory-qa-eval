@@ -15,9 +15,9 @@
     "Lake_Worth_Independent_School_District"
   ],
   "reasoning_chain_text": [
-    "1. For fiscal year 2019 Texas Department of Criminal Justice releases, record release totals by county.",
-    "2. For fiscal year 2020 Texas Department of Criminal Justice releases, record release totals by county.",
-    "3. For fiscal year 2021 Texas Department of Criminal Justice releases, record release totals by county and determine the top three counties by average releases across steps 1 through 3.",
+    "1. For fiscal year 2019, record Texas county release totals.",
+    "2. For fiscal year 2020, record Texas county release totals.",
+    "3. For fiscal year 2021, record Texas county release totals and determine the top three counties by average releases across steps 1 through 3.",
     "4. Using one of the top-three counties from step 3, determine its county seat.",
     "5. Using another of the top-three counties from step 3, determine its county seat.",
     "6. Using the remaining top-three county from step 3, determine its county seat.",

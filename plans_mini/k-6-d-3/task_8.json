@@ -1,0 +1,32 @@
+{
+  "dataset_sequence": [
+    "texas-state-expenditures-by-county-2019",
+    "texas-state-expenditures-by-county-2020",
+    "texas-state-expenditures-by-county-2021",
+    "texas-department-of-criminal-justice-releases-fy-2021",
+    "Harris_County,_Texas",
+    "Houston",
+    "Johnson_Space_Center",
+    "Lyndon_B._Johnson"
+  ],
+  "reasoning_chain_text": [
+    "1. Identify Texas counties in the top five by capital outlay spending in 2019.",
+    "2. From those counties, keep the Texas counties that again rank in the top five by capital outlay spending in 2020.",
+    "3. From those counties, keep the Texas counties that again rank in the top five by capital outlay spending in 2021.",
+    "4. Among those counties, identify which has the highest number of state prison releases in fiscal year 2021.",
+    "5. Determine the county seat city of that Texas county.",
+    "6. Identify the NASA center located in that city.",
+    "7. Determine which person that NASA center is named after.",
+    "8. Return the commonly used name of the Texas ranch where that person retired."
+  ],
+  "original_final_question": "Find the Texas counties that rank in the top five for capital-outlay spending in each year from 2019 to 2021. From those counties, use fiscal year 2021 state prison  releases to identify the county with the highest number of releases. From that county, find its county seat city, then identify the NASA center in that city and the person it is named after. Finally, identify the Texas ranch named after that person in retirement. Answer with the ranch name only. Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    "Nodes 1\u20133: Identify the top five Texas counties for CAPITAL OUTLAY spending in FY2019, FY2020, and FY2021.",
+    "Node 4 depends on nodes 1\u20133: Intersect those three lists, then use FY2021 Texas Department of Criminal Justice release counts to pick the county with the most releases (Harris).",
+    "Node 5 depends on node 4: Find the county seat of Harris County, Texas (Houston).",
+    "Node 6 depends on node 5: Identify the NASA center located in Houston (Johnson Space Center).",
+    "Node 7 depends on node 6: Identify the person the Johnson Space Center is named after (Lyndon B. Johnson).",
+    "Node 8 depends on node 7: Identify the commonly used name of Lyndon B. Johnson's Texas ranch (LBJ Ranch).",
+    "Final answer: LBJ Ranch."
+  ]
+}

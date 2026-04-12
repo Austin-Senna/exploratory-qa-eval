@@ -1,0 +1,32 @@
+{
+  "dataset_sequence": [
+    "parking-violations-issued-in-january-2019",
+    "parking-violations-issued-in-january-2020",
+    "parking-violations-issued-in-january-2021",
+    "moving-violations-issued-in-january-2019",
+    "United_States_Capitol_Police",
+    "United_States_Congress",
+    "Washington,_D.C.",
+    "Potomac_River"
+  ],
+  "reasoning_chain_text": [
+    "1. Identify issuing agencies in the top 20 by number of January 2019 parking violations.",
+    "2. From those agencies, keep the issuing agencies that again appear in the top 20 by number of January 2020 parking violations.",
+    "3. From those agencies, keep the issuing agencies that again appear in the top 20 by number of January 2021 parking violations.",
+    "4. Among the agencies from that common set whose names start with United States or U.S., identify which issued the most January 2019 moving violations.",
+    "5. Determine which federal legislative institution that agency protects.",
+    "6. Determine the city where that institution meets.",
+    "7. Determine the river that city is situated on.",
+    "8. Return the bay that river flows into."
+  ],
+  "original_final_question": "In January 2019, 2020, and 2021, find the issuing agencies that consistently appear in the top 20 by number of parking violations in all three years. From that common set, keep agencies starting with united states. Identify which of those agencies issued the most moving violations in January 2019. That agency protects a federal legislative body; identify the city where that body meets, and the river where this city is situated on. Finally, identify the bay where that river flows into. Answer with the bay name only. Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    "Nodes 1\u20133: Find the top 20 January parking-violation issuing agencies for 2019, 2020, and 2021.",
+    "Node 4 depends on nodes 1\u20133: Among agencies common to all three lists and starting with \"UNITED STATES\" or \"US.\", pick the one with the most January 2019 moving violations (UNITED STATES CAPITOL POLICE).",
+    "Node 5 depends on node 4: Identify the institution protected by the United States Capitol Police (United States Congress).",
+    "Node 6 depends on node 5: Identify the city where the United States Congress meets (Washington, D.C.).",
+    "Node 7 depends on node 6: Identify the river Washington, D.C. is situated on (Potomac River).",
+    "Node 8 depends on node 7: Identify the bay the Potomac River flows into (Chesapeake Bay).",
+    "Final answer: Chesapeake Bay."
+  ]
+}

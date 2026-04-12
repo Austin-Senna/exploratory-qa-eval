@@ -14,12 +14,12 @@
     "1. Identify Missouri state agencies in the top five by average employee pay for 2018.",
     "2. From the agencies in step 1, keep the ones that also rank in the top five by average employee pay for 2019.",
     "3. From the agencies in step 2, keep the ones that also rank in the top five by average employee pay for 2020 and determine which agencies remain under consideration.",
-    "4. From the Missouri State Auditor article, identify that office's first officeholder as one comparison candidate.",
-    "5. From the Missouri attorneys general list, identify that office's first officeholder as the other comparison candidate.",
-    "6. Using the officeholder article from step 5, determine which candidate office from steps 4 and 5 is the one whose first officeholder also served as U.S. Attorney General.",
-    "7. From the Missouri Attorney General article, identify the person from the office selected in step 6 who also served as both a U.S. Senator and a U.S. Attorney General.",
-    "8. Using the person identified in step 7, determine the birthplace city from that person's article.",
-    "9. Return the 2018 population of the city identified in step 8."
+    "4. Identify one office's first officeholder as one comparison candidate.",
+    "5. Identify the other office's first officeholder as the other comparison candidate.",
+    "6. Determine which candidate office from steps 4 and 5 has their first officeholder also served as U.S. Attorney General.",
+    "7. For the office selected in step 6, identify the person who also served as both a U.S. Senator and a U.S. Attorney General.",
+    "8. Using that person's biography, determine the birthplace city.",
+    "9. Return the 2018 population of that birthplace city."
   ],
   "original_final_question": "I am looking for a Missouri state agency that consistently ranked in the top 5 for average employee pay between 2018 and 2020. This agency's very first officeholder also served as U.S. Attorney General. Identify the person who served in that same agency, was a U.S. Senator, and was a U.S. Attorney General. What was the 2018 population of that person's birthplace? Your response should be in the format [Answer].",
   "original_reasoning_chain": [

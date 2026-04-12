@@ -21,7 +21,7 @@ class TestSearchIdealPlanLoading(unittest.TestCase):
             with self.assertRaises(FileNotFoundError):
                 search_ideal.set_task_context({"task_id": "tasks_mini/k-1-d-1/task_1.json"})
 
-    def test_search_ideal_consumes_dataset_sequence_and_exhausts(self):
+    def test_search_ideal_consumes_dataset_sequence_in_batches_of_five_and_exhausts(self):
         with TemporaryDirectory() as tmpdir:
             plans_root = Path(tmpdir) / "plans_mini"
             target = plans_root / "k-1-d-1"
@@ -29,8 +29,15 @@ class TestSearchIdealPlanLoading(unittest.TestCase):
             (target / "task_1.json").write_text(
                 json.dumps(
                     {
-                        "dataset_sequence": ["ds_one", "ds_two"],
-                        "reasoning_chain_text": "Step 1 then Step 2",
+                        "dataset_sequence": [
+                            "ds_one",
+                            "ds_two",
+                            "ds_three",
+                            "ds_four",
+                            "ds_five",
+                            "ds_six",
+                        ],
+                        "reasoning_chain_text": "Step 1 then Step 2 then Step 3 then Step 4 then Step 5 then Step 6",
                     }
                 )
             )
@@ -42,6 +49,10 @@ class TestSearchIdealPlanLoading(unittest.TestCase):
                 mock_search.side_effect = [
                     [{"uri": "s3://x/datagov/ds_one/files/rows.txt", "dataset_id": "ds_one", "document": "a"}],
                     [{"uri": "s3://x/datagov/ds_two/files/rows.txt", "dataset_id": "ds_two", "document": "b"}],
+                    [{"uri": "s3://x/datagov/ds_three/files/rows.txt", "dataset_id": "ds_three", "document": "c"}],
+                    [{"uri": "s3://x/datagov/ds_four/files/rows.txt", "dataset_id": "ds_four", "document": "d"}],
+                    [{"uri": "s3://x/datagov/ds_five/files/rows.txt", "dataset_id": "ds_five", "document": "e"}],
+                    [{"uri": "s3://x/datagov/ds_six/files/rows.txt", "dataset_id": "ds_six", "document": "f"}],
                 ]
 
                 first = search_ideal.search_ideal("q1")
@@ -49,11 +60,19 @@ class TestSearchIdealPlanLoading(unittest.TestCase):
                 third = search_ideal.search_ideal("q3")
 
             self.assertEqual(first.get("dataset_id"), "ds_one")
+            self.assertEqual(
+                first.get("dataset_ids"),
+                ["ds_one", "ds_two", "ds_three", "ds_four", "ds_five"],
+            )
             self.assertEqual(first.get("plan_step_number"), 1)
+            self.assertEqual(first.get("plan_step_numbers"), [1, 2, 3, 4, 5])
+            self.assertEqual(first.get("count"), 5)
             self.assertFalse(first.get("plan_exhausted"))
 
-            self.assertEqual(second.get("dataset_id"), "ds_two")
-            self.assertEqual(second.get("plan_step_number"), 2)
+            self.assertEqual(second.get("dataset_id"), "ds_six")
+            self.assertEqual(second.get("dataset_ids"), ["ds_six"])
+            self.assertEqual(second.get("plan_step_number"), 6)
+            self.assertEqual(second.get("count"), 1)
             self.assertTrue(second.get("plan_exhausted"))
 
             self.assertEqual(third.get("count"), 0)
