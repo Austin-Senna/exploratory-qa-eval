@@ -1,25 +1,25 @@
 {
   "dataset_sequence": [
     "2015-2016-shsat-admissions-test-offers-by-sending-school",
-    "2016-2017-school-locations",
     "2016-2017-shsat-admissions-test-offers-by-sending-school",
     "2017-2018-shsat-admissions-test-offers-by-sending-school",
     "2018-2019-shsat-admissions-test-offers-by-sending-school",
+    "2016-2017-school-locations",
     "Louis_Pasteur",
     "Marie_Curie",
     "Nathaniel_Hawthorne",
     "Pasteur_Institute"
   ],
   "reasoning_chain_text": [
-    "1. For 2015-16 SHSAT offers, identify schools with at least 50 offers.",
-    "2. Using 2016-17 school locations, determine which relevant middle schools are in Queens District 26.",
-    "3. For 2016-17 SHSAT offers, keep Queens District 26 schools with at least 50 offers again.",
-    "4. For 2017-18 SHSAT offers, keep Queens District 26 schools with at least 50 offers again.",
-    "5. For 2018-19 SHSAT offers, intersect the four yearly offer filters to keep the qualifying Queens District 26 middle schools.",
-    "6. Using the first scientist page in this task, confirm that the school bearing this name honors a scientist and record the birth year.",
-    "7. Using the second scientist page in this task, confirm that the school bearing this name honors a scientist and record the birth year.",
-    "8. Using the third person page in this task, determine whether the school bearing this name honors a scientist.",
-    "9. Using the research institute page associated with the older qualifying scientist, return the year it was founded and first directed."
+    "1. Identify New York City middle schools with at least 50 SHSAT offers in 2015-2016.",
+    "2. From those schools, keep the New York City middle schools with at least 50 SHSAT offers in 2016-2017.",
+    "3. From those schools, keep the New York City middle schools with at least 50 SHSAT offers in 2017-2018.",
+    "4. From those schools, keep the New York City middle schools with at least 50 SHSAT offers in 2018-2019.",
+    "5. From the remaining schools, keep the New York City middle schools in Queens District 26.",
+    "6. Determine whether one of those remaining Queens District 26 schools is named after a scientist, and record the birth year if it is.",
+    "7. Determine whether another remaining Queens District 26 school is named after a scientist, and record the birth year if it is.",
+    "8. Determine whether the third remaining Queens District 26 school with a reference page is named after a scientist.",
+    "9. Return the year the research institute associated with the older qualifying scientist was founded and first directed."
   ],
   "original_final_question": "Which New York City middle schools located in Queens District 26 had (1) at least 50 offers to specialized high schools on specialized high school admissions test in every school year from 2015-19, and (2) are named after scientists. In what year was the research institute founded and first directed by the older of these two scientists? Please return the year only. Your response should be in the format [Answer].",
   "original_reasoning_chain": [

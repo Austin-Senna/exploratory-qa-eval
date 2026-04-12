@@ -7,7 +7,13 @@
     "report-card-assessment-data-2017-18-school-year",
     "Eastern_Washington"
   ],
-  "reasoning_chain_text": "1. For each school year 2014-15 through 2017-18, find Washington school districts with ELA performance at least 68 percent for all students and all grades.\\n2. Intersect district sets across all four years.\\n3. Map the qualifying districts to counties.\\n4. Keep counties that are in Eastern Washington.\\n5. Return county names in alphabetical order, separated by comma and space.",
+  "reasoning_chain_text": [
+    "1. Identify Washington school districts with ELA performance at least 68 percent for all students and all grades in 2014-15.",
+    "2. From those districts, keep the ones meeting the same condition in 2015-16.",
+    "3. From the remaining districts, keep the ones meeting the same condition in 2016-17.",
+    "4. From the remaining districts, keep the ones meeting the same condition in 2017-18 and map the surviving districts to counties.",
+    "5. From those counties, keep the ones in Eastern Washington and return their names in alphabetical order, separated by comma and space."
+  ],
   "original_reasoning_chain": [
     "HOP 1 (d=4, data.gov intersection - nodes 1-4):",
     "  Node 1: 2014-15 districts with ELA >= 68%",

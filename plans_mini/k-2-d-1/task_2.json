@@ -4,7 +4,10 @@
     "McAllen,_Texas",
     "aps-1-1-texas-adult-populations-at-risk-by-county-region-fy2013-fy2022"
   ],
-  "reasoning_chain_text": "1. Identify the Texas county that contains McAllen.\n2. Retrieve the 2022 percentage for population aged 65 or older for that county and return it in number format.",
+  "reasoning_chain_text": [
+    "1. Identify the Texas county that contains McAllen.",
+    "2. Retrieve the 2022 percentage for population aged 65 or older for that county and return it in number format."
+  ],
   "original_reasoning_chain": [
     "HOP 1 (d=1, Wikipedia - node 1):",
     "  Node 1: McAllen is in Hidalgo County",

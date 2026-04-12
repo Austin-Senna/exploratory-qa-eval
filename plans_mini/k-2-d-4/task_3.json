@@ -7,7 +7,13 @@
     "employee-overtime-and-supplemental-earnings-2021",
     "Chicago_Police_Department"
   ],
-  "reasoning_chain_text": "1. Aggregate overtime by Chicago department for each year 2018 through 2021.\\n2. Compute average overtime by department across the four years and identify the highest.\\n3. Using the department context source, identify the first civilian superintendent of that department.\\n4. Return the person name only.",
+  "reasoning_chain_text": [
+    "1. Compute total overtime for each Chicago department in 2018.",
+    "2. Compute total overtime for each Chicago department in 2019.",
+    "3. Compute total overtime for each Chicago department in 2020.",
+    "4. Compute total overtime for each Chicago department in 2021.",
+    "5. For the department with the highest average overtime across steps 1-4, identify its first civilian superintendent and return that person's name only."
+  ],
   "original_reasoning_chain": [
     "HOP 1 (d=4, data.gov aggregation - nodes 1-4):",
     "  Node 1: 2018 overtime by department",

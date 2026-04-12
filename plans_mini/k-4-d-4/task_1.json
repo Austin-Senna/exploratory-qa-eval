@@ -8,12 +8,12 @@
     "John_Wayne_Elementary_School"
   ],
   "reasoning_chain_text": [
-    "1. For the 2006-07 school progress report, identify the top five elementary schools by environment category rating.",
-    "2. For the 2007-08 school progress report, identify the top five elementary schools by environment category rating.",
-    "3. For the 2008-09 school progress report, identify the top five elementary schools by environment category rating.",
-    "4. For the 2009-10 school progress report, identify the top five elementary schools by environment category rating and determine which schools appear in at least three of the four yearly top-five lists.",
-    "5. Using the school locations data, keep the qualifying school that is in the Bedford Neighborhood Tabulation Area.",
-    "6. Using the remaining school page, determine its school day and return the month/day in MM/DD format."
+    "1. Identify the top five NYC elementary schools by environment category rating in 2006-07.",
+    "2. Identify the top five NYC elementary schools by environment category rating in 2007-08.",
+    "3. Identify the top five NYC elementary schools by environment category rating in 2008-09.",
+    "4. Identify the top five NYC elementary schools by environment category rating in 2009-10, then determine which schools appear in at least three of the four yearly top-five lists.",
+    "5. From those schools, keep the one located in the Bedford Neighborhood Tabulation Area.",
+    "6. Determine its school day and return the month/day in MM/DD format."
   ],
   "original_final_question": "Can you find the NYC elementary school that appears in the top 5 by environment category rating in at least three years from 2006-2010 and is located in the Bedford Neighborhood Tabulation Area? Please report the school day in the MM/DD format. Your response should be in the format [Answer].",
   "original_reasoning_chain": [

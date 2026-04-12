@@ -1,0 +1,49 @@
+{
+  "dataset_sequence": [
+    "2021-state-expenditures",
+    "2022-state-expenditures",
+    "2023-state-expenditures",
+    "2021-state-employee-pay",
+    "2022-state-employee-pay",
+    "2023-state-employee-pay",
+    "Missouri_Department_of_Corrections",
+    "Jefferson_City,_Missouri",
+    "Lincoln_University_(Missouri)"
+  ],
+  "reasoning_chain_text": [
+    "1. Identify Missouri state agencies in the top five for professional services spending in 2021.",
+    "2. From the agencies in step 1, keep the ones that also remain in the top five for professional services spending in 2022.",
+    "3. From the agencies in step 2, keep the ones that also remain in the top five for professional services spending in 2023.",
+    "4. For the agencies remaining after step 3, record employee counts for 2021.",
+    "5. For the same agencies, record employee counts for 2022.",
+    "6. For the same agencies, record employee counts for 2023 and determine which one has the highest average across steps 4 through 6.",
+    "7. Using the agency article in dataset position 7, verify it matches the agency identified in step 6 and determine its headquarters city.",
+    "8. Using the city article in dataset position 8, verify it matches the city from step 7 and identify the historically Black university located there.",
+    "9. Using the university article in dataset position 9, verify it matches the university from step 8 and determine who founded it."
+  ],
+  "original_final_question": "Across 2021-2023, which Missouri state agency stayed in the top five for professional services spending and also had the highest average employee count? In its headquarters city, a historically Black university was founded. Who founded that university? Return the name only. Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    "HOP 1 (d=3, professional services spending 2021-2023 - nodes 1-3):",
+    "  Node 1 (2021): Top 5 = {SOCIAL SERVICES, CORRECTIONS, PUBLIC SAFETY, TRANSPORTATION, ELEMENTARY AND SECONDARY EDUCATION}",
+    "  Node 2 (2022): Top 5 = {SOCIAL SERVICES, CORRECTIONS, TRANSPORTATION, PUBLIC SAFETY, ELEMENTARY AND SECONDARY EDUCATION}",
+    "  Node 3 (2023): Top 5 = {CORRECTIONS, SOCIAL SERVICES, TRANSPORTATION, OFFICE OF ADMINISTRATION, MENTAL HEALTH}",
+    "  Intersection: {CORRECTIONS, SOCIAL SERVICES, TRANSPORTATION}",
+    "",
+    "HOP 2 (d=3, employee counts 2021-2023 - nodes 4-6):",
+    "  Node 4 (2021): CORRECTIONS=12,530; SOCIAL SERVICES=8,362; TRANSPORTATION=7,170",
+    "  Node 5 (2022): CORRECTIONS=12,380; SOCIAL SERVICES=8,723; TRANSPORTATION=6,917",
+    "  Node 6 (2023): CORRECTIONS=13,107; SOCIAL SERVICES=8,932; TRANSPORTATION=6,956",
+    "  Averages: CORRECTIONS=12,672 > SOCIAL SERVICES=8,672 > TRANSPORTATION=7,014",
+    "  Result: Missouri Department of Corrections",
+    "",
+    "HOP 3 (d=1, Missouri Department of Corrections - node 7):",
+    "  Node 7: Headquarters city -> Jefferson City",
+    "",
+    "HOP 4 (d=1, Jefferson City - node 8):",
+    "  Node 8: Lincoln University is the historically Black university in Jefferson City",
+    "",
+    "HOP 5 (d=1, Lincoln University - node 9):",
+    "  Node 9: Founded by James Milton Turner",
+    "  Final answer: James Milton Turner"
+  ]
+}

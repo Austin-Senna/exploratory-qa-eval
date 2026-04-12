@@ -1,0 +1,48 @@
+{
+  "dataset_sequence": [
+    "Missouri_Department_of_Transportation",
+    "Springfield,_Missouri",
+    "500-cities-local-data-for-better-health-2016-release",
+    "500-cities-local-data-for-better-health-2018-release",
+    "employee-overtime-and-supplemental-earnings-2014",
+    "employee-overtime-and-supplemental-earnings-2015",
+    "employee-overtime-and-supplemental-earnings-2016",
+    "employee-overtime-and-supplemental-earnings-2017",
+    "Chicago_Fire_Department"
+  ],
+  "reasoning_chain_text": [
+    "1. Identify the city where the agency's Southwest district is based.",
+    "2. Identify the highway born there and its two terminus cities.",
+    "3. In the 2016 city health release, compare binge drinking rates for those two cities.",
+    "4. In the 2018 city health release, keep the city that again has the higher binge drinking rate.",
+    "5. For 2014, calculate overtime totals by department for that city.",
+    "6. For 2015, calculate overtime totals by department for that city.",
+    "7. For 2016, calculate overtime totals by department for that city.",
+    "8. For 2017, combine the 2014-2017 overtime totals to identify the department with the second-highest cumulative overtime.",
+    "9. Record the founding year for that department."
+  ],
+  "original_final_question": "Find the city the Southwest district of the Missouri Department of Transportation is based in and a highway that was born in the city. Between that highway's two terminus cities, which one had higher binge drinking rates in 2016 and 2018? For that city, identify the department with the second-highest overtime costs from 2014 to 2017 and state its founding year. Please return the year only. Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    "HOP 1 (d=1, Wikipedia Missouri_Department_of_Transportation - node 1):",
+    "  Node 1: MoDOT Southwest district is based in Springfield",
+    "",
+    "HOP 2 (d=1, Wikipedia Springfield,_Missouri - node 2):",
+    "  Node 2: Route 66 was the Chicago-to-Los Angeles highway",
+    "",
+    "HOP 3 (d=2, 500-Cities Health Data 2016 and 2018 - nodes 3-4):",
+    "  Node 3: 2016 binge drinking - Chicago 20.1%, LA 15.9% -> Chicago higher",
+    "  Node 4: 2018 binge drinking - Chicago 21.5%, LA 16.7% -> Chicago higher",
+    "  Result: Chicago",
+    "",
+    "HOP 4 (d=4, Chicago Employee Overtime 2014-2017 - nodes 5-8):",
+    "  Node 5: 2014 overtime -> Police #1, Fire #2",
+    "  Node 6: 2015 overtime -> Police #1, Fire #2",
+    "  Node 7: 2016 overtime -> Police #1, Fire #2",
+    "  Node 8: 2017 overtime -> Police #1, Fire #2",
+    "  Result: Fire",
+    "",
+    "HOP 5 (d=1, Wikipedia Chicago_Fire_Department - node 9):",
+    "  Node 9: Chicago Fire Department founded in 1858",
+    "  Final answer: 1858"
+  ]
+}

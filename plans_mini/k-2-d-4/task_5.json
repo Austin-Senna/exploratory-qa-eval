@@ -8,7 +8,14 @@
     "Whitman_County,_Washington",
     "Spokane_County,_Washington"
   ],
-  "reasoning_chain_text": "1. For each school year 2014-15 through 2017-18, find Washington school districts with ELA performance at least 68 percent for all students and all grades.\\n2. Intersect district sets across all four years and map to counties.\\n3. From the county context sources, identify which candidate county both borders Idaho and has 2020 population under 300,000.\\n4. Return the county name only.",
+  "reasoning_chain_text": [
+    "1. Identify Washington school districts with ELA performance at least 68 percent for all students and all grades in 2014-15.",
+    "2. From those districts, keep the ones meeting the same condition in 2015-16.",
+    "3. From the remaining districts, keep the ones meeting the same condition in 2016-17.",
+    "4. From the remaining districts, keep the ones meeting the same condition in 2017-18 and carry forward the county subset implied by those surviving districts.",
+    "5. Using the next county reference page for that carried-forward county subset, determine whether the county borders Idaho and whether its 2020 population is under 300,000.",
+    "6. Using the final county reference page for that carried-forward county subset, apply the same checks and return the county name that satisfies them."
+  ],
   "original_reasoning_chain": [
     "HOP 1 (d=4, data.gov intersection - nodes 1-4):",
     "  Node 1: 2014-15 districts with ELA >= 68%",

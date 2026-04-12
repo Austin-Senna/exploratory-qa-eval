@@ -7,7 +7,13 @@
     "texas-department-of-criminal-justice-receives-fy-2022",
     "2020-census-redistricting-data-all-texas-counties"
   ],
-  "reasoning_chain_text": "1. For each fiscal year 2019 through 2022, find Texas counties with prison-system entries between 700 and 4,600.\\n2. Intersect county sets across all four years.\\n3. Keep counties with 2020 Census population under 900,000.\\n4. Return county names in alphabetical order, separated by comma and space.",
+  "reasoning_chain_text": [
+    "1. Identify Texas counties with prison-system entries between 700 and 4,600 in FY 2019.",
+    "2. From those counties, keep the ones in the same range in FY 2020.",
+    "3. From the remaining counties, keep the ones in the same range in FY 2021.",
+    "4. From the remaining counties, keep the ones in the same range in FY 2022.",
+    "5. Using 2020 Census county population data, keep the remaining counties with population under 900,000 and return their names in alphabetical order, separated by comma and space."
+  ],
   "original_reasoning_chain": [
     "HOP 1 (d=4, data.gov intersection - nodes 1-4):",
     "  Node 1: FY 2019 counties with 700-4,600 intakes",

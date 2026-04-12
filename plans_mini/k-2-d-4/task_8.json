@@ -7,7 +7,13 @@
     "texas-department-of-criminal-justice-receives-fy-2022",
     "Hidalgo_County,_Texas"
   ],
-  "reasoning_chain_text": "1. For each fiscal year 2019 through 2022, find Texas counties with prison-system entries between 700 and 4,600.\\n2. Intersect county sets across all four years.\\n3. From that subset, identify the county located in South Texas using the county context source.\\n4. Return that county seat city only.",
+  "reasoning_chain_text": [
+    "1. Identify Texas counties with prison-system entries between 700 and 4,600 in FY 2019.",
+    "2. From those counties, keep the ones in the same range in FY 2020.",
+    "3. From the remaining counties, keep the ones in the same range in FY 2021.",
+    "4. From the remaining counties, keep the ones in the same range in FY 2022.",
+    "5. Test a county carried forward from step 4 for whether it is in South Texas and determine its county seat; return the seat city for the candidate that satisfies the region condition."
+  ],
   "original_reasoning_chain": [
     "HOP 1 (d=4, data.gov intersection - nodes 1-4):",
     "  Node 1: FY 2019 counties with 700-4,600 intakes",

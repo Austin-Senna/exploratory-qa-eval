@@ -7,7 +7,13 @@
     "500-cities-city-level-data-gis-friendly-format-2019-release",
     "2020-census-redistricting-data-all-texas-places"
   ],
-  "reasoning_chain_text": "1. For each year 2016 through 2019, find Texas cities with diabetes prevalence above 12 percent.\\n2. Intersect city sets across all four years.\\n3. Keep cities whose 2020 Census population is under 100,000.\\n4. Return city names in alphabetical order, separated by comma and space.",
+  "reasoning_chain_text": [
+    "1. Identify Texas cities with diabetes prevalence above 12 percent in 2016.",
+    "2. From those cities, keep the ones with diabetes prevalence above 12 percent in 2017.",
+    "3. From the remaining cities, keep the ones with diabetes prevalence above 12 percent in 2018.",
+    "4. From the remaining cities, keep the ones with diabetes prevalence above 12 percent in 2019.",
+    "5. Using 2020 Census place population data, keep the remaining cities with population under 100,000 and return their names in alphabetical order, separated by comma and space."
+  ],
   "original_reasoning_chain": [
     "HOP 1 (d=4, data.gov intersection - nodes 1-4):",
     "  Node 1: TX cities with diabetes > 12% in 2016 release",

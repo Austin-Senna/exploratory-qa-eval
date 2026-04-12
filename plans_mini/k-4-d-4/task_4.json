@@ -4,20 +4,20 @@
     "2016-property-tax-roll",
     "2017-property-tax-roll",
     "2018-property-tax-roll",
+    "national-incorporated-places-and-counties",
     "Brown_University",
-    "Moses_Brown",
     "Moses_Brown_Ives",
-    "national-incorporated-places-and-counties"
+    "Moses_Brown"
   ],
   "reasoning_chain_text": [
-    "1. For the 2015 Providence property tax roll, identify hospital properties with assessed value between $6.9 million and $7.3 million.",
-    "2. For the 2016 Providence property tax roll, identify hospital properties with assessed value between $6.9 million and $7.3 million.",
-    "3. For the 2017 Providence property tax roll, identify hospital properties with assessed value between $6.9 million and $7.3 million.",
-    "4. For the 2018 Providence property tax roll, intersect the 2015-2018 hospital-property sets to keep the properties that stay in range every year.",
-    "5. Using the university page in this task, determine whether one remaining property is an Ivy League university and exclude it.",
-    "6. Using the person page in this task, identify the grandfather of the person for whom the benefactor was named.",
-    "7. Using the benefactor page in this task, determine whom that benefactor was named after and connect it to the surviving property.",
-    "8. Using the incorporated-places data, exclude any remaining property whose owner name matches an incorporated Rhode Island city, then return the grandfather identified earlier."
+    "1. Identify Providence hospital properties with assessed value between $6.9 million and $7.3 million in 2015.",
+    "2. From those properties, keep the ones with assessed value in the same range in 2016.",
+    "3. From the remaining properties, keep the ones with assessed value in the same range in 2017.",
+    "4. From the remaining properties, keep the ones with assessed value in the same range in 2018.",
+    "5. From the remaining properties, exclude any whose owner name matches an incorporated Rhode Island city.",
+    "6. From the remaining properties, exclude any that are Ivy League universities.",
+    "7. For the surviving property, identify the benefactor associated with it and determine whom that benefactor was named after.",
+    "8. Using the page for that person, determine the person's grandfather and return the grandfather's name."
   ],
   "original_final_question": "Among Providence hospital properties, only one met the following criteria: it had an assessed value consistently between $6.9 million and $7.3 million from 2015 through 2018, and it is neither an Ivy League university nor named after an incorporated Rhode Island city. The benefactor associated with this property was named in honor of another person. Who was that person's grandfather?. Your response should be in the format [Answer].",
   "original_reasoning_chain": [

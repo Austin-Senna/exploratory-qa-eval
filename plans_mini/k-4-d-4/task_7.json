@@ -10,14 +10,14 @@
     "Chicago_Police_Department"
   ],
   "reasoning_chain_text": [
-    "1. Using the city page in this task, identify the highway born there and the two terminus cities of that highway.",
-    "2. In the 2016 city health release, compare binge drinking prevalence for those two cities.",
-    "3. In the 2018 city health release, keep the city that again has the higher binge drinking prevalence.",
-    "4. For 2014 overtime data, calculate overtime totals by department for that city.",
-    "5. For 2015 overtime data, calculate overtime totals by department for that city.",
-    "6. For 2016 overtime data, calculate overtime totals by department for that city.",
-    "7. For 2017 overtime data, calculate overtime totals by department for that city and combine the 2014-2017 totals to identify the department with the highest cumulative overtime.",
-    "8. Using the page for that department, return its 2025 starting salary."
+    "1. Using the Missouri birthplace city of Route 66 in this task, identify the highway's two terminus cities.",
+    "2. In the 2016 city health data, compare binge drinking prevalence for those two terminus cities.",
+    "3. In the 2018 city health data, keep the terminus city that again has the higher binge drinking prevalence.",
+    "4. For 2014 municipal overtime data in that city, total overtime by department.",
+    "5. For 2015 municipal overtime data in that city, total overtime by department.",
+    "6. For 2016 municipal overtime data in that city, total overtime by department.",
+    "7. For 2017 municipal overtime data in that city, combine the 2014-2017 department totals and identify the department with the highest cumulative overtime.",
+    "8. Return the 2025 starting salary for that department."
   ],
   "original_final_question": "Can you first find the terminus cities of Route 66, among the citites, which one had higher binge drinking prevalence in both 2016 and 2018 city health data? For that city, identify the department with the highest total overtime costs from 2014 to 2017, then report the starting salary of that department in 2025. Return the dollar amount only. Your response should be in the format [Answer].",
   "original_reasoning_chain": [

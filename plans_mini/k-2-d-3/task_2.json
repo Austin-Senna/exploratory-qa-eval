@@ -6,7 +6,12 @@
     "agency-contracts-fiscal-year-2015",
     "agency-contracts-fiscal-year-2016"
   ],
-  "reasoning_chain_text": "1. Identify the 18th-largest U.S. state by area.\\n2. For FY 2014 through FY 2016, collect contract counts for community colleges in that state.\\n3. Compute average contract count per college across the three years and rank descending.\\n4. Keep the top three colleges and return the highest average, rounded to the nearest integer.",
+  "reasoning_chain_text": [
+    "1. Identify the 18th-largest U.S. state by area.",
+    "2. For fiscal year 2014, count contracts for community colleges in that state.",
+    "3. For fiscal year 2015, count contracts for community colleges in that state.",
+    "4. For fiscal year 2016, count contracts for community colleges in that state, then compute each college's 2014-2016 average, keep the top three, and return the highest average rounded to the nearest integer."
+  ],
   "original_reasoning_chain": [
     "HOP 1 (d=1, Wikipedia - node 1):",
     "  Node 1: Washington is the 18th-largest U.S. state by area",

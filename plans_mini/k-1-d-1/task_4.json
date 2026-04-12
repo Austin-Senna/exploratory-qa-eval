@@ -3,7 +3,9 @@
   "dataset_sequence": [
     "lottery-ny-lotto-winning-numbers-beginning-2001"
   ],
-  "reasoning_chain_text": "1. Compute average Bonus # by year from 2005 to 2010 and select the maximum.",
+  "reasoning_chain_text": [
+    "1. Compute average Bonus # by year from 2005 to 2010 and select the maximum."
+  ],
   "original_reasoning_chain": [
     "Node 1: Compute the average Bonus # by year (2005-2010) and select the maximum; the peak year is 2005.",
     "Final answer: 2005"

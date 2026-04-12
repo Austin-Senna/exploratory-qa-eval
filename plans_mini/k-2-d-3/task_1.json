@@ -6,7 +6,12 @@
     "apd-computer-aided-dispatch-incidents",
     "apd-use-of-force"
   ],
-  "reasoning_chain_text": "1. Compute 2022 maximum NOPD use-of-force incident count by division.\\n2. In 2022 APD searches-by-type data, identify the sector with the most searches, excluding Sector Unknown.\\n3. Use that sector to count 2022 APD CAD incidents.\\n4. Compute 2022 maximum APD use-of-force incident count by council district.\\n5. Compare the three derived counts and return the greatest number.",
+  "reasoning_chain_text": [
+    "1. Determine the largest 2022 incident count across New Orleans police divisions for cases where officers applied force.",
+    "2. Determine which Austin police sector had the most 2022 searches, excluding Sector Unknown.",
+    "3. Using that sector, determine how many 2022 dispatch incidents it recorded.",
+    "4. Determine the largest 2022 incident count across Austin council districts for cases where officers applied force, then compare the values from steps 1, 3, and 4 and return the greatest number."
+  ],
   "original_reasoning_chain": [
     "Node 1: 2022 NOPD maximum division-level incident count = 92.",
     "Node 2: 2022 APD searches-by-type top sector (excluding Unknown) = Charlie.",

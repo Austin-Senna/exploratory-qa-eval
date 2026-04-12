@@ -8,7 +8,14 @@
     "texas-department-of-criminal-justice-releases-fy-2020",
     "texas-department-of-criminal-justice-releases-fy-2021"
   ],
-  "reasoning_chain_text": "1. For each year 2019 through 2021, find the top five Texas counties by Capital Outlay spending.\\n2. Intersect those county sets across the three years.\\n3. For each year 2019 through 2021, find the overall top five counties by TDCJ releases.\\n4. Intersect the release-based set with the Capital Outlay intersection.\\n5. Return the final county names in alphabetical order, separated by comma and space.",
+  "reasoning_chain_text": [
+    "1. For fiscal year 2019, identify Texas counties in the top five for Capital Outlay spending.",
+    "2. For fiscal year 2020, identify Texas counties in the top five for Capital Outlay spending.",
+    "3. For fiscal year 2021, identify Texas counties in the top five for Capital Outlay spending.",
+    "4. For fiscal year 2019, among the counties identified by intersecting the results of steps 1-3, keep those in the overall top five for TDCJ releases.",
+    "5. For fiscal year 2020, among the counties identified by intersecting the results of steps 1-3, keep those in the overall top five for TDCJ releases.",
+    "6. For fiscal year 2021, among the counties identified by intersecting the results of steps 1-3, keep those in the overall top five for TDCJ releases, then return the counties that remain after intersecting the 2019-2021 release-filtered sets in alphabetical order separated by comma and space."
+  ],
   "original_reasoning_chain": [
     "HOP 1 (d=3, data.gov - nodes 1-3):",
     "  Nodes 1-3: Top 5 Capital Outlay counties 2019–2021 -> intersection {Harris, Travis, Dallas, Bexar}",

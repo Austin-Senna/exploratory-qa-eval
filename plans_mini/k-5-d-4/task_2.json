@@ -1,0 +1,50 @@
+{
+  "dataset_sequence": [
+    "500-cities-city-level-data-gis-friendly-format-2016-release",
+    "500-cities-city-level-data-gis-friendly-format-2017-release",
+    "500-cities-city-level-data-gis-friendly-format-2018-release",
+    "500-cities-city-level-data-gis-friendly-format-2019-release",
+    "2020-census-redistricting-data-all-texas-places",
+    "Pharr,_Texas",
+    "Mission,_Texas",
+    "McAllen,_Texas",
+    "aps-1-1-texas-adult-populations-at-risk-by-county-region-fy2013-fy2022"
+  ],
+  "reasoning_chain_text": [
+    "1. In the 2016 city health release, identify Texas cities with diabetes rates above 12%.",
+    "2. In the 2017 city health release, keep Texas cities with diabetes rates above 12% again.",
+    "3. In the 2018 city health release, keep Texas cities with diabetes rates above 12% again.",
+    "4. In the 2019 city health release, intersect the four annual diabetes sets to keep cities meeting the threshold every year.",
+    "5. From those cities, keep the ones with 2020 population under 100,000.",
+    "6. List neighboring cities for the city in dataset position 6.",
+    "7. List neighboring cities for the city in dataset position 7.",
+    "8. Verify that the city in dataset position 8 borders both candidate cities from steps 6 and 7, then record its county.",
+    "9. Retrieve the 2022 percentage aged 65 or older for the county from step 8."
+  ],
+  "original_final_question": "What percentage of the population in the county containing the city that borders both of the Texas cities with above 12% diabetes rates between 2016 and 2019 was aged 65 or older in 2022? (These cities had populations under 100,000 in 2020.). Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    "HOP 1 (d=4, CDC 500 Cities diabetes data 2016-2019 - nodes 1-4):",
+    "  Node 1: TX cities with diabetes > 12% in 2016 release -> 10 cities",
+    "  Node 2: TX cities with diabetes > 12% in 2017 release -> 12 cities",
+    "  Node 3: TX cities with diabetes > 12% in 2018 release -> 12 cities (Edinburg dropped, Longview/Tyler added)",
+    "  Node 4: TX cities with diabetes > 12% in 2019 release -> 13 cities (Edinburg returned, Waco added)",
+    "  Intersection of nodes 1-4: Cities meeting criterion all 4 years -> 9 cities (Beaumont, Brownsville, Corpus Christi, El Paso, Laredo, McAllen, Mission, Pharr, San Antonio)",
+    "",
+    "HOP 2 (d=1, 2020 Census Texas Places - node 5):",
+    "  Node 5: Filter 9-city intersection by 2020 Census pop < 100k -> Mission (85,778) and Pharr (79,715)",
+    "  Result: 2 cities remaining (Mission, Pharr)",
+    "",
+    "HOP 3 (d=2, Wikipedia adjacent cities - nodes 6-7):",
+    "  Node 6 (Wikipedia Pharr,_Texas): Cities bordering Pharr -> McAllen, Edinburg, San Juan, Hidalgo",
+    "  Node 7 (Wikipedia Mission,_Texas): Cities bordering Mission -> McAllen, Palmhurst, Palmview",
+    "  Intersection: City that borders BOTH Pharr and Mission -> McAllen",
+    "",
+    "HOP 4 (d=1, Wikipedia McAllen,_Texas - node 8):",
+    "  Node 8: McAllen is in Hidalgo County, Texas (most populous city in the county)",
+    "",
+    "HOP 5 (d=1, data.gov Texas Adult Populations at Risk - node 9):",
+    "  Node 9: Hidalgo County had 12.3% of population aged 65 and older in 2022",
+    "",
+    "Final answer: 12.3 (percentage of Hidalgo County population aged 65+ in 2022)"
+  ]
+}

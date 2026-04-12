@@ -4,7 +4,10 @@
     "index-violent-property-and-firearm-rates-by-county-beginning-1990",
     "Buffalo,_New_York"
   ],
-  "reasoning_chain_text": "1. Compare 2021 violent crime totals for Erie County and Westchester County and identify the county with the higher value.\n2. Look up the county seat of that county and return only the city name.",
+  "reasoning_chain_text": [
+    "1. Compare 2021 violent crime totals for Erie County and Westchester County and identify the county with the higher value.",
+    "2. Look up the county seat of that county and return only the city name."
+  ],
   "original_reasoning_chain": [
     "HOP 1 (d=1, data.gov - node 1):",
     "  Node 1: 2021 violent crimes -> Erie County (3,493) vs Westchester County (1,520) -> Erie County",

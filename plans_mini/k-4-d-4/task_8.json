@@ -10,14 +10,14 @@
     "500-cities-local-data-for-better-health-2018-release"
   ],
   "reasoning_chain_text": [
-    "1. For fiscal year 2007 Missouri state expenditures, record agency spending levels relevant to the 2007-2010 average ranking.",
-    "2. For fiscal year 2008 Missouri state expenditures, record agency spending levels relevant to the 2007-2010 average ranking.",
-    "3. For fiscal year 2009 Missouri state expenditures, record agency spending levels relevant to the 2007-2010 average ranking.",
-    "4. For fiscal year 2010 Missouri state expenditures, determine which agency ranks third by average spending across 2007-2010.",
-    "5. Using that agency's page, identify the city where its Southwest district is based.",
-    "6. Using the city from step 5, identify the highway born there and its two terminus cities.",
-    "7. In the 2016 city health release, compare binge drinking prevalence for those two terminus cities.",
-    "8. In the 2018 city health release, compute the two-city average across 2016 and 2018 and return the city with the lower average prevalence."
+    "1. Identify Missouri state agencies with the highest spending levels in fiscal year 2007.",
+    "2. Identify Missouri state agencies with the highest spending levels in fiscal year 2008.",
+    "3. Identify Missouri state agencies with the highest spending levels in fiscal year 2009.",
+    "4. Using fiscal year 2010 spending data, combine the 2007-2010 results to determine which Missouri state agency ranks third by average spending.",
+    "5. Determine the Missouri city where that agency's Southwest district is based.",
+    "6. Using that Missouri city, identify the highway born there and its two terminus cities.",
+    "7. In the 2016 city health data, compare binge drinking prevalence for those two terminus cities.",
+    "8. In the 2018 city health data, combine 2016 and 2018 prevalence for those two terminus cities and return the city with the lower average binge drinking prevalence."
   ],
   "original_final_question": "Find the Missouri state agency that ranked third in average spending from 2007-10, for that agency, which city is its Southwest district based and the highway that was born there. Between that highway's two terminus cities, which one had lower average binge drinking prevalence across the 2016 and 2018? Return the city name only. Your response should be in the format [Answer].",
   "original_reasoning_chain": [

@@ -6,7 +6,12 @@
     "parking-violations-issued-in-january-2021",
     "moving-violations-issued-in-january-2019"
   ],
-  "reasoning_chain_text": "1. For each year 2019 through 2021, find the top 20 issuing agencies for January parking violations and intersect across years.\\n2. From the intersection, keep agencies whose names start with UNITED STATES or US..\\n3. In January 2019 moving-violations data, compare counts across these agencies.\\n4. Return the agency with the highest count.",
+  "reasoning_chain_text": [
+    "1. For January 2019, identify issuing agencies in the top 20 for January parking violations.",
+    "2. For January 2020, identify issuing agencies in the top 20 for January parking violations.",
+    "3. For January 2021, identify issuing agencies in the top 20 for January parking violations.",
+    "4. In January 2019 moving-violations data, among agencies identified by intersecting the results of steps 1-3 whose names start with `UNITED STATES` or `US.`, identify the agency with the highest count."
+  ],
   "original_reasoning_chain": [
     "HOP 1 (d=3, data.gov - nodes 1-3):",
     "  Nodes 1-3: Top-20 January parking-violation agencies 2019–2021 -> intersection; filter to U.S./US. agencies",

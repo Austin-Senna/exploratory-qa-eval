@@ -1,23 +1,23 @@
 {
   "dataset_sequence": [
-    "Chicago_Cubs",
-    "Wrigley_Field",
-    "census-data-selected-socioeconomic-indicators-in-chicago-2008-2012",
-    "chicago-public-schools-elementary-school-progress-report-2013-2014",
-    "chicago-public-schools-elementary-school-progress-report-card-2012-2013",
     "chicago-public-schools-progress-report-cards-2011-2012",
+    "chicago-public-schools-elementary-school-progress-report-card-2012-2013",
+    "chicago-public-schools-elementary-school-progress-report-2013-2014",
+    "chicago-public-schools-school-progress-reports-sy1718",
     "chicago-public-schools-school-locations-sy1516",
-    "chicago-public-schools-school-progress-reports-sy1718"
+    "census-data-selected-socioeconomic-indicators-in-chicago-2008-2012",
+    "Wrigley_Field",
+    "Chicago_Cubs"
   ],
   "reasoning_chain_text": [
-    "1. For the MLB team page in this task, record the year the team was founded.",
-    "2. For the stadium page in this task, identify the community area of the stadium and the team that plays there.",
-    "3. Using the Chicago census data, identify community areas with per capita income above $50,000.",
-    "4. For the 2013-14 elementary school progress report, identify public elementary schools classified as moderately organized.",
-    "5. For the 2012-13 elementary school progress report card, identify public elementary schools with above-average overall growth.",
-    "6. For the 2011-12 progress report cards, identify public elementary schools with the top performance rating.",
-    "7. Using school locations, determine the community area for schools that remain from the earlier progress-report filters.",
-    "8. For the 2017-18 school progress reports, keep the schools with above-average or far-above-average student growth and isolate the one whose community area matches the income and stadium-area conditions from earlier steps."
+    "1. Identify Chicago public elementary schools with the top performance rating in 2011-2012.",
+    "2. From those schools, keep the Chicago public elementary schools that show above-average overall growth in 2012-2013.",
+    "3. From the remaining schools, keep the Chicago public elementary schools classified as moderately organized in 2013-2014.",
+    "4. From the remaining schools, keep the Chicago public elementary schools with above-average or far-above-average student growth in 2017-2018.",
+    "5. Determine the Chicago community area for the schools that remain after the four school-performance filters.",
+    "6. From those schools, keep the ones in a Chicago community area with per capita income above $50,000.",
+    "7. Identify the MLB team that plays in the stadium located in that same Chicago community area.",
+    "8. Return the year that MLB team was founded."
   ],
   "original_final_question": "In Chicago elementary schools that are public school, find which school (1) received the top performance rating in 2011-12, (2) showed above-average growth in the 2012\u201313, and (3) classified as moderately organized under the My Voice, My School measure, and (4) showed above-average or far-above-average student growth in 2017\u20132018, based on progress report cards. This school is also located in a community area with a per capita income above $50K. In what year was the MLB team founded that plays in the stadium located within that same community area? Please return the year only. Your response should be in the format [Answer].",
   "original_reasoning_chain": [

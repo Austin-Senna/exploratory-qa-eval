@@ -11,15 +11,15 @@
     "Harris_County,_Texas"
   ],
   "reasoning_chain_text": [
-    "1. For 2018 Texas state expenditures by county, record counties with high capital outlay spending relevant to the top-five comparison.",
-    "2. For 2019 Texas state expenditures by county, record counties with high capital outlay spending relevant to the top-five comparison.",
-    "3. For 2020 Texas state expenditures by county, record counties with high capital outlay spending relevant to the top-five comparison.",
-    "4. For 2021 Texas state expenditures by county, combine the 2018-2021 capital outlay results to determine the counties that rank in the top five by average spending.",
-    "5. For fiscal year 2019 prison-release data, record release counts for those counties.",
-    "6. For fiscal year 2020 prison-release data, compute average releases across 2019-20 for those counties and keep the top two.",
-    "7. For fiscal year 2020 disability compensation data, record recipient counts for the two remaining counties.",
-    "8. For fiscal year 2023 disability compensation data, compute each remaining county's change from 2020 to 2023 and keep the county with the larger increase.",
-    "9. Using the remaining county page, return its county seat."
+    "1. Identify Texas counties with the highest capital outlay spending in 2018.",
+    "2. Identify Texas counties with the highest capital outlay spending in 2019.",
+    "3. Identify Texas counties with the highest capital outlay spending in 2020.",
+    "4. Using 2021 capital outlay data, combine the 2018-2021 results to determine the Texas counties that rank in the top five by average spending.",
+    "5. For those counties, record prison-release counts in fiscal year 2019.",
+    "6. Using fiscal year 2020 prison-release data, combine 2019 and 2020 release counts to keep the two counties with the highest average releases across 2019-2020.",
+    "7. For those two counties, record disability compensation recipient counts in fiscal year 2020.",
+    "8. Using fiscal year 2023 disability compensation counts, compute each remaining county's change from 2020 to 2023 and keep the county with the larger increase.",
+    "9. Return the county seat of that remaining Texas county."
   ],
   "original_final_question": "Among Texas counties that were in the top five for average capital outlay spending from 2018 to 2021, identify the two highest by average prison releases in 2019-20. Of those two, pick the county with the larger increase in veterans affairs disability compensation recipients from 2020 to 2023. What is the county seat of that county? Return the county seat name only. Your response should be in the format [Answer].",
   "original_reasoning_chain": [

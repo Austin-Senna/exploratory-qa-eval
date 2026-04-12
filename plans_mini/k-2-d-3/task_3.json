@@ -6,7 +6,12 @@
     "texas-state-expenditures-by-county-2019",
     "texas-state-expenditures-by-county-2020"
   ],
-  "reasoning_chain_text": "1. Determine the year with the highest total unemployment-benefit beneficiaries since 2001.\\n2. From 2018 through that year, aggregate Texas state expenditures by county for each year.\\n3. Compute average expenditure by county across the selected years and rank descending.\\n4. Return the county ranked third among the top three averages.",
+  "reasoning_chain_text": [
+    "1. Determine the year since 2001 with the highest total unemployment-benefit beneficiaries.",
+    "2. For 2018, aggregate Texas state expenditures by county.",
+    "3. For 2019, aggregate Texas state expenditures by county.",
+    "4. For 2020, aggregate Texas state expenditures by county, then compute county averages across 2018 through the year from step 1 and return the county ranked third by average expenditure."
+  ],
   "original_reasoning_chain": [
     "HOP 1 (d=1, data.gov - node 1):",
     "  Node 1: Year with highest total unemployment insurance beneficiaries -> 2020",

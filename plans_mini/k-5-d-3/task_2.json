@@ -1,0 +1,39 @@
+{
+  "dataset_sequence": [
+    "2018-state-employee-pay",
+    "2019-state-employee-pay",
+    "2020-state-employee-pay",
+    "State_Auditor_of_Missouri",
+    "List_of_attorneys_general_of_Missouri",
+    "Edward_Bates",
+    "Missouri_Attorney_General",
+    "John_Ashcroft",
+    "chicago-population-counts"
+  ],
+  "reasoning_chain_text": [
+    "1. Identify Missouri state agencies in the top five by average employee pay for 2018.",
+    "2. From the agencies in step 1, keep the ones that also rank in the top five by average employee pay for 2019.",
+    "3. From the agencies in step 2, keep the ones that also rank in the top five by average employee pay for 2020 and determine which agencies remain under consideration.",
+    "4. From the Missouri State Auditor article, identify that office's first officeholder as one comparison candidate.",
+    "5. From the Missouri attorneys general list, identify that office's first officeholder as the other comparison candidate.",
+    "6. Using the officeholder article from step 5, determine which candidate office from steps 4 and 5 is the one whose first officeholder also served as U.S. Attorney General.",
+    "7. From the Missouri Attorney General article, identify the person from the office selected in step 6 who also served as both a U.S. Senator and a U.S. Attorney General.",
+    "8. Using the person identified in step 7, determine the birthplace city from that person's article.",
+    "9. Return the 2018 population of the city identified in step 8."
+  ],
+  "original_final_question": "I am looking for a Missouri state agency that consistently ranked in the top 5 for average employee pay between 2018 and 2020. This agency's very first officeholder also served as U.S. Attorney General. Identify the person who served in that same agency, was a U.S. Senator, and was a U.S. Attorney General. What was the 2018 population of that person's birthplace? Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    "Nodes 1-3 (d=3): Find Missouri state agencies in top 5 by average employee pay in ALL of 2018, 2019, and 2020",
+    "Node 1: 2018 top 5 by avg pay -> {OFFICE OF ATTORNEY GENERAL, OFFICE OF STATE AUDITOR, LEGISLATURE, OFFICE OF ADMINISTRATION, ECONOMIC DEVELOPMENT}",
+    "Node 2: Filter to those in 2019 top 5 -> {OFFICE OF ATTORNEY GENERAL, OFFICE OF STATE AUDITOR, OFFICE OF ADMINISTRATION}",
+    "Node 3: Filter to those in 2020 top 5 -> {OFFICE OF ATTORNEY GENERAL, OFFICE OF STATE AUDITOR}",
+    "Nodes 4-6 (d=3): Use first officeholders to select the office tied to a U.S. Attorney General",
+    "Node 4: First State Auditor -> William Christy",
+    "Node 5: First Missouri Attorney General -> Edward Bates",
+    "Node 6: Of those first officeholders, Edward Bates served as U.S. Attorney General -> select the Missouri Attorney General office",
+    "Node 7: From the Missouri Attorney General notable list, the only person listed as both U.S. Attorney General and U.S. Senator is John Ashcroft",
+    "Node 8: John Ashcroft was born in Chicago",
+    "Node 9: Chicago's 2018 citywide population was 2,705,988",
+    "Final answer: 2705988"
+  ]
+}

@@ -3,7 +3,9 @@
   "dataset_sequence": [
     "vsrr-provisional-drug-overdose-death-counts"
   ],
-  "reasoning_chain_text": "1. Sum December overdose deaths by year from 2015-2023 and select the maximum.",
+  "reasoning_chain_text": [
+    "1. Sum December overdose deaths by year from 2015-2023 and select the maximum."
+  ],
   "original_reasoning_chain": [
     "Node 1: Sum December 12 month-ending overdose deaths by Year and select the maximum; the peak year is 2022.",
     "Final answer: 2022"
