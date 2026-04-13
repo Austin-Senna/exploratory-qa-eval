@@ -81,6 +81,8 @@ This is the shared loader for ideal-mode plans.
   - `dataset_sequence`
   - `source_sequence`
   - `reasoning_chain_text`
+- During plan authoring, unresolved file choices may also appear temporarily under:
+  - `source_resolution_notes`
 
 Missing or invalid plan files fail fast.
 
@@ -128,6 +130,7 @@ This is the ideal planning tool.
 - Current instruction policy:
   - copying the chain is allowed
   - producing a clearer, more executable plan is preferred
+  - the agent is not shown `dataset_sequence`; it plans from `reasoning_chain_text` only
 
 ## 3. Other ablation implementations
 

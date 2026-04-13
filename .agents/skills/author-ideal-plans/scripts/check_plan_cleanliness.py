@@ -75,6 +75,10 @@ def _known_uris(repo_root: Path) -> set[str]:
     return known
 
 
+def _canonical_uri(source_path: str) -> str:
+    return f"{_S3_PREFIX}{str(source_path).lstrip('/')}"
+
+
 def _plan_relpath(plan_path: Path, repo_root: Path) -> Path:
     plans_root = (repo_root / "plans_mini").resolve()
     resolved = plan_path.resolve()
@@ -300,7 +304,7 @@ def _resolve_source_entry(source: Any, *, repo_root: Path) -> Optional[str]:
 
     known_uris = _known_uris(repo_root)
     for candidate in candidates:
-        if f"{_S3_PREFIX}{candidate}" in known_uris:
+        if _canonical_uri(candidate) in known_uris:
             return candidate
     return candidates[0]
 
@@ -319,6 +323,30 @@ def _normalize_reasoning_text_value(value: str) -> str:
     if "\n" not in text and "\\n" in text:
         text = text.replace("\\n", "\n")
     return text
+
+
+def _validate_source_resolution_notes(raw: Any, issues: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    if raw is None:
+        return []
+    if not isinstance(raw, list):
+        _add_issue(
+            issues,
+            "invalid_source_resolution_notes",
+            "source_resolution_notes must be a list when present.",
+        )
+        return []
+    notes: List[Dict[str, Any]] = []
+    for index, item in enumerate(raw):
+        if not isinstance(item, dict):
+            _add_issue(
+                issues,
+                "invalid_source_resolution_note",
+                "source_resolution_notes entries must be objects.",
+                index=index,
+            )
+            continue
+        notes.append(item)
+    return notes
 
 
 def _validate_reasoning_text(raw: Any, issues: List[Dict[str, Any]]) -> str:
@@ -461,6 +489,10 @@ def evaluate_plan(plan_path: str | Path) -> Dict[str, Any]:
     payload = _load_json(resolved_plan_path)
     dataset_sequence = _validate_dataset_sequence(payload.get("dataset_sequence"), issues)
     source_sequence = _validate_source_sequence(payload.get("source_sequence"), issues)
+    source_resolution_notes = _validate_source_resolution_notes(
+        payload.get("source_resolution_notes"),
+        issues,
+    )
     reasoning_chain_text = _validate_reasoning_text(payload.get("reasoning_chain_text"), issues)
     steps = _extract_steps(reasoning_chain_text)
 
@@ -490,6 +522,22 @@ def evaluate_plan(plan_path: str | Path) -> Dict[str, Any]:
             "The number of reasoning steps should not exceed dataset_sequence length.",
             dataset_count=len(dataset_sequence),
             step_count=len(steps),
+        )
+    if source_sequence and steps and len(steps) > len(source_sequence):
+        _add_issue(
+            issues,
+            "step_count_exceeds_sources",
+            "The number of reasoning steps should not exceed source_sequence length.",
+            source_count=len(source_sequence),
+            step_count=len(steps),
+        )
+
+    if source_resolution_notes:
+        _add_issue(
+            issues,
+            "source_resolution_review_required",
+            "source_resolution_notes is still populated. Resolve the file choice before accepting the plan.",
+            note_count=len(source_resolution_notes),
         )
 
     oversplit_hits = [
@@ -567,7 +615,8 @@ def evaluate_plan(plan_path: str | Path) -> Dict[str, Any]:
         task_datasets = _task_dataset_ids(task_payload.get("datasets_used"))
         node_datasets = _node_dataset_sequence(task_payload)
         expected_sequence = node_datasets or task_datasets
-        expected_source_sequence = _node_source_sequence(task_payload, repo_root=repo_root)
+        node_items = _node_items(task_payload)
+        known_uris = _known_uris(repo_root)
 
         if node_datasets and task_datasets and set(node_datasets) != set(task_datasets):
             _add_issue(
@@ -596,14 +645,39 @@ def evaluate_plan(plan_path: str | Path) -> Dict[str, Any]:
                     actual_sequence=dataset_sequence,
                 )
 
-        if expected_source_sequence:
-            if source_sequence != expected_source_sequence:
+        if node_items:
+            if len(source_sequence) != len(node_items):
                 _add_issue(
                     issues,
-                    "source_sequence_mismatch",
-                    "source_sequence must follow node order and resolve each node source using the ideal source-resolution rule.",
-                    expected_sequence=expected_source_sequence,
-                    actual_sequence=source_sequence,
+                    "source_sequence_length_mismatch",
+                    "source_sequence must contain one file-backed entry per node in node order.",
+                    expected_count=len(node_items),
+                    actual_count=len(source_sequence),
+                )
+            else:
+                for index, ((node_id, node_payload), source_entry) in enumerate(zip(node_items, source_sequence)):
+                    expected_dataset_id = _dataset_id_from_source(node_payload.get("source"))
+                    actual_dataset_id = _dataset_id_from_source(source_entry)
+                    if expected_dataset_id and actual_dataset_id != expected_dataset_id:
+                        _add_issue(
+                            issues,
+                            "source_dataset_mismatch",
+                            "source_sequence must stay aligned to the dataset used by each node.",
+                            index=index,
+                            node_id=node_id,
+                            expected_dataset_id=expected_dataset_id,
+                            actual_dataset_id=actual_dataset_id,
+                            actual_source=source_entry,
+                        )
+
+        for index, source_entry in enumerate(source_sequence):
+            if _canonical_uri(source_entry) not in known_uris:
+                _add_issue(
+                    issues,
+                    "source_not_indexed",
+                    "source_sequence entries must point to indexed file-backed sources, or remain explicitly marked for review.",
+                    index=index,
+                    source_entry=source_entry,
                 )
 
         dataset_year_values = _dataset_years(dataset_sequence)

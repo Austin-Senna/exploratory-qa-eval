@@ -21,18 +21,19 @@ Treat `datasets_used` as a coverage check: it should match the unique dataset ID
 Treat the placeholder one-step-per-dataset scaffold from `init_plan_file.py` as a starting point only. Collapse it into cleaner grouped steps during the rewrite when adjacent datasets support the same logical action.
 Treat `source_sequence` as the retrieval source of truth for `search_ideal`; do not deduplicate repeated node uses.
 
-Resolve `source_sequence` entries with this exact rule:
+Resolve `source_sequence` entries with this initial rule:
 1. start from each node's `source`
 2. try the `.txt` version first
 3. then try the original source
 4. then try the `.json` version
 5. for each candidate above, also try the normalized `/v1/files/` -> `/files/` form
 6. if a candidate exists in `table_descriptions.jsonl`, store that file path
-7. otherwise store the first normalized file-path candidate, not a bare dataset id
+7. if no candidate is indexed, inspect likely real data files such as `files/data.txt`, or list the dataset files and choose the actual data body
+8. if you still cannot verify the file choice, keep the best candidate temporarily and add `source_resolution_notes` so the plan is visibly blocked on manual review
 
 `source_sequence` should now contain concrete dataset-relative file paths only.
 Do not leave bare dataset ids in `source_sequence`.
-If a chosen file path is not yet indexed in `table_descriptions.jsonl`, add or update that metadata entry as a follow-up so `search_ideal` can return descriptions and truncated content.
+If a chosen file path is not yet indexed in `table_descriptions.jsonl`, treat the plan as unresolved. Add or update that metadata entry, or mark the plan with `source_resolution_notes` until the file choice is verified.
 
 ## Draft the Plan in Dataset Order
 
@@ -113,6 +114,7 @@ Run `scripts/check_plan_cleanliness.py <plan_json_path>` on every authored or re
 
 The validator must pass before the plan is considered ready.
 It now validates both `dataset_sequence` and `source_sequence`.
+It also fails when `source_resolution_notes` is still present or when a `source_sequence` entry is not indexed in `table_descriptions.jsonl`.
 
 Store `reasoning_chain_text` as a JSON list so each step stays readable in the raw file. `plan_ideal` joins the list with `\n` at load time. Legacy string plans still load, but new and rewritten plans should use the list form. During review, render the list as plain lines:
 
@@ -128,6 +130,7 @@ If the validator reports issues:
 ## Run an Independent Review Subagent
 
 After local validation passes, launch a fresh subagent for an independent cleanliness review.
+If `source_resolution_notes` is present, launch a subagent before the final cleanliness pass to resolve those file choices first.
 
 Give the subagent only:
 - the task question
@@ -164,6 +167,25 @@ Do not solve the task.
 Do not infer the final answer.
 ```
 
+When `source_resolution_notes` is present, use a separate subagent prompt shaped like this:
+
+```text
+Use $author-ideal-plans at /absolute/path/to/author-ideal-plans to review unresolved source choices for /absolute/path/to/plans_mini/.../task_X.json.
+
+Return JSON only with:
+- status: resolved | needs_manual_review
+- resolutions: [{index, chosen_source, rationale}]
+- review_notes: [short strings]
+
+Review only for:
+- whether files/data.txt is the real data body
+- whether another listed file is the real data body
+- whether the chosen source is indexed in table_descriptions.jsonl
+
+If you cannot verify a better file, say needs_manual_review and explain why.
+Do not solve the task.
+```
+
 Accept the plan only after:
 - `check_plan_cleanliness.py` returns `clean`
 - the independent subagent returns `clean`
@@ -173,6 +195,7 @@ Accept the plan only after:
 1. Initialize the mirrored plan file with `scripts/init_plan_file.py` if needed.
 2. Read the source task's `question`, `datasets_used`, `nodes`, and `reasoning_chain`.
 3. Derive `dataset_sequence` from the unique datasets in node order, derive `source_sequence` from node `source` values in node order, cross-check the dataset coverage against `datasets_used`, and rewrite `reasoning_chain_text` into clean scaffolding that respects the dataset order without exposing hidden indexing.
-4. Run `scripts/check_plan_cleanliness.py`.
-5. Run the independent review subagent.
-6. Revise until both checks pass.
+4. If any source choice is unresolved, add `source_resolution_notes` and run the source-resolution subagent before accepting the file choice.
+5. Run `scripts/check_plan_cleanliness.py`.
+6. Run the independent review subagent.
+7. Revise until all checks pass and `source_resolution_notes` is gone.

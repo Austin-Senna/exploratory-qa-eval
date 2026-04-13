@@ -69,8 +69,9 @@ class TestAuthorIdealPlanScripts(unittest.TestCase):
                 scaffold["source_sequence"],
                 ["datagov/example-dataset/files/rows.txt"],
             )
+            self.assertNotIn("source_resolution_notes", scaffold)
 
-    def test_build_scaffold_uses_first_file_candidate_when_source_is_unindexed(self):
+    def test_build_scaffold_marks_unindexed_source_for_review(self):
         with TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
             task_path = root / "tasks_mini" / "k-1-d-1" / "task_2.json"
@@ -95,8 +96,12 @@ class TestAuthorIdealPlanScripts(unittest.TestCase):
                 scaffold["source_sequence"],
                 ["datagov/example-dataset/files/raw.txt"],
             )
+            self.assertEqual(len(scaffold["source_resolution_notes"]), 1)
+            note = scaffold["source_resolution_notes"][0]
+            self.assertEqual(note["status"], "needs_review")
+            self.assertEqual(note["chosen_source"], "datagov/example-dataset/files/raw.txt")
 
-    def test_check_plan_cleanliness_flags_source_sequence_mismatch(self):
+    def test_check_plan_cleanliness_flags_unindexed_source_review(self):
         with TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
             task_path = root / "tasks_mini" / "k-1-d-1" / "task_3.json"
@@ -120,6 +125,12 @@ class TestAuthorIdealPlanScripts(unittest.TestCase):
                 {
                     "dataset_sequence": ["example-dataset"],
                     "source_sequence": ["datagov/example-dataset/files/wrong.txt"],
+                    "source_resolution_notes": [
+                        {
+                            "status": "needs_review",
+                            "chosen_source": "datagov/example-dataset/files/wrong.txt",
+                        }
+                    ],
                     "reasoning_chain_text": ["1. Determine the answer."],
                 },
             )
@@ -136,7 +147,49 @@ class TestAuthorIdealPlanScripts(unittest.TestCase):
 
             result = check_plan_cleanliness.evaluate_plan(plan_path)
             codes = {issue["code"] for issue in result["issues"]}
-            self.assertIn("source_sequence_mismatch", codes)
+            self.assertIn("source_not_indexed", codes)
+            self.assertIn("source_resolution_review_required", codes)
+
+    def test_check_plan_cleanliness_allows_indexed_alternative_file_in_same_dataset(self):
+        with TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            task_path = root / "tasks_mini" / "k-1-d-1" / "task_4.json"
+            plan_path = root / "plans_mini" / "k-1-d-1" / "task_4.json"
+            self._write_json(
+                task_path,
+                {
+                    "question": "Q?",
+                    "datasets_used": ["example-dataset"],
+                    "reasoning_chain": ["Node 1: ..."],
+                    "nodes": {
+                        "1": {
+                            "source": "datagov/example-dataset/v1/files/rows.csv",
+                        }
+                    },
+                },
+            )
+            self._write_json(
+                plan_path,
+                {
+                    "dataset_sequence": ["example-dataset"],
+                    "source_sequence": ["datagov/example-dataset/files/data.txt"],
+                    "reasoning_chain_text": ["1. Determine the answer."],
+                },
+            )
+            (root / "table_descriptions.jsonl").write_text(
+                json.dumps(
+                    {
+                        "dataset_uri": "s3://lakeqa-yc4103-datalake/datagov/example-dataset/files/data.txt",
+                        "description": "desc",
+                        "content": "content",
+                    }
+                )
+                + "\n"
+            )
+
+            result = check_plan_cleanliness.evaluate_plan(plan_path)
+            self.assertEqual(result["status"], "clean")
+            self.assertFalse(result["issues"])
 
     def test_k_1_d_1_scaffolds_all_resolve_to_file_paths(self):
         repo_root = Path(__file__).resolve().parent.parent

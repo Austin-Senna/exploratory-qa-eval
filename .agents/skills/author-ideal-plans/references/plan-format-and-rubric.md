@@ -20,6 +20,7 @@ Required keys:
 Optional review-only keys:
 - `original_final_question`
 - `original_reasoning_chain`
+- `source_resolution_notes`
 
 ## Dataset Sequence Rules
 
@@ -41,7 +42,9 @@ Optional review-only keys:
   3. `.json`
   4. for each of the above, also try `/v1/files/` -> `/files/`
 - If one of those candidates exists in `table_descriptions.jsonl`, store the file path.
-- If none are indexed yet, store the first normalized file-path candidate and then add/update the corresponding `table_descriptions.jsonl` entry.
+- If none are indexed yet, inspect likely data files such as `files/data.txt` or list the dataset files and choose the actual data body.
+- If you still cannot verify the file choice, add `source_resolution_notes` and do not treat the plan as final.
+- Final plans should not keep `source_resolution_notes`, and every `source_sequence` entry should be indexed in `table_descriptions.jsonl`.
 
 ## Clean Reasoning Chain Rules
 

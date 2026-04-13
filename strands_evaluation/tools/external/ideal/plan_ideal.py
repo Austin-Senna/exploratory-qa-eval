@@ -67,7 +67,7 @@ def plan_ideal(plan_text: str, tool_context: ToolContext) -> str:
         "You may copy chain steps when they are already correct.\n"
         "Prefer improving the plan with clearer execution actions, validations, and expected intermediate outputs.\n"
         "Requirements for that plan:\n"
-        "1. Keep steps in dataset_sequence order.\n"
+        "1. Keep steps faithful to the order implied by the reasoning chain.\n"
         "2. For each step, state what must be verified/computed.\n"
         "3. Produce an execution-ready plan in your own words where possible; copy only when it improves clarity."
     )

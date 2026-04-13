@@ -58,9 +58,11 @@ class TestPlanIdealFileBacked(unittest.TestCase):
             self.assertIn("STEP-BY-STEP PLANNING DIRECTIVE", fake_agent.system_prompt)
             self.assertIn("You may copy chain steps when they are already correct.", fake_agent.system_prompt)
             self.assertIn("Prefer improving the plan with clearer execution actions", fake_agent.system_prompt)
+            self.assertIn("Keep steps faithful to the order implied by the reasoning chain.", fake_agent.system_prompt)
             self.assertIn("copying is allowed", msg.lower())
             self.assertNotIn("Path:", fake_agent.system_prompt)
             self.assertNotIn("Dataset sequence:", fake_agent.system_prompt)
+            self.assertNotIn("dataset_sequence order", fake_agent.system_prompt)
             self.assertNotIn("manual should be ignored", fake_agent.system_prompt)
 
     def test_plan_ideal_joins_list_backed_reasoning_chain(self):

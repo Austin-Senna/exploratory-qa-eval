@@ -69,6 +69,10 @@ def _known_uris(repo_root: Path) -> set[str]:
     return known
 
 
+def _canonical_uri(source_path: str) -> str:
+    return f"{_S3_PREFIX}{str(source_path).lstrip('/')}"
+
+
 def _validate_dataset_sequence(raw: Any, *, task_path: Path) -> list[str]:
     if not isinstance(raw, list) or not raw:
         raise ValueError(
@@ -172,27 +176,56 @@ def _source_candidates(source: str) -> List[str]:
     return ordered
 
 
-def _resolve_source_entry(source: Any, *, repo_root: Path) -> Optional[str]:
+def _resolve_source_entry(
+    source: Any,
+    *,
+    repo_root: Path,
+) -> Tuple[Optional[str], Optional[Dict[str, Any]]]:
     if not isinstance(source, str):
-        return None
+        return None, None
     candidates = _source_candidates(source)
     if not candidates:
-        return None
+        return None, None
 
     known_uris = _known_uris(repo_root)
     for candidate in candidates:
-        if f"{_S3_PREFIX}{candidate}" in known_uris:
-            return candidate
-    return candidates[0]
+        if _canonical_uri(candidate) in known_uris:
+            return candidate, None
+
+    chosen = candidates[0]
+    note: Dict[str, Any] = {
+        "status": "needs_review",
+        "original_source": str(source).strip(),
+        "chosen_source": chosen,
+        "candidate_sources": candidates,
+        "reason": (
+            "No indexed source candidate matched the task node. "
+            "Check likely data files such as files/data.txt, inspect the dataset file listing, "
+            "or launch a subagent to verify the real data file before accepting the plan."
+        ),
+    }
+    return chosen, note
 
 
-def _node_source_sequence(payload: Dict[str, Any], *, repo_root: Path) -> List[str]:
+def _node_source_sequence(
+    payload: Dict[str, Any],
+    *,
+    repo_root: Path,
+) -> Tuple[List[str], List[Dict[str, Any]]]:
     out: List[str] = []
+    review_notes: List[Dict[str, Any]] = []
     for _node_id, node_payload in _node_items(payload):
-        resolved = _resolve_source_entry(node_payload.get("source"), repo_root=repo_root)
+        resolved, note = _resolve_source_entry(node_payload.get("source"), repo_root=repo_root)
         if resolved:
             out.append(resolved)
-    return out
+        if note:
+            note = dict(note)
+            note["node_id"] = _node_id
+            dataset_id = _dataset_id_from_source(node_payload.get("source"))
+            if dataset_id:
+                note["dataset_id"] = dataset_id
+            review_notes.append(note)
+    return out, review_notes
 
 
 def _placeholder_reasoning_text(dataset_sequence: Iterable[str]) -> List[str]:
@@ -222,7 +255,7 @@ def build_scaffold(task_path: str | Path) -> Tuple[Path, Dict[str, Any]]:
         dataset_sequence = task_datasets
 
     node_items = _node_items(payload)
-    source_sequence = _node_source_sequence(payload, repo_root=repo_root)
+    source_sequence, source_resolution_notes = _node_source_sequence(payload, repo_root=repo_root)
     if node_items and len(source_sequence) != len(node_items):
         raise ValueError(
             f"Could not derive source_sequence for every node in '{resolved_task_path}'."
@@ -244,6 +277,8 @@ def build_scaffold(task_path: str | Path) -> Tuple[Path, Dict[str, Any]]:
         "source_sequence": source_sequence,
         "reasoning_chain_text": _placeholder_reasoning_text(dataset_sequence),
     }
+    if source_resolution_notes:
+        scaffold["source_resolution_notes"] = source_resolution_notes
     if question:
         scaffold["original_final_question"] = question
     if reasoning_chain is not None:
