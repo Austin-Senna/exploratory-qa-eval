@@ -1,52 +1,52 @@
 ---
 name: plan-agent
-description: Planning framework for decomposing multi-hop data lake questions into ordered sub-tasks with search strategies. ALWAYS load this skill first before calling plan() or any search tool. If you skip planning, you will waste tool calls on dead ends.
+description: Planning framework for compact execution plans on multi-hop data lake questions. ALWAYS load this skill before calling `plan()` or searching.
 ---
 
 ## Rule #1: Plan Before You Search
 
 Call `plan()` as your **first action** on every new question. Do NOT call search tools until you have a saved plan.
 
-A plan forces you to think about what you actually need before burning tool calls. Without one, you'll chase irrelevant datasets.
-
----
+A saved plan keeps search focused and reduces wasted tool calls.
 
 ## How to Decompose a Question
 
-Break it into 3-7 numbered sub-tasks across four phases:
+Make sure the plan covers the right reasoning phases when they matter. A compact plan can combine adjacent phases into one step.
 
-1. **Entity resolution** — Translate the question's terms into government vocabulary.
-   - "food stamps" -> SNAP; "unemployment" -> ETA / UI beneficiaries
-   - City names -> county + state FIPS codes
-   - If you don't know the official term, your first sub-task is a Wikipedia or search lookup.
+1. **Entity resolution** — Translate question wording into official agency, program, geography, or person names.
+   - "food stamps" -> SNAP
+   - "unemployment" -> ETA / UI beneficiaries
+   - city/state references may need a FIPS or official jurisdiction mapping
 
-2. **Dataset discovery** — For each dataset you need, write a specific search query.
-   - Shape queries as: `source/program + grain + metric + time`
+2. **Dataset discovery** — Say what dataset shape you need and how you will search for it.
+   - Shape search queries as: `source/program + grain + metric + time`
    - Better: `Texas county prison admissions fiscal year`
    - Worse: `people entering prison system county`
 
-3. **Join mapping** — If combining datasets, name the join key and confirm it exists in both before querying.
-
-4. **Extraction** — What SQL or code produces the final number?
-   - Be specific: `GROUP BY county, COUNT(*), WHERE STFIP='06', top 3`
-
-Keep plans to 3-7 sub-tasks. Do not hallucinate dataset names.
+Do not hallucinate dataset names.
 
 ### Plan Format
 
-Every sub-task MUST have a **goal** and a **tool family**. For risky steps, add an inline fallback with `-> else:`.
+Write 4-8 short numbered steps.
+Not every task needs all four reasoning phases as separate steps, but the plan should still account for them when relevant.
+Each step should include:
+- the goal
+- the main tool family
+- a concrete action or check
 
 ```
 1. Find Khan Academy HQ city/state | use the available search tool for entity lookup
-     -> else: reformulate with the official organization name or likely dataset title
+   -> else: reformulate with the official organization name or likely dataset title
 2. Resolve state to FIPS code | grep_file on a lookup dataset
-     -> else: use the available search tool to find a state FIPS lookup table
+   -> else: use the available search tool to find a state FIPS lookup table
 3. Count public schools by county in that state | query_file GROUP BY
-4. If county-level data missing, get state total | query_file WHERE STFIP=...
-     -> else: search for an alternative school dataset using the available search tools
+4. If county-level data is missing, get the state total | query_file WHERE STFIP=...
+   -> else: search for an alternative school dataset using the available search tools
 ```
 
-Do not write vague sub-tasks like "find relevant data" — name what you're looking for and which tool family gets it. Fallbacks are optional but recommended for discovery steps where the first search may miss.
+For risky discovery steps, an inline fallback with `-> else:` is fine.
+Avoid long narrative, restating the full question, or writing essay-style plans.
+Do not write vague steps like "find relevant data" or "analyze the dataset."
 
 ---
 
@@ -56,11 +56,11 @@ Call `plan()` again in any of these situations:
 
 1. **Plan completed, answer not found** — You finished all sub-tasks (including fallbacks) but still can't answer the question. Summarize what you found, identify what's missing, and write a new plan targeting the gap.
 
-2. **Before final extraction** — Once you've found your datasets and confirmed columns, replan as a sanity check. Write a focused 1-2 step plan for the exact query/code that produces the final answer. This catches misaligned assumptions before you burn your last tool calls.
+2. **Before final extraction** — Once you've found the datasets and confirmed columns, save a focused 1-3 step plan for the exact query or read that yields the answer.
 
-3. **Dead end — pivot to alternative info** — The dataset you need doesn't seem to exist and your inline fallbacks are exhausted. Instead of repeating failed searches, replan around alternative information. Ask: "What *other* data could answer this question indirectly?" Then write sub-tasks to find that instead.
+3. **Dead end — pivot to alternative info** — If the expected dataset does not exist, write a short replacement plan around a viable proxy or alternate source.
 
-When replanning: summarize what you've found so far, name the specific gap, then write new sub-tasks for the gap only.
+When replanning, focus only on the remaining gap.
 
 ---
 

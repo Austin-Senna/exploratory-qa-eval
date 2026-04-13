@@ -1,3 +1,4 @@
+import json
 import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -9,12 +10,36 @@ from strands_evaluation.helper.prompting import (
     compose_condition_b_prompt,
     skill_paths_for_modes,
 )
-from strands_evaluation.tools.external.ideal.plan_store import set_plans_root
+from strands_evaluation.tools.external.ideal.plan_store import (
+    get_task_context,
+    set_plans_root,
+    set_task_context,
+)
 
 
 class TestModeWrapper(unittest.TestCase):
+    def _write_valid_plan(
+        self,
+        plans_root: Path,
+        *,
+        task_name: str = "task_1.json",
+        reasoning_chain_text: str = "1. Gold reasoning step.",
+    ) -> None:
+        target = plans_root / "k-1-d-1"
+        target.mkdir(parents=True, exist_ok=True)
+        (target / task_name).write_text(
+            json.dumps(
+                {
+                    "dataset_sequence": ["ds_one"],
+                    "source_sequence": ["datagov/ds_one/files/rows.txt"],
+                    "reasoning_chain_text": reasoning_chain_text,
+                }
+            )
+        )
+
     def tearDown(self) -> None:
         set_plans_root("plans_mini")
+        set_task_context({})
 
     def test_naive_modes_disable_skills(self):
         cfg = RunConfig(
@@ -88,24 +113,77 @@ class TestModeWrapper(unittest.TestCase):
         self.assertIn("strands_evaluation/tools/skills/discover-data-ideal", ideal_paths)
 
     def test_ideal_management_uses_condition_b_stack_with_plan_swap(self):
-        cfg = RunConfig(
-            search_tool_mode="naive",
-            search_results_mode="naive",
-            agent_management_mode="ideal",
-            system_prompt="BASE_PROMPT",
-        )
-        bundle = build_mode_bundle(
-            cfg,
-            data_tools=[],
-            task_context={"task_id": "tasks_mini/k-1-d-1/task_1.json"},
-        )
-        tool_names = [tool_obj.tool_spec["name"] for tool_obj in bundle.tools]
-        self.assertIn("plan_ideal", tool_names)
-        self.assertNotIn("plan", tool_names)
-        self.assertIn("summarize_context", tool_names)
-        self.assertIn("search_value", bundle.search_tool_names)
-        self.assertTrue(bundle.enable_skills)
-        self.assertTrue(bundle.enable_stagnation)
+        with TemporaryDirectory() as tmpdir:
+            plans_root = Path(tmpdir) / "plans_mini"
+            self._write_valid_plan(plans_root)
+            set_plans_root(plans_root)
+
+            cfg = RunConfig(
+                search_tool_mode="ideal",
+                search_results_mode="ideal",
+                agent_management_mode="ideal",
+                system_prompt="BASE_PROMPT",
+            )
+            bundle = build_mode_bundle(
+                cfg,
+                data_tools=[],
+                task_context={"task_id": "tasks_mini/k-1-d-1/task_1.json"},
+            )
+            tool_names = [tool_obj.tool_spec["name"] for tool_obj in bundle.tools]
+            self.assertIn("plan_ideal", tool_names)
+            self.assertNotIn("plan", tool_names)
+            self.assertIn("summarize_context", tool_names)
+            self.assertIn("search_ideal", bundle.search_tool_names)
+            self.assertTrue(bundle.enable_skills)
+            self.assertTrue(bundle.enable_stagnation)
+
+    def test_ideal_management_stores_task_context_for_plan_loading(self):
+        with TemporaryDirectory() as tmpdir:
+            plans_root = Path(tmpdir) / "plans_mini"
+            self._write_valid_plan(plans_root, task_name="task_6.json")
+            set_plans_root(plans_root)
+
+            cfg = RunConfig(
+                search_tool_mode="ideal",
+                search_results_mode="ideal",
+                agent_management_mode="ideal",
+                system_prompt="BASE_PROMPT",
+            )
+            build_mode_bundle(
+                cfg,
+                data_tools=[],
+                task_context={"task_id": "tasks_mini/k-1-d-1/task_6.json"},
+            )
+            self.assertEqual(
+                get_task_context().get("task_id"),
+                "tasks_mini/k-1-d-1/task_6.json",
+            )
+
+    def test_ideal_management_preloads_gold_reasoning_chain_into_prompt(self):
+        with TemporaryDirectory() as tmpdir:
+            plans_root = Path(tmpdir) / "plans_mini"
+            self._write_valid_plan(
+                plans_root,
+                reasoning_chain_text="1. Gold reasoning step.\n2. Gold reasoning step two.",
+            )
+            set_plans_root(plans_root)
+
+            cfg = RunConfig(
+                search_tool_mode="ideal",
+                search_results_mode="ideal",
+                agent_management_mode="ideal",
+                system_prompt="BASE_PROMPT",
+            )
+            bundle = build_mode_bundle(
+                cfg,
+                data_tools=[],
+                task_context={"task_id": "tasks_mini/k-1-d-1/task_1.json"},
+            )
+
+            self.assertIn("## GOLD REASONING CHAIN", bundle.system_prompt)
+            self.assertIn("1. Gold reasoning step.", bundle.system_prompt)
+            self.assertIn("2. Gold reasoning step two.", bundle.system_prompt)
+            self.assertNotIn("## IDEAL EXECUTION PLAN", bundle.system_prompt)
 
     def test_standard_management_prompt_matches_standard_search_tools(self):
         cfg = RunConfig(
@@ -179,25 +257,52 @@ class TestModeWrapper(unittest.TestCase):
             self.assertNotIn("search_reranked", bundle.system_prompt)
             self.assertNotIn("reasoning chain", bundle.system_prompt.lower())
 
-    def test_ideal_management_does_not_fail_without_plan_file(self):
+    def test_ideal_management_fails_fast_without_plan_file(self):
         with TemporaryDirectory() as tmpdir:
             plans_root = Path(tmpdir) / "plans_mini"
             plans_root.mkdir(parents=True, exist_ok=True)
             set_plans_root(plans_root)
 
             cfg = RunConfig(
-                search_tool_mode="naive",
-                search_results_mode="naive",
+                search_tool_mode="ideal",
+                search_results_mode="ideal",
                 agent_management_mode="ideal",
                 system_prompt="BASE_PROMPT",
             )
-            bundle = build_mode_bundle(
-                cfg,
-                data_tools=[],
-                task_context={"task_id": "tasks_mini/k-1-d-1/task_missing.json"},
+            with self.assertRaises(FileNotFoundError):
+                build_mode_bundle(
+                    cfg,
+                    data_tools=[],
+                    task_context={"task_id": "tasks_mini/k-1-d-1/task_missing.json"},
+                )
+
+    def test_ideal_management_fails_fast_with_invalid_plan_file(self):
+        with TemporaryDirectory() as tmpdir:
+            plans_root = Path(tmpdir) / "plans_mini"
+            target = plans_root / "k-1-d-1"
+            target.mkdir(parents=True, exist_ok=True)
+            (target / "task_1.json").write_text(
+                json.dumps(
+                    {
+                        "dataset_sequence": ["ds_one"],
+                        "reasoning_chain_text": "Step 1",
+                    }
+                )
             )
-            tool_names = [tool_obj.tool_spec["name"] for tool_obj in bundle.tools]
-            self.assertIn("plan_ideal", tool_names)
+            set_plans_root(plans_root)
+
+            cfg = RunConfig(
+                search_tool_mode="ideal",
+                search_results_mode="ideal",
+                agent_management_mode="ideal",
+                system_prompt="BASE_PROMPT",
+            )
+            with self.assertRaises(ValueError):
+                build_mode_bundle(
+                    cfg,
+                    data_tools=[],
+                    task_context={"task_id": "tasks_mini/k-1-d-1/task_1.json"},
+                )
 
 
 if __name__ == "__main__":
