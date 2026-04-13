@@ -8,6 +8,14 @@
     "Carnegie_Hill",
     "Andrew_Carnegie"
   ],
+  "source_sequence": [
+    "datagov/2010-2011-school-progress-report/files/rows.txt",
+    "datagov/2011-2012-school-progress-report-all-schools/files/rows.txt",
+    "datagov/2012-2013-citywide-progress-report/files/rows.txt",
+    "datagov/2013-2014-school-locations/files/rows.txt",
+    "wikipedia/Carnegie_Hill/content.txt",
+    "wikipedia/Andrew_Carnegie/content.txt"
+  ],
   "reasoning_chain_text": [
     "1. Identify NYC elementary schools in District 2 that ranked in the top 3 by performance category score in 2010-11.",
     "2. Identify NYC elementary schools in District 2 that ranked in the top 3 by performance category score in 2011-12.",

@@ -1,0 +1,58 @@
+{
+  "dataset_sequence": [
+    "tax-rates-by-motor-fuel-and-state",
+    "New_York_City",
+    "2006-2007-school-progress-report",
+    "2007-2008-school-progress-report",
+    "2008-2009-school-progress-report",
+    "2009-2010-school-progress-report",
+    "2013-2014-school-locations",
+    "John_Wayne_Elementary_School"
+  ],
+  "source_sequence": [
+    "datagov/tax-rates-by-motor-fuel-and-state/files/rows.txt",
+    "wikipedia/New_York_City/content.txt",
+    "datagov/2006-2007-school-progress-report/files/rows.txt",
+    "datagov/2007-2008-school-progress-report/files/rows.txt",
+    "datagov/2008-2009-school-progress-report/files/rows.txt",
+    "datagov/2009-2010-school-progress-report/files/rows.txt",
+    "datagov/2006-2007-school-progress-report/files/rows.txt",
+    "datagov/2013-2014-school-locations/files/rows.txt",
+    "wikipedia/John_Wayne_Elementary_School/content.txt"
+  ],
+  "reasoning_chain_text": [
+    "1. Identify the state with the 24th-highest average gasoline tax rate across MMFR years 2013-2023, excluding DC and Federal Tax.",
+    "2. Using the city reference for that state's southern-tip metropolis, determine the most populous city located at the southern tip of that state.",
+    "3. For each school progress report year from 2006-2007, 2007-2008, 2008-2009, and 2009-2010, identify the top five elementary schools in that city by environment category rating, applying the source task's deterministic school-name tie-break only if needed.",
+    "4. From the four yearly top-five lists, keep the schools that appear in at least three years.",
+    "5. Using the 2013-14 school locations data, keep the school from step 4 that is in the Bedford Neighborhood Tabulation Area.",
+    "6. Using that school's reference page, return its school day in MM/DD format."
+  ],
+  "original_final_question": "First find the state with the 24th-highest average gasoline tax rate (excluding DC and Federal Tax) across MMFR years 2013-2023, then identify the most populous city located at its southern tip. In that city, find the elementary school that appears in the top 5 by environment category rating in at least three years from 2006-2010 and is located in the Bedford Neighborhood Tabulation Area. Please report the school day in the MM/DD format. Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    "HOP 1 (d=1, data.gov - node 1):",
+    "  Node 1: State with 24th-highest average gasoline tax rate (2013-2023) -> New York",
+    "  Result: New York state identified",
+    "",
+    "HOP 2 (d=1, Wikipedia - node 2):",
+    "  Node 2: Most populous city at southern tip of New York -> New York City",
+    "  Result: New York City identified as the target city",
+    "",
+    "HOP 3 (d=4, data.gov - nodes 3-6):",
+    "  Node 3: Top 5 elementary schools by environment score in 2006-07 (tie-break by SCHOOL name Z-A) -> {PS 034 OLIVER H PERRY, EARTH SCHOOL, PS 212 MIDTOWN WEST, PS 205 ALEXANDER GRAHAM BELL, PS 120 CARLOS TAPIA}",
+    "  Node 4: Top 5 elementary schools by environment score in 2007-08 (tie-break by SCHOOL name Z-A) -> {P.S. 380 JOHN WAYNE ELEMENTARY, P.S. 172 BEACON SCHOOL OF EXCELLENCE, P.S. 120 CARLOS TAPIA, EXCELLENCE CHARTER SCHOOL OF BEDFORD STUYVESANT, P.S. 164 CAESAR RODNEY}",
+    "  Node 5: Top 5 elementary schools by environment score in 2008-09 (tie-break by SCHOOL name Z-A) -> {P.S. X307 - EAMES PLACE, P.S. 380 JOHN WAYNE ELEMENTARY, P.S. 254, P.S. 172 BEACON SCHOOL OF EXCELLENCE, P.S. 157 BENJAMIN FRANKLIN}",
+    "  Node 6: Top 5 elementary schools by environment score in 2009-10 (tie-break by SCHOOL name Z-A) -> {P.S. 380 John Wayne Elementary, P.S. 172 Beacon School of Excellence, Achievement First East New York School, Bronx Charter School for Excellence, P.S. 254}",
+    "",
+    "HOP 4 (d=1, aggregation - node 7):",
+    "  Node 7: Schools appearing in top-5 lists in at least three of the four years -> {P.S. 380 John Wayne Elementary, P.S. 172 Beacon School of Excellence}",
+    "",
+    "HOP 5 (d=1, data.gov - node 8):",
+    "  Node 8: From node 7, select the school located in the Bedford NTA -> P.S. 380 John Wayne Elementary",
+    "",
+    "HOP 6 (d=1, Wikipedia - node 9):",
+    "  Node 9: John Wayne Elementary School Day is on October 28",
+    "",
+    "Final answer: 10/28"
+  ]
+}

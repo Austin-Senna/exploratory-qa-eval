@@ -13,6 +13,20 @@
     "O._W._Wilson",
     "University_of_California,_Berkeley"
   ],
+  "source_sequence": [
+    "datagov/budget-2019-budget-ordinance-appropriations/files/rows.txt",
+    "datagov/budget-2020-budget-ordinance-appropriations/files/rows.txt",
+    "datagov/budget-2021-budget-ordinance-appropriations/files/rows.txt",
+    "datagov/budget-2019-budget-ordinance-positions-and-salaries/files/rows.txt",
+    "datagov/budget-2020-budget-ordinance-positions-and-salaries/files/rows.txt",
+    "datagov/budget-2021-budget-ordinance-positions-and-salaries/files/rows.txt",
+    "datagov/budget-2019-budget-recommendations-positions-and-salaries/files/rows.txt",
+    "datagov/budget-2020-budget-recommendations-positions-and-salaries/files/rows.txt",
+    "datagov/budget-2021-budget-recommendations-positions-and-salaries/files/rows.txt",
+    "wikipedia/Chicago_Police_Department/content.txt",
+    "wikipedia/O._W._Wilson/content.txt",
+    "wikipedia/University_of_California,_Berkeley/content.txt"
+  ],
   "reasoning_chain_text": [
     "1. Identify Chicago department numbers in the top five by total ordinance appropriation in 2019.",
     "2. From those departments, keep the Chicago department numbers that again rank in the top five by total ordinance appropriation in 2020.",

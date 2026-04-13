@@ -1,0 +1,4 @@
+interface:
+  display_name: "Plan Verifier"
+  short_description: "Verify plan fidelity and leaks"
+  default_prompt: "Use $plan-verifier to verify whether this plans_mini file matches the original reasoning chain without leaking answers or skip-step hints."

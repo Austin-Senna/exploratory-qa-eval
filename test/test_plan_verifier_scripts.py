@@ -59,12 +59,12 @@ class TestPlanVerifierScripts(unittest.TestCase):
                     "question": "What year was the capital city chartered?",
                     "answer": "1781",
                     "datasets_used": [
-                        "Montpelier,_Vermont",
-                        "New_England",
-                        "Vermont",
                         "fy-2020-pension-recipients-by-state",
                         "fy-2021-pension-recipients-by-state-1266e",
                         "fy-2023-pension-recipients-by-state",
+                        "New_England",
+                        "Vermont",
+                        "Montpelier,_Vermont",
                     ],
                     "reasoning_chain": [
                         "Node 1: Find states with 200-400 VA pension recipients in FY 2020",
@@ -90,6 +90,14 @@ class TestPlanVerifierScripts(unittest.TestCase):
                         "New_England",
                         "Vermont",
                         "Montpelier,_Vermont",
+                    ],
+                    "source_sequence": [
+                        "datagov/fy-2020-pension-recipients-by-state/files/rows.txt",
+                        "datagov/fy-2021-pension-recipients-by-state-1266e/files/rows.txt",
+                        "datagov/fy-2023-pension-recipients-by-state/files/rows.txt",
+                        "wikipedia/New_England/content.txt",
+                        "wikipedia/Vermont/content.txt",
+                        "wikipedia/Montpelier,_Vermont/content.txt",
                     ],
                     "reasoning_chain_text": [
                         "1. Identify U.S. states with between 200 and 400 VA pension recipients in FY 2020.",
@@ -131,6 +139,10 @@ class TestPlanVerifierScripts(unittest.TestCase):
                 plan_path,
                 {
                     "dataset_sequence": ["ytd-circulation-2019", "branch-context"],
+                    "source_sequence": [
+                        "datagov/ytd-circulation-2019/files/rows.txt",
+                        "wikipedia/branch-context/content.txt",
+                    ],
                     "reasoning_chain_text": (
                         "1. Identify top branches by circulation in 2019.\n"
                         "2. Return the branch names in alphabetical order."
@@ -166,6 +178,10 @@ class TestPlanVerifierScripts(unittest.TestCase):
                 plan_path,
                 {
                     "dataset_sequence": ["bridges", "violent-crimes-2021"],
+                    "source_sequence": [
+                        "datagov/bridges/files/rows.txt",
+                        "datagov/violent-crimes-2021/files/rows.txt",
+                    ],
                     "reasoning_chain_text": (
                         "1. Filter counties that satisfy the bridge condition.\n"
                         "2. Return the county name only."
@@ -205,6 +221,11 @@ class TestPlanVerifierScripts(unittest.TestCase):
                 plan_path,
                 {
                     "dataset_sequence": ["fy-2020-pension", "Vermont", "Montpelier,_Vermont"],
+                    "source_sequence": [
+                        "datagov/fy-2020-pension/files/rows.txt",
+                        "wikipedia/Vermont/content.txt",
+                        "wikipedia/Montpelier,_Vermont/content.txt",
+                    ],
                     "reasoning_chain_text": (
                         "1. Identify the qualifying state.\n"
                         "2. Find the capital of Vermont.\n"

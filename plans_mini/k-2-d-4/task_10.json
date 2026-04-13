@@ -7,6 +7,13 @@
     "report-card-enrollment-2021-22-school-year",
     "King_County,_Washington"
   ],
+  "source_sequence": [
+    "datagov/report-card-enrollment-2018-19-school-year/files/rows.txt",
+    "datagov/report-card-enrollment-2019-20-school-year/files/rows.txt",
+    "datagov/report-card-enrollment-2020-21-school-year/files/rows.txt",
+    "datagov/report-card-enrollment-2021-22-school-year/files/rows.txt",
+    "wikipedia/King_County,_Washington/content.txt"
+  ],
   "reasoning_chain_text": [
     "1. Identify Washington counties with low-income student enrollment between 32 and 40 percent in 2018-19.",
     "2. From those counties, keep the ones in the same range in 2019-20.",

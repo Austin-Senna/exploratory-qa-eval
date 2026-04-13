@@ -10,16 +10,27 @@
     "Hidalgo_County,_Texas",
     "University_of_Texas_Rio_Grande_Valley"
   ],
+  "source_sequence": [
+    "datagov/texas-department-of-criminal-justice-receives-fy-2019/files/rows.txt",
+    "datagov/texas-department-of-criminal-justice-receives-fy-2020/files/rows.txt",
+    "datagov/texas-department-of-criminal-justice-receives-fy-2021/files/rows.txt",
+    "datagov/texas-department-of-criminal-justice-receives-fy-2022/files/rows.txt",
+    "datagov/2020-census-redistricting-data-all-texas-counties/files/rows.txt",
+    "wikipedia/Montgomery_County,_Texas/content.txt",
+    "wikipedia/West_Texas/content.txt",
+    "wikipedia/Hidalgo_County,_Texas/content.txt",
+    "wikipedia/University_of_Texas_Rio_Grande_Valley/content.txt",
+    "wikipedia/University_of_Texas_Rio_Grande_Valley/content.txt"
+  ],
   "reasoning_chain_text": [
     "1. For fiscal year 2019 prison intake data, identify counties with between 700 and 4,600 people entering the state prison system.",
     "2. For fiscal year 2020 prison intake data, keep counties meeting that same intake range.",
     "3. For fiscal year 2021 prison intake data, keep counties meeting that same intake range.",
     "4. For fiscal year 2022 prison intake data, intersect the four annual intake sets to keep counties that stay in range every year.",
     "5. From those counties, keep the ones with 2020 population under 900,000.",
-    "6. Determine whether the county in dataset position 6 is in the Houston metropolitan area and record its county seat.",
-    "7. Determine whether the later county candidate falls in West Texas.",
-    "8. Record the county seat for the county in dataset position 8 and confirm whether it survives the metropolitan-area and regional filters.",
-    "9. If the UT System university in dataset position 9 is located in the surviving county seat, retrieve its Fall 2024 enrollment."
+    "6. From the remaining counties, eliminate any that are in the Houston metropolitan area.",
+    "7. From the counties still remaining, eliminate any that are in West Texas and record the county seat of the survivor.",
+    "8. Retrieve the Fall 2024 enrollment for the UT System university located in that county seat."
   ],
   "original_final_question": "Can you tell me the Fall 2024 student enrollment at a UT System university? It's located in a county's county seat where the county (1) has between 700 and 4,600 of people entering the state prison system in each fiscal year from 2019 to 2022, (2) has population under 900k according to the 2020 census, (3) is not in the Houston metropolitan area, and (4) is not in West Texas. Only report the enrollment in your answer. Your response should be in the format [Answer].",
   "original_reasoning_chain": [

@@ -22,20 +22,20 @@ Implemented by `build_search(...)` in `strands_evaluation/agent_with_mode.py`.
 - Exposes only:
   - `search_ideal`
 - Passes task context into `search_ideal.set_task_context(...)`
-- Uses the mirrored `plans_mini/.../task_*.json` file as the source of truth for dataset order
+- Uses the mirrored `plans_mini/.../task_*.json` file as the source of truth for:
+  - `dataset_sequence` planning order
+  - `source_sequence` retrieval order
 
 ### `search_results=ideal`
 
 Implemented by `build_results(...)` through `strands_evaluation/tools/external/ideal/search_wrapper.py`.
 
-- Returns:
-  - `uri`
-  - `dataset_id`
-  - `description`
-  - `schema`
-- `description` comes from `table_descriptions.jsonl`
-- `schema` comes from `lance_table_descriptions/lakeqa_schema`
-- Fixed `k` is enforced here when `RunConfig.search_k` is set
+- For standard/naive search tools:
+  - returns `uri`, `dataset_id`, optional `description`, and optional `schema`
+- For source-driven `search_tool=ideal` payloads:
+  - `search_results=naive` returns only `dataset_id`
+  - `search_results=standard` and `search_results=ideal` intentionally return the same richer file-oriented payload
+- Fixed `k` is enforced here when `RunConfig.search_k` is set, including source-driven `search_ideal`, where `top_k` controls how many sequential planned sources are returned per call
 
 ### `agent_management=ideal`
 
@@ -44,7 +44,10 @@ Implemented by `build_management(...)` in `strands_evaluation/agent_with_mode.py
 - Prompt:
   - composed from:
     - `prompts/condition_b.txt`
-    - `prompts/search_ideal.txt`
+    - one search overlay chosen by `search_tool`:
+      - `prompts/search_naive.txt`
+      - `prompts/search_standard.txt`
+      - `prompts/search_ideal.txt`
 - Management tools:
   - `plan_ideal`
   - `summarize_context`
@@ -52,7 +55,10 @@ Implemented by `build_management(...)` in `strands_evaluation/agent_with_mode.py
   - enabled
   - uses:
     - `plan-ideal`
-    - `discover-data-ideal`
+    - one discovery skill chosen by `search_tool`:
+      - `discover-data-naive`
+      - `discover-data-standard`
+      - `discover-data-ideal`
     - `query-data`
 - Stagnation plugin:
   - enabled
@@ -73,6 +79,7 @@ This is the shared loader for ideal-mode plans.
   - `plans_mini/k-2-d-4/task_1.json`
 - Each plan file must contain:
   - `dataset_sequence`
+  - `source_sequence`
   - `reasoning_chain_text`
 
 Missing or invalid plan files fail fast.
@@ -85,22 +92,26 @@ This is the ideal search tool.
   - `search_ideal(query, top_k=10)`
 - On task setup it loads the plan file and resets an internal cursor.
 - In ideal mode this is the only search tool.
-- Each call consumes up to five datasets from `dataset_sequence`.
-- Search is restricted to those datasets only.
-- It should be used until exhaustion; the agent will most likely need all the datasets.
+- Each call consumes up to `top_k` entries from `source_sequence`.
+- `query` is kept only for tool-signature compatibility; source-driven ideal retrieval does not use query text to choose results.
+- `top_k` controls how many sequential planned sources are returned in one call.
+- Each `source_sequence` entry must be a concrete dataset-relative file path.
+- For each returned file-backed result row, the tool returns:
+  - `dataset_id`
+  - `uri`
+  - optional `description`
+  - optional truncated `content`
+- It should be used until exhaustion; the agent will most likely need all the planned sources.
 - Returned payload includes:
   - `results`
   - `count`
-  - `dataset_id`
   - `dataset_ids`
-  - `plan_step_index`
-  - `plan_step_number`
-  - `plan_step_indexes`
+  - `plan_step_indices`
   - `plan_step_numbers`
   - `plan_steps_total`
-  - `datasets_per_call`
   - `plan_exhausted`
-- Once all datasets are consumed, it returns empty results with `plan_exhausted=true`.
+- For backward compatibility, the first row's `dataset_id`, `plan_step_index`, and `plan_step_number` are also repeated as singular top-level fields when results are present.
+- Once all planned sources are consumed, it returns empty results with `plan_exhausted=true`.
 
 ### `plan_ideal.py`
 
@@ -172,10 +183,14 @@ The `base_condition` is still carried for output nesting and compatibility, but 
   - `score`
   - `snippet`
 - `snippet` is truncated to 200 words
+- Special case:
+  - when `search_tool=ideal`, `search_results=standard` returns the same richer source-driven payload as `search_results=ideal`
 
 ### `search_results=naive`
 
 - Returns only `uri`
+- Special case:
+  - when `search_tool=ideal`, it returns only `dataset_id`
 
 ### `agent_management=standard`
 
@@ -313,7 +328,7 @@ In `agent_with_mode.py` worker setup:
 - `search_tool=standard` initializes the Condition A hybrid backend
 - `search_tool=naive` avoids calling `search_b_tools.setup()`
   - this prevents loading dense/reranker components on sparse-only runs
-- `search_tool=ideal` passes `db_path` through to `search_ideal`
+- `search_tool=ideal` may still receive `db_path` wiring for compatibility, but source-driven ideal retrieval ignores it
 
 ### Shared plugins
 
@@ -328,8 +343,9 @@ Across both legacy and mode-based agents:
 
 ### Ideal path
 
-- `search_ideal` controls ideal retrieval order through `dataset_sequence`
+- `search_ideal` controls ideal retrieval order through `source_sequence`
 - `plan_ideal` controls ideal planning context through `reasoning_chain_text`
+- `dataset_sequence` remains the plan-order context for reasoning-chain authoring
 - `plan-ideal` skill encourages the agent to turn the reasoning chain into a better execution plan
 
 ### Legacy conditions

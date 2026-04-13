@@ -10,6 +10,17 @@
     "Nathaniel_Hawthorne",
     "Pasteur_Institute"
   ],
+  "source_sequence": [
+    "datagov/2015-2016-shsat-admissions-test-offers-by-sending-school/files/rows.txt",
+    "datagov/2016-2017-shsat-admissions-test-offers-by-sending-school/files/rows.txt",
+    "datagov/2017-2018-shsat-admissions-test-offers-by-sending-school/files/rows.txt",
+    "datagov/2018-2019-shsat-admissions-test-offers-by-sending-school/files/rows.txt",
+    "datagov/2016-2017-school-locations/files/rows.txt",
+    "wikipedia/Louis_Pasteur/content.txt",
+    "wikipedia/Marie_Curie/content.txt",
+    "wikipedia/Nathaniel_Hawthorne/content.txt",
+    "wikipedia/Pasteur_Institute/content.txt"
+  ],
   "reasoning_chain_text": [
     "1. Identify New York City middle schools with at least 50 SHSAT offers in 2015-2016.",
     "2. From those schools, keep the New York City middle schools with at least 50 SHSAT offers in 2016-2017.",

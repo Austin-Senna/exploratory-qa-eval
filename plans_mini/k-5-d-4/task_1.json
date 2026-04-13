@@ -10,16 +10,26 @@
     "Buffalo,_New_York",
     "Holland_Land_Company"
   ],
+  "source_sequence": [
+    "datagov/bridge-conditions-nys-department-of-transportation/files/rows.txt",
+    "datagov/fire-department-directory-for-new-york-state/files/rows.txt",
+    "datagov/bank-owned-atm-locations-in-new-york-state/files/rows.txt",
+    "datagov/large-scale-renewable-projects-reported-by-nyserda-beginning-2004/files/rows.txt",
+    "wikipedia/Erie_County,_New_York/content.txt",
+    "wikipedia/Westchester_County,_New_York/content.txt",
+    "datagov/index-violent-property-and-firearm-rates-by-county-beginning-1990/files/rows.txt",
+    "wikipedia/Buffalo,_New_York/content.txt",
+    "wikipedia/Holland_Land_Company/content.txt"
+  ],
   "reasoning_chain_text": [
     "1. Identify New York counties with at least 65 bridges rated Poor.",
     "2. From those counties, keep the ones with at least 50 fire departments.",
     "3. From the remaining counties, keep the ones with at least 100 bank-owned ATMs.",
     "4. From the remaining counties, keep the ones with at least 1.0 MW of operational renewable capacity.",
-    "5. Record the county seat for the county in dataset position 5.",
-    "6. Record the county seat for the county in dataset position 6.",
-    "7. Compare 2021 violent crime counts for the remaining counties and determine whether the selected county matches the county-seat record from step 5 or step 6.",
-    "8. If the city in dataset position 8 matches the county seat selected in step 7, identify the land company associated with developing that city.",
-    "9. Record the founding year for the land company from step 8."
+    "5. Determine the county seats of the counties remaining after step 4.",
+    "6. Compare 2021 violent crime counts for those counties and keep the county with the higher value.",
+    "7. Using the county seat of the county selected in step 6, identify the land company associated with developing that city.",
+    "8. Record the founding year for that land company."
   ],
   "original_final_question": "Among NY counties with at least 65 bridges rated 'Poor' according to the department of transportation, contains at least 50 fire departments, at least 100 bank ATMs, and at least 1.0 MW of operational renewable energy capacity. Of these counties, focus on the county with more violent crimes in 2021. In what year was the land company founded that developed this county's seat? Please return the year only. Your response should be in the format [Answer].",
   "original_reasoning_chain": [

@@ -9,6 +9,16 @@
     "Wrigley_Field",
     "Chicago_Cubs"
   ],
+  "source_sequence": [
+    "datagov/chicago-public-schools-progress-report-cards-2011-2012/files/rows.txt",
+    "datagov/chicago-public-schools-elementary-school-progress-report-card-2012-2013/files/rows.txt",
+    "datagov/chicago-public-schools-elementary-school-progress-report-2013-2014/files/rows.txt",
+    "datagov/chicago-public-schools-school-progress-reports-sy1718/files/rows.txt",
+    "datagov/chicago-public-schools-school-locations-sy1516/files/rows.txt",
+    "datagov/census-data-selected-socioeconomic-indicators-in-chicago-2008-2012/files/rows.txt",
+    "wikipedia/Wrigley_Field/content.txt",
+    "wikipedia/Chicago_Cubs/content.txt"
+  ],
   "reasoning_chain_text": [
     "1. Identify Chicago public elementary schools with the top performance rating in 2011-2012.",
     "2. From those schools, keep the Chicago public elementary schools that show above-average overall growth in 2012-2013.",

@@ -80,6 +80,33 @@ def _truncate_words(text: str, max_words: int) -> str:
     return " ".join(words[:max_words])
 
 
+def _reshape_source_driven_row(row: Dict[str, Any], mode: str) -> Dict[str, Any]:
+    dataset_id = _extract_dataset_id(row)
+    if mode == "naive":
+        out: Dict[str, Any] = {}
+        if dataset_id:
+            out["dataset_id"] = dataset_id
+        return out
+
+    out = {}
+    if dataset_id:
+        out["dataset_id"] = dataset_id
+
+    uri = _extract_uri(row)
+    if uri:
+        out["uri"] = uri
+
+    description = _first_non_empty([row.get("description")])
+    if description:
+        out["description"] = description
+
+    content = _first_non_empty([row.get("content"), row.get("snippet"), row.get("document")])
+    if content:
+        out["content"] = _truncate_words(content, max_words=200)
+
+    return out
+
+
 def _load_desc_cache() -> None:
     global _DESC_CACHE_LOADED, _DESC_BY_URI
     if _DESC_CACHE_LOADED:
@@ -165,13 +192,19 @@ def reshape_search_payload(payload: Any, mode: str) -> Any:
     if "results" not in payload or not isinstance(payload["results"], list):
         return payload
 
-    if normalized == "ideal":
+    source_driven = bool(payload.get("ideal_source_driven"))
+
+    if normalized == "ideal" and not source_driven:
         _load_desc_cache()
 
     shaped: List[Any] = []
     for row in payload["results"]:
         if not isinstance(row, dict):
             shaped.append(row)
+            continue
+
+        if source_driven:
+            shaped.append(_reshape_source_driven_row(row, normalized))
             continue
 
         uri = _extract_uri(row)
@@ -230,11 +263,20 @@ def _query_default(spec: Dict[str, Any], field_name: str, fallback: int) -> int:
     return fallback
 
 
-def _compose_description(base_description: str, *, fixed_k: Optional[int], mode: str) -> str:
+def _compose_description(
+    base_description: str,
+    *,
+    tool_name: str,
+    fixed_k: Optional[int],
+    mode: str,
+) -> str:
     desc = base_description.strip()
     notes: List[str] = []
     if fixed_k is not None:
-        notes.append(f"Result limit is fixed at {fixed_k}; callers cannot change it.")
+        if tool_name == "search_ideal":
+            notes.append(f"Each call returns up to {fixed_k} planned sources from source_sequence; callers cannot change the call signature.")
+        else:
+            notes.append(f"Result limit is fixed at {fixed_k}; callers cannot change it.")
     notes.append(f"Result payload mode: {mode}.")
     return f"{desc} {' '.join(notes)}".strip()
 
@@ -249,6 +291,7 @@ def _wrap_query_tool(
     tool_name = spec["name"]
     wrapped_description = _compose_description(
         spec.get("description", ""),
+        tool_name=tool_name,
         fixed_k=fixed_k,
         mode=mode,
     )
@@ -276,6 +319,7 @@ def _wrap_prefix_tool(
     tool_name = spec["name"]
     wrapped_description = _compose_description(
         spec.get("description", ""),
+        tool_name=tool_name,
         fixed_k=fixed_k,
         mode=mode,
     )

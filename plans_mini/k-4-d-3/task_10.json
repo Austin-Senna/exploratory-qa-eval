@@ -8,6 +8,14 @@
     "National_Park_Service",
     "United_States_Department_of_the_Interior"
   ],
+  "source_sequence": [
+    "datagov/moving-violations-issued-in-january-2019/files/data.txt",
+    "datagov/moving-violations-issued-in-january-2020/files/data.txt",
+    "datagov/moving-violations-issued-in-january-2021/files/data.txt",
+    "wikipedia/United_States_Park_Police/content.txt",
+    "wikipedia/National_Park_Service/content.txt",
+    "wikipedia/United_States_Department_of_the_Interior/content.txt"
+  ],
   "reasoning_chain_text": [
     "1. For January 2019, count moving violations issued by the United States Park Police, the United States Capitol Police, and the U.S. Secret Service Uniform Division.",
     "2. For January 2020, count moving violations issued by the United States Park Police, the United States Capitol Police, and the U.S. Secret Service Uniform Division.",

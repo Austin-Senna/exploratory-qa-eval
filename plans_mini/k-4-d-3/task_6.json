@@ -10,6 +10,16 @@
     "Missouri_Department_of_Corrections",
     "Jefferson_City,_Missouri"
   ],
+  "source_sequence": [
+    "datagov/2021-state-expenditures/files/rows.txt",
+    "datagov/2022-state-expenditures/files/rows.txt",
+    "datagov/2023-state-expenditures/files/rows.txt",
+    "datagov/2021-state-employee-pay/files/rows.txt",
+    "datagov/2022-state-employee-pay/files/rows.txt",
+    "datagov/2023-state-employee-pay/files/rows.txt",
+    "wikipedia/Missouri_Department_of_Corrections/content.txt",
+    "wikipedia/Jefferson_City,_Missouri/content.txt"
+  ],
   "reasoning_chain_text": [
     "1. For 2021, identify Missouri state agencies in the top 5 for professional services spending.",
     "2. For 2022, identify Missouri state agencies in the top 5 for professional services spending.",

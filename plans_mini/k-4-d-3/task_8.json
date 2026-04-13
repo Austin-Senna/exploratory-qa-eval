@@ -12,6 +12,18 @@
     "texas-department-of-criminal-justice-receives-fy-2021",
     "Harris_County,_Texas"
   ],
+  "source_sequence": [
+    "datagov/texas-state-expenditures-by-county-2019/files/rows.txt",
+    "datagov/texas-state-expenditures-by-county-2020/files/rows.txt",
+    "datagov/texas-state-expenditures-by-county-2021/files/rows.txt",
+    "datagov/texas-department-of-criminal-justice-releases-fy-2019/files/rows.txt",
+    "datagov/texas-department-of-criminal-justice-releases-fy-2020/files/rows.txt",
+    "datagov/texas-department-of-criminal-justice-releases-fy-2021/files/rows.txt",
+    "datagov/texas-department-of-criminal-justice-receives-fy-2019/files/rows.txt",
+    "datagov/texas-department-of-criminal-justice-receives-fy-2020/files/rows.txt",
+    "datagov/texas-department-of-criminal-justice-receives-fy-2021/files/rows.txt",
+    "wikipedia/Harris_County,_Texas/content.txt"
+  ],
   "reasoning_chain_text": [
     "1. For fiscal year 2019, identify Texas counties in the top 5 for capital outlay spending.",
     "2. For fiscal year 2020, identify Texas counties in the top 5 for capital outlay spending.",

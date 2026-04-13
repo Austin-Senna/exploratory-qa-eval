@@ -10,16 +10,26 @@
     "Pullman,_Washington",
     "report-card-enrollment-2017-18-school-year"
   ],
+  "source_sequence": [
+    "datagov/report-card-assessment-data-2014-15-school-year/files/rows.txt",
+    "datagov/report-card-assessment-data-2015-16-school-year/files/rows.txt",
+    "datagov/report-card-assessment-data-2016-17-school-year/files/rows.txt",
+    "datagov/report-card-assessment-data-2017-18-school-year/files/rows.txt",
+    "wikipedia/Eastern_Washington/content.txt",
+    "wikipedia/Whitman_County,_Washington/content.txt",
+    "wikipedia/Spokane_County,_Washington/content.txt",
+    "wikipedia/Pullman,_Washington/content.txt",
+    "datagov/report-card-enrollment-2017-18-school-year/files/rows.txt"
+  ],
   "reasoning_chain_text": [
     "1. For the 2014-15 assessment data, identify counties or districts with English language arts performance of at least 68% for all students and all grades.",
     "2. For the 2015-16 assessment data, keep counties or districts meeting that same English language arts threshold.",
     "3. For the 2016-17 assessment data, keep counties or districts meeting that same English language arts threshold.",
     "4. For the 2017-18 assessment data, intersect the four annual English language arts sets to keep counties or districts meeting the threshold every year.",
-    "5. Determine which of the county entries in dataset positions 6 and 7 belong to Eastern Washington.",
-    "6. Determine whether the county in dataset position 6 borders Idaho and has 2020 population under 300,000.",
-    "7. Determine whether the county in dataset position 7 borders Idaho and has 2020 population under 300,000, then identify which eligible county remains after combining these filters with step 4.",
-    "8. Verify that the city in dataset position 8 is the most populous city in the qualifying county and record its school district.",
-    "9. Retrieve the 2017-18 enrollment for the city and district from step 8."
+    "5. From the counties remaining after step 4, keep the ones in Eastern Washington.",
+    "6. From those counties, keep the ones that border Idaho and had 2020 population under 300,000.",
+    "7. Identify the most populous city in the qualifying county and record its school district.",
+    "8. Retrieve the 2017-18 enrollment for that city and district."
   ],
   "original_final_question": "Consider the Eastern Washington counties that border Idaho and had a 2020 population under 300,000. Among these, identify the one where school districts consistently achieved at least 68% English language arts performance for all students and all grades from 2014-15 through 2017-18. In the most populous city in that county according to the 2020 census, what was its total school district enrollment for 2017-18? Your response should be in the format [Answer].",
   "original_reasoning_chain": [

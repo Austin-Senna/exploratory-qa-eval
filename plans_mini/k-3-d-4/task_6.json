@@ -8,6 +8,14 @@
     "Vermont",
     "Montpelier,_Vermont"
   ],
+  "source_sequence": [
+    "datagov/fy-2020-pension-recipients-by-state/files/rows.txt",
+    "datagov/fy-2021-pension-recipients-by-state-1266e/files/rows.txt",
+    "datagov/fy-2023-pension-recipients-by-state/files/rows.txt",
+    "wikipedia/New_England/content.txt",
+    "wikipedia/Vermont/content.txt",
+    "wikipedia/Montpelier,_Vermont/content.txt"
+  ],
   "reasoning_chain_text": [
     "1. Identify the U.S. states with between 200 and 400 veteran pension recipients in fiscal year 2020.",
     "2. Identify the U.S. states with between 200 and 400 veteran pension recipients in fiscal year 2021.",

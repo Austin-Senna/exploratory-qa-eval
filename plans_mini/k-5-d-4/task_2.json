@@ -10,16 +10,25 @@
     "McAllen,_Texas",
     "aps-1-1-texas-adult-populations-at-risk-by-county-region-fy2013-fy2022"
   ],
+  "source_sequence": [
+    "datagov/500-cities-city-level-data-gis-friendly-format-2016-release/files/rows.txt",
+    "datagov/500-cities-city-level-data-gis-friendly-format-2017-release/files/rows.txt",
+    "datagov/500-cities-city-level-data-gis-friendly-format-2018-release/files/rows.txt",
+    "datagov/500-cities-city-level-data-gis-friendly-format-2019-release/files/rows.txt",
+    "datagov/2020-census-redistricting-data-all-texas-places/files/rows.txt",
+    "wikipedia/Pharr,_Texas/content.txt",
+    "wikipedia/Mission,_Texas/content.txt",
+    "wikipedia/McAllen,_Texas/content.txt",
+    "datagov/aps-1-1-texas-adult-populations-at-risk-by-county-region-fy2013-fy2022/files/rows.txt"
+  ],
   "reasoning_chain_text": [
     "1. In the 2016 city health release, identify Texas cities with diabetes rates above 12%.",
     "2. In the 2017 city health release, keep Texas cities with diabetes rates above 12% again.",
     "3. In the 2018 city health release, keep Texas cities with diabetes rates above 12% again.",
     "4. In the 2019 city health release, intersect the four annual diabetes sets to keep cities meeting the threshold every year.",
     "5. From those cities, keep the ones with 2020 population under 100,000.",
-    "6. List neighboring cities for the city in dataset position 6.",
-    "7. List neighboring cities for the city in dataset position 7.",
-    "8. Verify that the city in dataset position 8 borders both candidate cities from steps 6 and 7, then record its county.",
-    "9. Retrieve the 2022 percentage aged 65 or older for the county from step 8."
+    "6. Determine which city borders both cities remaining after step 5 and record the county containing that city.",
+    "7. Retrieve the 2022 percentage aged 65 or older for that county."
   ],
   "original_final_question": "What percentage of the population in the county containing the city that borders both of the Texas cities with above 12% diabetes rates between 2016 and 2019 was aged 65 or older in 2022? (These cities had populations under 100,000 in 2020.). Your response should be in the format [Answer].",
   "original_reasoning_chain": [

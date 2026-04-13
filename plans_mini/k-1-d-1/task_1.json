@@ -3,6 +3,9 @@
   "dataset_sequence": [
     "unemployment-insurance-beneficiaries-and-benefit-amounts-paid-beginning-2001"
   ],
+  "source_sequence": [
+    "datagov/unemployment-insurance-beneficiaries-and-benefit-amounts-paid-beginning-2001/files/rows.txt"
+  ],
   "reasoning_chain_text": [
     "1. Sum beneficiaries by year and select the maximum."
   ],

@@ -1,26 +1,20 @@
-"""Ideal search tool for step-ordered dataset traversal.
+"""Ideal search tool for source-ordered retrieval.
 
-In ideal mode this is the *only* search tool. Each call consumes up to five
-datasets and searches only within those datasets.
-Use it until exhaustion. You will most likely need all the datasets.
+In ideal mode this is the *only* search tool. Each call consumes up to
+``top_k`` planned source targets from ``source_sequence`` and returns the next
+concrete file-backed results in plan order.
+
+Use this until exhaustion. You will most likely need all the planned sources.
 """
 
 from __future__ import annotations
 
+import json
 import logging
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-import sys
-
 from strands import tool
-
-sys.path.insert(
-    0,
-    str(Path(__file__).resolve().parent.parent.parent.parent.parent / "external-tools" / "hybrid_search"),
-)
-
-import api as _api  # noqa: E402
 
 from strands_evaluation.tools.external.ideal.plan_store import (
     IdealTaskPlan,
@@ -34,13 +28,18 @@ logger = logging.getLogger(__name__)
 _TASK_CONTEXT: Dict[str, Any] = {}
 _CURRENT_PLAN: Optional[IdealTaskPlan] = None
 _PLAN_CURSOR: int = 0
-_DATASETS_PER_CALL: int = 5
+
+_TABLE_DESCRIPTIONS_PATH = Path("table_descriptions.jsonl")
+_TABLE_CACHE_LOADED = False
+_TABLE_ENTRY_BY_URI: Dict[str, Dict[str, str]] = {}
+
+_S3_PREFIX = "s3://lakeqa-yc4103-datalake/"
+_TRUNCATED_CONTENT_WORDS = 200
 
 
 def set_db_path(path: str) -> None:
-    """Override LanceDB search index path for this process."""
-    _api.cfg.path = str(path)
-    _api._db = None
+    """Retained for compatibility; ideal source-driven retrieval ignores db_path."""
+    _ = path
 
 
 def set_plans_root(path: str | Path) -> None:
@@ -61,11 +60,14 @@ def set_task_context(task_context: Dict[str, Any]) -> None:
 
 
 def reset_state() -> None:
-    """Reset in-process plan/iterator state (mainly for tests)."""
+    """Reset in-process plan/iterator state and cached table descriptions."""
     global _TASK_CONTEXT, _CURRENT_PLAN, _PLAN_CURSOR
+    global _TABLE_CACHE_LOADED, _TABLE_ENTRY_BY_URI
     _TASK_CONTEXT = {}
     _CURRENT_PLAN = None
     _PLAN_CURSOR = 0
+    _TABLE_CACHE_LOADED = False
+    _TABLE_ENTRY_BY_URI = {}
     _set_task_context_shared({})
 
 
@@ -76,79 +78,110 @@ def _require_plan() -> IdealTaskPlan:
     return _CURRENT_PLAN
 
 
-def _safe_top_k(value: Any) -> int:
-    try:
-        n = int(value)
-    except Exception:
-        return 10
-    return n if n > 0 else 10
+def _load_table_cache() -> None:
+    global _TABLE_CACHE_LOADED, _TABLE_ENTRY_BY_URI
+    if _TABLE_CACHE_LOADED:
+        return
+    _TABLE_CACHE_LOADED = True
 
-
-def _search_dataset(query: str, dataset_id: str, top_k: int) -> List[Dict[str, Any]]:
-    table = _api.get_table()
-    marker = f"/{dataset_id}/"
-    scan_limit = max(top_k * 12, 60)
-
-    rows: List[Dict[str, Any]]
-    try:
-        escaped = dataset_id.replace("'", "''")
-        rows = (
-            table.search(query, query_type="fts", fts_columns="text")
-            .where(f"uri LIKE '%/{escaped}/%'")
-            .limit(scan_limit)
-            .select(["uri", "text", "_score"])
-            .to_list()
-        )
-    except Exception as exc:
+    if not _TABLE_DESCRIPTIONS_PATH.exists():
         logger.warning(
-            "Dataset-scoped where() query failed for dataset '%s'; using fallback filter (%s)",
-            dataset_id,
-            exc,
+            "table_descriptions.jsonl not found at '%s'; ideal file payloads will omit description/content.",
+            _TABLE_DESCRIPTIONS_PATH,
         )
-        rows = (
-            table.search(query, query_type="fts", fts_columns="text")
-            .limit(scan_limit * 3)
-            .select(["uri", "text", "_score"])
-            .to_list()
-        )
-        rows = [r for r in rows if marker in str(r.get("uri", ""))]
+        return
 
-    out: List[Dict[str, Any]] = []
-    for row in rows:
-        uri = str(row.get("uri") or "").strip()
-        if not uri or marker not in uri:
-            continue
-        doc = str(row.get("text") or "")
-        score_raw = row.get("_score", 0.0)
-        try:
-            score_text = f"{float(score_raw):.3f}"
-        except Exception:
-            score_text = str(score_raw)
-        out.append(
-            {
-                "uri": uri,
-                "dataset_id": dataset_id,
-                "document": doc,
-                "score": score_text,
+    uri_map: Dict[str, Dict[str, str]] = {}
+    with _TABLE_DESCRIPTIONS_PATH.open() as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                obj = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+
+            uri = str(obj.get("dataset_uri") or obj.get("uri") or "").strip()
+            if not uri:
+                continue
+
+            description = str(obj.get("description") or "").strip()
+            content = str(obj.get("content") or "").strip()
+            uri_map[uri] = {
+                "description": description,
+                "content": content,
             }
-        )
-        if len(out) >= top_k:
-            break
 
+    _TABLE_ENTRY_BY_URI = uri_map
+
+
+def _truncate_words(text: str, max_words: int = _TRUNCATED_CONTENT_WORDS) -> str:
+    words = (text or "").split()
+    if len(words) <= max_words:
+        return " ".join(words)
+    return " ".join(words[:max_words])
+
+
+def _dataset_id_from_source(source: str) -> str:
+    value = str(source or "").strip()
+    if "/" not in value:
+        return value
+    parts = value.split("/")
+    if len(parts) >= 2 and parts[1].strip():
+        return parts[1].strip()
+    return value
+
+
+def _canonical_uri(source_path: str) -> str:
+    return f"{_S3_PREFIX}{str(source_path).lstrip('/')}"
+
+
+def _metadata_for_uri(uri: str) -> Dict[str, str]:
+    _load_table_cache()
+    return _TABLE_ENTRY_BY_URI.get(uri, {})
+
+
+def _build_file_result(source_path: str) -> Dict[str, Any]:
+    uri = _canonical_uri(source_path)
+    dataset_id = _dataset_id_from_source(source_path)
+    metadata = _metadata_for_uri(uri)
+    out: Dict[str, Any] = {
+        "source_kind": "file",
+        "dataset_id": dataset_id,
+        "uri": uri,
+    }
+    description = metadata.get("description", "")
+    content = _truncate_words(metadata.get("content", ""))
+    if description:
+        out["description"] = description
+    if content:
+        out["content"] = content
     return out
+
+
+def _normalize_top_k(top_k: Any) -> int:
+    try:
+        value = int(top_k)
+    except (TypeError, ValueError):
+        return 10
+    return max(value, 1)
 
 
 @tool
 def search_ideal(query: str, top_k: int = 10) -> dict:
-    """Ideal-mode search: consume up to five datasets and search only within them.
+    """Ideal-mode retrieval: consume the next planned source target.
 
-    Use this until exhaustion. You will most likely need all the datasets.
+    ``query`` is retained only for interface compatibility with the other
+    search tools. Source-driven ideal retrieval does not use query text to
+    choose results; it walks the pre-authored ``source_sequence`` in order.
+    ``top_k`` controls how many sequential planned sources are returned in one
+    call.
     """
     global _PLAN_CURSOR
     plan = _require_plan()
 
-    requested_top_k = _safe_top_k(top_k)
-    total_steps = len(plan.dataset_sequence)
+    total_steps = len(plan.source_sequence)
     if _PLAN_CURSOR >= total_steps:
         return {
             "results": [],
@@ -159,55 +192,44 @@ def search_ideal(query: str, top_k: int = 10) -> dict:
             "plan_step_index": _PLAN_CURSOR,
             "plan_steps_total": total_steps,
             "plan_exhausted": True,
-            "note": "ideal search exhausted; no further datasets remain for this task.",
+            "note": "ideal search exhausted; no further planned sources remain for this task.",
         }
 
-    step_index = _PLAN_CURSOR
-    dataset_ids = plan.dataset_sequence[step_index : step_index + _DATASETS_PER_CALL]
-    _PLAN_CURSOR += len(dataset_ids)  # strict iterator: every call consumes the next dataset batch.
+    limit = _normalize_top_k(top_k)
+    start_index = _PLAN_CURSOR
+    end_index = min(total_steps, start_index + limit)
+    result_rows: List[Dict[str, Any]] = []
+    dataset_ids: List[str] = []
+    step_indices: List[int] = []
+    step_numbers: List[int] = []
 
-    all_results: List[Dict[str, Any]] = []
-    batch_errors: List[Dict[str, Any]] = []
-    for offset, dataset_id in enumerate(dataset_ids):
-        dataset_step_index = step_index + offset
-        try:
-            dataset_results = _search_dataset(query, dataset_id, requested_top_k)
-        except Exception as exc:
-            batch_errors.append(
-                {
-                    "dataset_id": dataset_id,
-                    "plan_step_index": dataset_step_index,
-                    "plan_step_number": dataset_step_index + 1,
-                    "error": str(exc),
-                }
-            )
-            continue
+    for step_index in range(start_index, end_index):
+        source_entry = plan.source_sequence[step_index]
+        result_row = _build_file_result(source_entry)
+        result_rows.append(result_row)
+        dataset_ids.append(result_row.get("dataset_id") or _dataset_id_from_source(source_entry))
+        step_indices.append(step_index)
+        step_numbers.append(step_index + 1)
 
-        for row in dataset_results:
-            enriched_row = dict(row)
-            enriched_row["plan_step_index"] = dataset_step_index
-            enriched_row["plan_step_number"] = dataset_step_index + 1
-            all_results.append(enriched_row)
+    _PLAN_CURSOR = end_index
 
     payload: Dict[str, Any] = {
-        "results": all_results,
-        "count": len(all_results),
+        "results": result_rows,
+        "count": len(result_rows),
         "query": query,
         "task_id": plan.task_id,
         "plan_path": str(plan.plan_path),
-        "dataset_id": dataset_ids[0],
         "dataset_ids": dataset_ids,
-        "plan_step_index": step_index,
-        "plan_step_number": step_index + 1,
-        "plan_step_indexes": list(range(step_index, step_index + len(dataset_ids))),
-        "plan_step_numbers": list(range(step_index + 1, step_index + len(dataset_ids) + 1)),
+        "plan_step_indices": step_indices,
+        "plan_step_numbers": step_numbers,
         "plan_steps_total": total_steps,
-        "datasets_per_call": _DATASETS_PER_CALL,
         "plan_exhausted": _PLAN_CURSOR >= total_steps,
+        "ideal_source_driven": True,
     }
-    if batch_errors:
-        payload["errors"] = batch_errors
-        payload["error"] = "; ".join(
-            f"{item['dataset_id']}: {item['error']}" for item in batch_errors
-        )
+    if dataset_ids:
+        payload["dataset_id"] = dataset_ids[0]
+    if step_indices:
+        payload["plan_step_index"] = step_indices[0]
+    if step_numbers:
+        payload["plan_step_number"] = step_numbers[0]
     return payload

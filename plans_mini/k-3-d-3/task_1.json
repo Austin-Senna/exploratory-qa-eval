@@ -7,6 +7,13 @@
     "Marble_Hill,_Manhattan",
     "Frederick_Philipse"
   ],
+  "source_sequence": [
+    "datagov/2006-2007-school-progress-report/files/rows.txt",
+    "datagov/2009-2010-school-progress-report/files/rows.txt",
+    "datagov/2010-2011-school-progress-report/files/rows.txt",
+    "wikipedia/Marble_Hill,_Manhattan/content.txt",
+    "wikipedia/Frederick_Philipse/content.txt"
+  ],
   "reasoning_chain_text": [
     "1. Identify NYC high schools in the top 7 by overall score in 2006-07.",
     "2. Identify NYC high schools in the top 7 by overall score in 2009-10.",

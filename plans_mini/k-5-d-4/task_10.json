@@ -12,6 +12,19 @@
     "University_of_North_Texas_at_Dallas",
     "University_of_Texas_at_Dallas"
   ],
+  "source_sequence": [
+    "datagov/texas-state-expenditures-by-county-2018/files/rows.txt",
+    "datagov/texas-state-expenditures-by-county-2019/files/rows.txt",
+    "datagov/texas-state-expenditures-by-county-2020/files/rows.txt",
+    "datagov/texas-state-expenditures-by-county-2021/files/rows.txt",
+    "datagov/texas-department-of-criminal-justice-releases-fy-2019/files/rows.txt",
+    "datagov/texas-department-of-criminal-justice-releases-fy-2020/files/rows.txt",
+    "datagov/fy-2020-disability-compensation-recipients-by-county/files/rows.txt",
+    "datagov/fy-2023-disability-compensation-recipients-by-county/files/rows.txt",
+    "wikipedia/Dallas_County,_Texas/content.txt",
+    "wikipedia/University_of_North_Texas_at_Dallas/content.txt",
+    "wikipedia/University_of_Texas_at_Dallas/content.txt"
+  ],
   "reasoning_chain_text": [
     "1. For 2018, record counties with high capital outlay spending relevant to the 2018-2021 top-five-average comparison.",
     "2. For 2019, record counties with high capital outlay spending relevant to that same comparison.",
@@ -22,8 +35,7 @@
     "7. Record FY 2020 disability compensation recipient counts for the two remaining counties.",
     "8. Compute each remaining county's change from FY 2020 to FY 2023 and keep the county with the smallest increase.",
     "9. Identify the public universities in that county.",
-    "10. Record the founding year for one of those public universities.",
-    "11. Record the founding year for the other public university and determine which of the two was founded earlier."
+    "10. Determine which of those universities was founded earlier."
   ],
   "original_final_question": "Among Texas counties in the top five for average capital outlay spending from 2018 to 2021, identify the two highest by average prison releases in 2019 and 2020. Of those two, select the county where disability compensation recipients with least increase from 2020 to 2023. Find the public universities in this county. Which of those was founded the earliest? Return the university name only. Your response should be in the format [Answer].",
   "original_reasoning_chain": [

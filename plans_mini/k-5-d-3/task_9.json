@@ -12,6 +12,19 @@
     "Harris_County,_Texas",
     "Houston"
   ],
+  "source_sequence": [
+    "datagov/texas-state-expenditures-by-county-2019/files/rows.txt",
+    "datagov/texas-state-expenditures-by-county-2020/files/rows.txt",
+    "datagov/texas-state-expenditures-by-county-2021/files/rows.txt",
+    "datagov/texas-department-of-criminal-justice-releases-fy-2019/files/rows.txt",
+    "datagov/texas-department-of-criminal-justice-releases-fy-2020/files/rows.txt",
+    "datagov/texas-department-of-criminal-justice-releases-fy-2021/files/rows.txt",
+    "datagov/texas-department-of-criminal-justice-receives-fy-2019/files/rows.txt",
+    "datagov/texas-department-of-criminal-justice-receives-fy-2020/files/rows.txt",
+    "datagov/texas-department-of-criminal-justice-receives-fy-2021/files/rows.txt",
+    "wikipedia/Harris_County,_Texas/content.txt",
+    "wikipedia/Houston/content.txt"
+  ],
   "reasoning_chain_text": [
     "1. Identify Texas counties in the top five for capital outlay spending in 2019.",
     "2. From the counties in step 1, keep the ones that also rank in the top five for capital outlay spending in 2020.",

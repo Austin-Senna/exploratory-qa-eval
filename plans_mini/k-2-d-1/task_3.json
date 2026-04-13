@@ -4,6 +4,10 @@
     "Pullman,_Washington",
     "report-card-enrollment-2017-18-school-year"
   ],
+  "source_sequence": [
+    "wikipedia/Pullman,_Washington/content.txt",
+    "datagov/report-card-enrollment-2017-18-school-year/files/rows.txt"
+  ],
   "reasoning_chain_text": [
     "1. Identify the city described as the most populous in Whitman County based on the 2020 census.",
     "2. Retrieve 2017-18 total student enrollment for that city's school district and return the numeric value."

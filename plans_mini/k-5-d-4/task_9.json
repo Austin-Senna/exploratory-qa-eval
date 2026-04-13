@@ -10,6 +10,17 @@
     "employee-overtime-and-supplemental-earnings-2017",
     "Chicago_Fire_Department"
   ],
+  "source_sequence": [
+    "wikipedia/Missouri_Department_of_Transportation/content.txt",
+    "wikipedia/Springfield,_Missouri/content.txt",
+    "datagov/500-cities-local-data-for-better-health-2016-release/files/rows.txt",
+    "datagov/500-cities-local-data-for-better-health-2018-release/files/rows.txt",
+    "datagov/employee-overtime-and-supplemental-earnings-2014/files/rows.txt",
+    "datagov/employee-overtime-and-supplemental-earnings-2015/files/rows.txt",
+    "datagov/employee-overtime-and-supplemental-earnings-2016/files/rows.txt",
+    "datagov/employee-overtime-and-supplemental-earnings-2017/files/rows.txt",
+    "wikipedia/Chicago_Fire_Department/content.txt"
+  ],
   "reasoning_chain_text": [
     "1. Identify the city where the agency's Southwest district is based.",
     "2. Identify the highway born there and its two terminus cities.",

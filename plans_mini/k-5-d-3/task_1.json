@@ -9,6 +9,16 @@
     "Franklin_D._Roosevelt",
     "Warm_Springs,_Georgia"
   ],
+  "source_sequence": [
+    "datagov/2007-2008-school-progress-report/files/rows.txt",
+    "datagov/2008-2009-school-progress-report/files/rows.txt",
+    "datagov/2009-2010-school-progress-report/files/rows.txt",
+    "wikipedia/List_of_first_ladies_of_the_United_States/content.txt",
+    "wikipedia/Eleanor_Roosevelt/content.txt",
+    "wikipedia/Theodore_Roosevelt/content.txt",
+    "wikipedia/Franklin_D._Roosevelt/content.txt",
+    "wikipedia/Warm_Springs,_Georgia/content.txt"
+  ],
   "reasoning_chain_text": [
     "1. Identify District 2 Manhattan high schools that received an A grade in 2007-2008.",
     "2. From the schools in step 1, keep the ones that also received an A grade in 2008-2009.",

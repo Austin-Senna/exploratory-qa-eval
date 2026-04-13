@@ -11,6 +11,18 @@
     "United_States_Department_of_the_Interior",
     "Doug_Burgum"
   ],
+  "source_sequence": [
+    "datagov/parking-violations-issued-in-january-2019/files/data.txt",
+    "datagov/parking-violations-issued-in-january-2020/files/data.txt",
+    "datagov/parking-violations-issued-in-january-2021/files/data.txt",
+    "datagov/moving-violations-issued-in-january-2019/files/data.txt",
+    "datagov/moving-violations-issued-in-january-2020/files/data.txt",
+    "datagov/moving-violations-issued-in-january-2021/files/data.txt",
+    "wikipedia/United_States_Park_Police/content.txt",
+    "wikipedia/National_Park_Service/content.txt",
+    "wikipedia/United_States_Department_of_the_Interior/content.txt",
+    "wikipedia/Doug_Burgum/content.txt"
+  ],
   "reasoning_chain_text": [
     "1. Identify issuing agencies in the top 20 for total January parking fine amount in 2019.",
     "2. From those agencies, keep the issuing agencies that again appear in the top 20 for total January parking fine amount in 2020.",

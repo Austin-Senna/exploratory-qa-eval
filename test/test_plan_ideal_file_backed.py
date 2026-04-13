@@ -1,7 +1,10 @@
 import json
+import sys
 import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from strands_evaluation.tools.external.ideal.plan_ideal import plan_ideal
 from strands_evaluation.tools.external.ideal.plan_store import (
@@ -34,6 +37,10 @@ class TestPlanIdealFileBacked(unittest.TestCase):
                 json.dumps(
                     {
                         "dataset_sequence": ["ds_a", "ds_b"],
+                        "source_sequence": [
+                            "datagov/ds_a/files/rows.txt",
+                            "datagov/ds_b/files/rows.txt",
+                        ],
                         "reasoning_chain_text": "File-backed plan text.",
                     }
                 )
@@ -65,6 +72,10 @@ class TestPlanIdealFileBacked(unittest.TestCase):
                 json.dumps(
                     {
                         "dataset_sequence": ["ds_a", "ds_b"],
+                        "source_sequence": [
+                            "datagov/ds_a/files/rows.txt",
+                            "datagov/ds_b/files/rows.txt",
+                        ],
                         "reasoning_chain_text": [
                             "1. First file-backed step.",
                             "2. Second file-backed step.",

@@ -10,6 +10,17 @@
     "fy-2023-disability-compensation-recipients-by-county",
     "Harris_County,_Texas"
   ],
+  "source_sequence": [
+    "datagov/texas-state-expenditures-by-county-2018/files/rows.txt",
+    "datagov/texas-state-expenditures-by-county-2019/files/rows.txt",
+    "datagov/texas-state-expenditures-by-county-2020/files/rows.txt",
+    "datagov/texas-state-expenditures-by-county-2021/files/rows.txt",
+    "datagov/texas-department-of-criminal-justice-releases-fy-2019/files/rows.txt",
+    "datagov/texas-department-of-criminal-justice-releases-fy-2020/files/rows.txt",
+    "datagov/fy-2020-disability-compensation-recipients-by-county/files/rows.txt",
+    "datagov/fy-2023-disability-compensation-recipients-by-county/files/rows.txt",
+    "wikipedia/Harris_County,_Texas/content.txt"
+  ],
   "reasoning_chain_text": [
     "1. Identify Texas counties with the highest capital outlay spending in 2018.",
     "2. Identify Texas counties with the highest capital outlay spending in 2019.",

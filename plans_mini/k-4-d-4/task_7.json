@@ -9,6 +9,16 @@
     "employee-overtime-and-supplemental-earnings-2017",
     "Chicago_Police_Department"
   ],
+  "source_sequence": [
+    "wikipedia/Springfield,_Missouri/content.txt",
+    "datagov/500-cities-local-data-for-better-health-2016-release/files/rows.txt",
+    "datagov/500-cities-local-data-for-better-health-2018-release/files/rows.txt",
+    "datagov/employee-overtime-and-supplemental-earnings-2014/files/rows.txt",
+    "datagov/employee-overtime-and-supplemental-earnings-2015/files/rows.txt",
+    "datagov/employee-overtime-and-supplemental-earnings-2016/files/rows.txt",
+    "datagov/employee-overtime-and-supplemental-earnings-2017/files/rows.txt",
+    "wikipedia/Chicago_Police_Department/content.txt"
+  ],
   "reasoning_chain_text": [
     "1. Using the Missouri birthplace city of Route 66 in this task, identify the highway's two terminus cities.",
     "2. In the 2016 city health data, compare binge drinking prevalence for those two terminus cities.",

@@ -9,6 +9,15 @@
     "texas-department-of-criminal-justice-releases-fy-2019",
     "texas-department-of-criminal-justice-releases-fy-2020"
   ],
+  "source_sequence": [
+    "wikipedia/List_of_counties_in_Texas/content.txt",
+    "datagov/texas-state-expenditures-by-county-2018/files/rows.txt",
+    "datagov/texas-state-expenditures-by-county-2019/files/rows.txt",
+    "datagov/texas-state-expenditures-by-county-2020/files/rows.txt",
+    "datagov/texas-state-expenditures-by-county-2021/files/rows.txt",
+    "datagov/texas-department-of-criminal-justice-releases-fy-2019/files/rows.txt",
+    "datagov/texas-department-of-criminal-justice-releases-fy-2020/files/rows.txt"
+  ],
   "reasoning_chain_text": [
     "1. Identify the original counties of Texas.",
     "2. For 2018 Texas state expenditures, identify the counties in the top five for capital outlay spending.",

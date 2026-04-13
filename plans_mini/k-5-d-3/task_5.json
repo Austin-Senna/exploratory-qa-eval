@@ -14,6 +14,21 @@
     "school-nutrition-programs-contact-information-and-site-level-program-participation-pr-2021",
     "Lake_Worth_Independent_School_District"
   ],
+  "source_sequence": [
+    "datagov/texas-department-of-criminal-justice-releases-fy-2019/files/rows.txt",
+    "datagov/texas-department-of-criminal-justice-releases-fy-2020/files/rows.txt",
+    "datagov/texas-department-of-criminal-justice-releases-fy-2021/files/rows.txt",
+    "wikipedia/Harris_County,_Texas/content.txt",
+    "wikipedia/Dallas_County,_Texas/content.txt",
+    "wikipedia/Tarrant_County,_Texas/content.txt",
+    "wikipedia/Houston/content.txt",
+    "wikipedia/Dallas/content.txt",
+    "wikipedia/Fort_Worth,_Texas/content.txt",
+    "datagov/school-nutrition-programs-contact-information-and-site-level-program-participation-pr-2019/files/rows.txt",
+    "datagov/school-nutrition-programs-contact-information-and-site-level-program-participation-pr-2020/files/rows.txt",
+    "datagov/school-nutrition-programs-contact-information-and-site-level-program-participation-pr-2021/files/rows.txt",
+    "wikipedia/Lake_Worth_Independent_School_District/content.txt"
+  ],
   "reasoning_chain_text": [
     "1. For fiscal year 2019, record Texas county release totals.",
     "2. For fiscal year 2020, record Texas county release totals.",

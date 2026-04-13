@@ -4,6 +4,10 @@
     "2020-census-redistricting-data-all-texas-counties",
     "Montgomery_County,_Texas"
   ],
+  "source_sequence": [
+    "datagov/2020-census-redistricting-data-all-texas-counties/files/rows.txt",
+    "wikipedia/Montgomery_County,_Texas/content.txt"
+  ],
   "reasoning_chain_text": [
     "1. From Bexar, El Paso, Hidalgo, and Montgomery, keep counties with 2020 census population under 900,000.",
     "2. Using the Montgomery County reference page, determine whether Montgomery County is part of the Houston metropolitan area, exclude Montgomery if so, then return the remaining under-900,000 county names alphabetically separated by comma and space."

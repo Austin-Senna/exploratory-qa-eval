@@ -9,6 +9,15 @@
     "Neighborhoods_in_Washington,_D.C.",
     "Montgomery_County,_Maryland"
   ],
+  "source_sequence": [
+    "datagov/crime-incidents-in-2018/files/data.txt",
+    "datagov/crime-incidents-in-2019/files/data.txt",
+    "datagov/crime-incidents-in-2020/files/data.txt",
+    "datagov/crime-incidents-in-2021/files/data.txt",
+    "wikipedia/Neighborhoods_in_Washington,_D.C./content.txt",
+    "wikipedia/Chevy_Chase,_Maryland/content.txt",
+    "wikipedia/Montgomery_County,_Maryland/content.txt"
+  ],
   "reasoning_chain_text": [
     "1. For 2018 DC crime incidents, count the incidents in each ward.",
     "2. For 2019 DC crime incidents, count the incidents in each ward.",

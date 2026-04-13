@@ -13,6 +13,20 @@
     "Sojourner_Truth",
     "Rifton,_New_York"
   ],
+  "source_sequence": [
+    "datagov/building-permits-in-2022/files/data.txt",
+    "datagov/building-permits-in-2023/files/data.txt",
+    "datagov/building-permits-in-2024/files/data.txt",
+    "datagov/crime-incidents-in-2022/files/data.txt",
+    "datagov/crime-incidents-in-2023/files/data.txt",
+    "datagov/crime-incidents-in-2024/files/data.txt",
+    "datagov/street-sweeping-schedule-2022/files/data.txt",
+    "datagov/street-sweeping-schedule-2023/files/data.txt",
+    "datagov/street-sweeping-schedule-2024/files/data.txt",
+    "datagov/dc-charter-schools/files/data.txt",
+    "wikipedia/Sojourner_Truth/content.txt",
+    "wikipedia/Rifton,_New_York/content.txt"
+  ],
   "reasoning_chain_text": [
     "1. Identify Washington, DC wards in the top four by number of building permits in 2022.",
     "2. From those wards, keep the Washington, DC wards that again rank in the top four by number of building permits in 2023.",

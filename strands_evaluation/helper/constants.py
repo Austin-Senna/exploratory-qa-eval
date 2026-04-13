@@ -117,11 +117,11 @@ DO NOT:
 - search_schema  — sparse keyword search over dataset schemas (column names, types); use when you know the field structure you need
 - search_prefix  — S3 prefix search by dataset name fragment; use when you know part of the dataset or entity name (e.g. "Erie_County", "index-crimes")
 - list_files     — list files inside a dataset
-- peek_file      — preview file structure and column headers (first 64KB); dataset_id is the bare ID only, no prefix
+- peek_file      — preview file structure (CSV/JSON/XML/text) and headers or XML schema hints (first 64KB); dataset_id is the bare ID only, no prefix
 - peek_multiple  — preview SEVERAL files in one call (batch wrapper); requires `files=[{dataset_id, file_path}, ...]`. For ONE file use peek_file instead
 - read_file      — read lines from a file directly (paginated, no download needed)
 - grep_file      — regex search inside a file (no download needed); saves 2-3 tool calls vs download+execute_code
-- query_file     — SQL query directly on a CSV/JSON file via DuckDB (no download needed); saves 2-3 tool calls
+- query_file     — SQL query directly on a CSV/JSON file via DuckDB (no download needed); XML/KML is detected but not queryable here
 - download       — download files to the sandbox
 - execute_code   — run Python against downloaded files; ONLY use when query_file/grep_file aren't enough
 - submit_answer(answer, reasoning) — submit your final answer and stop
@@ -155,9 +155,10 @@ NEVER call `query_file` on a file you have not first inspected with `peek_file`.
 - Casting strings to numbers when the column actually contains values like `'>80'`, `'0-5'`, or `'Under Review'` → Conversion Error
 - Using backtick identifiers (`` `OVERALL GRADE` ``) → DuckDB requires double quotes: `"OVERALL GRADE"`
 - Calling `query_file` on a plain-text file → use `read_file` or `grep_file` instead
+- Calling `query_file` on an XML/KML file → use `peek_file` for tags/schema, `grep_file` for text search, or `download` + `execute_code` with `xml.etree.ElementTree`
 
 **Required workflow for any new file:**
-1. `peek_file(dataset_id, file_path)` once — read the EXACT column headers and a few sample values
+1. `peek_file(dataset_id, file_path)` once — read the EXACT column headers, or for XML/KML inspect tags, schema fields, and record-tag hints
 2. Then write `query_file` SQL using those exact names, quoting with `"` for any name containing spaces or special characters
 3. Reference columns directly off `t` (e.g. `SELECT "Issuing Agency" FROM t`) — never `t.something.column`
 

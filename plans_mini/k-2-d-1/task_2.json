@@ -4,6 +4,10 @@
     "McAllen,_Texas",
     "aps-1-1-texas-adult-populations-at-risk-by-county-region-fy2013-fy2022"
   ],
+  "source_sequence": [
+    "wikipedia/McAllen,_Texas/content.txt",
+    "datagov/aps-1-1-texas-adult-populations-at-risk-by-county-region-fy2013-fy2022/files/rows.txt"
+  ],
   "reasoning_chain_text": [
     "1. Identify the Texas county that contains McAllen.",
     "2. Retrieve the 2022 percentage for population aged 65 or older for that county and return it in number format."

@@ -8,6 +8,15 @@
     "Carter_G._Woodson",
     "Harvard_University"
   ],
+  "source_sequence": [
+    "datagov/libraries-2019-computer-sessions-by-location/files/rows.txt",
+    "datagov/libraries-2020-computer-sessions-by-location/files/rows.txt",
+    "datagov/libraries-2021-computer-sessions-by-location/files/rows.txt",
+    "datagov/libraries-2021-visitors-by-location/files/rows.txt",
+    "wikipedia/Carter_G._Woodson_Regional_Library/content.txt",
+    "wikipedia/Carter_G._Woodson/content.txt",
+    "wikipedia/Harvard_University/content.txt"
+  ],
   "reasoning_chain_text": [
     "1. Identify Chicago library branches in the top five by total computer sessions in 2019.",
     "2. From those branches, keep the Chicago library branches that again rank in the top five by total computer sessions in 2020.",

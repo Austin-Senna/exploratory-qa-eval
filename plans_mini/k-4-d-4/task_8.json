@@ -9,6 +9,16 @@
     "500-cities-local-data-for-better-health-2016-release",
     "500-cities-local-data-for-better-health-2018-release"
   ],
+  "source_sequence": [
+    "datagov/2007-state-expenditures/files/rows.txt",
+    "datagov/2008-state-expenditures/files/rows.txt",
+    "datagov/2009-state-expenditures/files/rows.txt",
+    "datagov/2010-state-expenditures/files/rows.txt",
+    "wikipedia/Missouri_Department_of_Transportation/content.txt",
+    "wikipedia/Springfield,_Missouri/content.txt",
+    "datagov/500-cities-local-data-for-better-health-2016-release/files/rows.txt",
+    "datagov/500-cities-local-data-for-better-health-2018-release/files/rows.txt"
+  ],
   "reasoning_chain_text": [
     "1. Identify Missouri state agencies with the highest spending levels in fiscal year 2007.",
     "2. Identify Missouri state agencies with the highest spending levels in fiscal year 2008.",

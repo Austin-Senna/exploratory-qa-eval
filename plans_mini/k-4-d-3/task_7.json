@@ -8,6 +8,14 @@
     "Jefferson_City,_Missouri",
     "Lincoln_University_(Missouri)"
   ],
+  "source_sequence": [
+    "datagov/2021-state-employee-pay/files/rows.txt",
+    "datagov/2022-state-employee-pay/files/rows.txt",
+    "datagov/2023-state-employee-pay/files/rows.txt",
+    "wikipedia/Missouri_Department_of_Corrections/content.txt",
+    "wikipedia/Jefferson_City,_Missouri/content.txt",
+    "wikipedia/Lincoln_University_(Missouri)/content.txt"
+  ],
   "reasoning_chain_text": [
     "1. For 2021, count employees for the Missouri Department of Corrections, the Missouri Department of Social Services, and the Missouri Department of Transportation.",
     "2. For 2022, count employees for the Missouri Department of Corrections, the Missouri Department of Social Services, and the Missouri Department of Transportation.",

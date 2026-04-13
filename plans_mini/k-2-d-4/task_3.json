@@ -7,6 +7,13 @@
     "employee-overtime-and-supplemental-earnings-2021",
     "Chicago_Police_Department"
   ],
+  "source_sequence": [
+    "datagov/employee-overtime-and-supplemental-earnings-2018/files/rows.txt",
+    "datagov/employee-overtime-and-supplemental-earnings-2019/files/rows.txt",
+    "datagov/employee-overtime-and-supplemental-earnings-2020/files/rows.txt",
+    "datagov/employee-overtime-and-supplemental-earnings-2021/files/rows.txt",
+    "wikipedia/Chicago_Police_Department/content.txt"
+  ],
   "reasoning_chain_text": [
     "1. Compute total overtime for each Chicago department in 2018.",
     "2. Compute total overtime for each Chicago department in 2019.",

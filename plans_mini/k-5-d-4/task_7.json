@@ -9,13 +9,23 @@
     "San_Antonio_Spurs",
     "New_York_Knicks"
   ],
+  "source_sequence": [
+    "datagov/texas-department-of-criminal-justice-releases-fy-2019/files/rows.txt",
+    "datagov/texas-department-of-criminal-justice-releases-fy-2020/files/rows.txt",
+    "datagov/texas-department-of-criminal-justice-releases-fy-2021/files/rows.txt",
+    "datagov/texas-department-of-criminal-justice-releases-fy-2022/files/rows.txt",
+    "wikipedia/Bexar_County,_Texas/content.txt",
+    "wikipedia/San_Antonio/content.txt",
+    "wikipedia/San_Antonio_Spurs/content.txt",
+    "wikipedia/New_York_Knicks/content.txt"
+  ],
   "reasoning_chain_text": [
     "1. For fiscal year 2019 prison release data, calculate release totals by county across Texas.",
     "2. For fiscal year 2020 prison release data, calculate release totals by county across Texas.",
     "3. For fiscal year 2021 prison release data, calculate release totals by county across Texas.",
     "4. For fiscal year 2022 prison release data, combine the 2019-2022 release totals to identify the top five counties by average releases and determine which of those counties has the lowest coefficient of variation.",
-    "5. Record the county seat for the county in dataset position 5 if it matches the county identified in step 4.",
-    "6. If the city in dataset position 6 is that county seat, record the five-time NBA champion team based there.",
+    "5. Determine the county seat of the county identified in step 4.",
+    "6. Identify the five-time NBA champion team based in that city.",
     "7. Record the opponent defeated in that team's first NBA Finals appearance.",
     "8. Record the New York City borough associated with that opponent."
   ],

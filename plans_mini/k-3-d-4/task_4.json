@@ -8,6 +8,14 @@
     "Adam_Clayton_Powell_Jr.",
     "Colgate_University"
   ],
+  "source_sequence": [
+    "datagov/2007-2008-school-progress-report/files/rows.txt",
+    "datagov/2008-2009-school-progress-report/files/rows.txt",
+    "datagov/2009-2010-school-progress-report/files/rows.txt",
+    "datagov/2010-2011-school-progress-report/files/rows.txt",
+    "wikipedia/Adam_Clayton_Powell_Jr./content.txt",
+    "wikipedia/Colgate_University/content.txt"
+  ],
   "reasoning_chain_text": [
     "1. Identify the District 6 NYC elementary schools that received an A overall grade in 2007-2008.",
     "2. Identify the District 6 NYC elementary schools that received an A overall grade in 2008-2009.",

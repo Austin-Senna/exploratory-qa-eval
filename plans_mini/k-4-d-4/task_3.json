@@ -11,6 +11,18 @@
     "Corpus_Christi,_Texas",
     "Kinney_County,_Texas"
   ],
+  "source_sequence": [
+    "datagov/texas-state-expenditures-by-county-2018/files/rows.txt",
+    "datagov/texas-state-expenditures-by-county-2019/files/rows.txt",
+    "datagov/texas-state-expenditures-by-county-2020/files/rows.txt",
+    "datagov/texas-state-expenditures-by-county-2021/files/rows.txt",
+    "datagov/fy-2023-disability-compensation-recipients-by-county/files/rows.txt",
+    "wikipedia/Denton_County,_Texas/content.txt",
+    "wikipedia/Nueces_County,_Texas/content.txt",
+    "wikipedia/Tarrant_County,_Texas/content.txt",
+    "wikipedia/Corpus_Christi,_Texas/content.txt",
+    "wikipedia/Kinney_County,_Texas/content.txt"
+  ],
   "reasoning_chain_text": [
     "1. For fiscal year 2018 Texas expenditures, identify counties with highway construction spending between $150 million and $500 million.",
     "2. For fiscal year 2019 Texas expenditures, keep the counties that again fall in that same spending range.",

@@ -10,6 +10,16 @@
     "child-and-adult-care-food-program-cacfp-child-centers-meal-reimbursement-program-year-2018",
     "child-and-adult-care-food-program-cacfp-child-centers-meal-reimbursement-program-year-2019"
   ],
+  "source_sequence": [
+    "datagov/summer-meal-programs-seamless-summer-option-sso-meal-count-information-program-period-2016/files/rows.txt",
+    "datagov/summer-meal-programs-seamless-summer-option-sso-meal-count-information-program-period-2017/files/rows.txt",
+    "datagov/summer-meal-programs-seamless-summer-option-sso-meal-count-information-program-period-2018/files/rows.txt",
+    "datagov/summer-meal-programs-seamless-summer-option-sso-meal-count-information-program-period-2019/files/rows.txt",
+    "datagov/child-and-adult-care-food-programs-cacfp-day-care-homes-meal-reimbursement-program-ye-2018/files/rows.txt",
+    "datagov/child-and-adult-care-food-programs-cacfp-day-care-homes-meal-reimbursement-program-ye-2020/files/rows.txt",
+    "datagov/child-and-adult-care-food-program-cacfp-child-centers-meal-reimbursement-program-year-2018/files/rows.txt",
+    "datagov/child-and-adult-care-food-program-cacfp-child-centers-meal-reimbursement-program-year-2019/files/rows.txt"
+  ],
   "reasoning_chain_text": [
     "1. Identify the Texas counties in the top five for SSO lunch serves in program year 2015-2016.",
     "2. Identify the Texas counties in the top five for SSO lunch serves in program year 2016-2017.",

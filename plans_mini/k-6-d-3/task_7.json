@@ -9,6 +9,16 @@
     "Washington,_D.C.",
     "Potomac_River"
   ],
+  "source_sequence": [
+    "datagov/parking-violations-issued-in-january-2019/files/data.txt",
+    "datagov/parking-violations-issued-in-january-2020/files/data.txt",
+    "datagov/parking-violations-issued-in-january-2021/files/data.txt",
+    "datagov/moving-violations-issued-in-january-2019/files/data.txt",
+    "wikipedia/United_States_Capitol_Police/content.txt",
+    "wikipedia/United_States_Congress/content.txt",
+    "wikipedia/Washington,_D.C./content.txt",
+    "wikipedia/Potomac_River/content.txt"
+  ],
   "reasoning_chain_text": [
     "1. Identify issuing agencies in the top 20 by number of January 2019 parking violations.",
     "2. From those agencies, keep the issuing agencies that again appear in the top 20 by number of January 2020 parking violations.",

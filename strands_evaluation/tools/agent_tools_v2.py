@@ -19,7 +19,8 @@ import os
 import re
 import traceback
 import uuid
-from collections import deque
+import xml.etree.ElementTree as ET
+from collections import Counter, deque
 from typing import Any, Dict, List
 
 import duckdb
@@ -109,6 +110,20 @@ def _duckdb_connection() -> duckdb.DuckDBPyConnection:
 _MAX_OBJECT_SIZE_RE = re.compile(
     r'"maximum_object_size".*?bytes\s*exceeded.*?\(>(\d+)\s*bytes\)',
     re.DOTALL,
+)
+_XML_NAMESPACE_RE = re.compile(r'\bxmlns(?::([A-Za-z_][\w.-]*))?=["\']([^"\']+)["\']')
+_XML_SIMPLE_FIELD_RE = re.compile(
+    r'<(?:[\w.-]+:)?SimpleField\b[^>]*\bname=["\']([^"\']+)["\']',
+    re.IGNORECASE,
+)
+_XML_SIMPLE_DATA_RE = re.compile(
+    r'<(?:[\w.-]+:)?SimpleData\b[^>]*\bname=["\']([^"\']+)["\']',
+    re.IGNORECASE,
+)
+_XML_OPEN_TAG_RE = re.compile(r"<(?![!?/])([A-Za-z_][\w:.-]*)\b")
+_XML_LEADING_NOISE_RE = re.compile(
+    r"^(?:<\?xml.*?\?>\s*)?(?:<!--.*?-->\s*)*(?:<!DOCTYPE.*?>\s*)*",
+    re.DOTALL | re.IGNORECASE,
 )
 
 
@@ -211,6 +226,14 @@ def _rewrite_unqueryable_family_error(family: str) -> str:
     with a hint naming the right tool to use instead. The agent has no way
     to know that text files should go through grep/read/peek; spell it out.
     """
+    if family == "xml":
+        return (
+            "XML/KML was detected. query_file does not support XML because "
+            "there is no stable row model for arbitrary XML documents yet. "
+            "Use peek_file to inspect tags and schema fields, grep_file to "
+            "search for specific values, or download + execute_code with "
+            "xml.etree.ElementTree for custom extraction."
+        )
     if family == "text":
         return (
             "File contents are plain text — query_file only handles CSV and "
@@ -287,6 +310,134 @@ def _strip_folder_prefix(dataset_id: str) -> str:
     return dataset_id
 
 
+def _local_xml_name(tag: str | None) -> str | None:
+    """Return an XML tag without namespace or prefix decoration."""
+    if not tag:
+        return tag
+    if tag.startswith("{") and "}" in tag:
+        tag = tag.split("}", 1)[1]
+    if ":" in tag:
+        tag = tag.split(":", 1)[1]
+    return tag
+
+
+def _unique_preserve_order(values: List[str]) -> List[str]:
+    seen = set()
+    out: List[str] = []
+    for value in values:
+        if value and value not in seen:
+            seen.add(value)
+            out.append(value)
+    return out
+
+
+def _extract_xml_namespaces(text: str) -> Dict[str, str]:
+    namespaces: Dict[str, str] = {}
+    for prefix, uri in _XML_NAMESPACE_RE.findall(text):
+        key = prefix or "default"
+        namespaces[key] = uri
+    return namespaces
+
+
+def _strip_xml_leading_noise(text: str) -> str:
+    return _XML_LEADING_NOISE_RE.sub("", text.lstrip(), count=1)
+
+
+def _extract_xml_root_tag(text: str) -> str | None:
+    stripped = _strip_xml_leading_noise(text)
+    m = _XML_OPEN_TAG_RE.match(stripped)
+    if not m:
+        return None
+    return _local_xml_name(m.group(1))
+
+
+def _extract_xml_schema_fields(text: str) -> List[str]:
+    names = _XML_SIMPLE_FIELD_RE.findall(text) + _XML_SIMPLE_DATA_RE.findall(text)
+    return _unique_preserve_order([name.strip() for name in names if name.strip()])
+
+
+def _extract_xml_record_tag_candidates(text: str, root_tag: str | None) -> List[str]:
+    tags = [_local_xml_name(tag) for tag in _XML_OPEN_TAG_RE.findall(_strip_xml_leading_noise(text))]
+    filtered = [tag for tag in tags if tag]
+    counts = Counter(filtered)
+
+    candidates: List[str] = []
+    if counts.get("Placemark"):
+        candidates.append("Placemark")
+
+    for tag, count in counts.most_common():
+        if tag in {root_tag, "SimpleField", "SimpleData"}:
+            continue
+        if count >= 2:
+            candidates.append(tag)
+
+    if not candidates:
+        for tag, _count in counts.most_common():
+            if tag in {root_tag, "SimpleField", "SimpleData"}:
+                continue
+            candidates.append(tag)
+            if len(candidates) >= 5:
+                break
+
+    return _unique_preserve_order(candidates)[:5]
+
+
+def _build_xml_preview_from_tree(root: ET.Element, text: str) -> Dict[str, Any]:
+    root_tag = _local_xml_name(root.tag)
+    tags = [_local_xml_name(elem.tag) for elem in root.iter() if isinstance(elem.tag, str)]
+    counts = Counter(tag for tag in tags if tag)
+    schema_fields = _unique_preserve_order(
+        [
+            elem.attrib["name"].strip()
+            for elem in root.iter()
+            if _local_xml_name(elem.tag) in {"SimpleField", "SimpleData"}
+            and elem.attrib.get("name", "").strip()
+        ]
+    )
+
+    record_candidates: List[str] = []
+    if counts.get("Placemark"):
+        record_candidates.append("Placemark")
+    for tag, count in counts.most_common():
+        if tag in {root_tag, "SimpleField", "SimpleData"}:
+            continue
+        if count >= 2:
+            record_candidates.append(tag)
+    if not record_candidates:
+        for tag, _count in counts.most_common():
+            if tag in {root_tag, "SimpleField", "SimpleData"}:
+                continue
+            record_candidates.append(tag)
+            if len(record_candidates) >= 5:
+                break
+
+    return {
+        "xml_root_tag": root_tag,
+        "xml_namespaces": _extract_xml_namespaces(text),
+        "xml_schema_fields": schema_fields,
+        "xml_record_tag_candidates": _unique_preserve_order(record_candidates)[:5],
+        "xml_preview_mode": "parsed",
+    }
+
+
+def _build_xml_preview(text: str, size_bytes: int) -> Dict[str, Any]:
+    if size_bytes <= _PEEK_BYTES:
+        try:
+            root = ET.fromstring(text)
+            return _build_xml_preview_from_tree(root, text)
+        except ET.ParseError:
+            pass
+
+    root_tag = _extract_xml_root_tag(text)
+    return {
+        "xml_root_tag": root_tag,
+        "xml_namespaces": _extract_xml_namespaces(text),
+        "xml_schema_fields": _extract_xml_schema_fields(text),
+        "xml_record_tag_candidates": _extract_xml_record_tag_candidates(text, root_tag),
+        "xml_preview_mode": "heuristic",
+    }
+
+
 # ---------------------------------------------------------------------------
 # Tool 1: peek_file
 # ---------------------------------------------------------------------------
@@ -299,7 +450,8 @@ def peek_file(
 ) -> Dict[str, Any]:
     """
     Inspect a SINGLE file via a budget range-GET. Returns the content family
-    (csv/json/text), column headers, and a preview — no full download.
+    (csv/json/xml/text), column headers or XML tags/schema hints, and a
+    preview — no full download.
 
     USE THIS for one file at a time. For multiple files in one call, use
     `peek_multiple` instead (different signature: takes a `files` list).
@@ -314,7 +466,9 @@ def peek_file(
 
     Returns:
         Dict with keys: family, preview_text, header_columns, row_count_estimate,
-        size_bytes, dataset_id, file_path. On error: {error: ...}
+        size_bytes, dataset_id, file_path. XML previews may also include
+        xml_root_tag, xml_namespaces, xml_schema_fields,
+        xml_record_tag_candidates, xml_preview_mode. On error: {error: ...}
     """
     if not dataset_id:
         return {"error": "dataset_id is required"}
@@ -382,6 +536,9 @@ def peek_file(
                 result["json_keys"] = sorted(first_obj[0].keys())
         except Exception:
             pass
+
+    if family == "xml":
+        result.update(_build_xml_preview(text, size_bytes))
 
     return result
 
@@ -665,6 +822,8 @@ def query_file(
     No download required. The file is referenced as table alias 't'.
 
     Supported file types: CSV (.csv), JSON (.json, .jsonl, .ndjson).
+    XML/KML is detected but not queryable here; query_file returns a hint
+    to use peek_file, grep_file, or download + execute_code instead.
     Results are capped at 200 rows.
 
     Args:

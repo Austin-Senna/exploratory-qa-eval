@@ -10,6 +10,17 @@
     "Jefferson_City,_Missouri",
     "Lincoln_University_(Missouri)"
   ],
+  "source_sequence": [
+    "datagov/2021-state-expenditures/files/rows.txt",
+    "datagov/2022-state-expenditures/files/rows.txt",
+    "datagov/2023-state-expenditures/files/rows.txt",
+    "datagov/2021-state-employee-pay/files/rows.txt",
+    "datagov/2022-state-employee-pay/files/rows.txt",
+    "datagov/2023-state-employee-pay/files/rows.txt",
+    "wikipedia/Missouri_Department_of_Corrections/content.txt",
+    "wikipedia/Jefferson_City,_Missouri/content.txt",
+    "wikipedia/Lincoln_University_(Missouri)/content.txt"
+  ],
   "reasoning_chain_text": [
     "1. Identify Missouri state agencies in the top five for professional services spending in 2021.",
     "2. From the agencies in step 1, keep the ones that also remain in the top five for professional services spending in 2022.",

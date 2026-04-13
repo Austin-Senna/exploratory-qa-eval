@@ -7,6 +7,13 @@
     "report-card-enrollment-2021-22-school-year",
     "report-card-assessment-data-2021-22-school-year"
   ],
+  "source_sequence": [
+    "datagov/report-card-enrollment-2018-19-school-year/files/rows.txt",
+    "datagov/report-card-enrollment-2019-20-school-year/files/rows.txt",
+    "datagov/report-card-enrollment-2020-21-school-year/files/rows.txt",
+    "datagov/report-card-enrollment-2021-22-school-year/files/rows.txt",
+    "datagov/report-card-assessment-data-2021-22-school-year/files/rows.txt"
+  ],
   "reasoning_chain_text": [
     "1. Identify Washington counties with low-income student enrollment between 32 and 40 percent in 2018-19.",
     "2. From those counties, keep the ones in the same range in 2019-20.",

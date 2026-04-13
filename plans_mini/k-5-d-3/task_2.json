@@ -10,6 +10,17 @@
     "John_Ashcroft",
     "chicago-population-counts"
   ],
+  "source_sequence": [
+    "datagov/2018-state-employee-pay/files/rows.txt",
+    "datagov/2019-state-employee-pay/files/rows.txt",
+    "datagov/2020-state-employee-pay/files/rows.txt",
+    "wikipedia/State_Auditor_of_Missouri/content.txt",
+    "wikipedia/List_of_attorneys_general_of_Missouri/content.txt",
+    "wikipedia/Edward_Bates/content.txt",
+    "wikipedia/Missouri_Attorney_General/content.txt",
+    "wikipedia/John_Ashcroft/content.txt",
+    "datagov/chicago-population-counts/files/rows.txt"
+  ],
   "reasoning_chain_text": [
     "1. Identify Missouri state agencies in the top five by average employee pay for 2018.",
     "2. From the agencies in step 1, keep the ones that also rank in the top five by average employee pay for 2019.",

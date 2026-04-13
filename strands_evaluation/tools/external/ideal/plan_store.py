@@ -16,6 +16,7 @@ class IdealTaskPlan:
     task_id: str
     plan_path: Path
     dataset_sequence: List[str]
+    source_sequence: List[str]
     reasoning_chain_text: str
 
 
@@ -87,6 +88,35 @@ def _validate_dataset_sequence(raw: Any, *, plan_path: Path) -> List[str]:
     return out
 
 
+def _validate_source_sequence(raw: Any, *, plan_path: Path) -> List[str]:
+    if not isinstance(raw, list):
+        raise ValueError(f"Invalid plan at '{plan_path}': source_sequence must be a list.")
+
+    out: List[str] = []
+    for i, item in enumerate(raw):
+        if not isinstance(item, str):
+            raise ValueError(
+                f"Invalid plan at '{plan_path}': source_sequence[{i}] must be a string."
+            )
+        source = item.strip()
+        if not source:
+            raise ValueError(
+                f"Invalid plan at '{plan_path}': source_sequence[{i}] cannot be empty."
+            )
+        if "/" not in source:
+            raise ValueError(
+                f"Invalid plan at '{plan_path}': source_sequence[{i}] must be a dataset-relative file path, got '{source}'."
+            )
+        if "://" in source:
+            raise ValueError(
+                f"Invalid plan at '{plan_path}': source_sequence[{i}] must be a dataset-relative file path, got '{source}'."
+            )
+        out.append(source)
+    if not out:
+        raise ValueError(f"Invalid plan at '{plan_path}': source_sequence cannot be empty.")
+    return out
+
+
 def _validate_reasoning_text(raw: Any, *, plan_path: Path) -> str:
     if isinstance(raw, str):
         text = raw.strip()
@@ -138,6 +168,10 @@ def load_plan_for_task(task_id: str) -> IdealTaskPlan:
         payload.get("dataset_sequence"),
         plan_path=plan_path,
     )
+    source_sequence = _validate_source_sequence(
+        payload.get("source_sequence"),
+        plan_path=plan_path,
+    )
     reasoning_chain_text = _validate_reasoning_text(
         payload.get("reasoning_chain_text"),
         plan_path=plan_path,
@@ -147,6 +181,7 @@ def load_plan_for_task(task_id: str) -> IdealTaskPlan:
         task_id=str(task_id),
         plan_path=plan_path,
         dataset_sequence=dataset_sequence,
+        source_sequence=source_sequence,
         reasoning_chain_text=reasoning_chain_text,
     )
 

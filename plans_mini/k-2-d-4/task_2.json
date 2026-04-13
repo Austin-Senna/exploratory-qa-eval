@@ -7,6 +7,13 @@
     "500-cities-city-level-data-gis-friendly-format-2019-release",
     "2020-census-redistricting-data-all-texas-places"
   ],
+  "source_sequence": [
+    "datagov/500-cities-city-level-data-gis-friendly-format-2016-release/files/rows.txt",
+    "datagov/500-cities-city-level-data-gis-friendly-format-2017-release/files/rows.txt",
+    "datagov/500-cities-city-level-data-gis-friendly-format-2018-release/files/rows.txt",
+    "datagov/500-cities-city-level-data-gis-friendly-format-2019-release/files/rows.txt",
+    "datagov/2020-census-redistricting-data-all-texas-places/files/rows.txt"
+  ],
   "reasoning_chain_text": [
     "1. Identify Texas cities with diabetes prevalence above 12 percent in 2016.",
     "2. From those cities, keep the ones with diabetes prevalence above 12 percent in 2017.",

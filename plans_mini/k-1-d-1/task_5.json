@@ -3,6 +3,9 @@
   "dataset_sequence": [
     "cta-ridership-l-station-entries-monthly-day-type-averages-totals"
   ],
+  "source_sequence": [
+    "datagov/cta-ridership-l-station-entries-monthly-day-type-averages-totals/files/rows.txt"
+  ],
   "reasoning_chain_text": [
     "1. Sum CTA 'L' station entries by year from 2005 to 2010 and select the minimum."
   ],

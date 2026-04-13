@@ -11,17 +11,28 @@
     "Colfax,_Washington",
     "Washington_State_University"
   ],
+  "source_sequence": [
+    "datagov/report-card-enrollment-2018-19-school-year/files/rows.txt",
+    "datagov/report-card-enrollment-2019-20-school-year/files/rows.txt",
+    "datagov/report-card-enrollment-2020-21-school-year/files/rows.txt",
+    "datagov/report-card-enrollment-2021-22-school-year/files/rows.txt",
+    "datagov/report-card-assessment-data-2021-22-school-year/files/rows.txt",
+    "wikipedia/King_County,_Washington/content.txt",
+    "wikipedia/Kitsap_County,_Washington/content.txt",
+    "wikipedia/Whitman_County,_Washington/content.txt",
+    "wikipedia/Colfax,_Washington/content.txt",
+    "wikipedia/Washington_State_University/content.txt"
+  ],
   "reasoning_chain_text": [
     "1. Identify Washington counties with low-income enrollment percentage between 32% and 40% in 2018-19.",
     "2. Keep counties meeting that same range in 2019-20.",
     "3. Keep counties meeting that same range in 2020-21.",
     "4. For 2021-22, intersect the four yearly low-income sets to keep counties meeting the range every year.",
     "5. From those counties, keep the ones with district-average math proficiency above 40% in 2021-22.",
-    "6. Determine whether the county in dataset position 6 is the most populous county in Washington.",
-    "7. Record the 2020 population for the county in dataset position 7 if it remains under consideration after step 6.",
-    "8. Record the 2020 population and county seat for the county in dataset position 8, then identify which later county has the lower population among the counties still under consideration.",
-    "9. Identify the town that beat that county seat in the agricultural college site-selection competition.",
-    "10. Record the date when the agricultural college in dataset position 10 first opened to students."
+    "6. From those counties, exclude the most populous county in Washington.",
+    "7. Among the counties still remaining, compare 2020 populations and keep the county with the lower population, then record its county seat.",
+    "8. Identify the town that beat that county seat in the agricultural college site-selection competition.",
+    "9. Record the date when the agricultural college in that town first opened to students."
   ],
   "original_final_question": "On what date did the agricultural college first open to students, given that this college was ultimately located in a town that beat the county seat (in a site selection competition) of the Washington county that had the lowest 2020 census population among those Washington counties that (1) were NOT the most populous in the state, (2) had district-average Math proficiency above 40% in the 2021-22 school year, AND (3) had Low-Income student enrollment percentage between 32-40% in every school year from 2018-19 through 2021-22? Report in the format MM/DD/YYYY. Your response should be in the format [Answer].",
   "original_reasoning_chain": [

@@ -9,6 +9,16 @@
     "Moses_Brown_Ives",
     "Moses_Brown"
   ],
+  "source_sequence": [
+    "datagov/2015-property-tax-roll/files/rows.txt",
+    "datagov/2016-property-tax-roll/files/rows.txt",
+    "datagov/2017-property-tax-roll/files/rows.txt",
+    "datagov/2018-property-tax-roll/files/rows.txt",
+    "datagov/national-incorporated-places-and-counties/files/rows.txt",
+    "wikipedia/Brown_University/content.txt",
+    "wikipedia/Moses_Brown_Ives/content.txt",
+    "wikipedia/Moses_Brown/content.txt"
+  ],
   "reasoning_chain_text": [
     "1. Identify Providence hospital properties with assessed value between $6.9 million and $7.3 million in 2015.",
     "2. From those properties, keep the ones with assessed value in the same range in 2016.",

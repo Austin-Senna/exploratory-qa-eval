@@ -9,6 +9,16 @@
     "University_of_Houston\u2013Clear_Lake",
     "University_of_Houston\u2013Downtown"
   ],
+  "source_sequence": [
+    "wikipedia/List_of_counties_in_Texas/content.txt",
+    "datagov/fy-2020-disability-compensation-recipients-by-county/files/rows.txt",
+    "datagov/fy-2023-disability-compensation-recipients-by-county/files/rows.txt",
+    "wikipedia/Harris_County,_Texas/content.txt",
+    "wikipedia/Houston/content.txt",
+    "wikipedia/University_of_Houston/content.txt",
+    "wikipedia/University_of_Houston\u2013Clear_Lake/content.txt",
+    "wikipedia/University_of_Houston\u2013Downtown/content.txt"
+  ],
   "reasoning_chain_text": [
     "1. Identify the two most populous Texas counties in 2024.",
     "2. For the counties from step 1, record disability compensation recipient counts for 2020.",

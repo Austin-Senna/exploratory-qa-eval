@@ -14,6 +14,21 @@
     "school-nutrition-programs-contact-information-and-site-level-program-participation-pr-2020",
     "Sheldon_Independent_School_District"
   ],
+  "source_sequence": [
+    "datagov/texas-state-expenditures-by-county-2018/files/rows.txt",
+    "datagov/texas-state-expenditures-by-county-2019/files/rows.txt",
+    "datagov/texas-state-expenditures-by-county-2020/files/rows.txt",
+    "wikipedia/Travis_County,_Texas/content.txt",
+    "wikipedia/Harris_County,_Texas/content.txt",
+    "wikipedia/Dallas_County,_Texas/content.txt",
+    "wikipedia/Austin,_Texas/content.txt",
+    "wikipedia/Houston/content.txt",
+    "wikipedia/Dallas/content.txt",
+    "datagov/school-nutrition-programs-contact-information-and-site-level-program-participation-pr-2018/files/rows.txt",
+    "datagov/school-nutrition-programs-contact-information-and-site-level-program-participation-pr-2019/files/rows.txt",
+    "datagov/school-nutrition-programs-contact-information-and-site-level-program-participation-pr-2020/files/rows.txt",
+    "wikipedia/Sheldon_Independent_School_District/content.txt"
+  ],
   "reasoning_chain_text": [
     "1. Record total state spending by county in 2018.",
     "2. Record total state spending by county in 2019.",

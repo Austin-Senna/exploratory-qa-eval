@@ -7,6 +7,13 @@
     "large-scale-renewable-projects-reported-by-nyserda-beginning-2004",
     "index-violent-property-and-firearm-rates-by-county-beginning-1990"
   ],
+  "source_sequence": [
+    "datagov/bridge-conditions-nys-department-of-transportation/files/rows.txt",
+    "datagov/fire-department-directory-for-new-york-state/files/rows.txt",
+    "datagov/bank-owned-atm-locations-in-new-york-state/files/rows.txt",
+    "datagov/large-scale-renewable-projects-reported-by-nyserda-beginning-2004/files/rows.txt",
+    "datagov/index-violent-property-and-firearm-rates-by-county-beginning-1990/files/rows.txt"
+  ],
   "reasoning_chain_text": [
     "1. Identify NY counties with at least 65 bridges rated poor.",
     "2. From those counties, keep the ones with at least 50 fire departments.",

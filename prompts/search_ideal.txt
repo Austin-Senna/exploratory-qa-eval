@@ -1,13 +1,13 @@
 ## AVAILABLE SEARCH TOOLS
-- `search_ideal` — ideal search. In this mode it is the only search tool. Each call consumes up to five datasets and searches only within those datasets.
+- `search_ideal` — ideal search. In this mode it is the only search tool. Each call consumes up to `top_k` planned source targets.
 
 ## SEARCH STRATEGY GUIDE (IDEAL)
 `search_ideal` is the only search tool in this mode.
 
 Use it deliberately:
-1. Infer what the next search batch is supposed to verify from the question and your current plan context
-2. Use it until exhaustion. You will most likely need all the datasets.
-3. Ask for the exact entity, field, or value signal needed from those datasets
-4. After a relevant result, move quickly to `list_files`, `peek_file`, `query_file`, or `grep_file` for extraction
+1. Use it until exhaustion. You will most likely need all the planned sources.
+2. Each call advances through the next planned source targets in `source_sequence`; your query text does not change which targets are returned.
+3. `top_k` controls how many sequential planned sources are returned in one call.
+4. Inspect the returned dataset ids, URIs, descriptions, and truncated content, then move to extraction on those files.
 
-Each `search_ideal` call advances the search cursor by the next batch, and once the sequence is exhausted the tool will return `plan_exhausted=true`.
+Each `search_ideal` call advances the search cursor by up to `top_k` planned sources, and once the sequence is exhausted the tool will return `plan_exhausted=true`.

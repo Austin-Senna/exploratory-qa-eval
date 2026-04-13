@@ -5,6 +5,12 @@
     "crime-incidents-in-2020",
     "crime-incidents-in-2021"
   ],
+  "source_sequence": [
+    "wikipedia/Brightwood_(Washington,_D.C.)/content.txt",
+    "datagov/crime-incidents-in-2020/files/data.txt",
+    "datagov/crime-incidents-in-2021/files/data.txt",
+    "datagov/crime-incidents-in-2020/files/data.txt"
+  ],
   "reasoning_chain_text": [
     "1. Determine which ward contains Brightwood in Washington, D.C.",
     "2. Identify the most common offense in that ward in 2020 and determine its incident count.",
@@ -15,7 +21,7 @@
     "Node 2 depends on node 1: In 2020 within Ward 4, the most common offense is THEFT F/AUTO.",
     "Node 3 depends on node 2: 2021 Ward 4 incidents for THEFT F/AUTO = 996.",
     "Node 4 depends on node 1: In 2020 within Ward 4, the incident count of the most common offense = 1,070.",
-    "Compute percent of 2020 level in 2021: 996 / 1070 * 100 ≈ 93.08%.",
+    "Compute percent of 2020 level in 2021: 996 / 1070 * 100 \u2248 93.08%.",
     "Round to nearest whole percent: 93.",
     "Final answer: 93"
   ]

@@ -5,14 +5,16 @@ Content families
 ----------------
   csv   — first non-empty line contains a common delimiter (, \\t | ;)
   json  — stripped content starts with { or [
+  xml   — stripped content starts with an XML declaration or root tag
   text  — everything else
 """
 import re
 from typing import Literal
 
-ContentFamily = Literal["csv", "json", "text"]
+ContentFamily = Literal["csv", "json", "xml", "text"]
 
 DELIMITERS = (",", "\t", "|", ";")
+_XML_ROOT_TAG_RE = re.compile(r"^<(?![!?/])([A-Za-z_][\w:.-]*)\b")
 
 # ---------------------------------------------------------------------------
 # Metadata-filename heuristics (ported from legacy s3_search.py)
@@ -62,6 +64,14 @@ def detect_family(content: str) -> ContentFamily:
     stripped = content.lstrip()
     if stripped.startswith("{") or stripped.startswith("["):
         return "json"
+    head = stripped[:512]
+    lower_head = head.lower()
+    if (
+        lower_head.startswith("<?xml")
+        or lower_head.startswith("<kml")
+        or _XML_ROOT_TAG_RE.match(head)
+    ):
+        return "xml"
     first_line = stripped.split("\n", 1)[0]
     if any(d in first_line for d in DELIMITERS):
         return "csv"

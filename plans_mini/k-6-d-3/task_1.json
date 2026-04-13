@@ -11,6 +11,18 @@
     "Lincoln_University_(Missouri)",
     "James_Milton_Turner"
   ],
+  "source_sequence": [
+    "datagov/2021-state-expenditures/files/rows.txt",
+    "datagov/2022-state-expenditures/files/rows.txt",
+    "datagov/2023-state-expenditures/files/rows.txt",
+    "datagov/2021-state-employee-pay/files/rows.txt",
+    "datagov/2022-state-employee-pay/files/rows.txt",
+    "datagov/2023-state-employee-pay/files/rows.txt",
+    "wikipedia/Missouri_Department_of_Corrections/content.txt",
+    "wikipedia/Jefferson_City,_Missouri/content.txt",
+    "wikipedia/Lincoln_University_(Missouri)/content.txt",
+    "wikipedia/James_Milton_Turner/content.txt"
+  ],
   "reasoning_chain_text": [
     "1. Identify Missouri state agencies in the top five for professional services spending in 2021.",
     "2. From those agencies, keep the Missouri state agencies that again rank in the top five for professional services spending in 2022.",

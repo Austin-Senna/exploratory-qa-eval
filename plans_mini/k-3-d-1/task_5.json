@@ -5,6 +5,11 @@
     "index-violent-property-and-firearm-rates-by-county-beginning-1990",
     "Buffalo,_New_York"
   ],
+  "source_sequence": [
+    "datagov/los-angeles-international-airport-passenger-count-by-carrier-type/files/rows.txt",
+    "datagov/index-violent-property-and-firearm-rates-by-county-beginning-1990/files/rows.txt",
+    "wikipedia/Buffalo,_New_York/content.txt"
+  ],
   "reasoning_chain_text": [
     "1. Within 2017 through 2022, determine the year with the highest total Charter flight passengers over Los Angeles international airports.",
     "2. Using violent-crime data for that year, determine whether Erie County or Westchester County recorded more violent crimes.",

@@ -11,6 +11,17 @@
     "libraries-2020-computer-sessions-by-location",
     "libraries-2021-computer-sessions-by-location"
   ],
+  "source_sequence": [
+    "datagov/libraries-2019-circulation-by-location/files/rows.txt",
+    "datagov/libraries-2020-circulation-by-location/files/rows.txt",
+    "datagov/libraries-2021-circulation-by-location/files/rows.txt",
+    "datagov/libraries-2019-visitors-by-location/files/rows.txt",
+    "datagov/libraries-2020-visitors-by-location/files/rows.txt",
+    "datagov/libraries-2021-visitors-by-location/files/rows.txt",
+    "datagov/libraries-2019-computer-sessions-by-location/files/rows.txt",
+    "datagov/libraries-2020-computer-sessions-by-location/files/rows.txt",
+    "datagov/libraries-2021-computer-sessions-by-location/files/rows.txt"
+  ],
   "reasoning_chain_text": [
     "1. For 2019, identify Chicago library branches with physical addresses in the top 5 by YTD circulation.",
     "2. For 2020, identify Chicago library branches with physical addresses in the top 5 by YTD circulation.",

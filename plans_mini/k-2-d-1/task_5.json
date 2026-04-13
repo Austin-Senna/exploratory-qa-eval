@@ -4,6 +4,10 @@
     "2020-census-redistricting-data-all-texas-counties",
     "West_Texas"
   ],
+  "source_sequence": [
+    "datagov/2020-census-redistricting-data-all-texas-counties/files/rows.txt",
+    "wikipedia/West_Texas/content.txt"
+  ],
   "reasoning_chain_text": [
     "1. From Bexar, El Paso, Hidalgo, and Montgomery, keep counties with 2020 census population under 900,000.",
     "2. From that subset, identify the county listed as part of West Texas and return only the county name."

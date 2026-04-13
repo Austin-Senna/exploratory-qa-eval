@@ -6,6 +6,12 @@
     "apd-use-of-force",
     "Austin,_Texas"
   ],
+  "source_sequence": [
+    "wikipedia/Austin,_Texas/content.txt",
+    "datagov/apd-searches-by-type/files/rows.txt",
+    "datagov/apd-computer-aided-dispatch-incidents/files/rows.txt",
+    "datagov/apd-use-of-force/files/rows.txt"
+  ],
   "reasoning_chain_text": [
     "01. Determine which Austin Police Department sector, excluding Unknown, has the most searches in 2023.",
     "02. Within that sector, determine which council district has the most dispatch-system incident records in 2023.",
@@ -18,7 +24,7 @@
     "Node 3 depends on node 2: In 2023 CAD incidents, within sector Charlie, the council district with the most incidents -> 1 (21038).",
     "Node 4 depends on node 3: In 2023 APD use-of-force data, incidents in council district 1 with Used Taser(s) > 0 = 59.",
     "Compute Austin age in 2023: 2023 - 1839 = 184 years = 1.84 centuries.",
-    "Compute incidents per century: 59 / 1.84 ≈ 32.07.",
+    "Compute incidents per century: 59 / 1.84 \u2248 32.07.",
     "Round to nearest whole number: 32.",
     "Final answer: 32"
   ]

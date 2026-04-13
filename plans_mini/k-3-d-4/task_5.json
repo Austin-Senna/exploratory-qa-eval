@@ -8,6 +8,14 @@
     "fy-2023-disability-compensation-recipients-by-county",
     "Phoenix,_Arizona"
   ],
+  "source_sequence": [
+    "wikipedia/Mountain_states/content.txt",
+    "wikipedia/Mexico\u2013United_States_border/content.txt",
+    "wikipedia/Four_Corners/content.txt",
+    "datagov/fy-2020-pension-recipients-by-state/files/rows.txt",
+    "datagov/fy-2023-disability-compensation-recipients-by-county/files/rows.txt",
+    "wikipedia/Phoenix,_Arizona/content.txt"
+  ],
   "reasoning_chain_text": [
     "1. Identify the U.S. states classified as Mountain states.",
     "2. Identify the U.S. states that border Mexico.",

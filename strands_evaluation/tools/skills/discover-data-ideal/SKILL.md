@@ -1,6 +1,6 @@
 ---
 name: discover-data
-description: Ideal-mode discovery workflow for `search_ideal`. Load this skill before using the ideal search tool or list_files in ideal search mode.
+description: Ideal-mode discovery workflow for `search_ideal`. Load this skill before using the ideal search tool in ideal search mode.
 ---
 
 ## Rule #1: `search_ideal` Must Be Used Until Exhaustion
@@ -8,32 +8,21 @@ description: Ideal-mode discovery workflow for `search_ideal`. Load this skill b
 `search_ideal` is the only search tool in this mode.
 
 Each call:
-- consumes up to five datasets
-- searches only within those datasets
+- consumes up to `top_k` planned source targets
+- returns concrete file-backed results with dataset id, file URI, and indexed description/truncated content when available
 
 Use it until exhaustion.
-You will most likely need all the datasets.
+You will most likely need all the planned sources.
 
-## Step 1: Decide What the Next Batch Must Answer
+## Step 1: Inspect The Returned Source
 
-Before each `search_ideal` call, infer from your current plan:
-- what these datasets are supposed to verify
-- which entity, field, or value signal you need from them
+After each `search_ideal` call:
+- pivot directly to extraction on the returned files
 
-Ask only for that exact signal.
+Do not spend multiple broad searches on the same step. The cursor advances on every `search_ideal` call.
 
-## Step 2: Pivot Quickly After the Search
+## Step 2: Pivot Quickly After The Source Is Revealed
 
-After `search_ideal` returns a relevant result:
-- use `list_files` if you need file structure
-- use `peek_file` or `peek_multiple` to confirm schema
-- use `query_file` or `grep_file` for extraction
-
-Do not spend multiple broad searches on the same batch. The cursor advances on every `search_ideal` call.
-
-## When a Step Looks Weak
-
-If a `search_ideal` result is weak:
-1. inspect the returned dataset/file context directly if possible
-2. continue the extraction workflow instead of broadening search
-3. only advance if the current batch is exhausted and the next batch is required by the plan
+After `search_ideal` returns:
+1. use `peek_file` or `peek_multiple` to confirm file structure when needed
+2. use `query_file` or `grep_file` for extraction

@@ -11,6 +11,18 @@
     "Omaha,_Nebraska",
     "Logan_Fontenelle"
   ],
+  "source_sequence": [
+    "datagov/agency-contracts-fiscal-year-2017/files/rows.txt",
+    "datagov/agency-contracts-fiscal-year-2018/files/rows.txt",
+    "datagov/agency-contracts-fiscal-year-2019/files/rows.txt",
+    "datagov/agency-contracts-fiscal-year-2020/files/rows.txt",
+    "wikipedia/HDR,_Inc./content.txt",
+    "wikipedia/Jacobs_Solutions/content.txt",
+    "wikipedia/HNTB/content.txt",
+    "datagov/active-construction-projects/files/rows.txt",
+    "wikipedia/Omaha,_Nebraska/content.txt",
+    "wikipedia/Logan_Fontenelle/content.txt"
+  ],
   "reasoning_chain_text": [
     "1. For Washington agency contracts in fiscal year 2017, identify which candidate firms rank in the top 20 by contract count.",
     "2. For fiscal year 2018, keep the candidate firms that again rank in the top 20 by contract count.",

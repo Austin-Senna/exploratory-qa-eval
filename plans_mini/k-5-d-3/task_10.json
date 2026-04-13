@@ -10,6 +10,17 @@
     "Houston",
     "Houston_Rockets"
   ],
+  "source_sequence": [
+    "datagov/texas-department-of-criminal-justice-releases-fy-2019/files/rows.txt",
+    "datagov/texas-department-of-criminal-justice-releases-fy-2020/files/rows.txt",
+    "datagov/texas-department-of-criminal-justice-releases-fy-2021/files/rows.txt",
+    "datagov/texas-department-of-criminal-justice-receives-fy-2019/files/rows.txt",
+    "datagov/texas-department-of-criminal-justice-receives-fy-2020/files/rows.txt",
+    "datagov/texas-department-of-criminal-justice-receives-fy-2021/files/rows.txt",
+    "wikipedia/Harris_County,_Texas/content.txt",
+    "wikipedia/Houston/content.txt",
+    "wikipedia/Houston_Rockets/content.txt"
+  ],
   "reasoning_chain_text": [
     "1. Among Harris, Travis, Dallas, and Bexar counties, keep the ones that rank in the statewide top five for offender releases in 2019.",
     "2. From the counties in step 1, keep the ones that also rank in the statewide top five for offender releases in 2020.",

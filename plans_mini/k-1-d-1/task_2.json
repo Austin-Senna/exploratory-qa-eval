@@ -3,6 +3,9 @@
   "dataset_sequence": [
     "vsrr-provisional-drug-overdose-death-counts"
   ],
+  "source_sequence": [
+    "datagov/vsrr-provisional-drug-overdose-death-counts/files/rows.txt"
+  ],
   "reasoning_chain_text": [
     "1. Sum December overdose deaths by year from 2015-2023 and select the maximum."
   ],

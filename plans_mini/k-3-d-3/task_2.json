@@ -7,6 +7,13 @@
     "2012-2013-school-locations",
     "East_Flatbush,_Brooklyn"
   ],
+  "source_sequence": [
+    "datagov/2011-2012-high-school-progress-report/files/rows.txt",
+    "datagov/2012-2013-high-school-progress-report/files/rows.txt",
+    "datagov/2013-2014-doe-high-school-performance-directory/files/rows.txt",
+    "datagov/2012-2013-school-locations/files/rows.txt",
+    "wikipedia/East_Flatbush,_Brooklyn/content.txt"
+  ],
   "reasoning_chain_text": [
     "1. Identify NYC high schools in the top 3 by overall score in 2011-12.",
     "2. Identify NYC high schools in the top 3 by overall score in 2012-13.",

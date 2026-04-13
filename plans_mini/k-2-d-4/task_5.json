@@ -8,6 +8,14 @@
     "Whitman_County,_Washington",
     "Spokane_County,_Washington"
   ],
+  "source_sequence": [
+    "datagov/report-card-assessment-data-2014-15-school-year/files/rows.txt",
+    "datagov/report-card-assessment-data-2015-16-school-year/files/rows.txt",
+    "datagov/report-card-assessment-data-2016-17-school-year/files/rows.txt",
+    "datagov/report-card-assessment-data-2017-18-school-year/files/rows.txt",
+    "wikipedia/Whitman_County,_Washington/content.txt",
+    "wikipedia/Spokane_County,_Washington/content.txt"
+  ],
   "reasoning_chain_text": [
     "1. Identify Washington school districts with ELA performance at least 68 percent for all students and all grades in 2014-15.",
     "2. From those districts, keep the ones meeting the same condition in 2015-16.",

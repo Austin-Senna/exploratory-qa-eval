@@ -9,6 +9,16 @@
     "employee-overtime-and-supplemental-earnings-2016",
     "employee-overtime-and-supplemental-earnings-2017"
   ],
+  "source_sequence": [
+    "wikipedia/Missouri_Department_of_Transportation/content.txt",
+    "wikipedia/Springfield,_Missouri/content.txt",
+    "datagov/500-cities-local-data-for-better-health-2016-release/files/rows.txt",
+    "datagov/500-cities-local-data-for-better-health-2018-release/files/rows.txt",
+    "datagov/employee-overtime-and-supplemental-earnings-2014/files/rows.txt",
+    "datagov/employee-overtime-and-supplemental-earnings-2015/files/rows.txt",
+    "datagov/employee-overtime-and-supplemental-earnings-2016/files/rows.txt",
+    "datagov/employee-overtime-and-supplemental-earnings-2017/files/rows.txt"
+  ],
   "reasoning_chain_text": [
     "1. Determine the Missouri city where the Southwest district of that transportation agency is based.",
     "2. Using that Missouri city, identify the highway born there and its two terminus cities.",

@@ -1,8 +1,11 @@
 import json
+import sys
 import unittest
 from pathlib import Path
 
 from strands import tool
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from strands_evaluation.tools.external.ideal.search_wrapper import (
     reshape_search_payload,
@@ -26,6 +29,22 @@ class TestSearchWrapperPayload(unittest.TestCase):
         self.assertEqual(out["count"], 1)
         self.assertEqual(list(out["results"][0].keys()), ["uri"])
 
+    def test_source_driven_naive_mode_returns_dataset_id_only(self):
+        payload = {
+            "ideal_source_driven": True,
+            "results": [
+                {
+                    "dataset_id": "foo",
+                    "uri": "s3://lakeqa-yc4103-datalake/datagov/foo/files/rows.txt",
+                    "description": "desc",
+                    "content": "content here",
+                }
+            ],
+            "count": 1,
+        }
+        out = reshape_search_payload(payload, "naive")
+        self.assertEqual(out["results"][0], {"dataset_id": "foo"})
+
     def test_standard_mode_truncates_to_200_words(self):
         long_text = " ".join([f"w{i}" for i in range(400)])
         payload = {
@@ -43,6 +62,47 @@ class TestSearchWrapperPayload(unittest.TestCase):
         self.assertEqual(len(snippet.split()), 200)
         self.assertIn("uri", out["results"][0])
         self.assertEqual(out["results"][0]["score"], "0.123")
+
+    def test_source_driven_standard_and_ideal_match_for_file_rows(self):
+        payload = {
+            "ideal_source_driven": True,
+            "results": [
+                {
+                    "dataset_id": "foo",
+                    "uri": "s3://lakeqa-yc4103-datalake/datagov/foo/files/rows.txt",
+                    "description": "desc",
+                    "content": " ".join([f"w{i}" for i in range(400)]),
+                }
+            ],
+            "count": 1,
+        }
+        standard = reshape_search_payload(payload, "standard")
+        ideal = reshape_search_payload(payload, "ideal")
+
+        self.assertEqual(standard["results"], ideal["results"])
+        self.assertEqual(standard["results"][0]["dataset_id"], "foo")
+        self.assertEqual(standard["results"][0]["description"], "desc")
+        self.assertEqual(len(standard["results"][0]["content"].split()), 200)
+
+    def test_source_driven_standard_preserves_uri_without_optional_fields(self):
+        payload = {
+            "ideal_source_driven": True,
+            "results": [
+                {
+                    "dataset_id": "foo",
+                    "uri": "s3://lakeqa-yc4103-datalake/datagov/foo/files/rows.txt",
+                }
+            ],
+            "count": 1,
+        }
+        out = reshape_search_payload(payload, "standard")
+        self.assertEqual(
+            out["results"][0],
+            {
+                "dataset_id": "foo",
+                "uri": "s3://lakeqa-yc4103-datalake/datagov/foo/files/rows.txt",
+            },
+        )
 
     def test_ideal_mode_adds_description_when_available(self):
         first = json.loads(Path("table_descriptions.jsonl").read_text().splitlines()[0])

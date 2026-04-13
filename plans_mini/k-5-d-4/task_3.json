@@ -11,6 +11,18 @@
     "fy-2020-disability-compensation-recipients-by-county",
     "fy-2023-disability-compensation-recipients-by-county"
   ],
+  "source_sequence": [
+    "datagov/employee-overtime-and-supplemental-earnings-2018/files/rows.txt",
+    "datagov/employee-overtime-and-supplemental-earnings-2019/files/rows.txt",
+    "datagov/employee-overtime-and-supplemental-earnings-2020/files/rows.txt",
+    "datagov/employee-overtime-and-supplemental-earnings-2021/files/rows.txt",
+    "wikipedia/Chicago_Police_Department/content.txt",
+    "wikipedia/O._W._Wilson/content.txt",
+    "wikipedia/Wichita_Police_Department/content.txt",
+    "wikipedia/Wichita,_Kansas/content.txt",
+    "datagov/fy-2020-disability-compensation-recipients-by-county/files/rows.txt",
+    "datagov/fy-2023-disability-compensation-recipients-by-county/files/rows.txt"
+  ],
   "reasoning_chain_text": [
     "1. For 2018, calculate overtime totals by department in Chicago.",
     "2. For 2019, calculate overtime totals by department in Chicago.",
@@ -18,7 +30,7 @@
     "4. For 2021, combine the 2018-2021 overtime totals to identify the Chicago department with the highest average overtime.",
     "5. Record the first civilian superintendent for the department identified in step 4.",
     "6. List the cities where that person previously served as police chief.",
-    "7. Determine whether the department in dataset position 7 is based in one of the cities from step 6 and whether the same person both served as police chief there and founded a criminal justice program at a local university.",
+    "7. Determine which city from step 6 is also where that same person founded a criminal justice program at a local university.",
     "8. Record the county containing the city confirmed in step 7.",
     "9. Record the FY 2020 veteran disability compensation recipient count for the county from step 8.",
     "10. Compute the absolute change in veteran disability compensation recipients from FY 2020 to FY 2023 for that county."

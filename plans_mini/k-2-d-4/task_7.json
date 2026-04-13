@@ -7,6 +7,13 @@
     "texas-department-of-criminal-justice-receives-fy-2022",
     "West_Texas"
   ],
+  "source_sequence": [
+    "datagov/texas-department-of-criminal-justice-receives-fy-2019/files/rows.txt",
+    "datagov/texas-department-of-criminal-justice-receives-fy-2020/files/rows.txt",
+    "datagov/texas-department-of-criminal-justice-receives-fy-2021/files/rows.txt",
+    "datagov/texas-department-of-criminal-justice-receives-fy-2022/files/rows.txt",
+    "wikipedia/West_Texas/content.txt"
+  ],
   "reasoning_chain_text": [
     "1. Identify Texas counties with prison-system entries between 700 and 4,600 in FY 2019.",
     "2. From those counties, keep the ones in the same range in FY 2020.",

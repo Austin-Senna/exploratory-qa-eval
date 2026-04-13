@@ -8,6 +8,14 @@
     "Missouri_Department_of_Transportation",
     "Springfield,_Missouri"
   ],
+  "source_sequence": [
+    "datagov/2007-state-expenditures/files/rows.txt",
+    "datagov/2008-state-expenditures/files/rows.txt",
+    "datagov/2009-state-expenditures/files/rows.txt",
+    "datagov/2010-state-expenditures/files/rows.txt",
+    "wikipedia/Missouri_Department_of_Transportation/content.txt",
+    "wikipedia/Springfield,_Missouri/content.txt"
+  ],
   "reasoning_chain_text": [
     "1. For Missouri state expenditures in 2007, total spending by agency.",
     "2. For Missouri state expenditures in 2008, total spending by agency.",

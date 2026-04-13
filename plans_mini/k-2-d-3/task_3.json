@@ -6,6 +6,12 @@
     "texas-state-expenditures-by-county-2019",
     "texas-state-expenditures-by-county-2020"
   ],
+  "source_sequence": [
+    "datagov/unemployment-insurance-beneficiaries-and-benefit-amounts-paid-beginning-2001/files/rows.txt",
+    "datagov/texas-state-expenditures-by-county-2018/files/rows.txt",
+    "datagov/texas-state-expenditures-by-county-2019/files/rows.txt",
+    "datagov/texas-state-expenditures-by-county-2020/files/rows.txt"
+  ],
   "reasoning_chain_text": [
     "1. Determine the year since 2001 with the highest total unemployment-benefit beneficiaries.",
     "2. For 2018, aggregate Texas state expenditures by county.",
