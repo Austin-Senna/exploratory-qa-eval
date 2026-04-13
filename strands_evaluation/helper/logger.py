@@ -93,3 +93,21 @@ def configure_logging(
     logging.getLogger("strands.event_loop._retry").setLevel(logging.INFO)
 
     logger.info(f"Logging to: {log_file}")
+
+
+def configure_worker_logging(
+    run_config,
+    *,
+    model: Optional[str] = None,
+    condition: Optional[str] = None,
+    task_id: Optional[str] = None,
+    level: int = logging.DEBUG,
+) -> None:
+    """Configure per-task logging using the run-configured log root."""
+    configure_logging(
+        log_dir=getattr(run_config, "logs_output_dir", "logs") or "logs",
+        model=model,
+        condition=condition,
+        task_id=task_id,
+        level=level,
+    )

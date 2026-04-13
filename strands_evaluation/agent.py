@@ -36,7 +36,7 @@ from strands_evaluation.instrumentation import (
     TelemetryTracker,
 )
 from strands_evaluation.instrumentation.loop_plugin import CategoryStagnationHandler
-from strands_evaluation.helper.logger import configure_logging
+from strands_evaluation.helper.logger import configure_worker_logging
 from strands_evaluation.helper.prompting import (
     compose_baseline_prompt,
     compose_condition_b_prompt,
@@ -387,7 +387,8 @@ def _run_task_worker(
     if effort:
         log_model_name = f"{log_model_name}-{effort}"
 
-    configure_logging(
+    configure_worker_logging(
+        run_config,
         model=log_model_name,
         condition=run_config.condition_config.condition,
         task_id=task.get("id"),

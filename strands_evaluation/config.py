@@ -36,6 +36,7 @@ class ConditionConfig:
 @dataclass
 class RunConfig:
     results_output_dir: str = "results"
+    logs_output_dir: str = "logs"
     max_tool_calls: int = 30
     sliding_window_k: int = 40
     timeout_seconds: int = 450

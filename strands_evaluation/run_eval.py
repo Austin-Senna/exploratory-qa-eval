@@ -499,6 +499,8 @@ def main() -> None:
                         help="Sparse search backend for Condition A (default: bm25)")
     parser.add_argument("--results-output-dir", default="results",
                         help="Base directory for evaluation outputs (default: results)")
+    parser.add_argument("--logs-output-dir", default="logs",
+                        help="Base directory for per-task log files (default: logs)")
 
     # Execution
     parser.add_argument("--parallel", type=int, default=6,
@@ -528,6 +530,7 @@ def main() -> None:
 
     run_config = RunConfig(
         results_output_dir=args.results_output_dir,
+        logs_output_dir=args.logs_output_dir,
         max_tool_calls=args.max_tool_calls,
         sliding_window_k=args.sliding_window,
         timeout_seconds=args.timeout,

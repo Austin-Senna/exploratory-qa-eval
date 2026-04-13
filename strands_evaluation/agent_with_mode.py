@@ -38,7 +38,7 @@ from strands_evaluation.instrumentation import (
     TelemetryTracker,
 )
 from strands_evaluation.instrumentation.loop_plugin import CategoryStagnationHandler
-from strands_evaluation.helper.logger import configure_logging
+from strands_evaluation.helper.logger import configure_worker_logging
 from strands_evaluation.helper.prompting import (
     compose_baseline_prompt,
     compose_condition_b_prompt,
@@ -75,8 +75,12 @@ from strands_evaluation.tools.agent_tools_v2 import (
 )
 from strands_evaluation.tools.agent_tools import download
 from strands_evaluation.tools.external.plan_tools import plan
-from strands_evaluation.tools.external.ideal.plan_ideal import plan_ideal
+from strands_evaluation.tools.external.ideal.plan_ideal import (
+    inject_reasoning_chain_prompt,
+    plan_ideal,
+)
 from strands_evaluation.tools.external.ideal.plan_store import (
+    load_plan_for_context as load_ideal_plan_for_context,
     set_task_context as set_ideal_plan_task_context,
 )
 from strands_evaluation.tools.external.ideal.search_wrapper import (
@@ -190,8 +194,14 @@ def build_management(
     if management_mode == "standard":
         return prompt, [plan, summarize_context], True, True
 
-    # ideal = Condition-B management with plan swapped to plan_ideal.
+    # ideal = Condition-B management with gold reasoning chain preloaded and
+    # plan swapped to plan_ideal.
     set_ideal_plan_task_context(task_context or {})
+    ideal_plan = load_ideal_plan_for_context(task_context)
+    prompt = inject_reasoning_chain_prompt(
+        prompt,
+        ideal_plan.reasoning_chain_text,
+    )
     return prompt, [plan_ideal, summarize_context], True, True
 
 
@@ -581,7 +591,8 @@ def _run_task_worker(
     if effort:
         log_model_name = f"{log_model_name}-{effort}"
 
-    configure_logging(
+    configure_worker_logging(
+        run_config,
         model=log_model_name,
         condition=run_config.condition_config.condition,
         task_id=task.get("id"),

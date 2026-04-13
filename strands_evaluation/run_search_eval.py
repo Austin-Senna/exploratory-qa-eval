@@ -154,6 +154,11 @@ def main() -> None:
         help="Base directory for evaluation outputs",
     )
     parser.add_argument(
+        "--logs-output-dir",
+        default="logs",
+        help="Base directory for per-task log files",
+    )
+    parser.add_argument(
         "--db-path",
         default=None,
         help="Path to LanceDB search index directory (overrides default ./lance_data).",
@@ -216,6 +221,7 @@ def main() -> None:
 
     run_config = RunConfig(
         results_output_dir=args.results_output_dir,
+        logs_output_dir=args.logs_output_dir,
         max_tool_calls=args.max_tool_calls,
         sliding_window_k=args.sliding_window,
         timeout_seconds=args.timeout,

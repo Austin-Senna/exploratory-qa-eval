@@ -152,6 +152,7 @@ def main() -> None:
         help="Sparse backend metadata field (kept for compatibility).",
     )
     parser.add_argument("--results-output-dir", default="results", help="Base directory for outputs")
+    parser.add_argument("--logs-output-dir", default="logs", help="Base directory for per-task log files")
     parser.add_argument(
         "--db-path",
         default=None,
@@ -230,6 +231,7 @@ def main() -> None:
 
     run_config = RunConfig(
         results_output_dir=args.results_output_dir,
+        logs_output_dir=args.logs_output_dir,
         max_tool_calls=args.max_tool_calls,
         sliding_window_k=args.sliding_window,
         timeout_seconds=args.timeout,
