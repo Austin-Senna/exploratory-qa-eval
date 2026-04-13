@@ -190,11 +190,53 @@ def _empty_summary(model_id: str, task_dir_name: str) -> dict:
     }
 
 
+def _json_list_count(raw) -> int:
+    if isinstance(raw, list):
+        return len(raw)
+    text = str(raw or "").strip()
+    if not text:
+        return 0
+    try:
+        payload = json.loads(text)
+    except json.JSONDecodeError:
+        return 0
+    return len(payload) if isinstance(payload, list) else 0
+
+
+def _normalize_main_csv_row(row: dict) -> dict:
+    return {
+        "task_id": row.get("task_id", ""),
+        "model": row.get("model", ""),
+        "expected_answer": row.get("expected_answer", ""),
+        "predicted_answer": row.get("predicted_answer", ""),
+        "exact_match": row.get("exact_match", ""),
+        "f1_score": row.get("f1_score", ""),
+        "required_dataset_count": row.get(
+            "required_dataset_count",
+            _json_list_count(row.get("required_datasets", "")),
+        ),
+        "sources_used_count": row.get(
+            "sources_used_count",
+            _json_list_count(row.get("sources_used", "")),
+        ),
+        "runtime_seconds": row.get("runtime_seconds", 0),
+        "cycle_count": row.get("cycle_count", ""),
+        "input_tokens": row.get("input_tokens", 0),
+        "output_tokens": row.get("output_tokens", 0),
+        "total_tokens": row.get("total_tokens", 0),
+        "cost_usd": row.get("cost_usd", 0.0),
+        "tool_calls_total": row.get("tool_calls_total", 0),
+        "api_tool_calls": row.get("api_tool_calls", 0),
+        "success": row.get("success", False),
+        "error": row.get("error", ""),
+    }
+
+
 def _write_main_csv(csv_path: str, results: list, tasks_by_id: dict) -> None:
     fieldnames = [
         "task_id", "model",
         "expected_answer", "predicted_answer", "exact_match", "f1_score",
-        "reasoning", "required_datasets", "sources_used",
+        "required_dataset_count", "sources_used_count",
         "runtime_seconds", "cycle_count",
         "input_tokens", "output_tokens", "total_tokens", "cost_usd",
         "tool_calls_total", "api_tool_calls",
@@ -205,12 +247,13 @@ def _write_main_csv(csv_path: str, results: list, tasks_by_id: dict) -> None:
         with open(csv_path, newline="") as f:
             for row in csv.DictReader(f):
                 if row.get("task_id"):
-                    existing_rows[row["task_id"]] = row
+                    existing_rows[row["task_id"]] = _normalize_main_csv_row(row)
 
     for r in results:
         task_id = r.get("task_id", "")
         task = tasks_by_id.get(task_id, {})
         required = task.get("datasets_used", [])
+        sources_used = r.get("sources_used", []) or []
         existing_rows[str(task_id)] = {
             "task_id": task_id,
             "model": r.get("model", ""),
@@ -218,9 +261,8 @@ def _write_main_csv(csv_path: str, results: list, tasks_by_id: dict) -> None:
             "predicted_answer": r.get("predicted_answer", ""),
             "exact_match": r.get("exact_match", ""),
             "f1_score": r.get("f1_score", ""),
-            "reasoning": r.get("reasoning", ""),
-            "required_datasets": json.dumps(sorted(required)),
-            "sources_used": json.dumps(r.get("sources_used", [])),
+            "required_dataset_count": len({str(item) for item in required}),
+            "sources_used_count": len({str(item) for item in sources_used}),
             "runtime_seconds": r.get("time", 0),
             "cycle_count": r.get("cycle_count", ""),
             "input_tokens": r.get("input_tokens", 0),
