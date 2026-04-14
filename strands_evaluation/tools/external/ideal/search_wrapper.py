@@ -30,7 +30,9 @@ _DESC_CACHE_LOADED = False
 _DESC_BY_URI: Dict[str, str] = {}
 
 _SCHEMAS_CACHE_LOADED = False
-_SCHEMA_BY_SLUG_FILENAME: Dict[Tuple[str, str], str] = {}
+_SCHEMA_BY_SLUG_FILENAME: Dict[Tuple[str, str], Dict[str, Any]] = {}
+
+_TABULAR_KIND_PRIORITY = ("delimited_text", "tsv", "csv", "parquet", "json", "geojson")
 
 
 def _dataset_id_from_uri(uri: str) -> Optional[str]:
@@ -97,16 +99,19 @@ def _reshape_source_driven_row(row: Dict[str, Any], mode: str) -> Dict[str, Any]
     if uri:
         out["uri"] = uri
 
+    content = _first_non_empty([row.get("content"), row.get("snippet"), row.get("document")])
+
+    if mode == "standard":
+        if content:
+            out["content"] = _truncate_words(content, max_words=200)
+        return out
+
+    # ideal
     description = _first_non_empty([row.get("description")])
     if description:
         out["description"] = description
-
-    content = _first_non_empty([row.get("content"), row.get("snippet"), row.get("document")])
     if content:
-        if mode == "ideal":
-            out["dataset_snippet"] = _truncate_words(content, max_words=_IDEAL_SNIPPET_WORDS)
-        else:
-            out["content"] = _truncate_words(content, max_words=200)
+        out["dataset_snippet"] = _truncate_words(content, max_words=_IDEAL_SNIPPET_WORDS)
 
     return out
 
@@ -141,8 +146,13 @@ def _load_desc_cache() -> None:
     _DESC_BY_URI = uri_map
 
 
-def _slug_filename_from_uri(uri: str) -> Optional[Tuple[str, str]]:
-    """Derive (dataset_slug, filename) from either a full s3:// URI or a versioned s3_key."""
+def _slug_stem_from_uri(uri: str) -> Optional[Tuple[str, str]]:
+    """Derive (dataset_slug, filename_stem) from either a full s3:// URI or a versioned s3_key.
+
+    Extensions are stripped because search URIs use `.txt` while the schemas jsonl
+    keeps the original `.csv`/`.json`/`.tsv` extensions; both representations of a
+    file share a stem.
+    """
     raw = (uri or "").strip()
     if not raw:
         return None
@@ -160,23 +170,24 @@ def _slug_filename_from_uri(uri: str) -> Optional[Tuple[str, str]]:
     idx = parts.index("files")
     if idx + 1 >= len(parts):
         return None
-    return (slug, parts[idx + 1])
+    filename = parts[idx + 1]
+    stem = filename.rsplit(".", 1)[0] if "." in filename else filename
+    return (slug, stem)
 
 
-def _format_schema_text(table: Dict[str, Any]) -> str:
-    rel = str(table.get("relative_path") or "").strip() or "?"
+def _kind_rank(kind: str) -> int:
+    lower = (kind or "").strip().lower()
+    for rank, candidate in enumerate(_TABULAR_KIND_PRIORITY):
+        if lower == candidate:
+            return rank
+    return len(_TABULAR_KIND_PRIORITY)
+
+
+def _format_schema_entry(table: Dict[str, Any]) -> Dict[str, Any]:
     kind = str(table.get("table_kind") or "").strip() or "unknown"
-    columns = table.get("columns") or []
-    column_list = ", ".join(str(c) for c in columns) if isinstance(columns, list) else ""
-    delimiter = table.get("delimiter")
-
-    header = f"table: {rel} ({kind}"
-    if isinstance(delimiter, str) and delimiter:
-        header += f', delimiter="{delimiter}"'
-    header += ")"
-    if column_list:
-        return f"{header}\ncolumns: {column_list}"
-    return header
+    raw_columns = table.get("columns")
+    columns = [str(c) for c in raw_columns] if isinstance(raw_columns, list) else []
+    return {"kind": kind, "columns": columns}
 
 
 def _load_schemas_cache() -> None:
@@ -191,7 +202,7 @@ def _load_schemas_cache() -> None:
             "datagov_tables_schemas_full.jsonl at the repo root."
         )
 
-    cache: Dict[Tuple[str, str], str] = {}
+    chosen: Dict[Tuple[str, str], Tuple[int, Dict[str, Any]]] = {}
     with _SCHEMAS_PATH.open() as f:
         for line in f:
             line = line.strip()
@@ -214,17 +225,19 @@ def _load_schemas_cache() -> None:
                 if not rel:
                     continue
                 filename = rel.rsplit("/", 1)[-1]
-                key = (slug, filename)
-                if key in cache:
-                    continue
-                cache[key] = _format_schema_text(table)
+                stem = filename.rsplit(".", 1)[0] if "." in filename else filename
+                key = (slug, stem)
+                rank = _kind_rank(str(table.get("table_kind") or ""))
+                existing = chosen.get(key)
+                if existing is None or rank < existing[0]:
+                    chosen[key] = (rank, _format_schema_entry(table))
 
-    _SCHEMA_BY_SLUG_FILENAME = cache
+    _SCHEMA_BY_SLUG_FILENAME = {key: entry for key, (_, entry) in chosen.items()}
     _SCHEMAS_CACHE_LOADED = True
 
 
-def _lookup_schema_text(uri: str) -> Optional[str]:
-    key = _slug_filename_from_uri(uri)
+def _lookup_schema(uri: str) -> Optional[Dict[str, Any]]:
+    key = _slug_stem_from_uri(uri)
     if key is None:
         return None
     _load_schemas_cache()
@@ -284,7 +297,7 @@ def reshape_search_payload(payload: Any, mode: str) -> Any:
 
         # ideal
         desc = _DESC_BY_URI.get(uri or "", "")
-        schema = _lookup_schema_text(uri) if uri else None
+        schema = _lookup_schema(uri) if uri else None
         snippet = _truncate_words(_extract_search_text(row), max_words=_IDEAL_SNIPPET_WORDS)
 
         out = {}
@@ -303,6 +316,16 @@ def reshape_search_payload(payload: Any, mode: str) -> Any:
     transformed = dict(payload)
     transformed["results"] = shaped
     transformed["count"] = len(shaped)
+    if source_driven:
+        for noise_key in (
+            "ideal_source_driven",
+            "task_id",
+            "plan_path",
+            "dataset_id",
+            "plan_step_index",
+            "plan_step_number",
+        ):
+            transformed.pop(noise_key, None)
     return transformed
 
 

@@ -78,9 +78,10 @@ class TestSearchWrapperPayload(unittest.TestCase):
         }
         out = reshape_search_payload(payload, "standard")
         self.assertEqual(out["results"][0]["dataset_id"], "foo")
-        self.assertEqual(out["results"][0]["description"], "desc")
+        self.assertNotIn("description", out["results"][0])
         self.assertEqual(len(out["results"][0]["content"].split()), 200)
         self.assertNotIn("dataset_snippet", out["results"][0])
+        self.assertNotIn("ideal_source_driven", out)
 
     def test_source_driven_ideal_emits_dataset_snippet_at_100_words(self):
         payload = {
