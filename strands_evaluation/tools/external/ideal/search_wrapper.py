@@ -21,7 +21,8 @@ _QUERY_TOOLS = {"search_value", "search_schema", "search_reranked", "search_idea
 _PREFIX_TOOLS = {"search_prefix"}
 _SEARCH_TOOL_NAMES = _QUERY_TOOLS | _PREFIX_TOOLS
 
-_IDEAL_SNIPPET_WORDS = 100
+_IDEAL_SNIPPET_WORDS = 50
+_STANDARD_SNIPPET_WORDS = 75
 
 _TABLE_DESCRIPTIONS_PATH = Path("table_descriptions.jsonl")
 _SCHEMAS_PATH = Path("datagov_tables_schemas_full.jsonl")
@@ -103,7 +104,7 @@ def _reshape_source_driven_row(row: Dict[str, Any], mode: str) -> Dict[str, Any]
 
     if mode == "standard":
         if content:
-            out["content"] = _truncate_words(content, max_words=200)
+            out["content"] = _truncate_words(content, max_words=_STANDARD_SNIPPET_WORDS)
         return out
 
     # ideal
@@ -281,7 +282,7 @@ def reshape_search_payload(payload: Any, mode: str) -> Any:
             continue
 
         if normalized == "standard":
-            snippet = _truncate_words(_extract_search_text(row), max_words=200)
+            snippet = _truncate_words(_extract_search_text(row), max_words=_STANDARD_SNIPPET_WORDS)
             score = row.get("score")
             out = {}
             if uri:
