@@ -34,7 +34,7 @@ class SetupRunTests(unittest.TestCase):
     def _write_smoke_fixture(self, repo_root: Path) -> None:
         (repo_root / "lance_data").mkdir(parents=True, exist_ok=True)
         (repo_root / "lance_table_descriptions").mkdir(parents=True, exist_ok=True)
-        for task_dir in ("k-2-d-1", "k-1-d-1"):
+        for task_dir in ("k-1-d-1", "k-5-d-4"):
             target = repo_root / "tasks_mini" / task_dir
             target.mkdir(parents=True, exist_ok=True)
             (target / "task_1.json").write_text("{}")
@@ -76,13 +76,13 @@ class SetupRunTests(unittest.TestCase):
             self.assertIn("ideal", command)
             self.assertEqual(command[command.index("--model-name") + 1], "openai/gpt-5.2")
             self.assertEqual(command[command.index("--db-path") + 1], "lance_data")
-            self.assertEqual(command[command.index("--task-dir") + 1], "tasks_mini/k-1-d-1")
+            self.assertEqual(command[command.index("--task-dir") + 1], "tasks_mini/k-5-d-4")
             self.assertEqual(command[command.index("--tasks-per-dir") + 1], "2")
             self.assertEqual(command[command.index("--logs-output-dir") + 1], "test_logs")
             self.assertEqual(command[command.index("--results-output-dir") + 1], "test_results")
             self.assertEqual(command[command.index("--reasoning-effort") + 1], "xhigh")
             self.assertEqual(fake_runner.kwargs, {"check": True, "cwd": str(repo_root)})
-            self.assertIn("Task scope: tasks_mini/k-1-d-1 (first 2 tasks)", stdout.getvalue())
+            self.assertIn("Task scope: tasks_mini/k-5-d-4 (first 2 tasks)", stdout.getvalue())
 
     def test_full_builds_expected_command(self):
         with TemporaryDirectory() as tmpdir:

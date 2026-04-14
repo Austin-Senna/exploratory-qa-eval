@@ -11,3 +11,6 @@ analysis_results/
 paper/
 lance_table_descriptions
 analysis_results_search
+test_logs
+test_results
+.agents

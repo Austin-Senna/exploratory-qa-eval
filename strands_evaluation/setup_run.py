@@ -13,6 +13,7 @@ from typing import Callable, Optional, Sequence
 _MODE_CHOICES = ("naive", "standard", "ideal")
 _REASONING_EFFORT_CHOICES = ("none", "minimal", "low", "medium", "high", "xhigh")
 _DEFAULT_TASK_SET = "tasks_mini"
+_DEFAULT_SMOKE_TASK_DIR = "k-5-d-4"
 _DEFAULT_SMOKE_TASK_LIMIT = 2
 _MODEL_ALIASES = {
     "gpt5.2": "openai/gpt-5.2",
@@ -119,11 +120,13 @@ def _resolve_smoke_task_dir(task_dir_arg: Optional[str], cwd: Path) -> Path:
             raise ValueError(f"--task-dir does not exist: {task_dir_arg}")
         return candidate
 
-    task_root = cwd / _DEFAULT_TASK_SET
-    task_dirs = sorted(path for path in task_root.glob("k-*-d-*") if path.is_dir())
-    if not task_dirs:
-        raise ValueError(f"No task directories found under {_DEFAULT_TASK_SET}.")
-    return task_dirs[0]
+    candidate = cwd / _DEFAULT_TASK_SET / _DEFAULT_SMOKE_TASK_DIR
+    if not candidate.is_dir():
+        raise ValueError(
+            f"Default smoke task dir {_DEFAULT_TASK_SET}/{_DEFAULT_SMOKE_TASK_DIR} "
+            "not found. Pass --task-dir explicitly."
+        )
+    return candidate
 
 
 def _display_command(command: Sequence[str]) -> str:

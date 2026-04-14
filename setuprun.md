@@ -24,7 +24,7 @@ I will always ask which Lance DB to load before running anything. Valid repo-loc
 Smoke runs are lightweight checks:
 
 - task set: `tasks_mini`
-- default scope: first `k-*-d-*` directory alphabetically
+- default scope: `tasks_mini/k-5-d-4`
 - task count: first 2 task files in that directory
 - logs: `test_logs`
 - results: `test_results`
