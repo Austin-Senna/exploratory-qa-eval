@@ -31,10 +31,11 @@ Implemented by `build_search(...)` in `strands_evaluation/agent_with_mode.py`.
 Implemented by `build_results(...)` through `strands_evaluation/tools/external/ideal/search_wrapper.py`.
 
 - For standard/naive search tools:
-  - returns `uri`, `dataset_id`, optional `description`, and optional `schema`
+  - returns `uri`, `dataset_id`, optional `description`, optional `schema`, and optional `dataset_snippet`
 - For source-driven `search_tool=ideal` payloads:
   - `search_results=naive` returns only `dataset_id`
-  - `search_results=standard` and `search_results=ideal` intentionally return the same richer file-oriented payload
+  - `search_results=standard` returns the richer file-oriented payload with truncated `content`
+  - `search_results=ideal` returns the richer file-oriented payload with `dataset_snippet`
 - Fixed `k` is enforced here when `RunConfig.search_k` is set, including source-driven `search_ideal`, where `top_k` controls how many sequential planned sources are returned per call
 
 ### `agent_management=ideal`
@@ -63,7 +64,7 @@ Implemented by `build_management(...)` in `strands_evaluation/agent_with_mode.py
 - Stagnation plugin:
   - enabled
 
-Current code does not inject the reasoning chain during mode-bundle construction. Instead, `plan_ideal` loads the file-backed reasoning chain when the tool is called.
+Current code injects the file-backed gold reasoning chain during mode-bundle construction, before the first model turn. `plan_ideal` then records the agent-authored execution plan into the prompt for later turns.
 
 ## 2. Ideal tool implementation
 
@@ -121,16 +122,9 @@ This is the ideal planning tool.
 
 - The tool surface is currently:
   - `plan_ideal(plan_text, tool_context)`
-- Manual `plan_text` is ignored.
-- The tool loads the current task plan from `plans_mini`.
-- It writes a new `## IDEAL PLAN` section into `agent.system_prompt`.
-- That section includes:
-  - the file-backed `reasoning_chain_text`
-  - a directive telling the agent to build a numbered execution plan from that chain
-- Current instruction policy:
-  - copying the chain is allowed
-  - producing a clearer, more executable plan is preferred
-  - the agent is not shown `dataset_sequence`; it plans from `reasoning_chain_text` only
+- `plan_text` is the agent-authored execution plan to persist across turns.
+- The file-backed reasoning chain is injected earlier via `inject_reasoning_chain_prompt(...)`.
+- `plan_ideal` writes or replaces a `## IDEAL EXECUTION PLAN` section in `agent.system_prompt`.
 
 ## 3. Other ablation implementations
 
@@ -159,14 +153,13 @@ The three axes are:
 
 `run_mode_eval.py` builds output paths like:
 
-- `results/st-{search_tool}_sr-{search_results}_am-{agent_management}/{base_condition}/{model}/...`
+- `results/modes/{model}/search_{n|d|i}_results_{n|d|i}_plan{n|d|i}[_k...][_sc...]/...`
 
-The `base_condition` is still carried for output nesting and compatibility, but the agent behavior comes from the three mode builders.
+The `base_condition` is still carried in config for behavior selection and compatibility, but mode-run output nesting now lives under `modes/{model}/...`.
 
 ### `search_tool=standard`
 
-- Uses full Condition A search surface:
-  - `search_value`
+- Uses the reranker-led Condition A search surface:
   - `search_schema`
   - `search_reranked`
   - `search_prefix`
@@ -187,7 +180,7 @@ The `base_condition` is still carried for output nesting and compatibility, but 
   - `snippet`
 - `snippet` is truncated to 200 words
 - Special case:
-  - when `search_tool=ideal`, `search_results=standard` returns the same richer source-driven payload as `search_results=ideal`
+  - when `search_tool=ideal`, source-driven rows expose truncated `content` instead of `dataset_snippet`
 
 ### `search_results=naive`
 

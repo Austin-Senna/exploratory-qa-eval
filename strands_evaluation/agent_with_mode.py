@@ -164,11 +164,10 @@ def build_search(
             raise RuntimeError("Condition A search tools are unavailable (import failed).")
         from strands_evaluation.tools.external.search_a_tools import (
             search_schema as search_schema_hybrid,
-            search_value as search_value_hybrid,
             search_reranked as search_reranked_hybrid,
         )
 
-        return [search_value_hybrid, search_schema_hybrid, search_reranked_hybrid, search_prefix]
+        return [search_reranked_hybrid, search_schema_hybrid, search_prefix]
 
     import strands_evaluation.tools.external.ideal.search_ideal as search_ideal
 

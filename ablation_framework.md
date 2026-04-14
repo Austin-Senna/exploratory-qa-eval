@@ -25,13 +25,13 @@ It keeps the normal eval/search args (`--k`, `--search-calls`, `--task-dir`, `--
 ### Variant labeling and outputs
 Variant label is built as:
 
-- `st-{search_tool}_sr-{search_results}_am-{agent_management}`
+- `search_{n|d|i}_results_{n|d|i}_plan{n|d|i}`
 - optional suffixes: `_k{N}` and `_sc{N}`
 
 Output layout:
 
-- `results/{variant}/{base_condition}/{model}/...`
-- `results/traces/{variant}/{base_condition}/{model}/...`
+- `results/modes/{model}/{variant}/...`
+- `results/traces/modes/{model}/{variant}/...`
 
 The runner still supports `--task-continue` (resume by skipping already-recorded tasks).
 
@@ -59,9 +59,10 @@ Each axis is normalized and validated to one of:
   - uses sparse search tools from `search_b_tools` (`search_value`, `search_schema`)
   - plus `search_prefix`
 - `standard`:
-  - uses hybrid (BM25 + dense) tools from `search_a_tools` (`search_value`, `search_schema`)
-  - **without** cross-encoder reranked tool
-  - plus `search_prefix`
+  - `search_reranked` — hybrid (BM25 + dense) with cross-encoder reranker over the `lakeqa` table (from `search_a_tools`)
+  - `search_schema` — hybrid RRF over the schema index (from `search_a_tools`; no cross-encoder variant exists for schema)
+  - `search_prefix`
+  - The non-reranked hybrid `search_value` is deliberately excluded so standard retrieval is reranker-led.
 - `ideal`:
   - uses `search_ideal.py` tool signatures
   - receives task context via `set_task_context(...)`
@@ -77,9 +78,9 @@ Each axis is normalized and validated to one of:
   - enables skills + stagnation plugin path
 - `ideal`:
   - loads condition B prompt
-  - injects task `reasoning_chain` into prompt via `inject_reasoning_chain_prompt(...)`
-  - adds `[plan_ideal]`
-  - does **not** enable skills/stagnation
+  - injects the gold reasoning chain into the system prompt via `inject_reasoning_chain_prompt(...)` (under a `## GOLD REASONING CHAIN` section)
+  - adds `[plan_ideal, summarize_context]`
+  - enables skills and stagnation (same plugin stack as `standard`)
 
 ---
 
@@ -98,8 +99,13 @@ This wraps selected search tools for:
 - `ideal`:
   - returns `uri`, `dataset_id`
   - enriches with:
-    - `description` from `table_descriptions.jsonl`
+    - `description` from `table_descriptions.jsonl` (un-truncated)
     - `schema` text lookup from `lance_table_descriptions/lakeqa_schema`
+    - `dataset_snippet` capped to **100 words** (via `_IDEAL_SNIPPET_WORDS`), sourced from `document`/`text`/`content` on the raw search row
+  - `dataset_snippet` is emitted on both paths:
+    - source-driven (`search_tool=ideal` → `search_ideal`): snippet comes from the `content` field on the constructed row (itself populated from `table_descriptions.jsonl`)
+    - non-source-driven (`search_tool=standard|naive` with `search_results=ideal`): snippet comes from whatever `document/text/content` field the underlying search tool returned on each result row
+  - ideal results thus include the snippet regardless of which `search_tool` is active.
 
 ### Tool wrapping behavior
 For query tools and prefix tools, it preserves original signatures but:
@@ -111,16 +117,15 @@ For query tools and prefix tools, it preserves original signatures but:
 ## New supporting modules
 
 ### `strands_evaluation/tools/external/ideal/search_ideal.py`
-Current status: **scaffold**.
-
 - Exposes a single search tool: `search_ideal(query, top_k)`.
 - Loads required per-task plans from `plans_mini/` using mirrored paths:
   - task: `tasks_mini/k-*-d-*/task_*.json`
   - plan: `plans_mini/k-*-d-*/task_*.json`
 - Enforces strict plan schema:
   - `dataset_sequence` (ordered dataset IDs)
+  - `source_sequence` (ordered concrete file paths)
   - `reasoning_chain_text` (canonical long-form reasoning)
-- Consumes one dataset from `dataset_sequence` per `search_ideal` call.
+- Consumes sequential file targets from `source_sequence` per `search_ideal` call.
 - Returns empty results with `plan_exhausted=true` once sequence is exhausted.
 - Missing/invalid plan files hard-fail (no fallback to `tasks_mini`).
 
@@ -129,7 +134,7 @@ Provides ideal planning utilities:
 
 - `format_reasoning_chain(...)`
 - `inject_reasoning_chain_prompt(...)`
-- `plan_ideal(...)` tool (file-backed: loads from `plans_mini`, ignores manual plan text)
+- `plan_ideal(...)` tool (records the agent-authored execution plan into `## IDEAL EXECUTION PLAN`)
 
 ---
 

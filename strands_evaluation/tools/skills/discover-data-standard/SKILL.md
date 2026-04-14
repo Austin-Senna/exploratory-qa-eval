@@ -1,6 +1,6 @@
 ---
 name: discover-data
-description: Hybrid dataset discovery workflow for `search_reranked`, `search_value`, `search_schema`, and `search_prefix`. Load this skill before calling search tools or list_files in standard search mode.
+description: Hybrid dataset discovery workflow for `search_reranked`, `search_schema`, and `search_prefix`. Load this skill before calling search tools or list_files in standard search mode.
 ---
 
 ## Step 1: Start Precise, Then Broaden
@@ -10,7 +10,6 @@ Prefer `search_reranked` for the first high-precision discovery pass when you ne
 Use:
 - `search_reranked` for the first precise retrieval attempt
 - `search_schema` when the question depends on column names or table titles
-- `search_value` when you need broader recall or reformulation
 - `search_prefix` when you already know the dataset naming pattern
 
 ## Step 2: Shape Queries Like Datasets
@@ -35,5 +34,5 @@ After `list_files`, use:
 If the first precise result is weak:
 1. reformulate with more exact program/geography/time terms
 2. try `search_schema` for column-level matching
-3. broaden with `search_value`
+3. try `search_reranked` again with a tighter program/geography/time query
 4. use `search_prefix` only after you have learned a likely dataset name fragment

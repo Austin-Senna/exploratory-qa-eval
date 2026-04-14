@@ -19,6 +19,11 @@ def _slugify(value: Optional[str]) -> Optional[str]:
     return re.sub(r"[^A-Za-z0-9_.-]+", "-", value.strip())
 
 
+def _uses_mode_layout(condition: Optional[str]) -> bool:
+    normalized = str(condition or "").replace("\\", "/").lstrip("./")
+    return normalized == "modes" or normalized.startswith("modes/")
+
+
 def _build_log_file(
     log_dir: str,
     condition: Optional[str],
@@ -26,15 +31,16 @@ def _build_log_file(
     task_id: Optional[str],
 ) -> str:
     from pathlib import Path
-    # Build: logs/{condition}/{model}/{task_dir}/{task_stem}.log
-    # e.g.  logs/a/claude-haiku-4-5/k-2-d-1/task_1.log
+    # Default layout: logs/{condition}/{model}/{task_dir}/{task_stem}.log
+    # Mode runs can also provide a precomposed condition path like:
+    # logs/modes/{model}/{variant}/{task_dir}/{task_stem}.log
     subdir = log_dir
     if condition:
         # Allow hierarchical condition labels like "naive_k5/baseline".
         for part in str(condition).replace("\\", "/").split("/"):
             if part:
                 subdir = os.path.join(subdir, _slugify(part))
-    if model:
+    if model and not _uses_mode_layout(condition):
         subdir = os.path.join(subdir, _slugify(model))
     if task_id:
         p = Path(task_id)

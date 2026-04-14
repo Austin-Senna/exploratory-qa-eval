@@ -78,8 +78,9 @@ class TestModeWrapper(unittest.TestCase):
     def test_condition_b_standard_prompt_mentions_reranked_search(self):
         prompt = compose_condition_b_prompt("standard", fallback="BASE_PROMPT")
         self.assertIn("search_reranked", prompt)
-        self.assertIn("search_value", prompt)
         self.assertIn("search_schema", prompt)
+        self.assertIn("search_prefix", prompt)
+        self.assertNotIn("search_value", prompt)
         self.assertNotIn("search_ideal", prompt)
 
     def test_condition_b_ideal_prompt_mentions_only_search_ideal(self):
@@ -94,8 +95,8 @@ class TestModeWrapper(unittest.TestCase):
     def test_baseline_prompt_mentions_reranked_search_in_standard_mode(self):
         prompt = compose_baseline_prompt("standard", fallback="BASE_PROMPT")
         self.assertIn("search_reranked", prompt)
-        self.assertIn("search_value", prompt)
         self.assertIn("search_schema", prompt)
+        self.assertNotIn("search_value", prompt)
         self.assertNotIn("search_ideal", prompt)
 
     def test_baseline_prompt_mentions_only_search_ideal_in_ideal_mode(self):
@@ -202,7 +203,7 @@ class TestModeWrapper(unittest.TestCase):
             target = plans_root / "k-1-d-1"
             target.mkdir(parents=True, exist_ok=True)
             (target / "task_1.json").write_text(
-                '{"dataset_sequence":["ds_one"],"reasoning_chain_text":"Step 1"}'
+                '{"dataset_sequence":["ds_one"],"source_sequence":["datagov/ds_one/files/rows.txt"],"reasoning_chain_text":"Step 1"}'
             )
             set_plans_root(plans_root)
 
@@ -238,7 +239,7 @@ class TestModeWrapper(unittest.TestCase):
             target = plans_root / "k-1-d-1"
             target.mkdir(parents=True, exist_ok=True)
             (target / "task_1.json").write_text(
-                '{"dataset_sequence":["ds_one"],"reasoning_chain_text":"Step 1"}'
+                '{"dataset_sequence":["ds_one"],"source_sequence":["datagov/ds_one/files/rows.txt"],"reasoning_chain_text":"Step 1"}'
             )
             set_plans_root(plans_root)
 

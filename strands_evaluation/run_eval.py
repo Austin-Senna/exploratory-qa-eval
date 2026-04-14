@@ -65,6 +65,19 @@ def _results_root(run_config: RunConfig) -> str:
     return getattr(run_config, "results_output_dir", "results") or "results"
 
 
+def _uses_mode_layout(condition_label: str) -> bool:
+    normalized = str(condition_label or "").replace("\\", "/").lstrip("./")
+    return normalized == "modes" or normalized.startswith("modes/")
+
+
+def _results_dir(run_config: RunConfig, agent_config: AgentConfig) -> str:
+    condition_label = run_config.condition_config.condition
+    safe_model = _display_name(agent_config)
+    if _uses_mode_layout(condition_label):
+        return os.path.join(_results_root(run_config), condition_label)
+    return os.path.join(_results_root(run_config), condition_label, safe_model)
+
+
 def find_all_task_dirs(base_dir: str = "tasks") -> list:
     """Return all task directories matching the k-*-d-* pattern."""
     return sorted(glob.glob(os.path.join(base_dir, "k-*-d-*")))
@@ -87,7 +100,7 @@ def run_evaluation(
     cond = run_config.condition_config
     condition_label = cond.condition
     safe_model = _display_name(agent_config)
-    output_dir = os.path.join(_results_root(run_config), condition_label, safe_model)
+    output_dir = _results_dir(run_config, agent_config)
     os.makedirs(output_dir, exist_ok=True)
 
     task_files = sorted(glob.glob(os.path.join(task_dir, "*.json")))
@@ -348,7 +361,7 @@ def _run_continue(args, agent_config, run_config) -> None:
     """Re-run evaluation over task_set, skipping already-recorded tasks."""
     condition = run_config.condition_config.condition
     safe_model = _display_name(agent_config)
-    results_dir = os.path.join(_results_root(run_config), condition, safe_model)
+    results_dir = _results_dir(run_config, agent_config)
     csv_path = os.path.join(results_dir, "eval_results.csv")
 
     # Collect already-completed task_ids from the CSV

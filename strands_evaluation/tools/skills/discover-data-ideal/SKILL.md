@@ -9,7 +9,7 @@ description: Ideal-mode discovery workflow for `search_ideal`. Load this skill b
 
 Each call:
 - consumes up to `top_k` planned source targets
-- returns concrete file-backed results with dataset id, file URI, and indexed description/truncated content when available
+- returns concrete file-backed results with dataset id, file URI, indexed description, and `dataset_snippet` when available
 
 Use it until exhaustion.
 You will most likely need all the planned sources.

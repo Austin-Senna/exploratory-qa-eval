@@ -13,8 +13,9 @@
   - task_context is built in worker code with task_id and passed into the agent.
   - Ideal-mode setup stores that context in plan_store and search_ideal.
   - plan_store.load_plan_for_context() resolves task_id to plans_mini and loads dataset_sequence + reasoning_chain_text.
-  - plan_ideal() injects the loaded chain into agent.system_prompt under ## IDEAL PLAN.
-  - search_ideal() uses the same loaded plan to enforce one-dataset-per-call sequence order.
+  - inject_reasoning_chain_prompt() preloads the chain into agent.system_prompt under ## GOLD REASONING CHAIN.
+  - plan_ideal() records the agent-authored execution plan under ## IDEAL EXECUTION PLAN.
+  - search_ideal() uses the same loaded plan to enforce source_sequence order.
 
   Implementation Changes
 
@@ -30,8 +31,8 @@
   3. Keep current behavior intact:
 
   - File-backed load_plan_for_context()
-  - Ignored manual plan_text input
-  - System prompt mutation (## IDEAL PLAN) and return message flow.
+  - Agent-authored plan_text persistence
+  - System prompt mutation (## IDEAL EXECUTION PLAN) and return message flow.
 
   4. Keep inject_reasoning_chain_prompt exported but update its docstring wording to match the same preference policy.
 

@@ -26,6 +26,12 @@ logger = logging.getLogger(__name__)
 # Reuse run_eval orchestration while swapping only the runner implementation.
 base_eval.BatchRunner = ModeBatchRunner
 
+_MODE_LETTERS = {
+    "naive": "n",
+    "standard": "d",
+    "ideal": "i",
+}
+
 
 def _variant_condition_label(
     *,
@@ -36,9 +42,9 @@ def _variant_condition_label(
     search_calls: Optional[int],
 ) -> str:
     parts = [
-        f"st-{search_tool}",
-        f"sr-{search_results}",
-        f"am-{agent_management}",
+        f"search_{_MODE_LETTERS[search_tool]}",
+        f"results_{_MODE_LETTERS[search_results]}",
+        f"plan{_MODE_LETTERS[agent_management]}",
     ]
     if k is not None:
         parts.append(f"k{k}")
@@ -51,7 +57,7 @@ def _run_continue(args, agent_config: AgentConfig, run_config: RunConfig) -> Non
     """Re-run over task_set, skipping tasks already recorded for this variant."""
     condition_label = run_config.condition_config.condition
     safe_model = base_eval._display_name(agent_config)
-    results_dir = os.path.join(run_config.results_output_dir, condition_label, safe_model)
+    results_dir = base_eval._results_dir(run_config, agent_config)
     csv_path = os.path.join(results_dir, "eval_results.csv")
 
     completed_ids: set = set()
@@ -206,15 +212,6 @@ def main() -> None:
     if args.search_calls is not None and args.search_calls <= 0:
         parser.error("--search-calls must be > 0")
 
-    variant_condition = _variant_condition_label(
-        search_tool=args.search_tool,
-        search_results=args.search_results,
-        agent_management=args.agent_management,
-        k=args.k,
-        search_calls=args.search_calls,
-    )
-    condition_label = f"{variant_condition}/{args.condition}"
-
     extra_model_kwargs = {}
     if args.reasoning_effort is not None:
         extra_model_kwargs["reasoning_effort"] = args.reasoning_effort
@@ -226,8 +223,16 @@ def main() -> None:
         extra_model_kwargs=extra_model_kwargs,
     )
     safe_model_name = base_eval._display_name(agent_config)
+    variant_condition = _variant_condition_label(
+        search_tool=args.search_tool,
+        search_results=args.search_results,
+        agent_management=args.agent_management,
+        k=args.k,
+        search_calls=args.search_calls,
+    )
+    condition_label = f"modes/{safe_model_name}/{variant_condition}"
     traces_root = os.path.join(args.results_output_dir, "traces")
-    trace_dir = os.path.join(traces_root, condition_label, safe_model_name)
+    trace_dir = os.path.join(traces_root, condition_label)
 
     run_config = RunConfig(
         results_output_dir=args.results_output_dir,

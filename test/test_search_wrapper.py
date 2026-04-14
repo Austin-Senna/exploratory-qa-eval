@@ -63,7 +63,7 @@ class TestSearchWrapperPayload(unittest.TestCase):
         self.assertIn("uri", out["results"][0])
         self.assertEqual(out["results"][0]["score"], "0.123")
 
-    def test_source_driven_standard_and_ideal_match_for_file_rows(self):
+    def test_source_driven_standard_truncates_content_to_200_words(self):
         payload = {
             "ideal_source_driven": True,
             "results": [
@@ -76,13 +76,30 @@ class TestSearchWrapperPayload(unittest.TestCase):
             ],
             "count": 1,
         }
-        standard = reshape_search_payload(payload, "standard")
-        ideal = reshape_search_payload(payload, "ideal")
+        out = reshape_search_payload(payload, "standard")
+        self.assertEqual(out["results"][0]["dataset_id"], "foo")
+        self.assertEqual(out["results"][0]["description"], "desc")
+        self.assertEqual(len(out["results"][0]["content"].split()), 200)
+        self.assertNotIn("dataset_snippet", out["results"][0])
 
-        self.assertEqual(standard["results"], ideal["results"])
-        self.assertEqual(standard["results"][0]["dataset_id"], "foo")
-        self.assertEqual(standard["results"][0]["description"], "desc")
-        self.assertEqual(len(standard["results"][0]["content"].split()), 200)
+    def test_source_driven_ideal_emits_dataset_snippet_at_100_words(self):
+        payload = {
+            "ideal_source_driven": True,
+            "results": [
+                {
+                    "dataset_id": "foo",
+                    "uri": "s3://lakeqa-yc4103-datalake/datagov/foo/files/rows.txt",
+                    "description": "desc",
+                    "content": " ".join([f"w{i}" for i in range(400)]),
+                }
+            ],
+            "count": 1,
+        }
+        out = reshape_search_payload(payload, "ideal")
+        self.assertEqual(out["results"][0]["dataset_id"], "foo")
+        self.assertEqual(out["results"][0]["description"], "desc")
+        self.assertEqual(len(out["results"][0]["dataset_snippet"].split()), 100)
+        self.assertNotIn("content", out["results"][0])
 
     def test_source_driven_standard_preserves_uri_without_optional_fields(self):
         payload = {
@@ -120,6 +137,25 @@ class TestSearchWrapperPayload(unittest.TestCase):
         self.assertIn("uri", out["results"][0])
         self.assertIn("description", out["results"][0])
         self.assertTrue(out["results"][0]["description"])
+
+    def test_ideal_mode_emits_dataset_snippet_from_document(self):
+        first = json.loads(Path("table_descriptions.jsonl").read_text().splitlines()[0])
+        uri = first["dataset_uri"]
+        long_text = " ".join([f"w{i}" for i in range(250)])
+        payload = {
+            "results": [
+                {
+                    "uri": uri,
+                    "document": long_text,
+                }
+            ],
+            "count": 1,
+        }
+        out = reshape_search_payload(payload, "ideal")
+        row = out["results"][0]
+        self.assertIn("dataset_snippet", row)
+        self.assertEqual(len(row["dataset_snippet"].split()), 100)
+        self.assertIn("description", row)
 
     def test_search_tool_names_includes_search_ideal(self):
         @tool(name="search_ideal")

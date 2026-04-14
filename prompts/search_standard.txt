@@ -1,6 +1,5 @@
 ## AVAILABLE SEARCH TOOLS
-- `search_reranked` — hybrid search with cross-encoder reranking; prefer this for high-precision dataset discovery
-- `search_value` — hybrid semantic + keyword search over dataset content (RRF); use for broader recall and reformulation
+- `search_reranked` — hybrid search (dense + BM25) with cross-encoder reranking; use this as the primary dataset discovery tool
 - `search_schema` — hybrid search over dataset schemas (column names, types); use when you need the right schema quickly
 - `search_prefix` — S3 prefix search by dataset name fragment; use when you already know the naming pattern
 
@@ -8,7 +7,6 @@
 Prefer the highest-precision tool first, then broaden:
 1. `search_reranked` for the first precise discovery pass
 2. `search_schema` when the question depends on a specific field or table name
-3. `search_value` for broader recall and query reformulation
-4. `search_prefix` when you have learned the dataset naming pattern
+3. `search_prefix` when you have learned the dataset naming pattern
 
-You do not need to call all four for every query, but in the first two search calls prefer at least one `search_reranked` call before repeating broad `search_value` probes.
+`search_reranked` should be your default. Only fall back to `search_schema` or `search_prefix` when you need schema-level specificity or have a known naming pattern.

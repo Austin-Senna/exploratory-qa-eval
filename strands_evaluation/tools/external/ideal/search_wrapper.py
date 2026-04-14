@@ -21,6 +21,8 @@ _QUERY_TOOLS = {"search_value", "search_schema", "search_reranked", "search_idea
 _PREFIX_TOOLS = {"search_prefix"}
 _SEARCH_TOOL_NAMES = _QUERY_TOOLS | _PREFIX_TOOLS
 
+_IDEAL_SNIPPET_WORDS = 100
+
 _TABLE_DESCRIPTIONS_PATH = Path("table_descriptions.jsonl")
 _SCHEMA_DB_PATH = Path("lance_table_descriptions")
 
@@ -102,7 +104,10 @@ def _reshape_source_driven_row(row: Dict[str, Any], mode: str) -> Dict[str, Any]
 
     content = _first_non_empty([row.get("content"), row.get("snippet"), row.get("document")])
     if content:
-        out["content"] = _truncate_words(content, max_words=200)
+        if mode == "ideal":
+            out["dataset_snippet"] = _truncate_words(content, max_words=_IDEAL_SNIPPET_WORDS)
+        else:
+            out["content"] = _truncate_words(content, max_words=200)
 
     return out
 
@@ -235,6 +240,7 @@ def reshape_search_payload(payload: Any, mode: str) -> Any:
         # ideal
         desc = _DESC_BY_URI.get(uri or "", "")
         schema = _lookup_schema_text(uri) if uri else None
+        snippet = _truncate_words(_extract_search_text(row), max_words=_IDEAL_SNIPPET_WORDS)
 
         out = {}
         if uri:
@@ -245,6 +251,8 @@ def reshape_search_payload(payload: Any, mode: str) -> Any:
             out["description"] = desc
         if schema:
             out["schema"] = schema
+        if snippet:
+            out["dataset_snippet"] = snippet
         shaped.append(out)
 
     transformed = dict(payload)

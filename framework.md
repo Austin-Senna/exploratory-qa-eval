@@ -8,11 +8,14 @@ This project evaluates a tool-using data-lake QA agent under different condition
 2. Evaluation runs via:
    - `python -m strands_evaluation.run_eval` (baseline / A / B)
    - `python -m strands_evaluation.run_search_eval` (search ablations: fixed `k`, search-call cap, description mode)
+   - `python -m strands_evaluation.run_mode_eval` (multi-axis mode ablations)
 3. Raw outputs are written to:
    - `results/{condition}/{model}/eval_results.csv`
    - `results/{condition}/{model}/tools_breakdown.csv`
    - `results/{condition}/{model}/agent_results.jsonl`
    - `results/traces/{condition}/{model}/{task_dir}/{task}.jsonl`
+   - mode runs: `results/modes/{model}/{variant}/...`
+   - mode traces: `results/traces/modes/{model}/{variant}/{task_dir}/{task}.jsonl`
 4. Analysis runs via:
    - `analysis/run_analysis.py` (standard conditions)
    - `analysis/search_analysis.py` (variant-aware search ablations)
