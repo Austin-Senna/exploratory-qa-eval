@@ -19,7 +19,7 @@ _MODEL_ALIASES = {
     "gpt5.2": "openai/gpt-5.2",
     "gpt-5.2": "openai/gpt-5.2",
 }
-_DB_HINTS = ("lance_data", "lance_table_descriptions")
+_DB_HINTS = ("lance_data",)
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -71,8 +71,8 @@ def _missing_db_error(cwd: Path) -> str:
             + ", or provide a custom path."
         )
     return (
-        "--db is required. Use a Lance DB root such as lance_data or "
-        "lance_table_descriptions, or provide a custom path."
+        "--db is required. Use a Lance DB root such as lance_data, "
+        "or provide a custom path."
     )
 
 

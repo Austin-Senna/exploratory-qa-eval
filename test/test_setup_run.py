@@ -33,7 +33,6 @@ class _FakeRunner:
 class SetupRunTests(unittest.TestCase):
     def _write_smoke_fixture(self, repo_root: Path) -> None:
         (repo_root / "lance_data").mkdir(parents=True, exist_ok=True)
-        (repo_root / "lance_table_descriptions").mkdir(parents=True, exist_ok=True)
         for task_dir in ("k-1-d-1", "k-5-d-4"):
             target = repo_root / "tasks_mini" / task_dir
             target.mkdir(parents=True, exist_ok=True)
@@ -143,7 +142,6 @@ class SetupRunTests(unittest.TestCase):
             message = stderr.getvalue()
             self.assertIn("--db is required", message)
             self.assertIn("lance_data", message)
-            self.assertIn("lance_table_descriptions", message)
 
 
 if __name__ == "__main__":

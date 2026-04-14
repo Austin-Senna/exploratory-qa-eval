@@ -82,15 +82,15 @@ def _load_table_cache() -> None:
     global _TABLE_CACHE_LOADED, _TABLE_ENTRY_BY_URI
     if _TABLE_CACHE_LOADED:
         return
-    _TABLE_CACHE_LOADED = True
 
     if not _TABLE_DESCRIPTIONS_PATH.exists():
-        logger.warning(
-            "table_descriptions.jsonl not found at '%s'; ideal file payloads will omit description/content.",
-            _TABLE_DESCRIPTIONS_PATH,
+        raise FileNotFoundError(
+            f"Required dependency '{_TABLE_DESCRIPTIONS_PATH}' not found. "
+            "search_tool=ideal requires table_descriptions.jsonl at the repo root "
+            "for description/content enrichment."
         )
-        return
 
+    _TABLE_CACHE_LOADED = True
     uri_map: Dict[str, Dict[str, str]] = {}
     with _TABLE_DESCRIPTIONS_PATH.open() as f:
         for line in f:

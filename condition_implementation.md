@@ -32,6 +32,7 @@ Implemented by `build_results(...)` through `strands_evaluation/tools/external/i
 
 - For standard/naive search tools:
   - returns `uri`, `dataset_id`, optional `description`, optional `schema`, and optional `dataset_snippet`
+  - `schema` is now sourced from `datagov_tables_schemas_full.jsonl` keyed by `(dataset_slug, filename)` — no lance schema index required
 - For source-driven `search_tool=ideal` payloads:
   - `search_results=naive` returns only `dataset_id`
   - `search_results=standard` returns the richer file-oriented payload with truncated `content`

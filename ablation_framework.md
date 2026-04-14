@@ -100,7 +100,7 @@ This wraps selected search tools for:
   - returns `uri`, `dataset_id`
   - enriches with:
     - `description` from `table_descriptions.jsonl` (un-truncated)
-    - `schema` text lookup from `lance_table_descriptions/lakeqa_schema`
+    - `schema` text lookup from `datagov_tables_schemas_full.jsonl`, keyed by `(dataset_slug, filename)` and rendered as `table: <path> (<kind>[, delimiter="…"]) \n columns: …`
     - `dataset_snippet` capped to **100 words** (via `_IDEAL_SNIPPET_WORDS`), sourced from `document`/`text`/`content` on the raw search row
   - `dataset_snippet` is emitted on both paths:
     - source-driven (`search_tool=ideal` → `search_ideal`): snippet comes from the `content` field on the constructed row (itself populated from `table_descriptions.jsonl`)

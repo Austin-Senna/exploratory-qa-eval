@@ -16,7 +16,6 @@ When you ask me to run an eval in chat, use a request like:
 I will always ask which Lance DB to load before running anything. Valid repo-local choices right now are:
 
 - `lance_data`
-- `lance_table_descriptions`
 - any custom path you provide
 
 ## Smoke Run

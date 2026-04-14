@@ -49,14 +49,13 @@ def _load_description_cache() -> None:
     if _DESC_CACHE_LOADED:
         return
 
-    _DESC_CACHE_LOADED = True
     if not _TABLE_DESCRIPTIONS_PATH.exists():
-        logger.warning(
-            "table_descriptions.jsonl not found at '%s'; description mode will pass through.",
-            _TABLE_DESCRIPTIONS_PATH,
+        raise FileNotFoundError(
+            f"Required dependency '{_TABLE_DESCRIPTIONS_PATH}' not found. "
+            "search description mode requires table_descriptions.jsonl at the repo root."
         )
-        return
 
+    _DESC_CACHE_LOADED = True
     uri_map: Dict[str, str] = {}
     dataset_map: Dict[str, str] = {}
 

@@ -20,6 +20,7 @@ from typing import Optional
 from strands_evaluation import run_eval as base_eval
 from strands_evaluation.agent_with_mode import BatchRunner as ModeBatchRunner
 from strands_evaluation.config import AgentConfig, ConditionConfig, RunConfig
+from strands_evaluation.preflight import PreflightError, run_preflight
 
 logger = logging.getLogger(__name__)
 
@@ -51,6 +52,25 @@ def _variant_condition_label(
     if search_calls is not None:
         parts.append(f"sc{search_calls}")
     return "_".join(parts)
+
+
+def _collect_task_files(args) -> list[str]:
+    """Resolve the full task-file list the run will cover, before preflight."""
+    if args.task_dir:
+        files = sorted(glob.glob(os.path.join(args.task_dir, "*.json")))
+        if args.tasks_per_dir is not None:
+            files = files[: args.tasks_per_dir]
+        return files
+    if args.all_tasks or args.task_continue:
+        task_dirs = base_eval.find_all_task_dirs(args.task_set)
+        out: list[str] = []
+        for d in task_dirs:
+            files = sorted(glob.glob(os.path.join(d, "*.json")))
+            if args.tasks_per_dir is not None:
+                files = files[: args.tasks_per_dir]
+            out.extend(files)
+        return out
+    return []
 
 
 def _run_continue(args, agent_config: AgentConfig, run_config: RunConfig) -> None:
@@ -266,6 +286,12 @@ def main() -> None:
         args.search_calls,
         args.db_path or "./lance_data",
     )
+
+    task_files = _collect_task_files(args)
+    try:
+        run_preflight(run_config, task_files)
+    except PreflightError as exc:
+        parser.exit(2, f"{exc}\n")
 
     start_time = datetime.now()
 

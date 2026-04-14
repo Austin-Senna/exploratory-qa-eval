@@ -24,14 +24,13 @@ _SEARCH_TOOL_NAMES = _QUERY_TOOLS | _PREFIX_TOOLS
 _IDEAL_SNIPPET_WORDS = 100
 
 _TABLE_DESCRIPTIONS_PATH = Path("table_descriptions.jsonl")
-_SCHEMA_DB_PATH = Path("lance_table_descriptions")
+_SCHEMAS_PATH = Path("datagov_tables_schemas_full.jsonl")
 
 _DESC_CACHE_LOADED = False
 _DESC_BY_URI: Dict[str, str] = {}
 
-_SCHEMA_TABLE_INIT = False
-_SCHEMA_TABLE = None
-_SCHEMA_BY_URI: Dict[str, Optional[str]] = {}
+_SCHEMAS_CACHE_LOADED = False
+_SCHEMA_BY_SLUG_FILENAME: Dict[Tuple[str, str], str] = {}
 
 
 def _dataset_id_from_uri(uri: str) -> Optional[str]:
@@ -116,15 +115,14 @@ def _load_desc_cache() -> None:
     global _DESC_CACHE_LOADED, _DESC_BY_URI
     if _DESC_CACHE_LOADED:
         return
-    _DESC_CACHE_LOADED = True
 
     if not _TABLE_DESCRIPTIONS_PATH.exists():
-        logger.warning(
-            "table_descriptions.jsonl not found at '%s'; ideal payload description will be empty.",
-            _TABLE_DESCRIPTIONS_PATH,
+        raise FileNotFoundError(
+            f"Required dependency '{_TABLE_DESCRIPTIONS_PATH}' not found. "
+            "search_results=ideal enrichment requires table_descriptions.jsonl at the repo root."
         )
-        return
 
+    _DESC_CACHE_LOADED = True
     uri_map: Dict[str, str] = {}
     with _TABLE_DESCRIPTIONS_PATH.open() as f:
         for line in f:
@@ -143,47 +141,94 @@ def _load_desc_cache() -> None:
     _DESC_BY_URI = uri_map
 
 
-def _init_schema_table() -> None:
-    global _SCHEMA_TABLE_INIT, _SCHEMA_TABLE
-    if _SCHEMA_TABLE_INIT:
-        return
-    _SCHEMA_TABLE_INIT = True
+def _slug_filename_from_uri(uri: str) -> Optional[Tuple[str, str]]:
+    """Derive (dataset_slug, filename) from either a full s3:// URI or a versioned s3_key."""
+    raw = (uri or "").strip()
+    if not raw:
+        return None
+    if "://" in raw:
+        raw = raw.split("://", 1)[1]
+        if "/" not in raw:
+            return None
+        raw = raw.split("/", 1)[1]
+    parts = raw.split("/")
+    if len(parts) < 4 or parts[0] != "datagov":
+        return None
+    slug = parts[1]
+    if "files" not in parts:
+        return None
+    idx = parts.index("files")
+    if idx + 1 >= len(parts):
+        return None
+    return (slug, parts[idx + 1])
 
-    if not _SCHEMA_DB_PATH.exists():
-        logger.warning(
-            "Schema index path '%s' not found; ideal payload schema will be empty.",
-            _SCHEMA_DB_PATH,
+
+def _format_schema_text(table: Dict[str, Any]) -> str:
+    rel = str(table.get("relative_path") or "").strip() or "?"
+    kind = str(table.get("table_kind") or "").strip() or "unknown"
+    columns = table.get("columns") or []
+    column_list = ", ".join(str(c) for c in columns) if isinstance(columns, list) else ""
+    delimiter = table.get("delimiter")
+
+    header = f"table: {rel} ({kind}"
+    if isinstance(delimiter, str) and delimiter:
+        header += f', delimiter="{delimiter}"'
+    header += ")"
+    if column_list:
+        return f"{header}\ncolumns: {column_list}"
+    return header
+
+
+def _load_schemas_cache() -> None:
+    global _SCHEMAS_CACHE_LOADED, _SCHEMA_BY_SLUG_FILENAME
+    if _SCHEMAS_CACHE_LOADED:
+        return
+
+    if not _SCHEMAS_PATH.exists():
+        raise FileNotFoundError(
+            f"Required dependency '{_SCHEMAS_PATH}' not found. "
+            "search_results=ideal with a non-ideal search_tool requires "
+            "datagov_tables_schemas_full.jsonl at the repo root."
         )
-        return
 
-    try:
-        import lancedb
+    cache: Dict[Tuple[str, str], str] = {}
+    with _SCHEMAS_PATH.open() as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                obj = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            slug = str(obj.get("dataset_slug") or "").strip()
+            if not slug:
+                continue
+            tables = obj.get("tables") or []
+            if not isinstance(tables, list):
+                continue
+            for table in tables:
+                if not isinstance(table, dict):
+                    continue
+                rel = str(table.get("relative_path") or "").strip()
+                if not rel:
+                    continue
+                filename = rel.rsplit("/", 1)[-1]
+                key = (slug, filename)
+                if key in cache:
+                    continue
+                cache[key] = _format_schema_text(table)
 
-        db = lancedb.connect(str(_SCHEMA_DB_PATH))
-        _SCHEMA_TABLE = db.open_table("lakeqa_schema")
-    except Exception as exc:
-        logger.warning("Could not initialize schema index: %s", exc)
-        _SCHEMA_TABLE = None
+    _SCHEMA_BY_SLUG_FILENAME = cache
+    _SCHEMAS_CACHE_LOADED = True
 
 
 def _lookup_schema_text(uri: str) -> Optional[str]:
-    if uri in _SCHEMA_BY_URI:
-        return _SCHEMA_BY_URI[uri]
-
-    _init_schema_table()
-    if _SCHEMA_TABLE is None:
-        _SCHEMA_BY_URI[uri] = None
+    key = _slug_filename_from_uri(uri)
+    if key is None:
         return None
-
-    try:
-        escaped = uri.replace("'", "''")
-        rows = _SCHEMA_TABLE.search().where(f"uri = '{escaped}'").limit(1).select(["text"]).to_list()
-        schema_text = str(rows[0].get("text", "")).strip() if rows else ""
-    except Exception:
-        schema_text = ""
-
-    _SCHEMA_BY_URI[uri] = schema_text or None
-    return _SCHEMA_BY_URI[uri]
+    _load_schemas_cache()
+    return _SCHEMA_BY_SLUG_FILENAME.get(key)
 
 
 def reshape_search_payload(payload: Any, mode: str) -> Any:

@@ -14,3 +14,5 @@ analysis_results_search
 test_logs
 test_results
 .agents
+ec2setup.md
+datagov_tables_schemas_full.jsonl
