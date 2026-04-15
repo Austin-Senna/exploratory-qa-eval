@@ -16,3 +16,6 @@ test_results
 .agents
 ec2setup.md
 datagov_tables_schemas_full.jsonl
+results-ec2
+logs-ec2
+analysis_results_mode

@@ -55,13 +55,11 @@ def _variant_condition_label(
 
 
 def _collect_task_files(args) -> list[str]:
-    """Resolve the full task-file list the run will cover, before preflight."""
-    if args.task_dir:
-        files = sorted(glob.glob(os.path.join(args.task_dir, "*.json")))
-        if args.tasks_per_dir is not None:
-            files = files[: args.tasks_per_dir]
-        return files
-    if args.all_tasks or args.task_continue:
+    """Resolve the full task-file list the run will cover, before preflight.
+
+    Precedence mirrors ``main()``: ``--task-continue`` > ``--all-tasks`` > ``--task-dir``.
+    """
+    if args.task_continue or args.all_tasks:
         task_dirs = base_eval.find_all_task_dirs(args.task_set)
         out: list[str] = []
         for d in task_dirs:
@@ -70,6 +68,11 @@ def _collect_task_files(args) -> list[str]:
                 files = files[: args.tasks_per_dir]
             out.extend(files)
         return out
+    if args.task_dir:
+        files = sorted(glob.glob(os.path.join(args.task_dir, "*.json")))
+        if args.tasks_per_dir is not None:
+            files = files[: args.tasks_per_dir]
+        return files
     return []
 
 

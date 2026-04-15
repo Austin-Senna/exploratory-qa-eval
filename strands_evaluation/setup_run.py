@@ -54,7 +54,12 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Optional task directory override inside tasks_mini.",
     )
 
-    subparsers.add_parser("full", parents=[common], help="Run the full tasks_mini eval.")
+    full = subparsers.add_parser("full", parents=[common], help="Run the full tasks_mini eval.")
+    full.add_argument(
+        "--task-continue",
+        action="store_true",
+        help="Resume: skip tasks already recorded in this variant's CSV.",
+    )
     return parser
 
 
@@ -190,20 +195,36 @@ def _build_run_mode_command(args: argparse.Namespace, cwd: Path) -> tuple[list[s
         }
         return command, metadata
 
-    command.extend(
-        [
-            "--all-tasks",
-            "--task-set",
-            _DEFAULT_TASK_SET,
-            "--logs-output-dir",
-            "logs",
-            "--results-output-dir",
-            "results",
-        ]
-    )
+    task_continue = bool(getattr(args, "task_continue", False))
+    if task_continue:
+        command.extend(
+            [
+                "--task-continue",
+                "--task-set",
+                _DEFAULT_TASK_SET,
+                "--logs-output-dir",
+                "logs",
+                "--results-output-dir",
+                "results",
+            ]
+        )
+        scope = f"resume pending tasks under {_DEFAULT_TASK_SET}"
+    else:
+        command.extend(
+            [
+                "--all-tasks",
+                "--task-set",
+                _DEFAULT_TASK_SET,
+                "--logs-output-dir",
+                "logs",
+                "--results-output-dir",
+                "results",
+            ]
+        )
+        scope = f"all tasks under {_DEFAULT_TASK_SET}"
     metadata = {
         "db_path": db_arg,
-        "task_scope": f"all tasks under {_DEFAULT_TASK_SET}",
+        "task_scope": scope,
         "logs_output_dir": "logs",
         "results_output_dir": "results",
     }

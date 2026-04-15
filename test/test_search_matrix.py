@@ -24,7 +24,7 @@ import sys
 import traceback
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Sequence
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
@@ -85,7 +85,9 @@ def run_matrix(
     task_file: str,
     k: int,
     log_path: Path,
+    search_tools: Optional[Sequence[str]] = None,
 ) -> None:
+    outer_modes = tuple(search_tools) if search_tools else MODES
     log_path.parent.mkdir(parents=True, exist_ok=True)
     with log_path.open("w") as log:
         _emit(log, f"=== search 3x3 matrix — {datetime.now().isoformat()} ===")
@@ -93,8 +95,9 @@ def run_matrix(
         _emit(log, f"db_path   : {db_path}")
         _emit(log, f"task_file : {task_file}  (only used when search_tool=ideal)")
         _emit(log, f"fixed k   : {k}")
+        _emit(log, f"search_tools: {outer_modes}")
 
-        for search_tool_mode in MODES:
+        for search_tool_mode in outer_modes:
             _emit(log)
             _emit(log, f"===================== search_tool = {search_tool_mode} =====================")
             try:
@@ -141,6 +144,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     parser.add_argument("--task-file", default="tasks_mini/k-5-d-4/task_1.json", help="Task id used to set search_ideal context.")
     parser.add_argument("--k", type=int, default=3, help="Fixed result limit (passed as fixed_k to build_search_tools).")
     parser.add_argument("--out", default=None, help="Optional explicit output log path; defaults to test_logs/search_matrix_<ts>.log")
+    parser.add_argument("--search-tool", action="append", choices=list(MODES), help="Restrict outer search_tool modes; repeat to pass multiple. Defaults to all three.")
     args = parser.parse_args(argv)
 
     log_path = Path(args.out) if args.out else (
@@ -153,6 +157,7 @@ def main(argv: Optional[List[str]] = None) -> int:
         task_file=args.task_file,
         k=args.k,
         log_path=log_path,
+        search_tools=args.search_tool,
     )
     print(f"\nWrote matrix log to {log_path}")
     return 0
