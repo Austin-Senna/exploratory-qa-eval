@@ -11,13 +11,15 @@ from collections import Counter
 from pathlib import Path
 
 
-LABEL_EQUIVALENT = "Equivalent"
-LABEL_WRONG = "Wrong Answer"
-LABEL_ERROR_TURNS = "Error-Turns exhausted"
-LABEL_ERROR_CONTEXT = "Error-Context exhausted"
-LABEL_INFRA_EVENT_LOOP = "Infra-EventLoopException"
-LABEL_INFRA_OTHER = "Infra-Other"
-LABEL_UNCLASSIFIED = "Unclassified"
+BUCKET_SEMANTIC = "semantic_equivalents"
+BUCKET_SEMANTIC_EXHAUSTED = "semantic_equivalents_but_exhausted"
+BUCKET_WRONG = "wrong_answers"
+BUCKET_WRONG_EXHAUSTED = "wrong_answers_but_exhausted"
+BUCKET_UNSUB_TURNS = "unsubmitted_turns_exhausted"
+BUCKET_UNSUB_CONTEXT = "unsubmitted_context_exhausted"
+BUCKET_INFRA_EVENT_LOOP = "infra_event_loop_exception"
+BUCKET_INFRA_OTHER = "infra_other"
+BUCKET_UNCLASSIFIED = "unclassified"
 
 SUBMIT_MARKERS = [
     "Executing: submit_answer(",
@@ -199,34 +201,50 @@ def classify_row(
     context_pos, context_marker = latest_marker(tail_text, CONTEXT_MARKERS)
 
     error_text = str(row.get("error", "") or "")
+    submitted_answer = submit_pos >= 0
 
     if context_pos >= 0:
-        label = LABEL_ERROR_CONTEXT
-        label_reason = f"log_tail:{context_marker}"
+        exhaustion_status = "context"
+        if submitted_answer:
+            bucket = BUCKET_SEMANTIC_EXHAUSTED if semantic_match >= 1.0 else BUCKET_WRONG_EXHAUSTED
+        else:
+            bucket = BUCKET_UNSUB_CONTEXT
+        bucket_reason = f"log_tail:{context_marker}"
     elif turns_pos >= 0:
-        label = LABEL_ERROR_TURNS
-        label_reason = f"log_tail:{turns_marker}"
-    elif submit_pos >= 0:
-        label = LABEL_EQUIVALENT if semantic_match >= 1.0 else LABEL_WRONG
-        label_reason = f"log_tail:{submit_marker}"
+        exhaustion_status = "turns"
+        if submitted_answer:
+            bucket = BUCKET_SEMANTIC_EXHAUSTED if semantic_match >= 1.0 else BUCKET_WRONG_EXHAUSTED
+        else:
+            bucket = BUCKET_UNSUB_TURNS
+        bucket_reason = f"log_tail:{turns_marker}"
+    elif submitted_answer:
+        exhaustion_status = "none"
+        bucket = BUCKET_SEMANTIC if semantic_match >= 1.0 else BUCKET_WRONG
+        bucket_reason = f"log_tail:{submit_marker}"
     elif error_text.startswith("EventLoopException"):
-        label = LABEL_INFRA_EVENT_LOOP
-        label_reason = "error_field:EventLoopException"
+        exhaustion_status = "infra"
+        bucket = BUCKET_INFRA_EVENT_LOOP
+        bucket_reason = "error_field:EventLoopException"
     elif "MaxTokensReachedException" in error_text or "max_tokens limit" in error_text:
-        label = LABEL_ERROR_CONTEXT
-        label_reason = "error_field:MaxTokensReachedException"
+        exhaustion_status = "context"
+        bucket = BUCKET_UNSUB_CONTEXT
+        bucket_reason = "error_field:MaxTokensReachedException"
     elif any(marker in error_text for marker in TURNS_MARKERS):
-        label = LABEL_ERROR_TURNS
-        label_reason = "error_field:turns_exhausted"
+        exhaustion_status = "turns"
+        bucket = BUCKET_UNSUB_TURNS
+        bucket_reason = "error_field:turns_exhausted"
     elif error_text:
-        label = LABEL_INFRA_OTHER
-        label_reason = f"error_field:{error_text.split(':', 1)[0]}"
+        exhaustion_status = "infra"
+        bucket = BUCKET_INFRA_OTHER
+        bucket_reason = f"error_field:{error_text.split(':', 1)[0]}"
     elif predicted:
-        label = LABEL_EQUIVALENT if semantic_match >= 1.0 else LABEL_WRONG
-        label_reason = "fallback:predicted_answer_present"
+        exhaustion_status = "none"
+        bucket = BUCKET_SEMANTIC if semantic_match >= 1.0 else BUCKET_WRONG
+        bucket_reason = "fallback:predicted_answer_present"
     else:
-        label = LABEL_UNCLASSIFIED
-        label_reason = "no_tail_marker_or_error"
+        exhaustion_status = "unknown"
+        bucket = BUCKET_UNCLASSIFIED
+        bucket_reason = "no_tail_marker_or_error"
 
     return {
         "model": model,
@@ -238,9 +256,11 @@ def classify_row(
         "lexical_exact_match": lexical_exact_match,
         "semantic_equivalent": semantic_match,
         "semantic_match_reason": semantic_reason,
-        "label": label,
-        "label_reason": label_reason,
-        "tail_has_submit_marker": int(submit_pos >= 0),
+        "submitted_answer": int(submitted_answer),
+        "exhaustion_status": exhaustion_status,
+        "bucket": bucket,
+        "bucket_reason": bucket_reason,
+        "tail_has_submit_marker": int(submitted_answer),
         "tail_has_turns_marker": int(turns_pos >= 0),
         "tail_has_context_marker": int(context_pos >= 0),
         "tail_submit_marker": submit_marker,
@@ -262,8 +282,10 @@ def write_task_rows(path: Path, rows: list[dict]) -> None:
         "lexical_exact_match",
         "semantic_equivalent",
         "semantic_match_reason",
-        "label",
-        "label_reason",
+        "submitted_answer",
+        "exhaustion_status",
+        "bucket",
+        "bucket_reason",
         "tail_has_submit_marker",
         "tail_has_turns_marker",
         "tail_has_context_marker",
@@ -288,7 +310,7 @@ def write_summary(path: Path, rows: list[dict]) -> None:
 
     for model_mode in sorted(grouped):
         mode_rows = grouped[model_mode]
-        counts = Counter(row["label"] for row in mode_rows)
+        counts = Counter(row["bucket"] for row in mode_rows)
         summary_rows.append(
             {
                 "model": mode_rows[0]["model"],
@@ -296,14 +318,16 @@ def write_summary(path: Path, rows: list[dict]) -> None:
                 "model_mode": model_mode,
                 "task_count": len(mode_rows),
                 "lexical_exact_matches": int(sum(row["lexical_exact_match"] for row in mode_rows)),
-                "semantic_equivalents": int(sum(row["semantic_equivalent"] for row in mode_rows)),
-                LABEL_EQUIVALENT: counts.get(LABEL_EQUIVALENT, 0),
-                LABEL_WRONG: counts.get(LABEL_WRONG, 0),
-                LABEL_ERROR_TURNS: counts.get(LABEL_ERROR_TURNS, 0),
-                LABEL_ERROR_CONTEXT: counts.get(LABEL_ERROR_CONTEXT, 0),
-                LABEL_INFRA_EVENT_LOOP: counts.get(LABEL_INFRA_EVENT_LOOP, 0),
-                LABEL_INFRA_OTHER: counts.get(LABEL_INFRA_OTHER, 0),
-                LABEL_UNCLASSIFIED: counts.get(LABEL_UNCLASSIFIED, 0),
+                "semantic_equivalents_total": int(sum(row["semantic_equivalent"] for row in mode_rows)),
+                BUCKET_SEMANTIC: counts.get(BUCKET_SEMANTIC, 0),
+                BUCKET_SEMANTIC_EXHAUSTED: counts.get(BUCKET_SEMANTIC_EXHAUSTED, 0),
+                BUCKET_WRONG: counts.get(BUCKET_WRONG, 0),
+                BUCKET_WRONG_EXHAUSTED: counts.get(BUCKET_WRONG_EXHAUSTED, 0),
+                BUCKET_UNSUB_TURNS: counts.get(BUCKET_UNSUB_TURNS, 0),
+                BUCKET_UNSUB_CONTEXT: counts.get(BUCKET_UNSUB_CONTEXT, 0),
+                BUCKET_INFRA_EVENT_LOOP: counts.get(BUCKET_INFRA_EVENT_LOOP, 0),
+                BUCKET_INFRA_OTHER: counts.get(BUCKET_INFRA_OTHER, 0),
+                BUCKET_UNCLASSIFIED: counts.get(BUCKET_UNCLASSIFIED, 0),
             }
         )
 
@@ -313,14 +337,16 @@ def write_summary(path: Path, rows: list[dict]) -> None:
         "model_mode",
         "task_count",
         "lexical_exact_matches",
-        "semantic_equivalents",
-        LABEL_EQUIVALENT,
-        LABEL_WRONG,
-        LABEL_ERROR_TURNS,
-        LABEL_ERROR_CONTEXT,
-        LABEL_INFRA_EVENT_LOOP,
-        LABEL_INFRA_OTHER,
-        LABEL_UNCLASSIFIED,
+        "semantic_equivalents_total",
+        BUCKET_SEMANTIC,
+        BUCKET_SEMANTIC_EXHAUSTED,
+        BUCKET_WRONG,
+        BUCKET_WRONG_EXHAUSTED,
+        BUCKET_UNSUB_TURNS,
+        BUCKET_UNSUB_CONTEXT,
+        BUCKET_INFRA_EVENT_LOOP,
+        BUCKET_INFRA_OTHER,
+        BUCKET_UNCLASSIFIED,
     ]
     with path.open("w", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=fieldnames)
@@ -364,19 +390,21 @@ def main() -> None:
     write_task_rows(output_dir / "task_labels.csv", rows)
     write_summary(output_dir / "summary.csv", rows)
 
-    counts = Counter(row["label"] for row in rows)
+    counts = Counter(row["bucket"] for row in rows)
     print(f"Wrote {len(rows)} task labels to {output_dir / 'task_labels.csv'}")
     print(f"Wrote summary to {output_dir / 'summary.csv'}")
-    for label in [
-        LABEL_EQUIVALENT,
-        LABEL_WRONG,
-        LABEL_ERROR_TURNS,
-        LABEL_ERROR_CONTEXT,
-        LABEL_INFRA_EVENT_LOOP,
-        LABEL_INFRA_OTHER,
-        LABEL_UNCLASSIFIED,
+    for bucket in [
+        BUCKET_SEMANTIC,
+        BUCKET_SEMANTIC_EXHAUSTED,
+        BUCKET_WRONG,
+        BUCKET_WRONG_EXHAUSTED,
+        BUCKET_UNSUB_TURNS,
+        BUCKET_UNSUB_CONTEXT,
+        BUCKET_INFRA_EVENT_LOOP,
+        BUCKET_INFRA_OTHER,
+        BUCKET_UNCLASSIFIED,
     ]:
-        print(f"{label}: {counts.get(label, 0)}")
+        print(f"{bucket}: {counts.get(bucket, 0)}")
 
 
 if __name__ == "__main__":
