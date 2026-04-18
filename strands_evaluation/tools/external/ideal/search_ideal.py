@@ -9,8 +9,6 @@ Use this until exhaustion. You will most likely need all the planned sources.
 
 from __future__ import annotations
 
-import json
-import logging
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -23,18 +21,11 @@ from strands_evaluation.tools.external.ideal.plan_store import (
     set_task_context as _set_task_context_shared,
 )
 
-logger = logging.getLogger(__name__)
-
 _TASK_CONTEXT: Dict[str, Any] = {}
 _CURRENT_PLAN: Optional[IdealTaskPlan] = None
 _PLAN_CURSOR: int = 0
 
-_TABLE_DESCRIPTIONS_PATH = Path("table_descriptions.jsonl")
-_TABLE_CACHE_LOADED = False
-_TABLE_ENTRY_BY_URI: Dict[str, Dict[str, str]] = {}
-
 _S3_PREFIX = "s3://lakeqa-yc4103-datalake/"
-_TRUNCATED_CONTENT_WORDS = 200
 
 
 def set_db_path(path: str) -> None:
@@ -60,14 +51,11 @@ def set_task_context(task_context: Dict[str, Any]) -> None:
 
 
 def reset_state() -> None:
-    """Reset in-process plan/iterator state and cached table descriptions."""
+    """Reset in-process plan/iterator state."""
     global _TASK_CONTEXT, _CURRENT_PLAN, _PLAN_CURSOR
-    global _TABLE_CACHE_LOADED, _TABLE_ENTRY_BY_URI
     _TASK_CONTEXT = {}
     _CURRENT_PLAN = None
     _PLAN_CURSOR = 0
-    _TABLE_CACHE_LOADED = False
-    _TABLE_ENTRY_BY_URI = {}
     _set_task_context_shared({})
 
 
@@ -76,51 +64,6 @@ def _require_plan() -> IdealTaskPlan:
     if _CURRENT_PLAN is None:
         _CURRENT_PLAN = load_plan_for_context(_TASK_CONTEXT)
     return _CURRENT_PLAN
-
-
-def _load_table_cache() -> None:
-    global _TABLE_CACHE_LOADED, _TABLE_ENTRY_BY_URI
-    if _TABLE_CACHE_LOADED:
-        return
-
-    if not _TABLE_DESCRIPTIONS_PATH.exists():
-        raise FileNotFoundError(
-            f"Required dependency '{_TABLE_DESCRIPTIONS_PATH}' not found. "
-            "search_tool=ideal requires table_descriptions.jsonl at the repo root "
-            "for description/content enrichment."
-        )
-
-    _TABLE_CACHE_LOADED = True
-    uri_map: Dict[str, Dict[str, str]] = {}
-    with _TABLE_DESCRIPTIONS_PATH.open() as f:
-        for line in f:
-            line = line.strip()
-            if not line:
-                continue
-            try:
-                obj = json.loads(line)
-            except json.JSONDecodeError:
-                continue
-
-            uri = str(obj.get("dataset_uri") or obj.get("uri") or "").strip()
-            if not uri:
-                continue
-
-            description = str(obj.get("description") or "").strip()
-            content = str(obj.get("content") or "").strip()
-            uri_map[uri] = {
-                "description": description,
-                "content": content,
-            }
-
-    _TABLE_ENTRY_BY_URI = uri_map
-
-
-def _truncate_words(text: str, max_words: int = _TRUNCATED_CONTENT_WORDS) -> str:
-    words = (text or "").split()
-    if len(words) <= max_words:
-        return " ".join(words)
-    return " ".join(words[:max_words])
 
 
 def _dataset_id_from_source(source: str) -> str:
@@ -137,27 +80,15 @@ def _canonical_uri(source_path: str) -> str:
     return f"{_S3_PREFIX}{str(source_path).lstrip('/')}"
 
 
-def _metadata_for_uri(uri: str) -> Dict[str, str]:
-    _load_table_cache()
-    return _TABLE_ENTRY_BY_URI.get(uri, {})
-
-
 def _build_file_result(source_path: str) -> Dict[str, Any]:
     uri = _canonical_uri(source_path)
     dataset_id = _dataset_id_from_source(source_path)
-    metadata = _metadata_for_uri(uri)
-    out: Dict[str, Any] = {
+    return {
         "source_kind": "file",
         "dataset_id": dataset_id,
         "uri": uri,
+        "s3_uri": uri,
     }
-    description = metadata.get("description", "")
-    content = _truncate_words(metadata.get("content", ""))
-    if description:
-        out["description"] = description
-    if content:
-        out["content"] = content
-    return out
 
 
 def _normalize_top_k(top_k: Any) -> int:

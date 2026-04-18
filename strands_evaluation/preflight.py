@@ -49,19 +49,6 @@ def _check_lance_db(path: Path) -> PreflightCheck:
     return PreflightCheck(label, True, f"found: {lakeqa}")
 
 
-def _check_table_descriptions_for_source_driven() -> PreflightCheck:
-    from strands_evaluation.tools.external.ideal import search_ideal as _si
-
-    _si._TABLE_CACHE_LOADED = False
-    _si._TABLE_ENTRY_BY_URI = {}
-    label = "table_descriptions.jsonl (search_ideal load)"
-    try:
-        _si._load_table_cache()
-    except Exception as exc:
-        return PreflightCheck(label, False, str(exc))
-    return PreflightCheck(label, True, f"loaded {len(_si._TABLE_ENTRY_BY_URI)} URI entries")
-
-
 def _check_desc_cache_for_enrichment() -> PreflightCheck:
     from strands_evaluation.tools.external.ideal import search_wrapper as _sw
 
@@ -73,6 +60,19 @@ def _check_desc_cache_for_enrichment() -> PreflightCheck:
     except Exception as exc:
         return PreflightCheck(label, False, str(exc))
     return PreflightCheck(label, True, f"loaded {len(_sw._DESC_BY_URI)} URI entries")
+
+
+def _check_snippet_cache() -> PreflightCheck:
+    from strands_evaluation.tools.external.ideal import search_wrapper as _sw
+
+    _sw._SNIPPET_CACHE_LOADED = False
+    _sw._SNIPPET_BY_URI = {}
+    label = "snippet.jsonl"
+    try:
+        _sw._load_snippet_cache()
+    except Exception as exc:
+        return PreflightCheck(label, False, str(exc))
+    return PreflightCheck(label, True, f"loaded {len(_sw._SNIPPET_BY_URI)} URI entries")
 
 
 def _check_schemas_jsonl_load() -> PreflightCheck:
@@ -120,7 +120,7 @@ def run_preflight(
     stream = stream or sys.stdout
 
     st = (run_config.search_tool_mode or "standard").strip().lower()
-    sr = (run_config.search_results_mode or "standard").strip().lower()
+    sr = (run_config.search_results_mode or "naive").strip().lower()
     am = (run_config.agent_management_mode or "standard").strip().lower()
 
     checks: List[PreflightCheck] = []
@@ -145,11 +145,9 @@ def run_preflight(
             checks.extend(_check_plan_files(task_files))
 
     if sr == "ideal":
-        if st == "ideal":
-            checks.append(_check_table_descriptions_for_source_driven())
-        else:
-            checks.append(_check_desc_cache_for_enrichment())
-            checks.append(_check_schemas_jsonl_load())
+        checks.append(_check_desc_cache_for_enrichment())
+        checks.append(_check_snippet_cache())
+        checks.append(_check_schemas_jsonl_load())
 
     ok_count = sum(1 for c in checks if c.ok)
     fail_count = len(checks) - ok_count

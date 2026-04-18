@@ -94,13 +94,13 @@ class RunModeEvalTests(unittest.TestCase):
     def test_variant_condition_label_uses_compact_mode_letters(self):
         label = run_mode_eval._variant_condition_label(
             search_tool="ideal",
-            search_results="standard",
+            search_results="naive",
             agent_management="naive",
             k=5,
             search_calls=2,
         )
 
-        self.assertEqual(label, "search_i_results_d_plann_k5_sc2")
+        self.assertEqual(label, "search_i_results_n_plann_k5_sc2")
 
     def test_mode_results_dir_does_not_append_model_twice(self):
         agent_config = types.SimpleNamespace(

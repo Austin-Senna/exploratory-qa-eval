@@ -86,7 +86,7 @@ def _build_run_config(
         timeout_seconds=180,
         search_db_path=db_path,
         search_tool_mode=mode,
-        search_results_mode=mode,
+        search_results_mode="ideal" if mode == "ideal" else "naive",
         agent_management_mode=mode,
         condition_config=ConditionConfig(
             condition=f"diagnostic/plan_recitation_{mode}",

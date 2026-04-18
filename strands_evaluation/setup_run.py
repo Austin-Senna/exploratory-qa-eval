@@ -10,7 +10,8 @@ import sys
 from pathlib import Path
 from typing import Callable, Optional, Sequence
 
-_MODE_CHOICES = ("naive", "standard", "ideal")
+_SEARCH_MODE_CHOICES = ("naive", "standard", "ideal")
+_RESULT_MODE_CHOICES = ("naive", "ideal")
 _REASONING_EFFORT_CHOICES = ("none", "minimal", "low", "medium", "high", "xhigh")
 _DEFAULT_TASK_SET = "tasks_mini"
 _DEFAULT_SMOKE_TASK_DIR = "k-5-d-4"
@@ -29,9 +30,9 @@ def _build_parser() -> argparse.ArgumentParser:
     subparsers = parser.add_subparsers(dest="subcommand", required=True)
 
     common = argparse.ArgumentParser(add_help=False)
-    common.add_argument("--search", choices=_MODE_CHOICES, default="standard")
-    common.add_argument("--results", choices=_MODE_CHOICES, default="standard")
-    common.add_argument("--plan", choices=_MODE_CHOICES, default="standard")
+    common.add_argument("--search", choices=_SEARCH_MODE_CHOICES, default="standard")
+    common.add_argument("--results", choices=_RESULT_MODE_CHOICES, default="naive")
+    common.add_argument("--plan", choices=_SEARCH_MODE_CHOICES, default="standard")
     common.add_argument("--k", type=int, default=None)
     common.add_argument("--model", default="bedrock/claude-sonnet-4.5")
     common.add_argument(

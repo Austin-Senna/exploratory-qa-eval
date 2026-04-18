@@ -212,8 +212,8 @@ def main() -> None:
     )
     parser.add_argument(
         "--search_results",
-        choices=["naive", "standard", "ideal"],
-        default="standard",
+        choices=["naive", "ideal"],
+        default="naive",
         help="Search result richness axis.",
     )
     parser.add_argument(
