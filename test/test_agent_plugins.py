@@ -69,7 +69,7 @@ class TestToolLimitSteeringHandler(unittest.TestCase):
 
         self.assertEqual(action.type, "guide")
         self.assertIn("Call submit_answer NOW", action.reason)
-        self.assertEqual(agent.model.get_config()["params"]["max_completion_tokens"], 512)
+        self.assertEqual(agent.model.get_config()["params"]["max_completion_tokens"], 2048)
 
     def test_retry_cap_never_increases_a_smaller_user_cap(self):
         handler = ToolLimitSteeringHandler(timeout_seconds=9999)
@@ -102,7 +102,7 @@ class TestToolLimitSteeringHandler(unittest.TestCase):
         self.assertEqual(action.type, "guide")
         self.assertIn("Timeout reached", action.reason)
         self.assertIn("submit_answer NOW", action.reason)
-        self.assertEqual(agent.model.get_config()["params"]["max_completion_tokens"], 512)
+        self.assertEqual(agent.model.get_config()["params"]["max_completion_tokens"], 2048)
 
 
 class TestTokenBudgetDefaults(unittest.TestCase):
@@ -110,8 +110,8 @@ class TestTokenBudgetDefaults(unittest.TestCase):
         self.assertEqual(AgentConfig().max_tokens, 8096)
 
     def test_tool_result_caps_are_reduced(self):
-        self.assertEqual(agent_tools._TOOL_RESULT_CHAR_CAP, 12_000)
-        self.assertEqual(agent_tools_v2._TOOL_RESULT_CHAR_CAP, 12_000)
+        self.assertEqual(agent_tools._TOOL_RESULT_CHAR_CAP, 6_000)
+        self.assertEqual(agent_tools_v2._TOOL_RESULT_CHAR_CAP, 6_000)
 
 
 if __name__ == "__main__":

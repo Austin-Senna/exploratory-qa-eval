@@ -3,7 +3,7 @@ Strands-native agent runner for the Data Lake benchmark.
 
 Replaces the hand-rolled agent_runner.py with a clean Strands Agent skeleton
 that wires together:
-  - SlidingWindowConversationManager  (keeps last-k turns in context)
+  - built-in conversation management  (summarizing or sliding-window)
   - ToolLimitPlugin                   (stops after max_tool_calls)
   - LoggingCallbackHandler            (structured per-turn logging)
 """
@@ -18,7 +18,6 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 from strands import Agent
-from strands.agent.conversation_manager import SlidingWindowConversationManager
 from strands.tools.executors import SequentialToolExecutor, ConcurrentToolExecutor
 from strands.tools.decorator import DecoratedFunctionTool
 from strands.vended_plugins.skills import AgentSkills
@@ -45,6 +44,8 @@ from strands_evaluation.helper.prompting import (
     load_condition_prompt as _shared_load_condition_prompt,
     skill_paths_for_modes,
 )
+from strands_evaluation.helper.agent_runtime import invoke_with_watchdog
+from strands_evaluation.helper.conversation import build_conversation_manager
 from strands_evaluation.helper.result import AgentResult
 from strands_evaluation.helper.sandbox import (
     _cleanup_isolated_sandbox,
@@ -316,7 +317,6 @@ def _inject_search_budget_prompt(
     )
     return system_prompt.rstrip() + budget_note
 
-
 class DataLakeAgent:
     """Strands-based agent for the Data Lake benchmark."""
 
@@ -431,10 +431,7 @@ class DataLakeAgent:
             search_tool_names,
         )
 
-        conv_manager = SlidingWindowConversationManager(
-            window_size=self.run_config.sliding_window_k,
-            per_turn=True,  # proactively trim before every LLM call to prevent overflow
-        )
+        conv_manager = build_conversation_manager(self.run_config)
 
         if self.run_config.tool_executor == "sequential":
             tool_executor = SequentialToolExecutor()
@@ -442,7 +439,9 @@ class DataLakeAgent:
             tool_executor = ConcurrentToolExecutor()
 
         _tool_limit_handler = ToolLimitSteeringHandler(
-            self.run_config.max_tool_calls, self.run_config.timeout_seconds
+            self.run_config.max_tool_calls,
+            self.run_config.timeout_seconds,
+            submit_only_max_tokens=self.run_config.submit_only_max_tokens,
         )
 
         def _callback(**kwargs):
@@ -520,19 +519,58 @@ class DataLakeAgent:
                 trace_attributes=trace_attributes,
                 task_context=task_context,
             )
-            response = agent(question)
+            hard_deadline = (
+                start
+                + self.run_config.timeout_seconds
+                + self.run_config.submit_grace_seconds
+            )
+            outcome = invoke_with_watchdog(
+                agent,
+                question,
+                hard_deadline=hard_deadline,
+                timeout_seconds=self.run_config.timeout_seconds,
+                submit_grace_seconds=self.run_config.submit_grace_seconds,
+            )
+            response = outcome.response
 
             submitted = get_submitted_answer()
+            if outcome.timed_out and not submitted:
+                elapsed = time.time() - start
+                return AgentResult(
+                    answer="",
+                    model="",
+                    model_name=self.agent_config.model_name,
+                    metrics=response.metrics if response is not None else telemetry.partial_metrics,
+                    elapsed_time=elapsed,
+                    success=False,
+                    error=outcome.timeout_reason or "Timeout reached",
+                )
             retries = 0
             while not submitted and retries < 2:
                 logger.warning(
                     f"Agent finished without submit_answer. Nudging (attempt {retries + 1}/2)..."
                 )
-                response = agent(
+                outcome = invoke_with_watchdog(
+                    agent,
                     "You provided a text response but you MUST use the `submit_answer` tool "
-                    "to submit your final answer. Please call the tool now."
+                    "to submit your final answer. Please call the tool now.",
+                    hard_deadline=hard_deadline,
+                    timeout_seconds=self.run_config.timeout_seconds,
+                    submit_grace_seconds=self.run_config.submit_grace_seconds,
                 )
+                response = outcome.response
                 submitted = get_submitted_answer()
+                if outcome.timed_out and not submitted:
+                    elapsed = time.time() - start
+                    return AgentResult(
+                        answer="",
+                        model="",
+                        model_name=self.agent_config.model_name,
+                        metrics=response.metrics if response is not None else telemetry.partial_metrics,
+                        elapsed_time=elapsed,
+                        success=False,
+                        error=outcome.timeout_reason or "Timeout reached",
+                    )
                 retries += 1
 
             answer = submitted["answer"] if submitted else _clean_answer(str(response))

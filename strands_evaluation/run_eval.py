@@ -501,8 +501,38 @@ def main() -> None:
                         help="Max tool calls per task before agent is stopped")
     parser.add_argument("--sliding-window", type=int, default=40,
                         help="Conversation window size (last-k turns kept)")
+    parser.add_argument(
+        "--conversation-manager-strategy",
+        choices=["summarizing", "sliding_window"],
+        default="summarizing",
+        help="Conversation manager to use during the run.",
+    )
+    parser.add_argument(
+        "--summary-ratio",
+        type=float,
+        default=0.4,
+        help="Fraction of messages to summarize when Strands reduces context.",
+    )
+    parser.add_argument(
+        "--preserve-recent-messages",
+        type=int,
+        default=12,
+        help="How many recent messages the summarizing manager always keeps verbatim.",
+    )
     parser.add_argument("--timeout", type=int, default=450,
                         help="Per-task timeout in seconds")
+    parser.add_argument(
+        "--submit-grace-seconds",
+        type=int,
+        default=30,
+        help="Extra grace period reserved for submit_answer after the soft timeout.",
+    )
+    parser.add_argument(
+        "--submit-only-max-tokens",
+        type=int,
+        default=2048,
+        help="Token cap to enforce once the run enters submit-only mode.",
+    )
 
     # Condition flags (ConditionConfig)
     parser.add_argument("--condition", choices=["baseline", "a", "b"], default="baseline",
@@ -544,8 +574,13 @@ def main() -> None:
         results_output_dir=args.results_output_dir,
         logs_output_dir=args.logs_output_dir,
         max_tool_calls=args.max_tool_calls,
+        conversation_manager_strategy=args.conversation_manager_strategy,
         sliding_window_k=args.sliding_window,
+        summary_ratio=args.summary_ratio,
+        preserve_recent_messages=args.preserve_recent_messages,
         timeout_seconds=args.timeout,
+        submit_grace_seconds=args.submit_grace_seconds,
+        submit_only_max_tokens=args.submit_only_max_tokens,
         condition_config=ConditionConfig(
             condition=condition_label,
             base_condition=args.condition,

@@ -38,8 +38,13 @@ class RunConfig:
     results_output_dir: str = "results"
     logs_output_dir: str = "logs"
     max_tool_calls: int = 30
+    conversation_manager_strategy: str = "summarizing"
     sliding_window_k: int = 40
+    summary_ratio: float = 0.4
+    preserve_recent_messages: int = 12
     timeout_seconds: int = 450
+    submit_grace_seconds: int = 30
+    submit_only_max_tokens: int = 2048
     system_prompt: str = SYSTEM_PROMPT
     tool_executor: str = "sequential"    # or "concurrent"
     condition_config: ConditionConfig = field(default_factory=ConditionConfig)

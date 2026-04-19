@@ -63,7 +63,7 @@ _QUERY_ROW_CAP = 200
 _SEARCH_MAX_MATCHES = 20
 _SEARCH_CONTEXT_LINES = 2
 _QUERY_MAX_FILE_BYTES = 500 * 1024 * 1024  # 500 MB — above this, download first
-_TOOL_RESULT_CHAR_CAP = 12_000             # ~3k tokens — keeps single tool results from dominating context
+_TOOL_RESULT_CHAR_CAP = 6_000              # ~1.5k tokens — keeps single tool results from dominating context
 
 
 # ---------------------------------------------------------------------------
@@ -799,13 +799,44 @@ def grep_file(
     except Exception as e:
         return {"error": f"Stream search failed: {e}", "traceback": traceback.format_exc()}
 
-    return {
+    result = {
         "dataset_id": dataset_id,
         "file_path": file_path,
         "match_count": len(matches),
         "truncated_matches": len(matches) >= _SEARCH_MAX_MATCHES,
         "matches": matches,
     }
+    result_json = json.dumps(result)
+    if len(result_json) > _TOOL_RESULT_CHAR_CAP:
+        sandbox = _get_sandbox_dir()
+        safe_name = file_path.lstrip("/").replace("/", "_")
+        dump_path = sandbox / dataset_id / f"{safe_name}.grep_result.json"
+        dump_path.parent.mkdir(parents=True, exist_ok=True)
+        dump_path.write_text(result_json)
+        budget = _TOOL_RESULT_CHAR_CAP - 600
+        char_count, capped_matches = 0, []
+        for match in matches:
+            match_json = json.dumps(match)
+            if char_count + len(match_json) + 2 > budget:
+                break
+            capped_matches.append(match)
+            char_count += len(match_json) + 2
+        return {
+            "dataset_id": dataset_id,
+            "file_path": file_path,
+            "match_count": len(matches),
+            "returned_matches": len(capped_matches),
+            "truncated_matches": True,
+            "local_result_path": str(dump_path),
+            "truncation_note": (
+                f"Match output exceeded the {_TOOL_RESULT_CHAR_CAP} char limit. "
+                f"Showing {len(capped_matches)} of {len(matches)} matches. "
+                f"Full result written to: {dump_path}. "
+                "Tighten the regex or reduce context_lines if you need a smaller in-context result."
+            ),
+            "matches": capped_matches,
+        }
+    return result
 
 # ---------------------------------------------------------------------------
 # Tool 4: query_file

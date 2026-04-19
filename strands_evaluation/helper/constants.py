@@ -140,19 +140,19 @@ Use the tool that matches what you know:
 2. search_value — broad lexical discovery and query reformulation
 3. search_schema — when you need exact field/table-name matching
 
-## OUTPUT LIMITS — read_file, query_file, execute_code
-These tools cap their output at ~12,000 characters (~3k tokens) to protect context.
+## OUTPUT LIMITS — read_file, grep_file, query_file, execute_code
+These tools cap their output at ~6,000 characters (~1.5k tokens) to protect context.
 If a result is too large, you will receive:
 - `truncation_note` — explains the limit was hit and how many rows/lines fit
 - `local_result_path` — full result written to the sandbox (e.g. `/path/rows.txt.query_result.json`)
-- As many rows/lines as fit within the 12k limit
+- As many rows/lines/matches as fit within the 6k limit
 
 **When you see a truncation_note:**
 1. Use a more targeted query: `SELECT specific_col FROM t WHERE ... GROUP BY ... LIMIT n`
 2. Use `grep_file` to search for specific values instead
 3. Or read the full dump: `execute_code("import json; data = json.load(open('<local_result_path>')); print(data['rows'][:10])")`
 
-execute_code stdout is also capped at ~12,000 chars (~3k tokens). If output is truncated, print less or query more specifically.
+execute_code stdout is also capped at ~6,000 chars (~1.5k tokens). If output is truncated, print less or query more specifically.
 
 ## QUERY DISCIPLINE — peek before SQL
 NEVER call `query_file` on a file you have not first inspected with `peek_file`. The most common failure modes — observed hundreds of times — all come from guessing the schema:

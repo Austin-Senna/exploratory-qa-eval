@@ -94,7 +94,7 @@ class ToolLimitSteeringHandler(SteeringHandler):
         max_tool_calls: int = 30,
         timeout_seconds: int = 300,
         retry_max_tokens: int | None = 4096,
-        submit_only_max_tokens: int | None = 512,
+        submit_only_max_tokens: int | None = 2048,
         max_model_guides: int = 2,
     ) -> None:
         super().__init__()
@@ -219,7 +219,8 @@ class ToolLimitSteeringHandler(SteeringHandler):
             return Guide(
                 reason=(
                     f"{reason} Do not continue with plain-text analysis. "
-                    "Call submit_answer NOW with your best current answer and a short reasoning. "
+                    "Call submit_answer NOW with your best current answer. "
+                    "Keep the reasoning concise, but it may be longer if needed. "
                     "Do not produce any other response."
                 )
             )
@@ -235,7 +236,7 @@ class ToolLimitSteeringHandler(SteeringHandler):
                 reason=(
                     "Your recent responses keep hitting the max token limit and are being discarded. "
                     "Stop writing long prose. Call submit_answer NOW with your best current answer "
-                    "and a single short reasoning sentence."
+                    "and concise reasoning. The answer may still be long if required."
                 )
             )
 

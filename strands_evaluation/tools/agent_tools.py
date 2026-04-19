@@ -41,7 +41,7 @@ REGION = "us-east-1"
 # Sandbox directory on main disk (500G) instead of /tmp (63G tmpfs)
 SANDBOX_BASE_DIR = Path(__file__).resolve().parent.parent.parent / ".sandbox"
 
-_TOOL_RESULT_CHAR_CAP = 12_000  # ~3k tokens — keeps single tool results from dominating context
+_TOOL_RESULT_CHAR_CAP = 6_000  # ~1.5k tokens — keeps single tool results from dominating context
 
 # Global sandbox directory (created per session)
 _SANDBOX_DIR = None
