@@ -67,7 +67,7 @@ Before submitting any `execute_code` call, verify:
 
 ## Handling Truncated Output
 
-`query_file`, `read_file`, and `execute_code` cap output at ~24K characters. If you see a `truncation_note`:
+`query_file`, `read_file`, and `execute_code` cap output at ~12K characters. If you see a `truncation_note`:
 
 1. **Tighten the query** — add `WHERE`, `GROUP BY`, select fewer columns, use `LIMIT`
 2. **Use `grep_file`** to find a specific value instead of reading all rows
