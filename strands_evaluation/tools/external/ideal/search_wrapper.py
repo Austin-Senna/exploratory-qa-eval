@@ -2,33 +2,33 @@
 
 This module wraps search tools to control:
 1) Fixed result limits (k)
-2) Search result payload richness (naive | standard | ideal)
+2) Search result payload richness (naive | ideal)
 """
 
 from __future__ import annotations
 
 import json
-import logging
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple
 
 from strands import tool
 from strands.tools.decorator import DecoratedFunctionTool
 
-logger = logging.getLogger(__name__)
-
 _QUERY_TOOLS = {"search_value", "search_schema", "search_reranked", "search_ideal"}
 _PREFIX_TOOLS = {"search_prefix"}
 _SEARCH_TOOL_NAMES = _QUERY_TOOLS | _PREFIX_TOOLS
 
-_IDEAL_SNIPPET_WORDS = 50
-_STANDARD_SNIPPET_WORDS = 75
+_IDEAL_SNIPPET_WORDS = 100
 
 _TABLE_DESCRIPTIONS_PATH = Path("table_descriptions.jsonl")
+_SNIPPETS_PATH = Path("snippet.jsonl")
 _SCHEMAS_PATH = Path("datagov_tables_schemas_full.jsonl")
 
 _DESC_CACHE_LOADED = False
 _DESC_BY_URI: Dict[str, str] = {}
+
+_SNIPPET_CACHE_LOADED = False
+_SNIPPET_BY_URI: Dict[str, str] = {}
 
 _SCHEMAS_CACHE_LOADED = False
 _SCHEMA_BY_SLUG_FILENAME: Dict[Tuple[str, str], Dict[str, Any]] = {}
@@ -41,7 +41,6 @@ def _dataset_id_from_uri(uri: str) -> Optional[str]:
     if "://" not in raw:
         return None
     try:
-        # s3://bucket/<folder>/<dataset_id>/...
         tail = raw.split("://", 1)[1]
         parts = tail.split("/")
         if len(parts) >= 3:
@@ -59,7 +58,7 @@ def _first_non_empty(values: Iterable[Optional[str]]) -> Optional[str]:
 
 
 def _extract_uri(item: Dict[str, Any]) -> Optional[str]:
-    return _first_non_empty([item.get("dataset_uri"), item.get("uri")])
+    return _first_non_empty([item.get("s3_uri"), item.get("dataset_uri"), item.get("uri")])
 
 
 def _extract_dataset_id(item: Dict[str, Any]) -> Optional[str]:
@@ -73,7 +72,15 @@ def _extract_dataset_id(item: Dict[str, Any]) -> Optional[str]:
 
 
 def _extract_search_text(item: Dict[str, Any]) -> str:
-    text = _first_non_empty([item.get("document"), item.get("text"), item.get("content")])
+    text = _first_non_empty(
+        [
+            item.get("dataset_snippet"),
+            item.get("snippet"),
+            item.get("document"),
+            item.get("text"),
+            item.get("content"),
+        ]
+    )
     return text or ""
 
 
@@ -84,39 +91,6 @@ def _truncate_words(text: str, max_words: int) -> str:
     return " ".join(words[:max_words])
 
 
-def _reshape_source_driven_row(row: Dict[str, Any], mode: str) -> Dict[str, Any]:
-    dataset_id = _extract_dataset_id(row)
-    if mode == "naive":
-        out: Dict[str, Any] = {}
-        if dataset_id:
-            out["dataset_id"] = dataset_id
-        return out
-
-    out = {}
-    if dataset_id:
-        out["dataset_id"] = dataset_id
-
-    uri = _extract_uri(row)
-    if uri:
-        out["uri"] = uri
-
-    content = _first_non_empty([row.get("content"), row.get("snippet"), row.get("document")])
-
-    if mode == "standard":
-        if content:
-            out["content"] = _truncate_words(content, max_words=_STANDARD_SNIPPET_WORDS)
-        return out
-
-    # ideal
-    description = _first_non_empty([row.get("description")])
-    if description:
-        out["description"] = description
-    if content:
-        out["dataset_snippet"] = _truncate_words(content, max_words=_IDEAL_SNIPPET_WORDS)
-
-    return out
-
-
 def _load_desc_cache() -> None:
     global _DESC_CACHE_LOADED, _DESC_BY_URI
     if _DESC_CACHE_LOADED:
@@ -125,7 +99,7 @@ def _load_desc_cache() -> None:
     if not _TABLE_DESCRIPTIONS_PATH.exists():
         raise FileNotFoundError(
             f"Required dependency '{_TABLE_DESCRIPTIONS_PATH}' not found. "
-            "search_results=ideal enrichment requires table_descriptions.jsonl at the repo root."
+            "search_results=ideal requires table_descriptions.jsonl at the repo root."
         )
 
     _DESC_CACHE_LOADED = True
@@ -147,13 +121,40 @@ def _load_desc_cache() -> None:
     _DESC_BY_URI = uri_map
 
 
-def _slug_stem_from_uri(uri: str) -> Optional[Tuple[str, str]]:
-    """Derive (dataset_slug, filename_stem) from either a full s3:// URI or a versioned s3_key.
+def _load_snippet_cache() -> None:
+    global _SNIPPET_CACHE_LOADED, _SNIPPET_BY_URI
+    if _SNIPPET_CACHE_LOADED:
+        return
 
-    Extensions are stripped because search URIs use `.txt` while the schemas jsonl
-    keeps the original `.csv`/`.json`/`.tsv` extensions; both representations of a
-    file share a stem.
-    """
+    if not _SNIPPETS_PATH.exists():
+        raise FileNotFoundError(
+            f"Required dependency '{_SNIPPETS_PATH}' not found. "
+            "Run the snippet builder first to create snippet.jsonl."
+        )
+
+    _SNIPPET_CACHE_LOADED = True
+    uri_map: Dict[str, str] = {}
+    with _SNIPPETS_PATH.open() as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                obj = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            uri = str(obj.get("dataset_uri") or obj.get("uri") or "").strip()
+            snippet = _truncate_words(
+                str(obj.get("dataset_snippet") or obj.get("snippet") or obj.get("content") or "").strip(),
+                max_words=_IDEAL_SNIPPET_WORDS,
+            )
+            if uri and snippet and uri not in uri_map:
+                uri_map[uri] = snippet
+
+    _SNIPPET_BY_URI = uri_map
+
+
+def _slug_stem_from_uri(uri: str) -> Optional[Tuple[str, str]]:
     raw = (uri or "").strip()
     if not raw:
         return None
@@ -199,8 +200,7 @@ def _load_schemas_cache() -> None:
     if not _SCHEMAS_PATH.exists():
         raise FileNotFoundError(
             f"Required dependency '{_SCHEMAS_PATH}' not found. "
-            "search_results=ideal with a non-ideal search_tool requires "
-            "datagov_tables_schemas_full.jsonl at the repo root."
+            "search_results=ideal requires datagov_tables_schemas_full.jsonl at the repo root."
         )
 
     chosen: Dict[Tuple[str, str], Tuple[int, Dict[str, Any]]] = {}
@@ -245,79 +245,81 @@ def _lookup_schema(uri: str) -> Optional[Dict[str, Any]]:
     return _SCHEMA_BY_SLUG_FILENAME.get(key)
 
 
+def _fallback_type_from_uri(uri: str) -> str:
+    name = (uri or "").rsplit("/", 1)[-1]
+    if "." in name:
+        return name.rsplit(".", 1)[-1].lower()
+    return "unknown"
+
+
+def _schema_fields(uri: str) -> Dict[str, Any]:
+    schema = _lookup_schema(uri)
+    if not schema:
+        return {"type": _fallback_type_from_uri(uri)}
+
+    columns = schema.get("columns") or []
+    if columns:
+        return {"columns": list(columns)}
+
+    return {"type": str(schema.get("kind") or _fallback_type_from_uri(uri))}
+
+
+def _reshape_row(row: Dict[str, Any], mode: str) -> Dict[str, Any]:
+    dataset_id = _extract_dataset_id(row)
+    uri = _extract_uri(row)
+
+    out: Dict[str, Any] = {}
+    if dataset_id:
+        out["dataset_id"] = dataset_id
+    if uri:
+        out["s3_uri"] = uri
+
+    if mode == "naive":
+        return out
+
+    desc = _DESC_BY_URI.get(uri or "", "")
+    if desc:
+        out["llm_desc"] = desc
+
+    if uri:
+        out.update(_schema_fields(uri))
+
+    snippet = _SNIPPET_BY_URI.get(uri or "", "")
+    if not snippet:
+        snippet = _truncate_words(_extract_search_text(row), max_words=_IDEAL_SNIPPET_WORDS)
+    if snippet:
+        out["dataset_snippet"] = snippet
+
+    return out
+
+
 def reshape_search_payload(payload: Any, mode: str) -> Any:
-    """Transform a search payload into naive/standard/ideal result richness."""
-    normalized = str(mode or "standard").strip().lower()
-    if normalized not in {"naive", "standard", "ideal"}:
-        raise ValueError(f"Unsupported search_results mode '{mode}'. Expected: naive|standard|ideal")
+    """Transform a search payload into naive/ideal result richness."""
+    normalized = str(mode or "naive").strip().lower()
+    if normalized not in {"naive", "ideal"}:
+        raise ValueError(f"Unsupported search_results mode '{mode}'. Expected: naive|ideal")
 
     if not isinstance(payload, dict):
         return payload
     if "results" not in payload or not isinstance(payload["results"], list):
         return payload
 
-    source_driven = bool(payload.get("ideal_source_driven"))
-
-    if normalized == "ideal" and not source_driven:
+    if normalized == "ideal":
         _load_desc_cache()
+        _load_snippet_cache()
+        _load_schemas_cache()
 
     shaped: List[Any] = []
     for row in payload["results"]:
         if not isinstance(row, dict):
             shaped.append(row)
             continue
-
-        if source_driven:
-            shaped.append(_reshape_source_driven_row(row, normalized))
-            continue
-
-        uri = _extract_uri(row)
-        dataset_id = _extract_dataset_id(row)
-
-        if normalized == "naive":
-            out: Dict[str, Any] = {}
-            if uri:
-                out["uri"] = uri
-            shaped.append(out)
-            continue
-
-        if normalized == "standard":
-            snippet = _truncate_words(_extract_search_text(row), max_words=_STANDARD_SNIPPET_WORDS)
-            score = row.get("score")
-            out = {}
-            if uri:
-                out["uri"] = uri
-            if dataset_id:
-                out["dataset_id"] = dataset_id
-            if score is not None:
-                out["score"] = score
-            if snippet:
-                out["snippet"] = snippet
-            shaped.append(out)
-            continue
-
-        # ideal
-        desc = _DESC_BY_URI.get(uri or "", "")
-        schema = _lookup_schema(uri) if uri else None
-        snippet = _truncate_words(_extract_search_text(row), max_words=_IDEAL_SNIPPET_WORDS)
-
-        out = {}
-        if uri:
-            out["uri"] = uri
-        if dataset_id:
-            out["dataset_id"] = dataset_id
-        if desc:
-            out["description"] = desc
-        if schema:
-            out["schema"] = schema
-        if snippet:
-            out["dataset_snippet"] = snippet
-        shaped.append(out)
+        shaped.append(_reshape_row(row, normalized))
 
     transformed = dict(payload)
     transformed["results"] = shaped
     transformed["count"] = len(shaped)
-    if source_driven:
+    if payload.get("ideal_source_driven"):
         for noise_key in (
             "ideal_source_driven",
             "task_id",
@@ -351,10 +353,17 @@ def _compose_description(
     notes: List[str] = []
     if fixed_k is not None:
         if tool_name == "search_ideal":
-            notes.append(f"Each call returns up to {fixed_k} planned sources from source_sequence; callers cannot change the call signature.")
+            notes.append(
+                f"Each call returns up to {fixed_k} planned sources from source_sequence; callers cannot change the call signature."
+            )
         else:
             notes.append(f"Result limit is fixed at {fixed_k}; callers cannot change it.")
-    notes.append(f"Result payload mode: {mode}.")
+    if mode == "naive":
+        notes.append("Each result returns dataset_id and s3_uri.")
+    else:
+        notes.append(
+            "Each result returns dataset_id, s3_uri, llm_desc, columns or type, and dataset_snippet."
+        )
     return f"{desc} {' '.join(notes)}".strip()
 
 
@@ -375,6 +384,7 @@ def _wrap_query_tool(
     top_k_default = _query_default(spec, "top_k", 10)
 
     if fixed_k is not None:
+
         def _wrapped(query: str) -> dict:
             return reshape_search_payload(base_tool(query=query, top_k=fixed_k), mode)
 
@@ -403,6 +413,7 @@ def _wrap_prefix_tool(
     limit_default = _query_default(spec, "limit", 50)
 
     if fixed_k is not None:
+
         def _wrapped(prefixes: List[str]) -> dict:
             return reshape_search_payload(base_tool(prefixes=prefixes, limit=fixed_k), mode)
 
@@ -421,10 +432,10 @@ def build_search_tools(
     results_mode: str,
 ) -> List[DecoratedFunctionTool]:
     """Return search tools wrapped with k-control and payload shaping."""
-    mode = str(results_mode or "standard").strip().lower()
-    if mode not in {"naive", "standard", "ideal"}:
+    mode = str(results_mode or "naive").strip().lower()
+    if mode not in {"naive", "ideal"}:
         raise ValueError(
-            f"Unsupported results_mode '{results_mode}'. Expected: naive|standard|ideal"
+            f"Unsupported results_mode '{results_mode}'. Expected: naive|ideal"
         )
 
     wrapped: List[DecoratedFunctionTool] = []

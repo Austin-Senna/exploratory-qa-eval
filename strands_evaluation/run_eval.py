@@ -431,8 +431,7 @@ def _run_task_files(
     """Run evaluation on an explicit list of task files (bypass glob in run_evaluation)."""
     cond = run_config.condition_config
     condition_label = cond.condition
-    safe_model = _display_name(agent_config)
-    output_dir = os.path.join(_results_root(run_config), condition_label, safe_model)
+    output_dir = _results_dir(run_config, agent_config)
     os.makedirs(output_dir, exist_ok=True)
 
     task_dir_name = os.path.basename(task_dir)

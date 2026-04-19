@@ -122,6 +122,7 @@ except ImportError:
 # ---------------------------------------------------------------------------
 
 _MODES = {"naive", "standard", "ideal"}
+_RESULT_MODES = {"naive", "ideal"}
 
 
 @dataclass
@@ -138,6 +139,15 @@ def _normalize_mode(value: Optional[str], default: str, label: str) -> str:
     mode = (value or default).strip().lower()
     if mode not in _MODES:
         raise ValueError(f"Unsupported {label} mode '{value}'. Expected one of: {', '.join(sorted(_MODES))}")
+    return mode
+
+
+def _normalize_result_mode(value: Optional[str], default: str, label: str) -> str:
+    mode = (value or default).strip().lower()
+    if mode not in _RESULT_MODES:
+        raise ValueError(
+            f"Unsupported {label} mode '{value}'. Expected one of: {', '.join(sorted(_RESULT_MODES))}"
+        )
     return mode
 
 
@@ -211,7 +221,7 @@ def build_results(
     fixed_k: Optional[int],
 ) -> List[DecoratedFunctionTool]:
     """Apply fixed-k and payload-shaping wrappers to search tools."""
-    results_mode = _normalize_mode(mode, "standard", "search_results")
+    results_mode = _normalize_result_mode(mode, "naive", "search_results")
     return build_search_tools_by_mode(
         base_search_tools,
         fixed_k=fixed_k,
@@ -227,7 +237,7 @@ def build_mode_bundle(
 ) -> ModeBundle:
     """Build final tools/prompt/plugin toggles from multi-axis ablation modes."""
     search_tool_mode = _normalize_mode(run_config.search_tool_mode, "standard", "search_tool")
-    search_results_mode = _normalize_mode(run_config.search_results_mode, "standard", "search_results")
+    search_results_mode = _normalize_result_mode(run_config.search_results_mode, "naive", "search_results")
     agent_management_mode = _normalize_mode(run_config.agent_management_mode, "standard", "agent_management")
 
     if search_tool_mode == "ideal" or agent_management_mode == "ideal":

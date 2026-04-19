@@ -9,12 +9,12 @@ from __future__ import annotations
 import json
 import logging
 import time
-from typing import List
+from typing import Any, List
 
 from strands import Plugin
 from strands.hooks import AfterToolCallEvent, AgentInitializedEvent, BeforeToolCallEvent
 from strands.plugins import hook
-from strands.vended_plugins.steering import Guide, Proceed, SteeringHandler, ToolSteeringAction
+from strands.vended_plugins.steering import Guide, ModelSteeringAction, Proceed, SteeringHandler, ToolSteeringAction
 
 from strands_evaluation.tools.agent_tools import get_submitted_answer
 
@@ -89,14 +89,25 @@ class ToolLimitSteeringHandler(SteeringHandler):
 
     name = "tool-limit"
 
-    def __init__(self, max_tool_calls: int = 30, timeout_seconds: int = 300) -> None:
+    def __init__(
+        self,
+        max_tool_calls: int = 30,
+        timeout_seconds: int = 300,
+        retry_max_tokens: int | None = 4096,
+        submit_only_max_tokens: int | None = 512,
+        max_model_guides: int = 2,
+    ) -> None:
         super().__init__()
         self._max = max_tool_calls
         self._timeout = timeout_seconds
+        self._retry_max_tokens = retry_max_tokens
+        self._submit_only_max_tokens = submit_only_max_tokens
+        self._max_model_guides = max_model_guides
         self._count = 0
         self._start_time = 0.0
         self._guided = False
         self._overflow = False
+        self._model_guides_used = 0
 
     def signal_context_overflow(self) -> None:
         self._overflow = True
@@ -107,25 +118,75 @@ class ToolLimitSteeringHandler(SteeringHandler):
         self._start_time = time.time()
         self._guided = False
         self._overflow = False
+        self._model_guides_used = 0
 
     @hook
     def on_after_tool(self, event: AfterToolCallEvent) -> None:
         # Keep historical behavior: skills() and plan() do not count.
         if not (event.tool_use.get("name") == "skills" or event.tool_use.get("name") == "plan"):
             self._count += 1
+        self._model_guides_used = 0
+
+    def _current_limit_reason(self) -> str | None:
+        elapsed = time.time() - self._start_time
+        if self._overflow:
+            return "Context window overflow — a tool result was too large for context."
+        if elapsed >= self._timeout:
+            return f"Timeout reached ({elapsed:.1f}s elapsed)."
+        if self._count >= self._max:
+            return f"Tool limit reached ({self._count}/{self._max} calls used)."
+        return None
+
+    def _update_model_token_cap(self, agent: Any, max_tokens: int | None) -> bool:
+        if max_tokens is None:
+            return False
+
+        model = getattr(agent, "model", None)
+        if model is None or not hasattr(model, "get_config") or not hasattr(model, "update_config"):
+            return False
+
+        try:
+            config = model.get_config()
+        except Exception:
+            return False
+
+        if not isinstance(config, dict):
+            return False
+
+        params = config.get("params")
+        if isinstance(params, dict):
+            updated_params = dict(params)
+            for key in ("max_completion_tokens", "max_output_tokens", "max_tokens"):
+                if key in updated_params:
+                    current_value = updated_params.get(key)
+                    if isinstance(current_value, int):
+                        max_tokens = min(current_value, max_tokens)
+                    if current_value == max_tokens:
+                        return True
+                    updated_params[key] = max_tokens
+                    model.update_config(params=updated_params)
+                    logger.info("Adjusted model token cap to %s via params.%s", max_tokens, key)
+                    return True
+
+        for key in ("max_completion_tokens", "max_output_tokens", "max_tokens"):
+            if key in config:
+                current_value = config.get(key)
+                if isinstance(current_value, int):
+                    max_tokens = min(current_value, max_tokens)
+                if current_value == max_tokens:
+                    return True
+                model.update_config(**{key: max_tokens})
+                logger.info("Adjusted model token cap to %s via %s", max_tokens, key)
+                return True
+
+        return False
 
     async def steer_before_tool(self, *, agent, tool_use, **kwargs) -> ToolSteeringAction:
         if tool_use.get("name") == "submit_answer":
             return Proceed(reason="submit_answer is always allowed")
 
-        elapsed = time.time() - self._start_time
-        if self._overflow:
-            reason = "Context window overflow — a tool result was too large for context."
-        elif elapsed >= self._timeout:
-            reason = f"Timeout reached ({elapsed:.1f}s elapsed)."
-        elif self._count >= self._max:
-            reason = f"Tool limit reached ({self._count}/{self._max} calls used)."
-        else:
+        reason = self._current_limit_reason()
+        if reason is None:
             return Proceed(reason="within limits")
 
         if self._guided:
@@ -143,6 +204,47 @@ class ToolLimitSteeringHandler(SteeringHandler):
                 f"{reason} You must stop using other tools and immediately call submit_answer "
                 "with your best current answer and reasoning. "
                 "Do not call any other tool before submit_answer."
+            )
+        )
+
+    async def steer_after_model(self, *, agent, message, stop_reason, **kwargs) -> ModelSteeringAction:
+        if stop_reason == "tool_use":
+            self._model_guides_used = 0
+            return Proceed(reason="model produced a tool call")
+
+        reason = self._current_limit_reason()
+        if reason is not None:
+            self._update_model_token_cap(agent, self._submit_only_max_tokens)
+            self._model_guides_used = 0
+            return Guide(
+                reason=(
+                    f"{reason} Do not continue with plain-text analysis. "
+                    "Call submit_answer NOW with your best current answer and a short reasoning. "
+                    "Do not produce any other response."
+                )
+            )
+
+        if stop_reason != "max_tokens":
+            self._model_guides_used = 0
+            return Proceed(reason=f"model stopped with {stop_reason}")
+
+        self._model_guides_used += 1
+        if self._model_guides_used >= self._max_model_guides:
+            self._update_model_token_cap(agent, self._submit_only_max_tokens)
+            return Guide(
+                reason=(
+                    "Your recent responses keep hitting the max token limit and are being discarded. "
+                    "Stop writing long prose. Call submit_answer NOW with your best current answer "
+                    "and a single short reasoning sentence."
+                )
+            )
+
+        self._update_model_token_cap(agent, self._retry_max_tokens)
+        return Guide(
+            reason=(
+                "Your last response hit the max token limit and was discarded. "
+                "Be concise. Either make exactly one tool call, or if you can finish now, "
+                "call submit_answer. Do not write a long free-text analysis."
             )
         )
 

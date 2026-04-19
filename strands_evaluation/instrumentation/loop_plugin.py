@@ -61,10 +61,11 @@ class CategoryStagnationHandler(SteeringHandler):
 
         threshold = self.category_thresholds.get(current_category, self.max_consecutive)
         if self.consecutive_count > threshold:
+            display_count = self.consecutive_count
             # Increment the counter and log to the console/file
             self.total_loop_interventions += 1
             logger.info(
-                f"[Stagnation] Nudging agent: '{current_category}' called {self.consecutive_count} times "
+                f"[Stagnation] Nudging agent: '{current_category}' called {display_count} times "
                 f"(intervention #{self.total_loop_interventions})"
             )
             
@@ -72,7 +73,7 @@ class CategoryStagnationHandler(SteeringHandler):
             
             return Guide(
                 reason=(
-                    f"Note: you have used '{current_category}' tools {self.consecutive_count} times in a row. "
+                    f"Note: you have used '{current_category}' tools {display_count} times in a row. "
                     "If you are making steady progress, continue as planned — just retry the tool call you were about to make. "
                     "If you feel stuck, the `plan` tool is available to help you reassess. It does not cost towards your total plan call."
                 )

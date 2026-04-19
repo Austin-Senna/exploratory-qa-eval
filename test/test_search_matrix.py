@@ -1,4 +1,4 @@
-"""Diagnostic: exercise the 3x3 (search_tool, search_results) matrix end-to-end.
+"""Diagnostic: exercise the 3x2 (search_tool, search_results) matrix end-to-end.
 
 No agent, no LLM — this script constructs the base search tools for each
 search_tool mode, wraps them with ``build_search_tools`` for each search_results
@@ -32,7 +32,8 @@ from strands_evaluation.tools.agent_tools import search_prefix
 from strands_evaluation.tools.external.ideal import search_ideal as ideal_search
 from strands_evaluation.tools.external.ideal.search_wrapper import build_search_tools
 
-MODES = ("naive", "standard", "ideal")
+SEARCH_TOOL_MODES = ("naive", "standard", "ideal")
+SEARCH_RESULT_MODES = ("naive", "ideal")
 
 
 def _build_base_tools(search_tool_mode: str, db_path: str, task_file: Optional[str]) -> List:
@@ -87,10 +88,10 @@ def run_matrix(
     log_path: Path,
     search_tools: Optional[Sequence[str]] = None,
 ) -> None:
-    outer_modes = tuple(search_tools) if search_tools else MODES
+    outer_modes = tuple(search_tools) if search_tools else SEARCH_TOOL_MODES
     log_path.parent.mkdir(parents=True, exist_ok=True)
     with log_path.open("w") as log:
-        _emit(log, f"=== search 3x3 matrix — {datetime.now().isoformat()} ===")
+        _emit(log, f"=== search 3x2 matrix — {datetime.now().isoformat()} ===")
         _emit(log, f"query     : {query!r}")
         _emit(log, f"db_path   : {db_path}")
         _emit(log, f"task_file : {task_file}  (only used when search_tool=ideal)")
@@ -107,7 +108,7 @@ def run_matrix(
                 _emit(log, traceback.format_exc())
                 continue
 
-            for search_results_mode in MODES:
+            for search_results_mode in SEARCH_RESULT_MODES:
                 _emit(log)
                 _emit(log, f"----- search_tool={search_tool_mode}, search_results={search_results_mode} -----")
                 try:
@@ -144,7 +145,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     parser.add_argument("--task-file", default="tasks_mini/k-5-d-4/task_1.json", help="Task id used to set search_ideal context.")
     parser.add_argument("--k", type=int, default=3, help="Fixed result limit (passed as fixed_k to build_search_tools).")
     parser.add_argument("--out", default=None, help="Optional explicit output log path; defaults to test_logs/search_matrix_<ts>.log")
-    parser.add_argument("--search-tool", action="append", choices=list(MODES), help="Restrict outer search_tool modes; repeat to pass multiple. Defaults to all three.")
+    parser.add_argument("--search-tool", action="append", choices=list(SEARCH_TOOL_MODES), help="Restrict outer search_tool modes; repeat to pass multiple. Defaults to all three.")
     args = parser.parse_args(argv)
 
     log_path = Path(args.out) if args.out else (

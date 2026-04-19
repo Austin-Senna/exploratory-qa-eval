@@ -63,7 +63,7 @@ _QUERY_ROW_CAP = 200
 _SEARCH_MAX_MATCHES = 20
 _SEARCH_CONTEXT_LINES = 2
 _QUERY_MAX_FILE_BYTES = 500 * 1024 * 1024  # 500 MB — above this, download first
-_TOOL_RESULT_CHAR_CAP = 24_000             # ~6k tokens — prevents single result overflowing context
+_TOOL_RESULT_CHAR_CAP = 12_000             # ~3k tokens — keeps single tool results from dominating context
 
 
 # ---------------------------------------------------------------------------
@@ -918,7 +918,7 @@ def query_file(
                 "truncation_note": (
                     f"Result too large for context ({size // 1024}KB source file, "
                     f"~{int(size / max(1, avg_row_bytes))} rows estimated). "
-                    f"Showing {len(capped_rows)} of {len(safe_rows)} rows within the 16k limit. "
+                    f"Showing {len(capped_rows)} of {len(safe_rows)} rows within the {_TOOL_RESULT_CHAR_CAP} char limit. "
                     f"Full result written to: {dump_path} (use execute_code to read it). "
                     "Prefer: query_file with SELECT specific columns + WHERE/GROUP BY/LIMIT "
                     "for aggregates, or grep_file for searching specific values."

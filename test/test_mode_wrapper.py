@@ -59,7 +59,7 @@ class TestModeWrapper(unittest.TestCase):
     def test_standard_search_includes_reranked(self):
         cfg = RunConfig(
             search_tool_mode="standard",
-            search_results_mode="standard",
+            search_results_mode="naive",
             agent_management_mode="naive",
             system_prompt="BASE_PROMPT",
         )
@@ -189,7 +189,7 @@ class TestModeWrapper(unittest.TestCase):
     def test_standard_management_prompt_matches_standard_search_tools(self):
         cfg = RunConfig(
             search_tool_mode="standard",
-            search_results_mode="standard",
+            search_results_mode="naive",
             agent_management_mode="standard",
             system_prompt="BASE_PROMPT",
         )
@@ -225,7 +225,7 @@ class TestModeWrapper(unittest.TestCase):
     def test_naive_management_prompt_matches_standard_search_tools(self):
         cfg = RunConfig(
             search_tool_mode="standard",
-            search_results_mode="standard",
+            search_results_mode="naive",
             agent_management_mode="naive",
             system_prompt="BASE_PROMPT",
         )
