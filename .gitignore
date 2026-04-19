@@ -10,7 +10,7 @@ analysis_results/
 *.pem
 paper/
 lance_table_descriptions
-analysis_results_search
+analysis_results_*
 test_logs
 test_results
 .agents
@@ -18,4 +18,3 @@ ec2setup.md
 datagov_tables_schemas_full.jsonl
 results-ec2
 logs-ec2
-analysis_results_mode

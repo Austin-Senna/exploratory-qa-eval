@@ -16,6 +16,7 @@ Output files (default: analysis_results_mode/):
   discovery.json
   tools_discovery.json
   failure.json
+  semantic_outcomes.json
   efficiency.json
   search_depth.json
   reasoning_density.json
@@ -44,6 +45,7 @@ from typing import Dict, List, Optional, Tuple
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from analysis.compute_em import compute_stats
+from analysis.build_semantic_results import semantic_record
 from analysis.discovery_metrics import (
     load_task_gold_ids,
     compute_discovery_metrics,
@@ -56,6 +58,35 @@ from analysis.reasoning_density import compute_reasoning_density_curve, load_tas
 
 
 _LETTER_TO_MODE = {"n": "naive", "d": "standard", "i": "ideal"}
+
+BUCKET_SEMANTIC = "semantic_equivalents"
+BUCKET_SEMANTIC_EXHAUSTED = "semantic_equivalents_but_exhausted"
+BUCKET_WRONG = "wrong_answers"
+BUCKET_WRONG_EXHAUSTED = "wrong_answers_but_exhausted"
+BUCKET_UNSUB_TURNS = "unsubmitted_turns_exhausted"
+BUCKET_UNSUB_CONTEXT = "unsubmitted_context_exhausted"
+BUCKET_INFRA_EVENT_LOOP = "infra_event_loop_exception"
+
+SUBMIT_MARKERS = [
+    "Executing: submit_answer(",
+    "Tool result: Answer submitted:",
+    "Answer submitted! Triggering native agent cancellation.",
+    "ANSWER:",
+]
+
+TURNS_MARKERS = [
+    "Tool limit reached",
+    "Timeout reached",
+    "Search call budget exhausted",
+    "Call submit_answer NOW",
+]
+
+CONTEXT_MARKERS = [
+    "MaxTokensReachedException",
+    "max_tokens limit",
+    "Context window overflow",
+    "ValidationException",
+]
 
 
 def _cm_key(model: str, variant: str) -> str:
@@ -97,6 +128,27 @@ def _parse_variant(variant: str) -> Dict[str, Optional[object]]:
 def _task_stem(task_id: str) -> str:
     p = Path(str(task_id))
     return f"{p.parent.name}/{p.stem}"
+
+
+def relative_task_path(task_id: str) -> Path:
+    task_path = Path(str(task_id))
+    parts = list(task_path.parts)
+    if parts and parts[0].startswith("tasks"):
+        parts = parts[1:]
+    relative = Path(*parts) if parts else task_path
+    return relative.with_suffix(".log")
+
+
+def latest_marker(text: str, markers: List[str]) -> Tuple[int, str]:
+    lowered = text.lower()
+    latest_pos = -1
+    latest_text = ""
+    for marker in markers:
+        pos = lowered.rfind(marker.lower())
+        if pos > latest_pos:
+            latest_pos = pos
+            latest_text = marker
+    return latest_pos, latest_text
 
 
 def _parse_results_jsonl_path(path: Path, results_root: Path) -> Tuple[str, str]:
@@ -224,6 +276,77 @@ def run_failure(by_key_records: Dict[str, List[dict]], grouped_traces: Dict[str,
     return out
 
 
+def _read_log_tail(path: Path, tail_lines: int = 30) -> str:
+    if not path.exists():
+        return ""
+    with path.open(errors="ignore") as handle:
+        lines = handle.readlines()
+    return "".join(lines[-tail_lines:])
+
+
+def run_semantic_outcomes(by_key_records: Dict[str, List[dict]], logs_dir: str, tail_lines: int = 30) -> dict:
+    logs_root = Path(logs_dir)
+    out: dict = {}
+
+    for key, rows in sorted(by_key_records.items()):
+        model, variant = _split_cm_key(key)
+        counts: Counter = Counter()
+
+        for r in rows:
+            task_id = str(r.get("task_id", ""))
+            expected = r.get("ground_truth", r.get("expected_answer", ""))
+            predicted = r.get("predicted_answer", "")
+            lexical_exact_match = float(r.get("exact_match", 0) or 0)
+            semantic_match, _ = semantic_record(expected, predicted, lexical_exact_match)
+
+            log_path = logs_root / "modes" / model / variant / relative_task_path(task_id)
+            tail_text = _read_log_tail(log_path, tail_lines=tail_lines)
+
+            submitted = latest_marker(tail_text, SUBMIT_MARKERS)[0] >= 0
+            turns_exhausted = latest_marker(tail_text, TURNS_MARKERS)[0] >= 0
+            context_exhausted = latest_marker(tail_text, CONTEXT_MARKERS)[0] >= 0
+            error_text = str(r.get("error", "") or "")
+
+            if context_exhausted:
+                if submitted:
+                    bucket = BUCKET_SEMANTIC_EXHAUSTED if semantic_match >= 1.0 else BUCKET_WRONG_EXHAUSTED
+                else:
+                    bucket = BUCKET_UNSUB_CONTEXT
+            elif turns_exhausted:
+                if submitted:
+                    bucket = BUCKET_SEMANTIC_EXHAUSTED if semantic_match >= 1.0 else BUCKET_WRONG_EXHAUSTED
+                else:
+                    bucket = BUCKET_UNSUB_TURNS
+            elif submitted:
+                bucket = BUCKET_SEMANTIC if semantic_match >= 1.0 else BUCKET_WRONG
+            elif error_text.startswith("EventLoopException"):
+                bucket = BUCKET_INFRA_EVENT_LOOP
+            elif "MaxTokensReachedException" in error_text or "max_tokens limit" in error_text:
+                bucket = BUCKET_UNSUB_CONTEXT
+            elif any(marker in error_text for marker in TURNS_MARKERS):
+                bucket = BUCKET_UNSUB_TURNS
+            elif predicted:
+                bucket = BUCKET_SEMANTIC if semantic_match >= 1.0 else BUCKET_WRONG
+            else:
+                # Keep the mode-analysis view constrained to the agreed buckets.
+                bucket = BUCKET_INFRA_EVENT_LOOP
+
+            counts[bucket] += 1
+
+        out[key] = {
+            BUCKET_SEMANTIC: counts.get(BUCKET_SEMANTIC, 0),
+            BUCKET_SEMANTIC_EXHAUSTED: counts.get(BUCKET_SEMANTIC_EXHAUSTED, 0),
+            BUCKET_WRONG: counts.get(BUCKET_WRONG, 0),
+            BUCKET_WRONG_EXHAUSTED: counts.get(BUCKET_WRONG_EXHAUSTED, 0),
+            BUCKET_UNSUB_TURNS: counts.get(BUCKET_UNSUB_TURNS, 0),
+            BUCKET_UNSUB_CONTEXT: counts.get(BUCKET_UNSUB_CONTEXT, 0),
+            BUCKET_INFRA_EVENT_LOOP: counts.get(BUCKET_INFRA_EVENT_LOOP, 0),
+            "total": sum(counts.values()),
+        }
+
+    return out
+
+
 def run_efficiency(by_key_records: Dict[str, List[dict]]) -> dict:
     def percentile(vals: list, p: float) -> float:
         if not vals:
@@ -302,6 +425,7 @@ def build_summary(
     discovery: dict,
     failure: dict,
     efficiency: dict,
+    semantic_outcomes: dict | None = None,
     search_depth: dict | None = None,
     reasoning_density: dict | None = None,
     tool_errors: dict | None = None,
@@ -358,6 +482,15 @@ def build_summary(
             row["pct_em0_dacc_0_5_to_0_8"] = f.get("em0_dacc_0_5_to_0_8", {}).get("pct")
             row["pct_em0_dacc_0_2_to_0_5"] = f.get("em0_dacc_0_2_to_0_5", {}).get("pct")
             row["pct_em0_dacc_lt_0_2"] = f.get("em0_dacc_lt_0_2", {}).get("pct")
+        if semantic_outcomes is not None and key in semantic_outcomes:
+            so = semantic_outcomes[key]
+            row[BUCKET_SEMANTIC] = so.get(BUCKET_SEMANTIC, 0)
+            row[BUCKET_SEMANTIC_EXHAUSTED] = so.get(BUCKET_SEMANTIC_EXHAUSTED, 0)
+            row[BUCKET_WRONG] = so.get(BUCKET_WRONG, 0)
+            row[BUCKET_WRONG_EXHAUSTED] = so.get(BUCKET_WRONG_EXHAUSTED, 0)
+            row[BUCKET_UNSUB_TURNS] = so.get(BUCKET_UNSUB_TURNS, 0)
+            row[BUCKET_UNSUB_CONTEXT] = so.get(BUCKET_UNSUB_CONTEXT, 0)
+            row[BUCKET_INFRA_EVENT_LOOP] = so.get(BUCKET_INFRA_EVENT_LOOP, 0)
         if tool_errors is not None and key in tool_errors:
             te = tool_errors[key]
             for tool_name in ("query_file", "execute_code", "peek_file"):
@@ -428,6 +561,13 @@ def build_variant_summary(summary_rows: List[dict]) -> List[dict]:
                 "avg_cost_usd": weighted_avg(rows, "avg_cost_usd"),
                 "avg_tool_calls": weighted_avg(rows, "avg_tool_calls"),
                 "avg_search_calls": avg_search_calls,
+                BUCKET_SEMANTIC: sum(int(r.get(BUCKET_SEMANTIC, 0) or 0) for r in rows),
+                BUCKET_SEMANTIC_EXHAUSTED: sum(int(r.get(BUCKET_SEMANTIC_EXHAUSTED, 0) or 0) for r in rows),
+                BUCKET_WRONG: sum(int(r.get(BUCKET_WRONG, 0) or 0) for r in rows),
+                BUCKET_WRONG_EXHAUSTED: sum(int(r.get(BUCKET_WRONG_EXHAUSTED, 0) or 0) for r in rows),
+                BUCKET_UNSUB_TURNS: sum(int(r.get(BUCKET_UNSUB_TURNS, 0) or 0) for r in rows),
+                BUCKET_UNSUB_CONTEXT: sum(int(r.get(BUCKET_UNSUB_CONTEXT, 0) or 0) for r in rows),
+                BUCKET_INFRA_EVENT_LOOP: sum(int(r.get(BUCKET_INFRA_EVENT_LOOP, 0) or 0) for r in rows),
                 "search_efficiency": round(em / avg_search_calls, 4)
                 if (em is not None and avg_search_calls)
                 else None,
@@ -573,6 +713,7 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--results-dir", default="results/modes")
     parser.add_argument("--traces-dir", default="results/traces/modes")
+    parser.add_argument("--logs-dir", default="logs")
     parser.add_argument("--tasks-dir", default="tasks_mini")
     parser.add_argument("--output-dir", default="analysis_results_mode")
     parser.add_argument(
@@ -623,6 +764,9 @@ def main() -> None:
     print("Running failure attribution...")
     failure = run_failure(by_key_records, grouped_traces, args.tasks_dir)
 
+    print("Running semantic outcome buckets...")
+    semantic_outcomes = run_semantic_outcomes(by_key_records, args.logs_dir)
+
     print("Running efficiency...")
     efficiency = run_efficiency(by_key_records)
 
@@ -639,7 +783,16 @@ def main() -> None:
     tool_errors = run_tool_errors(by_key_records)
 
     print("Building summaries...")
-    summary = build_summary(em, discovery, failure, efficiency, search_depth, reasoning_density, tool_errors)
+    summary = build_summary(
+        em,
+        discovery,
+        failure,
+        efficiency,
+        semantic_outcomes,
+        search_depth,
+        reasoning_density,
+        tool_errors,
+    )
     variant_summary = build_variant_summary(summary)
 
     files = {
@@ -650,6 +803,7 @@ def main() -> None:
         },
         "tools_discovery.json": tools_discovery,
         "failure.json": failure,
+        "semantic_outcomes.json": semantic_outcomes,
         "efficiency.json": efficiency,
         "search_depth.json": search_depth,
         "reasoning_density.json": reasoning_density,
