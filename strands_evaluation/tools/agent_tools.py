@@ -240,6 +240,123 @@ def _resolve_dataset_folder(dataset_id: str) -> Optional[str]:
     return None
 
 
+def _strip_known_folder_prefix(dataset_id: str) -> str:
+    """Strip a leading wikipedia/ or datagov/ prefix from a dataset id."""
+    if not dataset_id or not isinstance(dataset_id, str):
+        return dataset_id
+    candidate = dataset_id.lstrip("/")
+    lowered = candidate.lower()
+    for folder in FOLDERS:
+        prefix = f"{folder}/"
+        if lowered.startswith(prefix):
+            return candidate[len(prefix):]
+    return dataset_id
+
+
+def _looks_like_s3_reference(value: str) -> bool:
+    """Return True when the string looks like an S3 URI or bucket-relative key."""
+    if not value or not isinstance(value, str):
+        return False
+    candidate = value.strip()
+    if candidate.startswith("s3://"):
+        return True
+    candidate = candidate.lstrip("/")
+    if candidate.startswith(f"{BUCKET}/"):
+        return True
+    parts = candidate.split("/", 2)
+    return len(parts) >= 3 and parts[0] in FOLDERS
+
+
+def _parse_s3_reference(value: str) -> Dict[str, Any]:
+    """
+    Parse an S3 URI or bucket-relative key into folder / dataset / file pieces.
+
+    Accepted forms:
+    - s3://<bucket>/<folder>/<dataset_id>/<file_path>
+    - <bucket>/<folder>/<dataset_id>/<file_path>
+    - <folder>/<dataset_id>/<file_path>
+    """
+    if not value or not isinstance(value, str):
+        return {"error": "s3_uri must be a non-empty string"}
+
+    raw = value.strip()
+    candidate = raw
+
+    if raw.startswith("s3://"):
+        remainder = raw[len("s3://") :]
+        bucket, sep, key = remainder.partition("/")
+        if not bucket or not sep or not key:
+            return {"error": "s3_uri must include bucket, dataset, and file path"}
+        if bucket != BUCKET:
+            return {"error": f"s3_uri bucket must be {BUCKET}, got {bucket}"}
+        candidate = key
+    else:
+        candidate = raw.lstrip("/")
+        bucket_prefix = f"{BUCKET}/"
+        if candidate.startswith(bucket_prefix):
+            candidate = candidate[len(bucket_prefix) :]
+
+    parts = candidate.split("/", 2)
+    if len(parts) < 3 or parts[0] not in FOLDERS:
+        return {
+            "error": (
+                "s3_uri must point to a lake object like "
+                f"s3://{BUCKET}/datagov/<dataset_id>/<file_path>"
+            )
+        }
+
+    folder, dataset_id, file_path = parts[0], parts[1], parts[2].lstrip("/")
+    if not dataset_id or not file_path:
+        return {"error": "s3_uri must include both dataset_id and file_path"}
+
+    key = f"{folder}/{dataset_id}/{file_path}"
+    return {
+        "bucket": BUCKET,
+        "folder": folder,
+        "dataset_id": dataset_id,
+        "file_path": file_path,
+        "key": key,
+        "s3_uri": f"s3://{BUCKET}/{key}",
+    }
+
+
+def _resolve_file_reference(
+    dataset_id: Optional[str] = None,
+    file_path: Optional[str] = None,
+    s3_uri: Optional[str] = None,
+) -> Dict[str, Any]:
+    """
+    Resolve either dataset_id+file_path or a single S3 URI into a canonical ref.
+    """
+    if s3_uri:
+        return _parse_s3_reference(s3_uri)
+
+    if dataset_id and not file_path and _looks_like_s3_reference(dataset_id):
+        return _parse_s3_reference(dataset_id)
+
+    normalized_dataset_id = _strip_known_folder_prefix(dataset_id or "")
+    normalized_file_path = (file_path or "").lstrip("/")
+
+    if not normalized_dataset_id:
+        return {"error": "dataset_id or s3_uri is required"}
+    if not normalized_file_path:
+        return {"error": "file_path is required unless you pass s3_uri"}
+
+    folder = _resolve_dataset_folder(normalized_dataset_id)
+    if folder is None:
+        return {"error": f"Dataset not found or ambiguous: {normalized_dataset_id}"}
+
+    key = f"{folder}/{normalized_dataset_id}/{normalized_file_path}"
+    return {
+        "bucket": BUCKET,
+        "folder": folder,
+        "dataset_id": normalized_dataset_id,
+        "file_path": normalized_file_path,
+        "key": key,
+        "s3_uri": f"s3://{BUCKET}/{key}",
+    }
+
+
 def _guess_delimiter(line: str) -> str:
     candidates = [",", "\t", "|", ";"]
     best = ""
@@ -562,7 +679,8 @@ def list_files(dataset_ids: List[str], limit: int = 100) -> Dict[str, Any]:
         limit: Maximum files to return per dataset (default 100)
 
     Returns:
-        Dict with 'files' list grouped by dataset_id
+        Dict with 'files' list grouped by dataset_id. Each file entry includes
+        `path`, `dataset_id`, `size`, and `s3_uri`.
 
     Example:
         >>> list_files(["Barack_Obama"])
@@ -603,7 +721,8 @@ def list_files(dataset_ids: List[str], limit: int = 100) -> Dict[str, Any]:
                     file_entry = {
                         'path': relative_path,
                         'size': obj['Size'],
-                        'dataset_id': dataset_id
+                        'dataset_id': dataset_id,
+                        's3_uri': f"s3://{BUCKET}/{folder}/{dataset_id}/{relative_path}"
                     }
                     files.append(file_entry)
                     all_files.append(file_entry)
@@ -651,9 +770,9 @@ def download(files: List[Dict[str, str]]) -> Dict[str, Any]:
     calls — there is no batch override.
 
     Args:
-        files: NON-EMPTY list of dicts (max length 5). Each dict needs
-               'dataset_id' (the bare dataset id, no folder prefix) and
-               'file_path' (the relative path within the dataset).
+        files: NON-EMPTY list of dicts (max length 5). Each dict needs either
+               ('dataset_id', 'file_path') or a single 's3_uri' pointing at
+               the object.
 
     Returns:
         Dict with 'downloaded' list of successful downloads, 'download_count',
@@ -686,29 +805,29 @@ def download(files: List[Dict[str, str]]) -> Dict[str, Any]:
     errors = []
 
     for file_spec in files:
+        if isinstance(file_spec, str):
+            file_spec = {'s3_uri': file_spec}
         if not isinstance(file_spec, dict):
-            errors.append({'error': "Each file must be a dict with dataset_id and file_path"})
+            errors.append({'error': "Each file must be a dict with dataset_id/file_path or s3_uri"})
             continue
 
-        dataset_id = file_spec.get('dataset_id', '')
-        file_path = file_spec.get('file_path', '')
-
-        if not dataset_id:
-            errors.append({'error': "dataset_id is required", 'file_spec': file_spec})
-            continue
-        if not file_path:
-            errors.append({'error': "file_path is required", 'dataset_id': dataset_id})
-            continue
-
-        folder = _resolve_dataset_folder(dataset_id)
-        if folder is None:
-            errors.append({'error': f"Dataset not found: {dataset_id}", 'dataset_id': dataset_id, 'file_path': file_path})
+        ref = _resolve_file_reference(
+            dataset_id=file_spec.get('dataset_id', ''),
+            file_path=file_spec.get('file_path') or file_spec.get('path') or '',
+            s3_uri=file_spec.get('s3_uri') or file_spec.get('uri') or '',
+        )
+        if 'error' in ref:
+            error_entry = {'error': ref['error'], 'file_spec': file_spec}
+            errors.append(error_entry)
             continue
 
-        s3_key = f"{folder}/{dataset_id}/{file_path.lstrip('/')}"
+        dataset_id = ref['dataset_id']
+        file_path = ref['file_path']
+        s3_key = ref['key']
+        s3_uri = ref['s3_uri']
 
         # Create local path structure (no folder prefix)
-        local_path = sandbox / dataset_id / file_path.lstrip('/')
+        local_path = sandbox / dataset_id / file_path
         local_path.parent.mkdir(parents=True, exist_ok=True)
 
         try:
@@ -719,6 +838,7 @@ def download(files: List[Dict[str, str]]) -> Dict[str, Any]:
                 'local_path': str(local_path),
                 'file_path': file_path,
                 'dataset_id': dataset_id,
+                's3_uri': s3_uri,
                 'size': file_size,
                 'status': 'downloaded'
             })
@@ -726,7 +846,8 @@ def download(files: List[Dict[str, str]]) -> Dict[str, Any]:
             errors.append({
                 'error': f"Failed to download: {str(e)}",
                 'dataset_id': dataset_id,
-                'file_path': file_path
+                'file_path': file_path,
+                's3_uri': s3_uri,
             })
 
     result = {

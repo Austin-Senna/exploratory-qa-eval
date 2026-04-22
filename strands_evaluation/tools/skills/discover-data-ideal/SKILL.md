@@ -24,5 +24,5 @@ Do not spend multiple broad searches on the same step. The cursor advances on ev
 ## Step 2: Pivot Quickly After The Source Is Revealed
 
 After `search_ideal` returns:
-1. use `peek_file` or `peek_multiple` to confirm file structure when needed
+1. use `peek_file` for one file or `peek_multiple(files=[{dataset_id, file_path}, ...], max_rows=5)` for 2+ files to confirm file structure when needed
 2. use `query_file` or `grep_file` for extraction

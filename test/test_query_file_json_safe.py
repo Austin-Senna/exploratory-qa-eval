@@ -16,6 +16,8 @@ import uuid
 
 from strands_evaluation.tools.agent_tools import (
     _rewrite_execute_code_error,
+    _parse_s3_reference,
+    _resolve_file_reference,
     execute_code,
 )
 from strands_evaluation.tools.agent_tools_v2 import (
@@ -321,6 +323,12 @@ class TestPeekMultipleRename(unittest.TestCase):
         fn = getattr(peek_multiple, "original_function", peek_multiple)
         # Empty/missing files should yield an actionable error message that
         # explains the right shape (the malformation we're trying to prevent).
+        result = fn()
+        self.assertIn("error", result)
+        self.assertIn("peek_multiple", result["error"])
+        self.assertIn("peek_file", result["error"])  # mentions the alternative
+        self.assertIn("files=[", result["error"])    # shows the right shape
+
         result = fn(files=[])
         self.assertIn("error", result)
         self.assertIn("peek_multiple", result["error"])
@@ -415,6 +423,36 @@ class TestStripFolderPrefix(unittest.TestCase):
     def test_substring_match_does_not_strip(self):
         # `wikipedia` without trailing slash is not a prefix to strip
         self.assertEqual(_strip_folder_prefix("wikipediathing"), "wikipediathing")
+
+
+class TestS3ReferenceHelpers(unittest.TestCase):
+    def test_parse_full_s3_uri(self):
+        parsed = _parse_s3_reference(
+            "s3://lakeqa-yc4103-datalake/datagov/index-crimes-by-county/files/rows.txt"
+        )
+        self.assertEqual(parsed["folder"], "datagov")
+        self.assertEqual(parsed["dataset_id"], "index-crimes-by-county")
+        self.assertEqual(parsed["file_path"], "files/rows.txt")
+
+    def test_parse_bucket_relative_key(self):
+        parsed = _parse_s3_reference(
+            "datagov/index-crimes-by-county/files/rows.txt"
+        )
+        self.assertEqual(parsed["dataset_id"], "index-crimes-by-county")
+        self.assertEqual(parsed["file_path"], "files/rows.txt")
+
+    def test_parse_rejects_wrong_bucket(self):
+        parsed = _parse_s3_reference("s3://other-bucket/datagov/foo/files/rows.txt")
+        self.assertIn("error", parsed)
+        self.assertIn("lakeqa-yc4103-datalake", parsed["error"])
+
+    def test_resolve_prefers_s3_uri(self):
+        parsed = _resolve_file_reference(
+            s3_uri="s3://lakeqa-yc4103-datalake/wikipedia/Barack_Obama/content.txt"
+        )
+        self.assertEqual(parsed["folder"], "wikipedia")
+        self.assertEqual(parsed["dataset_id"], "Barack_Obama")
+        self.assertEqual(parsed["file_path"], "content.txt")
 
 
 class TestRewriteExecuteCodeError(unittest.TestCase):

@@ -21,7 +21,7 @@ import traceback
 import uuid
 import xml.etree.ElementTree as ET
 from collections import Counter, deque
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 import duckdb
 from dotenv import load_dotenv
@@ -44,6 +44,7 @@ from .agent_tools import (  # noqa: F401 — re-exported
     BUCKET,
     REGION,
     SANDBOX_BASE_DIR,
+    _resolve_file_reference,
 )
 from .helper.detect import detect_family, should_skip
 
@@ -444,9 +445,10 @@ def _build_xml_preview(text: str, size_bytes: int) -> Dict[str, Any]:
 
 @tool
 def peek_file(
-    dataset_id: str,
-    file_path: str,
+    dataset_id: str | None = None,
+    file_path: str | None = None,
     max_rows: int = 20,
+    s3_uri: str | None = None,
 ) -> Dict[str, Any]:
     """
     Inspect a SINGLE file via a budget range-GET. Returns the content family
@@ -459,6 +461,7 @@ def peek_file(
     Args:
         dataset_id: ONE dataset identifier as a bare string, e.g. "Barack_Obama"
         file_path:  ONE relative path within the dataset, e.g. "files/data.txt"
+        s3_uri:     Optional full object URI instead of dataset_id/file_path
         max_rows:   Maximum preview rows to include (default 20)
 
     Example call:
@@ -470,19 +473,15 @@ def peek_file(
         xml_root_tag, xml_namespaces, xml_schema_fields,
         xml_record_tag_candidates, xml_preview_mode. On error: {error: ...}
     """
-    if not dataset_id:
-        return {"error": "dataset_id is required"}
-    if not file_path:
-        return {"error": "file_path is required"}
+    ref = _resolve_file_reference(dataset_id=dataset_id, file_path=file_path, s3_uri=s3_uri)
+    if "error" in ref:
+        return {"error": ref["error"]}
 
-    dataset_id = _strip_folder_prefix(dataset_id)
-
-    folder = _resolve_dataset_folder(dataset_id)
-    if folder is None:
-        return {"error": f"Dataset not found or ambiguous: {dataset_id}"}
-
+    dataset_id = _strip_folder_prefix(ref["dataset_id"])
+    file_path = ref["file_path"]
+    s3_uri = ref["s3_uri"]
     s3 = _get_s3_client()
-    key = f"{folder}/{dataset_id}/{file_path.lstrip('/')}"
+    key = ref["key"]
 
     try:
         size_bytes = _s3_head(s3, key)
@@ -505,6 +504,7 @@ def peek_file(
     result: Dict[str, Any] = {
         "dataset_id": dataset_id,
         "file_path": file_path,
+        "s3_uri": s3_uri,
         "size_bytes": size_bytes,
         "family": family,
         "preview_text": preview_text,
@@ -549,15 +549,16 @@ def peek_file(
 
 @tool
 def peek_multiple(
-    files: List[Dict[str, str]],
+    files: Optional[List[Dict[str, str]]] = None,
+    entries: Optional[List[Dict[str, str]]] = None,
     max_rows: int = 20,
 ) -> Dict[str, Any]:
     """
     Inspect SEVERAL files in ONE call — a batch wrapper around peek_file.
 
-    USE THIS only when you already know which multiple files you need
-    (e.g. immediately after `list_files` returned several paths). For a
-    single file, use `peek_file` instead — its signature is simpler.
+    USE THIS when you already know which 2+ files you need
+    (e.g. immediately after `list_files` returned several relevant paths).
+    For a single file, use `peek_file` instead — its signature is simpler.
 
     REQUIRED ARGUMENT SHAPE: You MUST pass a `files` list of dicts, NOT
     `dataset_id`/`file_path` directly:
@@ -573,30 +574,42 @@ def peek_multiple(
         files:    NON-EMPTY list of dicts. Each dict needs 'dataset_id' and
                   'file_path'. The key 'path' is also accepted as an alias for
                   'file_path' so raw list_files output can be passed directly.
+                  A per-entry `s3_uri` is also accepted.
+        entries:  Alias for `files`. Accepted to be forgiving when the agent
+                  uses the older/wrong wrapper key.
         max_rows: Maximum preview rows per file (default 20).
 
     Returns:
         Dict with 'results' list (one entry per file, same shape as peek_file)
         and 'count'.
     """
+    if files is None and entries is not None:
+        files = entries
+    if isinstance(files, dict):
+        files = [files]
     if not isinstance(files, list) or not files:
         return {
             "error": (
                 "peek_multiple requires a non-empty `files` list of "
-                "{dataset_id, file_path} dicts. For a single file, call "
-                "peek_file(dataset_id, file_path) instead. Example: "
-                'peek_multiple(files=[{"dataset_id": "census", "file_path": "files/rows.txt"}])'
+                "{dataset_id, file_path} dicts. Use peek_multiple for 2+ files "
+                "after list_files, or peek_file(dataset_id, file_path) for one "
+                "file. Example: "
+                'peek_multiple(files=[{"dataset_id": "census", "file_path": "files/rows.txt"}], max_rows=5)'
             )
         }
 
     results = []
     for spec in files:
+        if isinstance(spec, str):
+            results.append(peek_file(s3_uri=spec, max_rows=max_rows))
+            continue
         if not isinstance(spec, dict):
-            results.append({"error": "each entry must be a dict with dataset_id and file_path|path"})
+            results.append({"error": "each entry must be a dict with dataset_id/file_path or s3_uri"})
             continue
         ds = spec.get("dataset_id", "")
         fp = spec.get("file_path") or spec.get("path") or ""
-        results.append(peek_file(ds, fp, max_rows))
+        uri = spec.get("s3_uri") or spec.get("uri") or ""
+        results.append(peek_file(dataset_id=ds, file_path=fp, max_rows=max_rows, s3_uri=uri))
 
     return {"results": results, "count": len(results)}
 
@@ -608,10 +621,11 @@ def peek_multiple(
 
 @tool
 def read_file(
-    dataset_id: str,
-    file_path: str,
+    dataset_id: str | None = None,
+    file_path: str | None = None,
     start_line: int = 0,
     max_lines: int = 10000,
+    s3_uri: str | None = None,
 ) -> Dict[str, Any]:
     """
     Read lines from a file in the data lake without downloading it.
@@ -623,22 +637,21 @@ def read_file(
         file_path:  Relative path within the dataset (e.g. "files/data.txt")
         start_line: Line index to start reading from, 0-based (default 0)
         max_lines:  Number of lines to return, capped at 10000 (default 10000)
+        s3_uri:     Optional full object URI instead of dataset_id/file_path
     """
-    if not dataset_id or not file_path:
-        return {"error": "dataset_id and file_path are required"}
     if start_line < 0:
         return {"error": "start_line must be >= 0"}
 
     max_lines = min(max_lines, 10_000)
+    ref = _resolve_file_reference(dataset_id=dataset_id, file_path=file_path, s3_uri=s3_uri)
+    if "error" in ref:
+        return {"error": ref["error"]}
 
-    dataset_id = _strip_folder_prefix(dataset_id)
-
-    folder = _resolve_dataset_folder(dataset_id)
-    if folder is None:
-        return {"error": f"Dataset not found or ambiguous: {dataset_id}"}
-
+    dataset_id = _strip_folder_prefix(ref["dataset_id"])
+    file_path = ref["file_path"]
+    s3_uri = ref["s3_uri"]
     s3 = _get_s3_client()
-    key = f"{folder}/{dataset_id}/{file_path.lstrip('/')}"
+    key = ref["key"]
 
     try:
         resp = s3.get_object(Bucket=BUCKET, Key=key)
@@ -660,6 +673,7 @@ def read_file(
     result = {
         "dataset_id": dataset_id,
         "file_path": file_path,
+        "s3_uri": s3_uri,
         "start_line": start_line,
         "returned_lines": len(lines),
         "lines": lines,
@@ -682,6 +696,7 @@ def read_file(
         return {
             "dataset_id": dataset_id,
             "file_path": file_path,
+            "s3_uri": s3_uri,
             "start_line": start_line,
             "returned_lines": len(truncated_lines),
             "truncated": True,
@@ -703,10 +718,11 @@ def read_file(
 
 @tool
 def grep_file(
-    dataset_id: str,
-    file_path: str,
-    regex_pattern: str,
+    dataset_id: str | None = None,
+    file_path: str | None = None,
+    regex_pattern: str = "",
     context_lines: int = 2,
+    s3_uri: str | None = None,
 ) -> Dict[str, Any]:
     """
     Search for a regex pattern inside a file without downloading it.
@@ -718,13 +734,14 @@ def grep_file(
         file_path:     Relative path within the dataset (e.g. "files/data.txt")
         regex_pattern: Case-insensitive regex to search for (e.g. "King County")
         context_lines: Lines of context before/after each match (default 2, max 5)
+        s3_uri:        Optional full object URI instead of dataset_id/file_path
 
     Returns:
         Dict with keys: match_count, matches (list of {line_number, line,
         context_before, context_after}), truncated. On error: {error: ...}
     """
-    if not dataset_id or not file_path or not regex_pattern:
-        return {"error": "dataset_id, file_path, and regex_pattern are required"}
+    if not regex_pattern:
+        return {"error": "regex_pattern is required"}
 
     context_lines = min(context_lines, 5)
     # filename = file_path.rsplit("/", 1)[-1]
@@ -736,14 +753,15 @@ def grep_file(
     except re.error as e:
         return {"error": f"Invalid regex pattern: {e}"}
 
-    dataset_id = _strip_folder_prefix(dataset_id)
+    ref = _resolve_file_reference(dataset_id=dataset_id, file_path=file_path, s3_uri=s3_uri)
+    if "error" in ref:
+        return {"error": ref["error"]}
 
-    folder = _resolve_dataset_folder(dataset_id)
-    if folder is None:
-        return {"error": f"Dataset not found: {dataset_id}"}
-
+    dataset_id = _strip_folder_prefix(ref["dataset_id"])
+    file_path = ref["file_path"]
+    s3_uri = ref["s3_uri"]
     s3 = _get_s3_client()
-    key = f"{folder}/{dataset_id}/{file_path.lstrip('/')}"
+    key = ref["key"]
 
     try:
         resp = s3.get_object(Bucket=BUCKET, Key=key)
@@ -802,6 +820,7 @@ def grep_file(
     result = {
         "dataset_id": dataset_id,
         "file_path": file_path,
+        "s3_uri": s3_uri,
         "match_count": len(matches),
         "truncated_matches": len(matches) >= _SEARCH_MAX_MATCHES,
         "matches": matches,
@@ -824,6 +843,7 @@ def grep_file(
         return {
             "dataset_id": dataset_id,
             "file_path": file_path,
+            "s3_uri": s3_uri,
             "match_count": len(matches),
             "returned_matches": len(capped_matches),
             "truncated_matches": True,
@@ -844,9 +864,10 @@ def grep_file(
 
 @tool
 def query_file(
-    dataset_id: str,
-    file_path: str,
-    sql: str,
+    dataset_id: str | None = None,
+    file_path: str | None = None,
+    sql: str = "",
+    s3_uri: str | None = None,
 ) -> Dict[str, Any]:
     """
     Run a SQL query directly against an S3 file using DuckDB httpfs.
@@ -863,14 +884,11 @@ def query_file(
         sql:        SQL query. Use 't' as the table alias.
                     Example: "SELECT * FROM t LIMIT 10"
                     Example: "SELECT col1, COUNT(*) FROM t GROUP BY col1"
+        s3_uri:     Optional full object URI instead of dataset_id/file_path
 
     Returns:
         Dict with keys: columns, rows, row_count, truncated. On error: {error: ...}
     """
-    if not dataset_id:
-        return {"error": "dataset_id is required"}
-    if not file_path:
-        return {"error": "file_path is required"}
     if not sql or not sql.strip():
         return {"error": "sql is required"}
 
@@ -879,16 +897,18 @@ def query_file(
     # Parser Errors per eval at the source.
     sql = _normalize_sql_backticks(sql)
 
-    folder = _resolve_dataset_folder(dataset_id)
-    if folder is None:
-        return {"error": f"Dataset not found or ambiguous: {dataset_id}"}
+    ref = _resolve_file_reference(dataset_id=dataset_id, file_path=file_path, s3_uri=s3_uri)
+    if "error" in ref:
+        return {"error": ref["error"]}
 
-    s3_uri = f"s3://{BUCKET}/{folder}/{dataset_id}/{file_path.lstrip('/')}"
+    dataset_id = _strip_folder_prefix(ref["dataset_id"])
+    file_path = ref["file_path"]
+    s3_uri = ref["s3_uri"]
 
     # Determine reader function — peek first for all extensions
     try:
         s3 = _get_s3_client()
-        key = f"{folder}/{dataset_id}/{file_path.lstrip('/')}"
+        key = ref["key"]
         size = _s3_head(s3, key)
         if size > _QUERY_MAX_FILE_BYTES:
             return {"error": f"File too large to query directly ({size // (1024*1024)} MB). Use download + execute_code instead."}
@@ -921,6 +941,9 @@ def query_file(
         # DECIMAL / UUID / BLOB columns don't crash json.dumps below.
         safe_rows = [[_to_json_safe(v) for v in r] for r in rows]
         result = {
+            "dataset_id": dataset_id,
+            "file_path": file_path,
+            "s3_uri": s3_uri,
             "columns": columns,
             "rows": safe_rows,
             "row_count": len(safe_rows),
@@ -955,7 +978,9 @@ def query_file(
                     "for aggregates, or grep_file for searching specific values."
                 ),
                 "local_result_path": str(dump_path),
+                "dataset_id": dataset_id,
                 "file_path": file_path,
+                "s3_uri": s3_uri,
                 "size_bytes": size,
                 "columns": columns,
                 "rows": capped_rows,

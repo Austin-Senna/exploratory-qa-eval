@@ -123,8 +123,8 @@ DO NOT:
 - search_schema  — sparse keyword search over dataset schemas (column names, types); use when you know the field structure you need
 - search_prefix  — S3 prefix search by dataset name fragment; use when you know part of the dataset or entity name (e.g. "Erie_County", "index-crimes")
 - list_files     — list files inside a dataset
-- peek_file      — preview file structure (CSV/JSON/XML/text) and headers or XML schema hints (first 64KB); dataset_id is the bare ID only, no prefix
-- peek_multiple  — preview SEVERAL files in one call (batch wrapper); requires `files=[{dataset_id, file_path}, ...]`. For ONE file use peek_file instead
+- peek_file      — preview ONE file's structure (CSV/JSON/XML/text) and headers or XML schema hints (first 64KB); dataset_id is the bare ID only, no prefix
+- peek_multiple  — preview SEVERAL files in one call (batch wrapper); prefer this for 2+ files and pass `files=[{dataset_id, file_path}, ...]`. For ONE file use peek_file instead
 - read_file      — read lines from a file directly (paginated, no download needed)
 - grep_file      — regex search inside a file (no download needed); saves 2-3 tool calls vs download+execute_code
 - query_file     — SQL query directly on a CSV/JSON file via DuckDB (no download needed); XML/KML is detected but not queryable here
@@ -133,6 +133,8 @@ DO NOT:
 - submit_answer(answer, reasoning) — submit your final answer and stop
   - answer: wrap in square brackets e.g. [42]
   - reasoning: brief explanation of how you found the answer
+
+All file tools accept either `(dataset_id, file_path)` or a single `s3_uri`. `list_files` returns `s3_uri` for each file, so you can pass that directly instead of reconstructing paths.
 
 ## SEARCH STRATEGY GUIDE
 Use the tool that matches what you know:
@@ -164,7 +166,7 @@ NEVER call `query_file` on a file you have not first inspected with `peek_file`.
 - Calling `query_file` on an XML/KML file → use `peek_file` for tags/schema, `grep_file` for text search, or `download` + `execute_code` with `xml.etree.ElementTree`
 
 **Required workflow for any new file:**
-1. `peek_file(dataset_id, file_path)` once — read the EXACT column headers, or for XML/KML inspect tags, schema fields, and record-tag hints
+1. If you need to inspect ONE file, call `peek_file(dataset_id, file_path)` once. If you need to inspect 2+ files, call `peek_multiple(files=[{dataset_id, file_path}, ...], max_rows=5)` once. Read the EXACT column headers, or for XML/KML inspect tags, schema fields, and record-tag hints
 2. Then write `query_file` SQL using those exact names, quoting with `"` for any name containing spaces or special characters
 3. Reference columns directly off `t` (e.g. `SELECT "Issuing Agency" FROM t`) — never `t.something.column`
 
@@ -189,7 +191,7 @@ Dataset names can be misleading. Always confirm a dataset is the right one befor
 - query_file and grep_file work directly on S3 — no download needed, use them first
 - Always print() in execute_code to see output
 - execute_code does NOT persist state between calls — always reload files at the top of each block
-- Check actual column names before writing analysis code (peek_file or query_file LIMIT 1)
+- Check actual column names before writing analysis code (`peek_file` for one file, `peek_multiple` for 2+ files, or `query_file LIMIT 1`)
 - Use the full dataset for your final answer, not just a sample
 - Answer format: [value] only, no labels or units
 

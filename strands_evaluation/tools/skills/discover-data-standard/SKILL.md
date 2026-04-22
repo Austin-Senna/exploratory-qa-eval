@@ -26,8 +26,8 @@ Write search queries as **source/program + grain + metric + time**.
 When search returns a dataset ID, call `list_files`. Never guess file paths.
 
 After `list_files`, use:
-- `peek_multiple` for many files
-- `peek_file` for one file
+- `peek_multiple(files=[{dataset_id, file_path}, ...], max_rows=5)` for 2+ relevant files
+- `peek_file(dataset_id, file_path)` for one file
 
 ## When Search Fails
 

@@ -20,7 +20,7 @@ Do NOT download a file just to run a simple aggregation. `query_file` does it in
 
 Never assume column names from the question text. Government files use codes. Two equally good ways to check:
 
-- **`peek_file`** (one file) or **`peek_multiple`** (many files at once) — fast if you already have dataset IDs from search. Shows headers and first rows. `peek_multiple` requires `files=[{dataset_id, file_path}, ...]`.
+- **`peek_file`** for one file or **`peek_multiple`** for 2+ files at once — fast if you already have dataset IDs from search. Shows headers and first rows. `peek_multiple` requires `files=[{dataset_id, file_path}, ...]`.
 - **`SELECT * FROM t LIMIT 1`** — use via `query_file` when you're already in query mode or need to see actual values alongside column names.
 
 Common name mismatches:
@@ -37,7 +37,7 @@ Common name mismatches:
 ## Common Errors and Fixes
 
 **"Referenced column X not found"**
--> You guessed a column name. Check columns with `peek_file` (or `peek_multiple` for several files) or `SELECT * FROM t LIMIT 1` and rewrite.
+-> You guessed a column name. Check columns with `peek_file` for one file, `peek_multiple` for 2+ files, or `SELECT * FROM t LIMIT 1`, then rewrite.
 
 **"maximum_object_size exceeded" (~100MB)**
 -> File too large for DuckDB. Download it, then use `pd.read_csv(path, usecols=[...])` to load only the columns you need.
