@@ -24,9 +24,15 @@ Output files (default: analysis_results_search/):
   planning_overhead.json
   reasoning_density.json
   tool_errors.json
+  search_first_hit_condition.json
+  search_first_hit_tool.json
+  search_topk_miss_tool.json
+  search_tool_efficiency.json
   summary.json
   variant_summary.json
   per_task_retrieval.csv
+  per_task_search_bottleneck.csv
+  per_task_search_tool_bottleneck.csv
 """
 
 import argparse
@@ -54,6 +60,14 @@ from analysis.provenance import compute_provenance
 from analysis.search_depth import compute_search_depth_curve
 from analysis.planning_overhead import compute_planning_overhead
 from analysis.reasoning_density import compute_reasoning_density_curve, load_task_gold_counts
+from analysis.search_bottleneck import (
+    SEARCH_BOTTLENECK_CUTOFFS,
+    SEARCH_TOOL_COLORS,
+    SEARCH_TOOL_ORDER,
+    compute_search_bottleneck,
+    generate_search_bottleneck_figures as _shared_generate_search_bottleneck_figures,
+    write_search_bottleneck_csv as _shared_write_search_bottleneck_csv,
+)
 
 
 def _condition_label(variant: str, base_condition: str) -> str:
@@ -339,6 +353,7 @@ def build_summary(
     search_depth: dict | None = None,
     reasoning_density: dict | None = None,
     tool_errors: dict | None = None,
+    search_bottleneck: dict | None = None,
 ) -> list[dict]:
     keys = sorted(set(list(em.keys()) + list(discovery.keys()) + list(failure.keys())))
     rows = []
@@ -410,6 +425,24 @@ def build_summary(
                 entry = rdensity.get(bin_label, {})
                 row[f"rdensity_{safe}_em"] = entry.get("mean_em")
                 row[f"rdensity_{safe}_n"] = entry.get("n")
+        if search_bottleneck is not None:
+            sb = search_bottleneck.get(key, {})
+            row["n_tasks_with_search"] = sb.get("n_tasks_with_search")
+            row["n_tasks_without_search"] = sb.get("n_tasks_without_search")
+            for cutoff in SEARCH_BOTTLENECK_CUTOFFS:
+                found_tasks = sb.get(f"found_tasks_top_{cutoff}")
+                not_found_tasks = sb.get(f"not_found_tasks_top_{cutoff}")
+                avg_first_hit = sb.get(f"avg_first_hit_round_top_{cutoff}")
+                avg_wasted = sb.get(f"avg_wasted_rounds_top_{cutoff}")
+                row[f"found_tasks_top_{cutoff}"] = found_tasks
+                row[f"found_tasks_top{cutoff}"] = found_tasks
+                row[f"not_found_tasks_top_{cutoff}"] = not_found_tasks
+                row[f"not_found_tasks_top{cutoff}"] = not_found_tasks
+                row[f"top{cutoff}_not_found_rate"] = sb.get(f"top{cutoff}_not_found_rate")
+                row[f"avg_first_hit_round_top_{cutoff}"] = avg_first_hit
+                row[f"avg_first_hit_round_top{cutoff}"] = avg_first_hit
+                row[f"avg_wasted_rounds_top_{cutoff}"] = avg_wasted
+                row[f"avg_wasted_rounds_top{cutoff}"] = avg_wasted
         rows.append(row)
     return rows
 
@@ -419,12 +452,12 @@ def build_variant_summary(summary_rows: List[dict]) -> List[dict]:
     for row in summary_rows:
         groups[row.get("variant", "unknown")].append(row)
 
-    def weighted_avg(rows: List[dict], field: str) -> float | None:
+    def weighted_avg(rows: List[dict], field: str, weight_field: str = "n") -> float | None:
         num = 0.0
         den = 0.0
         for r in rows:
             v = r.get(field)
-            n = r.get("n")
+            n = r.get(weight_field)
             if v is None or n in (None, 0):
                 continue
             num += float(v) * float(n)
@@ -439,27 +472,54 @@ def build_variant_summary(summary_rows: List[dict]) -> List[dict]:
         total_cost = round(sum(float(r.get("total_cost_usd", 0) or 0) for r in rows), 4)
         avg_search_calls = weighted_avg(rows, "avg_search_calls")
         em = weighted_avg(rows, "em")
-        out.append(
-            {
-                "variant": variant,
-                "n_total": total_n,
-                "num_condition_model_rows": len(rows),
-                "conditions": sorted({r.get("base_condition", "") for r in rows if r.get("base_condition")}),
-                "models": sorted({r.get("model", "") for r in rows if r.get("model")}),
-                "total_cost_usd": total_cost,
-                "em": em,
-                "f1": weighted_avg(rows, "f1"),
-                "D_ret": weighted_avg(rows, "D_ret"),
-                "D_acc": weighted_avg(rows, "D_acc"),
-                "D_acc_precision": weighted_avg(rows, "dacc_precision"),
-                "D_acc_recall": weighted_avg(rows, "dacc_recall"),
-                "D_acc_f1": weighted_avg(rows, "dacc_f1"),
-                "avg_cost_usd": weighted_avg(rows, "avg_cost_usd"),
-                "avg_tool_calls": weighted_avg(rows, "avg_tool_calls"),
-                "avg_search_calls": avg_search_calls,
-                "search_efficiency": round(em / avg_search_calls, 4) if (em is not None and avg_search_calls) else None,
-            }
-        )
+        row = {
+            "variant": variant,
+            "n_total": total_n,
+            "num_condition_model_rows": len(rows),
+            "conditions": sorted({r.get("base_condition", "") for r in rows if r.get("base_condition")}),
+            "models": sorted({r.get("model", "") for r in rows if r.get("model")}),
+            "total_cost_usd": total_cost,
+            "em": em,
+            "f1": weighted_avg(rows, "f1"),
+            "D_ret": weighted_avg(rows, "D_ret"),
+            "D_acc": weighted_avg(rows, "D_acc"),
+            "D_acc_precision": weighted_avg(rows, "dacc_precision"),
+            "D_acc_recall": weighted_avg(rows, "dacc_recall"),
+            "D_acc_f1": weighted_avg(rows, "dacc_f1"),
+            "avg_cost_usd": weighted_avg(rows, "avg_cost_usd"),
+            "avg_tool_calls": weighted_avg(rows, "avg_tool_calls"),
+            "avg_search_calls": avg_search_calls,
+            "search_efficiency": round(em / avg_search_calls, 4) if (em is not None and avg_search_calls) else None,
+        }
+        row["n_tasks_with_search"] = sum(int(r.get("n_tasks_with_search", 0) or 0) for r in rows)
+        row["n_tasks_without_search"] = sum(int(r.get("n_tasks_without_search", 0) or 0) for r in rows)
+        for cutoff in SEARCH_BOTTLENECK_CUTOFFS:
+            found_tasks = sum(int(r.get(f"found_tasks_top_{cutoff}", 0) or 0) for r in rows)
+            not_found_tasks = sum(int(r.get(f"not_found_tasks_top_{cutoff}", 0) or 0) for r in rows)
+            avg_first_hit = weighted_avg(
+                rows,
+                f"avg_first_hit_round_top_{cutoff}",
+                weight_field=f"found_tasks_top_{cutoff}",
+            )
+            avg_wasted = weighted_avg(
+                rows,
+                f"avg_wasted_rounds_top_{cutoff}",
+                weight_field="n_tasks_with_search",
+            )
+            row[f"found_tasks_top_{cutoff}"] = found_tasks
+            row[f"found_tasks_top{cutoff}"] = found_tasks
+            row[f"not_found_tasks_top_{cutoff}"] = not_found_tasks
+            row[f"not_found_tasks_top{cutoff}"] = not_found_tasks
+            row[f"top{cutoff}_not_found_rate"] = weighted_avg(
+                rows,
+                f"top{cutoff}_not_found_rate",
+                weight_field="n_tasks_with_search",
+            )
+            row[f"avg_first_hit_round_top_{cutoff}"] = avg_first_hit
+            row[f"avg_first_hit_round_top{cutoff}"] = avg_first_hit
+            row[f"avg_wasted_rounds_top_{cutoff}"] = avg_wasted
+            row[f"avg_wasted_rounds_top{cutoff}"] = avg_wasted
+        out.append(row)
     return out
 
 
@@ -507,6 +567,204 @@ def write_per_task_retrieval_csv(discovery: dict, output_csv: Path) -> int:
     return len(rows)
 
 
+def write_search_bottleneck_csv(rows: List[dict], output_csv: Path, fieldnames: List[str]) -> int:
+    return _shared_write_search_bottleneck_csv(rows, output_csv, fieldnames)
+
+
+def _tool_sort_key(tool_name: str) -> tuple:
+    if tool_name in SEARCH_TOOL_ORDER:
+        return (SEARCH_TOOL_ORDER.index(tool_name), tool_name)
+    return (len(SEARCH_TOOL_ORDER), tool_name)
+
+
+def _condition_sort_key(condition_label: str) -> tuple:
+    if "/" in condition_label:
+        variant, base_condition = condition_label.split("/", 1)
+        return (variant, base_condition)
+    return (condition_label, "")
+
+
+def _import_plot_libs():
+    try:
+        import matplotlib
+
+        matplotlib.use("Agg")
+        import matplotlib.pyplot as plt
+
+        return plt
+    except Exception:
+        print("Skipping bottleneck figures: matplotlib is not installed.")
+        return None
+
+
+def _annotate_bar_values(ax, bars, *, pct: bool = False, min_value: float = 0.0) -> None:
+    for bar in bars:
+        value = float(bar.get_height())
+        if value < min_value:
+            continue
+        label = f"{value:.0f}%" if pct else f"{value:.1f}".rstrip("0").rstrip(".")
+        ax.text(
+            bar.get_x() + bar.get_width() / 2,
+            value + (1.0 if pct else max(0.05, value * 0.03)),
+            label,
+            ha="center",
+            va="bottom",
+            fontsize=8,
+        )
+
+
+def _plot_first_hit_rounds_condition(plt, rows: List[dict], output_path: Path) -> None:
+    if not rows:
+        return
+    ordered_conditions = sorted({str(row.get("condition", "")) for row in rows}, key=_condition_sort_key)
+    max_round = max(int(row.get("max_round", 0) or 0) for row in rows)
+    if max_round <= 0:
+        return
+
+    fig, axes = plt.subplots(1, len(SEARCH_BOTTLENECK_CUTOFFS), figsize=(18, 5), sharey=True)
+    for ax, cutoff in zip(axes, SEARCH_BOTTLENECK_CUTOFFS):
+        cutoff_rows = {str(row["condition"]): row for row in rows if int(row.get("cutoff", 0) or 0) == cutoff}
+        for condition in ordered_conditions:
+            row = cutoff_rows.get(condition)
+            if row is None:
+                continue
+            xs = list(range(1, max_round + 1))
+            cumulative = row.get("cumulative_found_rates", {})
+            ys = [100.0 * float(cumulative.get(str(round_number), 0.0) or 0.0) for round_number in xs]
+            not_found_pct = 100.0 * float(row.get("not_found_rate", 0.0) or 0.0)
+            ax.plot(xs, ys, marker="o", linewidth=2, label=f"{condition} (nf {not_found_pct:.0f}%)")
+        ax.set_title(f"Top-{cutoff}")
+        ax.set_xlabel("Search Round")
+        ax.set_ylim(0, 100)
+        ax.grid(alpha=0.25, linestyle="--", linewidth=0.7)
+        if ax is axes[0]:
+            ax.set_ylabel("Tasks Found by Round (%)")
+    handles, labels = axes[-1].get_legend_handles_labels()
+    if handles:
+        fig.legend(handles, labels, loc="center left", bbox_to_anchor=(1.01, 0.5), fontsize=8)
+    fig.suptitle("First Gold Hit by Search Round and Condition")
+    fig.tight_layout(rect=(0, 0, 0.83, 0.95))
+    fig.savefig(output_path)
+    plt.close(fig)
+
+
+def _plot_first_hit_rounds_tool(plt, rows: List[dict], output_path: Path) -> None:
+    if not rows:
+        return
+    ordered_tools = sorted({str(row.get("search_tool", "")) for row in rows}, key=_tool_sort_key)
+    max_round = max(int(row.get("max_round", 0) or 0) for row in rows)
+    if max_round <= 0:
+        return
+
+    fig, axes = plt.subplots(1, len(SEARCH_BOTTLENECK_CUTOFFS), figsize=(18, 5), sharey=True)
+    for ax, cutoff in zip(axes, SEARCH_BOTTLENECK_CUTOFFS):
+        cutoff_rows = {str(row["search_tool"]): row for row in rows if int(row.get("cutoff", 0) or 0) == cutoff}
+        for tool_name in ordered_tools:
+            row = cutoff_rows.get(tool_name)
+            if row is None:
+                continue
+            xs = list(range(1, max_round + 1))
+            cumulative = row.get("cumulative_found_rates", {})
+            ys = [100.0 * float(cumulative.get(str(round_number), 0.0) or 0.0) for round_number in xs]
+            not_found_pct = 100.0 * float(row.get("not_found_rate", 0.0) or 0.0)
+            ax.plot(
+                xs,
+                ys,
+                marker="o",
+                linewidth=2,
+                label=f"{tool_name} (nf {not_found_pct:.0f}%)",
+                color=SEARCH_TOOL_COLORS.get(tool_name),
+            )
+        ax.set_title(f"Top-{cutoff}")
+        ax.set_xlabel("Tool-Local Search Round")
+        ax.set_ylim(0, 100)
+        ax.grid(alpha=0.25, linestyle="--", linewidth=0.7)
+        if ax is axes[0]:
+            ax.set_ylabel("Tasks Found by Round (%)")
+    handles, labels = axes[-1].get_legend_handles_labels()
+    if handles:
+        fig.legend(handles, labels, loc="center left", bbox_to_anchor=(1.01, 0.5), fontsize=8)
+    fig.suptitle("First Gold Hit by Search Tool and Tool-Local Round")
+    fig.tight_layout(rect=(0, 0, 0.83, 0.95))
+    fig.savefig(output_path)
+    plt.close(fig)
+
+
+def _plot_topk_miss_by_tool(plt, rows: List[dict], output_path: Path) -> None:
+    if not rows:
+        return
+    ordered_tools = sorted({str(row.get("search_tool", "")) for row in rows}, key=_tool_sort_key)
+    cutoff_to_rows = {
+        cutoff: {str(row["search_tool"]): row for row in rows if int(row.get("cutoff", 0) or 0) == cutoff}
+        for cutoff in SEARCH_BOTTLENECK_CUTOFFS
+    }
+    fig, ax = plt.subplots(figsize=(max(9, len(ordered_tools) * 1.4), 6))
+    x_positions = list(range(len(ordered_tools)))
+    width = 0.22
+    for idx, cutoff in enumerate(SEARCH_BOTTLENECK_CUTOFFS):
+        offsets = [x + (idx - 1) * width for x in x_positions]
+        values = [
+            100.0 * float(cutoff_to_rows[cutoff].get(tool_name, {}).get("miss_rate", 0.0) or 0.0)
+            for tool_name in ordered_tools
+        ]
+        bars = ax.bar(offsets, values, width=width * 0.92, label=f"Top-{cutoff}")
+        _annotate_bar_values(ax, bars, pct=True, min_value=4.0)
+    ax.set_xticks(x_positions)
+    ax.set_xticklabels(ordered_tools, rotation=20, ha="right")
+    ax.set_ylabel("Miss Rate (%)")
+    ax.set_title("Gold Miss Rate by Search Tool")
+    ax.legend()
+    ax.grid(axis="y", alpha=0.25, linestyle="--", linewidth=0.7)
+    fig.tight_layout()
+    fig.savefig(output_path)
+    plt.close(fig)
+
+
+def _plot_search_tool_coverage_waste(plt, rows: List[dict], output_path: Path) -> None:
+    if not rows:
+        return
+    ordered_tools = sorted({str(row.get("search_tool", "")) for row in rows}, key=_tool_sort_key)
+    cutoff_to_rows = {
+        cutoff: {str(row["search_tool"]): row for row in rows if int(row.get("cutoff", 0) or 0) == cutoff}
+        for cutoff in SEARCH_BOTTLENECK_CUTOFFS
+    }
+    fig, axes = plt.subplots(1, 2, figsize=(16, 6))
+    x_positions = list(range(len(ordered_tools)))
+    width = 0.22
+
+    for idx, cutoff in enumerate(SEARCH_BOTTLENECK_CUTOFFS):
+        offsets = [x + (idx - 1) * width for x in x_positions]
+        coverage = [
+            100.0 * float(cutoff_to_rows[cutoff].get(tool_name, {}).get("ever_found_rate", 0.0) or 0.0)
+            for tool_name in ordered_tools
+        ]
+        wasted = [
+            float(cutoff_to_rows[cutoff].get(tool_name, {}).get("avg_wasted_rounds", 0.0) or 0.0)
+            for tool_name in ordered_tools
+        ]
+        bars_cov = axes[0].bar(offsets, coverage, width=width * 0.92, label=f"Top-{cutoff}")
+        bars_waste = axes[1].bar(offsets, wasted, width=width * 0.92, label=f"Top-{cutoff}")
+        _annotate_bar_values(axes[0], bars_cov, pct=True, min_value=4.0)
+        _annotate_bar_values(axes[1], bars_waste, pct=False, min_value=0.15)
+
+    axes[0].set_title("Ever Found Rate by Search Tool")
+    axes[0].set_ylabel("Tasks Ever Found (%)")
+    axes[1].set_title("Average Wasted Rounds Before First Hit")
+    axes[1].set_ylabel("Wasted Rounds")
+    for ax in axes:
+        ax.set_xticks(x_positions)
+        ax.set_xticklabels(ordered_tools, rotation=20, ha="right")
+        ax.grid(axis="y", alpha=0.25, linestyle="--", linewidth=0.7)
+    axes[0].legend()
+    fig.tight_layout()
+    fig.savefig(output_path)
+    plt.close(fig)
+
+
+def generate_search_bottleneck_figures(search_bottleneck: dict, output_dir: Path) -> None:
+    _shared_generate_search_bottleneck_figures(search_bottleneck, output_dir)
+
+
 def _collect_results_runs(results_root: Path) -> List[Tuple[str, str, str, Path]]:
     runs: List[Tuple[str, str, str, Path]] = []
     for jsonl_path in results_root.rglob("agent_results.jsonl"):
@@ -544,7 +802,14 @@ def _figure_condition_label(variant: str, base_condition: str) -> str:
     return f"{variant}__{base_condition}"
 
 
-def generate_search_figures(results_dir: str, traces_dir: str, tasks_dir: str, output_dir: Path, model_filter: str | None = None) -> None:
+def generate_search_figures(
+    results_dir: str,
+    traces_dir: str,
+    tasks_dir: str,
+    output_dir: Path,
+    model_filter: str | None = None,
+    search_bottleneck: dict | None = None,
+) -> None:
     """Generate standard analysis figures while preserving search variants."""
     results_root = Path(results_dir)
     traces_root = Path(traces_dir)
@@ -588,27 +853,20 @@ def generate_search_figures(results_dir: str, traces_dir: str, tasks_dir: str, o
         if model_filter:
             cmd += ["--model-filter", model_filter]
         subprocess.run(cmd, check=True)
+    if search_bottleneck is not None:
+        generate_search_bottleneck_figures(search_bottleneck, output_dir)
 
 
-def main() -> None:
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--results-dir", default="results")
-    parser.add_argument("--traces-dir", default="results/traces")
-    parser.add_argument("--tasks-dir", default="tasks_mini")
-    parser.add_argument("--output-dir", default="analysis_results_search")
-    parser.add_argument(
-        "--no-figures",
-        action="store_true",
-        help="Skip diagram generation (JSON outputs only).",
-    )
-    parser.add_argument(
-        "--model-filter",
-        default=None,
-        help="Substring filter on model name (comma-separated OR). e.g. 'haiku,sonnet'.",
-    )
-    args = parser.parse_args()
-
-    model_filters = [s.strip().lower() for s in args.model_filter.split(",")] if args.model_filter else None
+def run_analysis(
+    *,
+    results_dir: str,
+    traces_dir: str,
+    tasks_dir: str,
+    output_dir: str,
+    no_figures: bool = False,
+    model_filter: str | None = None,
+) -> dict:
+    model_filters = [s.strip().lower() for s in model_filter.split(",")] if model_filter else None
 
     def _keep_model(name: str) -> bool:
         if not model_filters:
@@ -616,40 +874,41 @@ def main() -> None:
         n = (name or "").lower()
         return any(f in n for f in model_filters)
 
-    out_dir = Path(args.output_dir)
+    out_dir = Path(output_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
 
     print("Loading grouped results...")
-    records, by_key_records, _ = load_results_grouped(args.results_dir)
+    records, by_key_records, _ = load_results_grouped(results_dir)
     if not records:
-        print(f"No agent_results.jsonl files found under {args.results_dir}")
-        return
+        print(f"No agent_results.jsonl files found under {results_dir}")
+        return {}
 
     print("Loading grouped traces...")
-    grouped_traces, _ = load_traces_grouped(args.traces_dir)
+    grouped_traces, trace_meta = load_traces_grouped(traces_dir)
 
     if model_filters:
         records = [r for r in records if _keep_model(_split_cm_key(r.get("_cm_key", ""))[2])]
         by_key_records = {k: v for k, v in by_key_records.items() if _keep_model(_split_cm_key(k)[2])}
         grouped_traces = {k: v for k, v in grouped_traces.items() if _keep_model(_split_cm_key(k)[2])}
+        trace_meta = {k: v for k, v in trace_meta.items() if _keep_model(_split_cm_key(k)[2])}
 
     print("Running EM/F1...")
     em = run_em(records)
 
     print("Running discovery metrics...")
-    discovery = run_discovery(grouped_traces, args.tasks_dir)
+    discovery = run_discovery(grouped_traces, tasks_dir)
 
     print("Running failure attribution...")
-    failure = run_failure(by_key_records, grouped_traces, args.tasks_dir)
+    failure = run_failure(by_key_records, grouped_traces, tasks_dir)
 
     print("Running efficiency...")
     efficiency = run_efficiency(by_key_records)
 
     print("Running provenance (Condition A variants)...")
-    provenance = run_provenance(grouped_traces, args.tasks_dir)
+    provenance = run_provenance(grouped_traces, tasks_dir)
 
     print("Running tools discovery...")
-    tools_discovery = run_tools_discovery(grouped_traces, args.tasks_dir)
+    tools_discovery = run_tools_discovery(grouped_traces, tasks_dir)
 
     print("Running search depth curve...")
     search_depth = run_search_depth(records)
@@ -658,13 +917,26 @@ def main() -> None:
     planning_overhead = run_planning_overhead(records)
 
     print("Running reasoning density curve...")
-    reasoning_density = run_reasoning_density(records, args.tasks_dir)
+    reasoning_density = run_reasoning_density(records, tasks_dir)
 
     print("Running tool error rates...")
     tool_errors = run_tool_errors(by_key_records)
 
+    print("Running search bottleneck analysis...")
+    task_gold = load_task_gold_ids(tasks_dir)
+    search_bottleneck = compute_search_bottleneck(grouped_traces, trace_meta, task_gold)
+
     print("Building summaries...")
-    summary = build_summary(em, discovery, failure, efficiency, search_depth, reasoning_density, tool_errors)
+    summary = build_summary(
+        em,
+        discovery,
+        failure,
+        efficiency,
+        search_depth,
+        reasoning_density,
+        tool_errors,
+        search_bottleneck.get("condition_model_summary"),
+    )
     variant_summary = build_variant_summary(summary)
 
     files = {
@@ -678,6 +950,10 @@ def main() -> None:
         "planning_overhead.json": planning_overhead,
         "reasoning_density.json": reasoning_density,
         "tool_errors.json": tool_errors,
+        "search_first_hit_condition.json": search_bottleneck.get("condition_summary_rows", []),
+        "search_first_hit_tool.json": search_bottleneck.get("tool_first_hit_rows", []),
+        "search_topk_miss_tool.json": search_bottleneck.get("tool_miss_rows", []),
+        "search_tool_efficiency.json": search_bottleneck.get("tool_efficiency_rows", []),
         "summary.json": summary,
         "variant_summary.json": variant_summary,
     }
@@ -691,6 +967,149 @@ def main() -> None:
     per_task_csv = out_dir / "per_task_retrieval.csv"
     num_rows = write_per_task_retrieval_csv(discovery, per_task_csv)
     print(f"  Wrote {per_task_csv} ({num_rows} rows)")
+
+    per_task_search_csv = out_dir / "per_task_search_bottleneck.csv"
+    per_task_search_rows = search_bottleneck.get("per_task_rows", [])
+    per_task_search_fields = [
+        "condition_model",
+        "condition",
+        "variant",
+        "base_condition",
+        "model",
+        "task_id",
+        "num_search_calls",
+    ] + [
+        field
+        for cutoff in SEARCH_BOTTLENECK_CUTOFFS
+        for field in (
+            f"found_top_{cutoff}",
+            f"first_hit_round_top_{cutoff}",
+            f"wasted_rounds_top_{cutoff}",
+        )
+    ]
+    num_task_search_rows = write_search_bottleneck_csv(
+        per_task_search_rows,
+        per_task_search_csv,
+        per_task_search_fields,
+    )
+    print(f"  Wrote {per_task_search_csv} ({num_task_search_rows} rows)")
+
+    per_task_tool_csv = out_dir / "per_task_search_tool_bottleneck.csv"
+    per_task_tool_rows = search_bottleneck.get("per_task_tool_rows", [])
+    per_task_tool_fields = [
+        "condition_model",
+        "condition",
+        "variant",
+        "base_condition",
+        "model",
+        "task_id",
+        "search_tool",
+        "num_tool_calls",
+    ] + [
+        field
+        for cutoff in SEARCH_BOTTLENECK_CUTOFFS
+        for field in (
+            f"found_top_{cutoff}",
+            f"first_hit_round_top_{cutoff}",
+            f"wasted_rounds_top_{cutoff}",
+        )
+    ]
+    num_task_tool_rows = write_search_bottleneck_csv(
+        per_task_tool_rows,
+        per_task_tool_csv,
+        per_task_tool_fields,
+    )
+    print(f"  Wrote {per_task_tool_csv} ({num_task_tool_rows} rows)")
+
+    search_first_hit_condition_csv = out_dir / "search_first_hit_condition.csv"
+    write_search_bottleneck_csv(
+        search_bottleneck.get("condition_summary_rows", []),
+        search_first_hit_condition_csv,
+        [
+            "condition",
+            "variant",
+            "base_condition",
+            "cutoff",
+            "n_tasks_with_search",
+            "n_tasks_without_search",
+            "found_tasks",
+            "not_found_tasks",
+            "not_found_rate",
+            "ever_found_rate",
+            "avg_first_hit_round_found_only",
+            "median_first_hit_round_found_only",
+            "avg_wasted_rounds",
+            "max_round",
+            "models",
+            "num_condition_model_rows",
+            "round_counts",
+            "cumulative_found_counts",
+            "cumulative_found_rates",
+        ],
+    )
+    print(f"  Wrote {search_first_hit_condition_csv}")
+
+    search_first_hit_tool_csv = out_dir / "search_first_hit_tool.csv"
+    write_search_bottleneck_csv(
+        search_bottleneck.get("tool_first_hit_rows", []),
+        search_first_hit_tool_csv,
+        [
+            "search_tool",
+            "cutoff",
+            "tasks_with_tool",
+            "found_tasks",
+            "not_found_tasks",
+            "not_found_rate",
+            "ever_found_rate",
+            "avg_first_hit_round_found_only",
+            "median_first_hit_round_found_only",
+            "avg_wasted_rounds",
+            "max_round",
+            "conditions",
+            "models",
+            "num_condition_model_rows",
+            "round_counts",
+            "cumulative_found_counts",
+            "cumulative_found_rates",
+        ],
+    )
+    print(f"  Wrote {search_first_hit_tool_csv}")
+
+    search_topk_miss_tool_csv = out_dir / "search_topk_miss_tool.csv"
+    write_search_bottleneck_csv(
+        search_bottleneck.get("tool_miss_rows", []),
+        search_topk_miss_tool_csv,
+        [
+            "search_tool",
+            "cutoff",
+            "n_calls",
+            "hit_calls",
+            "miss_calls",
+            "miss_rate",
+            "conditions",
+            "models",
+            "num_condition_model_rows",
+        ],
+    )
+    print(f"  Wrote {search_topk_miss_tool_csv}")
+
+    search_tool_efficiency_csv = out_dir / "search_tool_efficiency.csv"
+    write_search_bottleneck_csv(
+        search_bottleneck.get("tool_efficiency_rows", []),
+        search_tool_efficiency_csv,
+        [
+            "search_tool",
+            "cutoff",
+            "tasks_with_tool",
+            "ever_found_rate",
+            "avg_first_hit_round_found_only",
+            "avg_wasted_rounds",
+            "conditions",
+            "models",
+            "num_condition_model_rows",
+        ],
+    )
+    print(f"  Wrote {search_tool_efficiency_csv}")
 
     print(f"\nSummary ({len(summary)} variant×condition×model rows):")
     for row in summary:
@@ -710,15 +1129,57 @@ def main() -> None:
             f"D_acc={row.get('D_acc')} n={row.get('n_total')}"
         )
 
-    if args.no_figures:
+    if no_figures:
         print("\nSkipping figures (--no-figures).")
     else:
         print("\nGenerating figures...")
         try:
-            generate_search_figures(args.results_dir, args.traces_dir, args.tasks_dir, out_dir, args.model_filter)
+            generate_search_figures(
+                results_dir,
+                traces_dir,
+                tasks_dir,
+                out_dir,
+                model_filter,
+                search_bottleneck,
+            )
             print(f"Figures written to {out_dir / 'figures'}")
         except subprocess.CalledProcessError as exc:
             print(f"Figure generation failed with exit code {exc.returncode}.")
+
+    return {
+        "summary": summary,
+        "variant_summary": variant_summary,
+        "search_bottleneck": search_bottleneck,
+        "discovery": discovery,
+        "tools_discovery": tools_discovery,
+    }
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--results-dir", default="results")
+    parser.add_argument("--traces-dir", default="results/traces")
+    parser.add_argument("--tasks-dir", default="tasks_mini")
+    parser.add_argument("--output-dir", default="analysis_results_search")
+    parser.add_argument(
+        "--no-figures",
+        action="store_true",
+        help="Skip diagram generation (JSON outputs only).",
+    )
+    parser.add_argument(
+        "--model-filter",
+        default=None,
+        help="Substring filter on model name (comma-separated OR). e.g. 'haiku,sonnet'.",
+    )
+    args = parser.parse_args()
+    run_analysis(
+        results_dir=args.results_dir,
+        traces_dir=args.traces_dir,
+        tasks_dir=args.tasks_dir,
+        output_dir=args.output_dir,
+        no_figures=args.no_figures,
+        model_filter=args.model_filter,
+    )
 
 
 if __name__ == "__main__":

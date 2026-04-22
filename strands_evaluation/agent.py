@@ -245,7 +245,7 @@ class DataLakeAgent:
                     _tool_limit_handler.signal_context_overflow()
 
         cond = self.run_config.condition_config
-        plugins = [_tool_limit_handler]
+        plugins = [_tool_limit_handler, telemetry]
         if self.run_config.search_calls_limit is not None:
             plugins.append(
                 SearchCallBudgetHandler(
@@ -377,8 +377,13 @@ class DataLakeAgent:
             )
         except Exception as e:
             elapsed = time.time() - start
+            unique_tool_suffix = (
+                f" across {telemetry.unique_tool_calls} tool uses"
+                if telemetry.unique_tool_calls and telemetry.unique_tool_calls != telemetry.tool_calls
+                else ""
+            )
             logger.error(
-                f"Agent crashed after {telemetry.tool_calls} tools "
+                f"Agent crashed after {telemetry.tool_calls} tool starts{unique_tool_suffix} "
                 f"({elapsed:.1f}s): {type(e).__name__}: {e}",
                 exc_info=True,
             )

@@ -309,16 +309,34 @@ class LoggingPlugin(Plugin):
             logger.debug("Tool result: %s", result_str)
 
 
-class TelemetryTracker:
-    """Lightweight callback collector for tool count + partial metrics."""
+class TelemetryTracker(Plugin):
+    """Track actual tool-start events plus partial metrics emitted via callbacks."""
+
+    name = "telemetry"
 
     def __init__(self):
         self.tool_calls = 0
+        self._tool_use_ids: set[str] = set()
         self.partial_metrics = None
 
+    @property
+    def unique_tool_calls(self) -> int:
+        return len(self._tool_use_ids)
+
+    @hook
+    def on_agent_initialized(self, event: AgentInitializedEvent) -> None:
+        self.tool_calls = 0
+        self._tool_use_ids = set()
+        self.partial_metrics = None
+
+    @hook
+    def on_before_tool(self, event: BeforeToolCallEvent) -> None:
+        self.tool_calls += 1
+        tool_use_id = str(event.tool_use.get("toolUseId", "") or "")
+        if tool_use_id:
+            self._tool_use_ids.add(tool_use_id)
+
     def __call__(self, **kwargs):
-        if "current_tool_use" in kwargs:
-            self.tool_calls += 1
         if "metrics" in kwargs:
             self.partial_metrics = kwargs["metrics"]
 

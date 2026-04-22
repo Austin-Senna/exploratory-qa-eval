@@ -5,21 +5,40 @@ Semantic-first mode analysis runner.
 Reads semantic-audited eval_results.csv files from:
   results-ec2_semantic/modes/{model}/{variant}/eval_results.csv
 
-Optionally joins discovery metrics from traces:
+Joins the richer base run metadata from:
+  results-ec2/modes/{model}/{variant}/agent_results.jsonl
+
+And traces from:
   results-ec2/traces/modes/{model}/{variant}/{task_dir}/{task}.jsonl
 
 Outputs (default: analysis_results_mode_semantic/):
   semantic_match.json
   discovery.json
   runtime.json
+  efficiency.json
+  failure.json
+  tools_discovery.json
+  tool_errors.json
   semantic_buckets.json
   log_error_buckets.json
+  semantic_error_crosstab.json
+  search_depth.json
+  reasoning_density.json
+  search_first_hit_condition.json
+  search_first_hit_tool.json
+  search_topk_miss_tool.json
+  search_tool_efficiency.json
   search_depth_buckets.json
   reasoning_density_buckets.json
-  semantic_error_crosstab.json
+  turn_waste_global_groups.json
   summary.json
   variant_summary.json
   per_task_semantic.csv
+  per_task_retrieval.csv
+  per_task_search_bottleneck.csv
+  per_task_search_tool_bottleneck.csv
+  turn_waste_global_groups.csv
+  turn_waste_grouped_failures_joined.csv
   figures/ (unless --no-figures)
 """
 
@@ -36,12 +55,24 @@ from typing import Dict, Iterable, List, Optional, Tuple
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from analysis.discovery_metrics import compute_discovery_metrics, load_task_gold_ids, make_task_stem_key
-from analysis.reasoning_density import load_task_gold_counts
+from analysis.discovery_metrics import (
+    compute_discovery_metrics,
+    compute_tools_discovery,
+    load_task_gold_ids,
+    make_task_stem_key,
+)
 from analysis.reasoning_density import _BINS as _REASONING_DENSITY_BINS
 from analysis.reasoning_density import _assign_bin as _assign_reasoning_density_bin
+from analysis.reasoning_density import load_task_gold_counts
+from analysis.search_bottleneck import (
+    SEARCH_BOTTLENECK_CUTOFFS,
+    compute_search_bottleneck,
+    generate_search_bottleneck_figures,
+    write_search_bottleneck_csv,
+)
 from analysis.search_depth import _BINS as _SEARCH_DEPTH_BINS
 from analysis.search_depth import _assign_bin as _assign_search_depth_bin
+from analysis.tool_error_analysis import _DATA_TOOLS
 
 
 SEMANTIC_BUCKETS = [
@@ -70,6 +101,30 @@ DISPLAY_LOG_ERROR_BUCKETS = [
     "error_unknown",
 ]
 
+FAILURE_PRIMARY_BUCKETS = [
+    "semantic_correct",
+    "semantic_incorrect",
+    "answer_unknown_blank",
+    "error_turns_exhausted",
+    "error_tools_limit",
+    "error_tokens_reached",
+    "error_context_overflow",
+    "error_event_loop",
+    "error_unknown",
+]
+
+FAILURE_PRIMARY_COLORS = {
+    "semantic_correct": "#2E8B57",
+    "semantic_incorrect": "#C07A2C",
+    "answer_unknown_blank": "#C44E52",
+    "error_turns_exhausted": "#9C1D35",
+    "error_tools_limit": "#E17C05",
+    "error_tokens_reached": "#7A3E9D",
+    "error_context_overflow": "#9467BD",
+    "error_event_loop": "#7F7F7F",
+    "error_unknown": "#BCBD22",
+}
+
 REQUIRED_FIELDS = [
     "exact_match",
     "semantic_match",
@@ -79,10 +134,22 @@ REQUIRED_FIELDS = [
     "log_error_evidence",
 ]
 
+REQUIRED_TURN_WASTE_GROUP_FIELDS = [
+    "task_id",
+    "turn_waste_global_group",
+    "turn_waste_global_group_reason",
+]
+
 SEMANTIC_BUCKET_COLORS = {
     "semantic_correct": "#2E8B57",
     "semantic_incorrect": "#C07A2C",
     "answer_unknown_blank": "#C44E52",
+}
+
+SEMANTIC_BUCKET_DISPLAY = {
+    "semantic_correct": "Correct",
+    "semantic_incorrect": "Incorrect",
+    "answer_unknown_blank": "Blank",
 }
 
 LOG_ERROR_BUCKET_COLORS = {
@@ -95,25 +162,27 @@ LOG_ERROR_BUCKET_COLORS = {
     "error_unknown": "#BCBD22",
 }
 
-METRIC_COLORS = {
-    "semantic_match": "#2E8B57",
-    "D_ret": "#1F77B4",
-    "D_acc": "#FF7F0E",
-}
-
-METRIC_LABELS = {
-    "semantic_match": "Semantic Match",
-    "D_ret": "D_ret",
-    "D_acc": "D_acc",
+LOG_ERROR_BUCKET_DISPLAY = {
+    "no_error": "None",
+    "error_turns_exhausted": "Turns",
+    "error_tools_limit": "Tools",
+    "error_tokens_reached": "Tokens",
+    "error_context_overflow": "Context",
+    "error_event_loop": "Event Loop",
+    "error_unknown": "Unknown",
 }
 
 _LETTER_TO_MODE = {"n": "naive", "d": "standard", "i": "ideal"}
 _MODE_PRIORITY = {"ideal": 0, "standard": 1, "naive": 2, None: 3}
+_UNIMPORTANT_TOOLS = {"get_sandbox_info", "submit_answer", "plan", "think"}
+_MODE_DISPLAY = {"ideal": "Ideal", "standard": "Std", "naive": "Naive", None: "?"}
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--results-dir", default="results-ec2_semantic/modes")
+    parser.add_argument("--base-results-dir", default=None)
+    parser.add_argument("--turn-waste-grouped-dir", default=None)
     parser.add_argument("--traces-dir", default="results-ec2/traces/modes")
     parser.add_argument("--tasks-dir", default="tasks_mini")
     parser.add_argument("--output-dir", default="analysis_results_mode_semantic")
@@ -172,6 +241,51 @@ def _parse_variant(variant: str) -> Dict[str, Optional[object]]:
     return out
 
 
+def _parse_variant_mode_codes(variant: str) -> Dict[str, Optional[str]]:
+    out: Dict[str, Optional[str]] = {
+        "search": None,
+        "results": None,
+        "plan": None,
+        "k": None,
+        "sc": None,
+    }
+    parts = variant.split("_")
+    for idx, token in enumerate(parts):
+        if token == "search" and idx + 1 < len(parts):
+            out["search"] = parts[idx + 1]
+        elif token == "results" and idx + 1 < len(parts):
+            out["results"] = parts[idx + 1]
+        elif token.startswith("plan") and len(token) > 4:
+            out["plan"] = token[4:]
+        elif token.startswith("k") and token[1:].isdigit():
+            out["k"] = token[1:]
+        elif token.startswith("sc") and token[2:].isdigit():
+            out["sc"] = token[2:]
+    return out
+
+
+def _mode_display(mode: Optional[str]) -> str:
+    return _MODE_DISPLAY.get(mode, str(mode) if mode is not None else "?")
+
+
+def _compact_variant_label(variant: str, *, multiline: bool = False) -> str:
+    codes = _parse_variant_mode_codes(variant)
+    parts = []
+    if codes.get("search"):
+        parts.append(f"S:{_mode_display(_LETTER_TO_MODE.get(codes['search']))}")
+    if codes.get("results") and codes.get("results") != "i":
+        parts.append(f"R:{_mode_display(_LETTER_TO_MODE.get(codes['results']))}")
+    if codes.get("plan"):
+        parts.append(f"P:{_mode_display(_LETTER_TO_MODE.get(codes['plan']))}")
+    if codes.get("k") and codes.get("k") != "5":
+        parts.append(f"k={codes['k']}")
+    if codes.get("sc"):
+        parts.append(f"sc={codes['sc']}")
+    if not parts:
+        return variant
+    return ("\n" if multiline else " | ").join(parts)
+
+
 def _variant_sort_key(variant: str) -> tuple:
     axes = _parse_variant(variant)
     search_tool = axes.get("search_tool")
@@ -217,12 +331,51 @@ def _sort_variant_rows(rows: List[dict]) -> List[dict]:
     return sorted(rows, key=lambda row: _variant_sort_key(str(row.get("variant", ""))))
 
 
+def _safe_slug(value: str) -> str:
+    out = []
+    for char in value.lower():
+        if char.isalnum():
+            out.append(char)
+        else:
+            out.append("_")
+    slug = "".join(out)
+    while "__" in slug:
+        slug = slug.replace("__", "_")
+    return slug.strip("_") or "unknown"
+
+
+def _default_base_results_dir(results_dir: str) -> Optional[str]:
+    candidate = str(results_dir).replace("_semantic", "", 1)
+    if candidate != results_dir:
+        return candidate
+    return None
+
+
+def _default_turn_waste_grouped_dir(results_dir: str) -> Optional[str]:
+    results_str = str(results_dir)
+    candidate = results_str.replace("_semantic/modes", "_semantic_turn_waste_grouped/modes", 1)
+    if candidate != results_str:
+        return candidate
+    candidate = results_str.replace("_semantic", "_semantic_turn_waste_grouped", 1)
+    if candidate != results_str:
+        return candidate
+    return None
+
+
 def _parse_results_csv_path(path: Path, results_root: Path) -> Tuple[str, str]:
     rel = path.relative_to(results_root)
     parts = rel.parts
     if len(parts) >= 3 and parts[-1] == "eval_results.csv":
         return parts[-3], parts[-2]
     raise ValueError(f"Expected <results>/<model>/<variant>/eval_results.csv layout, got {path}")
+
+
+def _parse_agent_results_path(path: Path, base_root: Path) -> Tuple[str, str]:
+    rel = path.relative_to(base_root)
+    parts = rel.parts
+    if len(parts) >= 3 and parts[-1] == "agent_results.jsonl":
+        return parts[-3], parts[-2]
+    raise ValueError(f"Expected <results>/<model>/<variant>/agent_results.jsonl layout, got {path}")
 
 
 def _parse_trace_jsonl_path(path: Path, traces_root: Path) -> Tuple[str, str, str]:
@@ -239,6 +392,13 @@ def _validate_required_fields(fieldnames: List[str] | None, path: Path) -> None:
     missing = [field for field in REQUIRED_FIELDS if field not in available]
     if missing:
         raise ValueError(f"Missing required semantic columns in {path}: {', '.join(missing)}")
+
+
+def _validate_required_turn_waste_group_fields(fieldnames: List[str] | None, path: Path) -> None:
+    available = fieldnames or []
+    missing = [field for field in REQUIRED_TURN_WASTE_GROUP_FIELDS if field not in available]
+    if missing:
+        raise ValueError(f"Missing required grouped turn-waste columns in {path}: {', '.join(missing)}")
 
 
 def _normalize_log_error_bucket(value: str) -> str:
@@ -279,6 +439,13 @@ def _weighted_avg(rows: List[dict], field: str, weight_field: str = "n") -> Opti
     if denominator == 0:
         return None
     return numerator / denominator
+
+
+def _tool_count_value(row: dict, tool_name: str) -> float:
+    for tc in row.get("tool_counts", []):
+        if tc.get("name") == tool_name:
+            return float(tc.get("call_count", 0) or 0)
+    return 0.0
 
 
 def _normalize_eval_row(row: dict, model: str, variant: str, csv_path: Path) -> dict:
@@ -358,6 +525,86 @@ def load_semantic_results_grouped(
     return dict(by_key), field_order
 
 
+def load_turn_waste_grouped_results(
+    grouped_results_dir: str,
+    model_filters: Optional[List[str]] = None,
+) -> Dict[str, List[dict]]:
+    root = Path(grouped_results_dir)
+    if not root.exists():
+        raise FileNotFoundError(
+            f"Grouped turn-waste directory does not exist: {root}. "
+            "Run $turn-waste-grouper first to produce canonical turn-waste groups."
+        )
+
+    def keep_model(model: str) -> bool:
+        if not model_filters:
+            return True
+        lowered = model.lower()
+        return any(token in lowered for token in model_filters)
+
+    by_key: Dict[str, List[dict]] = defaultdict(list)
+    found = False
+    for csv_path in sorted(root.rglob("eval_results.csv")):
+        model, variant = _parse_results_csv_path(csv_path, root)
+        if not keep_model(model):
+            continue
+        found = True
+        with csv_path.open(newline="") as handle:
+            reader = csv.DictReader(handle)
+            _validate_required_turn_waste_group_fields(reader.fieldnames, csv_path)
+            for row in reader:
+                normalized = dict(row)
+                normalized["condition_model"] = _cm_key(model, variant)
+                normalized["variant"] = variant
+                normalized["model_dir"] = model
+                normalized["task_stem"] = make_task_stem_key(str(row.get("task_id", "")))
+                by_key[_cm_key(model, variant)].append(normalized)
+
+    if not found:
+        raise FileNotFoundError(
+            f"No grouped turn-waste eval_results.csv files found under {root}. "
+            "Run $turn-waste-grouper first to produce canonical turn-waste groups."
+        )
+
+    return dict(by_key)
+
+
+def load_base_agent_results_grouped(
+    base_results_dir: Optional[str],
+    model_filters: Optional[List[str]] = None,
+) -> Dict[str, List[dict]]:
+    if not base_results_dir:
+        return {}
+    root = Path(base_results_dir)
+    if not root.exists():
+        return {}
+
+    def keep_model(model: str) -> bool:
+        if not model_filters:
+            return True
+        lowered = model.lower()
+        return any(token in lowered for token in model_filters)
+
+    by_key: Dict[str, List[dict]] = defaultdict(list)
+    for jsonl_path in sorted(root.rglob("agent_results.jsonl")):
+        model, variant = _parse_agent_results_path(jsonl_path, root)
+        if not keep_model(model):
+            continue
+        key = _cm_key(model, variant)
+        with jsonl_path.open() as handle:
+            for line in handle:
+                line = line.strip()
+                if not line:
+                    continue
+                row = json.loads(line)
+                row["condition_model"] = key
+                row["variant"] = variant
+                row["model_dir"] = model
+                row["task_stem"] = make_task_stem_key(str(row.get("task_id", "")))
+                by_key[key].append(row)
+    return dict(by_key)
+
+
 def load_traces_grouped(
     traces_dir: str,
     model_filters: Optional[List[str]] = None,
@@ -386,6 +633,19 @@ def load_traces_grouped(
     return {key: dict(value) for key, value in grouped.items()}
 
 
+def build_search_bottleneck_meta(grouped_traces: Dict[str, dict]) -> Dict[str, dict]:
+    meta_by_key: Dict[str, dict] = {}
+    for key in sorted(grouped_traces.keys(), key=_condition_model_sort_key):
+        model, variant = _split_cm_key(key)
+        meta_by_key[key] = {
+            "variant": variant,
+            "base_condition": variant,
+            "condition_label": variant,
+            "model": model,
+        }
+    return meta_by_key
+
+
 def run_discovery(grouped_traces: Dict[str, dict], tasks_dir: str) -> Tuple[dict, Dict[str, Dict[str, dict]]]:
     tasks_root = Path(tasks_dir)
     if not grouped_traces or not tasks_root.exists():
@@ -407,246 +667,240 @@ def run_discovery(grouped_traces: Dict[str, dict], tasks_dir: str) -> Tuple[dict
     return aggregates, task_metrics_by_key
 
 
-def build_summary(by_key_records: Dict[str, List[dict]], discovery: dict) -> List[dict]:
-    rows: List[dict] = []
-    for key in sorted(by_key_records.keys(), key=_condition_model_sort_key):
-        records = by_key_records[key]
-        model, variant = _split_cm_key(key)
-        axes = _parse_variant(variant)
-        n = len(records)
+def run_efficiency(by_key_records: Dict[str, List[dict]]) -> dict:
+    def percentile(vals: list[float], p: float) -> float:
+        if not vals:
+            return 0.0
+        s = sorted(vals)
+        return s[min(int(len(s) * p / 100), len(s) - 1)]
+
+    def dist(vals: list[float]) -> dict:
+        if not vals:
+            return {}
+        n = len(vals)
+        return {
+            "mean": round(sum(vals) / n, 4),
+            "p50": round(percentile(vals, 50), 4),
+            "p90": round(percentile(vals, 90), 4),
+            "n": n,
+        }
+
+    out = {}
+    for key, rows in sorted(by_key_records.items(), key=lambda item: _condition_model_sort_key(item[0])):
+        out[key] = {
+            "cost_usd": dist([float(row.get("_cost_usd", 0.0) or 0.0) for row in rows]),
+            "time_s": dist([float(row.get("_runtime_seconds", 0.0) or 0.0) for row in rows]),
+            "tool_calls": dist([float(row.get("_tool_calls_total", 0.0) or 0.0) for row in rows]),
+            "total_cost_usd": round(sum(float(row.get("_cost_usd", 0.0) or 0.0) for row in rows), 4),
+            "n": len(rows),
+        }
+    return out
+
+
+def _strip_tool_recall_fields(tool_data: dict) -> dict:
+    cleaned = {}
+    for tool_name, stats in tool_data.items():
+        cleaned_stats = {
+            "calls": stats.get("calls"),
+            "n_tasks": stats.get("n_tasks"),
+            "tasks_with_hit": stats.get("tasks_with_hit"),
+            "avg_precision": stats.get("avg_precision"),
+            "avg_f1": stats.get("avg_f1"),
+        }
+        per_folder = {}
+        for folder, folder_stats in (stats.get("per_folder") or {}).items():
+            cleaned_folder = {
+                "n_tasks": folder_stats.get("n_tasks"),
+                "calls": folder_stats.get("calls"),
+                "avg_precision": folder_stats.get("avg_precision"),
+                "avg_f1": folder_stats.get("avg_f1"),
+                "tasks_with_hit": folder_stats.get("tasks_with_hit"),
+                "per_task": {},
+            }
+            for task_id, task_stats in (folder_stats.get("per_task") or {}).items():
+                cleaned_folder["per_task"][task_id] = {
+                    "calls": task_stats.get("calls"),
+                    "precision": task_stats.get("precision"),
+                    "f1": task_stats.get("f1"),
+                    "has_hit": task_stats.get("has_hit"),
+                }
+            per_folder[folder] = cleaned_folder
+        cleaned_stats["per_folder"] = per_folder
+        cleaned[tool_name] = cleaned_stats
+    return cleaned
+
+
+def run_tools_discovery(grouped_traces: Dict[str, dict], tasks_dir: str) -> dict:
+    if not grouped_traces or not Path(tasks_dir).exists():
+        return {}
+    task_gold = load_task_gold_ids(tasks_dir)
+    out = {}
+    for key, traces in sorted(grouped_traces.items(), key=lambda item: _condition_model_sort_key(item[0])):
+        raw = compute_tools_discovery(traces, task_gold)
+        out[key] = _strip_tool_recall_fields(raw)
+    return out
+
+
+def run_tool_errors(base_by_key_records: Dict[str, List[dict]]) -> dict:
+    acc: Dict[str, Dict[str, List[int]]] = defaultdict(lambda: defaultdict(lambda: [0, 0]))
+    for key, rows in base_by_key_records.items():
+        for row in rows:
+            for tc in row.get("tool_counts", []):
+                name = tc.get("name", "")
+                calls = int(tc.get("call_count", 0) or 0)
+                successes = int(tc.get("success_count", 0) or 0)
+                if calls == 0:
+                    continue
+                errors = max(calls - successes, 0)
+                acc[key][name][0] += calls
+                acc[key][name][1] += errors
+
+    out = {}
+    for key, tools in sorted(acc.items(), key=lambda item: _condition_model_sort_key(item[0])):
+        out[key] = {}
+        for tool_name, (total_calls, total_errors) in sorted(tools.items()):
+            out[key][tool_name] = {
+                "total_calls": total_calls,
+                "total_errors": total_errors,
+                "error_rate": round(total_errors / total_calls, 4) if total_calls else 0.0,
+            }
+    return out
+
+
+def _primary_failure_bucket(record: dict) -> str:
+    log_error_bucket = str(record.get("log_error_bucket_display", "no_error"))
+    if log_error_bucket != "no_error":
+        return log_error_bucket
+    semantic_bucket = str(record.get("semantic_bucket", "semantic_incorrect"))
+    if semantic_bucket in SEMANTIC_BUCKETS:
+        return semantic_bucket
+    return "error_unknown"
+
+
+def build_failure(by_key_records: Dict[str, List[dict]]) -> dict:
+    out = {}
+    for key, records in sorted(by_key_records.items(), key=lambda item: _condition_model_sort_key(item[0])):
+        total = len(records)
         semantic_counts = Counter(str(record.get("semantic_bucket", "")) for record in records)
         error_counts = Counter(str(record.get("log_error_bucket_display", "")) for record in records)
-
-        row = {
-            "condition_model": key,
-            "model": model,
-            "variant": variant,
-            "search_tool": axes["search_tool"],
-            "search_results": axes["search_results"],
-            "agent_management": axes["agent_management"],
-            "k": axes["k"],
-            "sc": axes["sc"],
-            "n": n,
-            "semantic_match": _round_or_none(_mean([record["_semantic_match"] for record in records])),
-            "avg_runtime_seconds": _round_or_none(_mean([record["_runtime_seconds"] for record in records])),
-            "avg_input_tokens": _round_or_none(_mean([record["_input_tokens"] for record in records])),
-            "avg_output_tokens": _round_or_none(_mean([record["_output_tokens"] for record in records])),
-            "avg_total_tokens": _round_or_none(_mean([record["_total_tokens"] for record in records])),
-            "avg_cost_usd": _round_or_none(_mean([record["_cost_usd"] for record in records])),
-            "total_cost_usd": round(sum(record["_cost_usd"] for record in records), 4),
-            "avg_tool_calls_total": _round_or_none(_mean([record["_tool_calls_total"] for record in records])),
-            "avg_api_tool_calls": _round_or_none(_mean([record["_api_tool_calls"] for record in records])),
-        }
-
-        discovery_row = discovery.get(key, {})
-        if discovery_row:
-            row["D_ret"] = _round_or_none(discovery_row.get("D_ret"))
-            row["D_ret_precision"] = _round_or_none(discovery_row.get("D_ret_precision"))
-            row["D_ret_f1"] = _round_or_none(discovery_row.get("D_ret_f1"))
-            row["D_acc"] = _round_or_none(discovery_row.get("D_acc"))
-            row["D_acc_precision"] = _round_or_none(discovery_row.get("D_acc_precision"))
-            row["D_acc_recall"] = _round_or_none(discovery_row.get("D_acc_recall"))
-            row["D_acc_f1"] = _round_or_none(discovery_row.get("D_acc_f1"))
-            row["search_avg_precision"] = _round_or_none(discovery_row.get("avg_precision"))
-            row["search_avg_recall"] = _round_or_none(discovery_row.get("avg_recall"))
-            row["search_avg_f1"] = _round_or_none(discovery_row.get("avg_f1"))
-            row["avg_search_calls"] = _round_or_none(discovery_row.get("avg_search_calls"))
-            row["avg_read_calls"] = _round_or_none(discovery_row.get("avg_read_calls"))
-            avg_search_calls = discovery_row.get("avg_search_calls")
-            semantic_match = row.get("semantic_match")
-            row["search_efficiency"] = (
-                round(float(semantic_match) / float(avg_search_calls), 4)
-                if semantic_match is not None and avg_search_calls
-                else None
-            )
-        else:
-            row["D_ret"] = None
-            row["D_ret_precision"] = None
-            row["D_ret_f1"] = None
-            row["D_acc"] = None
-            row["D_acc_precision"] = None
-            row["D_acc_recall"] = None
-            row["D_acc_f1"] = None
-            row["search_avg_precision"] = None
-            row["search_avg_recall"] = None
-            row["search_avg_f1"] = None
-            row["avg_search_calls"] = None
-            row["avg_read_calls"] = None
-            row["search_efficiency"] = None
-
-        for bucket in SEMANTIC_BUCKETS:
-            count = semantic_counts.get(bucket, 0)
-            row[bucket] = count
-            row[f"{bucket}_rate"] = round(count / n, 4) if n else 0.0
-
-        for bucket in DISPLAY_LOG_ERROR_BUCKETS:
-            count = error_counts.get(bucket, 0)
-            row[bucket] = count
-            row[f"{bucket}_rate"] = round(count / n, 4) if n else 0.0
-
-        rows.append(row)
-
-    return _sort_summary_rows(rows)
-
-
-def build_variant_summary(summary_rows: List[dict]) -> List[dict]:
-    groups: Dict[str, List[dict]] = defaultdict(list)
-    for row in summary_rows:
-        groups[str(row.get("variant", "unknown"))].append(row)
-
-    out: List[dict] = []
-    for variant, rows in sorted(groups.items(), key=lambda item: _variant_sort_key(item[0])):
-        axes = _parse_variant(variant)
-        total_n = sum(int(row.get("n", 0) or 0) for row in rows)
-        variant_row = {
-            "variant": variant,
-            "search_tool": axes["search_tool"],
-            "search_results": axes["search_results"],
-            "agent_management": axes["agent_management"],
-            "k": axes["k"],
-            "sc": axes["sc"],
-            "n_total": total_n,
-            "num_model_rows": len(rows),
-            "models": sorted({str(row.get("model", "")) for row in rows if row.get("model")}),
-            "semantic_match": _round_or_none(_weighted_avg(rows, "semantic_match")),
-            "D_ret": _round_or_none(_weighted_avg(rows, "D_ret")),
-            "D_ret_precision": _round_or_none(_weighted_avg(rows, "D_ret_precision")),
-            "D_ret_f1": _round_or_none(_weighted_avg(rows, "D_ret_f1")),
-            "D_acc": _round_or_none(_weighted_avg(rows, "D_acc")),
-            "D_acc_precision": _round_or_none(_weighted_avg(rows, "D_acc_precision")),
-            "D_acc_recall": _round_or_none(_weighted_avg(rows, "D_acc_recall")),
-            "D_acc_f1": _round_or_none(_weighted_avg(rows, "D_acc_f1")),
-            "search_avg_precision": _round_or_none(_weighted_avg(rows, "search_avg_precision")),
-            "search_avg_recall": _round_or_none(_weighted_avg(rows, "search_avg_recall")),
-            "search_avg_f1": _round_or_none(_weighted_avg(rows, "search_avg_f1")),
-            "avg_search_calls": _round_or_none(_weighted_avg(rows, "avg_search_calls")),
-            "avg_read_calls": _round_or_none(_weighted_avg(rows, "avg_read_calls")),
-            "avg_runtime_seconds": _round_or_none(_weighted_avg(rows, "avg_runtime_seconds")),
-            "avg_input_tokens": _round_or_none(_weighted_avg(rows, "avg_input_tokens")),
-            "avg_output_tokens": _round_or_none(_weighted_avg(rows, "avg_output_tokens")),
-            "avg_total_tokens": _round_or_none(_weighted_avg(rows, "avg_total_tokens")),
-            "avg_cost_usd": _round_or_none(_weighted_avg(rows, "avg_cost_usd")),
-            "total_cost_usd": round(sum(float(row.get("total_cost_usd", 0) or 0) for row in rows), 4),
-            "avg_tool_calls_total": _round_or_none(_weighted_avg(rows, "avg_tool_calls_total")),
-            "avg_api_tool_calls": _round_or_none(_weighted_avg(rows, "avg_api_tool_calls")),
-        }
-        avg_search_calls = variant_row.get("avg_search_calls")
-        semantic_match = variant_row.get("semantic_match")
-        variant_row["search_efficiency"] = (
-            round(float(semantic_match) / float(avg_search_calls), 4)
-            if semantic_match is not None and avg_search_calls
-            else None
-        )
-
-        for bucket in SEMANTIC_BUCKETS:
-            count = sum(int(row.get(bucket, 0) or 0) for row in rows)
-            variant_row[bucket] = count
-            variant_row[f"{bucket}_rate"] = round(count / total_n, 4) if total_n else 0.0
-
-        for bucket in DISPLAY_LOG_ERROR_BUCKETS:
-            count = sum(int(row.get(bucket, 0) or 0) for row in rows)
-            variant_row[bucket] = count
-            variant_row[f"{bucket}_rate"] = round(count / total_n, 4) if total_n else 0.0
-
-        out.append(variant_row)
-
-    return _sort_variant_rows(out)
-
-
-def build_metric_mappings(summary_rows: List[dict]) -> Tuple[dict, dict, dict, dict, dict]:
-    semantic_match = {}
-    discovery = {}
-    runtime = {}
-    semantic_buckets = {}
-    log_error_buckets = {}
-
-    for row in summary_rows:
-        key = str(row["condition_model"])
-        semantic_match[key] = {
-            "n": row.get("n"),
-            "semantic_match": row.get("semantic_match"),
-        }
-        discovery[key] = {
-            "n": row.get("n"),
-            "D_ret": row.get("D_ret"),
-            "D_ret_precision": row.get("D_ret_precision"),
-            "D_ret_f1": row.get("D_ret_f1"),
-            "D_acc": row.get("D_acc"),
-            "D_acc_precision": row.get("D_acc_precision"),
-            "D_acc_recall": row.get("D_acc_recall"),
-            "D_acc_f1": row.get("D_acc_f1"),
-            "search_avg_precision": row.get("search_avg_precision"),
-            "search_avg_recall": row.get("search_avg_recall"),
-            "search_avg_f1": row.get("search_avg_f1"),
-            "avg_search_calls": row.get("avg_search_calls"),
-            "avg_read_calls": row.get("avg_read_calls"),
-            "search_efficiency": row.get("search_efficiency"),
-        }
-        runtime[key] = {
-            "n": row.get("n"),
-            "avg_runtime_seconds": row.get("avg_runtime_seconds"),
-            "avg_input_tokens": row.get("avg_input_tokens"),
-            "avg_output_tokens": row.get("avg_output_tokens"),
-            "avg_total_tokens": row.get("avg_total_tokens"),
-            "avg_cost_usd": row.get("avg_cost_usd"),
-            "total_cost_usd": row.get("total_cost_usd"),
-            "avg_tool_calls_total": row.get("avg_tool_calls_total"),
-            "avg_api_tool_calls": row.get("avg_api_tool_calls"),
-        }
-        semantic_buckets[key] = {"total": row.get("n")}
-        for bucket in SEMANTIC_BUCKETS:
-            semantic_buckets[key][bucket] = row.get(bucket, 0)
-            semantic_buckets[key][f"{bucket}_rate"] = row.get(f"{bucket}_rate")
-        log_error_buckets[key] = {"total": row.get("n")}
-        for bucket in DISPLAY_LOG_ERROR_BUCKETS:
-            log_error_buckets[key][bucket] = row.get(bucket, 0)
-            log_error_buckets[key][f"{bucket}_rate"] = row.get(f"{bucket}_rate")
-
-    return semantic_match, discovery, runtime, semantic_buckets, log_error_buckets
-
-
-def build_semantic_error_crosstab(
-    by_key_records: Dict[str, List[dict]],
-    variant_summary: List[dict],
-) -> List[dict]:
-    rows: List[dict] = []
-
-    def add_rows(level: str, model: Optional[str], variant: str, records: List[dict]) -> None:
-        total = len(records)
-        counts: Counter = Counter(
+        primary_counts = Counter(_primary_failure_bucket(record) for record in records)
+        joint_counts = Counter(
             (str(record.get("semantic_bucket", "")), str(record.get("log_error_bucket_display", "")))
             for record in records
         )
-        for semantic_bucket in SEMANTIC_BUCKETS:
-            for log_error_bucket in DISPLAY_LOG_ERROR_BUCKETS:
-                count = counts.get((semantic_bucket, log_error_bucket), 0)
-                rows.append(
-                    {
-                        "level": level,
-                        "model": model,
-                        "variant": variant,
-                        "semantic_bucket": semantic_bucket,
-                        "log_error_bucket": log_error_bucket,
-                        "n": count,
-                        "total": total,
-                        "pct_within_group": round(count / total, 4) if total else 0.0,
-                    }
-                )
+        out[key] = {
+            "total": total,
+            "semantic_buckets": {
+                bucket: {
+                    "n": semantic_counts.get(bucket, 0),
+                    "pct": round(100 * semantic_counts.get(bucket, 0) / total, 1) if total else 0.0,
+                }
+                for bucket in SEMANTIC_BUCKETS
+            },
+            "log_error_buckets": {
+                bucket: {
+                    "n": error_counts.get(bucket, 0),
+                    "pct": round(100 * error_counts.get(bucket, 0) / total, 1) if total else 0.0,
+                }
+                for bucket in DISPLAY_LOG_ERROR_BUCKETS
+            },
+            "primary": {
+                bucket: {
+                    "n": primary_counts.get(bucket, 0),
+                    "pct": round(100 * primary_counts.get(bucket, 0) / total, 1) if total else 0.0,
+                }
+                for bucket in FAILURE_PRIMARY_BUCKETS
+            },
+            "joint": {
+                f"{semantic_bucket}|{log_error_bucket}": {
+                    "n": joint_counts.get((semantic_bucket, log_error_bucket), 0),
+                    "pct": round(100 * joint_counts.get((semantic_bucket, log_error_bucket), 0) / total, 1)
+                    if total
+                    else 0.0,
+                }
+                for semantic_bucket in SEMANTIC_BUCKETS
+                for log_error_bucket in DISPLAY_LOG_ERROR_BUCKETS
+            },
+        }
+    return out
+
+
+def _build_semantic_curve(
+    by_key_records: Dict[str, List[dict]],
+    task_metrics_by_key: Dict[str, Dict[str, dict]],
+    *,
+    bin_labels: List[str],
+    assign_bin_fn,
+    selector_fn,
+) -> Tuple[dict, dict]:
+    variant_acc: Dict[str, Dict[str, List[int]]] = defaultdict(lambda: defaultdict(list))
+    cm_acc: Dict[str, Dict[str, List[int]]] = defaultdict(lambda: defaultdict(list))
 
     for key in sorted(by_key_records.keys(), key=_condition_model_sort_key):
         model, variant = _split_cm_key(key)
-        add_rows("model_variant", model, variant, by_key_records[key])
+        task_metrics = task_metrics_by_key.get(key, {})
+        for record in by_key_records[key]:
+            selector_value = selector_fn(record, task_metrics)
+            if selector_value is None:
+                continue
+            bin_label = assign_bin_fn(selector_value)
+            semantic_match = int(record.get("_semantic_match", 0) or 0)
+            variant_acc[variant][bin_label].append(semantic_match)
+            cm_acc[key][bin_label].append(semantic_match)
 
-    grouped_by_variant: Dict[str, List[dict]] = defaultdict(list)
-    for records in by_key_records.values():
-        for record in records:
-            grouped_by_variant[str(record.get("variant", "unknown"))].append(record)
+    def finalize(acc: Dict[str, Dict[str, List[int]]]) -> dict:
+        out = {}
+        for outer_key, bins in sorted(acc.items(), key=lambda item: _variant_sort_key(item[0]) if "/" not in item[0] else _condition_model_sort_key(item[0])):
+            out[outer_key] = {}
+            for label in bin_labels:
+                vals = bins.get(label, [])
+                out[outer_key][label] = {
+                    "mean_semantic_match": round(sum(vals) / len(vals), 4) if vals else None,
+                    "n": len(vals),
+                }
+            if "/" in outer_key:
+                model, variant = _split_cm_key(outer_key)
+                out[outer_key]["model"] = model
+                out[outer_key]["variant"] = variant
+        return out
 
-    for row in variant_summary:
-        variant = str(row.get("variant", "unknown"))
-        add_rows("variant", None, variant, grouped_by_variant.get(variant, []))
+    return finalize(variant_acc), finalize(cm_acc)
 
-    return rows
+
+def build_search_depth_curves(
+    by_key_records: Dict[str, List[dict]],
+    task_metrics_by_key: Dict[str, Dict[str, dict]],
+) -> Tuple[dict, dict]:
+    return _build_semantic_curve(
+        by_key_records,
+        task_metrics_by_key,
+        bin_labels=[label for label, _ in _SEARCH_DEPTH_BINS],
+        assign_bin_fn=_assign_search_depth_bin,
+        selector_fn=lambda record, task_metrics: (
+            int(task_metrics.get(str(record.get("task_stem", "")), {}).get("num_search_calls", 0) or 0)
+            or None
+        ),
+    )
+
+
+def build_reasoning_density_curves(
+    by_key_records: Dict[str, List[dict]],
+    tasks_dir: str,
+) -> Tuple[dict, dict]:
+    task_gold_counts = load_task_gold_counts(tasks_dir)
+
+    def selector(record: dict, _task_metrics: Dict[str, dict]) -> Optional[int]:
+        n_docs = task_gold_counts.get(str(record.get("task_stem", "")))
+        return int(n_docs) if n_docs is not None else None
+
+    dummy_task_metrics: Dict[str, Dict[str, dict]] = {key: {} for key in by_key_records}
+    return _build_semantic_curve(
+        by_key_records,
+        dummy_task_metrics,
+        bin_labels=[label for label, _ in _REASONING_DENSITY_BINS],
+        assign_bin_fn=_assign_reasoning_density_bin,
+        selector_fn=selector,
+    )
 
 
 def _empty_bucket_entry() -> dict:
@@ -743,6 +997,458 @@ def build_reasoning_density_buckets(
     return out
 
 
+def build_summary(
+    by_key_records: Dict[str, List[dict]],
+    discovery: dict,
+    efficiency: dict,
+    tool_errors: dict,
+    base_by_key_records: Dict[str, List[dict]],
+    search_bottleneck: Optional[dict] = None,
+) -> List[dict]:
+    rows: List[dict] = []
+    for key in sorted(by_key_records.keys(), key=_condition_model_sort_key):
+        records = by_key_records[key]
+        model, variant = _split_cm_key(key)
+        axes = _parse_variant(variant)
+        n = len(records)
+        semantic_counts = Counter(str(record.get("semantic_bucket", "")) for record in records)
+        error_counts = Counter(str(record.get("log_error_bucket_display", "")) for record in records)
+        base_rows = base_by_key_records.get(key, [])
+
+        row = {
+            "condition_model": key,
+            "model": model,
+            "variant": variant,
+            "search_tool": axes["search_tool"],
+            "search_results": axes["search_results"],
+            "agent_management": axes["agent_management"],
+            "k": axes["k"],
+            "sc": axes["sc"],
+            "n": n,
+            "semantic_match": _round_or_none(_mean([record["_semantic_match"] for record in records])),
+            "avg_runtime_seconds": _round_or_none(_mean([record["_runtime_seconds"] for record in records])),
+            "avg_input_tokens": _round_or_none(_mean([record["_input_tokens"] for record in records])),
+            "avg_output_tokens": _round_or_none(_mean([record["_output_tokens"] for record in records])),
+            "avg_total_tokens": _round_or_none(_mean([record["_total_tokens"] for record in records])),
+            "avg_cost_usd": _round_or_none(_mean([record["_cost_usd"] for record in records])),
+            "total_cost_usd": round(sum(record["_cost_usd"] for record in records), 4),
+            "avg_tool_calls_total": _round_or_none(_mean([record["_tool_calls_total"] for record in records])),
+            "avg_tool_calls": _round_or_none(_mean([record["_tool_calls_total"] for record in records])),
+            "avg_api_tool_calls": _round_or_none(_mean([record["_api_tool_calls"] for record in records])),
+        }
+
+        discovery_row = discovery.get(key, {})
+        if discovery_row:
+            row["D_ret"] = _round_or_none(discovery_row.get("D_ret"))
+            row["D_ret_precision"] = _round_or_none(discovery_row.get("D_ret_precision"))
+            row["D_ret_f1"] = _round_or_none(discovery_row.get("D_ret_f1"))
+            row["D_acc"] = _round_or_none(discovery_row.get("D_acc"))
+            row["D_acc_precision"] = _round_or_none(discovery_row.get("D_acc_precision"))
+            row["D_acc_recall"] = _round_or_none(discovery_row.get("D_acc_recall"))
+            row["D_acc_f1"] = _round_or_none(discovery_row.get("D_acc_f1"))
+            row["search_avg_precision"] = _round_or_none(discovery_row.get("avg_precision"))
+            row["search_avg_f1"] = _round_or_none(discovery_row.get("avg_f1"))
+            row["avg_search_calls"] = _round_or_none(discovery_row.get("avg_search_calls"))
+            row["avg_read_calls"] = _round_or_none(discovery_row.get("avg_read_calls"))
+            avg_search_calls = discovery_row.get("avg_search_calls")
+            semantic_match = row.get("semantic_match")
+            row["search_efficiency"] = (
+                round(float(semantic_match) / float(avg_search_calls), 4)
+                if semantic_match is not None and avg_search_calls
+                else None
+            )
+        else:
+            row["D_ret"] = None
+            row["D_ret_precision"] = None
+            row["D_ret_f1"] = None
+            row["D_acc"] = None
+            row["D_acc_precision"] = None
+            row["D_acc_recall"] = None
+            row["D_acc_f1"] = None
+            row["search_avg_precision"] = None
+            row["search_avg_f1"] = None
+            row["avg_search_calls"] = None
+            row["avg_read_calls"] = None
+            row["search_efficiency"] = None
+
+        if base_rows:
+            row["avg_query_file_calls"] = _round_or_none(_mean([_tool_count_value(r, "query_file") for r in base_rows]))
+            row["avg_execute_code_calls"] = _round_or_none(
+                _mean([_tool_count_value(r, "execute_code") for r in base_rows])
+            )
+        else:
+            row["avg_query_file_calls"] = None
+            row["avg_execute_code_calls"] = None
+
+        if key in tool_errors:
+            row["query_file_error_rate"] = tool_errors[key].get("query_file", {}).get("error_rate")
+            row["execute_code_error_rate"] = tool_errors[key].get("execute_code", {}).get("error_rate")
+            row["peek_file_error_rate"] = (
+                tool_errors[key].get("peek_file", {}).get("error_rate")
+                or tool_errors[key].get("peek_multiple", {}).get("error_rate")
+                or tool_errors[key].get("peek_files", {}).get("error_rate")
+            )
+        else:
+            row["query_file_error_rate"] = None
+            row["execute_code_error_rate"] = None
+            row["peek_file_error_rate"] = None
+
+        if search_bottleneck is not None:
+            sb = search_bottleneck.get(key, {})
+            row["n_tasks_with_search"] = sb.get("n_tasks_with_search")
+            row["n_tasks_without_search"] = sb.get("n_tasks_without_search")
+            for cutoff in SEARCH_BOTTLENECK_CUTOFFS:
+                found_tasks = sb.get(f"found_tasks_top_{cutoff}")
+                not_found_tasks = sb.get(f"not_found_tasks_top_{cutoff}")
+                avg_first_hit = sb.get(f"avg_first_hit_round_top_{cutoff}")
+                avg_wasted = sb.get(f"avg_wasted_rounds_top_{cutoff}")
+                row[f"found_tasks_top_{cutoff}"] = found_tasks
+                row[f"found_tasks_top{cutoff}"] = found_tasks
+                row[f"not_found_tasks_top_{cutoff}"] = not_found_tasks
+                row[f"not_found_tasks_top{cutoff}"] = not_found_tasks
+                row[f"top{cutoff}_not_found_rate"] = sb.get(f"top{cutoff}_not_found_rate")
+                row[f"avg_first_hit_round_top_{cutoff}"] = avg_first_hit
+                row[f"avg_first_hit_round_top{cutoff}"] = avg_first_hit
+                row[f"avg_wasted_rounds_top_{cutoff}"] = avg_wasted
+                row[f"avg_wasted_rounds_top{cutoff}"] = avg_wasted
+
+        for bucket in SEMANTIC_BUCKETS:
+            count = semantic_counts.get(bucket, 0)
+            row[bucket] = count
+            row[f"{bucket}_rate"] = round(count / n, 4) if n else 0.0
+
+        for bucket in DISPLAY_LOG_ERROR_BUCKETS:
+            count = error_counts.get(bucket, 0)
+            row[bucket] = count
+            row[f"{bucket}_rate"] = round(count / n, 4) if n else 0.0
+
+        for bucket in FAILURE_PRIMARY_BUCKETS:
+            count = sum(1 for record in records if _primary_failure_bucket(record) == bucket)
+            row[f"primary_{bucket}"] = count
+
+        rows.append(row)
+
+    return _sort_summary_rows(rows)
+
+
+def build_variant_summary(summary_rows: List[dict]) -> List[dict]:
+    groups: Dict[str, List[dict]] = defaultdict(list)
+    for row in summary_rows:
+        groups[str(row.get("variant", "unknown"))].append(row)
+
+    out: List[dict] = []
+    for variant, rows in sorted(groups.items(), key=lambda item: _variant_sort_key(item[0])):
+        axes = _parse_variant(variant)
+        total_n = sum(int(row.get("n", 0) or 0) for row in rows)
+        variant_row = {
+            "variant": variant,
+            "search_tool": axes["search_tool"],
+            "search_results": axes["search_results"],
+            "agent_management": axes["agent_management"],
+            "k": axes["k"],
+            "sc": axes["sc"],
+            "n_total": total_n,
+            "num_model_rows": len(rows),
+            "models": sorted({str(row.get("model", "")) for row in rows if row.get("model")}),
+            "semantic_match": _round_or_none(_weighted_avg(rows, "semantic_match")),
+            "D_ret": _round_or_none(_weighted_avg(rows, "D_ret")),
+            "D_ret_precision": _round_or_none(_weighted_avg(rows, "D_ret_precision")),
+            "D_ret_f1": _round_or_none(_weighted_avg(rows, "D_ret_f1")),
+            "D_acc": _round_or_none(_weighted_avg(rows, "D_acc")),
+            "D_acc_precision": _round_or_none(_weighted_avg(rows, "D_acc_precision")),
+            "D_acc_recall": _round_or_none(_weighted_avg(rows, "D_acc_recall")),
+            "D_acc_f1": _round_or_none(_weighted_avg(rows, "D_acc_f1")),
+            "search_avg_precision": _round_or_none(_weighted_avg(rows, "search_avg_precision")),
+            "search_avg_f1": _round_or_none(_weighted_avg(rows, "search_avg_f1")),
+            "avg_search_calls": _round_or_none(_weighted_avg(rows, "avg_search_calls")),
+            "avg_read_calls": _round_or_none(_weighted_avg(rows, "avg_read_calls")),
+            "avg_runtime_seconds": _round_or_none(_weighted_avg(rows, "avg_runtime_seconds")),
+            "avg_input_tokens": _round_or_none(_weighted_avg(rows, "avg_input_tokens")),
+            "avg_output_tokens": _round_or_none(_weighted_avg(rows, "avg_output_tokens")),
+            "avg_total_tokens": _round_or_none(_weighted_avg(rows, "avg_total_tokens")),
+            "avg_cost_usd": _round_or_none(_weighted_avg(rows, "avg_cost_usd")),
+            "total_cost_usd": round(sum(float(row.get("total_cost_usd", 0) or 0) for row in rows), 4),
+            "avg_tool_calls_total": _round_or_none(_weighted_avg(rows, "avg_tool_calls_total")),
+            "avg_tool_calls": _round_or_none(_weighted_avg(rows, "avg_tool_calls")),
+            "avg_api_tool_calls": _round_or_none(_weighted_avg(rows, "avg_api_tool_calls")),
+            "avg_query_file_calls": _round_or_none(_weighted_avg(rows, "avg_query_file_calls")),
+            "avg_execute_code_calls": _round_or_none(_weighted_avg(rows, "avg_execute_code_calls")),
+            "query_file_error_rate": _round_or_none(_weighted_avg(rows, "query_file_error_rate")),
+            "execute_code_error_rate": _round_or_none(_weighted_avg(rows, "execute_code_error_rate")),
+            "peek_file_error_rate": _round_or_none(_weighted_avg(rows, "peek_file_error_rate")),
+        }
+        avg_search_calls = variant_row.get("avg_search_calls")
+        semantic_match = variant_row.get("semantic_match")
+        variant_row["search_efficiency"] = (
+            round(float(semantic_match) / float(avg_search_calls), 4)
+            if semantic_match is not None and avg_search_calls
+            else None
+        )
+
+        variant_row["n_tasks_with_search"] = sum(int(row.get("n_tasks_with_search", 0) or 0) for row in rows)
+        variant_row["n_tasks_without_search"] = sum(int(row.get("n_tasks_without_search", 0) or 0) for row in rows)
+        for cutoff in SEARCH_BOTTLENECK_CUTOFFS:
+            found_tasks = sum(int(row.get(f"found_tasks_top_{cutoff}", 0) or 0) for row in rows)
+            not_found_tasks = sum(int(row.get(f"not_found_tasks_top_{cutoff}", 0) or 0) for row in rows)
+            avg_first_hit = _round_or_none(
+                _weighted_avg(rows, f"avg_first_hit_round_top_{cutoff}", weight_field=f"found_tasks_top_{cutoff}")
+            )
+            avg_wasted = _round_or_none(
+                _weighted_avg(rows, f"avg_wasted_rounds_top_{cutoff}", weight_field="n_tasks_with_search")
+            )
+            variant_row[f"found_tasks_top_{cutoff}"] = found_tasks
+            variant_row[f"found_tasks_top{cutoff}"] = found_tasks
+            variant_row[f"not_found_tasks_top_{cutoff}"] = not_found_tasks
+            variant_row[f"not_found_tasks_top{cutoff}"] = not_found_tasks
+            variant_row[f"top{cutoff}_not_found_rate"] = _round_or_none(
+                _weighted_avg(rows, f"top{cutoff}_not_found_rate", weight_field="n_tasks_with_search")
+            )
+            variant_row[f"avg_first_hit_round_top_{cutoff}"] = avg_first_hit
+            variant_row[f"avg_first_hit_round_top{cutoff}"] = avg_first_hit
+            variant_row[f"avg_wasted_rounds_top_{cutoff}"] = avg_wasted
+            variant_row[f"avg_wasted_rounds_top{cutoff}"] = avg_wasted
+
+        for bucket in SEMANTIC_BUCKETS:
+            count = sum(int(row.get(bucket, 0) or 0) for row in rows)
+            variant_row[bucket] = count
+            variant_row[f"{bucket}_rate"] = round(count / total_n, 4) if total_n else 0.0
+
+        for bucket in DISPLAY_LOG_ERROR_BUCKETS:
+            count = sum(int(row.get(bucket, 0) or 0) for row in rows)
+            variant_row[bucket] = count
+            variant_row[f"{bucket}_rate"] = round(count / total_n, 4) if total_n else 0.0
+
+        out.append(variant_row)
+
+    return _sort_variant_rows(out)
+
+
+def build_metric_mappings(summary_rows: List[dict]) -> Tuple[dict, dict, dict, dict, dict]:
+    semantic_match = {}
+    discovery = {}
+    runtime = {}
+    semantic_buckets = {}
+    log_error_buckets = {}
+
+    for row in summary_rows:
+        key = str(row["condition_model"])
+        semantic_match[key] = {
+            "n": row.get("n"),
+            "semantic_match": row.get("semantic_match"),
+        }
+        discovery[key] = {
+            "n": row.get("n"),
+            "D_ret": row.get("D_ret"),
+            "D_ret_precision": row.get("D_ret_precision"),
+            "D_ret_f1": row.get("D_ret_f1"),
+            "D_acc": row.get("D_acc"),
+            "D_acc_precision": row.get("D_acc_precision"),
+            "D_acc_recall": row.get("D_acc_recall"),
+            "D_acc_f1": row.get("D_acc_f1"),
+            "search_avg_precision": row.get("search_avg_precision"),
+            "search_avg_f1": row.get("search_avg_f1"),
+            "avg_search_calls": row.get("avg_search_calls"),
+            "avg_read_calls": row.get("avg_read_calls"),
+            "search_efficiency": row.get("search_efficiency"),
+        }
+        runtime[key] = {
+            "n": row.get("n"),
+            "avg_runtime_seconds": row.get("avg_runtime_seconds"),
+            "avg_input_tokens": row.get("avg_input_tokens"),
+            "avg_output_tokens": row.get("avg_output_tokens"),
+            "avg_total_tokens": row.get("avg_total_tokens"),
+            "avg_cost_usd": row.get("avg_cost_usd"),
+            "total_cost_usd": row.get("total_cost_usd"),
+            "avg_tool_calls_total": row.get("avg_tool_calls_total"),
+            "avg_api_tool_calls": row.get("avg_api_tool_calls"),
+        }
+        semantic_buckets[key] = {"total": row.get("n")}
+        for bucket in SEMANTIC_BUCKETS:
+            semantic_buckets[key][bucket] = row.get(bucket, 0)
+            semantic_buckets[key][f"{bucket}_rate"] = row.get(f"{bucket}_rate")
+        log_error_buckets[key] = {"total": row.get("n")}
+        for bucket in DISPLAY_LOG_ERROR_BUCKETS:
+            log_error_buckets[key][bucket] = row.get(bucket, 0)
+            log_error_buckets[key][f"{bucket}_rate"] = row.get(f"{bucket}_rate")
+
+    return semantic_match, discovery, runtime, semantic_buckets, log_error_buckets
+
+
+def build_semantic_error_crosstab(by_key_records: Dict[str, List[dict]], variant_summary: List[dict]) -> List[dict]:
+    rows: List[dict] = []
+
+    def add_rows(level: str, model: Optional[str], variant: str, records: List[dict]) -> None:
+        total = len(records)
+        counts: Counter = Counter(
+            (str(record.get("semantic_bucket", "")), str(record.get("log_error_bucket_display", "")))
+            for record in records
+        )
+        for semantic_bucket in SEMANTIC_BUCKETS:
+            for log_error_bucket in DISPLAY_LOG_ERROR_BUCKETS:
+                count = counts.get((semantic_bucket, log_error_bucket), 0)
+                rows.append(
+                    {
+                        "level": level,
+                        "model": model,
+                        "variant": variant,
+                        "semantic_bucket": semantic_bucket,
+                        "log_error_bucket": log_error_bucket,
+                        "n": count,
+                        "total": total,
+                        "pct_within_group": round(count / total, 4) if total else 0.0,
+                    }
+                )
+
+    for key in sorted(by_key_records.keys(), key=_condition_model_sort_key):
+        model, variant = _split_cm_key(key)
+        add_rows("model_variant", model, variant, by_key_records[key])
+
+    grouped_by_variant: Dict[str, List[dict]] = defaultdict(list)
+    for records in by_key_records.values():
+        for record in records:
+            grouped_by_variant[str(record.get("variant", "unknown"))].append(record)
+
+    for row in variant_summary:
+        variant = str(row.get("variant", "unknown"))
+        add_rows("variant", None, variant, grouped_by_variant.get(variant, []))
+
+    return rows
+
+
+def build_turn_waste_global_groups(
+    by_key_records: Dict[str, List[dict]],
+    grouped_turn_waste_by_key: Dict[str, List[dict]],
+    variant_rows: List[dict],
+) -> Tuple[dict, List[dict], List[dict]]:
+    grouped_index_by_key: Dict[str, Dict[str, dict]] = {}
+
+    for key in sorted(by_key_records.keys(), key=_condition_model_sort_key):
+        semantic_records = by_key_records[key]
+        grouped_records = grouped_turn_waste_by_key.get(key)
+        if grouped_records is None:
+            raise ValueError(
+                f"Missing grouped turn-waste eval_results.csv for {key}. "
+                "Run $turn-waste-grouper for the same scope as the semantic results."
+            )
+
+        semantic_ids = [str(record.get("task_id", "")) for record in semantic_records]
+        grouped_ids = [str(record.get("task_id", "")) for record in grouped_records]
+        if len(semantic_ids) != len(grouped_ids):
+            raise ValueError(
+                f"Grouped turn-waste row count mismatch for {key}: "
+                f"semantic={len(semantic_ids)} grouped={len(grouped_ids)}"
+            )
+        if set(semantic_ids) != set(grouped_ids):
+            missing = sorted(set(semantic_ids) - set(grouped_ids))
+            extra = sorted(set(grouped_ids) - set(semantic_ids))
+            raise ValueError(
+                f"Grouped turn-waste task mismatch for {key}: "
+                f"missing={missing[:5]} extra={extra[:5]}"
+            )
+        grouped_index_by_key[key] = {str(record.get("task_id", "")): record for record in grouped_records}
+
+    variant_totals = {
+        str(row.get("variant", "")): {
+            "n_total_rows": int(row.get("n_total", 0) or 0),
+            "models": row.get("models", []),
+            "num_model_rows": int(row.get("num_model_rows", 0) or 0),
+        }
+        for row in variant_rows
+    }
+
+    failed_join_rows: List[dict] = []
+    group_counts_by_variant: Dict[str, Counter] = defaultdict(Counter)
+    failed_counts_by_variant: Counter = Counter()
+    grouped_failed_counts_by_variant: Counter = Counter()
+    unassigned_failed_counts_by_variant: Counter = Counter()
+
+    for key in sorted(by_key_records.keys(), key=_condition_model_sort_key):
+        for semantic_record in by_key_records[key]:
+            task_id = str(semantic_record.get("task_id", ""))
+            grouped_record = grouped_index_by_key[key][task_id]
+            log_error_bucket = str(semantic_record.get("log_error_bucket_display", "no_error"))
+            if log_error_bucket == "no_error":
+                continue
+
+            group_name = str(grouped_record.get("turn_waste_global_group", "") or "").strip()
+            variant = str(semantic_record.get("variant", "unknown"))
+            failed_counts_by_variant[variant] += 1
+            if group_name:
+                grouped_failed_counts_by_variant[variant] += 1
+                group_counts_by_variant[variant][group_name] += 1
+            else:
+                unassigned_failed_counts_by_variant[variant] += 1
+            failed_join_rows.append(
+                {
+                    "condition_model": key,
+                    "variant": variant,
+                    "task_id": task_id,
+                    "semantic_bucket": semantic_record.get("semantic_bucket", ""),
+                    "log_error_bucket": log_error_bucket,
+                    "turn_waste_global_group": group_name,
+                    "turn_waste_global_group_reason": grouped_record.get("turn_waste_global_group_reason", ""),
+                    "estimated_wasted_turns": grouped_record.get("estimated_wasted_turns", ""),
+                }
+            )
+
+    variant_summary: dict = {}
+    csv_rows: List[dict] = []
+    for variant in [str(row.get("variant", "")) for row in variant_rows]:
+        total_info = variant_totals.get(variant, {})
+        n_total_rows = int(total_info.get("n_total_rows", 0) or 0)
+        n_failed_rows = int(failed_counts_by_variant.get(variant, 0))
+        n_grouped_failed_rows = int(grouped_failed_counts_by_variant.get(variant, 0))
+        n_unassigned_failed_rows = int(unassigned_failed_counts_by_variant.get(variant, 0))
+        groups_counter = group_counts_by_variant.get(variant, Counter())
+        groups_payload = {}
+        for group_name, count in sorted(groups_counter.items(), key=lambda item: (-item[1], item[0])):
+            pct = round(count / n_grouped_failed_rows, 4) if n_grouped_failed_rows else 0.0
+            groups_payload[group_name] = {
+                "n": count,
+                "pct_within_grouped_failed_rows": pct,
+            }
+            csv_rows.append(
+                {
+                    "variant": variant,
+                    "turn_waste_global_group": group_name,
+                    "n": count,
+                    "pct_within_grouped_failed_rows": pct,
+                    "n_failed_rows": n_failed_rows,
+                    "n_grouped_failed_rows": n_grouped_failed_rows,
+                    "n_unassigned_failed_rows": n_unassigned_failed_rows,
+                    "n_total_rows": n_total_rows,
+                }
+            )
+        variant_summary[variant] = {
+            "variant": variant,
+            "n_total_rows": n_total_rows,
+            "n_failed_rows": n_failed_rows,
+            "n_grouped_failed_rows": n_grouped_failed_rows,
+            "n_unassigned_failed_rows": n_unassigned_failed_rows,
+            "models": total_info.get("models", []),
+            "num_model_rows": int(total_info.get("num_model_rows", 0) or 0),
+            "groups": groups_payload,
+        }
+
+    failed_join_rows = sorted(
+        failed_join_rows,
+        key=lambda row: (
+            _variant_sort_key(str(row.get("variant", ""))),
+            str(row.get("turn_waste_global_group", "")),
+            str(row.get("task_id", "")),
+        ),
+    )
+    csv_rows = sorted(
+        csv_rows,
+        key=lambda row: (
+            _variant_sort_key(str(row.get("variant", ""))),
+            -int(row.get("n", 0) or 0),
+            str(row.get("turn_waste_global_group", "")),
+        ),
+    )
+    return variant_summary, csv_rows, failed_join_rows
+
+
 def build_per_task_rows(
     by_key_records: Dict[str, List[dict]],
     task_metrics_by_key: Dict[str, Dict[str, dict]],
@@ -757,7 +1463,6 @@ def build_per_task_rows(
         "D_acc_recall",
         "D_acc_f1",
         "search_precision",
-        "search_recall",
         "search_f1",
         "num_search_calls",
         "num_read_calls",
@@ -790,7 +1495,6 @@ def build_per_task_rows(
                 "D_acc_recall": _round_or_none(task_metric.get("d_acc_recall"), 6),
                 "D_acc_f1": _round_or_none(task_metric.get("d_acc_f1"), 6),
                 "search_precision": _round_or_none(task_metric.get("precision"), 6),
-                "search_recall": _round_or_none(task_metric.get("recall"), 6),
                 "search_f1": _round_or_none(task_metric.get("f1"), 6),
                 "num_search_calls": task_metric.get("num_search_calls"),
                 "num_read_calls": task_metric.get("num_read_calls"),
@@ -820,6 +1524,43 @@ def build_per_task_rows(
     return output_rows, deduped_fieldnames
 
 
+def build_per_task_retrieval_rows(task_metrics_by_key: Dict[str, Dict[str, dict]]) -> Tuple[List[dict], List[str]]:
+    fieldnames = [
+        "condition_model",
+        "task_id",
+        "search_calls_count",
+        "gold_datasets_needed_count",
+        "datasets_retrieved_count",
+        "datasets_retrieved_unique_count",
+        "gold_datasets_retrieved_count",
+        "retrieval_recall",
+        "retrieval_precision",
+        "retrieval_f1",
+    ]
+    rows: List[dict] = []
+    for key in sorted(task_metrics_by_key.keys(), key=_condition_model_sort_key):
+        for task_metric in sorted(task_metrics_by_key[key].values(), key=lambda item: str(item.get("task_id", ""))):
+            gold_ids_count = len(task_metric.get("gold_ids", []))
+            retrieved_unique_count = len(task_metric.get("retrieved_dataset_ids", []))
+            retrieved_ids_count = int(task_metric.get("num_results_total_non_unique", retrieved_unique_count) or 0)
+            retrieved_gold_ids_count = len(task_metric.get("retrieved_gold_dataset_ids", []))
+            rows.append(
+                {
+                    "condition_model": key,
+                    "task_id": task_metric.get("task_id", ""),
+                    "search_calls_count": int(task_metric.get("num_search_calls", 0) or 0),
+                    "gold_datasets_needed_count": gold_ids_count,
+                    "datasets_retrieved_count": retrieved_ids_count,
+                    "datasets_retrieved_unique_count": retrieved_unique_count,
+                    "gold_datasets_retrieved_count": retrieved_gold_ids_count,
+                    "retrieval_recall": round(float(task_metric.get("d_ret", 0) or 0), 6),
+                    "retrieval_precision": round(float(task_metric.get("d_ret_precision", 0) or 0), 6),
+                    "retrieval_f1": round(float(task_metric.get("d_ret_f1", 0) or 0), 6),
+                }
+            )
+    return rows, fieldnames
+
+
 def write_json(path: Path, data: object) -> None:
     with path.open("w") as handle:
         json.dump(data, handle, indent=2)
@@ -845,6 +1586,12 @@ def _import_plot_libs():
         return None
 
 
+def _cleanup_figure_dir(fig_dir: Path) -> None:
+    fig_dir.mkdir(parents=True, exist_ok=True)
+    for path in fig_dir.glob("*.pdf"):
+        path.unlink()
+
+
 def _pretty_model(model_name: str) -> str:
     label = model_name.split("/")[-1]
     label = label.replace("bedrock_", "").replace("openai_", "")
@@ -853,56 +1600,18 @@ def _pretty_model(model_name: str) -> str:
     return label
 
 
-def _model_variant_label(row: dict) -> str:
-    return f"{_pretty_model(str(row.get('model', '')))}\n{row.get('variant', '')}"
+def _pretty_cm_from_row(row: dict) -> str:
+    return f"{_pretty_model(str(row.get('model', '')))} / {_compact_variant_label(str(row.get('variant', '')))}"
 
 
-def _plot_metric_bars(plt, rows: List[dict], label_fn, title: str, output_path: Path) -> None:
-    metric_specs = [
-        (field, METRIC_LABELS[field], METRIC_COLORS[field])
-        for field in ("semantic_match", "D_ret", "D_acc")
-        if any(row.get(field) is not None for row in rows)
-    ]
-    if not rows or not metric_specs:
-        return
+def _pretty_cm_from_key(key: str) -> str:
+    model, variant = _split_cm_key(key)
+    return f"{_pretty_model(model)} / {_compact_variant_label(variant)}"
 
-    labels = [label_fn(row) for row in rows]
-    x_positions = list(range(len(rows)))
-    width = 0.8 / len(metric_specs)
-    fig_width = max(10, len(rows) * 0.8)
-    fig, ax = plt.subplots(figsize=(fig_width, 6))
 
-    for idx, (field, label, color) in enumerate(metric_specs):
-        values = [(float(row.get(field) or 0.0) * 100.0) for row in rows]
-        offset = (idx - len(metric_specs) / 2 + 0.5) * width
-        bars = ax.bar(
-            [position + offset for position in x_positions],
-            values,
-            width=width * 0.9,
-            label=label,
-            color=color,
-        )
-        for bar, value in zip(bars, values):
-            if value < 4.0:
-                continue
-            ax.text(
-                bar.get_x() + bar.get_width() / 2,
-                value + 1.0,
-                f"{value:.0f}",
-                ha="center",
-                va="bottom",
-                fontsize=8,
-            )
-
-    ax.set_xticks(x_positions)
-    ax.set_xticklabels(labels, rotation=30, ha="right")
-    ax.set_ylabel("Rate (%)")
-    ax.set_title(title)
-    ax.set_ylim(0, 100)
-    ax.legend(loc="upper left", bbox_to_anchor=(1.02, 1))
-    fig.tight_layout(rect=(0, 0, 0.84, 1))
-    fig.savefig(output_path)
-    plt.close(fig)
+def _pretty_variant_tick_label(variant: str, n_total: int) -> str:
+    label = _compact_variant_label(variant, multiline=True)
+    return f"{label}\n(n={n_total})"
 
 
 def _hex_to_rgb(color: str) -> Tuple[float, float, float]:
@@ -918,6 +1627,438 @@ def _label_text_color(fill_color: str) -> str:
     return "black" if luminance > 0.62 else "white"
 
 
+def _display_semantic_bucket(bucket: str) -> str:
+    return SEMANTIC_BUCKET_DISPLAY.get(bucket, bucket)
+
+
+def _display_log_error_bucket(bucket: str) -> str:
+    return LOG_ERROR_BUCKET_DISPLAY.get(bucket, bucket)
+
+
+def _display_failure_bucket(bucket: str) -> str:
+    if bucket in SEMANTIC_BUCKET_DISPLAY:
+        return SEMANTIC_BUCKET_DISPLAY[bucket]
+    if bucket in LOG_ERROR_BUCKET_DISPLAY:
+        return LOG_ERROR_BUCKET_DISPLAY[bucket]
+    return bucket
+
+
+def _display_tool_name(tool_name: str) -> str:
+    return {
+        "execute_code": "execute",
+        "query_file": "query",
+        "peek_file": "peek",
+        "peek_multiple": "peek_multi",
+        "grep_file": "grep",
+        "list_files": "list",
+        "read_file": "read",
+        "search_ideal": "search_ideal",
+        "search_reranked": "search_reranked",
+        "search_prefix": "search_prefix",
+        "search_schema": "search_schema",
+        "search_value": "search_value",
+    }.get(tool_name, tool_name)
+
+
+def _annotate_pct_bars(ax, bars, values: List[float], *, min_value: float = 4.0, digits: int = 0) -> None:
+    for bar, value in zip(bars, values):
+        if value < min_value:
+            continue
+        ax.text(
+            bar.get_x() + bar.get_width() / 2,
+            value + 1.0,
+            f"{value:.{digits}f}%",
+            ha="center",
+            va="bottom",
+            fontsize=8,
+        )
+
+
+def _plot_single_metric_bars(plt, rows: List[dict], *, field: str, label_fn, title: str, output_path: Path) -> None:
+    if not rows:
+        return
+    labels = [label_fn(row) for row in rows]
+    values = [float(row.get(field) or 0.0) * 100.0 for row in rows]
+    fig_width = max(10, len(rows) * 1.2)
+    fig, ax = plt.subplots(figsize=(fig_width, 6))
+    bars = ax.bar(range(len(rows)), values, color="#2E8B57")
+    _annotate_pct_bars(ax, bars, values)
+    ax.set_xticks(range(len(rows)))
+    ax.set_xticklabels(labels, rotation=0, ha="center", fontsize=9)
+    ax.set_ylabel("Semantic Match (%)")
+    ax.set_ylim(0, 100)
+    ax.set_title(title)
+    fig.tight_layout()
+    fig.savefig(output_path)
+    plt.close(fig)
+
+
+def _plot_grouped_metrics_bars(
+    plt,
+    rows: List[dict],
+    *,
+    fields: List[Tuple[str, str, str]],
+    label_fn,
+    title: str,
+    y_label: str,
+    output_path: Path,
+) -> None:
+    if not rows:
+        return
+    fig_width = max(10, len(rows) * 1.2)
+    fig, ax = plt.subplots(figsize=(fig_width, 6))
+    x_positions = list(range(len(rows)))
+    width = 0.8 / len(fields)
+    for idx, (field, label, color) in enumerate(fields):
+        values = [float(row.get(field) or 0.0) * 100.0 for row in rows]
+        offset = (idx - len(fields) / 2 + 0.5) * width
+        bars = ax.bar([x + offset for x in x_positions], values, width=width * 0.9, label=label, color=color)
+        _annotate_pct_bars(ax, bars, values)
+    ax.set_xticks(x_positions)
+    ax.set_xticklabels([label_fn(row) for row in rows], rotation=0, ha="center", fontsize=9)
+    ax.set_ylabel(y_label)
+    ax.set_ylim(0, 100)
+    ax.set_title(title)
+    ax.legend(loc="upper left", bbox_to_anchor=(1.02, 1))
+    fig.tight_layout(rect=(0, 0, 0.84, 1))
+    fig.savefig(output_path)
+    plt.close(fig)
+
+
+def _plot_discovery_panels_for_model(plt, rows: List[dict], model: str, output_path: Path) -> None:
+    if not rows:
+        return
+    ordered_rows = sorted(rows, key=lambda row: _variant_sort_key(str(row.get("variant", ""))))
+    labels = [_compact_variant_label(str(row.get("variant", "")), multiline=True) for row in ordered_rows]
+    fig, axes = plt.subplots(2, 1, figsize=(max(10, len(rows) * 1.2), 9), sharex=True)
+    top_ax, bottom_ax = axes
+
+    top_fields = [
+        ("D_ret_precision", "Precision", "#4C78A8"),
+        ("D_ret", "Recall", "#F58518"),
+        ("D_ret_f1", "F1", "#54A24B"),
+    ]
+    bottom_fields = [
+        ("D_acc_precision", "Precision", "#4C78A8"),
+        ("D_acc_recall", "Recall", "#F58518"),
+        ("D_acc_f1", "F1", "#54A24B"),
+    ]
+
+    def draw(ax, fields, title):
+        x_positions = list(range(len(ordered_rows)))
+        width = 0.8 / len(fields)
+        for idx, (field, label, color) in enumerate(fields):
+            values = [float(row.get(field) or 0.0) * 100.0 for row in ordered_rows]
+            offset = (idx - len(fields) / 2 + 0.5) * width
+            bars = ax.bar([x + offset for x in x_positions], values, width=width * 0.9, label=label, color=color)
+            _annotate_pct_bars(ax, bars, values)
+        ax.set_ylim(0, 100)
+        ax.set_ylabel("Rate (%)")
+        ax.set_title(title)
+        ax.legend(loc="upper left", fontsize=8)
+
+    draw(top_ax, top_fields, "D_ret Metrics")
+    draw(bottom_ax, bottom_fields, "D_acc Metrics")
+    bottom_ax.set_xticks(range(len(ordered_rows)))
+    bottom_ax.set_xticklabels(labels, rotation=0, ha="center", fontsize=9)
+    fig.suptitle(f"Discovery Metrics — {_pretty_model(model)}")
+    fig.tight_layout()
+    fig.savefig(output_path)
+    plt.close(fig)
+
+
+def _plot_primary_failure_breakdown(plt, variant_rows: List[dict], failure_by_key: dict, output_path: Path) -> None:
+    if not variant_rows:
+        return
+    variant_primary: Dict[str, Counter] = defaultdict(Counter)
+    variant_totals: Dict[str, int] = defaultdict(int)
+    for key, failure_row in failure_by_key.items():
+        _, variant = _split_cm_key(key)
+        for bucket in FAILURE_PRIMARY_BUCKETS:
+            variant_primary[variant][bucket] += int(failure_row.get("primary", {}).get(bucket, {}).get("n", 0) or 0)
+        variant_totals[variant] += int(failure_row.get("total", 0) or 0)
+
+    ordered_variants = [str(row.get("variant", "")) for row in variant_rows]
+    fig, ax = plt.subplots(figsize=(max(10, len(ordered_variants) * 1.25), 6))
+    x_positions = list(range(len(ordered_variants)))
+    bottoms = [0.0] * len(ordered_variants)
+    for bucket in FAILURE_PRIMARY_BUCKETS:
+        vals = [
+            100 * variant_primary[variant].get(bucket, 0) / variant_totals[variant] if variant_totals[variant] else 0.0
+            for variant in ordered_variants
+        ]
+        bars = ax.bar(
+            x_positions,
+            vals,
+            bottom=bottoms,
+            label=_display_failure_bucket(bucket),
+            color=FAILURE_PRIMARY_COLORS[bucket],
+        )
+        for bar, val, bottom in zip(bars, vals, bottoms):
+            if val < 6.0:
+                continue
+            ax.text(
+                bar.get_x() + bar.get_width() / 2,
+                bottom + val / 2,
+                f"{val:.0f}%",
+                ha="center",
+                va="center",
+                fontsize=8,
+                color=_label_text_color(FAILURE_PRIMARY_COLORS[bucket]),
+            )
+        bottoms = [bottoms[i] + vals[i] for i in range(len(vals))]
+    ax.set_xticks(x_positions)
+    ax.set_xticklabels([_compact_variant_label(variant, multiline=True) for variant in ordered_variants], fontsize=9)
+    ax.set_ylabel("Tasks (%)")
+    ax.set_ylim(0, 100)
+    ax.set_title("Primary Semantic Failure Attribution by Variant")
+    ax.legend(loc="upper left", bbox_to_anchor=(1.02, 1), fontsize=8)
+    fig.tight_layout(rect=(0, 0, 0.82, 1))
+    fig.savefig(output_path)
+    plt.close(fig)
+
+
+def _plot_cost_vs_semantic(plt, summary_rows: List[dict], output_path: Path) -> None:
+    if not summary_rows:
+        return
+    fig, ax = plt.subplots(figsize=(7.5, 5.5))
+    for row in summary_rows:
+        semantic_match = row.get("semantic_match")
+        cost = row.get("avg_cost_usd")
+        if semantic_match is None or cost is None:
+            continue
+        ax.scatter(cost, float(semantic_match) * 100.0, s=80, zorder=3)
+        ax.annotate(
+            _compact_variant_label(str(row.get("variant", ""))),
+            (cost, float(semantic_match) * 100.0),
+            textcoords="offset points",
+            xytext=(5, 3),
+            fontsize=7,
+        )
+    ax.set_xlabel("Avg Cost per Task (USD)")
+    ax.set_ylabel("Semantic Match (%)")
+    ax.set_title("Cost–Semantic Match Frontier")
+    fig.tight_layout()
+    fig.savefig(output_path)
+    plt.close(fig)
+
+
+def _plot_tool_precision(plt, tools_discovery: dict, output_path: Path) -> None:
+    rows = []
+    for key, tool_data in sorted(tools_discovery.items(), key=lambda item: _condition_model_sort_key(item[0])):
+        search_tool_names = [tool for tool in tool_data if tool.startswith("search")]
+        if not search_tool_names:
+            search_tool_names = list(tool_data.keys())
+        precisions = [float(tool_data[tool].get("avg_precision", 0.0) or 0.0) for tool in search_tool_names]
+        rows.append({"key": key, "precision": sum(precisions) / len(precisions) if precisions else 0.0})
+    if not rows:
+        return
+    fig, ax = plt.subplots(figsize=(max(10, len(rows) * 0.9), 5.5))
+    vals = [row["precision"] * 100.0 for row in rows]
+    bars = ax.bar(range(len(rows)), vals, color="#4C78A8")
+    _annotate_pct_bars(ax, bars, vals)
+    ax.set_xticks(range(len(rows)))
+    ax.set_xticklabels([_compact_variant_label(_split_cm_key(row["key"])[1], multiline=True) for row in rows], rotation=0, ha="center", fontsize=9)
+    ax.set_ylabel("Avg Precision (%)")
+    ax.set_ylim(0, 100)
+    ax.set_title("Search Tool Precision by Variant × Model")
+    fig.tight_layout()
+    fig.savefig(output_path)
+    plt.close(fig)
+
+
+def _plot_search_calls(plt, summary_rows: List[dict], output_path: Path) -> None:
+    if not summary_rows:
+        return
+    fig, ax = plt.subplots(figsize=(max(10, len(summary_rows) * 0.9), 5.5))
+    vals = [float(row.get("avg_search_calls") or 0.0) for row in summary_rows]
+    bars = ax.bar(range(len(summary_rows)), vals, color="#72B7B2")
+    for bar, val in zip(bars, vals):
+        if val <= 0:
+            continue
+        ax.text(bar.get_x() + bar.get_width() / 2, val + 0.08, f"{val:.1f}", ha="center", va="bottom", fontsize=8)
+    ax.set_xticks(range(len(summary_rows)))
+    ax.set_xticklabels([_compact_variant_label(str(row.get("variant", "")), multiline=True) for row in summary_rows], rotation=0, ha="center", fontsize=9)
+    ax.set_ylabel("Avg Search Calls / Task")
+    ax.set_title("Search Calls by Variant × Model")
+    fig.tight_layout()
+    fig.savefig(output_path)
+    plt.close(fig)
+
+
+def _plot_curve_by_variant(plt, curve: dict, *, title: str, y_label: str, x_label: str, output_path: Path) -> None:
+    if not curve:
+        return
+    ordered_variants = sorted(curve.keys(), key=_variant_sort_key)
+    bin_labels = [key for key in next(iter(curve.values())).keys() if not key.startswith("_")]
+    fig, ax = plt.subplots(figsize=(8.5, 5.5))
+    for variant in ordered_variants:
+        xs, ys = [], []
+        for idx, label in enumerate(bin_labels):
+            entry = curve[variant].get(label, {})
+            mean_value = entry.get("mean_semantic_match")
+            n = entry.get("n", 0)
+            if mean_value is not None and n > 0:
+                xs.append(idx)
+                ys.append(float(mean_value) * 100.0)
+        if xs:
+            ax.plot(xs, ys, marker="o", label=_compact_variant_label(variant))
+            for xi, yi in zip(xs, ys):
+                ax.annotate(f"{yi:.1f}%", (xi, yi), textcoords="offset points", xytext=(0, 6), ha="center", fontsize=8)
+    ax.set_xticks(range(len(bin_labels)))
+    ax.set_xticklabels(bin_labels)
+    ax.set_xlabel(x_label)
+    ax.set_ylabel(y_label)
+    ax.set_title(title)
+    ax.legend(fontsize=8)
+    fig.tight_layout()
+    fig.savefig(output_path)
+    plt.close(fig)
+
+
+def _plot_curve_by_model(
+    plt,
+    curve_by_cm: dict,
+    *,
+    x_label: str,
+    title_prefix: str,
+    output_prefix: str,
+    output_suffix: str,
+    output_dir: Path,
+) -> None:
+    by_model: Dict[str, Dict[str, dict]] = defaultdict(dict)
+    for key, bins in curve_by_cm.items():
+        model, variant = _split_cm_key(key)
+        by_model[model][variant] = bins
+    for model, variant_map in sorted(by_model.items()):
+        if not variant_map:
+            continue
+        bin_labels = [key for key in next(iter(variant_map.values())).keys() if key not in ("model", "variant")]
+        fig, ax = plt.subplots(figsize=(8.5, 5.5))
+        for variant, bins in sorted(variant_map.items(), key=lambda item: _variant_sort_key(item[0])):
+            xs, ys = [], []
+            for idx, label in enumerate(bin_labels):
+                entry = bins.get(label, {})
+                mean_value = entry.get("mean_semantic_match")
+                n = entry.get("n", 0)
+                if mean_value is not None and n > 0:
+                    xs.append(idx)
+                    ys.append(float(mean_value) * 100.0)
+            if xs:
+                ax.plot(xs, ys, marker="o", label=_compact_variant_label(variant))
+        ax.set_xticks(range(len(bin_labels)))
+        ax.set_xticklabels(bin_labels)
+        ax.set_xlabel(x_label)
+        ax.set_ylabel("Mean Semantic Match (%)")
+        ax.set_title(f"{title_prefix} — {_pretty_model(model)}")
+        ax.legend(fontsize=8)
+        fig.tight_layout()
+        fname = f"{output_prefix}_{_safe_slug(_pretty_model(model))}_{output_suffix}.pdf"
+        fig.savefig(output_dir / fname)
+        plt.close(fig)
+
+
+_TOOL_ERROR_MIN_CALLS = 10
+
+
+def _plot_tool_error_heatmap(plt, tool_errors: dict, output_path: Path) -> None:
+    filtered_tools = sorted({tool for cm_data in tool_errors.values() for tool in cm_data if tool in _DATA_TOOLS})
+    cm_keys = sorted(tool_errors.keys(), key=_condition_model_sort_key)
+    if not filtered_tools or not cm_keys:
+        return
+    import numpy as np
+
+    matrix = np.full((len(filtered_tools), len(cm_keys)), np.nan)
+    calls = np.zeros((len(filtered_tools), len(cm_keys)), dtype=int)
+    for j, cm in enumerate(cm_keys):
+        for i, tool in enumerate(filtered_tools):
+            cell = tool_errors[cm].get(tool, {})
+            total = int(cell.get("total_calls", 0) or 0)
+            calls[i, j] = total
+            if total >= _TOOL_ERROR_MIN_CALLS:
+                matrix[i, j] = float(cell.get("error_rate", 0.0) or 0.0) * 100.0
+
+    masked = np.ma.masked_invalid(matrix)
+    cmap = plt.get_cmap("Reds").copy()
+    cmap.set_bad(color="#e6e6e6")
+    finite_vals = masked.compressed()
+    vmax = max(float(finite_vals.max()), 1.0) if finite_vals.size else 1.0
+
+    fig, ax = plt.subplots(figsize=(max(6, len(cm_keys) * 2.0), max(4, len(filtered_tools) * 0.7)))
+    im = ax.imshow(masked, aspect="auto", cmap=cmap, vmin=0, vmax=vmax)
+    plt.colorbar(im, ax=ax, label="Error Rate (%)")
+    ax.set_xticks(range(len(cm_keys)))
+    ax.set_xticklabels([_compact_variant_label(_split_cm_key(cm)[1], multiline=True) for cm in cm_keys], rotation=0, ha="center", fontsize=9)
+    ax.set_yticks(range(len(filtered_tools)))
+    ax.set_yticklabels([_display_tool_name(tool) for tool in filtered_tools], fontsize=9)
+    for i in range(len(filtered_tools)):
+        for j in range(len(cm_keys)):
+            total = calls[i, j]
+            if total <= 0:
+                continue
+            if total < _TOOL_ERROR_MIN_CALLS:
+                ax.text(j, i, f"n={total}", ha="center", va="center", fontsize=7, color="#555555")
+                continue
+            val = matrix[i, j]
+            if val <= 0:
+                continue
+            color = "white" if val > 25 else "black"
+            ax.text(j, i, f"{val:.0f}%", ha="center", va="center", fontsize=8, color=color)
+    ax.set_title(
+        f"Tool Error Rates by Variant × Model (%)  —  cells with <{_TOOL_ERROR_MIN_CALLS} calls shown as n=X"
+    )
+    fig.tight_layout()
+    fig.savefig(output_path)
+    plt.close(fig)
+
+
+def _plot_tool_call_heatmap(plt, base_by_key_records: Dict[str, List[dict]], output_path: Path) -> None:
+    import numpy as np
+
+    tc_acc: Dict[str, Dict[str, int]] = defaultdict(lambda: defaultdict(int))
+    n_tasks_by_cm: Dict[str, int] = defaultdict(int)
+    for key, rows in base_by_key_records.items():
+        n_tasks_by_cm[key] += len(rows)
+        for row in rows:
+            for tc in row.get("tool_counts", []):
+                name = tc.get("name", "")
+                if not name or name in _UNIMPORTANT_TOOLS:
+                    continue
+                tc_acc[key][name] += int(tc.get("call_count", 0) or 0)
+    cm_keys = sorted(tc_acc.keys(), key=_condition_model_sort_key)
+    all_tools = sorted({tool for cm_data in tc_acc.values() for tool in cm_data})
+    if not cm_keys or not all_tools:
+        return
+    matrix = np.zeros((len(all_tools), len(cm_keys)))
+    for j, cm in enumerate(cm_keys):
+        n = n_tasks_by_cm.get(cm, 0)
+        for i, tool in enumerate(all_tools):
+            matrix[i, j] = (tc_acc[cm].get(tool, 0) / n) if n else 0.0
+
+    from matplotlib.colors import LinearSegmentedColormap
+
+    fig, ax = plt.subplots(figsize=(max(6, len(cm_keys) * 2.0), max(4, len(all_tools) * 0.7)))
+    vmax = max(1.0, float(matrix.max()))
+    white_green = LinearSegmentedColormap.from_list("white_green", ["#ffffff", "#1b7837"])
+    im = ax.imshow(matrix, aspect="auto", cmap=white_green, vmin=0, vmax=vmax)
+    plt.colorbar(im, ax=ax, label="Avg Calls / Task")
+    ax.set_xticks(range(len(cm_keys)))
+    ax.set_xticklabels([_compact_variant_label(_split_cm_key(cm)[1], multiline=True) for cm in cm_keys], rotation=0, ha="center", fontsize=9)
+    ax.set_yticks(range(len(all_tools)))
+    ax.set_yticklabels([_display_tool_name(tool) for tool in all_tools], fontsize=9)
+    for i in range(len(all_tools)):
+        for j in range(len(cm_keys)):
+            val = matrix[i, j]
+            if val <= 0:
+                continue
+            color = "white" if val > vmax * 0.6 else "black"
+            ax.text(j, i, f"{val:.1f}", ha="center", va="center", fontsize=8, color=color)
+    ax.set_title("Avg Tool Calls per Task by Variant × Model")
+    fig.tight_layout()
+    fig.savefig(output_path)
+    plt.close(fig)
+
+
 def _plot_stacked_buckets_on_ax(
     ax,
     rows: List[dict],
@@ -927,9 +2068,8 @@ def _plot_stacked_buckets_on_ax(
     label_fn,
     total_field: str,
     title: str,
-    show_xticklabels: bool = True,
-    label_min_pct: float = 6.0,
     show_legend: bool = True,
+    label_min_pct: float = 6.0,
 ) -> None:
     if not rows:
         return
@@ -946,16 +2086,160 @@ def _plot_stacked_buckets_on_ax(
             count = float(row.get(bucket) or 0.0)
             counts.append(int(count))
             heights.append((count / total) * 100.0 if total else 0.0)
-        bars = ax.bar(
-            x_positions,
-            heights,
-            bottom=bottoms,
-            color=colors[bucket],
-            label=bucket,
-        )
+        display_bucket = _display_semantic_bucket(bucket) if bucket in SEMANTIC_BUCKETS else _display_log_error_bucket(bucket)
+        bars = ax.bar(x_positions, heights, bottom=bottoms, color=colors[bucket], label=display_bucket)
         label_color = _label_text_color(colors[bucket])
         for bar, height, count, bottom in zip(bars, heights, counts, bottoms):
             if count <= 0 or height < label_min_pct:
+                continue
+            ax.text(
+                bar.get_x() + bar.get_width() / 2,
+                bottom + height / 2,
+                f"{height:.0f}%\n({count})",
+                ha="center",
+                va="center",
+                fontsize=8,
+                color=label_color,
+            )
+        bottoms = [bottom + height for bottom, height in zip(bottoms, heights)]
+
+    ax.set_xticks(x_positions)
+    ax.set_xticklabels(labels, rotation=0, ha="center", fontsize=9)
+    ax.set_ylabel("Share of Tasks (%)")
+    ax.set_ylim(0, 100)
+    ax.set_title(title)
+    if show_legend:
+        ax.legend(loc="upper left", bbox_to_anchor=(1.02, 1), fontsize=8)
+
+
+def _plot_variant_crosstab_heatmap(plt, crosstab_rows: List[dict], variant_rows: List[dict], output_path: Path) -> None:
+    if not variant_rows:
+        return
+    ordered_variants = [str(row.get("variant", "")) for row in variant_rows]
+    grouped = defaultdict(dict)
+    max_value = 0.0
+    for row in crosstab_rows:
+        if row.get("level") != "variant":
+            continue
+        variant = str(row.get("variant", ""))
+        grouped[variant][(str(row.get("semantic_bucket", "")), str(row.get("log_error_bucket", "")))] = (
+            float(row.get("pct_within_group", 0.0) or 0.0) * 100.0
+        )
+        max_value = max(max_value, grouped[variant][(str(row.get("semantic_bucket", "")), str(row.get("log_error_bucket", "")))])
+
+    ncols = 2 if len(ordered_variants) > 1 else 1
+    nrows = math.ceil(len(ordered_variants) / ncols)
+    fig, axes = plt.subplots(nrows, ncols, figsize=(7.5 * ncols, 4.8 * nrows))
+    axes_list = axes.flatten().tolist() if hasattr(axes, "flatten") else [axes]
+    image = None
+    for ax, variant in zip(axes_list, ordered_variants):
+        matrix = []
+        for semantic_bucket in SEMANTIC_BUCKETS:
+            matrix.append(
+                [
+                    grouped.get(variant, {}).get((semantic_bucket, log_error_bucket), 0.0)
+                    for log_error_bucket in DISPLAY_LOG_ERROR_BUCKETS
+                ]
+            )
+        image = ax.imshow(matrix, cmap="Blues", vmin=0, vmax=max(max_value, 1.0))
+        total_n = int(next((row.get("n_total", 0) for row in variant_rows if str(row.get("variant", "")) == variant), 0) or 0)
+        ax.set_title(_pretty_variant_tick_label(variant, total_n), fontsize=10)
+        ax.set_xticks(range(len(DISPLAY_LOG_ERROR_BUCKETS)))
+        ax.set_xticklabels([_display_log_error_bucket(bucket) for bucket in DISPLAY_LOG_ERROR_BUCKETS], rotation=25, ha="right", fontsize=8)
+        ax.set_yticks(range(len(SEMANTIC_BUCKETS)))
+        ax.set_yticklabels([_display_semantic_bucket(bucket) for bucket in SEMANTIC_BUCKETS], fontsize=8)
+        for row_idx, matrix_row in enumerate(matrix):
+            for col_idx, value in enumerate(matrix_row):
+                if value <= 0:
+                    continue
+                ax.text(col_idx, row_idx, f"{value:.0f}%", ha="center", va="center", fontsize=8)
+
+    for ax in axes_list[len(ordered_variants):]:
+        ax.axis("off")
+    if image is not None:
+        fig.colorbar(image, ax=axes_list, fraction=0.02, pad=0.02, label="Share of Tasks (%)")
+    fig.suptitle("Semantic Bucket × Log Error Bucket by Variant", fontsize=14)
+    fig.subplots_adjust(top=0.88, wspace=0.35, hspace=0.45)
+    fig.savefig(output_path)
+    plt.close(fig)
+
+
+def _plot_error_vs_semantic_variant(plt, variant_rows: List[dict], output_path: Path) -> None:
+    if not variant_rows:
+        return
+
+    fig, ax = plt.subplots(figsize=(max(11, len(variant_rows) * 1.45), 6))
+    x_positions = list(range(len(variant_rows)))
+    width = 0.34
+    semantic_vals = [float(row.get("semantic_correct_rate", 0.0) or 0.0) * 100.0 for row in variant_rows]
+    error_vals = [100.0 - (float(row.get("no_error_rate", 0.0) or 0.0) * 100.0) for row in variant_rows]
+
+    semantic_bars = ax.bar([x - width / 2 for x in x_positions], semantic_vals, width=width, color=SEMANTIC_BUCKET_COLORS["semantic_correct"], label="Semantic Match")
+    error_bars = ax.bar([x + width / 2 for x in x_positions], error_vals, width=width, color="#C44E52", label="Any Error")
+    _annotate_pct_bars(ax, semantic_bars, semantic_vals, min_value=1.0)
+    _annotate_pct_bars(ax, error_bars, error_vals, min_value=1.0)
+
+    ax.set_xticks(x_positions)
+    ax.set_xticklabels(
+        [_pretty_variant_tick_label(str(row.get("variant", "")), int(row.get("n_total", 0) or 0)) for row in variant_rows],
+        rotation=0,
+        ha="center",
+        fontsize=9,
+    )
+    ax.set_ylabel("Tasks (%)")
+    ax.set_ylim(0, 100)
+    ax.set_title("Semantic Match vs. Any Error by Variant")
+    ax.grid(axis="y", alpha=0.25, linestyle="--", linewidth=0.7)
+    ax.legend(loc="upper left", bbox_to_anchor=(1.02, 1), fontsize=9)
+    fig.tight_layout(rect=(0, 0, 0.84, 1))
+    fig.savefig(output_path)
+    plt.close(fig)
+
+
+def _turn_waste_group_sort_key(group_name: str, total_counts: Counter) -> tuple:
+    normalized = group_name.lower()
+    is_mixed = "mixed" in normalized or "unclear" in normalized
+    return (1 if is_mixed else 0, -int(total_counts.get(group_name, 0)), group_name)
+
+
+def _plot_turn_waste_groups_variant(plt, turn_waste_groups: dict, variant_rows: List[dict], output_path: Path) -> None:
+    if not variant_rows:
+        return
+
+    ordered_variants = [str(row.get("variant", "")) for row in variant_rows]
+    overall_counts: Counter = Counter()
+    for variant in ordered_variants:
+        groups = turn_waste_groups.get(variant, {}).get("groups", {})
+        for group_name, payload in groups.items():
+            overall_counts[group_name] += int(payload.get("n", 0) or 0)
+
+    ordered_groups = sorted(overall_counts.keys(), key=lambda group_name: _turn_waste_group_sort_key(group_name, overall_counts))
+    fig, ax = plt.subplots(figsize=(max(10, len(ordered_variants) * 1.25), 6))
+    x_positions = list(range(len(ordered_variants)))
+    bottoms = [0 for _ in ordered_variants]
+    cmap = plt.get_cmap("tab20")
+    colors = {group_name: cmap(idx % 20) for idx, group_name in enumerate(ordered_groups)}
+
+    for group_name in ordered_groups:
+        heights = []
+        counts = []
+        for variant in ordered_variants:
+            entry = turn_waste_groups.get(variant, {})
+            n_grouped_failed_rows = int(entry.get("n_grouped_failed_rows", 0) or 0)
+            group_payload = entry.get("groups", {}).get(group_name, {})
+            count = int(group_payload.get("n", 0) or 0)
+            counts.append(count)
+            heights.append(count if n_grouped_failed_rows else 0)
+        bars = ax.bar(x_positions, heights, bottom=bottoms, color=colors[group_name], label=group_name)
+        label_color = _label_text_color(
+            "#{:02x}{:02x}{:02x}".format(
+                int(colors[group_name][0] * 255),
+                int(colors[group_name][1] * 255),
+                int(colors[group_name][2] * 255),
+            )
+        )
+        for bar, count, height, bottom in zip(bars, counts, heights, bottoms):
+            if count <= 0:
                 continue
             ax.text(
                 bar.get_x() + bar.get_width() / 2,
@@ -968,202 +2252,47 @@ def _plot_stacked_buckets_on_ax(
             )
         bottoms = [bottom + height for bottom, height in zip(bottoms, heights)]
 
-    ax.set_xticks(x_positions)
-    if show_xticklabels:
-        ax.set_xticklabels(labels, rotation=30, ha="right")
-    else:
-        ax.set_xticklabels([])
-    ax.set_ylabel("Share of Tasks (%)")
-    ax.set_title(title)
-    ax.set_ylim(0, 100)
-    if show_legend:
-        ax.legend(loc="upper left", bbox_to_anchor=(1.02, 1), fontsize=8)
-
-
-def _plot_stacked_buckets(
-    plt,
-    rows: List[dict],
-    *,
-    buckets: List[str],
-    colors: Dict[str, str],
-    label_fn,
-    total_field: str,
-    title: str,
-    output_path: Path,
-) -> None:
-    if not rows:
-        return
-
-    fig_width = max(10, len(rows) * 0.8)
-    fig, ax = plt.subplots(figsize=(fig_width, 6))
-    _plot_stacked_buckets_on_ax(
-        ax,
-        rows,
-        buckets=buckets,
-        colors=colors,
-        label_fn=label_fn,
-        total_field=total_field,
-        title=title,
-        show_xticklabels=True,
-        show_legend=True,
-    )
-    fig.tight_layout(rect=(0, 0, 0.84, 1))
-    fig.savefig(output_path)
-    plt.close(fig)
-
-
-def _plot_combined_model_variant_buckets(
-    plt,
-    rows: List[dict],
-    output_path: Path,
-) -> None:
-    if not rows:
-        return
-
-    fig_width = max(10, len(rows) * 0.8)
-    fig, axes = plt.subplots(2, 1, figsize=(fig_width, 11), sharex=True)
-    semantic_ax, error_ax = axes
-
-    _plot_stacked_buckets_on_ax(
-        semantic_ax,
-        rows,
-        buckets=SEMANTIC_BUCKETS,
-        colors=SEMANTIC_BUCKET_COLORS,
-        label_fn=_model_variant_label,
-        total_field="n",
-        title="Semantic Bucket Distribution by Model x Variant",
-        show_xticklabels=False,
-        show_legend=True,
-    )
-    _plot_stacked_buckets_on_ax(
-        error_ax,
-        rows,
-        buckets=DISPLAY_LOG_ERROR_BUCKETS,
-        colors=LOG_ERROR_BUCKET_COLORS,
-        label_fn=_model_variant_label,
-        total_field="n",
-        title="Log Error Bucket Distribution by Model x Variant",
-        show_xticklabels=True,
-        show_legend=True,
-    )
-
-    fig.subplots_adjust(top=0.94, bottom=0.18, left=0.06, right=0.82, hspace=0.28)
-    fig.savefig(output_path)
-    plt.close(fig)
-
-
-def _plot_binned_bucket_panels(
-    plt,
-    binned_rows: dict,
-    *,
-    bin_labels: List[str],
-    buckets: List[str],
-    colors: Dict[str, str],
-    panel_title_fn,
-    figure_title: str,
-    x_label: str,
-    output_path: Path,
-) -> None:
-    if not binned_rows:
-        return
-
-    ordered_keys = sorted(binned_rows.keys(), key=_condition_model_sort_key)
-    n_panels = len(ordered_keys)
-    ncols = 2 if n_panels > 1 else 1
-    nrows = math.ceil(n_panels / ncols)
-    fig, axes = plt.subplots(nrows, ncols, figsize=(8 * ncols, 4.6 * nrows), sharey=True)
-    axes_list = axes.flatten().tolist() if hasattr(axes, "flatten") else [axes]
-
-    for ax, key in zip(axes_list, ordered_keys):
-        row = binned_rows[key]
-        plot_rows = []
-        for bin_label in bin_labels:
-            bin_entry = dict(row["bins"].get(bin_label, _empty_bucket_entry()))
-            bin_entry["bin_label"] = bin_label
-            plot_rows.append(bin_entry)
-        _plot_stacked_buckets_on_ax(
-            ax,
-            plot_rows,
-            buckets=buckets,
-            colors=colors,
-            label_fn=lambda current_row: str(current_row.get("bin_label", "")),
-            total_field="n",
-            title=panel_title_fn(row),
-            show_xticklabels=True,
-            label_min_pct=8.0,
-            show_legend=False,
-        )
-        ax.set_xlabel(x_label)
-
-    for ax in axes_list[n_panels:]:
-        ax.axis("off")
-
-    from matplotlib.patches import Patch
-
-    legend_handles = [Patch(color=colors[bucket], label=bucket) for bucket in buckets]
-    fig.legend(legend_handles, buckets, loc="upper center", ncol=min(len(buckets), 4), fontsize=9)
-    fig.suptitle(figure_title, fontsize=14)
-    fig.subplots_adjust(top=0.82, bottom=0.12, left=0.07, right=0.98, hspace=0.42, wspace=0.22)
-    fig.savefig(output_path)
-    plt.close(fig)
-
-
-def _plot_variant_crosstab_heatmaps(
-    plt,
-    crosstab_rows: List[dict],
-    variant_rows: List[dict],
-    output_path: Path,
-) -> None:
-    variant_names = [str(row.get("variant", "")) for row in variant_rows]
-    if not variant_names:
-        return
-
-    ncols = 2 if len(variant_names) > 1 else 1
-    nrows = math.ceil(len(variant_names) / ncols)
-    fig, axes = plt.subplots(nrows, ncols, figsize=(7 * ncols, 4.5 * nrows))
-    axes_list = axes.flatten().tolist() if hasattr(axes, "flatten") else [axes]
-    max_value = 0.0
-
-    grouped = defaultdict(dict)
-    for row in crosstab_rows:
-        if row.get("level") != "variant":
-            continue
-        grouped[str(row.get("variant", ""))][
-            (str(row.get("semantic_bucket", "")), str(row.get("log_error_bucket", "")))
-        ] = float(row.get("pct_within_group", 0.0) or 0.0) * 100.0
-        max_value = max(max_value, grouped[str(row.get("variant", ""))][
-            (str(row.get("semantic_bucket", "")), str(row.get("log_error_bucket", "")))
-        ])
-
-    image = None
-    for ax, variant in zip(axes_list, variant_names):
-        matrix = []
-        for semantic_bucket in SEMANTIC_BUCKETS:
-            matrix.append(
-                [
-                    grouped.get(variant, {}).get((semantic_bucket, log_error_bucket), 0.0)
-                    for log_error_bucket in DISPLAY_LOG_ERROR_BUCKETS
-                ]
+    for x_pos, variant, grouped_total in zip(x_positions, ordered_variants, bottoms):
+        entry = turn_waste_groups.get(variant, {})
+        unassigned = int(entry.get("n_unassigned_failed_rows", 0) or 0)
+        failed = int(entry.get("n_failed_rows", 0) or 0)
+        top_label = f"{grouped_total}"
+        if unassigned > 0:
+            top_label += f" (+{unassigned} unassigned)"
+        elif failed > grouped_total:
+            top_label += f" / {failed}"
+        if grouped_total > 0 or unassigned > 0:
+            ax.text(
+                x_pos,
+                grouped_total + max(0.3, grouped_total * 0.03),
+                top_label,
+                ha="center",
+                va="bottom",
+                fontsize=8,
             )
-        image = ax.imshow(matrix, cmap="Blues", vmin=0, vmax=max(max_value, 1.0))
-        ax.set_title(variant)
-        ax.set_xticks(range(len(DISPLAY_LOG_ERROR_BUCKETS)))
-        ax.set_xticklabels(DISPLAY_LOG_ERROR_BUCKETS, rotation=35, ha="right")
-        ax.set_yticks(range(len(SEMANTIC_BUCKETS)))
-        ax.set_yticklabels(SEMANTIC_BUCKETS)
-        for row_idx, matrix_row in enumerate(matrix):
-            for col_idx, value in enumerate(matrix_row):
-                if value <= 0:
-                    continue
-                ax.text(col_idx, row_idx, f"{value:.0f}", ha="center", va="center", fontsize=8)
 
-    for ax in axes_list[len(variant_names):]:
-        ax.axis("off")
-
-    if image is not None:
-        fig.colorbar(image, ax=axes_list, fraction=0.02, pad=0.02, label="Share of Tasks (%)")
-    fig.suptitle("Semantic Bucket x Log Error Bucket by Variant", fontsize=14)
-    fig.subplots_adjust(top=0.88, wspace=0.35, hspace=0.45)
+    ax.set_xticks(x_positions)
+    ax.set_xticklabels(
+        [
+            (
+                f"{_compact_variant_label(variant, multiline=True)}\n"
+                f"g={turn_waste_groups.get(variant, {}).get('n_grouped_failed_rows', 0)} / "
+                f"f={turn_waste_groups.get(variant, {}).get('n_failed_rows', 0)}"
+            )
+            for variant in ordered_variants
+        ],
+        rotation=0,
+        ha="center",
+        fontsize=9,
+    )
+    ymax = max(max(bottoms, default=0), max(int(turn_waste_groups.get(variant, {}).get("n_failed_rows", 0) or 0) for variant in ordered_variants))
+    ax.set_ylabel("Grouped Failed Rows")
+    ax.set_ylim(0, max(1, ymax * 1.18))
+    ax.set_title("Canonical Turn-Waste Groups by Variant (Counts)")
+    ax.grid(axis="y", alpha=0.25, linestyle="--", linewidth=0.7)
+    if ordered_groups:
+        ax.legend(loc="upper left", bbox_to_anchor=(1.02, 1), fontsize=8)
+    fig.tight_layout(rect=(0, 0, 0.8, 1))
     fig.savefig(output_path)
     plt.close(fig)
 
@@ -1171,9 +2300,17 @@ def _plot_variant_crosstab_heatmaps(
 def generate_figures(
     summary_rows: List[dict],
     variant_rows: List[dict],
+    failure: dict,
+    tools_discovery: dict,
+    tool_errors: dict,
+    base_by_key_records: Dict[str, List[dict]],
     crosstab_rows: List[dict],
-    search_depth_buckets: dict,
-    reasoning_density_buckets: dict,
+    turn_waste_global_groups: dict,
+    search_bottleneck: dict,
+    search_depth_curve: dict,
+    search_depth_curve_by_cm: dict,
+    reasoning_density_curve: dict,
+    reasoning_density_curve_by_cm: dict,
     output_dir: Path,
 ) -> None:
     plt = _import_plot_libs()
@@ -1181,126 +2318,188 @@ def generate_figures(
         return
 
     fig_dir = output_dir / "figures"
-    fig_dir.mkdir(parents=True, exist_ok=True)
+    _cleanup_figure_dir(fig_dir)
 
-    _plot_metric_bars(
+    _plot_stacked_buckets_on_ax  # keep referenced for lint happiness
+
+    _plot_stacked_buckets = lambda rows, buckets, colors, label_fn, total_field, title, path, label_min_pct=6.0: (
+        (lambda fig, ax: (
+            _plot_stacked_buckets_on_ax(
+                ax,
+                rows,
+                buckets=buckets,
+                colors=colors,
+                label_fn=label_fn,
+                total_field=total_field,
+                title=title,
+                show_legend=True,
+                label_min_pct=label_min_pct,
+            ),
+            fig.tight_layout(rect=(0, 0, 0.84, 1)),
+            fig.savefig(path),
+            plt.close(fig),
+        ))(*plt.subplots(figsize=(max(10, len(rows) * 0.9), 6)))
+        if rows
+        else None
+    )
+
+    _plot_stacked_buckets(
+        variant_rows,
+        SEMANTIC_BUCKETS,
+        SEMANTIC_BUCKET_COLORS,
+        lambda row: _pretty_variant_tick_label(str(row.get("variant", "")), int(row.get("n_total", 0) or 0)),
+        "n_total",
+        "Semantic Bucket Distribution by Variant",
+        fig_dir / "fig01_semantic_buckets_variant.pdf",
+        label_min_pct=0.0,
+    )
+    _plot_stacked_buckets(
+        variant_rows,
+        DISPLAY_LOG_ERROR_BUCKETS,
+        LOG_ERROR_BUCKET_COLORS,
+        lambda row: _pretty_variant_tick_label(str(row.get("variant", "")), int(row.get("n_total", 0) or 0)),
+        "n_total",
+        "Log Error Bucket Distribution by Variant",
+        fig_dir / "fig02_log_error_buckets_variant.pdf",
+    )
+    _plot_variant_crosstab_heatmap(
+        plt,
+        crosstab_rows,
+        variant_rows,
+        fig_dir / "fig03_semantic_x_error_variant.pdf",
+    )
+    _plot_error_vs_semantic_variant(
         plt,
         variant_rows,
-        label_fn=lambda row: str(row.get("variant", "")),
-        title="Semantic Match, D_ret, and D_acc by Variant",
-        output_path=fig_dir / "fig_semantic_discovery_variant.pdf",
+        fig_dir / "fig04_error_vs_semantic_variant.pdf",
     )
-    _plot_metric_bars(
+    _plot_turn_waste_groups_variant(
         plt,
-        summary_rows,
-        label_fn=_model_variant_label,
-        title="Semantic Match, D_ret, and D_acc by Model x Variant",
-        output_path=fig_dir / "fig_semantic_discovery_model_variant.pdf",
+        turn_waste_global_groups,
+        variant_rows,
+        fig_dir / "fig05_turn_waste_groups_variant.pdf",
     )
 
-    _plot_stacked_buckets(
+    _plot_single_metric_bars(
+        plt,
+        summary_rows,
+        field="semantic_match",
+        label_fn=lambda row: _compact_variant_label(str(row.get("variant", "")), multiline=True),
+        title="Semantic Match by Variant × Model",
+        output_path=fig_dir / "fig1_semantic_comparison.pdf",
+    )
+
+    _plot_grouped_metrics_bars(
         plt,
         variant_rows,
-        buckets=SEMANTIC_BUCKETS,
-        colors=SEMANTIC_BUCKET_COLORS,
-        label_fn=lambda row: str(row.get("variant", "")),
-        total_field="n_total",
-        title="Semantic Bucket Distribution by Variant",
-        output_path=fig_dir / "fig_semantic_buckets_variant.pdf",
-    )
-    _plot_stacked_buckets(
-        plt,
-        summary_rows,
-        buckets=SEMANTIC_BUCKETS,
-        colors=SEMANTIC_BUCKET_COLORS,
-        label_fn=_model_variant_label,
-        total_field="n",
-        title="Semantic Bucket Distribution by Model x Variant",
-        output_path=fig_dir / "fig_semantic_buckets_model_variant.pdf",
-    )
-    _plot_combined_model_variant_buckets(
-        plt,
-        summary_rows,
-        output_path=fig_dir / "fig_semantic_log_error_buckets_model_variant.pdf",
+        fields=[
+            ("D_ret", "D_ret", "#4C78A8"),
+            ("D_acc", "D_acc", "#F58518"),
+        ],
+        label_fn=lambda row: _compact_variant_label(str(row.get("variant", "")), multiline=True),
+        title="Discovery Coverage by Variant",
+        y_label="Rate (%)",
+        output_path=fig_dir / "fig2_discovery_metrics.pdf",
     )
 
-    _plot_stacked_buckets(
+    rows_by_model: Dict[str, List[dict]] = defaultdict(list)
+    for row in summary_rows:
+        rows_by_model[str(row.get("model", ""))].append(row)
+    for model, model_rows in sorted(rows_by_model.items()):
+        _plot_discovery_panels_for_model(
+            plt,
+            model_rows,
+            model,
+            fig_dir / f"fig2b_{_safe_slug(_pretty_model(model))}_discovery_metrics.pdf",
+        )
+
+    _plot_primary_failure_breakdown(
         plt,
         variant_rows,
-        buckets=DISPLAY_LOG_ERROR_BUCKETS,
-        colors=LOG_ERROR_BUCKET_COLORS,
-        label_fn=lambda row: str(row.get("variant", "")),
-        total_field="n_total",
-        title="Log Error Bucket Distribution by Variant",
-        output_path=fig_dir / "fig_log_error_buckets_variant.pdf",
+        failure,
+        fig_dir / "fig3_failure_breakdown.pdf",
     )
-    _plot_stacked_buckets(
+
+    _plot_cost_vs_semantic(
         plt,
         summary_rows,
-        buckets=DISPLAY_LOG_ERROR_BUCKETS,
-        colors=LOG_ERROR_BUCKET_COLORS,
-        label_fn=_model_variant_label,
-        total_field="n",
-        title="Log Error Bucket Distribution by Model x Variant",
-        output_path=fig_dir / "fig_log_error_buckets_model_variant.pdf",
+        fig_dir / "fig6_cost_vs_semantic.pdf",
     )
 
-    _plot_variant_crosstab_heatmaps(
+    _plot_tool_precision(
         plt,
-        crosstab_rows=crosstab_rows,
-        variant_rows=variant_rows,
-        output_path=fig_dir / "fig_semantic_x_error_variant.pdf",
+        tools_discovery,
+        fig_dir / "fig8_search_tool_precision.pdf",
     )
 
-    _plot_binned_bucket_panels(
+    _plot_search_calls(
         plt,
-        search_depth_buckets,
-        bin_labels=[label for label, _ in _SEARCH_DEPTH_BINS],
-        buckets=SEMANTIC_BUCKETS,
-        colors=SEMANTIC_BUCKET_COLORS,
-        panel_title_fn=lambda row: _model_variant_label(row).replace("\n", " — "),
-        figure_title="Semantic Buckets by Search Depth",
+        summary_rows,
+        fig_dir / "fig9_search_calls.pdf",
+    )
+
+    _plot_curve_by_variant(
+        plt,
+        search_depth_curve,
+        title="Search Depth Curve — Semantic Match vs. Search Call Budget Used",
+        y_label="Mean Semantic Match (%)",
         x_label="Search Calls per Task",
-        output_path=fig_dir / "fig_semantic_buckets_search_depth_model_variant.pdf",
+        output_path=fig_dir / "fig10_search_depth_curve.pdf",
     )
-    _plot_binned_bucket_panels(
+    _plot_curve_by_model(
         plt,
-        search_depth_buckets,
-        bin_labels=[label for label, _ in _SEARCH_DEPTH_BINS],
-        buckets=DISPLAY_LOG_ERROR_BUCKETS,
-        colors=LOG_ERROR_BUCKET_COLORS,
-        panel_title_fn=lambda row: _model_variant_label(row).replace("\n", " — "),
-        figure_title="Log Error Buckets by Search Depth",
+        search_depth_curve_by_cm,
         x_label="Search Calls per Task",
-        output_path=fig_dir / "fig_log_error_buckets_search_depth_model_variant.pdf",
+        title_prefix="Search Depth Curve",
+        output_prefix="fig10b",
+        output_suffix="search_depth",
+        output_dir=fig_dir,
     )
-    _plot_binned_bucket_panels(
+
+    _plot_curve_by_variant(
         plt,
-        reasoning_density_buckets,
-        bin_labels=[label for label, _ in _REASONING_DENSITY_BINS],
-        buckets=SEMANTIC_BUCKETS,
-        colors=SEMANTIC_BUCKET_COLORS,
-        panel_title_fn=lambda row: _model_variant_label(row).replace("\n", " — "),
-        figure_title="Semantic Buckets by Reasoning Density",
+        reasoning_density_curve,
+        title="Semantic Match vs. Reasoning Density",
+        y_label="Mean Semantic Match (%)",
         x_label="Number of Gold Documents per Task",
-        output_path=fig_dir / "fig_semantic_buckets_reasoning_density_model_variant.pdf",
+        output_path=fig_dir / "fig12_reasoning_density.pdf",
     )
-    _plot_binned_bucket_panels(
+    _plot_curve_by_model(
         plt,
-        reasoning_density_buckets,
-        bin_labels=[label for label, _ in _REASONING_DENSITY_BINS],
-        buckets=DISPLAY_LOG_ERROR_BUCKETS,
-        colors=LOG_ERROR_BUCKET_COLORS,
-        panel_title_fn=lambda row: _model_variant_label(row).replace("\n", " — "),
-        figure_title="Log Error Buckets by Reasoning Density",
+        reasoning_density_curve_by_cm,
         x_label="Number of Gold Documents per Task",
-        output_path=fig_dir / "fig_log_error_buckets_reasoning_density_model_variant.pdf",
+        title_prefix="Semantic Match vs. Reasoning Density",
+        output_prefix="fig12b",
+        output_suffix="reasoning_density",
+        output_dir=fig_dir,
+    )
+
+    _plot_tool_error_heatmap(
+        plt,
+        tool_errors,
+        fig_dir / "fig13_tool_error_rates.pdf",
+    )
+
+    _plot_tool_call_heatmap(
+        plt,
+        base_by_key_records,
+        fig_dir / "fig14_tool_call_counts.pdf",
+    )
+
+    generate_search_bottleneck_figures(
+        search_bottleneck,
+        output_dir,
+        include_tool_first_hit=False,
+        include_condition_breakouts=True,
+        condition_label_formatter=lambda row: _compact_variant_label(str(row.get("variant", ""))),
     )
 
 
 def run_analysis(
     *,
     results_dir: str,
+    base_results_dir: Optional[str],
+    turn_waste_grouped_dir: str,
     traces_dir: str,
     tasks_dir: str,
     output_dir: str,
@@ -1315,30 +2514,70 @@ def run_analysis(
     print("Loading semantic eval results...")
     by_key_records, source_field_order = load_semantic_results_grouped(results_dir, model_filters=model_filters)
 
+    print("Loading grouped turn-waste results...")
+    grouped_turn_waste_by_key = load_turn_waste_grouped_results(turn_waste_grouped_dir, model_filters=model_filters)
+
+    print("Loading base agent results...")
+    base_by_key_records = load_base_agent_results_grouped(base_results_dir, model_filters=model_filters)
+
     print("Loading traces for discovery metrics...")
     grouped_traces = load_traces_grouped(traces_dir, model_filters=model_filters)
 
     print("Computing discovery metrics...")
     discovery_aggregates, task_metrics_by_key = run_discovery(grouped_traces, tasks_dir)
 
-    print("Building summary tables...")
-    summary_rows = build_summary(by_key_records, discovery_aggregates)
-    variant_rows = build_variant_summary(summary_rows)
+    print("Computing search-style side analyses...")
+    efficiency = run_efficiency(by_key_records)
+    failure = build_failure(by_key_records)
+    tools_discovery = run_tools_discovery(grouped_traces, tasks_dir)
+    tool_errors = run_tool_errors(base_by_key_records)
+    search_depth_curve, search_depth_curve_by_cm = build_search_depth_curves(by_key_records, task_metrics_by_key)
+    reasoning_density_curve, reasoning_density_curve_by_cm = build_reasoning_density_curves(by_key_records, tasks_dir)
     search_depth_buckets = build_search_depth_buckets(by_key_records, task_metrics_by_key)
     reasoning_density_buckets = build_reasoning_density_buckets(by_key_records, tasks_dir)
+    search_bottleneck_meta = build_search_bottleneck_meta(grouped_traces)
+    search_bottleneck = compute_search_bottleneck(grouped_traces, search_bottleneck_meta, load_task_gold_ids(tasks_dir))
+
+    print("Building summary tables...")
+    summary_rows = build_summary(
+        by_key_records,
+        discovery_aggregates,
+        efficiency,
+        tool_errors,
+        base_by_key_records,
+        search_bottleneck.get("condition_model_summary"),
+    )
+    variant_rows = build_variant_summary(summary_rows)
     semantic_match, discovery, runtime, semantic_buckets, log_error_buckets = build_metric_mappings(summary_rows)
     crosstab_rows = build_semantic_error_crosstab(by_key_records, variant_rows)
+    turn_waste_global_groups, turn_waste_global_group_rows, turn_waste_joined_failed_rows = build_turn_waste_global_groups(
+        by_key_records,
+        grouped_turn_waste_by_key,
+        variant_rows,
+    )
     per_task_rows, per_task_fieldnames = build_per_task_rows(by_key_records, task_metrics_by_key, source_field_order)
+    per_task_retrieval_rows, per_task_retrieval_fieldnames = build_per_task_retrieval_rows(task_metrics_by_key)
 
     files = {
         "semantic_match.json": semantic_match,
         "discovery.json": discovery,
         "runtime.json": runtime,
+        "efficiency.json": efficiency,
+        "failure.json": failure,
+        "tools_discovery.json": tools_discovery,
+        "tool_errors.json": tool_errors,
         "semantic_buckets.json": semantic_buckets,
         "log_error_buckets.json": log_error_buckets,
+        "semantic_error_crosstab.json": crosstab_rows,
+        "turn_waste_global_groups.json": turn_waste_global_groups,
+        "search_depth.json": search_depth_curve,
+        "reasoning_density.json": reasoning_density_curve,
+        "search_first_hit_condition.json": search_bottleneck.get("condition_summary_rows", []),
+        "search_first_hit_tool.json": search_bottleneck.get("tool_first_hit_rows", []),
+        "search_topk_miss_tool.json": search_bottleneck.get("tool_miss_rows", []),
+        "search_tool_efficiency.json": search_bottleneck.get("tool_efficiency_rows", []),
         "search_depth_buckets.json": search_depth_buckets,
         "reasoning_density_buckets.json": reasoning_density_buckets,
-        "semantic_error_crosstab.json": crosstab_rows,
         "summary.json": summary_rows,
         "variant_summary.json": variant_rows,
     }
@@ -1352,6 +2591,187 @@ def run_analysis(
     write_csv(per_task_path, per_task_rows, per_task_fieldnames)
     print(f"  Wrote {per_task_path} ({len(per_task_rows)} rows)")
 
+    per_task_retrieval_path = out_dir / "per_task_retrieval.csv"
+    write_csv(per_task_retrieval_path, per_task_retrieval_rows, per_task_retrieval_fieldnames)
+    print(f"  Wrote {per_task_retrieval_path} ({len(per_task_retrieval_rows)} rows)")
+
+    per_task_search_path = out_dir / "per_task_search_bottleneck.csv"
+    per_task_search_rows = search_bottleneck.get("per_task_rows", [])
+    per_task_search_fieldnames = [
+        "condition_model",
+        "condition",
+        "variant",
+        "base_condition",
+        "model",
+        "task_id",
+        "num_search_calls",
+    ] + [
+        field
+        for cutoff in SEARCH_BOTTLENECK_CUTOFFS
+        for field in (
+            f"found_top_{cutoff}",
+            f"first_hit_round_top_{cutoff}",
+            f"wasted_rounds_top_{cutoff}",
+        )
+    ]
+    num_per_task_search_rows = write_search_bottleneck_csv(
+        per_task_search_rows,
+        per_task_search_path,
+        per_task_search_fieldnames,
+    )
+    print(f"  Wrote {per_task_search_path} ({num_per_task_search_rows} rows)")
+
+    per_task_search_tool_path = out_dir / "per_task_search_tool_bottleneck.csv"
+    per_task_search_tool_rows = search_bottleneck.get("per_task_tool_rows", [])
+    per_task_search_tool_fieldnames = [
+        "condition_model",
+        "condition",
+        "variant",
+        "base_condition",
+        "model",
+        "task_id",
+        "search_tool",
+        "num_tool_calls",
+    ] + [
+        field
+        for cutoff in SEARCH_BOTTLENECK_CUTOFFS
+        for field in (
+            f"found_top_{cutoff}",
+            f"first_hit_round_top_{cutoff}",
+            f"wasted_rounds_top_{cutoff}",
+        )
+    ]
+    num_per_task_search_tool_rows = write_search_bottleneck_csv(
+        per_task_search_tool_rows,
+        per_task_search_tool_path,
+        per_task_search_tool_fieldnames,
+    )
+    print(f"  Wrote {per_task_search_tool_path} ({num_per_task_search_tool_rows} rows)")
+
+    search_first_hit_condition_csv = out_dir / "search_first_hit_condition.csv"
+    write_search_bottleneck_csv(
+        search_bottleneck.get("condition_summary_rows", []),
+        search_first_hit_condition_csv,
+        [
+            "condition",
+            "variant",
+            "base_condition",
+            "cutoff",
+            "n_tasks_with_search",
+            "n_tasks_without_search",
+            "found_tasks",
+            "not_found_tasks",
+            "not_found_rate",
+            "ever_found_rate",
+            "avg_first_hit_round_found_only",
+            "median_first_hit_round_found_only",
+            "avg_wasted_rounds",
+            "max_round",
+            "models",
+            "num_condition_model_rows",
+            "round_counts",
+            "cumulative_found_counts",
+            "cumulative_found_rates",
+        ],
+    )
+    print(f"  Wrote {search_first_hit_condition_csv}")
+
+    search_first_hit_tool_csv = out_dir / "search_first_hit_tool.csv"
+    write_search_bottleneck_csv(
+        search_bottleneck.get("tool_first_hit_rows", []),
+        search_first_hit_tool_csv,
+        [
+            "search_tool",
+            "cutoff",
+            "tasks_with_tool",
+            "found_tasks",
+            "not_found_tasks",
+            "not_found_rate",
+            "ever_found_rate",
+            "avg_first_hit_round_found_only",
+            "median_first_hit_round_found_only",
+            "avg_wasted_rounds",
+            "max_round",
+            "conditions",
+            "models",
+            "num_condition_model_rows",
+            "round_counts",
+            "cumulative_found_counts",
+            "cumulative_found_rates",
+        ],
+    )
+    print(f"  Wrote {search_first_hit_tool_csv}")
+
+    search_topk_miss_tool_csv = out_dir / "search_topk_miss_tool.csv"
+    write_search_bottleneck_csv(
+        search_bottleneck.get("tool_miss_rows", []),
+        search_topk_miss_tool_csv,
+        [
+            "search_tool",
+            "cutoff",
+            "n_calls",
+            "hit_calls",
+            "miss_calls",
+            "miss_rate",
+            "conditions",
+            "models",
+            "num_condition_model_rows",
+        ],
+    )
+    print(f"  Wrote {search_topk_miss_tool_csv}")
+
+    search_tool_efficiency_csv = out_dir / "search_tool_efficiency.csv"
+    write_search_bottleneck_csv(
+        search_bottleneck.get("tool_efficiency_rows", []),
+        search_tool_efficiency_csv,
+        [
+            "search_tool",
+            "cutoff",
+            "tasks_with_tool",
+            "ever_found_rate",
+            "avg_first_hit_round_found_only",
+            "avg_wasted_rounds",
+            "conditions",
+            "models",
+            "num_condition_model_rows",
+        ],
+    )
+    print(f"  Wrote {search_tool_efficiency_csv}")
+
+    turn_waste_groups_csv_path = out_dir / "turn_waste_global_groups.csv"
+    write_csv(
+        turn_waste_groups_csv_path,
+        turn_waste_global_group_rows,
+        [
+            "variant",
+            "turn_waste_global_group",
+            "n",
+            "pct_within_grouped_failed_rows",
+            "n_failed_rows",
+            "n_grouped_failed_rows",
+            "n_unassigned_failed_rows",
+            "n_total_rows",
+        ],
+    )
+    print(f"  Wrote {turn_waste_groups_csv_path} ({len(turn_waste_global_group_rows)} rows)")
+
+    turn_waste_joined_path = out_dir / "turn_waste_grouped_failures_joined.csv"
+    write_csv(
+        turn_waste_joined_path,
+        turn_waste_joined_failed_rows,
+        [
+            "condition_model",
+            "variant",
+            "task_id",
+            "semantic_bucket",
+            "log_error_bucket",
+            "turn_waste_global_group",
+            "turn_waste_global_group_reason",
+            "estimated_wasted_turns",
+        ],
+    )
+    print(f"  Wrote {turn_waste_joined_path} ({len(turn_waste_joined_failed_rows)} rows)")
+
     if no_figures:
         print("Skipping figures (--no-figures).")
     else:
@@ -1359,20 +2779,24 @@ def run_analysis(
         generate_figures(
             summary_rows,
             variant_rows,
+            failure,
+            tools_discovery,
+            tool_errors,
+            base_by_key_records,
             crosstab_rows,
-            search_depth_buckets,
-            reasoning_density_buckets,
+            turn_waste_global_groups,
+            search_bottleneck,
+            search_depth_curve,
+            search_depth_curve_by_cm,
+            reasoning_density_curve,
+            reasoning_density_curve_by_cm,
             out_dir,
         )
         print(f"  Wrote figures to {out_dir / 'figures'}")
 
     print(f"\nSummary ({len(summary_rows)} model x variant rows):")
     for row in summary_rows:
-        semantic_pct = (
-            f"{float(row['semantic_match']) * 100:.1f}%"
-            if row.get("semantic_match") is not None
-            else "N/A"
-        )
+        semantic_pct = f"{float(row['semantic_match']) * 100:.1f}%" if row.get("semantic_match") is not None else "N/A"
         d_ret = f"{row.get('D_ret'):.2f}" if row.get("D_ret") is not None else "N/A"
         d_acc = f"{row.get('D_acc'):.2f}" if row.get("D_acc") is not None else "N/A"
         print(
@@ -1386,19 +2810,39 @@ def run_analysis(
         "semantic_match": semantic_match,
         "discovery": discovery,
         "runtime": runtime,
+        "efficiency": efficiency,
+        "failure": failure,
+        "tools_discovery": tools_discovery,
+        "tool_errors": tool_errors,
         "semantic_buckets": semantic_buckets,
         "log_error_buckets": log_error_buckets,
+        "turn_waste_global_groups": turn_waste_global_groups,
+        "turn_waste_global_group_rows": turn_waste_global_group_rows,
+        "turn_waste_joined_failed_rows": turn_waste_joined_failed_rows,
+        "search_bottleneck": search_bottleneck,
+        "search_depth": search_depth_curve,
+        "reasoning_density": reasoning_density_curve,
         "search_depth_buckets": search_depth_buckets,
         "reasoning_density_buckets": reasoning_density_buckets,
         "semantic_error_crosstab": crosstab_rows,
         "per_task_rows": per_task_rows,
+        "per_task_retrieval_rows": per_task_retrieval_rows,
     }
 
 
 def main() -> None:
     args = parse_args()
+    base_results_dir = args.base_results_dir or _default_base_results_dir(args.results_dir)
+    turn_waste_grouped_dir = args.turn_waste_grouped_dir or _default_turn_waste_grouped_dir(args.results_dir)
+    if not turn_waste_grouped_dir:
+        raise ValueError(
+            "Could not infer --turn-waste-grouped-dir from --results-dir. "
+            "Pass the grouped turn-waste root explicitly."
+        )
     run_analysis(
         results_dir=args.results_dir,
+        base_results_dir=base_results_dir,
+        turn_waste_grouped_dir=turn_waste_grouped_dir,
         traces_dir=args.traces_dir,
         tasks_dir=args.tasks_dir,
         output_dir=args.output_dir,
