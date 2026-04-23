@@ -15,10 +15,32 @@ if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
 from dotenv import load_dotenv
+try:
+    from tqdm.auto import tqdm
+except Exception:  # pragma: no cover
+    def tqdm(iterable=None, **_kwargs):
+        return iterable if iterable is not None else _NullTqdm()
 
 from strands_evaluation.tools.agent_tools import BUCKET, FOLDERS, _build_s3_client
 
 load_dotenv()
+
+
+class _NullTqdm:
+    def update(self, _n: int = 1) -> None:
+        return None
+
+    def set_postfix(self, *args, **kwargs) -> None:
+        return None
+
+    def close(self) -> None:
+        return None
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc, tb) -> bool:
+        return False
 
 
 def _parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
@@ -123,7 +145,12 @@ def build_manifest(
     file_count = 0
     unresolved: List[str] = []
     with output_path.open("w") as out:
-        for dataset_id in sorted(usage):
+        for dataset_id in tqdm(
+            sorted(usage),
+            total=len(usage),
+            desc="Listing datasets",
+            unit="dataset",
+        ):
             folder = _resolve_dataset_folder(s3_client, bucket=bucket, dataset_id=dataset_id)
             if folder is None:
                 unresolved.append(dataset_id)

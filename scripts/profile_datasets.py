@@ -20,11 +20,33 @@ if str(_REPO_ROOT) not in sys.path:
 
 import duckdb
 from dotenv import load_dotenv
+try:
+    from tqdm.auto import tqdm
+except Exception:  # pragma: no cover
+    def tqdm(iterable=None, **_kwargs):
+        return iterable if iterable is not None else _NullTqdm()
 
 from strands_evaluation.tools.agent_tools import BUCKET, REGION, _build_s3_client
 from strands_evaluation.tools.helper.detect import detect_family
 
 load_dotenv()
+
+
+class _NullTqdm:
+    def update(self, _n: int = 1) -> None:
+        return None
+
+    def set_postfix(self, *args, **kwargs) -> None:
+        return None
+
+    def close(self) -> None:
+        return None
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc, tb) -> bool:
+        return False
 
 _DESC_PATH = Path("table_descriptions.jsonl")
 _SNIPPET_PATH = Path("snippet.jsonl")
@@ -594,7 +616,12 @@ def build_profiles(
 
     with output_path.open(mode) as out:
         if parallel <= 1:
-            for entry in entries:
+            for entry in tqdm(
+                entries,
+                total=len(entries),
+                desc="Profiling files",
+                unit="file",
+            ):
                 identity = _profile_identity(entry)
                 key = (entry["slug"], entry["filename"])
                 if identity is not None and identity in existing_keys:
@@ -622,17 +649,20 @@ def build_profiles(
                 future = executor.submit(_process_entry, entry, description_cache, snippet_cache)
                 futures[future] = key
 
-            for future in concurrent.futures.as_completed(futures):
-                _, profile, error = future.result()
-                if error is not None or profile is None:
-                    errors += 1
-                    key = futures[future]
-                    print(f"SKIP {key[0]}/{key[1]}: {error}", file=sys.stderr)
-                    continue
-                out.write(json.dumps(profile, default=_json_value))
-                out.write("\n")
-                out.flush()
-                written += 1
+            with tqdm(total=len(futures), desc="Profiling files", unit="file") as pbar:
+                for future in concurrent.futures.as_completed(futures):
+                    _, profile, error = future.result()
+                    if error is not None or profile is None:
+                        errors += 1
+                        key = futures[future]
+                        print(f"SKIP {key[0]}/{key[1]}: {error}", file=sys.stderr)
+                        pbar.update(1)
+                        continue
+                    out.write(json.dumps(profile, default=_json_value))
+                    out.write("\n")
+                    out.flush()
+                    written += 1
+                    pbar.update(1)
 
     return {"written": written, "skipped": skipped, "errors": errors}
 
