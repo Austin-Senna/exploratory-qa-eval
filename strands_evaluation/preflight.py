@@ -14,6 +14,7 @@ from typing import List, Optional, Sequence
 from strands_evaluation.config import RunConfig
 
 _PROMPTS_DIR = Path("prompts")
+_PROFILES_PATH = Path("datagov_tables_profiles.jsonl")
 
 
 @dataclass
@@ -92,6 +93,28 @@ def _check_schemas_jsonl_load() -> PreflightCheck:
     )
 
 
+def _check_profiles_jsonl() -> PreflightCheck:
+    label = "datagov_tables_profiles.jsonl"
+    if not _PROFILES_PATH.exists():
+        return PreflightCheck(
+            label,
+            True,
+            f"missing: {_PROFILES_PATH} (Agent 1 falls back to legacy schema+snippet+description)",
+        )
+
+    count = 0
+    try:
+        with _PROFILES_PATH.open() as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                count += 1
+    except Exception as exc:
+        return PreflightCheck(label, False, str(exc))
+    return PreflightCheck(label, True, f"found: {count} entries")
+
+
 def _check_plan_files(task_files: Sequence[str]) -> List[PreflightCheck]:
     from strands_evaluation.tools.external.ideal import plan_store
 
@@ -150,6 +173,8 @@ def run_preflight(
         checks.append(_check_desc_cache_for_enrichment())
         checks.append(_check_snippet_cache())
         checks.append(_check_schemas_jsonl_load())
+    if sana is not None and sana >= 1:
+        checks.append(_check_profiles_jsonl())
 
     ok_count = sum(1 for c in checks if c.ok)
     fail_count = len(checks) - ok_count

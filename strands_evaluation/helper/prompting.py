@@ -108,6 +108,7 @@ def inject_sana_prompt(prompt: str, sana_level: Optional[int]) -> str:
         "\n\n## DATASET PROFILE (SANA Agent 1)\n"
         "`peek_file` may return an extra `profile` field with cached metadata for the dataset:\n"
         "`schema_columns`, `table_kind`, `llm_description`, `snippet`.\n"
+        "Some profiles also include `row_count`, `size_bytes`, `top_2_rows`, and per-column `null_rate`, `distinct_count`, `min`, `max`, `mean`.\n"
         "When `profile` is present, use it instead of follow-up `read_file` / `grep_file` probes to learn column names, types, or dataset purpose.\n"
         "Fall back to the usual preview-then-query flow when `profile` is absent (not every dataset is cached)."
     )

@@ -378,6 +378,10 @@ class TestSanaLevel(unittest.TestCase):
         bundle = build_mode_bundle(cfg, data_tools=[], task_context=self._task_context)
         self.assertIn("DATASET PROFILE", bundle.system_prompt)
         self.assertIn("profile", bundle.system_prompt)
+        self.assertIn("row_count", bundle.system_prompt)
+        self.assertIn("top_2_rows", bundle.system_prompt)
+        self.assertIn("null_rate", bundle.system_prompt)
+        self.assertLessEqual(len(bundle.system_prompt.splitlines()), len(compose_managed_prompt("ideal").splitlines()) + 12)
 
     def test_sana_0_does_not_inject_profile_section(self):
         cfg = RunConfig(sana_level=0)
