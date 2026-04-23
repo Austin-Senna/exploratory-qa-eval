@@ -1,27 +1,29 @@
 ---
 name: plan-ideal
-description: Ideal-mode planning workflow with the gold reasoning chain already loaded in the system prompt. Call `plan_ideal()` first to save a concise execution plan grounded in that chain.
+description: Planning guidance when the gold reasoning chain is preloaded. Load before calling `plan_ideal()`.
 ---
 
-## Rule #1: Call `plan_ideal` First
+## Base the plan on the gold reasoning chain
 
-In ideal management mode, call `plan_ideal` as your first planning action.
+The gold reasoning chain is already in the system prompt. Use `plan_ideal()` to save your working plan — grounded in that chain, keeping its order intact.
 
-The gold reasoning chain is already loaded in the system prompt at startup.
-Use `plan_ideal()` to save your working execution plan before broad retrieval.
+Copy a chain step only when its wording is already the clearest. You don't need to redo entity resolution or dataset search: `search_ideal` will advance through the planned sources in order.
 
-## Build an Execution Plan From the Reasoning Chain
+## Plan format
 
-Base the plan on the gold reasoning chain and keep its order intact.
-Copy a chain step only when it is already the clearest wording.
-
-## Execution Expectations
-
-Prefer 4-8 short numbered steps.
-Each step should name:
+4–8 short numbered steps. Each step names:
 - what to verify or compute
-- the main tool family
+- the main tool family (`search_ideal`, `peek_file`, `query_file`, `execute_code`)
 - the result needed to move on
 
-Avoid long narrative, restating the whole question, or expanded prose about intermediate outputs.
-If evidence conflicts with the chain assumptions, call `plan_ideal()` again with a short revised plan.
+Avoid long narrative, restating the whole question, or prose about intermediate outputs.
+
+## When to replan
+
+Call `plan_ideal()` again in any of these cases:
+
+1. **Evidence conflicts with the chain** — a returned source doesn't contain what the chain implied, or values don't match. Write a short revised plan around the new evidence.
+2. **Before final extraction** — once the relevant sources have been surfaced and columns are confirmed, save a focused 1–3 step plan for the exact query that yields the answer.
+3. **Planned sources exhausted without an answer** — if `search_ideal` returns `plan_exhausted=true` and you still can't answer, summarize what was found, identify the gap, and plan around a proxy or fallback approach.
+
+When replanning, focus only on the remaining gap — don't rewrite completed steps.

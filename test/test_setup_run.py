@@ -66,6 +66,7 @@ class SetupRunTests(unittest.TestCase):
                         "assistant-v3:tools-v1",
                         "--openai-prompt-cache-retention",
                         "24h",
+                        "--verbose",
                         "--db",
                         "lance_data",
                     ],
@@ -86,6 +87,7 @@ class SetupRunTests(unittest.TestCase):
             self.assertEqual(command[command.index("--reasoning-effort") + 1], "xhigh")
             self.assertEqual(command[command.index("--openai-prompt-cache-key") + 1], "assistant-v3:tools-v1")
             self.assertEqual(command[command.index("--openai-prompt-cache-retention") + 1], "24h")
+            self.assertIn("--verbose", command)
             self.assertEqual(fake_runner.kwargs, {"check": True, "cwd": str(repo_root)})
             self.assertIn("Task scope: tasks_core_quality/k-5-d-4 (first 2 tasks)", stdout.getvalue())
 

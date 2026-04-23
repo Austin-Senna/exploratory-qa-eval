@@ -1,7 +1,7 @@
 import unittest
+from pathlib import Path
 from unittest.mock import Mock, patch
 
-from strands_evaluation.helper import constants
 from strands_evaluation.tools import agent_tools_v2
 from strands_evaluation.tools.helper.detect import detect_family
 
@@ -131,7 +131,7 @@ class TestQueryFileXmlSupport(unittest.TestCase):
 
 class TestPromptContract(unittest.TestCase):
     def test_system_prompt_mentions_xml_preview_and_query_limit(self):
-        prompt = constants.SYSTEM_PROMPT
+        prompt = Path("prompts/baseline.txt").read_text()
         self.assertIn("CSV/JSON/XML/text", prompt)
         self.assertIn("XML/KML is detected but not queryable here", prompt)
         self.assertIn("xml.etree.ElementTree", prompt)

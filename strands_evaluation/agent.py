@@ -38,9 +38,8 @@ from strands_evaluation.instrumentation.loop_plugin import CategoryStagnationHan
 from strands_evaluation.helper.logger import configure_worker_logging
 from strands_evaluation.helper.prompting import (
     compose_baseline_prompt,
-    compose_condition_b_prompt,
+    compose_managed_prompt,
     inject_debug_prompt,
-    load_condition_prompt as _shared_load_condition_prompt,
     skill_paths_for_modes,
 )
 from strands_evaluation.helper.agent_runtime import invoke_with_watchdog
@@ -82,18 +81,6 @@ from strands_evaluation.tools.external.search_eval_tools import (
 
 logger = logging.getLogger(__name__)
 
-# Condition A search tools
-_CONDITION_A_TOOLS_AVAILABLE = False
-try:
-    from strands_evaluation.tools.external.search_a_tools import (
-        search_value as search_value_a,
-        search_schema,
-        search_reranked,
-    )
-    _CONDITION_A_TOOLS_AVAILABLE = True
-except ImportError:
-    pass
-
 # Condition B search tools
 _CONDITION_B_TOOLS_AVAILABLE = False
 try:
@@ -113,11 +100,6 @@ except ImportError:
 # ---------------------------------------------------------------------------
 # DataLakeAgent
 # ---------------------------------------------------------------------------
-
-def _load_condition_prompt(condition: str, fallback: str = "") -> str:
-    """Load system prompt for a condition."""
-    return _shared_load_condition_prompt(condition, fallback)
-
 
 def _base_condition(condition_label: str) -> str:
     """Strip optional experimental suffix from condition label."""
@@ -170,8 +152,6 @@ class DataLakeAgent:
     ) -> tuple:
         cond = self.run_config.condition_config
         condition = _resolve_condition(cond)
-        if condition == "a" and not _CONDITION_A_TOOLS_AVAILABLE:
-            raise RuntimeError("Condition A search tools are unavailable (import failed).")
         if condition in {"baseline", "b"} and not _CONDITION_B_TOOLS_AVAILABLE:
             raise RuntimeError("Condition B/Baseline search tools are unavailable (import failed).")
 
@@ -182,22 +162,11 @@ class DataLakeAgent:
             submit_answer,
         ]
 
-        if condition == "a" and _CONDITION_A_TOOLS_AVAILABLE:
-            # Condition A (tools-rich): hybrid RRF + schema + reranked + shared baseline tools
-            raw_search_tools = [search_value_a, search_schema, search_reranked, search_prefix]
-            system_prompt = _load_condition_prompt("a", fallback=self.run_config.system_prompt)
-            search_tools = build_search_tools(
-                raw_search_tools,
-                fixed_k=self.run_config.search_k,
-                search_descriptions=self.run_config.search_descriptions,
-            )
-            tools = search_tools + _data_tools
-
-        elif condition == "b" and _CONDITION_B_TOOLS_AVAILABLE:
+        if condition == "b" and _CONDITION_B_TOOLS_AVAILABLE:
             # Condition B (planning-rich): sparse search + prefix + plan tool + skills
             # summarize_context only given to B — longer planning loops benefit from manual context control
             raw_search_tools = [search_value_b, search_schema_b, search_prefix]
-            system_prompt = compose_condition_b_prompt("naive", fallback=self.run_config.system_prompt)
+            system_prompt = compose_managed_prompt("naive")
             search_tools = build_search_tools(
                 raw_search_tools,
                 fixed_k=self.run_config.search_k,
@@ -208,7 +177,7 @@ class DataLakeAgent:
         else:
             # Baseline: Condition B search tools (BM25 + schema + prefix) without any context tools
             raw_search_tools = [search_value_b, search_schema_b, search_prefix]
-            system_prompt = compose_baseline_prompt("naive", fallback=self.run_config.system_prompt)
+            system_prompt = compose_baseline_prompt("naive")
             search_tools = build_search_tools(
                 raw_search_tools,
                 fixed_k=self.run_config.search_k,
@@ -442,15 +411,6 @@ def _run_task_worker(
     # Eagerly load the hybrid search DB + embedding model + cross-encoder reranker once
     # per worker process (singletons in api.py guard against re-loading on subsequent tasks).
     condition = _resolve_condition(run_config.condition_config)
-
-    if condition == "a" and _CONDITION_A_TOOLS_AVAILABLE:
-        try:
-            import strands_evaluation.tools.external.search_a_tools as _sa
-            if run_config.search_db_path:
-                _sa.set_db_path(run_config.search_db_path)
-            _sa.setup()
-        except Exception as e:
-            logger.warning(f"Hybrid search setup failed: {e}")
 
     if condition == "b" and _CONDITION_B_TOOLS_AVAILABLE:
         try:

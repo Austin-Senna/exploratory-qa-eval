@@ -40,51 +40,37 @@ def normalize_debug_mode(value: Optional[str]) -> Optional[str]:
     return mode
 
 
-def load_prompt_text(path: str | Path, fallback: str = "") -> str:
+def load_prompt_text(path: str | Path) -> str:
     prompt_path = Path(path)
-    try:
-        return prompt_path.read_text()
-    except FileNotFoundError:
-        logger.warning("%s not found — using fallback prompt text", prompt_path)
-        return fallback
-
-
-def load_condition_prompt(condition: str, fallback: str = "") -> str:
-    if str(condition).strip().lower() == "baseline":
-        return load_prompt_text(_PROMPTS_DIR / "baseline.txt", fallback)
-    return load_prompt_text(_PROMPTS_DIR / f"condition_{condition}.txt", fallback)
+    if not prompt_path.is_file():
+        raise FileNotFoundError(
+            f"Required prompt file missing: {prompt_path}. "
+            "Run preflight to confirm your prompts/ directory is complete."
+        )
+    return prompt_path.read_text()
 
 
 def _compose_search_overlay_prompt(
     base_prompt_path: str | Path,
     search_tool_mode: Optional[str],
-    *,
-    fallback: str = "",
 ) -> str:
     mode = _normalize_mode(search_tool_mode, "naive", "search_tool")
-    base_prompt = load_prompt_text(base_prompt_path, fallback).rstrip()
-    overlay = load_prompt_text(_PROMPTS_DIR / f"search_{mode}.txt", "").strip()
-
-    if not base_prompt:
-        return overlay
-    if not overlay:
-        return base_prompt
+    base_prompt = load_prompt_text(base_prompt_path).rstrip()
+    overlay = load_prompt_text(_PROMPTS_DIR / f"search_{mode}.txt").strip()
     return f"{base_prompt}\n\n{overlay}"
 
 
-def compose_condition_b_prompt(search_tool_mode: Optional[str], *, fallback: str = "") -> str:
+def compose_managed_prompt(search_tool_mode: Optional[str]) -> str:
     return _compose_search_overlay_prompt(
-        _PROMPTS_DIR / "condition_b.txt",
+        _PROMPTS_DIR / "managed.txt",
         search_tool_mode,
-        fallback=fallback,
     )
 
 
-def compose_baseline_prompt(search_tool_mode: Optional[str], *, fallback: str = "") -> str:
+def compose_baseline_prompt(search_tool_mode: Optional[str]) -> str:
     return _compose_search_overlay_prompt(
         _PROMPTS_DIR / "baseline.txt",
         search_tool_mode,
-        fallback=fallback,
     )
 
 
@@ -134,10 +120,9 @@ def inject_debug_prompt(prompt: str, debug_mode: Optional[str]) -> str:
 
 __all__ = [
     "compose_baseline_prompt",
-    "compose_condition_b_prompt",
+    "compose_managed_prompt",
     "discover_skill_path",
     "inject_debug_prompt",
-    "load_condition_prompt",
     "load_prompt_text",
     "normalize_debug_mode",
     "planning_skill_path",

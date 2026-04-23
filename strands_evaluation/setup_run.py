@@ -45,10 +45,11 @@ def _build_parser() -> argparse.ArgumentParser:
     common.add_argument("--db", default=None, help="Lance DB root, required on every run.")
     common.add_argument(
         "--condition",
-        choices=("baseline", "a", "b"),
+        choices=("baseline", "b"),
         default="baseline",
     )
     common.add_argument("--parallel", type=int, default=None)
+    common.add_argument("--verbose", "-v", action="store_true")
 
     smoke = subparsers.add_parser("smoke", parents=[common], help="Run a lightweight smoke eval.")
     smoke.add_argument(
@@ -178,6 +179,8 @@ def _build_run_mode_command(args: argparse.Namespace, cwd: Path) -> tuple[list[s
         command.extend(["--openai-prompt-cache-retention", args.openai_prompt_cache_retention])
     if args.parallel is not None:
         command.extend(["--parallel", str(args.parallel)])
+    if args.verbose:
+        command.append("--verbose")
 
     if args.subcommand == "smoke":
         task_dir = _resolve_smoke_task_dir(args.task_dir, cwd)

@@ -28,7 +28,7 @@ class PreflightError(RuntimeError):
 
 
 def _prompt_files_for_modes(search_tool_mode: str, agent_management_mode: str) -> List[Path]:
-    base_name = "baseline.txt" if agent_management_mode == "naive" else "condition_b.txt"
+    base_name = "baseline.txt" if agent_management_mode == "naive" else "managed.txt"
     overlay_name = f"search_{search_tool_mode}.txt"
     return [_PROMPTS_DIR / base_name, _PROMPTS_DIR / overlay_name]
 

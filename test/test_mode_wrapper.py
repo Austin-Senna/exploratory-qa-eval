@@ -7,7 +7,7 @@ from strands_evaluation.config import RunConfig
 from strands_evaluation.agent_with_mode import build_mode_bundle
 from strands_evaluation.helper.prompting import (
     compose_baseline_prompt,
-    compose_condition_b_prompt,
+    compose_managed_prompt,
     inject_debug_prompt,
     normalize_debug_mode,
     skill_paths_for_modes,
@@ -48,7 +48,6 @@ class TestModeWrapper(unittest.TestCase):
             search_tool_mode="naive",
             search_results_mode="naive",
             agent_management_mode="naive",
-            system_prompt="BASE_PROMPT",
         )
         bundle = build_mode_bundle(cfg, data_tools=[])
         self.assertEqual(bundle.modes["search_tool"], "naive")
@@ -63,30 +62,29 @@ class TestModeWrapper(unittest.TestCase):
             search_tool_mode="standard",
             search_results_mode="naive",
             agent_management_mode="naive",
-            system_prompt="BASE_PROMPT",
         )
         bundle = build_mode_bundle(cfg, data_tools=[])
         self.assertIn("search_reranked", bundle.search_tool_names)
         self.assertNotIn("search_ideal", bundle.search_tool_names)
 
-    def test_condition_b_naive_prompt_mentions_sparse_search_only(self):
-        prompt = compose_condition_b_prompt("naive", fallback="BASE_PROMPT")
+    def test_managed_naive_prompt_mentions_sparse_search_only(self):
+        prompt = compose_managed_prompt("naive")
         self.assertIn("search_value", prompt)
         self.assertIn("search_schema", prompt)
         self.assertIn("search_prefix", prompt)
         self.assertNotIn("search_reranked", prompt)
         self.assertNotIn("search_ideal", prompt)
 
-    def test_condition_b_standard_prompt_mentions_reranked_search(self):
-        prompt = compose_condition_b_prompt("standard", fallback="BASE_PROMPT")
+    def test_managed_standard_prompt_mentions_reranked_search(self):
+        prompt = compose_managed_prompt("standard")
         self.assertIn("search_reranked", prompt)
         self.assertIn("search_schema", prompt)
         self.assertIn("search_prefix", prompt)
         self.assertNotIn("search_value", prompt)
         self.assertNotIn("search_ideal", prompt)
 
-    def test_condition_b_ideal_prompt_mentions_only_search_ideal(self):
-        prompt = compose_condition_b_prompt("ideal", fallback="BASE_PROMPT")
+    def test_managed_ideal_prompt_mentions_only_search_ideal(self):
+        prompt = compose_managed_prompt("ideal")
         self.assertIn("search_ideal", prompt)
         self.assertNotIn("search_reranked", prompt)
         self.assertNotIn("search_value", prompt)
@@ -95,14 +93,14 @@ class TestModeWrapper(unittest.TestCase):
         self.assertNotIn("reasoning chain", prompt.lower())
 
     def test_baseline_prompt_mentions_reranked_search_in_standard_mode(self):
-        prompt = compose_baseline_prompt("standard", fallback="BASE_PROMPT")
+        prompt = compose_baseline_prompt("standard")
         self.assertIn("search_reranked", prompt)
         self.assertIn("search_schema", prompt)
         self.assertNotIn("search_value", prompt)
         self.assertNotIn("search_ideal", prompt)
 
     def test_baseline_prompt_mentions_only_search_ideal_in_ideal_mode(self):
-        prompt = compose_baseline_prompt("ideal", fallback="BASE_PROMPT")
+        prompt = compose_baseline_prompt("ideal")
         self.assertIn("search_ideal", prompt)
         self.assertNotIn("search_reranked", prompt)
         self.assertNotIn("reasoning chain", prompt.lower())
@@ -115,7 +113,7 @@ class TestModeWrapper(unittest.TestCase):
         self.assertIn("strands_evaluation/tools/skills/plan-ideal", ideal_paths)
         self.assertIn("strands_evaluation/tools/skills/discover-data-ideal", ideal_paths)
 
-    def test_ideal_management_uses_condition_b_stack_with_plan_swap(self):
+    def test_ideal_management_uses_managed_stack_with_plan_swap(self):
         with TemporaryDirectory() as tmpdir:
             plans_root = Path(tmpdir) / "plans_mini"
             self._write_valid_plan(plans_root)
@@ -125,7 +123,6 @@ class TestModeWrapper(unittest.TestCase):
                 search_tool_mode="ideal",
                 search_results_mode="ideal",
                 agent_management_mode="ideal",
-                system_prompt="BASE_PROMPT",
             )
             bundle = build_mode_bundle(
                 cfg,
@@ -150,7 +147,6 @@ class TestModeWrapper(unittest.TestCase):
                 search_tool_mode="ideal",
                 search_results_mode="ideal",
                 agent_management_mode="ideal",
-                system_prompt="BASE_PROMPT",
             )
             build_mode_bundle(
                 cfg,
@@ -175,7 +171,6 @@ class TestModeWrapper(unittest.TestCase):
                 search_tool_mode="ideal",
                 search_results_mode="ideal",
                 agent_management_mode="ideal",
-                system_prompt="BASE_PROMPT",
             )
             bundle = build_mode_bundle(
                 cfg,
@@ -193,7 +188,6 @@ class TestModeWrapper(unittest.TestCase):
             search_tool_mode="standard",
             search_results_mode="naive",
             agent_management_mode="standard",
-            system_prompt="BASE_PROMPT",
         )
         bundle = build_mode_bundle(cfg, data_tools=[])
         self.assertIn("search_reranked", bundle.system_prompt)
@@ -213,7 +207,6 @@ class TestModeWrapper(unittest.TestCase):
                 search_tool_mode="ideal",
                 search_results_mode="ideal",
                 agent_management_mode="standard",
-                system_prompt="BASE_PROMPT",
             )
             bundle = build_mode_bundle(
                 cfg,
@@ -229,7 +222,6 @@ class TestModeWrapper(unittest.TestCase):
             search_tool_mode="standard",
             search_results_mode="naive",
             agent_management_mode="naive",
-            system_prompt="BASE_PROMPT",
         )
         bundle = build_mode_bundle(cfg, data_tools=[])
         self.assertIn("search_reranked", bundle.system_prompt)
@@ -249,7 +241,6 @@ class TestModeWrapper(unittest.TestCase):
                 search_tool_mode="ideal",
                 search_results_mode="ideal",
                 agent_management_mode="naive",
-                system_prompt="BASE_PROMPT",
             )
             bundle = build_mode_bundle(
                 cfg,
@@ -265,7 +256,6 @@ class TestModeWrapper(unittest.TestCase):
             search_tool_mode="standard",
             search_results_mode="naive",
             agent_management_mode="naive",
-            system_prompt="BASE_PROMPT",
             debug_mode="decision_notes",
         )
         bundle = build_mode_bundle(cfg, data_tools=[])
@@ -295,7 +285,6 @@ class TestModeWrapper(unittest.TestCase):
                 search_tool_mode="ideal",
                 search_results_mode="ideal",
                 agent_management_mode="ideal",
-                system_prompt="BASE_PROMPT",
             )
             with self.assertRaises(FileNotFoundError):
                 build_mode_bundle(
@@ -323,7 +312,6 @@ class TestModeWrapper(unittest.TestCase):
                 search_tool_mode="ideal",
                 search_results_mode="ideal",
                 agent_management_mode="ideal",
-                system_prompt="BASE_PROMPT",
             )
             with self.assertRaises(ValueError):
                 build_mode_bundle(

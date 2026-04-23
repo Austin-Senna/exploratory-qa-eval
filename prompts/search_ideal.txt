@@ -1,13 +1,10 @@
 ## AVAILABLE SEARCH TOOLS
-- `search_ideal` — ideal search. In this mode it is the only search tool. Each call consumes up to `top_k` planned source targets.
+- `search_ideal` — ideal search. In this mode it is the only search tool. 
 
-## SEARCH STRATEGY GUIDE (IDEAL)
-`search_ideal` is the only search tool in this mode.
-
+## SEARCH STRATEGY GUIDE 
 Use it deliberately:
 1. Use it until exhaustion. You will most likely need all the planned sources.
 2. Each call advances through the next planned source targets in `source_sequence`; your query text does not change which targets are returned.
-3. `top_k` controls how many sequential planned sources are returned in one call.
-4. Inspect the returned `dataset_id`, `s3_uri`, `llm_desc`, `columns` or `type`, and `dataset_snippet`, then move to extraction on those files.
+3. Inspect the returned `dataset_id`, `s3_uri`, `llm_desc`, `columns` or `type`, and `dataset_snippet`, then move to extraction on those files.
 
 Each `search_ideal` call advances the search cursor by up to `top_k` planned sources, and once the sequence is exhausted the tool will return `plan_exhausted=true`.

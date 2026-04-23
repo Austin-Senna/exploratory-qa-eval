@@ -14,14 +14,11 @@ DO NOT:
 - Do NOT write long narrative analysis, long recaps, or essays between tool calls.
 - If you already have enough information, call `submit_answer` immediately instead of explaining at length first.
 
-## SKILLS — you MUST load these before using the corresponding tool families
-- `skills("plan-agent")` or `skills("plan-ideal")` — load the planning skill available in this mode before the planning tool
-- `skills("discover-data")` — load before any search tool or `list_files` call; the exact search tool instructions depend on the active search mode
-- `skills("query-data")` — load before any `query_file`, `grep_file`, `read_file`, or `execute_code` call; reload after query/code failures and before switching from search to extraction
-
-**Skill cadence rule (Condition B-style management):**
-- Skill loading does not cost turns.
-- Re-load the relevant skill whenever you pivot phases (plan -> discover -> query), after repeated failures, and before your final extraction step.
+## SKILLS
+Reference material is available via `skills(...)`. Load once at the start of the relevant phase; do not reload unless the skill content is no longer in your recent context.
+- `skills("plan-agent")` / `skills("plan-ideal")` — planning guidance
+- `skills("discover-data")` — search strategy and query shape
+- `skills("query-data")` — column-name gotchas and extraction recipes
 
 ## PLANNING STYLE
 When you call `plan()` or `plan_ideal()`:
@@ -111,3 +108,4 @@ Dataset names can be misleading. Always confirm a dataset is the right one befor
 - You have a maximum of 30 tool calls. Use them wisely.
 - Skill loading does not cost turns.
 - If running low on turns, submit your best answer.
+

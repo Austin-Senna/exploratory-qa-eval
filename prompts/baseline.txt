@@ -18,11 +18,11 @@ DO NOT:
 The active search tools are listed in the search-mode section appended below. Use only the search tools described there.
 
 - `list_files` — list files inside a dataset
-- `peek_file` — preview ONE file's structure and column headers (first 64KB); dataset_id is the bare ID only, no prefix
+- `peek_file` — preview ONE file's structure (CSV/JSON/XML/text) and column headers or XML schema hints (first 64KB); dataset_id is the bare ID only, no prefix
 - `peek_multiple` — preview SEVERAL files in one call (batch wrapper); use this for 2+ files and pass `files=[{dataset_id, file_path}, ...]`. For ONE file use `peek_file` instead
 - `read_file` — read lines from a file directly (paginated, no download needed)
 - `grep_file` — regex search inside a file (no download needed); saves 2-3 tool calls vs download+execute_code
-- `query_file` — SQL query directly on a CSV/JSON file via DuckDB (no download needed); saves 2-3 tool calls
+- `query_file` — SQL query directly on a CSV/JSON file via DuckDB (no download needed); XML/KML is detected but not queryable here
 - `download` — download files to the sandbox
 - `execute_code` — run Python against downloaded files; ONLY use when `query_file`/`grep_file` are not enough
 - `submit_answer(answer, reasoning)` — submit your final answer and stop
@@ -46,12 +46,13 @@ If a result is too large, you will receive:
 `execute_code` stdout is also capped at ~6,000 chars (~1.5k tokens). If output is truncated, print less or query more specifically.
 
 ## QUERY DISCIPLINE — peek before SQL
-NEVER call `query_file` on a file you have not first inspected with `peek_file`. The most common failure modes come from guessing the schema:
+Do not call `query_file` on a dataset you don't know the schema of. The most common failure modes come from guessing the schema:
 - Inventing column names (`county_name` when the column is `County`, `ISSUING_AGENCY_NAME` when it's `IssuingAgency`) -> Binder Error
 - Inventing nested table refs like `t.features` or `properties.X` -> DuckDB only exposes the flat table alias `t`
 - Casting strings to numbers when the column actually contains values like `'>80'`, `'0-5'`, or `'Under Review'` -> Conversion Error
 - Using backtick identifiers (`` `OVERALL GRADE` ``) -> DuckDB requires double quotes: `"OVERALL GRADE"`
 - Calling `query_file` on a plain-text file -> use `read_file` or `grep_file` instead
+- Calling `query_file` on an XML/KML file -> use `peek_file` for tags/schema, `grep_file` for text search, or `download` + `execute_code` with `xml.etree.ElementTree`
 
 **Required workflow for any new file:**
 1. If you need to inspect one file, call `peek_file(dataset_id, file_path)` once. If you need to inspect 2+ files, call `peek_multiple(files=[{dataset_id, file_path}, ...], max_rows=5)` once. Read the EXACT column headers and a few sample values
@@ -72,7 +73,6 @@ You only need to peek a file ONCE per session. After that, query freely.
 
 ## VERIFY DATA SOURCES
 Dataset names can be misleading. Always confirm a dataset is the right one before using it:
-- Check metadata files for publisher, geographic coverage, and time period
 - Two datasets with similar names may cover completely different locations
 
 ## GENERAL TIPS

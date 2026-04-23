@@ -40,9 +40,8 @@ from strands_evaluation.instrumentation.loop_plugin import CategoryStagnationHan
 from strands_evaluation.helper.logger import configure_worker_logging
 from strands_evaluation.helper.prompting import (
     compose_baseline_prompt,
-    compose_condition_b_prompt,
+    compose_managed_prompt,
     inject_debug_prompt,
-    load_condition_prompt as _shared_load_condition_prompt,
     skill_paths_for_modes,
 )
 from strands_evaluation.helper.agent_runtime import invoke_with_watchdog
@@ -191,21 +190,20 @@ def build_management(
     mode: str,
     *,
     search_tool_mode: str,
-    base_prompt: str,
     task_context: Optional[Dict[str, Any]],
 ) -> tuple[str, List[Any], bool, bool]:
     """Return prompt, management tools, and behavior toggles for a mode."""
     management_mode = _normalize_mode(mode, "standard", "agent_management")
 
     if management_mode == "naive":
-        prompt = compose_baseline_prompt(search_tool_mode, fallback=base_prompt)
+        prompt = compose_baseline_prompt(search_tool_mode)
         return prompt, [], False, False
 
-    prompt = compose_condition_b_prompt(search_tool_mode, fallback=base_prompt)
+    prompt = compose_managed_prompt(search_tool_mode)
     if management_mode == "standard":
         return prompt, [plan, summarize_context], True, True
 
-    # ideal = Condition-B management with gold reasoning chain preloaded and
+    # ideal = managed stack with gold reasoning chain preloaded and
     # plan swapped to plan_ideal.
     set_ideal_plan_task_context(task_context or {})
     ideal_plan = load_ideal_plan_for_context(task_context)
@@ -254,7 +252,6 @@ def build_mode_bundle(
     system_prompt, management_tools, enable_skills, enable_stagnation = build_management(
         agent_management_mode,
         search_tool_mode=search_tool_mode,
-        base_prompt=run_config.system_prompt,
         task_context=task_context,
     )
     system_prompt = inject_debug_prompt(system_prompt, run_config.debug_mode)
@@ -282,11 +279,6 @@ def build_mode_bundle(
 # DataLakeAgent
 # ---------------------------------------------------------------------------
 
-def _load_condition_prompt(condition: str, fallback: str = "") -> str:
-    """Load system prompt for a condition."""
-    return _shared_load_condition_prompt(condition, fallback)
-
-
 def _base_condition(condition_label: str) -> str:
     """Strip optional experimental suffix from condition label."""
     if not condition_label:
@@ -295,7 +287,7 @@ def _base_condition(condition_label: str) -> str:
 
 
 def _resolve_condition(cond_cfg: ConditionConfig) -> str:
-    """Resolve the actual experiment condition (baseline/a/b)."""
+    """Resolve the actual experiment condition (baseline/b)."""
     if getattr(cond_cfg, "base_condition", None):
         return str(cond_cfg.base_condition)
     return _base_condition(cond_cfg.condition)
@@ -348,8 +340,6 @@ class DataLakeAgent:
         )
 
         if not mode_overrides_enabled:
-            if condition == "a" and not _CONDITION_A_TOOLS_AVAILABLE:
-                raise RuntimeError("Condition A search tools are unavailable (import failed).")
             if condition in {"baseline", "b"} and not _CONDITION_B_TOOLS_AVAILABLE:
                 raise RuntimeError("Condition B/Baseline search tools are unavailable (import failed).")
 
@@ -382,25 +372,11 @@ class DataLakeAgent:
                 mode_bundle.modes["agent_management"],
             )
         else:
-            if condition == "a" and _CONDITION_A_TOOLS_AVAILABLE:
-                # Condition A (tools-rich): hybrid RRF + schema + reranked + shared baseline tools
-                raw_search_tools = [search_value_a, search_schema, search_reranked, search_prefix]
-                system_prompt = _load_condition_prompt("a", fallback=self.run_config.system_prompt)
-                search_tools = build_search_tools(
-                    raw_search_tools,
-                    fixed_k=self.run_config.search_k,
-                    search_descriptions=self.run_config.search_descriptions,
-                )
-                tools = search_tools + _data_tools
-                enable_skills = False
-                enable_stagnation = False
-                skill_paths = skill_paths_for_modes("naive", "naive")
-
-            elif condition == "b" and _CONDITION_B_TOOLS_AVAILABLE:
+            if condition == "b" and _CONDITION_B_TOOLS_AVAILABLE:
                 # Condition B (planning-rich): sparse search + prefix + plan tool + skills
                 # summarize_context only given to B — longer planning loops benefit from manual context control
                 raw_search_tools = [search_value_b, search_schema_b, search_prefix]
-                system_prompt = compose_condition_b_prompt("naive", fallback=self.run_config.system_prompt)
+                system_prompt = compose_managed_prompt("naive")
                 search_tools = build_search_tools(
                     raw_search_tools,
                     fixed_k=self.run_config.search_k,
@@ -414,7 +390,7 @@ class DataLakeAgent:
             else:
                 # Baseline: Condition B search tools (BM25 + schema + prefix) without any context tools
                 raw_search_tools = [search_value_b, search_schema_b, search_prefix]
-                system_prompt = compose_baseline_prompt("naive", fallback=self.run_config.system_prompt)
+                system_prompt = compose_baseline_prompt("naive")
                 search_tools = build_search_tools(
                     raw_search_tools,
                     fixed_k=self.run_config.search_k,
@@ -657,9 +633,8 @@ def _run_task_worker(
     # Eagerly load search backend state once per worker process.
     # For ablation runs, mode overrides drive setup. For legacy runs, condition drives setup.
     mode_search_tool = (run_config.search_tool_mode or "").strip().lower() or None
-    condition = _resolve_condition(run_config.condition_config)
     if mode_search_tool is None:
-        mode_search_tool = "standard" if condition == "a" else "naive"
+        mode_search_tool = "naive"
 
     if mode_search_tool == "standard" and _CONDITION_A_TOOLS_AVAILABLE:
         try:

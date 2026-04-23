@@ -12,7 +12,7 @@ They also serve as the key for pricing lookups in helper/constants.py MODEL_PRIC
 
 from dataclasses import dataclass, field
 from typing import Any, Dict, Optional, Tuple
-from strands_evaluation.helper.constants import MODEL_REGISTRY, SYSTEM_PROMPT
+from strands_evaluation.helper.constants import MODEL_REGISTRY
 
 
 def resolve_model(model_name: str) -> Tuple[str, str]:
@@ -27,9 +27,9 @@ def resolve_model(model_name: str) -> Tuple[str, str]:
 
 @dataclass
 class ConditionConfig:
-    condition: str = "baseline"          # "a", "b", or "baseline"
+    condition: str = "baseline"          # "b" or "baseline"
     base_condition: Optional[str] = None # optional explicit base condition for variant labels
-    sparse_backend: str = "bm25"         # "bm25" or "splade" (Condition A)
+    sparse_backend: str = "bm25"         # "bm25" or "splade"
     trace_output_dir: str = "results/traces"
 
 
@@ -46,7 +46,6 @@ class RunConfig:
     timeout_seconds: int = 450
     submit_grace_seconds: int = 30
     submit_only_max_tokens: int = 2048
-    system_prompt: str = SYSTEM_PROMPT
     tool_executor: str = "sequential"    # or "concurrent"
     condition_config: ConditionConfig = field(default_factory=ConditionConfig)
     max_consecutive_category: int = 6    # CategoryStagnationHandler threshold (0 = disabled)
