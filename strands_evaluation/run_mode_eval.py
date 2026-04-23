@@ -20,6 +20,7 @@ from typing import Optional
 from strands_evaluation import run_eval as base_eval
 from strands_evaluation.agent_with_mode import BatchRunner as ModeBatchRunner
 from strands_evaluation.config import AgentConfig, ConditionConfig, RunConfig
+from strands_evaluation.helper.prompting import normalize_debug_mode
 from strands_evaluation.preflight import PreflightError, run_preflight
 
 logger = logging.getLogger(__name__)
@@ -52,6 +53,13 @@ def _variant_condition_label(
     if search_calls is not None:
         parts.append(f"sc{search_calls}")
     return "_".join(parts)
+
+
+def _with_debug_suffix(label: str, debug_mode: Optional[str]) -> str:
+    normalized = normalize_debug_mode(debug_mode)
+    if normalized is None:
+        return label
+    return f"{label}__debug_{normalized}"
 
 
 def _collect_task_files(args) -> list[str]:
@@ -161,6 +169,17 @@ def main() -> None:
         default=None,
         help="Optional reasoning effort for OpenAI chat models (passed as reasoning_effort).",
     )
+    parser.add_argument(
+        "--debug-mode",
+        choices=["none", "decision_notes"],
+        default="none",
+        help="Optional debug behavior. 'decision_notes' asks the model to emit short structured notes before tool calls.",
+    )
+    parser.add_argument(
+        "--decision-notes",
+        action="store_true",
+        help="Convenience alias for --debug-mode decision_notes.",
+    )
 
     # RunConfig core
     parser.add_argument("--max-tool-calls", type=int, default=30, help="Max tool calls per task")
@@ -259,6 +278,8 @@ def main() -> None:
     parser.add_argument("--verbose", "-v", action="store_true")
 
     args = parser.parse_args()
+    if args.decision_notes:
+        args.debug_mode = "decision_notes"
 
     if args.k is not None and args.k <= 0:
         parser.error("--k must be > 0")
@@ -283,6 +304,7 @@ def main() -> None:
         k=args.k,
         search_calls=args.search_calls,
     )
+    variant_condition = _with_debug_suffix(variant_condition, args.debug_mode)
     condition_label = f"modes/{safe_model_name}/{variant_condition}"
     traces_root = os.path.join(args.results_output_dir, "traces")
     trace_dir = os.path.join(traces_root, condition_label)
@@ -290,6 +312,7 @@ def main() -> None:
     run_config = RunConfig(
         results_output_dir=args.results_output_dir,
         logs_output_dir=args.logs_output_dir,
+        debug_mode=normalize_debug_mode(args.debug_mode),
         max_tool_calls=args.max_tool_calls,
         conversation_manager_strategy=args.conversation_manager_strategy,
         sliding_window_k=args.sliding_window,

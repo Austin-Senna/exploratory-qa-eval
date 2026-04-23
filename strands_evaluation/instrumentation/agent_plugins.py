@@ -12,7 +12,13 @@ import time
 from typing import Any, List
 
 from strands import Plugin
-from strands.hooks import AfterToolCallEvent, AgentInitializedEvent, BeforeToolCallEvent
+from strands.hooks import (
+    AfterModelCallEvent,
+    AfterToolCallEvent,
+    AgentInitializedEvent,
+    BeforeModelCallEvent,
+    BeforeToolCallEvent,
+)
 from strands.plugins import hook
 from strands.vended_plugins.steering import Guide, ModelSteeringAction, Proceed, SteeringHandler, ToolSteeringAction
 
@@ -40,6 +46,78 @@ def _flush_buffers() -> None:
         full_text = "".join(_text_buf)
         logger.debug("LLM content: %s", full_text)
         _text_buf = []
+
+
+def _json_dumps_safe(value: Any) -> str:
+    try:
+        return json.dumps(value, ensure_ascii=False)
+    except Exception:
+        return str(value)
+
+
+def _iter_message_log_lines(message: dict[str, Any]) -> List[str]:
+    role = str(message.get("role", "?"))
+    content = message.get("content", [])
+    if not isinstance(content, list) or not content:
+        return [f"[role={role}] <empty>"]
+
+    lines: List[str] = []
+    for idx, block in enumerate(content, start=1):
+        if not isinstance(block, dict):
+            lines.append(f"[role={role} block={idx} unknown] {block}")
+            continue
+
+        reasoning = block.get("reasoningContent")
+        if isinstance(reasoning, dict):
+            reasoning_text = reasoning.get("reasoningText")
+            if isinstance(reasoning_text, dict) and reasoning_text.get("text"):
+                lines.append(f"[role={role} block={idx} reasoning] {reasoning_text['text']}")
+            redacted = reasoning.get("redactedContent")
+            if redacted is not None:
+                redacted_size = len(redacted) if isinstance(redacted, (bytes, bytearray)) else "?"
+                lines.append(f"[role={role} block={idx} reasoning_redacted] bytes={redacted_size}")
+
+        if "text" in block:
+            lines.append(f"[role={role} block={idx} text] {block['text']}")
+
+        tool_use = block.get("toolUse")
+        if isinstance(tool_use, dict):
+            tool_name = tool_use.get("name", "?")
+            tool_id = tool_use.get("toolUseId", "?")
+            tool_input = _json_dumps_safe(tool_use.get("input", {}))
+            lines.append(
+                f"[role={role} block={idx} tool_use] {tool_name}({tool_input}) [toolUseId={tool_id}]"
+            )
+
+        tool_result = block.get("toolResult")
+        if isinstance(tool_result, dict):
+            status = tool_result.get("status", "?")
+            tool_use_id = tool_result.get("toolUseId", "?")
+            lines.append(
+                f"[role={role} block={idx} tool_result] status={status} toolUseId={tool_use_id} "
+                f"{_json_dumps_safe(tool_result)}"
+            )
+
+        if "citationsContent" in block:
+            lines.append(f"[role={role} block={idx} citations] {_json_dumps_safe(block['citationsContent'])}")
+
+        known_keys = {
+            "reasoningContent",
+            "text",
+            "toolUse",
+            "toolResult",
+            "citationsContent",
+            "cachePoint",
+            "document",
+            "guardContent",
+            "image",
+            "video",
+        }
+        unknown_payload = {key: value for key, value in block.items() if key not in known_keys}
+        if unknown_payload:
+            lines.append(f"[role={role} block={idx} extra] {_json_dumps_safe(unknown_payload)}")
+
+    return lines or [f"[role={role}] <no-loggable-blocks>"]
 
 
 def event_loop_tracker(**kwargs):
@@ -268,6 +346,18 @@ class LoggingPlugin(Plugin):
 
     name = "logging"
 
+    def __init__(self) -> None:
+        super().__init__()
+        self._model_call_count = 0
+
+    @hook
+    def on_agent_initialized(self, event: AgentInitializedEvent) -> None:
+        self._model_call_count = 0
+
+    @hook
+    def on_before_model(self, event: BeforeModelCallEvent) -> None:
+        self._model_call_count += 1
+
     @hook
     def on_before_tool(self, event: BeforeToolCallEvent) -> None:
         tool_name = event.tool_use.get("name", "?")
@@ -308,6 +398,30 @@ class LoggingPlugin(Plugin):
         else:
             logger.debug("Tool result: %s", result_str)
 
+    @hook
+    def on_after_model(self, event: AfterModelCallEvent) -> None:
+        if event.exception is not None:
+            logger.warning(
+                "Model response #%s failed: %s: %s",
+                self._model_call_count,
+                type(event.exception).__name__,
+                event.exception,
+            )
+            return
+
+        stop_response = event.stop_response
+        if stop_response is None:
+            logger.debug("Model response #%s: <missing stop response>", self._model_call_count)
+            return
+
+        logger.debug(
+            "Model response #%s [stop_reason=%s]",
+            self._model_call_count,
+            stop_response.stop_reason,
+        )
+        for line in _iter_message_log_lines(stop_response.message):
+            logger.debug("Model response #%s %s", self._model_call_count, line)
+
 
 class TelemetryTracker(Plugin):
     """Track actual tool-start events plus partial metrics emitted via callbacks."""
@@ -315,6 +429,7 @@ class TelemetryTracker(Plugin):
     name = "telemetry"
 
     def __init__(self):
+        super().__init__()
         self.tool_calls = 0
         self._tool_use_ids: set[str] = set()
         self.partial_metrics = None

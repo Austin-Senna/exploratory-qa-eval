@@ -8,6 +8,8 @@ from strands_evaluation.agent_with_mode import build_mode_bundle
 from strands_evaluation.helper.prompting import (
     compose_baseline_prompt,
     compose_condition_b_prompt,
+    inject_debug_prompt,
+    normalize_debug_mode,
     skill_paths_for_modes,
 )
 from strands_evaluation.tools.external.ideal.plan_store import (
@@ -257,6 +259,31 @@ class TestModeWrapper(unittest.TestCase):
             self.assertIn("search_ideal", bundle.system_prompt)
             self.assertNotIn("search_reranked", bundle.system_prompt)
             self.assertNotIn("reasoning chain", bundle.system_prompt.lower())
+
+    def test_debug_decision_notes_are_injected_for_mode_bundle(self):
+        cfg = RunConfig(
+            search_tool_mode="standard",
+            search_results_mode="naive",
+            agent_management_mode="naive",
+            system_prompt="BASE_PROMPT",
+            debug_mode="decision_notes",
+        )
+        bundle = build_mode_bundle(cfg, data_tools=[])
+        self.assertIn("## DEBUG DECISION NOTES", bundle.system_prompt)
+        self.assertIn("goal:", bundle.system_prompt)
+        self.assertIn("why_this_tool:", bundle.system_prompt)
+        self.assertIn("what_success_looks_like:", bundle.system_prompt)
+        self.assertIn("confidence: <low|medium|high>", bundle.system_prompt)
+
+    def test_inject_debug_prompt_noops_when_disabled(self):
+        self.assertEqual("BASE_PROMPT", inject_debug_prompt("BASE_PROMPT", None))
+        self.assertEqual("BASE_PROMPT", inject_debug_prompt("BASE_PROMPT", "none"))
+
+    def test_normalize_debug_mode_rejects_unknown_value(self):
+        self.assertEqual("decision_notes", normalize_debug_mode("decision_notes"))
+        self.assertIsNone(normalize_debug_mode(None))
+        with self.assertRaises(ValueError):
+            normalize_debug_mode("full_cot")
 
     def test_ideal_management_fails_fast_without_plan_file(self):
         with TemporaryDirectory() as tmpdir:

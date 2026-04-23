@@ -41,6 +41,7 @@ from strands_evaluation.helper.logger import configure_worker_logging
 from strands_evaluation.helper.prompting import (
     compose_baseline_prompt,
     compose_condition_b_prompt,
+    inject_debug_prompt,
     load_condition_prompt as _shared_load_condition_prompt,
     skill_paths_for_modes,
 )
@@ -256,6 +257,7 @@ def build_mode_bundle(
         base_prompt=run_config.system_prompt,
         task_context=task_context,
     )
+    system_prompt = inject_debug_prompt(system_prompt, run_config.debug_mode)
 
     tools = list(search_tools) + list(management_tools) + list(data_tools)
     return ModeBundle(
@@ -430,6 +432,8 @@ class DataLakeAgent:
             self.run_config.search_calls_limit,
             search_tool_names,
         )
+        if not mode_overrides_enabled:
+            system_prompt = inject_debug_prompt(system_prompt, self.run_config.debug_mode)
 
         conv_manager = build_conversation_manager(self.run_config)
 

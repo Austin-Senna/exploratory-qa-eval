@@ -3,8 +3,13 @@ import time
 import unittest
 from types import SimpleNamespace
 
+from strands.hooks.events import (
+    AfterModelCallEvent,
+    AgentInitializedEvent,
+    BeforeModelCallEvent,
+)
 from strands_evaluation.config import AgentConfig
-from strands_evaluation.instrumentation.agent_plugins import ToolLimitSteeringHandler
+from strands_evaluation.instrumentation.agent_plugins import LoggingPlugin, ToolLimitSteeringHandler
 from strands_evaluation.tools import agent_tools, agent_tools_v2
 
 
@@ -112,6 +117,65 @@ class TestTokenBudgetDefaults(unittest.TestCase):
     def test_tool_result_caps_are_reduced(self):
         self.assertEqual(agent_tools._TOOL_RESULT_CHAR_CAP, 6_000)
         self.assertEqual(agent_tools_v2._TOOL_RESULT_CHAR_CAP, 6_000)
+
+
+class TestLoggingPlugin(unittest.TestCase):
+    def test_logs_final_text_response_from_after_model(self):
+        plugin = LoggingPlugin()
+        agent = SimpleNamespace()
+        plugin.on_agent_initialized(AgentInitializedEvent(agent=agent))
+        plugin.on_before_model(BeforeModelCallEvent(agent=agent, invocation_state={}))
+
+        event = AfterModelCallEvent(
+            agent=agent,
+            invocation_state={},
+            stop_response=AfterModelCallEvent.ModelStopResponse(
+                message={"role": "assistant", "content": [{"text": "final answer text"}]},
+                stop_reason="end_turn",
+            ),
+        )
+
+        with self.assertLogs("strands_evaluation.instrumentation.agent_plugins", level="DEBUG") as logs:
+            plugin.on_after_model(event)
+
+        output = "\n".join(logs.output)
+        self.assertIn("Model response #1 [stop_reason=end_turn]", output)
+        self.assertIn("[role=assistant block=1 text] final answer text", output)
+
+    def test_logs_final_tool_use_response_from_after_model(self):
+        plugin = LoggingPlugin()
+        agent = SimpleNamespace()
+        plugin.on_agent_initialized(AgentInitializedEvent(agent=agent))
+        plugin.on_before_model(BeforeModelCallEvent(agent=agent, invocation_state={}))
+
+        event = AfterModelCallEvent(
+            agent=agent,
+            invocation_state={},
+            stop_response=AfterModelCallEvent.ModelStopResponse(
+                message={
+                    "role": "assistant",
+                    "content": [
+                        {
+                            "toolUse": {
+                                "name": "search_ideal",
+                                "toolUseId": "tool-123",
+                                "input": {"query": "district 3 school"},
+                            }
+                        }
+                    ],
+                },
+                stop_reason="tool_use",
+            ),
+        )
+
+        with self.assertLogs("strands_evaluation.instrumentation.agent_plugins", level="DEBUG") as logs:
+            plugin.on_after_model(event)
+
+        output = "\n".join(logs.output)
+        self.assertIn("Model response #1 [stop_reason=tool_use]", output)
+        self.assertIn("[role=assistant block=1 tool_use] search_ideal(", output)
+        self.assertIn("\"query\": \"district 3 school\"", output)
+        self.assertIn("[toolUseId=tool-123]", output)
 
 
 if __name__ == "__main__":

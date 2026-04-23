@@ -39,6 +39,7 @@ from strands_evaluation.helper.logger import configure_worker_logging
 from strands_evaluation.helper.prompting import (
     compose_baseline_prompt,
     compose_condition_b_prompt,
+    inject_debug_prompt,
     load_condition_prompt as _shared_load_condition_prompt,
     skill_paths_for_modes,
 )
@@ -222,6 +223,7 @@ class DataLakeAgent:
             self.run_config.search_calls_limit,
             search_tool_names,
         )
+        system_prompt = inject_debug_prompt(system_prompt, self.run_config.debug_mode)
 
         conv_manager = build_conversation_manager(self.run_config)
 

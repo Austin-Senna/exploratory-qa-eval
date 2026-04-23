@@ -34,6 +34,7 @@ from typing import Optional
 
 from strands_evaluation.agent import BatchRunner
 from strands_evaluation.config import AgentConfig, ConditionConfig, RunConfig
+from strands_evaluation.helper.prompting import normalize_debug_mode
 
 logger = logging.getLogger(__name__)
 
@@ -76,6 +77,13 @@ def _results_dir(run_config: RunConfig, agent_config: AgentConfig) -> str:
     if _uses_mode_layout(condition_label):
         return os.path.join(_results_root(run_config), condition_label)
     return os.path.join(_results_root(run_config), condition_label, safe_model)
+
+
+def _with_debug_suffix(label: str, debug_mode: Optional[str]) -> str:
+    normalized = normalize_debug_mode(debug_mode)
+    if normalized is None:
+        return label
+    return f"{label}__debug_{normalized}"
 
 
 def find_all_task_dirs(base_dir: str = "tasks") -> list:
@@ -495,6 +503,17 @@ def main() -> None:
         default=None,
         help="Optional reasoning effort for OpenAI chat models (passed as reasoning_effort).",
     )
+    parser.add_argument(
+        "--debug-mode",
+        choices=["none", "decision_notes"],
+        default="none",
+        help="Optional debug behavior. 'decision_notes' asks the model to emit short structured notes before tool calls.",
+    )
+    parser.add_argument(
+        "--decision-notes",
+        action="store_true",
+        help="Convenience alias for --debug-mode decision_notes.",
+    )
 
     # RunConfig
     parser.add_argument("--max-tool-calls", type=int, default=30,
@@ -552,6 +571,8 @@ def main() -> None:
     parser.add_argument("--verbose", "-v", action="store_true")
 
     args = parser.parse_args()
+    if args.decision_notes:
+        args.debug_mode = "decision_notes"
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
@@ -566,13 +587,14 @@ def main() -> None:
         extra_model_kwargs=extra_model_kwargs,
     )
     safe_model_name = _display_name(agent_config)
-    condition_label = args.condition
+    condition_label = _with_debug_suffix(args.condition, args.debug_mode)
     traces_root = os.path.join(args.results_output_dir, "traces")
     trace_dir = os.path.join(traces_root, condition_label, safe_model_name)
 
     run_config = RunConfig(
         results_output_dir=args.results_output_dir,
         logs_output_dir=args.logs_output_dir,
+        debug_mode=normalize_debug_mode(args.debug_mode),
         max_tool_calls=args.max_tool_calls,
         conversation_manager_strategy=args.conversation_manager_strategy,
         sliding_window_k=args.sliding_window,

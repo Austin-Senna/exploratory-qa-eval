@@ -37,6 +37,7 @@ class ConditionConfig:
 class RunConfig:
     results_output_dir: str = "results"
     logs_output_dir: str = "logs"
+    debug_mode: Optional[str] = None
     max_tool_calls: int = 30
     conversation_manager_strategy: str = "summarizing"
     sliding_window_k: int = 40

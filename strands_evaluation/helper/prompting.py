@@ -8,6 +8,7 @@ logger = logging.getLogger(__name__)
 
 _PROMPTS_DIR = Path("prompts")
 _MODES = {"naive", "standard", "ideal"}
+_DEBUG_MODES = {"decision_notes"}
 
 _PLAN_AGENT_SKILL = "strands_evaluation/tools/skills/plan-agent"
 _PLAN_IDEAL_SKILL = "strands_evaluation/tools/skills/plan-ideal"
@@ -24,6 +25,17 @@ def _normalize_mode(value: Optional[str], default: str, label: str) -> str:
     if mode not in _MODES:
         raise ValueError(
             f"Unsupported {label} mode '{value}'. Expected one of: {', '.join(sorted(_MODES))}"
+        )
+    return mode
+
+
+def normalize_debug_mode(value: Optional[str]) -> Optional[str]:
+    mode = (value or "").strip().lower()
+    if not mode or mode == "none":
+        return None
+    if mode not in _DEBUG_MODES:
+        raise ValueError(
+            f"Unsupported debug mode '{value}'. Expected one of: none, {', '.join(sorted(_DEBUG_MODES))}"
         )
     return mode
 
@@ -97,12 +109,37 @@ def skill_paths_for_modes(
     ]
 
 
+def inject_debug_prompt(prompt: str, debug_mode: Optional[str]) -> str:
+    mode = normalize_debug_mode(debug_mode)
+    if mode is None:
+        return prompt
+
+    if mode == "decision_notes":
+        section = (
+            "\n\n## DEBUG DECISION NOTES\n"
+            "- Debug mode is active.\n"
+            "- Before every tool call, emit a short structured note immediately before the tool-use block.\n"
+            "- Keep it concise and action-oriented. Do not dump long reasoning.\n"
+            "- Use exactly these four fields:\n"
+            "goal: <one short sentence>\n"
+            "why_this_tool: <one short sentence>\n"
+            "what_success_looks_like: <one short sentence>\n"
+            "confidence: <low|medium|high>\n"
+            "- Then call the tool in the same response.\n"
+        )
+        return prompt.rstrip() + section
+
+    return prompt
+
+
 __all__ = [
     "compose_baseline_prompt",
     "compose_condition_b_prompt",
     "discover_skill_path",
+    "inject_debug_prompt",
     "load_condition_prompt",
     "load_prompt_text",
+    "normalize_debug_mode",
     "planning_skill_path",
     "skill_paths_for_modes",
 ]
