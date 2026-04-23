@@ -6,22 +6,30 @@ from strands_evaluation.helper.result import AgentResult
 
 
 class _DummyMetrics:
-    def __init__(self, input_tokens: int, output_tokens: int) -> None:
+    def __init__(self, input_tokens: int, output_tokens: int, cached_input_tokens: int = 0) -> None:
         self.accumulated_usage = {
             "inputTokens": input_tokens,
             "outputTokens": output_tokens,
         }
+        if cached_input_tokens:
+            self.accumulated_usage["cacheReadInputTokens"] = cached_input_tokens
         self.cycle_count = 0
         self.cycle_durations = []
         self.tool_metrics = {}
 
 
-def _build_result(model_name: str, input_tokens: int, output_tokens: int) -> AgentResult:
+def _build_result(
+    model_name: str,
+    input_tokens: int,
+    output_tokens: int,
+    *,
+    cached_input_tokens: int = 0,
+) -> AgentResult:
     return AgentResult(
         answer="",
         model="",
         model_name=model_name,
-        metrics=_DummyMetrics(input_tokens, output_tokens),
+        metrics=_DummyMetrics(input_tokens, output_tokens, cached_input_tokens=cached_input_tokens),
     )
 
 
@@ -40,6 +48,18 @@ class PricingLookupTests(unittest.TestCase):
         # 1.00 * 1000/1e6 + 5.00 * 500/1e6
         expected = 0.0035
         self.assertAlmostEqual(result.cost_usd, expected, places=12)
+
+    def test_openai_cached_input_tokens_use_discounted_rate(self) -> None:
+        result = _build_result(
+            "openai/gpt-5.2",
+            input_tokens=10_000,
+            output_tokens=500,
+            cached_input_tokens=8_000,
+        )
+        expected = ((2_000 * 1.75) + (8_000 * 0.175) + (500 * 14.0)) / 1_000_000
+        self.assertAlmostEqual(result.cost_usd, expected, places=12)
+        self.assertEqual(result.cached_input_tokens, 8_000)
+        self.assertEqual(result.uncached_input_tokens, 2_000)
 
     def test_unknown_model_returns_zero_and_logs_warning(self) -> None:
         result = _build_result("unknown/provider-model", input_tokens=1000, output_tokens=1000)

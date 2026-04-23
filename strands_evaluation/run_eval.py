@@ -243,6 +243,11 @@ def _normalize_main_csv_row(row: dict) -> dict:
         "runtime_seconds": row.get("runtime_seconds", 0),
         "cycle_count": row.get("cycle_count", ""),
         "input_tokens": row.get("input_tokens", 0),
+        "cached_input_tokens": row.get("cached_input_tokens", 0),
+        "uncached_input_tokens": row.get(
+            "uncached_input_tokens",
+            max(0, int(row.get("input_tokens", 0) or 0) - int(row.get("cached_input_tokens", 0) or 0)),
+        ),
         "output_tokens": row.get("output_tokens", 0),
         "total_tokens": row.get("total_tokens", 0),
         "cost_usd": row.get("cost_usd", 0.0),
@@ -259,7 +264,8 @@ def _write_main_csv(csv_path: str, results: list, tasks_by_id: dict) -> None:
         "expected_answer", "predicted_answer", "exact_match", "f1_score",
         "required_dataset_count", "sources_used_count",
         "runtime_seconds", "cycle_count",
-        "input_tokens", "output_tokens", "total_tokens", "cost_usd",
+        "input_tokens", "cached_input_tokens", "uncached_input_tokens",
+        "output_tokens", "total_tokens", "cost_usd",
         "tool_calls_total", "api_tool_calls",
         "success", "error",
     ]
@@ -287,6 +293,11 @@ def _write_main_csv(csv_path: str, results: list, tasks_by_id: dict) -> None:
             "runtime_seconds": r.get("time", 0),
             "cycle_count": r.get("cycle_count", ""),
             "input_tokens": r.get("input_tokens", 0),
+            "cached_input_tokens": r.get("cached_input_tokens", 0),
+            "uncached_input_tokens": r.get(
+                "uncached_input_tokens",
+                max(0, int(r.get("input_tokens", 0) or 0) - int(r.get("cached_input_tokens", 0) or 0)),
+            ),
             "output_tokens": r.get("output_tokens", 0),
             "total_tokens": r.get("total_tokens", 0),
             "cost_usd": r.get("cost_usd", 0.0),
@@ -483,8 +494,11 @@ def main() -> None:
     # Task selection
     parser.add_argument("--task-dir", "-d", help="Single task directory to evaluate")
     parser.add_argument("--all-tasks", action="store_true", help="Evaluate all k-*-d-* directories")
-    parser.add_argument("--task-set", default="tasks",
-                        help="Base directory for --all-tasks (default: tasks)")
+    parser.add_argument(
+        "--task-set",
+        default="tasks_core_quality",
+        help="Base directory for --all-tasks (default: tasks_core_quality)",
+    )
     parser.add_argument("--tasks-per-dir", type=int, default=None,
                         help="Limit number of tasks evaluated per directory")
     parser.add_argument("--task-continue", action="store_true",
@@ -502,6 +516,16 @@ def main() -> None:
         choices=["none", "minimal", "low", "medium", "high", "xhigh"],
         default=None,
         help="Optional reasoning effort for OpenAI chat models (passed as reasoning_effort).",
+    )
+    parser.add_argument(
+        "--openai-prompt-cache-key",
+        default=None,
+        help="Optional OpenAI prompt_cache_key for better cache routing on repeated prefixes.",
+    )
+    parser.add_argument(
+        "--openai-prompt-cache-retention",
+        default=None,
+        help="Optional OpenAI prompt_cache_retention value such as 24h.",
     )
     parser.add_argument(
         "--debug-mode",
@@ -584,6 +608,8 @@ def main() -> None:
         model_name=args.model_name,
         temperature=args.temperature,
         max_tokens=args.max_tokens,
+        openai_prompt_cache_key=args.openai_prompt_cache_key,
+        openai_prompt_cache_retention=args.openai_prompt_cache_retention,
         extra_model_kwargs=extra_model_kwargs,
     )
     safe_model_name = _display_name(agent_config)

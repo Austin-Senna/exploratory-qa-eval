@@ -47,6 +47,14 @@ class AgentResult:
         return self.metrics.accumulated_usage.get("inputTokens", 0) if self.metrics else 0
 
     @property
+    def cached_input_tokens(self) -> int:
+        return self.metrics.accumulated_usage.get("cacheReadInputTokens", 0) if self.metrics else 0
+
+    @property
+    def uncached_input_tokens(self) -> int:
+        return max(0, self.input_tokens - self.cached_input_tokens)
+
+    @property
     def output_tokens(self) -> int:
         return self.metrics.accumulated_usage.get("outputTokens", 0) if self.metrics else 0
 
@@ -71,8 +79,10 @@ class AgentResult:
         for key in candidates:
             pricing = MODEL_PRICING.get(key)
             if pricing:
+                cached_input_rate = pricing.get("cache_read_input", pricing["input"])
                 return (
-                    pricing["input"] * self.input_tokens / 1_000_000
+                    pricing["input"] * self.uncached_input_tokens / 1_000_000
+                    + cached_input_rate * self.cached_input_tokens / 1_000_000
                     + pricing["output"] * self.output_tokens / 1_000_000
                 )
 

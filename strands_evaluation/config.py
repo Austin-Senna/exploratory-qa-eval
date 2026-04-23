@@ -80,6 +80,8 @@ class AgentConfig:
     anthropic_api_key: Optional[str] = None   # or set ANTHROPIC_API_KEY
     openai_api_key: Optional[str] = None      # or set OPENAI_API_KEY
     openai_base_url: Optional[str] = None     # for Azure / vLLM / compatible APIs
+    openai_prompt_cache_key: Optional[str] = None        # optional stable OpenAI prompt cache key
+    openai_prompt_cache_retention: Optional[str] = None  # optional OpenAI retention e.g. "24h"
     gemini_api_key: Optional[str] = None      # or set GEMINI_API_KEY
     ollama_host: str = "http://localhost:11434"
     llama_api_key: Optional[str] = None       # or set LLAMA_API_KEY

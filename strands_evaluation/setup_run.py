@@ -13,7 +13,7 @@ from typing import Callable, Optional, Sequence
 _SEARCH_MODE_CHOICES = ("naive", "standard", "ideal")
 _RESULT_MODE_CHOICES = ("naive", "ideal")
 _REASONING_EFFORT_CHOICES = ("none", "minimal", "low", "medium", "high", "xhigh")
-_DEFAULT_TASK_SET = "tasks_mini"
+_DEFAULT_TASK_SET = "tasks_core_quality"
 _DEFAULT_SMOKE_TASK_DIR = "k-5-d-4"
 _DEFAULT_SMOKE_TASK_LIMIT = 2
 _MODEL_ALIASES = {
@@ -40,6 +40,8 @@ def _build_parser() -> argparse.ArgumentParser:
         choices=_REASONING_EFFORT_CHOICES,
         default=None,
     )
+    common.add_argument("--openai-prompt-cache-key", default=None)
+    common.add_argument("--openai-prompt-cache-retention", default=None)
     common.add_argument("--db", default=None, help="Lance DB root, required on every run.")
     common.add_argument(
         "--condition",
@@ -52,10 +54,10 @@ def _build_parser() -> argparse.ArgumentParser:
     smoke.add_argument(
         "--task-dir",
         default=None,
-        help="Optional task directory override inside tasks_mini.",
+        help="Optional task directory override inside the default task set.",
     )
 
-    full = subparsers.add_parser("full", parents=[common], help="Run the full tasks_mini eval.")
+    full = subparsers.add_parser("full", parents=[common], help="Run the full default task-set eval.")
     full.add_argument(
         "--task-continue",
         action="store_true",
@@ -170,6 +172,10 @@ def _build_run_mode_command(args: argparse.Namespace, cwd: Path) -> tuple[list[s
         command.extend(["--k", str(args.k)])
     if args.reasoning_effort is not None:
         command.extend(["--reasoning-effort", args.reasoning_effort])
+    if args.openai_prompt_cache_key is not None:
+        command.extend(["--openai-prompt-cache-key", args.openai_prompt_cache_key])
+    if args.openai_prompt_cache_retention is not None:
+        command.extend(["--openai-prompt-cache-retention", args.openai_prompt_cache_retention])
     if args.parallel is not None:
         command.extend(["--parallel", str(args.parallel)])
 

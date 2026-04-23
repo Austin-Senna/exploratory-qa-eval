@@ -107,7 +107,11 @@ def main() -> None:
     # Task selection
     parser.add_argument("--task-dir", "-d", help="Single task directory to evaluate")
     parser.add_argument("--all-tasks", action="store_true", help="Evaluate all k-*-d-* directories")
-    parser.add_argument("--task-set", default="tasks", help="Base directory for --all-tasks (default: tasks)")
+    parser.add_argument(
+        "--task-set",
+        default="tasks_core_quality",
+        help="Base directory for --all-tasks (default: tasks_core_quality)",
+    )
     parser.add_argument("--tasks-per-dir", type=int, default=None, help="Limit tasks per directory")
     parser.add_argument(
         "--task-continue",
@@ -128,6 +132,16 @@ def main() -> None:
         choices=["none", "minimal", "low", "medium", "high", "xhigh"],
         default=None,
         help="Optional reasoning effort for OpenAI chat models (passed as reasoning_effort).",
+    )
+    parser.add_argument(
+        "--openai-prompt-cache-key",
+        default=None,
+        help="Optional OpenAI prompt_cache_key for better cache routing on repeated prefixes.",
+    )
+    parser.add_argument(
+        "--openai-prompt-cache-retention",
+        default=None,
+        help="Optional OpenAI prompt_cache_retention value such as 24h.",
     )
 
     # RunConfig core
@@ -243,6 +257,8 @@ def main() -> None:
         model_name=args.model_name,
         temperature=args.temperature,
         max_tokens=args.max_tokens,
+        openai_prompt_cache_key=args.openai_prompt_cache_key,
+        openai_prompt_cache_retention=args.openai_prompt_cache_retention,
         extra_model_kwargs=extra_model_kwargs,
     )
     safe_model_name = base_eval._display_name(agent_config)

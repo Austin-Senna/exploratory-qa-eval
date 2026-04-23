@@ -106,7 +106,7 @@ def _build_anthropic(c: AgentConfig) -> Any:
 def _build_openai(c: AgentConfig) -> Any:
     # Requires: OPENAI_API_KEY env var (or AgentConfig.openai_api_key)
     # Optional: AgentConfig.openai_base_url for Azure / vLLM / other compatible APIs
-    from strands.models.openai import OpenAIModel
+    from strands_evaluation.llm.openai_cached_model import OpenAICachedUsageModel
 
     # OpenAIModel expects request fields under `params` and transport/auth fields
     # under `client_args`. Passing raw top-level keys is ignored by Strands.
@@ -163,6 +163,18 @@ def _build_openai(c: AgentConfig) -> Any:
     if isinstance(reasoning, dict) and "reasoning_effort" not in params and "effort" in reasoning:
         params["reasoning_effort"] = reasoning["effort"]
 
+    # OpenAI prompt caching is automatic for matching prefixes. These optional
+    # request fields improve routing and opt into longer retention when desired.
+    prompt_cache_key = c.openai_prompt_cache_key or os.getenv("OPENAI_PROMPT_CACHE_KEY")
+    if prompt_cache_key and "prompt_cache_key" not in params:
+        params["prompt_cache_key"] = prompt_cache_key
+
+    prompt_cache_retention = (
+        c.openai_prompt_cache_retention or os.getenv("OPENAI_PROMPT_CACHE_RETENTION")
+    )
+    if prompt_cache_retention and "prompt_cache_retention" not in params:
+        params["prompt_cache_retention"] = prompt_cache_retention
+
     api_key = c.openai_api_key or os.getenv("OPENAI_API_KEY")
     if api_key and "api_key" not in client_args:
         client_args["api_key"] = api_key
@@ -174,8 +186,8 @@ def _build_openai(c: AgentConfig) -> Any:
         kwargs["params"] = params
 
     if client_args:
-        return OpenAIModel(client_args=client_args, **kwargs)
-    return OpenAIModel(**kwargs)
+        return OpenAICachedUsageModel(client_args=client_args, **kwargs)
+    return OpenAICachedUsageModel(**kwargs)
 
 
 def _build_gemini(c: AgentConfig) -> Any:

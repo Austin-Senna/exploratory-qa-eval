@@ -726,6 +726,8 @@ def _run_task_worker(
 
         # Tokens
         result_dict["input_tokens"]     = result.input_tokens
+        result_dict["cached_input_tokens"] = result.cached_input_tokens
+        result_dict["uncached_input_tokens"] = result.uncached_input_tokens
         result_dict["output_tokens"]    = result.output_tokens
         result_dict["total_tokens"]     = result.total_tokens
         result_dict["cost_usd"]         = result.cost_usd
@@ -759,6 +761,8 @@ def _run_task_worker(
         if result.success:
             logger.info(
                 f"Completed task {task_index + 1}: "
+                f"input={result.input_tokens} cached_input={result.cached_input_tokens} "
+                f"uncached_input={result.uncached_input_tokens} output={result.output_tokens} "
                 f"tokens={result.total_tokens} cost=${result.cost_usd:.4f} "
                 f"tools={total_calls} cycles={result.cycle_count}"
             )

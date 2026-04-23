@@ -54,12 +54,13 @@ MODEL_REGISTRY: Dict[str, Tuple[str, str]] = {
 }
 
 MODEL_PRICING = {
-        # OpenAI (example pricing - update with actual values)
-        "gpt-5.2": {"input": 1.75, "output": 14.00},
-        "gpt-5-mini": {"input": 0.25, "output": 2.00},
+        # OpenAI text-token pricing per 1M tokens.
+        # Source: https://platform.openai.com/docs/pricing/ (checked Apr 23, 2026)
+        "gpt-5.2": {"input": 1.75, "cache_read_input": 0.175, "output": 14.00},
+        "gpt-5-mini": {"input": 0.25, "cache_read_input": 0.025, "output": 2.00},
         # Alias keys for provider-prefixed model_name values
-        "openai/gpt-5.2": {"input": 1.75, "output": 14.00},
-        "openai/gpt-5-mini": {"input": 0.25, "output": 2.00},
+        "openai/gpt-5.2": {"input": 1.75, "cache_read_input": 0.175, "output": 14.00},
+        "openai/gpt-5-mini": {"input": 0.25, "cache_read_input": 0.025, "output": 2.00},
 
         # AWS Bedrock Claude models
         "bedrock/claude-opus-4.5": {"input": 5.00, "output": 25.00},
