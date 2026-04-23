@@ -387,8 +387,45 @@ def _json_value(value: Any) -> Any:
     return value
 
 
+def _json_safe(value: Any, _seen: Optional[set[int]] = None) -> Any:
+    primitive = _json_value(value)
+    if primitive is None or isinstance(primitive, (bool, int, float, str)):
+        return primitive
+
+    if _seen is None:
+        _seen = set()
+
+    if isinstance(value, dict):
+        ident = id(value)
+        if ident in _seen:
+            return "[circular]"
+        _seen.add(ident)
+        try:
+            out: Dict[str, Any] = {}
+            for key, child in value.items():
+                safe_key = _json_safe(key, _seen)
+                out[str(safe_key)] = _json_safe(child, _seen)
+            return out
+        finally:
+            _seen.remove(ident)
+
+    if isinstance(value, (list, tuple, set)):
+        ident = id(value)
+        if ident in _seen:
+            return "[circular]"
+        _seen.add(ident)
+        try:
+            return [_json_safe(child, _seen) for child in value]
+        finally:
+            _seen.remove(ident)
+
+    return str(value)
+
+
 def _truncate_cell(value: Any) -> Any:
-    value = _json_value(value)
+    value = _json_safe(value)
+    if isinstance(value, (dict, list)):
+        value = json.dumps(value, ensure_ascii=False, separators=(",", ":"))
     if isinstance(value, str) and len(value) > _MAX_CELL_CHARS:
         return value[:_MAX_CELL_CHARS] + "…"
     return value
@@ -632,7 +669,7 @@ def build_profiles(
                     errors += 1
                     print(f"SKIP {key[0]}/{key[1]}: {error}", file=sys.stderr)
                     continue
-                out.write(json.dumps(profile, default=_json_value))
+                out.write(json.dumps(_json_safe(profile)))
                 out.write("\n")
                 out.flush()
                 written += 1
@@ -658,7 +695,7 @@ def build_profiles(
                         print(f"SKIP {key[0]}/{key[1]}: {error}", file=sys.stderr)
                         pbar.update(1)
                         continue
-                    out.write(json.dumps(profile, default=_json_value))
+                    out.write(json.dumps(_json_safe(profile)))
                     out.write("\n")
                     out.flush()
                     written += 1

@@ -27,11 +27,18 @@ class ProfileDatasetsScriptTests(unittest.TestCase):
         self._descriptions_path = self._root / "descriptions.jsonl"
         self._snippets_path = self._root / "snippets.jsonl"
         self._csv_path = self._root / "rows.csv"
+        self._jsonl_path = self._root / "rows.jsonl"
         self._csv_path.write_text(
             "name,value,day\n"
             "Ada,1,2020-01-01\n"
             "Grace,2,2020-01-03\n"
             ",2,2020-01-05\n"
+        )
+        self._jsonl_path.write_text(
+            '{"id":1,"payload":{"nested":{"message":"'
+            + ("x" * 120)
+            + '"}}}\n'
+            '{"id":2,"payload":{"nested":{"message":"ok"}}}\n'
         )
         self._write_jsonl(
             self._input_path,
@@ -175,6 +182,42 @@ class ProfileDatasetsScriptTests(unittest.TestCase):
         self.assertEqual(row["dataset_id"], "example-dataset")
         self.assertEqual(row["file_path"], "files/rows.csv")
         self.assertEqual(row["llm_description"], "Manifest description")
+
+    def test_build_profiles_stringifies_nested_top_rows(self):
+        manifest_path = self._root / "manifest_nested.jsonl"
+        local_uri = f"s3://lakeqa-yc4103-datalake/datagov/example-dataset/files/rows.jsonl"
+        self._write_jsonl(
+            manifest_path,
+            [
+                {
+                    "dataset_id": "example-dataset",
+                    "folder": "datagov",
+                    "file_path": "files/rows.jsonl",
+                    "s3_uri": local_uri,
+                    "source_ref": str(self._jsonl_path),
+                    "local_path": str(self._jsonl_path),
+                    "size_bytes": self._jsonl_path.stat().st_size,
+                    "table_kind": "json",
+                }
+            ],
+        )
+
+        summary = profile_datasets.build_profiles(
+            input_path=manifest_path,
+            output_path=self._output_path,
+            input_kind="manifest",
+            descriptions_path=self._descriptions_path,
+            snippets_path=self._snippets_path,
+            parallel=1,
+            resume=False,
+            bucket="unused",
+        )
+
+        self.assertEqual(summary, {"written": 1, "skipped": 0, "errors": 0})
+        row = self._read_output_rows()[0]
+        self.assertEqual(row["family"], "json")
+        self.assertIsInstance(row["top_2_rows"][0]["payload"], str)
+        self.assertTrue(row["top_2_rows"][0]["payload"].endswith("…"))
 
 
 if __name__ == "__main__":
