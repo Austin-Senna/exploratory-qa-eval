@@ -45,6 +45,7 @@ _TABULAR_KIND_TO_FAMILY = {
 def _parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--input", default="datagov_tables_schemas_full.jsonl")
+    parser.add_argument("--input-kind", choices=("auto", "schemas", "manifest"), default="auto")
     parser.add_argument("--output", default="datagov_tables_profiles.jsonl")
     parser.add_argument("--descriptions", default=str(_DESC_PATH))
     parser.add_argument("--snippets", default=str(_SNIPPET_PATH))
@@ -66,6 +67,12 @@ def _jsonl_rows(path: Path) -> Iterable[Dict[str, Any]]:
                 continue
             if isinstance(obj, dict):
                 yield obj
+
+
+def _peek_first_row(path: Path) -> Optional[Dict[str, Any]]:
+    for obj in _jsonl_rows(path):
+        return obj
+    return None
 
 
 def _load_description_cache(path: Path) -> Dict[str, str]:
@@ -92,15 +99,25 @@ def _load_snippet_cache(path: Path) -> Dict[str, str]:
     return out
 
 
-def _load_existing_keys(path: Path) -> set[Tuple[str, str]]:
+def _profile_identity(row: Dict[str, Any]) -> Optional[str]:
+    s3_uri = str(row.get("s3_uri") or "").strip()
+    if s3_uri:
+        return f"uri:{s3_uri}"
+    slug = str(row.get("slug") or "").strip()
+    filename = str(row.get("filename") or "").strip()
+    if slug and filename:
+        return f"slug:{slug}::{filename}"
+    return None
+
+
+def _load_existing_keys(path: Path) -> set[str]:
     if not path.exists():
         return set()
-    keys: set[Tuple[str, str]] = set()
+    keys: set[str] = set()
     for obj in _jsonl_rows(path):
-        slug = str(obj.get("slug") or "").strip()
-        filename = str(obj.get("filename") or "").strip()
-        if slug and filename:
-            keys.add((slug, filename))
+        identity = _profile_identity(obj)
+        if identity:
+            keys.add(identity)
     return keys
 
 
@@ -198,6 +215,11 @@ def _filename_stem(table: Dict[str, Any], source_ref: str) -> str:
     return name.rsplit(".", 1)[0] if "." in name else name
 
 
+def _stem_from_path(path_like: str) -> str:
+    name = str(path_like).rsplit("/", 1)[-1]
+    return name.rsplit(".", 1)[0] if "." in name else name
+
+
 def _iter_schema_entries(input_path: Path, bucket: str) -> List[Dict[str, Any]]:
     entries: List[Dict[str, Any]] = []
     for obj in _jsonl_rows(input_path):
@@ -216,10 +238,55 @@ def _iter_schema_entries(input_path: Path, bucket: str) -> List[Dict[str, Any]]:
                     "slug": slug,
                     "filename": _filename_stem(table, source_ref),
                     "source_ref": source_ref,
+                    "s3_uri": source_ref if _is_s3_ref(source_ref) else None,
                     "table": table,
                 }
             )
     return entries
+
+
+def _iter_manifest_entries(input_path: Path) -> List[Dict[str, Any]]:
+    entries: List[Dict[str, Any]] = []
+    for obj in _jsonl_rows(input_path):
+        source_ref = str(obj.get("source_ref") or obj.get("local_path") or obj.get("s3_uri") or "").strip()
+        if not source_ref:
+            continue
+        dataset_id = str(obj.get("dataset_id") or "").strip()
+        file_path = str(obj.get("file_path") or obj.get("path") or "").strip()
+        slug = dataset_id or _stem_from_path(source_ref)
+        filename = _stem_from_path(file_path or source_ref)
+        table = {
+            "delimiter": obj.get("delimiter"),
+            "table_kind": obj.get("table_kind"),
+        }
+        entry = {
+            "slug": slug,
+            "filename": filename,
+            "source_ref": source_ref,
+            "s3_uri": str(obj.get("s3_uri") or "").strip() or None,
+            "dataset_id": dataset_id or None,
+            "file_path": file_path or None,
+            "size_bytes": obj.get("size_bytes") or obj.get("size"),
+            "table": table,
+        }
+        entries.append(entry)
+    return entries
+
+
+def _detect_input_kind(input_path: Path) -> str:
+    first_row = _peek_first_row(input_path)
+    if first_row is None:
+        return "manifest"
+    if isinstance(first_row.get("tables"), list):
+        return "schemas"
+    return "manifest"
+
+
+def _iter_input_entries(input_path: Path, *, input_kind: str, bucket: str) -> List[Dict[str, Any]]:
+    resolved = _detect_input_kind(input_path) if input_kind == "auto" else input_kind
+    if resolved == "schemas":
+        return _iter_schema_entries(input_path, bucket)
+    return _iter_manifest_entries(input_path)
 
 
 def _duckdb_connection(*, needs_httpfs: bool) -> duckdb.DuckDBPyConnection:
@@ -391,6 +458,9 @@ def _build_tabular_profile(
     slug: str,
     filename: str,
     source_ref: str,
+    s3_uri: Optional[str],
+    dataset_id: Optional[str],
+    file_path: Optional[str],
     family: str,
     table: Dict[str, Any],
     size_bytes: int,
@@ -413,6 +483,12 @@ def _build_tabular_profile(
         "top_2_rows": top_2_rows,
         "columns": columns,
     }
+    if s3_uri:
+        profile["s3_uri"] = s3_uri
+    if dataset_id:
+        profile["dataset_id"] = dataset_id
+    if file_path:
+        profile["file_path"] = file_path
     if description:
         profile["llm_description"] = description
     return profile
@@ -423,6 +499,9 @@ def _build_non_tabular_profile(
     slug: str,
     filename: str,
     source_ref: str,
+    s3_uri: Optional[str],
+    dataset_id: Optional[str],
+    file_path: Optional[str],
     family: str,
     size_bytes: int,
     description: Optional[str],
@@ -435,6 +514,12 @@ def _build_non_tabular_profile(
         "size_bytes": size_bytes,
         "snippet": snippet_cache.get(source_ref) or _snippet_fallback(source_ref),
     }
+    if s3_uri:
+        profile["s3_uri"] = s3_uri
+    if dataset_id:
+        profile["dataset_id"] = dataset_id
+    if file_path:
+        profile["file_path"] = file_path
     if description:
         profile["llm_description"] = description
     return profile
@@ -444,17 +529,24 @@ def _process_entry(entry: Dict[str, Any], description_cache: Dict[str, str], sni
     slug = str(entry["slug"])
     filename = str(entry["filename"])
     source_ref = str(entry["source_ref"])
+    s3_uri = str(entry.get("s3_uri") or "").strip() or None
+    dataset_id = entry.get("dataset_id")
+    file_path = entry.get("file_path")
     table = entry["table"]
     key = (slug, filename)
     try:
-        size_bytes = _head_size_bytes(source_ref)
-        description = description_cache.get(source_ref)
+        size_bytes = int(entry.get("size_bytes") or 0) or _head_size_bytes(source_ref)
+        cache_key = s3_uri or source_ref
+        description = description_cache.get(cache_key)
         family = _resolve_family(table, source_ref)
         if family in {"csv", "json", "parquet"}:
             profile = _build_tabular_profile(
                 slug=slug,
                 filename=filename,
                 source_ref=source_ref,
+                s3_uri=s3_uri,
+                dataset_id=dataset_id,
+                file_path=file_path,
                 family=family,
                 table=table,
                 size_bytes=size_bytes,
@@ -465,6 +557,9 @@ def _process_entry(entry: Dict[str, Any], description_cache: Dict[str, str], sni
                 slug=slug,
                 filename=filename,
                 source_ref=source_ref,
+                s3_uri=s3_uri,
+                dataset_id=dataset_id,
+                file_path=file_path,
                 family=family,
                 size_bytes=size_bytes,
                 description=description,
@@ -479,6 +574,7 @@ def build_profiles(
     *,
     input_path: Path,
     output_path: Path,
+    input_kind: str = "auto",
     descriptions_path: Path = _DESC_PATH,
     snippets_path: Path = _SNIPPET_PATH,
     parallel: int = 4,
@@ -487,7 +583,7 @@ def build_profiles(
 ) -> Dict[str, int]:
     description_cache = _load_description_cache(descriptions_path)
     snippet_cache = _load_snippet_cache(snippets_path)
-    entries = _iter_schema_entries(input_path, bucket)
+    entries = _iter_input_entries(input_path, input_kind=input_kind, bucket=bucket)
     existing_keys = _load_existing_keys(output_path) if resume else set()
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -499,8 +595,9 @@ def build_profiles(
     with output_path.open(mode) as out:
         if parallel <= 1:
             for entry in entries:
+                identity = _profile_identity(entry)
                 key = (entry["slug"], entry["filename"])
-                if key in existing_keys:
+                if identity is not None and identity in existing_keys:
                     skipped += 1
                     continue
                 _, profile, error = _process_entry(entry, description_cache, snippet_cache)
@@ -517,8 +614,9 @@ def build_profiles(
         with concurrent.futures.ThreadPoolExecutor(max_workers=parallel) as executor:
             futures: Dict[concurrent.futures.Future, Tuple[str, str]] = {}
             for entry in entries:
+                identity = _profile_identity(entry)
                 key = (entry["slug"], entry["filename"])
-                if key in existing_keys:
+                if identity is not None and identity in existing_keys:
                     skipped += 1
                     continue
                 future = executor.submit(_process_entry, entry, description_cache, snippet_cache)
@@ -544,6 +642,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     summary = build_profiles(
         input_path=Path(args.input),
         output_path=Path(args.output),
+        input_kind=args.input_kind,
         descriptions_path=Path(args.descriptions),
         snippets_path=Path(args.snippets),
         parallel=args.parallel,

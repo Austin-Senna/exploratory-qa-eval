@@ -136,6 +136,46 @@ class ProfileDatasetsScriptTests(unittest.TestCase):
         self.assertEqual(second, {"written": 0, "skipped": 1, "errors": 0})
         self.assertEqual(len(self._read_output_rows()), 1)
 
+    def test_build_profiles_accepts_manifest_rows(self):
+        manifest_path = self._root / "manifest.jsonl"
+        local_uri = f"s3://lakeqa-yc4103-datalake/datagov/example-dataset/files/rows.csv"
+        self._write_jsonl(
+            manifest_path,
+            [
+                {
+                    "dataset_id": "example-dataset",
+                    "folder": "datagov",
+                    "file_path": "files/rows.csv",
+                    "s3_uri": local_uri,
+                    "source_ref": str(self._csv_path),
+                    "local_path": str(self._csv_path),
+                    "size_bytes": self._csv_path.stat().st_size,
+                }
+            ],
+        )
+        self._write_jsonl(
+            self._descriptions_path,
+            [{"dataset_uri": local_uri, "description": "Manifest description"}],
+        )
+
+        summary = profile_datasets.build_profiles(
+            input_path=manifest_path,
+            output_path=self._output_path,
+            input_kind="manifest",
+            descriptions_path=self._descriptions_path,
+            snippets_path=self._snippets_path,
+            parallel=1,
+            resume=False,
+            bucket="unused",
+        )
+
+        self.assertEqual(summary, {"written": 1, "skipped": 0, "errors": 0})
+        row = self._read_output_rows()[0]
+        self.assertEqual(row["s3_uri"], local_uri)
+        self.assertEqual(row["dataset_id"], "example-dataset")
+        self.assertEqual(row["file_path"], "files/rows.csv")
+        self.assertEqual(row["llm_description"], "Manifest description")
+
 
 if __name__ == "__main__":
     unittest.main()

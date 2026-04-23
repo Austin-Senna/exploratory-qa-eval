@@ -64,6 +64,7 @@ load_dotenv()
 
 _PEEK_ENRICHMENT_ENABLED: bool = False
 _PROFILES_PATH = Path("datagov_tables_profiles.jsonl")
+_PROFILE_BY_URI: Dict[str, Dict[str, Any]] = {}
 _PROFILE_BY_SLUG_FILENAME: Dict[Tuple[str, str], Dict[str, Any]] = {}
 _PROFILES_LOADED: bool = False
 
@@ -76,10 +77,11 @@ def set_peek_enrichment(enabled: bool) -> None:
 
 def _load_profiles_cache() -> None:
     """Load precomputed dataset profiles keyed by (slug, filename stem)."""
-    global _PROFILES_LOADED, _PROFILE_BY_SLUG_FILENAME
+    global _PROFILES_LOADED, _PROFILE_BY_URI, _PROFILE_BY_SLUG_FILENAME
     if _PROFILES_LOADED:
         return
 
+    profiles_by_uri: Dict[str, Dict[str, Any]] = {}
     profiles: Dict[Tuple[str, str], Dict[str, Any]] = {}
     if _PROFILES_PATH.exists():
         with _PROFILES_PATH.open() as f:
@@ -91,11 +93,15 @@ def _load_profiles_cache() -> None:
                     obj = json.loads(line)
                 except json.JSONDecodeError:
                     continue
+                s3_uri = str(obj.get("s3_uri") or "").strip()
+                if s3_uri and s3_uri not in profiles_by_uri:
+                    profiles_by_uri[s3_uri] = obj
                 slug = str(obj.get("slug") or "").strip()
                 filename = str(obj.get("filename") or "").strip()
                 if slug and filename and (slug, filename) not in profiles:
                     profiles[(slug, filename)] = obj
 
+    _PROFILE_BY_URI = profiles_by_uri
     _PROFILE_BY_SLUG_FILENAME = profiles
     _PROFILES_LOADED = True
 
@@ -139,14 +145,17 @@ def _load_dataset_profile(s3_uri: str) -> Optional[Dict[str, Any]]:
         return None
 
     key = _sw._slug_stem_from_uri(s3_uri)
-    if key is not None:
-        try:
-            _load_profiles_cache()
-        except Exception:
-            # Soft-fail into the legacy bundle so Agent 1 remains usable even if
-            # the precomputed profiles file is malformed or absent.
-            pass
-        else:
+    try:
+        _load_profiles_cache()
+    except Exception:
+        # Soft-fail into the legacy bundle so Agent 1 remains usable even if
+        # the precomputed profiles file is malformed or absent.
+        pass
+    else:
+        profile = _PROFILE_BY_URI.get(s3_uri)
+        if profile is not None:
+            return dict(profile)
+        if key is not None:
             profile = _PROFILE_BY_SLUG_FILENAME.get(key)
             if profile is not None:
                 return dict(profile)

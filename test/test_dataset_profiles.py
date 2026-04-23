@@ -19,6 +19,7 @@ class DatasetProfilesTests(unittest.TestCase):
         self._orig_agent_tools_state = {
             "profiles_path": agent_tools_v2._PROFILES_PATH,
             "profiles_loaded": agent_tools_v2._PROFILES_LOADED,
+            "profile_by_uri": agent_tools_v2._PROFILE_BY_URI,
             "profile_by_slug_filename": agent_tools_v2._PROFILE_BY_SLUG_FILENAME,
         }
         self._orig_search_wrapper_state = {
@@ -35,6 +36,7 @@ class DatasetProfilesTests(unittest.TestCase):
 
         agent_tools_v2._PROFILES_PATH = self._profiles_path
         agent_tools_v2._PROFILES_LOADED = False
+        agent_tools_v2._PROFILE_BY_URI = {}
         agent_tools_v2._PROFILE_BY_SLUG_FILENAME = {}
 
         search_wrapper._TABLE_DESCRIPTIONS_PATH = self._desc_path
@@ -87,6 +89,7 @@ class DatasetProfilesTests(unittest.TestCase):
     def tearDown(self) -> None:
         agent_tools_v2._PROFILES_PATH = self._orig_agent_tools_state["profiles_path"]
         agent_tools_v2._PROFILES_LOADED = self._orig_agent_tools_state["profiles_loaded"]
+        agent_tools_v2._PROFILE_BY_URI = self._orig_agent_tools_state["profile_by_uri"]
         agent_tools_v2._PROFILE_BY_SLUG_FILENAME = self._orig_agent_tools_state["profile_by_slug_filename"]
 
         search_wrapper._TABLE_DESCRIPTIONS_PATH = self._orig_search_wrapper_state["desc_path"]
@@ -116,6 +119,7 @@ class DatasetProfilesTests(unittest.TestCase):
 
     def test_profile_lookup_prefers_precomputed_profiles_jsonl(self):
         expected = {
+            "s3_uri": self._tabular_uri,
             "slug": "example-dataset",
             "filename": "rows",
             "family": "csv",
@@ -136,6 +140,7 @@ class DatasetProfilesTests(unittest.TestCase):
         }
         self._write_jsonl(self._profiles_path, [expected])
         agent_tools_v2._PROFILES_LOADED = False
+        agent_tools_v2._PROFILE_BY_URI = {}
         agent_tools_v2._PROFILE_BY_SLUG_FILENAME = {}
 
         profile = agent_tools_v2._load_dataset_profile(self._tabular_uri)
@@ -164,6 +169,7 @@ class DatasetProfilesTests(unittest.TestCase):
 
     def test_profiles_cache_supports_tabular_and_non_tabular_entries(self):
         tabular = {
+            "s3_uri": self._tabular_uri,
             "slug": "example-dataset",
             "filename": "rows",
             "family": "csv",
@@ -183,6 +189,7 @@ class DatasetProfilesTests(unittest.TestCase):
             ],
         }
         non_tabular = {
+            "s3_uri": self._text_uri,
             "slug": "example-dataset",
             "filename": "notes",
             "family": "text",
@@ -192,6 +199,7 @@ class DatasetProfilesTests(unittest.TestCase):
         }
         self._write_jsonl(self._profiles_path, [tabular, non_tabular])
         agent_tools_v2._PROFILES_LOADED = False
+        agent_tools_v2._PROFILE_BY_URI = {}
         agent_tools_v2._PROFILE_BY_SLUG_FILENAME = {}
 
         tabular_profile = agent_tools_v2._load_dataset_profile(self._tabular_uri)
@@ -205,6 +213,29 @@ class DatasetProfilesTests(unittest.TestCase):
         self.assertIn("snippet", text_profile)
         self.assertNotIn("top_2_rows", text_profile)
         self.assertNotIn("columns", text_profile)
+
+    def test_profile_lookup_prefers_exact_uri_over_slug_filename_fallback(self):
+        canonical = {
+            "s3_uri": self._tabular_uri,
+            "slug": "example-dataset",
+            "filename": "rows",
+            "family": "csv",
+            "row_count": 2,
+        }
+        conflicting = {
+            "slug": "example-dataset",
+            "filename": "rows",
+            "family": "csv",
+            "row_count": 999,
+        }
+        self._write_jsonl(self._profiles_path, [canonical, conflicting])
+        agent_tools_v2._PROFILES_LOADED = False
+        agent_tools_v2._PROFILE_BY_URI = {}
+        agent_tools_v2._PROFILE_BY_SLUG_FILENAME = {}
+
+        profile = agent_tools_v2._load_dataset_profile(self._tabular_uri)
+
+        self.assertEqual(profile["row_count"], 2)
 
 
 if __name__ == "__main__":
