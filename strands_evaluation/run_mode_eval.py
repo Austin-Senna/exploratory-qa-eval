@@ -36,9 +36,9 @@ _MODE_LETTERS = {
 }
 
 _SANA_AXIS_DEFAULTS = {
-    "search_tool": "ideal",
-    "search_results": "ideal",
-    "agent_management": "standard",
+    "search_tool": "preloaded",
+    "search_results": "naive",
+    "agent_management": "naive",
 }
 
 _LEGACY_AXIS_DEFAULTS = {

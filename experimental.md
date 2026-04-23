@@ -20,16 +20,16 @@ Alternative title:
 
 ### Claims that are currently safe
 
-- Idealized retrieval is a useful diagnostic lens.
+- Preloaded sources — gold `source_sequence` injected into the prompt with no search tools — is a useful diagnostic lens for isolating navigation failures.
 - Runtime-failure traces suggest recurrent navigation failures such as repeated evidence gathering, rediscovery, and endgame overshoot.
 - SANA is a concrete proposed intervention stack.
 
 ### Claims that are **not** yet safe without experiments
 
-- “Planning is not the bottleneck.”
-- “SANA improves accuracy.”
-- “SANA is cost-neutral.”
-- “These findings generalize to tool-using agents broadly.”
+- "Planning scaffolding recovers most preloaded failures."
+- "SANA improves accuracy."
+- "SANA is cost-neutral."
+- "These findings generalize to tool-using agents that must search."
 
 Any of these claims must be gated on actual results with uncertainty estimates.
 
@@ -45,21 +45,21 @@ The paper must define the following precisely:
 - number of seeds / reruns
 - tool APIs exposed to the agent
 - runtime budget definition
-- operational definition of `results_ideal`
-- operational definition of `plan_ideal`
+- operational definition of **preloaded sources**
+- operational definition of `plan_standard` and `plan_ideal` management modes
 - exact role of `SummarizingConversationManager`
 
 Without this section, the paper is not reviewable.
 
-### 3.1 Ideal retrieval must be operationalized
+### 3.1 Preloaded sources — operational definition
 
-The paper must state exactly what “ideal retrieval” means. For example:
+Preloaded sources is the sole retrieval condition in the main experimental table. For each task:
 
-- gold dataset injection
-- oracle top-k dataset family retrieval
-- benchmark-authored curated source bundle
+- The gold `source_sequence` from the benchmark-authored plan is injected into the system prompt as a `## PRELOADED DATASETS` block listing `dataset_id` and S3 URI for every source.
+- The agent is told explicitly that the list is complete and authoritative; it should not attempt to search.
+- **No search tools are exposed** to the agent. `list_files`, `peek_file`, `read_file`, `grep_file`, `query_file`, `download`, `execute_code`, and `submit_answer` remain available.
 
-Different operationalizations imply different conclusions. This must not remain implicit.
+Softer idealizations (e.g. a gold-sequence cursor search tool) are not used in the main paper because they reintroduce the pacing decisions — when to call search again, when to stop, how to interpret partial results — that the paper's thesis asks us to factor out. The `search_ideal` mode remains in the repository as a legacy comparison condition but is not part of the main results.
 
 ## 4. Related Work Section Required
 
@@ -108,15 +108,21 @@ From `results-ec2_semantic_turn_waste_grouped/turn_waste_global_report.md`:
 
 These counts can be used descriptively, but the paper must explain how they were produced.
 
-## 6. Stage 1: Planning Under Ideal Retrieval
+## 6. Stage 1: Planning Scaffolding Under Preloaded Sources
 
-This section should test the narrow claim that planning quality may be relatively strong under ideal retrieval.
+This section tests the narrow claim that planning scaffolding recovers or does not recover failures once retrieval is removed.
 
 ### Required comparisons
 
-- `plan_naive, results_naive`
-- `plan_default, results_ideal`
-- `plan_ideal, results_ideal`
+Two conditions, both with preloaded sources:
+
+- **Oracle-Sources (no planning)** — `search=preloaded, plan=naive`. Agent has gold sources, no `plan()` tool, no skills plugin, no `summarize_context`.
+- **Oracle-Sources + Planning** — `search=preloaded, plan=standard`. Same preloaded sources, plus the managed stack (`plan()`, skills, `summarize_context`, category-stagnation handler).
+
+Interpretation:
+
+- If Oracle-Sources + Planning substantially beats Oracle-Sources, planning scaffolding is load-bearing even when retrieval is solved.
+- If the two conditions are close, failures under preloaded are not primarily addressable by planning scaffolding — they are deeper navigation/reasoning issues, motivating the SANA interventions in Stage 2.
 
 ### Required reporting
 
@@ -129,36 +135,36 @@ This section should test the narrow claim that planning quality may be relativel
 
 ### Rule
 
-Do **not** write “planning is not the bottleneck” unless the 3% gap is shown to be robust and not plausibly noise.
+Do **not** write "planning scaffolding is sufficient" or "planning scaffolding does not help" unless the gap is shown to be robust and not plausibly noise.
 
 ## 7. Stage 2: SANA Ablation
 
-Summarized memory is held fixed everywhere as default runtime infrastructure.
+Preloaded sources and `SummarizingConversationManager` are held fixed everywhere as default runtime infrastructure.
 
-### Main additive ablation
+### Agent 0 — the baseline
 
-- `Agent 0`: Ideal Retrieval + Default Plan + Basic Tools + `SummarizingConversationManager`
-- `Agent 1`: Agent 0 + richer APIs and batched tools
-- `Agent 2`: Agent 1 + plan budgeting and exit conditions
-- `Agent 3`: Agent 2 + micro-reflection around each tool call
-- `Agent 4`: Agent 3 + macro-reflection every `k` turns
+- `Agent 0`: Preloaded sources + Default Plan + Basic Tools + `SummarizingConversationManager`.
 
-### Why this order
+Agent 0 is the Oracle-Sources (no planning) condition from §6. It is the baseline against which each intervention is measured.
 
-- `Agent 1` addresses the “this is just bad tools” objection.
-- `Agent 2` adds cheap static control.
-- `Agent 3` adds local dynamic control.
-- `Agent 4` adds long-horizon control and therefore must justify its overhead.
+### One-at-a-time interventions on top of Agent 0
 
-### Additive ablation is not enough
+Each of the following adds a single intervention to Agent 0. The interventions are independent toggles; none of them compose with each other in the main ablation.
 
-The experimental paper should also include at least one of:
+- `Agent 1 = Agent 0 + rich_apis` — richer dataset-profile APIs (`peek_file` returns cached column stats, `top_2_rows`, `llm_description`).
+- `Agent 2 = Agent 0 + plan_budget` — plan bullets with explicit `estimated_tool_calls` and `exit_condition`; hard-stop behavior on budget exhaustion.
+- `Agent 3 = Agent 0 + micro_reflection` — structured pre-tool and post-tool check records around each tool call.
+- `Agent 4 = Agent 0 + macro_reflection` — k-turn global reflection with `should_submit` / `global_status` decisions.
 
-- leave-one-out from `Agent 4`
-- targeted pairwise comparisons
-- selective disablements for interacting components
+### Cumulative stack
 
-Otherwise component interactions cannot be isolated cleanly.
+A sixth condition — `Agent Full = Agent 0 + rich_apis + plan_budget + micro_reflection + macro_reflection` — runs all four interventions together and serves as the cumulative-stack result. Reporting both one-at-a-time and cumulative lets the paper distinguish "each intervention helps" from "only the combination helps."
+
+### Why this structure
+
+One-at-a-time isolates each intervention's contribution to the Oracle-Sources baseline. Strict additive ordering (Agent k = Agent k-1 + intervention k) cannot answer "does intervention k help?" because the answer is always entangled with everything before it. One-at-a-time also makes the structure symmetric: the same five numbers (Agents 0-4) are directly comparable deltas on the same baseline.
+
+Cumulative (`Agent Full`) is kept because interactions may be non-additive — the paper should be able to report both the isolated effects and the combined effect.
 
 ## 8. SANA Runtime Schemas
 
@@ -237,25 +243,24 @@ The experimental paper must report both benefit and overhead.
 - estimated wasted turns
 - turn waste percentage
 - time to first sufficient answer (`TTFSA`)
-- turns-to-dataset-access at 50% coverage (`TDA@50`)
-- turns-to-dataset-access at 100% coverage (`TDA@100`)
+- preloaded-source engagement rate — fraction of preloaded URIs the agent ever opens
 - token overhead per run
 - cost per solved task
 - fraction of runs whose answer was likely available before the final turn
 
-### Required metric definition
+### Required metric definitions
 
 `TTFSA` must be defined precisely as the first turn where the information needed for the correct final answer is already available in the trace.
 
-`TDA@p` must be defined as the earliest turn at which the agent has accessed at least `p%` of the required datasets for the task.
+**Preloaded-source engagement rate** is the per-task fraction `|opened ∩ preloaded| / |preloaded|`, where `opened` is the set of URIs the agent inspected via any read tool. Under preloaded sources, the classical "turns-to-dataset-access" metrics (`TDA@50`, `TDA@100`) are degenerate — the agent has all sources at turn 0 — so we replace them with engagement rate, which measures whether the agent *uses* what it was given.
 
 These metrics are important because they separate:
 
-- reaching the right datasets
+- engaging with the preloaded sources
 from
-- using those datasets well
+- extracting the right answer from them
 
-If `TDA@100` is early but final performance is still poor, that is evidence for a navigation bottleneck rather than a retrieval bottleneck.
+If engagement rate is high but final performance is low, that is evidence for a post-retrieval navigation bottleneck rather than a "did not look at the data" failure.
 
 ## 10. Required Tables and Figures
 
@@ -263,17 +268,17 @@ The final experimental paper should contain at least:
 
 ### Tables
 
-1. Benchmark / setup table
-2. Stage 1 planning comparison table with CIs
-3. Stage 2 ablation table
-4. Overhead / cost-benefit table
+1. Benchmark / setup table (including the preloaded-sources operationalization per §3.1)
+2. Stage 1 two-cell comparison table (Oracle-Sources vs Oracle-Sources + Planning) with CIs
+3. Stage 2 ablation table: rows for Agent 0, Agent 1–4 (each = Agent 0 + single intervention), Agent Full (all four interventions)
+4. Overhead / cost-benefit table — per-intervention token and turn cost
 
 ### Figures
 
-1. Failure-category distribution
-2. At least one example trace of rediscovery or closure chasing
+1. Failure-category distribution across the Stage 1 cells
+2. At least one example trace of rediscovery or closure chasing under preloaded
 3. Optional plot of `TTFSA` versus final solve outcome
-4. Optional plot of `TDA@100` versus final solve outcome
+4. Optional plot of preloaded-source engagement rate versus final solve outcome
 
 Without trace examples, the taxonomy will read abstract and subjective.
 
@@ -298,10 +303,10 @@ Not allowed unless broadened experimentally:
 
 This document becomes a paper only when all of the following are true:
 
-- benchmark and ideal-retrieval setup are defined
-- Stage 1 numbers have uncertainty estimates
-- Stage 2 ablation has been run
-- overhead is measured
+- benchmark and preloaded-sources setup are defined
+- Stage 1 numbers (Oracle-Sources, Oracle-Sources + Planning) have uncertainty estimates
+- Stage 2 ablation has been run (Agent 0, Agents 1–4 one-at-a-time, Agent Full)
+- overhead is measured per intervention
 - related work is added
 - taxonomy protocol is described
 - the paper no longer contains proposal-only language where results should be

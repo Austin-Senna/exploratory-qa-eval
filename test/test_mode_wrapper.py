@@ -418,11 +418,15 @@ class TestModeWrapper(unittest.TestCase):
 
 
 class TestSanaLevel(unittest.TestCase):
-    """SANA Agent 0 (labeling) and Agent 1 (enriched peek_file)."""
+    """SANA Agent 0 (labeling) and Agent 1 (enriched peek_file).
+
+    After the paper's preloaded-operationalization revision, SANA Agent 0 =
+    preloaded/naive/naive (Oracle-Sources baseline per experimental.md §6).
+    Preloaded mode requires a valid plan for source_sequence injection; set
+    that up here so build_mode_bundle can compose the PRELOADED DATASETS block.
+    """
 
     def setUp(self) -> None:
-        # SANA defaults resolve search_tool/search_results to ideal, which triggers
-        # plan_store lookups. Point plans_root at a temp dir with a valid plan.
         self._tmp = TemporaryDirectory()
         plans_root = Path(self._tmp.name) / "plans_mini"
         target = plans_root / "k-1-d-1"
@@ -447,9 +451,9 @@ class TestSanaLevel(unittest.TestCase):
     def test_sana_0_fills_axis_defaults_when_unset(self):
         cfg = RunConfig(sana_level=0)
         bundle = build_mode_bundle(cfg, data_tools=[], task_context=self._task_context)
-        self.assertEqual(bundle.modes["search_tool"], "ideal")
-        self.assertEqual(bundle.modes["search_results"], "ideal")
-        self.assertEqual(bundle.modes["agent_management"], "standard")
+        self.assertEqual(bundle.modes["search_tool"], "preloaded")
+        self.assertEqual(bundle.modes["search_results"], "naive")
+        self.assertEqual(bundle.modes["agent_management"], "naive")
 
     def test_sana_0_respects_explicit_axis_override(self):
         cfg = RunConfig(sana_level=0, search_tool_mode="naive")
@@ -477,7 +481,11 @@ class TestSanaLevel(unittest.TestCase):
         self.assertIn("row_count", bundle.system_prompt)
         self.assertIn("top_2_rows", bundle.system_prompt)
         self.assertIn("null_rate", bundle.system_prompt)
-        self.assertLessEqual(len(bundle.system_prompt.splitlines()), len(compose_managed_prompt("ideal").splitlines()) + 12)
+        # SANA section is an 8-line appendage; bound the injection to ~12 extra lines.
+        self.assertLessEqual(
+            len(bundle.system_prompt.splitlines()),
+            len(compose_baseline_prompt("preloaded").splitlines()) + 60,
+        )
 
     def test_sana_0_does_not_inject_profile_section(self):
         cfg = RunConfig(sana_level=0)

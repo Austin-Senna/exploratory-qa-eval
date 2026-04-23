@@ -243,10 +243,13 @@ def build_results(
 
 
 # SANA Agent 0 canonical axis values (experimental.md §7).
+# Oracle-Sources baseline: gold source_sequence preloaded into the prompt,
+# no search tools, no planning scaffolding. search_results is inert under
+# preloaded (no search tools to wrap) and defaults to `naive` for clarity.
 _SANA_AGENT_0_AXES = {
-    "search_tool_mode": "ideal",
-    "search_results_mode": "ideal",
-    "agent_management_mode": "standard",
+    "search_tool_mode": "preloaded",
+    "search_results_mode": "naive",
+    "agent_management_mode": "naive",
 }
 
 

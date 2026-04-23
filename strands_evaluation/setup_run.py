@@ -155,7 +155,7 @@ def _display_command(command: Sequence[str]) -> str:
     return shlex.join(printable)
 
 
-_SANA_AXIS_DEFAULTS = {"search": "ideal", "results": "ideal", "plan": "standard"}
+_SANA_AXIS_DEFAULTS = {"search": "preloaded", "results": "naive", "plan": "naive"}
 _LEGACY_AXIS_DEFAULTS = {"search": "standard", "results": "naive", "plan": "standard"}
 
 

@@ -110,7 +110,7 @@ class RunModeEvalTests(unittest.TestCase):
                 agent_management=None,
                 sana_level=0,
             ),
-            ("ideal", "ideal", "standard"),
+            ("preloaded", "naive", "naive"),
         )
 
     def test_resolve_mode_axes_honors_explicit_override_with_sana(self):
@@ -121,7 +121,7 @@ class RunModeEvalTests(unittest.TestCase):
                 agent_management=None,
                 sana_level=1,
             ),
-            ("naive", "ideal", "standard"),
+            ("naive", "naive", "naive"),
         )
 
     def test_variant_condition_label_uses_compact_mode_letters(self):
