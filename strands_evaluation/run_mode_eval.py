@@ -34,6 +34,18 @@ _MODE_LETTERS = {
     "ideal": "i",
 }
 
+_SANA_AXIS_DEFAULTS = {
+    "search_tool": "ideal",
+    "search_results": "ideal",
+    "agent_management": "standard",
+}
+
+_LEGACY_AXIS_DEFAULTS = {
+    "search_tool": "standard",
+    "search_results": "naive",
+    "agent_management": "standard",
+}
+
 
 def _variant_condition_label(
     *,
@@ -60,6 +72,21 @@ def _with_debug_suffix(label: str, debug_mode: Optional[str]) -> str:
     if normalized is None:
         return label
     return f"{label}__debug_{normalized}"
+
+
+def _resolve_mode_axes(
+    *,
+    search_tool: Optional[str],
+    search_results: Optional[str],
+    agent_management: Optional[str],
+    sana_level: Optional[int],
+) -> tuple[str, str, str]:
+    defaults = _SANA_AXIS_DEFAULTS if sana_level is not None else _LEGACY_AXIS_DEFAULTS
+    return (
+        search_tool or defaults["search_tool"],
+        search_results or defaults["search_results"],
+        agent_management or defaults["agent_management"],
+    )
 
 
 def _collect_task_files(args) -> list[str]:
@@ -270,19 +297,19 @@ def main() -> None:
     parser.add_argument(
         "--search_tool",
         choices=["naive", "standard", "ideal"],
-        default="standard",
+        default=None,
         help="Search tool quality axis.",
     )
     parser.add_argument(
         "--search_results",
         choices=["naive", "ideal"],
-        default="naive",
+        default=None,
         help="Search result richness axis.",
     )
     parser.add_argument(
         "--agent_management",
         choices=["naive", "standard", "ideal"],
-        default="standard",
+        default=None,
         help="Agent management axis.",
     )
     parser.add_argument(
@@ -319,11 +346,17 @@ def main() -> None:
         openai_prompt_cache_retention=args.openai_prompt_cache_retention,
         extra_model_kwargs=extra_model_kwargs,
     )
-    safe_model_name = base_eval._display_name(agent_config)
-    variant_condition = _variant_condition_label(
+    search_tool_mode, search_results_mode, agent_management_mode = _resolve_mode_axes(
         search_tool=args.search_tool,
         search_results=args.search_results,
         agent_management=args.agent_management,
+        sana_level=args.sana_level,
+    )
+    safe_model_name = base_eval._display_name(agent_config)
+    variant_condition = _variant_condition_label(
+        search_tool=search_tool_mode,
+        search_results=search_results_mode,
+        agent_management=agent_management_mode,
         k=args.k,
         search_calls=args.search_calls,
     )
@@ -348,9 +381,9 @@ def main() -> None:
         search_calls_limit=args.search_calls,
         search_descriptions=args.search_descriptions,
         search_db_path=args.db_path,
-        search_tool_mode=args.search_tool,
-        search_results_mode=args.search_results,
-        agent_management_mode=args.agent_management,
+        search_tool_mode=search_tool_mode,
+        search_results_mode=search_results_mode,
+        agent_management_mode=agent_management_mode,
         sana_level=args.sana_level,
         condition_config=ConditionConfig(
             condition=condition_label,
@@ -364,9 +397,9 @@ def main() -> None:
         "Ablation variant: %s (base=%s, st=%s, sr=%s, am=%s, k=%s, search_calls=%s, db_path=%s)",
         condition_label,
         args.condition,
-        args.search_tool,
-        args.search_results,
-        args.agent_management,
+        search_tool_mode,
+        search_results_mode,
+        agent_management_mode,
         args.k,
         args.search_calls,
         args.db_path or "./lance_data",
