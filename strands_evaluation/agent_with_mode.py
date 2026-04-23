@@ -42,6 +42,7 @@ from strands_evaluation.helper.prompting import (
     compose_baseline_prompt,
     compose_managed_prompt,
     inject_debug_prompt,
+    inject_sana_prompt,
     skill_paths_for_modes,
 )
 from strands_evaluation.helper.agent_runtime import invoke_with_watchdog
@@ -229,6 +230,29 @@ def build_results(
     )
 
 
+# SANA Agent 0 canonical axis values (experimental.md §7).
+_SANA_AGENT_0_AXES = {
+    "search_tool_mode": "ideal",
+    "search_results_mode": "ideal",
+    "agent_management_mode": "standard",
+}
+
+
+def _resolve_sana_axes(run_config: RunConfig) -> None:
+    """Preset-with-override: fill unset axes with SANA Agent 0 canonical values; warn on disagreement."""
+    if run_config.sana_level is None:
+        return
+    for axis, canonical in _SANA_AGENT_0_AXES.items():
+        current = getattr(run_config, axis)
+        if current is None:
+            setattr(run_config, axis, canonical)
+        elif current != canonical:
+            logger.warning(
+                "sana_level=%s canonical baseline is %s=%s; got %s (honoring user override)",
+                run_config.sana_level, axis, canonical, current,
+            )
+
+
 def build_mode_bundle(
     run_config: RunConfig,
     *,
@@ -236,6 +260,7 @@ def build_mode_bundle(
     task_context: Optional[Dict[str, Any]] = None,
 ) -> ModeBundle:
     """Build final tools/prompt/plugin toggles from multi-axis ablation modes."""
+    _resolve_sana_axes(run_config)
     search_tool_mode = _normalize_mode(run_config.search_tool_mode, "standard", "search_tool")
     search_results_mode = _normalize_result_mode(run_config.search_results_mode, "naive", "search_results")
     agent_management_mode = _normalize_mode(run_config.agent_management_mode, "standard", "agent_management")
@@ -254,7 +279,12 @@ def build_mode_bundle(
         search_tool_mode=search_tool_mode,
         task_context=task_context,
     )
+    system_prompt = inject_sana_prompt(system_prompt, run_config.sana_level)
     system_prompt = inject_debug_prompt(system_prompt, run_config.debug_mode)
+
+    # SANA Agent 1: toggle peek_file dataset-profile enrichment.
+    from strands_evaluation.tools.agent_tools_v2 import set_peek_enrichment
+    set_peek_enrichment(run_config.sana_level is not None and run_config.sana_level >= 1)
 
     tools = list(search_tools) + list(management_tools) + list(data_tools)
     return ModeBundle(

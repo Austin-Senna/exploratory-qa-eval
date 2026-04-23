@@ -285,6 +285,13 @@ def main() -> None:
         default="standard",
         help="Agent management axis.",
     )
+    parser.add_argument(
+        "--sana-level",
+        type=int,
+        choices=(0, 1),
+        default=None,
+        help="SANA ablation level. 0 = Agent 0 baseline label. 1 = Agent 1 (richer peek_file via cached profiles).",
+    )
 
     # Execution
     parser.add_argument("--parallel", type=int, default=6, help="Number of parallel worker processes")
@@ -344,6 +351,7 @@ def main() -> None:
         search_tool_mode=args.search_tool,
         search_results_mode=args.search_results,
         agent_management_mode=args.agent_management,
+        sana_level=args.sana_level,
         condition_config=ConditionConfig(
             condition=condition_label,
             base_condition=args.condition,

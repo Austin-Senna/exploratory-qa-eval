@@ -51,6 +51,61 @@ from .helper.detect import detect_family, should_skip
 load_dotenv()
 
 # ---------------------------------------------------------------------------
+# SANA Agent 1: peek_file dataset-profile enrichment
+# ---------------------------------------------------------------------------
+# When enabled, peek_file augments its response with a `profile` field sourced
+# from the cached jsonl files already loaded by the ideal-search wrapper:
+#   - datagov_tables_schemas_full.jsonl  (hard schema)
+#   - table_descriptions.jsonl           (LLM metadata)
+#   - snippet.jsonl                      (dataset snippet)
+# Activated per-agent by build_mode_bundle via set_peek_enrichment(True) when
+# sana_level >= 1. Orthogonal to existing modes.
+
+_PEEK_ENRICHMENT_ENABLED: bool = False
+
+
+def set_peek_enrichment(enabled: bool) -> None:
+    """Toggle dataset-profile enrichment on peek_file (SANA Agent 1)."""
+    global _PEEK_ENRICHMENT_ENABLED
+    _PEEK_ENRICHMENT_ENABLED = bool(enabled)
+
+
+def _load_dataset_profile(s3_uri: str) -> Optional[Dict[str, Any]]:
+    """Look up cached profile for a dataset file URI. Returns None if no cache hit."""
+    try:
+        from strands_evaluation.tools.external.ideal import search_wrapper as _sw
+    except Exception:
+        return None
+
+    try:
+        _sw._load_schemas_cache()
+        _sw._load_desc_cache()
+        _sw._load_snippet_cache()
+    except FileNotFoundError:
+        # Expected when running without the ideal jsonl files; preflight catches this
+        # for sana_level>=1 configurations.
+        return None
+    except Exception:
+        return None
+
+    schema = _sw._lookup_schema(s3_uri)
+    description = _sw._DESC_BY_URI.get(s3_uri)
+    snippet = _sw._SNIPPET_BY_URI.get(s3_uri)
+
+    if schema is None and description is None and snippet is None:
+        return None
+
+    profile: Dict[str, Any] = {}
+    if schema is not None:
+        profile["schema_columns"] = schema.get("columns")
+        profile["table_kind"] = schema.get("kind")
+    if description is not None:
+        profile["llm_description"] = description
+    if snippet is not None:
+        profile["snippet"] = snippet
+    return profile
+
+# ---------------------------------------------------------------------------
 # Budget constants (mirrored from streams.py S3Config defaults)
 # ---------------------------------------------------------------------------
 _PEEK_BYTES = 65_536          # 64 KB for initial range-GET / peek
@@ -539,6 +594,11 @@ def peek_file(
 
     if family == "xml":
         result.update(_build_xml_preview(text, size_bytes))
+
+    if _PEEK_ENRICHMENT_ENABLED:
+        profile = _load_dataset_profile(s3_uri)
+        if profile is not None:
+            result["profile"] = profile
 
     return result
 

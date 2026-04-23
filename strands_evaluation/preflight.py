@@ -122,6 +122,7 @@ def run_preflight(
     st = (run_config.search_tool_mode or "standard").strip().lower()
     sr = (run_config.search_results_mode or "naive").strip().lower()
     am = (run_config.agent_management_mode or "standard").strip().lower()
+    sana = run_config.sana_level
 
     checks: List[PreflightCheck] = []
 
@@ -144,7 +145,8 @@ def run_preflight(
         else:
             checks.extend(_check_plan_files(task_files))
 
-    if sr == "ideal":
+    # SANA Agent 1 requires the three profile jsonl files; also loaded by search_results=ideal.
+    if sr == "ideal" or (sana is not None and sana >= 1):
         checks.append(_check_desc_cache_for_enrichment())
         checks.append(_check_snippet_cache())
         checks.append(_check_schemas_jsonl_load())
