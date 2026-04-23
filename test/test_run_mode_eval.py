@@ -91,6 +91,39 @@ run_mode_eval = _load_run_mode_eval_module()
 
 
 class RunModeEvalTests(unittest.TestCase):
+    def test_resolve_mode_axes_uses_legacy_defaults_without_sana(self):
+        self.assertEqual(
+            run_mode_eval._resolve_mode_axes(
+                search_tool=None,
+                search_results=None,
+                agent_management=None,
+                sana_level=None,
+            ),
+            ("standard", "naive", "standard"),
+        )
+
+    def test_resolve_mode_axes_uses_sana_agent_0_defaults(self):
+        self.assertEqual(
+            run_mode_eval._resolve_mode_axes(
+                search_tool=None,
+                search_results=None,
+                agent_management=None,
+                sana_level=0,
+            ),
+            ("ideal", "ideal", "standard"),
+        )
+
+    def test_resolve_mode_axes_honors_explicit_override_with_sana(self):
+        self.assertEqual(
+            run_mode_eval._resolve_mode_axes(
+                search_tool="naive",
+                search_results=None,
+                agent_management=None,
+                sana_level=1,
+            ),
+            ("naive", "ideal", "standard"),
+        )
+
     def test_variant_condition_label_uses_compact_mode_letters(self):
         label = run_mode_eval._variant_condition_label(
             search_tool="ideal",

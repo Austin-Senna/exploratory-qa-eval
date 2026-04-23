@@ -123,6 +123,26 @@ def skill_paths_for_modes(
     ]
 
 
+def inject_sana_prompt(prompt: str, sana_level: Optional[int]) -> str:
+    """Append a short section describing SANA Agent 1's enriched peek_file.
+
+    Only runs when sana_level >= 1. Keeps the baseline/managed prompts unmodified
+    on disk — the extra guidance is appended at agent construction time.
+    """
+    if sana_level is None or sana_level < 1:
+        return prompt
+
+    section = (
+        "\n\n## DATASET PROFILE (SANA Agent 1)\n"
+        "`peek_file` may return an extra `profile` field with cached metadata for the dataset:\n"
+        "`schema_columns`, `table_kind`, `llm_description`, `snippet`.\n"
+        "Some profiles also include `row_count`, `size_bytes`, `top_2_rows`, and per-column `null_rate`, `distinct_count`, `min`, `max`, `mean`.\n"
+        "When `profile` is present, use it instead of follow-up `read_file` / `grep_file` probes to learn column names, types, or dataset purpose.\n"
+        "Fall back to the usual preview-then-query flow when `profile` is absent (not every dataset is cached)."
+    )
+    return prompt.rstrip() + section
+
+
 def inject_debug_prompt(prompt: str, debug_mode: Optional[str]) -> str:
     mode = normalize_debug_mode(debug_mode)
     if mode is None:
@@ -152,6 +172,7 @@ __all__ = [
     "compose_preloaded_block",
     "discover_skill_path",
     "inject_debug_prompt",
+    "inject_sana_prompt",
     "load_prompt_text",
     "normalize_debug_mode",
     "planning_skill_path",

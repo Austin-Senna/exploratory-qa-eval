@@ -31,9 +31,9 @@ def _build_parser() -> argparse.ArgumentParser:
     subparsers = parser.add_subparsers(dest="subcommand", required=True)
 
     common = argparse.ArgumentParser(add_help=False)
-    common.add_argument("--search", choices=_SEARCH_MODE_CHOICES, default="standard")
-    common.add_argument("--results", choices=_RESULT_MODE_CHOICES, default="naive")
-    common.add_argument("--plan", choices=_MANAGEMENT_MODE_CHOICES, default="standard")
+    common.add_argument("--search", choices=_SEARCH_MODE_CHOICES, default=None)
+    common.add_argument("--results", choices=_RESULT_MODE_CHOICES, default=None)
+    common.add_argument("--plan", choices=_MANAGEMENT_MODE_CHOICES, default=None)
     common.add_argument("--k", type=int, default=None)
     common.add_argument("--model", default="bedrock/claude-sonnet-4.5")
     common.add_argument(
@@ -51,6 +51,13 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     common.add_argument("--parallel", type=int, default=None)
     common.add_argument("--verbose", "-v", action="store_true")
+    common.add_argument(
+        "--sana",
+        type=int,
+        choices=(0, 1),
+        default=None,
+        help="SANA ablation level. 0 = baseline (asserts ideal/ideal/standard axes). 1 = baseline + richer peek_file.",
+    )
 
     smoke = subparsers.add_parser("smoke", parents=[common], help="Run a lightweight smoke eval.")
     smoke.add_argument(
@@ -148,7 +155,20 @@ def _display_command(command: Sequence[str]) -> str:
     return shlex.join(printable)
 
 
+_SANA_AXIS_DEFAULTS = {"search": "ideal", "results": "ideal", "plan": "standard"}
+_LEGACY_AXIS_DEFAULTS = {"search": "standard", "results": "naive", "plan": "standard"}
+
+
+def _resolve_axes(args: argparse.Namespace) -> None:
+    """Fill axis defaults based on whether --sana is active. Explicit user args always win."""
+    defaults = _SANA_AXIS_DEFAULTS if args.sana is not None else _LEGACY_AXIS_DEFAULTS
+    for axis, fallback in defaults.items():
+        if getattr(args, axis) is None:
+            setattr(args, axis, fallback)
+
+
 def _build_run_mode_command(args: argparse.Namespace, cwd: Path) -> tuple[list[str], dict[str, str]]:
+    _resolve_axes(args)
     model_name = _normalize_model_name(args.model)
     db_arg = _validate_db_arg(args.db, cwd)
 
@@ -182,6 +202,8 @@ def _build_run_mode_command(args: argparse.Namespace, cwd: Path) -> tuple[list[s
         command.extend(["--parallel", str(args.parallel)])
     if args.verbose:
         command.append("--verbose")
+    if args.sana is not None:
+        command.extend(["--sana-level", str(args.sana)])
 
     if args.subcommand == "smoke":
         task_dir = _resolve_smoke_task_dir(args.task_dir, cwd)
