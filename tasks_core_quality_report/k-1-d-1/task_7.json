@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "task_id": "tasks_core/k-1-d-1/task_7.json",
+  "source_task": "tasks_core/k-1-d-1/task_7.json",
+  "source_verdict": null,
+  "question": "Which year from 2005-2010 has the highest total number of murders in Maryland? Your response should be in the format [Answer].",
+  "heuristic_flags": {
+    "question_text_anomaly": false,
+    "question_text_anomaly_notes": [],
+    "has_explicit_answer_placeholders": true
+  },
+  "estimated_dataset_count": 1,
+  "estimated_min_tool_calls": 2,
+  "estimated_nice_tool_calls": 3,
+  "tool_call_budget_bucket": "within_budget_comfortably",
+  "quality_bucket": "high",
+  "derivability_bucket": "clean",
+  "difficulty_bucket": "too_easy",
+  "overall_recommendation": "keep_noncore",
+  "issue_labels": [],
+  "strengths": [
+    "Question, node, and reasoning all align on a single well-defined yearly aggregation."
+  ],
+  "concerns": [
+    "The task is a very cheap one-dataset lookup and is likely too easy for a core benchmark slot."
+  ],
+  "rationale": "This task is internally coherent and easy to derive from the question: filter 2005-2010, sum murders by year, and take the maximum. The artifact does not show unsupported narrowing, leakage, or a weak final hop. Its main weakness is not quality but benchmark value, since the task is a single-hop aggregation over one dataset and therefore better suited to a non-core slice than a core difficulty target.",
+  "suggested_fix": "Keep as non-core, or increase complexity with an additional justified comparison or filtering hop."
+}

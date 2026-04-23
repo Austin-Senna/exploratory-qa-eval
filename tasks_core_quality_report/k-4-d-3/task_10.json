@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "task_id": "tasks_core/k-4-d-3/task_10.json",
+  "source_task": "tasks_core/k-4-d-3/task_10.json",
+  "source_verdict": null,
+  "question": "Among the United States Park Police, United States Capitol Police, and U.S. Secret Service Uniform Division, which agency issued the highest average number of driving-related violations in January from 2019 to 2021? That agency is operated by which federal agency, and that agency sits within which U.S. department? Who is the head of that department? Return the name of the person only. Your response should be in the format [Answer].",
+  "heuristic_flags": {
+    "question_text_anomaly": false,
+    "question_text_anomaly_notes": [],
+    "has_explicit_answer_placeholders": true
+  },
+  "estimated_dataset_count": 6,
+  "estimated_min_tool_calls": 12,
+  "estimated_nice_tool_calls": 18,
+  "tool_call_budget_bucket": "within_budget_comfortably",
+  "quality_bucket": "high",
+  "derivability_bucket": "clean",
+  "difficulty_bucket": "core",
+  "overall_recommendation": "core_keep",
+  "issue_labels": [
+    "temporal_instability"
+  ],
+  "strengths": [
+    "The comparison path is directly implied by the question.",
+    "The agency-to-department chain is short and well supported."
+  ],
+  "concerns": [
+    "The final answer depends on a current officeholder, so the task may age poorly."
+  ],
+  "rationale": "The task is internally consistent, comfortably within budget, and the reasoning chain follows the question cleanly from the three January violation counts to the operating agency, department, and final target. Its main weakness is that the last hop asks for the current department head, which introduces avoidable time sensitivity even though the rest of the task is a strong core-style multi-hop.",
+  "suggested_fix": "Anchor the final hop to a dated snapshot or stop at the department name."
+}

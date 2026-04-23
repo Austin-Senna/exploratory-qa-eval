@@ -5,6 +5,7 @@ Search bottleneck analysis helpers.
 This module computes:
 - task-level first-hit rounds over all search calls
 - task-level first-hit rounds per search tool (tool-local rounds)
+- per-call gold-hit/recall rows over search-call index
 - per-tool top-k miss rates
 - compact condition-model summaries that can be merged into higher-level tables
 """
@@ -36,6 +37,7 @@ SEARCH_TOOL_COLORS = {
     "search_prefix": "#C44E52",
     "search_schema": "#7F7F7F",
 }
+READ_TOOLS = {"read_file", "grep_file", "query_file"}
 
 
 def _split_cm_key(key: str) -> Tuple[str, str, str]:
@@ -107,6 +109,11 @@ def _resolve_gold_ids(task_id: str, task_gold: Dict[str, List[str]]) -> set[str]
 def _is_search_event(record: dict) -> bool:
     tool = str(record.get("tool", "") or "")
     return tool.startswith("search") and record.get("result_dataset_ids") is not None
+
+
+def _is_read_event(record: dict) -> bool:
+    tool = str(record.get("tool", "") or "")
+    return tool in READ_TOOLS and record.get("read_dataset_ids") is not None
 
 
 def _summarize_first_hit_rows(
@@ -200,30 +207,52 @@ def compute_search_bottleneck(
             gold_ids = _resolve_gold_ids(task_id, task_gold)
             if not gold_ids:
                 continue
+            n_gold_ids = len(gold_ids)
 
             cm_task_counts[key]["tasks_seen"] += 1
             condition_task_counts[condition_label]["tasks_seen"] += 1
 
             search_events: List[dict] = []
+            trajectory_events: List[dict] = []
             for line_index, record in enumerate(task_traces):
+                parsed_turn = _parse_turn(record.get("turn"))
                 if not _is_search_event(record):
+                    if _is_read_event(record):
+                        trajectory_events.append(
+                            {
+                                "event_type": "read",
+                                "tool": str(record.get("tool", "") or ""),
+                                "read_ids": list(record.get("read_dataset_ids") or []),
+                                "parsed_turn": parsed_turn,
+                                "line_index": line_index,
+                                "task_id": str(record.get("task_id", "") or task_id),
+                            }
+                        )
                     continue
                 tool_name = str(record.get("tool", "") or "")
                 result_ids = list(record.get("result_dataset_ids") or [])
+                result_gold_ids = sorted(set(result_ids) & gold_ids)
+                cutoff_hit_counts = {
+                    cutoff: len(set(result_ids[:cutoff]) & gold_ids)
+                    for cutoff in SEARCH_BOTTLENECK_CUTOFFS
+                }
                 cutoff_hits = {
-                    cutoff: bool(set(result_ids[:cutoff]) & gold_ids)
+                    cutoff: bool(cutoff_hit_counts[cutoff])
                     for cutoff in SEARCH_BOTTLENECK_CUTOFFS
                 }
 
                 event = {
                     "tool": tool_name,
                     "result_ids": result_ids,
+                    "result_gold_ids": result_gold_ids,
+                    "cutoff_hit_counts": cutoff_hit_counts,
                     "cutoff_hits": cutoff_hits,
-                    "parsed_turn": _parse_turn(record.get("turn")),
+                    "parsed_turn": parsed_turn,
                     "line_index": line_index,
                     "task_id": str(record.get("task_id", "") or task_id),
                 }
                 search_events.append(event)
+                trajectory_events.append({**event, "event_type": "search"})
 
                 tool_bucket = tool_miss_acc[tool_name]
                 tool_bucket["conditions"].add(condition_label)
@@ -234,27 +263,58 @@ def compute_search_bottleneck(
                     if cutoff_hits[cutoff]:
                         tool_bucket["hits"][cutoff] += 1
 
-                per_call_row = {
-                    "condition_model": key,
-                    "condition": condition_label,
-                    "variant": variant,
-                    "base_condition": base_condition,
-                    "model": model,
-                    "task_id": _task_id_for_row(str(record.get("task_id", "") or task_id)),
-                    "search_tool": tool_name,
-                    "turn": record.get("turn"),
-                    "results_returned": len(result_ids),
-                }
-                for cutoff in SEARCH_BOTTLENECK_CUTOFFS:
-                    per_call_row[f"gold_in_top_{cutoff}"] = 1 if cutoff_hits[cutoff] else 0
-                per_call_rows.append(per_call_row)
-
             if not search_events:
                 cm_task_counts[key]["tasks_without_search"] += 1
                 condition_task_counts[condition_label]["tasks_without_search"] += 1
                 continue
 
             ordered_events = _order_events(search_events)
+            ordered_trajectory = _order_events(trajectory_events)
+            cumulative_retrieved_gold: set[str] = set()
+            cumulative_read_gold: set[str] = set()
+            current_search_call_index = 0
+            current_search_call_row: Optional[dict] = None
+            for event in ordered_trajectory:
+                if str(event.get("event_type", "")) == "read":
+                    cumulative_read_gold.update(set(event.get("read_ids") or []) & gold_ids)
+                    if current_search_call_row is not None:
+                        current_search_call_row["cumulative_read_gold_count"] = len(cumulative_read_gold)
+                        current_search_call_row["cumulative_read_gold_recall"] = (
+                            round(len(cumulative_read_gold) / n_gold_ids, 4) if n_gold_ids else 0.0
+                        )
+                    continue
+
+                current_search_call_index += 1
+                cumulative_retrieved_gold.update(set(event.get("result_gold_ids") or []))
+                per_call_row = {
+                    "condition_model": key,
+                    "condition": condition_label,
+                    "variant": variant,
+                    "base_condition": base_condition,
+                    "model": model,
+                    "task_id": _task_id_for_row(str(event.get("task_id", "") or task_id)),
+                    "search_tool": str(event.get("tool", "") or ""),
+                    "turn": event.get("parsed_turn"),
+                    "search_call_index": current_search_call_index,
+                    "results_returned": len(list(event.get("result_ids") or [])),
+                    "n_gold_datasets": n_gold_ids,
+                    "cumulative_search_gold_count": len(cumulative_retrieved_gold),
+                    "cumulative_search_gold_recall": round(len(cumulative_retrieved_gold) / n_gold_ids, 4)
+                    if n_gold_ids
+                    else 0.0,
+                    "cumulative_read_gold_count": len(cumulative_read_gold),
+                    "cumulative_read_gold_recall": round(len(cumulative_read_gold) / n_gold_ids, 4)
+                    if n_gold_ids
+                    else 0.0,
+                }
+                for cutoff in SEARCH_BOTTLENECK_CUTOFFS:
+                    hit_count = int(event.get("cutoff_hit_counts", {}).get(cutoff, 0) or 0)
+                    per_call_row[f"gold_hits_top_{cutoff}"] = hit_count
+                    per_call_row[f"gold_in_top_{cutoff}"] = 1 if hit_count else 0
+                    per_call_row[f"gold_recall_top_{cutoff}"] = round(hit_count / n_gold_ids, 4) if n_gold_ids else 0.0
+                per_call_rows.append(per_call_row)
+                current_search_call_row = per_call_row
+
             task_row = {
                 "condition_model": key,
                 "condition": condition_label,
@@ -604,6 +664,78 @@ def _plot_first_hit_rounds_condition(
     plt.close(fig)
 
 
+def _plot_cumulative_gold_recall_condition(
+    plt,
+    rows: List[dict],
+    output_path: Path,
+    *,
+    recall_field: str,
+    title: str,
+    label_formatter: Optional[Callable[[dict], str]] = None,
+) -> None:
+    if not rows:
+        return
+
+    ordered_conditions = sorted({str(row.get("condition", "")) for row in rows}, key=_condition_sort_key)
+    condition_rows = {}
+    for row in rows:
+        condition_rows.setdefault(str(row.get("condition", "")), row)
+    display_labels = {
+        condition: _condition_display_label(condition_rows.get(condition, {}), label_formatter)
+        for condition in ordered_conditions
+    }
+
+    series_by_condition: Dict[str, Dict[str, Dict[int, float]]] = defaultdict(lambda: defaultdict(dict))
+    global_max_call = 0
+    for row in rows:
+        condition = str(row.get("condition", ""))
+        task_id = str(row.get("task_id", ""))
+        search_call_index = int(row.get("search_call_index", 0) or 0)
+        if not condition or not task_id or search_call_index <= 0:
+            continue
+        recall = row.get(recall_field)
+        if recall in (None, ""):
+            continue
+        series_by_condition[condition][task_id][search_call_index] = float(recall)
+        global_max_call = max(global_max_call, search_call_index)
+
+    if global_max_call <= 0:
+        return
+
+    fig, ax = plt.subplots(figsize=(11, 6))
+    for condition in ordered_conditions:
+        task_series = series_by_condition.get(condition, {})
+        if not task_series:
+            continue
+        xs = list(range(1, global_max_call + 1))
+        ys: List[float] = []
+        for search_call_index in xs:
+            recalls_at_k: List[float] = []
+            for series in task_series.values():
+                last = 0.0
+                for call_idx in range(1, search_call_index + 1):
+                    if call_idx in series:
+                        last = float(series[call_idx])
+                recalls_at_k.append(last)
+            ys.append(100.0 * (sum(recalls_at_k) / len(recalls_at_k)) if recalls_at_k else 0.0)
+        ax.plot(xs, ys, marker="o", linewidth=2, label=display_labels.get(condition, condition))
+
+    ax.set_xlabel("Search Call")
+    ax.set_ylabel("Mean Cumulative Gold Recall (%)")
+    ax.set_ylim(0, 100)
+    ax.grid(alpha=0.25, linestyle="--", linewidth=0.7)
+    ax.set_title(title)
+
+    handles, labels = ax.get_legend_handles_labels()
+    legend_artist = None
+    if handles:
+        legend_artist = fig.legend(handles, labels, loc="center left", bbox_to_anchor=(1.01, 0.5), fontsize=8)
+    fig.tight_layout(rect=(0, 0, 0.83, 1.0))
+    extra_artists = (legend_artist,) if legend_artist is not None else ()
+    fig.savefig(output_path, bbox_inches="tight", bbox_extra_artists=extra_artists)
+    plt.close(fig)
+
+
 def _plot_first_hit_rounds_tool(plt, rows: List[dict], output_path: Path) -> None:
     if not rows:
         return
@@ -825,7 +957,6 @@ def generate_search_bottleneck_figures(
     search_bottleneck: dict,
     output_dir: Path,
     *,
-    include_tool_first_hit: bool = True,
     include_condition_breakouts: bool = False,
     condition_label_formatter: Optional[Callable[[dict], str]] = None,
 ) -> None:
@@ -834,18 +965,22 @@ def generate_search_bottleneck_figures(
         return
     fig_dir = output_dir / "figures"
     fig_dir.mkdir(parents=True, exist_ok=True)
-    _plot_first_hit_rounds_condition(
+    _plot_cumulative_gold_recall_condition(
         plt,
-        search_bottleneck.get("condition_summary_rows", []),
-        fig_dir / "fig15_search_first_hit_rounds_condition.pdf",
+        search_bottleneck.get("per_call_rows", []),
+        fig_dir / "fig15_search_cumulative_retrieval_recall_condition.pdf",
+        recall_field="cumulative_search_gold_recall",
+        title="Cumulative Gold Retrieval Recall by Search Call and Variant",
         label_formatter=condition_label_formatter,
     )
-    if include_tool_first_hit:
-        _plot_first_hit_rounds_tool(
-            plt,
-            search_bottleneck.get("tool_first_hit_rows", []),
-            fig_dir / "fig16_search_first_hit_rounds_tool.pdf",
-        )
+    _plot_cumulative_gold_recall_condition(
+        plt,
+        search_bottleneck.get("per_call_rows", []),
+        fig_dir / "fig16_search_cumulative_access_recall_condition.pdf",
+        recall_field="cumulative_read_gold_recall",
+        title="Cumulative Gold Access Recall by Search Call and Variant",
+        label_formatter=condition_label_formatter,
+    )
     _plot_topk_miss_by_tool(
         plt,
         search_bottleneck.get("tool_miss_rows", []),

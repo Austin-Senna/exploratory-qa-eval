@@ -1,0 +1,57 @@
+{
+  "dataset_sequence": [
+    "NoMa",
+    "crime-incidents-in-2019",
+    "crime-incidents-in-2018",
+    "crime-incidents-in-2021"
+  ],
+  "source_sequence": [
+    "wikipedia/NoMa/content.txt",
+    "datagov/crime-incidents-in-2019/files/data.txt",
+    "datagov/crime-incidents-in-2018/files/data.txt",
+    "datagov/crime-incidents-in-2021/files/data.txt"
+  ],
+  "reasoning_chain_text": [
+    "1. Determine which Washington, D.C. ward the North of Massachusetts Avenue neighborhood belongs to.",
+    "2. Identify the most common offense in that ward in 2019.",
+    "3. For that ward and offense, count incidents in 2018 and 2021 and return the larger count."
+  ],
+  "original_final_question": "I want to study the North of Massachusetts Avenue neighborhood in Washington, D.C. Identify the ward it is in, find the most common offense in that ward in 2019, and report the maximum of the incidents for that offense in 2018 and 2021. Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1
+      ],
+      "reasoning": [
+        "Node 1: 6 is the ward where NoMa is located in Washington, D.C.",
+        "Hop result: <node_1 answer>"
+      ],
+      "answer": "6"
+    },
+    {
+      "hop": 2,
+      "node_ids": [
+        2
+      ],
+      "reasoning": [
+        "Node 2: Filter rows where `WARD` equals <hop 1 answer>, count records by `OFFENSE`, and select the most common offense.",
+        "Hop result: <node_2 answer>"
+      ],
+      "answer": "THEFT/OTHER"
+    },
+    {
+      "hop": 3,
+      "node_ids": [
+        3,
+        4
+      ],
+      "reasoning": [
+        "Node 3: Filter rows where `WARD` equals <hop 1 answer> and `OFFENSE` equals <hop 2 answer>, then count the matching incidents.",
+        "Node 4: Filter rows where `WARD` equals <hop 1 answer> and `OFFENSE` equals <hop 2 answer>, then count the matching incidents.",
+        "Hop result: max(<node_3 answer>, <node_4 answer>) = max(2238, 1655) = 2238."
+      ],
+      "answer": "2238"
+    }
+  ]
+}

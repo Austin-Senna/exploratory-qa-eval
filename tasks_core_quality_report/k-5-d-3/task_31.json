@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "task_id": "tasks_core/k-5-d-3/task_31.json",
+  "source_task": "tasks_core/k-5-d-3/task_31.json",
+  "source_verdict": null,
+  "question": "First find the Iowa county with the highest total personal income in 2022. In the most populous city in that county in 2023, compare three ZIP codes: the headquarters ZIP of the fire department named for the city, the physical ZIP of the public school district named for the city, and the ZIP code that appears most often among residential judicial facilities there. Which of those ZIP codes covers the most land, and how many Iowa lottery retailers are in that city and ZIP code? Return just the number. Your response should be in the format [Answer].",
+  "heuristic_flags": {
+    "question_text_anomaly": false,
+    "question_text_anomaly_notes": [],
+    "has_explicit_answer_placeholders": true
+  },
+  "estimated_dataset_count": 7,
+  "estimated_min_tool_calls": 14,
+  "estimated_nice_tool_calls": 21,
+  "tool_call_budget_bucket": "within_budget_comfortably",
+  "quality_bucket": "high",
+  "derivability_bucket": "clean",
+  "difficulty_bucket": "core",
+  "overall_recommendation": "core_keep",
+  "issue_labels": [
+    "format_noise"
+  ],
+  "strengths": [
+    "Question-driven chain from county to city to ZIP comparison is coherent.",
+    "Seven datasets still fit comfortably within the benchmark tool budget."
+  ],
+  "concerns": [
+    "The explicit `[Answer]` placeholder adds minor format noise to an otherwise clear prompt."
+  ],
+  "rationale": "This task is internally consistent and the decomposition follows naturally from the question: identify the top-income county, take its largest city, derive the three ZIP candidates, compare their land area, then count lottery retailers in the winning city and ZIP. The candidate set is question-motivated rather than injected, and the final hop is substantively tied to the prior comparison instead of feeling decorative. With 7 datasets, the rough budget is 14 minimum and 21 nice tool calls, so it remains a good core-slice fit despite the small formatting blemish.",
+  "suggested_fix": "Remove the `[Answer]` placeholder and keep the ending instruction as `Return just the number.`"
+}

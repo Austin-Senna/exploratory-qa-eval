@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "task_id": "tasks_core/k-6-d-3/task_1.json",
+  "source_task": "tasks_core/k-6-d-3/task_1.json",
+  "source_verdict": null,
+  "question": "After identifying the Missouri state agency that throughout 2021 to 2023 consistently ranked in the top five for professional services spending, find the agency with the highest average employee count, determine the city that its headquarter is located at. In that city, there is a historically Black university. Identify who founded it, and then answer the question: what year did that person die? Report the year only. Your response should be in the format [Answer].",
+  "heuristic_flags": {
+    "question_text_anomaly": false,
+    "question_text_anomaly_notes": [],
+    "has_explicit_answer_placeholders": true
+  },
+  "estimated_dataset_count": 10,
+  "estimated_min_tool_calls": 20,
+  "estimated_nice_tool_calls": 30,
+  "tool_call_budget_bucket": "within_budget_comfortably",
+  "quality_bucket": "medium",
+  "derivability_bucket": "strained",
+  "difficulty_bucket": "core",
+  "overall_recommendation": "keep_noncore",
+  "issue_labels": [
+    "format_noise"
+  ],
+  "strengths": [
+    "The final target and required output format are explicit.",
+    "The hop structure provides a plausible narrowing and lookup path from the question."
+  ],
+  "concerns": [
+    "Answer placeholders and/or embedded execution snippets add avoidable surface noise."
+  ],
+  "rationale": "The task is generally coherent and the answer target is clear, but the derivation relies on a fairly long or contrived bridge chain that can be brittle in a benchmark setting. It looks usable with cleanup, but it is not an ideal core-slice item as-is.",
+  "suggested_fix": "Tighten the question wording and make the key narrowing/comparison steps explicit; remove placeholder-heavy phrasing where possible."
+}

@@ -1,0 +1,139 @@
+{
+  "dataset_sequence": [
+    "2013-2014-vadir-incidents",
+    "2013-2014-school-locations",
+    "2010-2016-school-safety-report",
+    "2013-nyc-school-survey",
+    "2011-2016-demographic-snapshot",
+    "2005-2019-graduation-rates-all",
+    "2014-2015-doe-high-school-directory"
+  ],
+  "source_sequence": [
+    "datagov/2013-2014-vadir-incidents/files/rows.txt",
+    "datagov/2013-2014-school-locations/files/rows.txt",
+    "datagov/2010-2016-school-safety-report/files/rows.txt",
+    "datagov/2013-nyc-school-survey/files/rows.txt",
+    "datagov/2011-2016-demographic-snapshot/files/rows.txt",
+    "datagov/2005-2019-graduation-rates-all/files/rows.txt",
+    "datagov/2014-2015-doe-high-school-directory/files/rows.txt"
+  ],
+  "reasoning_chain_text": [
+    "1. Identify New York City schools that served high school students and reported at least 151 total VADIR incidents in 2013-2014.",
+    "2. Match those schools to their school codes for the 2013-2014 school records.",
+    "3. From those schools, keep the ones with at least 25 total school-safety incidents in 2013-2014, a safety and respect score of 7.3 or lower in 2013, and a poverty rate of at least 70% in 2013-2014.",
+    "4. Among the schools that remain, identify the one with the highest four-year August graduation rate for the 2014 cohort.",
+    "5. Return the city listed for that school in the 2014-2015 high school directory."
+  ],
+  "original_final_question": "Among New York City schools that served high school students and reported at least 151 total VADIR incidents in 2013-2014, which schools also had at least 25 total incidents reported by school safety in 2013-2014, a safety and respect score of 7.3 or lower in 2013, and a poverty rate of at least 70% in 2013-2014? Which city was home to the school in that group with the highest four-year August graduation rate for the 2014 cohort? Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1
+      ],
+      "reasoning": [
+        "Node 1: After summing all reported incident columns for NYC high schools in 2013-14, 21 schools meet the confirmed threshold of at least 151 total VADIR incidents.",
+        "The cutoff is tied at 151 incidents between Brooklyn School For Music & Theater and Queens High School Of Teaching, Liberal Arts And Sciences, so the complete answer set has 21 schools rather than 20.",
+        "Hop result: <node_1 answer>"
+      ],
+      "answer": [
+        "353100011460 | Susan E Wagner High School",
+        "342700011475 | Richmond Hill High School",
+        "331700011382 | Acad For College Prep & Career Exploration: A College Board Sch",
+        "331700011533 | School For Democracy And Leadership",
+        "331700011600 | Clara Barton High School",
+        "320700011473 | Mott Haven Village Prep High School",
+        "342400011485 | Grover Cleveland High School",
+        "320800011405 | Herbert H Lehman High School",
+        "310400011680 | Heritage School (the)",
+        "332100011525 | Edward R Murrow High School",
+        "342600011435 | Martin Van Buren High School",
+        "331500010448 | Brooklyn Secondary School For Collaborative Studies",
+        "342500011425 | John Bowne High School",
+        "331500011429 | Brooklyn School For Global Studies",
+        "332200011495 | Sheepshead Bay High School",
+        "343000011445 | William Cullen Bryant High School",
+        "321200011267 | Bronx Latin School",
+        "332100011410 | Abraham Lincoln High School",
+        "353100011440 | New Dorp High School",
+        "331700011548 | Brooklyn School For Music & Theater",
+        "342600011566 | Queens High School Of Teaching, Liberal Arts And Sciences"
+      ]
+    },
+    {
+      "hop": 2,
+      "node_ids": [
+        2
+      ],
+      "reasoning": [
+        "Node 2: In the 2013-2014 school locations file, each hop-1 BEDS code maps to a single ATS SYSTEM CODE, which is the school's six-character school code.",
+        "Hop result: <node_2 answer>"
+      ],
+      "answer": [
+        "Susan E Wagner High School | 31R460",
+        "Richmond Hill High School | 27Q475",
+        "Acad For College Prep & Career Exploration: A College Board Sch | 17K382",
+        "School For Democracy And Leadership | 17K533",
+        "Clara Barton High School | 17K600",
+        "Mott Haven Village Prep High School | 07X473",
+        "Grover Cleveland High School | 24Q485",
+        "Herbert H Lehman High School | 08X405",
+        "Heritage School (the) | 04M680",
+        "Edward R Murrow High School | 21K525",
+        "Martin Van Buren High School | 26Q435",
+        "Brooklyn Secondary School For Collaborative Studies | 15K448",
+        "John Bowne High School | 25Q425",
+        "Brooklyn School For Global Studies | 15K429",
+        "Sheepshead Bay High School | 22K495",
+        "William Cullen Bryant High School | 30Q445",
+        "Bronx Latin School | 12X267",
+        "Abraham Lincoln High School | 21K410",
+        "New Dorp High School | 31R440",
+        "Brooklyn School For Music & Theater | 17K548",
+        "Queens High School Of Teaching, Liberal Arts And Sciences | 26Q566"
+      ]
+    },
+    {
+      "hop": 3,
+      "node_ids": [
+        3,
+        4,
+        5
+      ],
+      "reasoning": [
+        "Node 3: Among the schools from hop 2, seven have at least 25 total reported incidents in 2013-14 after summing Major N, Oth N, NoCrim N, Prop N, and Vio N in the school safety report.",
+        "Node 4: Among the schools from hop 2, thirteen have a safety and respect score of 7.3 or lower in the 2013 school survey.",
+        "Node 5: Among the schools from hop 2, fourteen have a poverty rate of at least 70 percent in the 2013-14 demographic snapshot.",
+        "Intersecting <node_3 answer>, <node_4 answer>, and <node_5 answer> leaves Clara Barton High School, John Bowne High School, and William Cullen Bryant High School.",
+        "Hop result: Clara Barton High School | John Bowne High School | William Cullen Bryant High School"
+      ],
+      "answer": [
+        "Clara Barton High School",
+        "John Bowne High School",
+        "William Cullen Bryant High School"
+      ]
+    },
+    {
+      "hop": 4,
+      "node_ids": [
+        6
+      ],
+      "reasoning": [
+        "Node 6: Among the three schools left after hop 3, John Bowne High School has the highest four-year August graduation rate for the 2014 cohort at 77.1 percent, ahead of Clara Barton High School at 74.5 percent and William Cullen Bryant High School at 70.8 percent.",
+        "Hop result: <node_6 answer>"
+      ],
+      "answer": "John Bowne High School"
+    },
+    {
+      "hop": 5,
+      "node_ids": [
+        7
+      ],
+      "reasoning": [
+        "Node 7: In the 2014-2015 high school directory, the row for John Bowne High School lists the city as Flushing.",
+        "Hop result: <node_7 answer>"
+      ],
+      "answer": "Flushing"
+    }
+  ]
+}

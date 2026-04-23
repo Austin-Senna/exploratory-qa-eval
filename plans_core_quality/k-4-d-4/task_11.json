@@ -1,0 +1,119 @@
+{
+  "dataset_sequence": [
+    "List_of_counties_in_Texas",
+    "texas-state-expenditures-by-county-2018",
+    "texas-state-expenditures-by-county-2019",
+    "texas-state-expenditures-by-county-2020",
+    "texas-state-expenditures-by-county-2021",
+    "texas-department-of-criminal-justice-releases-fy-2019",
+    "texas-department-of-criminal-justice-releases-fy-2020",
+    "fy-2020-disability-compensation-recipients-by-county",
+    "fy-2023-disability-compensation-recipients-by-county"
+  ],
+  "source_sequence": [
+    "wikipedia/List_of_counties_in_Texas/content.txt",
+    "datagov/texas-state-expenditures-by-county-2018/files/rows.txt",
+    "datagov/texas-state-expenditures-by-county-2019/files/rows.txt",
+    "datagov/texas-state-expenditures-by-county-2020/files/rows.txt",
+    "datagov/texas-state-expenditures-by-county-2021/files/rows.txt",
+    "datagov/texas-department-of-criminal-justice-releases-fy-2019/files/rows.txt",
+    "datagov/texas-department-of-criminal-justice-releases-fy-2020/files/rows.txt",
+    "datagov/fy-2020-disability-compensation-recipients-by-county/files/rows.txt",
+    "datagov/fy-2023-disability-compensation-recipients-by-county/files/rows.txt"
+  ],
+  "reasoning_chain_text": [
+    "1. Identify the original 23 Texas counties.",
+    "2. Identify Texas counties with the highest capital outlay spending in 2018.",
+    "3. Identify Texas counties with the highest capital outlay spending in 2019.",
+    "4. Identify Texas counties with the highest capital outlay spending in 2020.",
+    "5. Using 2021 capital outlay data, determine the counties that rank in the top five by average spending from 2018 to 2021, then remove any counties from step 1.",
+    "6. For the remaining counties, record criminal-release counts in fiscal year 2019.",
+    "7. Using fiscal year 2020 criminal-release data, keep the county with the highest average releases across 2019-2020.",
+    "8. Record the number of veterans disability compensation recipients in 2020 for that county.",
+    "9. Using the 2023 total, compute and return that county's average number of veterans disability compensation recipients across 2020 and 2023."
+  ],
+  "original_final_question": "Among Texas counties in the top five for average capital outlay spending from 2018 to 2021, consider those that are not among the original 23 Texas counties. Which of those had the highest average criminal releases in 2019-20? For that county, compute the average number of veterans disability compensation recipients in 2020 and 2023. Return the average number only. Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1
+      ],
+      "reasoning": [
+        "Node 1: In the Wikipedia county table, `Austin`, `Bastrop`, `Bexar`, `Brazoria`, `Colorado`, `Fayette`, `Goliad`, `Gonzales`, `Harris`, `Jackson`, `Jasper`, `Jefferson`, `Liberty`, `Matagorda`, `Milam`, `Nacogdoches`, `Red River`, `Refugio`, `Sabine`, `San Augustine`, `San Patricio`, `Shelby`, and `Victoria` are marked as one of the original 23 counties."
+      ],
+      "answer": [
+        "Austin",
+        "Bastrop",
+        "Bexar",
+        "Brazoria",
+        "Colorado",
+        "Fayette",
+        "Goliad",
+        "Gonzales",
+        "Harris",
+        "Jackson",
+        "Jasper",
+        "Jefferson",
+        "Liberty",
+        "Matagorda",
+        "Milam",
+        "Nacogdoches",
+        "Red River",
+        "Refugio",
+        "Sabine",
+        "San Augustine",
+        "San Patricio",
+        "Shelby",
+        "Victoria"
+      ]
+    },
+    {
+      "hop": 2,
+      "node_ids": [
+        2,
+        3,
+        4,
+        5
+      ],
+      "reasoning": [
+        "Node 2: For FY2018, group rows by `County`, sum `Amount`, and keep the full `County` -> capital outlay total mapping.",
+        "Node 3: For FY2019, group rows by `County`, sum `Amount`, and keep the full `County` -> capital outlay total mapping.",
+        "Node 4: For FY2020, group rows by `County`, sum `Amount`, and keep the full `County` -> capital outlay total mapping.",
+        "Node 5: For FY2021, group rows by `County`, sum `Amount`, and keep the full `County` -> capital outlay total mapping.",
+        "Hop result: compare the cross-year average capital outlay total for each county using the full per-year county mappings from nodes 2-5; the top five counties are `HARRIS`, `DALLAS`, `TRAVIS`, `MONTGOMERY`, and `BEXAR`. Excluding the counties from <hop 1 answer> leaves `Dallas`, `Travis`, and `Montgomery`."
+      ],
+      "answer": [
+        "Dallas",
+        "Travis",
+        "Montgomery"
+      ]
+    },
+    {
+      "hop": 3,
+      "node_ids": [
+        6,
+        7
+      ],
+      "reasoning": [
+        "Node 6: For the counties from <hop 2 answer>, count FY2019 TDCJ release records by `County`.",
+        "Node 7: For the counties from <hop 2 answer>, count FY2020 TDCJ release records by `County`.",
+        "Hop result: compare the 2019-2020 average release counts for the counties from <hop 2 answer>; Dallas County has the highest average."
+      ],
+      "answer": "Dallas County"
+    },
+    {
+      "hop": 4,
+      "node_ids": [
+        8,
+        9
+      ],
+      "reasoning": [
+        "Node 8: For <hop 3 answer>, read `Total: Disability Compensation Recipients` for FY2020.",
+        "Node 9: For <hop 3 answer>, read `Total: Disability Compensation Recipients` for FY2023.",
+        "Hop result: average disability compensation recipients for <hop 3 answer> = (26,317 + 25,704) / 2 = 26,010.5."
+      ],
+      "answer": "26010.5"
+    }
+  ]
+}

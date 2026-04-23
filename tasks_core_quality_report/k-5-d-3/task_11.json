@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "task_id": "tasks_core/k-5-d-3/task_11.json",
+  "source_task": "tasks_core/k-5-d-3/task_11.json",
+  "source_verdict": null,
+  "question": "Across January 2019 to 2021, identify the agencies that consistently ranked in the top 20 by total amount of parking fines issued. From those, keep only the U.S. national law-enforcement bodies and find which had the highest average number of driving-related violations issued in January from 2019 to 2021. That agency is operated by a federal agency within a U.S. department. Who is the head of that department? Return the name only. Your response should be in the format [Answer].",
+  "heuristic_flags": {
+    "question_text_anomaly": false,
+    "question_text_anomaly_notes": [],
+    "has_explicit_answer_placeholders": true
+  },
+  "estimated_dataset_count": 9,
+  "estimated_min_tool_calls": 18,
+  "estimated_nice_tool_calls": 27,
+  "tool_call_budget_bucket": "within_budget_comfortably",
+  "quality_bucket": "low",
+  "derivability_bucket": "broken",
+  "difficulty_bucket": "core",
+  "overall_recommendation": "revise_or_drop",
+  "issue_labels": [
+    "internal_inconsistency",
+    "unsupported_step"
+  ],
+  "strengths": [
+    "The question outlines a meaningful multi-hop intersection-and-average task within a comfortable 9-dataset budget.",
+    "Once the winning agency is fixed, the operator-to-department chain is short and coherent."
+  ],
+  "concerns": [
+    "Nodes 4-6 hardcode three agencies even though their subquestions say to evaluate each agency from hop 1, creating a central inconsistency.",
+    "The key narrowing to the national law-enforcement subset is injected rather than explicitly derived from the hop-1 result."
+  ],
+  "rationale": "The budget profile is solid: `datasets_used` gives 9 datasets, so the task is comfortably affordable for a core slice on cost alone. The problem is the core derivation step in hop 2: the artifact jumps straight to three preselected agencies, while the node wording implies the full hop-1 set and never actually derives why only those three survive the \u201cU.S. national law-enforcement bodies\u201d filter. Because that narrowing is both inconsistent and central to the answer path, the task is not reliable enough to keep as-is even though its intended difficulty is core-worthy.",
+  "suggested_fix": "Add an explicit hop that derives the federal/national law-enforcement subset from the hop-1 intersection, then rewrite nodes 4-6 to use that derived subset consistently instead of a hardcoded trio."
+}

@@ -1,0 +1,78 @@
+{
+  "dataset_sequence": [
+    "child-and-adult-care-food-programs-cacfp-day-care-homes-meal-reimbursement-program-ye-2018",
+    "child-and-adult-care-food-programs-cacfp-day-care-homes-meal-reimbursement-program-ye-2020",
+    "child-and-adult-care-food-program-cacfp-child-centers-meal-reimbursement-program-year-2018",
+    "child-and-adult-care-food-program-cacfp-child-centers-meal-reimbursement-program-year-2019",
+    "Cameron_County,_Texas",
+    "trec-hoa-management-certificates"
+  ],
+  "source_sequence": [
+    "datagov/child-and-adult-care-food-programs-cacfp-day-care-homes-meal-reimbursement-program-ye-2018/files/rows.txt",
+    "datagov/child-and-adult-care-food-programs-cacfp-day-care-homes-meal-reimbursement-program-ye-2020/files/rows.txt",
+    "datagov/child-and-adult-care-food-program-cacfp-child-centers-meal-reimbursement-program-year-2018/files/rows.txt",
+    "datagov/child-and-adult-care-food-program-cacfp-child-centers-meal-reimbursement-program-year-2019/files/rows.txt",
+    "wikipedia/Cameron_County,_Texas/content.txt",
+    "datagov/trec-hoa-management-certificates/files/rows.txt"
+  ],
+  "reasoning_chain_text": [
+    "1. Compare 2018-19 and 2020-21 day care home meal reimbursements for Harris, Hidalgo, Dallas, and Cameron counties, and keep the two counties with the largest percentage decreases.",
+    "2. For those two counties, compare child center enrollment across 2018-19 and 2019-20 and keep the county with the higher average enrollment.",
+    "3. Determine the county seat of that county.",
+    "4. Determine what share of that county's residential community association management listings are in the county seat city, rounded to two decimals."
+  ],
+  "original_final_question": "Among Harris, Hidalgo, Dallas, and Cameron counties in Texas, which two saw the largest percentage decreases in day care home meal reimbursements from 2018-19 to 2020-21? Of those two, which had the higher average child center enrollment across 2018-19 and 2019-20? For that county, what is the county seat, and what percentage of the county's residential community association management listings are in the county seat city? Return only the percentage rounded to two decimals. Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1,
+        2
+      ],
+      "reasoning": [
+        "Node 1 totals (2018-2019): Harris 8,757,796.13; Dallas 2,835,278.75; Hidalgo 1,202,699.73; Cameron 392,489.51",
+        "Node 2 totals (2020-2021): Harris 7,558,597.77; Dallas 2,393,411.26; Hidalgo 971,063.56; Cameron 330,003.06",
+        "Percent decreases: Hidalgo -19.26%, Cameron -15.92%, Dallas -15.58%, Harris -13.69% -> two largest decreases {Hidalgo, Cameron}",
+        "Hop result: Hidalgo, Cameron"
+      ],
+      "answer": "Hidalgo, Cameron"
+    },
+    {
+      "hop": 2,
+      "node_ids": [
+        3,
+        4
+      ],
+      "reasoning": [
+        "Node 3 totals (2018-2019): Cameron 7,620,183; Hidalgo 1,661,128",
+        "Node 4 totals (2019-2020): Cameron 1,076,746; Hidalgo 1,477,805",
+        "Average enrollment: Cameron 4,348,464.5 vs Hidalgo 1,569,466.5 -> Cameron County",
+        "Hop result: Cameron County"
+      ],
+      "answer": "Cameron County"
+    },
+    {
+      "hop": 3,
+      "node_ids": [
+        5
+      ],
+      "reasoning": [
+        "Node 5: Cameron County seat is Brownsville",
+        "Hop result: Brownsville"
+      ],
+      "answer": "Brownsville"
+    },
+    {
+      "hop": 4,
+      "node_ids": [
+        6
+      ],
+      "reasoning": [
+        "Node 6: in the HOA management certificates data, Cameron County has 45 records total and Brownsville has 6 of them",
+        "Percentage = 100 * 6 / 45 = 13.33",
+        "Hop result: 13.33"
+      ],
+      "answer": 13.33
+    }
+  ]
+}

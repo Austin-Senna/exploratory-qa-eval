@@ -1,0 +1,77 @@
+{
+  "dataset_sequence": [
+    "moving-violations-issued-in-january-2019",
+    "moving-violations-issued-in-january-2020",
+    "moving-violations-issued-in-january-2021",
+    "United_States_Park_Police",
+    "National_Park_Service",
+    "United_States_Department_of_the_Interior"
+  ],
+  "source_sequence": [
+    "datagov/moving-violations-issued-in-january-2019/files/data.txt",
+    "datagov/moving-violations-issued-in-january-2020/files/data.txt",
+    "datagov/moving-violations-issued-in-january-2021/files/data.txt",
+    "wikipedia/United_States_Park_Police/content.txt",
+    "wikipedia/National_Park_Service/content.txt",
+    "wikipedia/United_States_Department_of_the_Interior/content.txt"
+  ],
+  "reasoning_chain_text": [
+    "1. [Describe what to verify or compute from dataset step 1.]",
+    "2. [Describe what to verify or compute from dataset step 2.]",
+    "3. [Describe what to verify or compute from dataset step 3.]",
+    "4. [Describe what to verify or compute from dataset step 4.]",
+    "5. [Describe what to verify or compute from dataset step 5.]",
+    "6. [Describe what to verify or compute from dataset step 6.]"
+  ],
+  "original_final_question": "Among the United States Park Police, United States Capitol Police, and U.S. Secret Service Uniform Division, which agency issued the highest average number of driving-related violations in January from 2019 to 2021? That agency is operated by which federal agency, and that agency sits within which U.S. department? Who is the head of that department? Return the name of the person only. Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1,
+        2,
+        3
+      ],
+      "reasoning": [
+        "Node 1: Parse the GeoJSON features, filter `ISSUING_AGENCY_NAME` to the three agencies, and count rows for January 2019 moving violations.",
+        "Node 2: Parse the GeoJSON features, filter `ISSUING_AGENCY_NAME` to the three agencies, and count rows for January 2020 moving violations.",
+        "Node 3: Parse the GeoJSON features, filter `ISSUING_AGENCY_NAME` to the three agencies, and count rows for January 2021 moving violations.",
+        "Hop result: average moving violations = {UNITED STATES CAPITOL POLICE: (176 + 139 + 30) / 3 = 115.0, US. SECRET SERVICE UNIFORM DIVISION: (145 + 118 + 32) / 3 = 98.33, UNITED STATES PARK POLICE: (103 + 204 + 71) / 3 = 126.0}; highest average = UNITED STATES PARK POLICE."
+      ],
+      "answer": "UNITED STATES PARK POLICE"
+    },
+    {
+      "hop": 2,
+      "node_ids": [
+        4
+      ],
+      "reasoning": [
+        "Node 4: The United States Park Police is an operation of the National Park Service.",
+        "Hop result: National Park Service."
+      ],
+      "answer": "National Park Service"
+    },
+    {
+      "hop": 3,
+      "node_ids": [
+        5
+      ],
+      "reasoning": [
+        "Node 5: The National Park Service is an agency within the United States Department of the Interior.",
+        "Hop result: United States Department of the Interior."
+      ],
+      "answer": "United States Department of the Interior"
+    },
+    {
+      "hop": 4,
+      "node_ids": [
+        6
+      ],
+      "reasoning": [
+        "Node 6: The current interior secretary is Doug Burgum.",
+        "Hop result: Doug Burgum."
+      ],
+      "answer": "Doug Burgum"
+    }
+  ]
+}

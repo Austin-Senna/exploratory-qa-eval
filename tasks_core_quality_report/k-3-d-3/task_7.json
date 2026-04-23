@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "task_id": "tasks_core/k-3-d-3/task_7.json",
+  "source_task": "tasks_core/k-3-d-3/task_7.json",
+  "source_verdict": null,
+  "question": "Consider Harris, Travis, Dallas, and Bexar counties. Determine which of these consistently ranked in the statewide top five for releases from the Department of Criminal Justice from 2019 to 2021. Among those, compute the average annual intake counts from the Department of Criminal Justice over 2019-2021 and identify the county with the highest average. What is that county's seat? Return the city name only. Your response should be in the format [Answer].",
+  "heuristic_flags": {
+    "question_text_anomaly": false,
+    "question_text_anomaly_notes": [],
+    "has_explicit_answer_placeholders": true
+  },
+  "estimated_dataset_count": 7,
+  "estimated_min_tool_calls": 14,
+  "estimated_nice_tool_calls": 21,
+  "tool_call_budget_bucket": "within_budget_comfortably",
+  "quality_bucket": "high",
+  "derivability_bucket": "strained",
+  "difficulty_bucket": "core",
+  "overall_recommendation": "core_keep",
+  "issue_labels": [
+    "unsupported_step"
+  ],
+  "strengths": [
+    "Question implies a clear multi-hop decomposition without relying on injected intermediate winners.",
+    "Dataset fan-out looks feasible within a rough 30-tool-call budget."
+  ],
+  "concerns": [
+    "No major issues spotted from the artifact surface."
+  ],
+  "rationale": "The task reads as internally coherent and the decomposition is easy to infer from the question.",
+  "suggested_fix": "No change needed."
+}

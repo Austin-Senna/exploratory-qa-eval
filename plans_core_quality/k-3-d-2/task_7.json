@@ -1,0 +1,57 @@
+{
+  "dataset_sequence": [
+    "Adams_Morgan",
+    "crime-incidents-in-2019",
+    "crime-incidents-in-2020",
+    "crime-incidents-in-2021"
+  ],
+  "source_sequence": [
+    "wikipedia/Adams_Morgan/content.txt",
+    "datagov/crime-incidents-in-2019/files/data.txt",
+    "datagov/crime-incidents-in-2020/files/data.txt",
+    "datagov/crime-incidents-in-2021/files/data.txt"
+  ],
+  "reasoning_chain_text": [
+    "1. Determine which Washington, D.C. ward Adams Morgan belongs to.",
+    "2. Identify the most common offense in that ward in 2019.",
+    "3. For that ward and offense, count incidents in 2020 and 2021 and return the larger count."
+  ],
+  "original_final_question": "I want to investigate Adams Morgan in Washington, D.C. Identify the ward Adams Morgan belongs to, find the most common offense in that ward in 2019, and report the maximum of the incidents for that offense over the next two years?. Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1
+      ],
+      "reasoning": [
+        "Node 1: 1 is the ward that Adams Morgan is part of.",
+        "Hop result: <node_1 answer>"
+      ],
+      "answer": "1"
+    },
+    {
+      "hop": 2,
+      "node_ids": [
+        2
+      ],
+      "reasoning": [
+        "Node 2: Filter 2019 records where `WARD` equals <hop 1 answer>, count rows by `OFFENSE`, and select the most frequent offense.",
+        "Hop result: <node_2 answer>"
+      ],
+      "answer": "THEFT/OTHER"
+    },
+    {
+      "hop": 3,
+      "node_ids": [
+        3,
+        4
+      ],
+      "reasoning": [
+        "Node 3: Filter 2020 records where `WARD` equals the <hop 1 answer> and `OFFENSE` equals the <hop 2 answer>, then count the matching incidents.",
+        "Node 4: Filter 2021 records where `WARD` equals the <hop 1 answer> and `OFFENSE` equals the <hop 2 answer>, then count the matching incidents.",
+        "Hop result: max(<node_3 answer>, <node_4 answer>) = max(1587, 1702) = 1702."
+      ],
+      "answer": "1702"
+    }
+  ]
+}

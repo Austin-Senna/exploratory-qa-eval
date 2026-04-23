@@ -1,0 +1,77 @@
+{
+  "dataset_sequence": [
+    "texas-state-expenditures-by-county-2019",
+    "texas-state-expenditures-by-county-2020",
+    "texas-state-expenditures-by-county-2021",
+    "texas-department-of-criminal-justice-releases-fy-2019",
+    "texas-department-of-criminal-justice-releases-fy-2020",
+    "texas-department-of-criminal-justice-releases-fy-2021",
+    "texas-department-of-criminal-justice-receives-fy-2019",
+    "texas-department-of-criminal-justice-receives-fy-2020",
+    "texas-department-of-criminal-justice-receives-fy-2021"
+  ],
+  "source_sequence": [
+    "datagov/texas-state-expenditures-by-county-2019/files/rows.txt",
+    "datagov/texas-state-expenditures-by-county-2020/files/rows.txt",
+    "datagov/texas-state-expenditures-by-county-2021/files/rows.txt",
+    "datagov/texas-department-of-criminal-justice-releases-fy-2019/files/rows.txt",
+    "datagov/texas-department-of-criminal-justice-releases-fy-2020/files/rows.txt",
+    "datagov/texas-department-of-criminal-justice-releases-fy-2021/files/rows.txt",
+    "datagov/texas-department-of-criminal-justice-receives-fy-2019/files/rows.txt",
+    "datagov/texas-department-of-criminal-justice-receives-fy-2020/files/rows.txt",
+    "datagov/texas-department-of-criminal-justice-receives-fy-2021/files/rows.txt"
+  ],
+  "reasoning_chain_text": [
+    "1. For 2019, 2020, and 2021, identify Texas counties in the top 5 for capital outlay spending each year and keep the counties that qualify every year.",
+    "2. From the counties that remain, keep only the ones that are also in the statewide top 5 for Department of Criminal Justice releases in 2019, 2020, and 2021.",
+    "3. For the counties from step 2, determine their Department of Criminal Justice intake counts in 2019, 2020, and 2021, then compute the largest three-year average and round to one decimal."
+  ],
+  "original_final_question": "Across 2019-2021, identify the Texas counties that consistently rank in the top five for capital outlay spending. From those, keep only the counties that also rank in the statewide top five for releases from the Department of Criminal Justice in each of those years. For the remaining counties, compute the average annual intake counts from the Department of Criminal Justice over 2019-2021 and report the largest average, rounded to one decimal. Return the number only. Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1,
+        2,
+        3
+      ],
+      "reasoning": [
+        "Node 1: According to Texas state expenditure data for fiscal year 2019, the top 5 counties by Capital Outlay spending were: HARRIS ($222,408,956.01), TRAVIS ($130,659,552.92), DALLAS ($87,456,413.40), HARDIN ($44,254,637.81), and BEXAR ($32,102,175.63).",
+        "Node 2: According to Texas state expenditure data for fiscal year 2020, the top 5 counties by Capital Outlay spending were: TRAVIS ($279,580,855.70), HARRIS ($182,107,791.26), DALLAS ($124,333,498.09), BEXAR ($96,531,261.46), and GRAYSON ($29,683,297.03).",
+        "Node 3: According to Texas state expenditure data for fiscal year 2021, the top 5 counties by Capital Outlay spending were: HARRIS ($339,910,977.18), TRAVIS ($171,854,028.76), DALLAS ($131,046,497.37), BEXAR ($104,956,196.72), and GUADALUPE ($49,356,346.09).",
+        "Hop result: <node_1 answer> \u2229 <node_2 answer> \u2229 <node_3 answer> = [\"Bexar\", \"Dallas\", \"Harris\", \"Travis\"]."
+      ],
+      "answer": "Harris, Travis, Dallas, Bexar"
+    },
+    {
+      "hop": 2,
+      "node_ids": [
+        4,
+        5,
+        6
+      ],
+      "reasoning": [
+        "Node 4: According to Texas Department of Criminal Justice release data for fiscal year 2019, the overall top 5 counties by releases were Harris (9,029), Dallas (5,355), Tarrant (4,769), Bexar (4,545), and Hidalgo (1,861). Among the hop 1 counties, Harris, Dallas, and Bexar were in that top 5.",
+        "Node 5: According to Texas Department of Criminal Justice release data for fiscal year 2020, the overall top 5 counties by releases were Harris (7,059), Dallas (4,540), Tarrant (4,450), Bexar (3,917), and Travis (1,596). Among the hop 1 counties, Harris, Dallas, Bexar, and Travis were in that top 5.",
+        "Node 6: According to Texas Department of Criminal Justice release data for fiscal year 2021, the overall top 5 counties by releases were Harris (5,210), Dallas (3,565), Tarrant (3,252), Bexar (3,236), and Hidalgo (1,147). Among the hop 1 counties, Harris, Dallas, and Bexar were in that top 5.",
+        "Hop result: <node_4 answer> \u2229 <node_5 answer> \u2229 <node_6 answer> = [\"Bexar\", \"Dallas\", \"Harris\"]."
+      ],
+      "answer": "Harris, Dallas, Bexar"
+    },
+    {
+      "hop": 3,
+      "node_ids": [
+        7,
+        8,
+        9
+      ],
+      "reasoning": [
+        "Node 7: According to Texas Department of Criminal Justice intake data for fiscal year 2019, among the hop 2 counties: Harris had 7,874 intakes, Dallas had 4,660, and Bexar had 4,457.",
+        "Node 8: According to Texas Department of Criminal Justice intake data for fiscal year 2020, among the hop 2 counties: Harris had 3,840 intakes, Dallas had 2,519, and Bexar had 2,420.",
+        "Node 9: According to Texas Department of Criminal Justice intake data for fiscal year 2021, among the hop 2 counties: Harris had 4,652 intakes, Dallas had 3,520, and Bexar had 2,822.",
+        "Hop result: <node_7 answer> \u2229 <node_8 answer> \u2229 <node_9 answer> = [\"Bexar\", \"Dallas\", \"Harris\"]."
+      ],
+      "answer": "5455.3"
+    }
+  ]
+}

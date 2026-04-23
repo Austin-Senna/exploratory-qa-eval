@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "task_id": "tasks_core/k-5-d-4/task_7.json",
+  "source_task": "tasks_core/k-5-d-4/task_7.json",
+  "source_verdict": null,
+  "question": "Identify the Texas county that had the most consistent annual number of state prison releases from 2019 to 2022 (lowest coefficient of variation among the top five by average releases). Identify the NBA champion team based in its county seat, and find which county the team it won its first NBA Finals against is based in? Your response should be in the format [Answer].",
+  "heuristic_flags": {
+    "question_text_anomaly": false,
+    "question_text_anomaly_notes": [],
+    "has_explicit_answer_placeholders": true
+  },
+  "estimated_dataset_count": 9,
+  "estimated_min_tool_calls": 18,
+  "estimated_nice_tool_calls": 27,
+  "tool_call_budget_bucket": "within_budget_comfortably",
+  "quality_bucket": "low",
+  "derivability_bucket": "broken",
+  "difficulty_bucket": "unclear",
+  "overall_recommendation": "revise_or_drop",
+  "issue_labels": [
+    "internal_inconsistency",
+    "unsupported_step"
+  ],
+  "strengths": [
+    "Budget is comfortable even using the declared 9 datasets.",
+    "The county-seat to NBA-team bridge is short and easy to follow."
+  ],
+  "concerns": [
+    "The top-five county set is injected as a hardcoded candidate pool instead of being derived from the four release datasets.",
+    "The question asks for a county, but the final node resolves the Knicks to Manhattan, which is a borough in the cited reasoning."
+  ],
+  "rationale": "Using `datasets_used`, the artifact is comfortably within budget at 9 datasets and the intended hop structure is readable. But the task is not benchmark-clean: the central narrowing to the top five counties is unsupported because the nodes preselect the counties instead of deriving them from the yearly data, and the last hop conflicts with the question by returning a borough-level answer for a county-level target. Those are central artifact problems rather than minor wording issues, so this should be revised before any core or non-core retention decision.",
+  "suggested_fix": "Explicitly derive the top-five counties from the four release datasets, then make the last hop consistently county-level by answering with a county source/value or rewriting the question to ask for a borough."
+}

@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "task_id": "tasks_core/k-3-d-4/task_14.json",
+  "source_task": "tasks_core/k-3-d-4/task_14.json",
+  "source_verdict": null,
+  "question": "Among NY counties with at least 65 bridges rated 'Poor', at least 50 fire departments, at least 100 bank ATMs, and at least 1.0 MW of operational renewable energy capacity, identify the counties that meet all criteria and their county seats. Between those counties, what is the higher number of violent crimes in 2021? Your response should be in the format [Answer].",
+  "heuristic_flags": {
+    "question_text_anomaly": false,
+    "question_text_anomaly_notes": [],
+    "has_explicit_answer_placeholders": true
+  },
+  "estimated_dataset_count": 7,
+  "estimated_min_tool_calls": 14,
+  "estimated_nice_tool_calls": 21,
+  "tool_call_budget_bucket": "within_budget_comfortably",
+  "quality_bucket": "low",
+  "derivability_bucket": "strained",
+  "difficulty_bucket": "unclear",
+  "overall_recommendation": "revise_or_drop",
+  "issue_labels": [
+    "answer_path_leakage",
+    "unsupported_step"
+  ],
+  "strengths": [
+    "Task has a multi-hop structure that could be benchmark-worthy once leakage is removed."
+  ],
+  "concerns": [
+    "Reasoning text contains literal hop outcomes (not placeholders), which can short-circuit the intended work."
+  ],
+  "rationale": "The task includes leakage in its reasoning text that reveals intermediate or final results, weakening benchmark integrity.",
+  "suggested_fix": "Replace literal hop outcomes / named survivors in reasoning text with <node_X answer>/<hop Y answer> placeholders; keep derivations but avoid spelling out winners."
+}

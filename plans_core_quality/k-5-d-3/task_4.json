@@ -1,0 +1,124 @@
+{
+  "dataset_sequence": [
+    "texas-state-expenditures-by-county-2018",
+    "texas-state-expenditures-by-county-2019",
+    "texas-state-expenditures-by-county-2020",
+    "Travis_County,_Texas",
+    "Harris_County,_Texas",
+    "Dallas_County,_Texas",
+    "Austin,_Texas",
+    "Houston",
+    "Dallas",
+    "school-nutrition-programs-contact-information-and-site-level-program-participation-pr-2018",
+    "school-nutrition-programs-contact-information-and-site-level-program-participation-pr-2019",
+    "school-nutrition-programs-contact-information-and-site-level-program-participation-pr-2020",
+    "Sheldon_Independent_School_District"
+  ],
+  "source_sequence": [
+    "datagov/texas-state-expenditures-by-county-2018/files/rows.txt",
+    "datagov/texas-state-expenditures-by-county-2019/files/rows.txt",
+    "datagov/texas-state-expenditures-by-county-2020/files/rows.txt",
+    "wikipedia/Travis_County,_Texas/content.txt",
+    "wikipedia/Harris_County,_Texas/content.txt",
+    "wikipedia/Dallas_County,_Texas/content.txt",
+    "wikipedia/Austin,_Texas/content.txt",
+    "wikipedia/Houston/content.txt",
+    "wikipedia/Dallas/content.txt",
+    "datagov/school-nutrition-programs-contact-information-and-site-level-program-participation-pr-2018/files/rows.txt",
+    "datagov/school-nutrition-programs-contact-information-and-site-level-program-participation-pr-2019/files/rows.txt",
+    "datagov/school-nutrition-programs-contact-information-and-site-level-program-participation-pr-2020/files/rows.txt",
+    "wikipedia/Sheldon_Independent_School_District/content.txt"
+  ],
+  "reasoning_chain_text": [
+    "1. Identify the top three Texas counties by average state-government spending across 2018, 2019, and 2020.",
+    "2. Determine the county seat of each of those counties.",
+    "3. Determine when each county seat was incorporated and keep the county whose county seat was incorporated earliest.",
+    "4. For that county, compute each school district's average percentage across its sites of students automatically recognized as eligible for free school meals in 2018-19.",
+    "5. For that county, compute each school district's average percentage across its sites of students automatically recognized as eligible for free school meals in 2019-20.",
+    "6. For that county, compute each school district's average percentage across its sites of students automatically recognized as eligible for free school meals in 2020-21.",
+    "7. Average those school-district percentages across the three years and keep the district with the highest overall average.",
+    "8. Return the year that school district became independent."
+  ],
+  "original_final_question": "From the top three Texas counties by average state-government spending from 2018 to 2020, identify the county with the oldest incorporated county seat. In that county, identify the school district that had the highest average percentage across its sites of students automatically recognized as eligible for free school meals without submitting a household meal application from 2018-2019 through 2020-2021. What year did that school district become independent? Please return the year only. Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    {
+      "hop_id": 1,
+      "node_ids": [
+        1,
+        2,
+        3
+      ],
+      "reasoning": [
+        "Node 1: Filter 2018 rows where `County` is present and not `INTEX`, group by `County`, sum `Amount`, and return the yearly county totals.",
+        "Node 2: Filter 2019 rows where `County` is present and not `INTEX`, group by `County`, sum `Amount`, and return the yearly county totals.",
+        "Node 3: Filter 2020 rows where `County` is present and not `INTEX`, group by `County`, sum `Amount`, and return the yearly county totals.",
+        "Hop result: average the three yearly county totals and rank them; the top three counties are Travis, Harris, and Dallas."
+      ],
+      "answer": [
+        "TRAVIS",
+        "HARRIS",
+        "DALLAS"
+      ]
+    },
+    {
+      "hop_id": 2,
+      "node_ids": [
+        4,
+        5,
+        6
+      ],
+      "reasoning": [
+        "Node 4: Retrieve the county seat of Travis County from <hop 1 answer>.",
+        "Node 5: Retrieve the county seat of Harris County from <hop 1 answer>.",
+        "Node 6: Retrieve the county seat of Dallas County from <hop 1 answer>.",
+        "Hop result: the county seats are Austin, Houston, and Dallas."
+      ],
+      "answer": {
+        "TRAVIS": "Austin",
+        "HARRIS": "Houston",
+        "DALLAS": "Dallas"
+      }
+    },
+    {
+      "hop_id": 3,
+      "node_ids": [
+        7,
+        8,
+        9
+      ],
+      "reasoning": [
+        "Node 7: Retrieve when Austin was incorporated.",
+        "Node 8: Retrieve when Houston was incorporated.",
+        "Node 9: Retrieve when Dallas was incorporated.",
+        "Hop result: compare the incorporation dates of the county seats and select Harris County because Houston was incorporated earliest."
+      ],
+      "answer": "Harris County"
+    },
+    {
+      "hop_id": 4,
+      "node_ids": [
+        10,
+        11,
+        12
+      ],
+      "reasoning": [
+        "Node 10: Filter 2018-2019 rows where `SiteCounty` = `HARRIS` and `CEName` contains `ISD`, group by `CEName`, compute mean `SiteISP`, and return the yearly ISD mapping.",
+        "Node 11: Filter 2019-2020 rows where `SiteCounty` = `HARRIS` and `CEName` contains `ISD`, group by `CEName`, compute mean `SiteISP`, and return the yearly ISD mapping.",
+        "Node 12: Filter 2020-2021 rows where `SiteCounty` = `HARRIS` and `CEName` contains `ISD`, group by `CEName`, compute mean `SiteISP`, and return the yearly ISD mapping.",
+        "Hop result: average `SiteISP` across the three school years and select the ISD with the highest overall average; the district is SHELDON ISD."
+      ],
+      "answer": "SHELDON ISD"
+    },
+    {
+      "hop_id": 5,
+      "node_ids": [
+        13
+      ],
+      "reasoning": [
+        "Node 13: Retrieve the year when <hop 4 answer> became an independent school district.",
+        "Hop result: the year is 1952."
+      ],
+      "answer": 1952
+    }
+  ]
+}

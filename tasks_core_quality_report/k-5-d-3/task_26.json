@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "task_id": "tasks_core/k-5-d-3/task_26.json",
+  "source_task": "tasks_core/k-5-d-3/task_26.json",
+  "source_verdict": null,
+  "question": "First find the city in New York's Mid-Hudson area where fiber broadband is available to the largest share of homes. In that county, identify the electric utility with the most residential electricity use in 2023. Then take the three cities with the largest combined evaluated yearly electricity savings among residential energy-efficiency projects for existing homes with up to four units in that utility's service area. Which U.S. president's home is preserved by the national historic site in whichever of those three cities is in the same county as the first city? Return only the president's name. Your response should be in the format [Answer].",
+  "heuristic_flags": {
+    "question_text_anomaly": false,
+    "question_text_anomaly_notes": [],
+    "has_explicit_answer_placeholders": true
+  },
+  "estimated_dataset_count": 3,
+  "estimated_min_tool_calls": 6,
+  "estimated_nice_tool_calls": 9,
+  "tool_call_budget_bucket": "within_budget_comfortably",
+  "quality_bucket": "low",
+  "derivability_bucket": "broken",
+  "difficulty_bucket": "core",
+  "overall_recommendation": "revise_or_drop",
+  "issue_labels": [
+    "answer_path_leakage"
+  ],
+  "strengths": [
+    "The city-to-county-to-utility narrowing path is coherent and easy to follow.",
+    "The artifact's stated dataset count keeps the nominal tool budget comfortably under the core threshold."
+  ],
+  "concerns": [
+    "The final hop hard-codes an answer-bearing historic-site page instead of deriving the relevant site from the selected city."
+  ],
+  "rationale": "The task is affordable and most of the chain is motivated by the question, but the last step is benchmark-breaking. Node 7 jumps directly to Home_of_Franklin_D._Roosevelt_National_Historic_Site, which exposes the downstream entity and bypasses the needed derivation from the chosen city to the correct national historic site. That makes the artifact low-quality and broken for benchmark use even though the earlier hops are otherwise solid.",
+  "suggested_fix": "Replace the final node with an explicit city-to-historic-site lookup using a non-answer-bearing source, then ask whose home that site preserves."
+}

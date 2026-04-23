@@ -1,0 +1,119 @@
+{
+  "question": "First find the Iowa county with the highest share of motor-fuel distribution made up of biofuels in 2023. In that county, identify the city with the highest population in 2023. In that city, determine the postal code listed in the fireworks-seller data, the lottery-retailer data, and the liquor-store data, and keep the code shared by all three. In that ZIP code, count the certified organic farms and businesses. Using that count as n, which Iowa PBS educational-services outreach event in the same ZIP code had the nth-highest total reach? Return only the event name. Your response should be in the format [Answer].",
+  "answer": "Ready for School visit #2",
+  "nodes": {
+    "1": {
+      "source": "datagov/iowa-motor-fuel-sales-by-county-and-year/files/rows.txt",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.client import Config\n\nsource = 'datagov/iowa-motor-fuel-sales-by-county-and-year/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3', region_name='us-east-1', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), dtype=str, low_memory=False)\ndf.columns = [str(col).strip() for col in df.columns]\ndf['Calendar Year'] = pd.to_numeric(df['Calendar Year'], errors='coerce')\ndf['Biofuel Distribution Percentage'] = pd.to_numeric(df['Biofuel Distribution Percentage'], errors='coerce')\nranked = df[df['Calendar Year'].eq(2023)][['County', 'Biofuel Distribution Percentage']].dropna().sort_values(['Biofuel Distribution Percentage', 'County'], ascending=[False, True])\ntop = ranked.iloc[0]\nanswer = f\"{str(top['County']).strip()} County\"\n",
+      "subquestion": "In 2023, which Iowa county had the highest share of motor-fuel distribution made up of biofuels?",
+      "answer": "Hamilton County"
+    },
+    "2": {
+      "source": "datagov/city-population-in-iowa-by-county-and-year/files/rows.txt",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.client import Config\n\nsource = 'datagov/city-population-in-iowa-by-county-and-year/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3', region_name='us-east-1', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), dtype=str, low_memory=False)\ndf['Estimate'] = pd.to_numeric(df['Estimate'], errors='coerce')\ndf['year'] = pd.to_datetime(df['Year'], errors='coerce').dt.year\nnode_1_answer = 'Hamilton County'\ncounty = str(node_1_answer).replace(' County', '').strip()\nfiltered = df[\n    df['County'].astype(str).str.strip().eq(county)\n    & df['year'].eq(2023)\n    & ~df['City'].astype(str).str.startswith('Balance of', na=False)\n].copy()\nranked = filtered[['City', 'Estimate']].dropna().sort_values(['Estimate', 'City'], ascending=[False, True])\nanswer = str(ranked.iloc[0]['City']).strip()\n",
+      "subquestion": "In the county from <node_1 answer>, which city had the highest population in 2023?",
+      "answer": "Webster City"
+    },
+    "3": {
+      "source": "datagov/consumer-fireworks-licensed-retail-sellers-in-iowa-ecbb4/files/rows.txt",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.client import Config\n\nsource = 'datagov/consumer-fireworks-licensed-retail-sellers-in-iowa-ecbb4/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3', region_name='us-east-1', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), dtype=str, usecols=['City', 'Postal Code'], low_memory=False)\nnode_2_answer = 'Webster City'\nfiltered = df[df['City'].astype(str).str.strip().eq(str(node_2_answer).strip())].copy()\ncodes = sorted({str(value).strip() for value in filtered['Postal Code'].dropna() if str(value).strip()})\nanswer = codes[0]\n",
+      "subquestion": "In <node_2 answer>, what postal code is listed for the fireworks sellers here? Return only the postal code.",
+      "answer": "50595"
+    },
+    "4": {
+      "source": "datagov/iowa-lottery-retailer-list/files/rows.txt",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.client import Config\n\nsource = 'datagov/iowa-lottery-retailer-list/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3', region_name='us-east-1', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), dtype=str, usecols=['CITY', 'ZIP'], low_memory=False)\nnode_2_answer = 'Webster City'\nfiltered = df[df['CITY'].astype(str).str.strip().eq(str(node_2_answer).strip().upper())].copy()\ncodes = sorted({str(value).strip() for value in filtered['ZIP'].dropna() if str(value).strip()})\nanswer = codes[0]\n",
+      "subquestion": "In <node_2 answer>, what ZIP code is listed for the lottery retailers here? Return only the ZIP code.",
+      "answer": "50595"
+    },
+    "5": {
+      "source": "datagov/iowa-liquor-stores/files/rows.txt",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.client import Config\n\nsource = 'datagov/iowa-liquor-stores/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3', region_name='us-east-1', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), dtype=str, usecols=['City', 'Zip Code'], low_memory=False)\nnode_2_answer = 'Webster City'\nfiltered = df[df['City'].astype(str).str.strip().eq(str(node_2_answer).strip().upper())].copy()\ncodes = sorted({str(value).strip() for value in filtered['Zip Code'].dropna() if str(value).strip()})\nanswer = codes[0]\n",
+      "subquestion": "In <node_2 answer>, what ZIP code is listed for the liquor-store listings here? Return only the ZIP code.",
+      "answer": "50595"
+    },
+    "6": {
+      "source": "datagov/iowa-certified-organic-farms-and-businesses/files/rows.txt",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.client import Config\n\nsource = 'datagov/iowa-certified-organic-farms-and-businesses/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3', region_name='us-east-1', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), dtype=str, usecols=['Operation Name', 'Physical Address ZIP Code'], low_memory=False)\nnode_3_answer = '50595'\nnode_4_answer = '50595'\nnode_5_answer = '50595'\nshared = sorted(set([node_3_answer]) & set([node_4_answer]) & set([node_5_answer]))[0]\nfiltered = df[df['Physical Address ZIP Code'].astype(str).str.strip().eq(shared)].copy()\nanswer = str(int(len(filtered)))\n",
+      "subquestion": "How many certified organic farms and businesses are listed in the ZIP code shared by <node_3 answer>, <node_4 answer>, and <node_5 answer>?",
+      "answer": "3"
+    },
+    "7": {
+      "source": "datagov/iowa-pbs-educational-services-outreach-events/files/rows.txt",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.client import Config\n\nsource = 'datagov/iowa-pbs-educational-services-outreach-events/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3', region_name='us-east-1', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), dtype=str, usecols=['Event', 'Zip Code', '# Total Reach'], low_memory=False)\nnode_3_answer = '50595'\nnode_4_answer = '50595'\nnode_5_answer = '50595'\nnode_6_answer = '3'\nshared = sorted(set([node_3_answer]) & set([node_4_answer]) & set([node_5_answer]))[0]\nrank = int(str(node_6_answer).strip())\nfiltered = df[df['Zip Code'].astype(str).str.strip().eq(shared)].copy()\nfiltered['# Total Reach'] = pd.to_numeric(filtered['# Total Reach'], errors='coerce')\nranked = filtered[['Event', '# Total Reach']].dropna().sort_values(['# Total Reach', 'Event'], ascending=[False, True]).reset_index(drop=True)\nanswer = str(ranked.iloc[rank - 1]['Event']).strip()\n",
+      "subquestion": "Using <node_6 answer> as n, which Iowa PBS educational-services outreach event in the ZIP code shared by <node_3 answer>, <node_4 answer>, and <node_5 answer> had the nth-highest total reach? Return only the event name.",
+      "answer": "Ready for School visit #2"
+    }
+  },
+  "datasets_used": [
+    "iowa-motor-fuel-sales-by-county-and-year",
+    "city-population-in-iowa-by-county-and-year",
+    "consumer-fireworks-licensed-retail-sellers-in-iowa-ecbb4",
+    "iowa-lottery-retailer-list",
+    "iowa-liquor-stores",
+    "iowa-certified-organic-farms-and-businesses",
+    "iowa-pbs-educational-services-outreach-events"
+  ],
+  "reasoning_hops": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1
+      ],
+      "reasoning": [
+        "Node 1: In 2023 Iowa motor fuel sales data, Hamilton County has the highest biofuel distribution percentage.",
+        "Hop result: <node_1 answer>"
+      ],
+      "answer": "Hamilton County"
+    },
+    {
+      "hop": 2,
+      "node_ids": [
+        2
+      ],
+      "reasoning": [
+        "Node 2: In 2023 city population data for Hamilton County, Webster City has the largest population among the listed cities.",
+        "Hop result: <node_2 answer>"
+      ],
+      "answer": "Webster City"
+    },
+    {
+      "hop": 3,
+      "node_ids": [
+        3,
+        4,
+        5
+      ],
+      "reasoning": [
+        "Node 3: In Webster City's fireworks-seller listings, the listed postal code is 50595.",
+        "Node 4: In Webster City's lottery-retailer listings, the listed ZIP code is 50595.",
+        "Node 5: In Webster City's liquor-store listings, the listed ZIP code is 50595.",
+        "The ZIP code shared by all three nodes is 50595.",
+        "Hop result: 50595"
+      ],
+      "answer": "50595"
+    },
+    {
+      "hop": 4,
+      "node_ids": [
+        6
+      ],
+      "reasoning": [
+        "Node 6: In the certified organic farms and businesses dataset, ZIP code 50595 has 3 listings.",
+        "Hop result: <node_6 answer>"
+      ],
+      "answer": "3"
+    },
+    {
+      "hop": 5,
+      "node_ids": [
+        7
+      ],
+      "reasoning": [
+        "Node 7: In the Iowa PBS educational-services outreach-events dataset, the event with the 3rd-highest total reach in ZIP code 50595 is Ready for School visit #2.",
+        "Hop result: <node_7 answer>"
+      ],
+      "answer": "Ready for School visit #2"
+    }
+  ]
+}

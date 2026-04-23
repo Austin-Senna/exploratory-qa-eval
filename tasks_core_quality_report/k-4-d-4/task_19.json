@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "task_id": "tasks_core/k-4-d-4/task_19.json",
+  "source_task": "tasks_core/k-4-d-4/task_19.json",
+  "source_verdict": null,
+  "question": "Identify the UT System university located in a county's county seat where the county (1) has between 700 and 4,600 people entering the state prison system in each fiscal year from 2019 to 2022, (2) has population under 900,000 according to the 2020 census, (3) is not in the Houston metropolitan area, and (4) is not in West Texas. Only report the university name. Your response should be in the format [Answer].",
+  "heuristic_flags": {
+    "question_text_anomaly": false,
+    "question_text_anomaly_notes": [],
+    "has_explicit_answer_placeholders": true
+  },
+  "estimated_dataset_count": 9,
+  "estimated_min_tool_calls": 18,
+  "estimated_nice_tool_calls": 27,
+  "tool_call_budget_bucket": "within_budget_comfortably",
+  "quality_bucket": "high",
+  "derivability_bucket": "clean",
+  "difficulty_bucket": "core",
+  "overall_recommendation": "core_keep",
+  "issue_labels": [
+    "format_noise"
+  ],
+  "strengths": [
+    "Filtering path is faithful to the question.",
+    "The county-seat to university hop is directly motivated.",
+    "The budget stays comfortably under the core limit."
+  ],
+  "concerns": [
+    "Nodes 7 and 8 use the wrong hop placeholder reference.",
+    "The opening question sentence is a little clunky."
+  ],
+  "rationale": "The task is coherent, affordable, and naturally decomposes from the final question: intersect the four yearly county sets, apply the census and metro filters, exclude West Texas, recover the county seat, and identify the UT System university there. The only notable weakness is surface noise in the placeholder references and wording, which does not materially break the reasoning path.",
+  "suggested_fix": "Change nodes 7-8 to reference <hop 2 answer> and tighten the question wording."
+}

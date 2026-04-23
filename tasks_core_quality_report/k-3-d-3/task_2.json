@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "task_id": "tasks_core/k-3-d-3/task_2.json",
+  "source_task": "tasks_core/k-3-d-3/task_2.json",
+  "source_verdict": null,
+  "question": "I want to study the demographic in NYC. Can you find me the zip code of the NYC high school that was in the top 3 by overall progress score in the school year 2011-13 and had an A grade in the 2010-11 progress. Report the percentage of White people contributing to the racial makeup of the neighborhood whose primary ZIP code is the same as that high school based on data in 2010 census?. Your response should be in the format [Answer].",
+  "heuristic_flags": {
+    "question_text_anomaly": true,
+    "question_text_anomaly_notes": [
+      "malformed punctuation in question text"
+    ],
+    "has_explicit_answer_placeholders": true
+  },
+  "estimated_dataset_count": 5,
+  "estimated_min_tool_calls": 10,
+  "estimated_nice_tool_calls": 15,
+  "tool_call_budget_bucket": "within_budget_comfortably",
+  "quality_bucket": "medium",
+  "derivability_bucket": "strained",
+  "difficulty_bucket": "core",
+  "overall_recommendation": "core_keep",
+  "issue_labels": [
+    "unsupported_step"
+  ],
+  "strengths": [
+    "Underlying multi-hop structure appears plausible from the question."
+  ],
+  "concerns": [
+    "Question text has surface punctuation/typo issues that reduce clarity."
+  ],
+  "rationale": "The task is mostly coherent, but surface wording issues make it a bit brittle to decompose.",
+  "suggested_fix": "Fix question punctuation/typos to make the target and comparison unambiguous."
+}

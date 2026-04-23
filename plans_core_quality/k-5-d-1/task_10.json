@@ -1,0 +1,74 @@
+{
+  "dataset_sequence": [
+    "LAPD_Rampart_Division",
+    "lapd-ripa-ab-953-stop-incident-details-from-7-1-2018-to-present",
+    "crime-data-from-2020-to-present",
+    "crime-data-from-2010-to-2019"
+  ],
+  "source_sequence": [
+    "wikipedia/LAPD_Rampart_Division/content.txt",
+    "datagov/lapd-ripa-ab-953-stop-incident-details-from-7-1-2018-to-present/files/rows.txt",
+    "datagov/crime-data-from-2020-to-present/files/rows.txt",
+    "datagov/crime-data-from-2010-to-2019/files/rows.txt",
+    "datagov/crime-data-from-2020-to-present/files/rows.txt"
+  ],
+  "reasoning_chain_text": [
+    "1. Determine which LAPD division serves neighborhoods including Echo Park and Silver Lake, and determine that division's area ID.",
+    "2. Using 2020 crime data for that area, identify the most frequent crime code.",
+    "3. Determine the crime description associated with that code.",
+    "4. Count how many times that crime was recorded across all of Los Angeles in 2020."
+  ],
+  "original_final_question": "I'm analyzing 2020 crime statistics for the LAPD division that serves neighborhoods including Echo Park and Silver Lake. What was the most frequent crime reported in that division during that year? Tell me the total number of times that specific crime occurred across the entire city of Los Angeles in 2020. Only report the total number in the response. Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1
+      ],
+      "reasoning": [
+        "Node 1: Identify the LAPD area/division that serves neighborhoods including Echo Park and Silver Lake from the cited Wikipedia source."
+      ],
+      "answer": "Rampart"
+    },
+    {
+      "hop": 2,
+      "node_ids": [
+        2
+      ],
+      "reasoning": [
+        "Node 2: Filter rows where `Area Name` = <hop 1 answer>, convert `Area ID` values to integers, and keep the mapped area id."
+      ],
+      "answer": 2
+    },
+    {
+      "hop": 3,
+      "node_ids": [
+        3
+      ],
+      "reasoning": [
+        "Node 3: Filter rows where `DATE OCC` is in 2020 and `AREA` = <hop 2 answer>, count incidents by `Crm Cd`, sort descending, and keep the most common crime code."
+      ],
+      "answer": 510
+    },
+    {
+      "hop": 4,
+      "node_ids": [
+        4
+      ],
+      "reasoning": [
+        "Node 4: Filter rows where `Crm Cd` = <hop 3 answer>, collect matching `Crm Cd Desc` values, and keep the mapped crime description."
+      ],
+      "answer": "VEHICLE - STOLEN"
+    },
+    {
+      "hop": 5,
+      "node_ids": [
+        5
+      ],
+      "reasoning": [
+        "Node 5: Filter rows where `DATE OCC` is in 2020 and `Crm Cd Desc` = <hop 4 answer>, then count incidents."
+      ],
+      "answer": 29141
+    }
+  ]
+}

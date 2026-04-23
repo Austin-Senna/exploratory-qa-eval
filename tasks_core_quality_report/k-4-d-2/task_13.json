@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "task_id": "tasks_core/k-4-d-2/task_13.json",
+  "source_task": "tasks_core/k-4-d-2/task_13.json",
+  "source_verdict": null,
+  "question": "Among New York counties with violent crime rates over 300 per 100,000 in 2020 and more than 100 youth sent to jail in 2015, find the county that also had total state payments for homeowners' school taxes between $60M and $90M in 2023 and a jail population above 800. Find the county seat of that county, what year was it incorporated? Please return the year only. Your response should be in the format [Answer].",
+  "heuristic_flags": {
+    "question_text_anomaly": false,
+    "question_text_anomaly_notes": [],
+    "has_explicit_answer_placeholders": true
+  },
+  "estimated_dataset_count": 6,
+  "estimated_min_tool_calls": 12,
+  "estimated_nice_tool_calls": 18,
+  "tool_call_budget_bucket": "within_budget_comfortably",
+  "quality_bucket": "medium",
+  "derivability_bucket": "strained",
+  "difficulty_bucket": "core",
+  "overall_recommendation": "keep_noncore",
+  "issue_labels": [
+    "unsupported_step"
+  ],
+  "strengths": [
+    "The multi-hop path is short, affordable, and mostly internally coherent.",
+    "The final county-seat to incorporation lookup is directly tied to the stated target."
+  ],
+  "concerns": [
+    "The jail-population constraint introduces 2019 without the question specifying any year.",
+    "A central filter depends on that hidden time choice, so the derivation is not fully faithful to the prompt."
+  ],
+  "rationale": "This task stays well within the budget and the overall chain is understandable, but it is not clean enough for core use because the jail-population hop injects a 2019 year filter that the question never motivates. That makes the derivation strained rather than clean, even though the remaining hops are straightforward and the final lookup is well attached.",
+  "suggested_fix": "State the jail-population year explicitly in the question, e.g. 'had a 2019 jail population above 800.'"
+}

@@ -1,0 +1,92 @@
+{
+  "dataset_sequence": [
+    "ACT_(for-profit_organization)",
+    "Iowa_City,_Iowa",
+    "school-district-office-locations-current-d848f",
+    "public-school-locations-2018-19-42360",
+    "private-school-locations-2017-18-f49f6",
+    "school-district-office-locations-2020-21-d8df0",
+    "postsecondary-school-locations-2019-20-64b31"
+  ],
+  "source_sequence": [
+    "wikipedia/ACT_(for-profit_organization)/content.txt",
+    "wikipedia/Iowa_City,_Iowa/content.txt",
+    "datagov/school-district-office-locations-current-d848f/files/nces::school-district-office-locations-current-1.txt",
+    "datagov/public-school-locations-2018-19-42360/files/data.txt",
+    "datagov/private-school-locations-2017-18-f49f6/files/data-dqdQDP.txt",
+    "datagov/school-district-office-locations-2020-21-d8df0/files/data-UDaCeM.txt",
+    "datagov/postsecondary-school-locations-2019-20-64b31/files/data-cbxYz6.txt"
+  ],
+  "reasoning_chain_text": [
+    "1. Determine the city where ACT, Inc. was founded.",
+    "2. Determine the county containing that city.",
+    "3. Using current school district office listings for the city and county identified in steps 1-2, determine the state code associated with that location.",
+    "4. In that state, identify the counties common to the top three for the twenty eighteen to twenty nineteen public school year, the twenty seventeen to twenty eighteen private school year, and the twenty twenty to twenty twenty one school district office year.",
+    "5. Return the smallest postsecondary institution count among the counties common to step 4."
+  ],
+  "original_final_question": "ACT, Inc. was founded in a city in Iowa. Determine the county for that city and the corresponding state. In that state, find the counties that rank in the top three for public schools, private schools, and school district offices; among those counties, what is the smallest postsecondary institution count? Only report the number. Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1
+      ],
+      "reasoning": [
+        "Node 1: Read the city where ACT, Inc. was founded from the cited Wikipedia source.",
+        "Hop result: the city is Iowa City."
+      ],
+      "answer": "Iowa City"
+    },
+    {
+      "hop": 2,
+      "node_ids": [
+        2
+      ],
+      "reasoning": [
+        "Node 2: Read the county containing <hop 1 answer> from the cited Iowa City Wikipedia source.",
+        "Hop result: the county is Johnson County."
+      ],
+      "answer": "Johnson County"
+    },
+    {
+      "hop": 3,
+      "node_ids": [
+        3
+      ],
+      "reasoning": [
+        "Node 3: From the school district office GeoJSON source, filter features where `CITY` = <hop 1 answer> and `NMCNTY` = <hop 2 answer>, extract distinct `STFIP` values, and keep the shared two-digit code.",
+        "Hop result: the shared state FIPS code is 19."
+      ],
+      "answer": "19"
+    },
+    {
+      "hop": 4,
+      "node_ids": [
+        4,
+        5,
+        6
+      ],
+      "reasoning": [
+        "Node 4: For `STFIP` = <hop 3 answer>, count public schools by county and keep the top three county names.",
+        "Node 5: For `STFIP` = <hop 3 answer>, count private schools by county and keep the top three county names.",
+        "Node 6: For `STFIP` = <hop 3 answer>, count school district offices by county and keep the top three county names.",
+        "Hop result: intersect the three top-three county sets; the shared counties are Linn County and Polk County."
+      ],
+      "answer": [
+        "Linn County",
+        "Polk County"
+      ]
+    },
+    {
+      "hop": 5,
+      "node_ids": [
+        7
+      ],
+      "reasoning": [
+        "Node 7: For `STFIP` = <hop 3 answer>, count postsecondary institutions by county, restrict to the counties in <hop 4 answer>, and take the smaller count.",
+        "Hop result: the smaller postsecondary institution count is 7."
+      ],
+      "answer": 7
+    }
+  ]
+}

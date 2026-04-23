@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "task_id": "tasks_core/k-4-d-3/task_8.json",
+  "source_task": "tasks_core/k-4-d-3/task_8.json",
+  "source_verdict": null,
+  "question": "Across 2019-2021, identify the Texas counties that consistently rank in the top five for spending on major asset purchases and long-term property improvements. Among those, keep the counties that also rank in the statewide top five for releases from the Texas state prison system in each of those years. From that set, which county had the highest average number of releases from the Texas state prison system over 2019-2021, and what is its county seat? Return the city name only. Your response should be in the format [Answer].",
+  "heuristic_flags": {
+    "question_text_anomaly": false,
+    "question_text_anomaly_notes": [],
+    "has_explicit_answer_placeholders": true
+  },
+  "estimated_dataset_count": 10,
+  "estimated_min_tool_calls": 20,
+  "estimated_nice_tool_calls": 30,
+  "tool_call_budget_bucket": "within_budget_comfortably",
+  "quality_bucket": "low",
+  "derivability_bucket": "broken",
+  "difficulty_bucket": "unclear",
+  "overall_recommendation": "revise_or_drop",
+  "issue_labels": [
+    "internal_inconsistency"
+  ],
+  "strengths": [
+    "Question implies a clear multi-year intersection and comparison path.",
+    "Dataset count stays at the edge of the comfortable budget."
+  ],
+  "concerns": [
+    "The deciding average-count hop switches from releases to receives intake datasets.",
+    "Nodes 7-9 claim to measure releases while their sources and reasoning count intake rows."
+  ],
+  "rationale": "The first two hops are reasonably derived from the question and the 10 listed datasets keep the task at roughly 20 minimum and 30 nice tool calls. But the central scoring hop is internally contradictory: after filtering on prison releases, the task computes the final average from texas-department-of-criminal-justice-receives datasets and even describes them as intake counts, so the chosen county is not actually justified by the asked metric. That breaks derivability and makes the task unreliable as written.",
+  "suggested_fix": "Replace nodes 7-9 with release-count lookups from the releases datasets and recompute the 2019-2021 average before resolving the county seat."
+}

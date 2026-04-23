@@ -1,0 +1,67 @@
+{
+  "dataset_sequence": [
+    "Pittsburgh",
+    "pittsburgh-international-airport-scheduled-passenger-traffic",
+    "airports-5e97a",
+    "boundaries-us-zip-codes"
+  ],
+  "source_sequence": [
+    "wikipedia/Pittsburgh/content.txt",
+    "datagov/pittsburgh-international-airport-scheduled-passenger-traffic/files/pittsburgh-international-traffic-report-march-2019.txt",
+    "datagov/airports-5e97a/files/rows.txt",
+    "datagov/boundaries-us-zip-codes/files/rows.txt"
+  ],
+  "reasoning_chain_text": [
+    "1. Determine the airport that most directly serves Pittsburgh for commercial passenger travel.",
+    "2. In that airport's March 2019 scheduled traffic report, identify the destination with the most seats.",
+    "3. Map that destination airport code to its city and state.",
+    "4. For ZIP codes in that city and state, return the largest land area in square miles."
+  ],
+  "original_final_question": "In Pittsburgh, identify the airport that most directly serves it for commercial passenger travel; in its March 2019 scheduled traffic report, find the destination with the most seats and map it to its city and state. What is the largest land area in square miles among ZIP codes in that destination city/state? Please return the land area only. Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1
+      ],
+      "reasoning": [
+        "Node 1: Pittsburgh International Airport provides commercial passenger service to the Pittsburgh metropolitan area, while Arnold Palmer Regional Airport is only described as providing limited commercial passenger service.",
+        "Hop result: Pittsburgh International Airport"
+      ],
+      "answer": "Pittsburgh International Airport"
+    },
+    {
+      "hop": 2,
+      "node_ids": [
+        2
+      ],
+      "reasoning": [
+        "Node 2: Atlanta (ATL) has the most seats (44,912)",
+        "Hop result: Atlanta (ATL)"
+      ],
+      "answer": "Atlanta (ATL)"
+    },
+    {
+      "hop": 3,
+      "node_ids": [
+        3
+      ],
+      "reasoning": [
+        "Node 3: Loc_Id ATL -> Atlanta, GA",
+        "Hop result: Atlanta, GA"
+      ],
+      "answer": "Atlanta, GA"
+    },
+    {
+      "hop": 4,
+      "node_ids": [
+        4
+      ],
+      "reasoning": [
+        "Node 4: Atlanta, GA -> largest land area is 45.68",
+        "Hop result: 45.68"
+      ],
+      "answer": "45.68"
+    }
+  ]
+}

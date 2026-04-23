@@ -1,4 +1,10 @@
-"""Shared loader/state for ideal-mode task plans in plans_mini."""
+"""Shared loader/state for ideal-mode task plans.
+
+Default mappings:
+- tasks_mini/... -> plans_mini/...
+- tasks_core/... -> plans_mini/tasks_core/...
+- tasks_core_quality/... -> plans_core_quality/...
+"""
 
 from __future__ import annotations
 
@@ -8,6 +14,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 _PLANS_ROOT = Path("plans_mini")
+_QUALITY_PLANS_ROOT = Path("plans_core_quality")
 _TASK_CONTEXT: Dict[str, Any] = {}
 
 
@@ -42,27 +49,34 @@ def task_id_from_context(task_context: Optional[Dict[str, Any]]) -> str:
     return str((task_context or {}).get("task_id") or "").strip()
 
 
-def _plan_relpath_from_task(task_id: str) -> Path:
+def _plan_location_from_task(task_id: str) -> tuple[Path, Path]:
     raw = str(task_id or "").strip()
     if not raw:
         raise ValueError("Missing task_id for ideal plan lookup.")
 
     p = Path(raw)
     parts = p.parts
-    if "tasks_mini" in parts:
-        idx = parts.index("tasks_mini")
+    for task_root in ("tasks_core_quality", "tasks_core", "tasks_mini"):
+        if task_root not in parts:
+            continue
+        idx = parts.index(task_root)
         suffix = parts[idx + 1 :]
         if not suffix:
             raise ValueError(f"Could not derive relative plan path from task_id '{task_id}'.")
-        return Path(*suffix)
+        if task_root == "tasks_core_quality":
+            return (_QUALITY_PLANS_ROOT, Path(*suffix))
+        if task_root == "tasks_core":
+            return (plans_root(), Path(task_root) / Path(*suffix))
+        return (plans_root(), Path(*suffix))
 
     if p.is_absolute():
-        return Path(p.name)
-    return p
+        return (plans_root(), Path(p.name))
+    return (plans_root(), p)
 
 
 def plan_path_for_task(task_id: str) -> Path:
-    return plans_root() / _plan_relpath_from_task(task_id)
+    root, relpath = _plan_location_from_task(task_id)
+    return root / relpath
 
 
 def _validate_dataset_sequence(raw: Any, *, plan_path: Path) -> List[str]:

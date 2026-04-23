@@ -1,0 +1,76 @@
+{
+  "dataset_sequence": [
+    "Chicago_Police_Department",
+    "O._W._Wilson",
+    "Wichita_Police_Department",
+    "Wichita,_Kansas",
+    "fy-2020-disability-compensation-recipients-by-county",
+    "fy-2023-disability-compensation-recipients-by-county"
+  ],
+  "source_sequence": [
+    "wikipedia/Chicago_Police_Department/content.txt",
+    "wikipedia/O._W._Wilson/content.txt",
+    "wikipedia/Wichita_Police_Department/content.txt",
+    "wikipedia/Wichita,_Kansas/content.txt",
+    "datagov/fy-2020-disability-compensation-recipients-by-county/files/rows.txt",
+    "datagov/fy-2023-disability-compensation-recipients-by-county/files/rows.txt"
+  ],
+  "reasoning_chain_text": [
+    "1. Identify the first civilian superintendent of the Chicago Police Department.",
+    "2. Determine the city where that person both previously served as police chief and founded a criminal justice program at a local university.",
+    "3. Determine the county containing that city.",
+    "4. Determine that county's total number of disability compensation recipients in 2020 and 2023.",
+    "5. Return the absolute change between those two totals as a whole number."
+  ],
+  "original_final_question": "Identify the first civilian superintendent of the Chicago Police Department. In the city where that person previously served as police chief and founded a criminal justice program at a local university, find the county the city is located in and report the absolute change in the number of veterans receiving disability benefits between 2020 and 2023. Only report the numeric change as a whole number. Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1
+      ],
+      "reasoning": [
+        "Node 1: O. W. Wilson was brought on as Superintendent of Police when the superintendent role was created in 1960.",
+        "Hop result: O. W. Wilson"
+      ],
+      "answer": "O. W. Wilson"
+    },
+    {
+      "hop": 2,
+      "node_ids": [
+        2,
+        3
+      ],
+      "reasoning": [
+        "Node 2: Fullerton and Wichita are the cities where O. W. Wilson served as police chief before Chicago.",
+        "Node 3: Wichita is the city where O. W. Wilson started a criminal justice program at a local university.",
+        "Hop result: Wichita"
+      ],
+      "answer": "Wichita"
+    },
+    {
+      "hop": 3,
+      "node_ids": [
+        4
+      ],
+      "reasoning": [
+        "Node 4: Wichita is the county seat of Sedgwick County.",
+        "Hop result: Sedgwick County"
+      ],
+      "answer": "Sedgwick County"
+    },
+    {
+      "hop": 4,
+      "node_ids": [
+        5,
+        6
+      ],
+      "reasoning": [
+        "Node 5: Filter rows where `State` equals `Kansas` and `County Name` equals `Sedgwick`, then return `Total: Disability Compensation Recipients` for 2020.",
+        "Node 6: Filter rows where `State` equals `Kansas` and `County Name` equals `Sedgwick`, then return `Total: Disability Compensation Recipients` for 2023.",
+        "Hop result: abs(8701 - 7871) = 830"
+      ],
+      "answer": "830"
+    }
+  ]
+}

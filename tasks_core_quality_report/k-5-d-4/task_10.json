@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "task_id": "tasks_core/k-5-d-4/task_10.json",
+  "source_task": "tasks_core/k-5-d-4/task_10.json",
+  "source_verdict": null,
+  "question": "Among Texas counties in the top five for average capital outlay spending from 2018 to 2021, identify the two highest by average prison releases in 2019 and 2020. Of those two, select the county where disability compensation recipients had the least increase from 2020 to 2023. Find the public universities in this county. Which of those was founded earliest? Return the university name only. Your response should be in the format [Answer].",
+  "heuristic_flags": {
+    "question_text_anomaly": false,
+    "question_text_anomaly_notes": [],
+    "has_explicit_answer_placeholders": true
+  },
+  "estimated_dataset_count": 11,
+  "estimated_min_tool_calls": 22,
+  "estimated_nice_tool_calls": 33,
+  "tool_call_budget_bucket": "within_budget_tight",
+  "quality_bucket": "low",
+  "derivability_bucket": "broken",
+  "difficulty_bucket": "unclear",
+  "overall_recommendation": "revise_or_drop",
+  "issue_labels": [
+    "internal_inconsistency"
+  ],
+  "strengths": [
+    "The early aggregation hops are explicit and auditable from the artifact.",
+    "The estimated budget is tight but still plausibly runnable."
+  ],
+  "concerns": [
+    "The decisive county-selection hop treats a decrease as the 'least increase,' which conflicts with the question wording.",
+    "Once that county choice is unstable, the downstream university lookup is no longer a cleanly justified target."
+  ],
+  "rationale": "This task is borderline affordable at 11 datasets, but it is not benchmark-ready because the core narrowing step is internally inconsistent. The question asks for the county with the least increase in disability compensation recipients from 2020 to 2023, yet the retained county is supported by a decrease, so the final answer path is not faithfully derivable from the question as written.",
+  "suggested_fix": "Change the hop-3 criterion to 'smallest change' or regenerate hop 3 onward so the surviving county truly has the least positive increase."
+}

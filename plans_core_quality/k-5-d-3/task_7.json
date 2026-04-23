@@ -1,0 +1,101 @@
+{
+  "dataset_sequence": [
+    "2021-state-expenditures",
+    "2022-state-expenditures",
+    "2023-state-expenditures",
+    "2021-state-employee-pay",
+    "2022-state-employee-pay",
+    "2023-state-employee-pay",
+    "Missouri_Department_of_Corrections",
+    "Jefferson_City,_Missouri",
+    "Lincoln_University_(Missouri)"
+  ],
+  "source_sequence": [
+    "datagov/2021-state-expenditures/files/rows.txt",
+    "datagov/2022-state-expenditures/files/rows.txt",
+    "datagov/2023-state-expenditures/files/rows.txt",
+    "datagov/2021-state-employee-pay/files/rows.txt",
+    "datagov/2022-state-employee-pay/files/rows.txt",
+    "datagov/2023-state-employee-pay/files/rows.txt",
+    "wikipedia/Missouri_Department_of_Corrections/content.txt",
+    "wikipedia/Jefferson_City,_Missouri/content.txt",
+    "wikipedia/Lincoln_University_(Missouri)/content.txt"
+  ],
+  "reasoning_chain_text": [
+    "1. For 2021, 2022, and 2023, identify the Missouri state agencies in the top five for professional services spending and keep the agencies that remain in the top five across all three years.",
+    "2. For those agencies, compare average employee counts across 2021, 2022, and 2023 and keep the agency with the highest average.",
+    "3. Determine that agency's headquarters city.",
+    "4. Identify the historically Black university in that city.",
+    "5. Return who founded that university."
+  ],
+  "original_final_question": "Across 2021-2023, which Missouri state agency stayed in the top five for professional services spending and also had the highest average employee count? In its headquarters city, a historically Black university was founded. Who founded that university? Return the name only. Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    {
+      "hop_id": 1,
+      "node_ids": [
+        1,
+        2,
+        3
+      ],
+      "reasoning": [
+        "Node 1: Filter 2021 rows where `Category Description` = `PROFESSIONAL SERVICES`, group by `Agency Name`, sum `Payments To Vendors`, sort descending, and keep the top five agencies.",
+        "Node 2: Filter 2022 rows where `Category Description` = `PROFESSIONAL SERVICES`, group by `Agency Name`, sum `Payments To Vendors`, sort descending, and keep the top five agencies.",
+        "Node 3: Filter 2023 rows where `Category Description` = `PROFESSIONAL SERVICES`, group by `Agency Name`, sum `Payments To Vendors`, sort descending, and keep the top five agencies.",
+        "Hop result: intersect the three yearly top-five agency sets to keep the agencies that stayed in the top five across 2021 through 2023: CORRECTIONS, SOCIAL SERVICES, and TRANSPORTATION."
+      ],
+      "answer": [
+        "CORRECTIONS",
+        "SOCIAL SERVICES",
+        "TRANSPORTATION"
+      ]
+    },
+    {
+      "hop_id": 2,
+      "node_ids": [
+        4,
+        5,
+        6
+      ],
+      "reasoning": [
+        "Node 4: Filter 2021 employee-pay rows where `Agency Name` is CORRECTIONS, SOCIAL SERVICES, or TRANSPORTATION, group by `Agency Name`, count rows, and return the yearly employee counts.",
+        "Node 5: Filter 2022 employee-pay rows where `Agency Name` is CORRECTIONS, SOCIAL SERVICES, or TRANSPORTATION, group by `Agency Name`, count rows, and return the yearly employee counts.",
+        "Node 6: Filter 2023 employee-pay rows where `Agency Name` is CORRECTIONS, SOCIAL SERVICES, or TRANSPORTATION, group by `Agency Name`, count rows, and return the yearly employee counts.",
+        "Hop result: average the three yearly employee counts and select CORRECTIONS because it has the highest overall average."
+      ],
+      "answer": "CORRECTIONS"
+    },
+    {
+      "hop_id": 3,
+      "node_ids": [
+        7
+      ],
+      "reasoning": [
+        "Node 7: Retrieve the headquarters city of <hop 2 answer>.",
+        "Hop result: the headquarters city is Jefferson City."
+      ],
+      "answer": "Jefferson City"
+    },
+    {
+      "hop_id": 4,
+      "node_ids": [
+        8
+      ],
+      "reasoning": [
+        "Node 8: Retrieve the historically Black university located in <hop 3 answer>.",
+        "Hop result: the university is Lincoln University."
+      ],
+      "answer": "Lincoln University"
+    },
+    {
+      "hop_id": 5,
+      "node_ids": [
+        9
+      ],
+      "reasoning": [
+        "Node 9: Retrieve the founder of <hop 4 answer>.",
+        "Hop result: the founder is James Milton Turner."
+      ],
+      "answer": "James Milton Turner"
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "task_id": "tasks_core/k-5-d-1/task_6.json",
+  "source_task": "tasks_core/k-5-d-1/task_6.json",
+  "source_verdict": null,
+  "question": "I'm researching crime trends starting in the D.C. ward that contains the NoMa neighborhood. What was the most frequent offense there in 2018? Then, identify which ward saw the highest number of that specific crime in 2019. For that new ward, find its most common offense in 2020, and tell me the total number of incidents of that offense recorded across the city in 2021. Only report the total number in your response. Your response should be in the format [Answer].",
+  "heuristic_flags": {
+    "question_text_anomaly": false,
+    "question_text_anomaly_notes": [],
+    "has_explicit_answer_placeholders": true
+  },
+  "estimated_dataset_count": 5,
+  "estimated_min_tool_calls": 10,
+  "estimated_nice_tool_calls": 15,
+  "tool_call_budget_bucket": "within_budget_comfortably",
+  "quality_bucket": "high",
+  "derivability_bucket": "clean",
+  "difficulty_bucket": "core",
+  "overall_recommendation": "core_keep",
+  "issue_labels": [],
+  "strengths": [
+    "Question cleanly motivates each yearly narrowing without leaking downstream entities.",
+    "Five datasets keep the task comfortably inside the budget while still requiring a real serial chain."
+  ],
+  "concerns": [
+    "Several 'most common' or 'highest number' comparisons rely on an unstated unique winner.",
+    "The hop structure is somewhat repetitive, so the task tests execution discipline more than varied reasoning."
+  ],
+  "rationale": "The artifact is internally coherent and the decomposition follows naturally from the final question: identify NoMa's ward, find the top offense there in 2018, find the ward with the most of that offense in 2019, find that ward's top offense in 2020, then count that offense citywide in 2021. Nothing essential appears injected, and the final hop stays attached to the stated target. With five datasets, the task is comfortably within the 30-call budget and is suitable for the core slice, with only a minor residual ambiguity around tie handling for repeated max-style comparisons.",
+  "suggested_fix": "Add an explicit tie-break rule for 'most frequent' and 'highest number' comparisons."
+}

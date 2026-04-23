@@ -1,0 +1,99 @@
+{
+  "dataset_sequence": [
+    "ocs-1-1-abuse-neglect-related-texas-child-fatalities-fy2013-fy2022",
+    "ocs-1-2-non-abuse-neglect-related-texas-child-fatality-investigations-fy2013-fy2022",
+    "nchs-drug-poisoning-mortality-by-county-united-states",
+    "nchs-drug-poisoning-mortality-by-county-united-states-20278",
+    "Victoria_County,_Texas",
+    "Victoria,_Texas",
+    "Guadalupe_River_(Texas)"
+  ],
+  "source_sequence": [
+    "datagov/ocs-1-1-abuse-neglect-related-texas-child-fatalities-fy2013-fy2022/files/rows.txt",
+    "datagov/ocs-1-2-non-abuse-neglect-related-texas-child-fatality-investigations-fy2013-fy2022/files/rows.txt",
+    "datagov/nchs-drug-poisoning-mortality-by-county-united-states/files/rows.txt",
+    "datagov/nchs-drug-poisoning-mortality-by-county-united-states-20278/files/rows.txt",
+    "wikipedia/Victoria_County,_Texas/content.txt",
+    "wikipedia/Victoria,_Texas/content.txt",
+    "wikipedia/Guadalupe_River_(Texas)/content.txt"
+  ],
+  "reasoning_chain_text": [
+    "1. Among Brooks, Willacy, Comal, Atascosa, and Victoria counties, keep the counties with at least one abuse- or neglect-related child fatality and at least three non-abuse-or-neglect child fatality investigations between 2018 and 2022.",
+    "2. From the counties that remain, identify which are in the top two for 2021 model-based drug poisoning death rates.",
+    "3. From those same counties, identify which are in the bottom two for 2016 age-adjusted drug poisoning rate categories, and keep the county that appears in both sets.",
+    "4. Determine the county seat of that county.",
+    "5. Determine the river that city lies along.",
+    "6. Determine the bay that river flows into and return its name."
+  ],
+  "original_final_question": "Among Brooks, Willacy, Comal, Atascosa, and Victoria counties in Texas, keep those with at least one abuse/neglect-related child fatality and at least three non-abuse/neglect child fatality investigations between 2018 and 2022. From the remaining counties, find the one that is both in the top two for 2021 model-based drug poisoning death rates and in the bottom two for 2016 age-adjusted rate categories. Identify that county's seat, then the river it lies along, and finally the bay the river flows into. What is the bay's name? Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1,
+        2
+      ],
+      "title": "Filter The Candidate Counties",
+      "reasoning": [
+        "Node 1 retrieves counties among `Brooks`, `Willacy`, `Comal`, `Atascosa`, and `Victoria` whose summed `Abuse Neglect Fatalities` over `Fiscal Year` 2018-2022 are at least 1.",
+        "Node 2 retrieves counties among the same five whose summed `Non-Abuse/Neglect Fatalities Investigated` over `Fiscal Year` 2018-2022 are at least 3.",
+        "Hop result: intersecting nodes 1 and 2 yields `Victoria`, `Comal`, and `Willacy`."
+      ],
+      "answer": [
+        "Victoria",
+        "Comal",
+        "Willacy"
+      ]
+    },
+    {
+      "hop": 2,
+      "node_ids": [
+        3,
+        4
+      ],
+      "title": "Apply The Drug-Poisoning Criteria",
+      "reasoning": [
+        "Node 3 retrieves the top two counties from `<hop 1 answer>` by 2021 `Model-based Death Rate`.",
+        "Node 4 retrieves the bottom two counties from `<hop 1 answer>` by 2016 `Estimated Age-adjusted Death Rate, 16 Categories (in ranges)` using the category lower bound.",
+        "Hop result: intersecting nodes 3 and 4 yields `Victoria County`."
+      ],
+      "answer": "Victoria County"
+    },
+    {
+      "hop": 3,
+      "node_ids": [
+        5
+      ],
+      "title": "Find The County Seat",
+      "reasoning": [
+        "Node 5 retrieves the county seat of `<hop 2 answer>`.",
+        "Hop result: `Victoria`."
+      ],
+      "answer": "Victoria"
+    },
+    {
+      "hop": 4,
+      "node_ids": [
+        6
+      ],
+      "title": "Find The River",
+      "reasoning": [
+        "Node 6 retrieves the river that `<hop 3 answer>` lies along.",
+        "Hop result: `Guadalupe River`."
+      ],
+      "answer": "Guadalupe River"
+    },
+    {
+      "hop": 5,
+      "node_ids": [
+        7
+      ],
+      "title": "Find The Bay",
+      "reasoning": [
+        "Node 7 retrieves the bay on the Gulf Coast that `<hop 4 answer>` flows into.",
+        "Hop result: `San Antonio Bay`."
+      ],
+      "answer": "San Antonio Bay"
+    }
+  ]
+}

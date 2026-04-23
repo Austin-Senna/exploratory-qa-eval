@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "task_id": "tasks_core/k-4-d-4/task_3.json",
+  "source_task": "tasks_core/k-4-d-4/task_3.json",
+  "source_verdict": null,
+  "question": "Identify Texas counties with highway construction expenditures between $150 million and $500 million consistently across fiscal years 2018 through 2021. Among those that also had fewer than 15,000 VA disability compensation recipients in FY 2023 and whose county seat name differs from the county name, who founded the first permanent settlement in that county seat, and in what year was the Texas county named after that founder created? Report the year only. Your response should be in the format [Answer].",
+  "heuristic_flags": {
+    "question_text_anomaly": false,
+    "question_text_anomaly_notes": [],
+    "has_explicit_answer_placeholders": true
+  },
+  "estimated_dataset_count": 9,
+  "estimated_min_tool_calls": 18,
+  "estimated_nice_tool_calls": 27,
+  "tool_call_budget_bucket": "within_budget_comfortably",
+  "quality_bucket": "low",
+  "derivability_bucket": "broken",
+  "difficulty_bucket": "unclear",
+  "overall_recommendation": "revise_or_drop",
+  "issue_labels": [
+    "unsupported_step"
+  ],
+  "strengths": [
+    "The multi-year expenditure and recipient filters are explicit and affordable.",
+    "The county-seat name check is clearly motivated by the question."
+  ],
+  "concerns": [
+    "The settlement source names Henry Lawrence Kinney and William P. Aubrey, but the chain selects only Kinney without justification.",
+    "The final county-naming year depends on that unsupported founder choice, so the answer path is not uniquely derived."
+  ],
+  "rationale": "The task stays within budget and most of the narrowing path is faithful to the question, but the decisive founder hop is not cleanly derivable from the cited evidence. Because the artifact presents two founders and then advances only one into the final lookup, the last answer depends on an injected choice rather than a uniquely supported chain.",
+  "suggested_fix": "Disambiguate the founder step explicitly or replace it with a source that identifies a single intended founder."
+}

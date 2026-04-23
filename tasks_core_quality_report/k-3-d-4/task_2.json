@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "task_id": "tasks_core/k-3-d-4/task_2.json",
+  "source_task": "tasks_core/k-3-d-4/task_2.json",
+  "source_verdict": null,
+  "question": "Can you tell me which senior high school had a consistently top 3 number of violent/disruptive incident reported between 2010 and 2014? The borough containing that school also has a suspension bridge that connects to NYC, what is the name of that suspension bridge?. Your response should be in the format [Answer].",
+  "heuristic_flags": {
+    "question_text_anomaly": true,
+    "question_text_anomaly_notes": [
+      "malformed punctuation in question text"
+    ],
+    "has_explicit_answer_placeholders": true
+  },
+  "estimated_dataset_count": 14,
+  "estimated_min_tool_calls": 28,
+  "estimated_nice_tool_calls": 42,
+  "tool_call_budget_bucket": "within_budget_tight",
+  "quality_bucket": "low",
+  "derivability_bucket": "strained",
+  "difficulty_bucket": "unclear",
+  "overall_recommendation": "revise_or_drop",
+  "issue_labels": [
+    "answer_path_leakage",
+    "unsupported_step"
+  ],
+  "strengths": [
+    "Task has a multi-hop structure that could be benchmark-worthy once leakage is removed."
+  ],
+  "concerns": [
+    "Question text has surface punctuation/typo issues that reduce clarity.",
+    "Reasoning text contains literal hop outcomes (not placeholders), which can short-circuit the intended work.",
+    "High dataset count makes the tool-call budget borderline (tight) even if execution is efficient."
+  ],
+  "rationale": "The task includes leakage in its reasoning text that reveals intermediate or final results, weakening benchmark integrity. Its dataset fan-out is also borderline for a 30-call budget, increasing brittleness.",
+  "suggested_fix": "Replace literal hop outcomes / named survivors in reasoning text with <node_X answer>/<hop Y answer> placeholders; keep derivations but avoid spelling out winners."
+}

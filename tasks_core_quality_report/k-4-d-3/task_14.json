@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "task_id": "tasks_core/k-4-d-3/task_14.json",
+  "source_task": "tasks_core/k-4-d-3/task_14.json",
+  "source_verdict": null,
+  "question": "Among Washington, DC wards 2 and 5, identify which ward had more scheduled street-cleaning events from 2022 to 2024. In that ward, find the charter school whose serving spans grades 8 and 9, and is named after a famous person. What county is that person's birthplace located in? Please return the county only, i.e. `XX County`. Your response should be in the format [Answer].",
+  "heuristic_flags": {
+    "question_text_anomaly": false,
+    "question_text_anomaly_notes": [],
+    "has_explicit_answer_placeholders": true
+  },
+  "estimated_dataset_count": 6,
+  "estimated_min_tool_calls": 12,
+  "estimated_nice_tool_calls": 18,
+  "tool_call_budget_bucket": "within_budget_comfortably",
+  "quality_bucket": "high",
+  "derivability_bucket": "clean",
+  "difficulty_bucket": "core",
+  "overall_recommendation": "core_keep",
+  "issue_labels": [],
+  "strengths": [
+    "Question implies a coherent ward-to-school-to-person-to-county chain.",
+    "Budget stays comfortable at six datasets."
+  ],
+  "concerns": [
+    "Hop 1 reports averages rather than total event counts, though the ranking is unchanged.",
+    "Hop 2 does not explicitly state that the selected school satisfies the famous-person naming clue."
+  ],
+  "rationale": "The task is internally coherent and the answer target is clear. The yearly ward counts cleanly support Ward 5, and the follow-on path from the ward to a qualifying charter school and then to the namesake's birthplace county is short and interpretable. The rough edges are presentation issues rather than structural breaks: hop 1 uses an average framing instead of a total-over-years framing, and hop 2 could make the namesake criterion explicit.",
+  "suggested_fix": "Use summed 2022-2024 counts in hop 1 and explicitly note that Sojourner Truth PCS is the famous-person-named school."
+}

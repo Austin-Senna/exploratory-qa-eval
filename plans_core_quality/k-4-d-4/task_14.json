@@ -1,0 +1,100 @@
+{
+  "dataset_sequence": [
+    "child-and-adult-care-food-programs-cacfp-adult-day-care-centers-meal-reimbursement-pr-2016",
+    "child-and-adult-care-food-programs-cacfp-adult-day-care-centers-meal-reimbursement-pr-2017",
+    "child-and-adult-care-food-programs-cacfp-adult-day-care-centers-meal-reimbursement-pr-2018",
+    "child-and-adult-care-food-programs-cacfp-adult-day-care-centers-meal-reimbursement-pr-2019",
+    "ocs-1-1-abuse-neglect-related-texas-child-fatalities-fy2013-fy2022",
+    "ocs-1-2-non-abuse-neglect-related-texas-child-fatality-investigations-fy2013-fy2022",
+    "nchs-drug-poisoning-mortality-by-county-united-states",
+    "nchs-drug-poisoning-mortality-by-county-united-states-20278",
+    "Victoria_County,_Texas"
+  ],
+  "source_sequence": [
+    "datagov/child-and-adult-care-food-programs-cacfp-adult-day-care-centers-meal-reimbursement-pr-2016/files/rows.txt",
+    "datagov/child-and-adult-care-food-programs-cacfp-adult-day-care-centers-meal-reimbursement-pr-2017/files/rows.txt",
+    "datagov/child-and-adult-care-food-programs-cacfp-adult-day-care-centers-meal-reimbursement-pr-2018/files/rows.txt",
+    "datagov/child-and-adult-care-food-programs-cacfp-adult-day-care-centers-meal-reimbursement-pr-2019/files/rows.txt",
+    "datagov/ocs-1-1-abuse-neglect-related-texas-child-fatalities-fy2013-fy2022/files/rows.txt",
+    "datagov/ocs-1-2-non-abuse-neglect-related-texas-child-fatality-investigations-fy2013-fy2022/files/rows.txt",
+    "datagov/nchs-drug-poisoning-mortality-by-county-united-states/files/rows.txt",
+    "datagov/nchs-drug-poisoning-mortality-by-county-united-states-20278/files/rows.txt",
+    "wikipedia/Victoria_County,_Texas/content.txt"
+  ],
+  "reasoning_chain_text": [
+    "1. Determine Texas county totals for adult day care meal reimbursements in program year 2016-2017.",
+    "2. Determine Texas county totals for adult day care meal reimbursements in program year 2017-2018.",
+    "3. Determine Texas county totals for adult day care meal reimbursements in program year 2018-2019.",
+    "4. Using 2019-2020 reimbursements, keep counties whose average reimbursement across 2016-2017 through 2019-2020 is at least $50,000 and that have the five largest percentage drops over that span.",
+    "5. From those counties, keep only the ones with at least one abuse-neglect-related child fatality and at least three non-abuse-neglect child fatality investigations between 2018 and 2022.",
+    "6. Among the remaining counties, determine the two with the highest 2021 model-based drug poisoning death rates.",
+    "7. Using the 2016 age-adjusted rate categories, keep the county that is also among the bottom two for that year.",
+    "8. Return the county seat of that county."
+  ],
+  "original_final_question": "Across 2016-17 through 2019-20, start with Texas counties that averaged at least $50,000 in adult day care meal reimbursements and had the five largest percentage drops over that span. From those five, keep only counties with at least one abuse/neglect-related child fatality and at least three non-abuse/neglect child fatality investigations between 2018 and 2022. Among the remaining counties, find the one that is both in the top two for 2021 model-based drug poisoning death rates and in the bottom two for 2016 age-adjusted rate categories. What is the county seat of that county? Return the county seat name only. Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "reasoning": [
+        "Node 1: For program year `2016-2017`, group rows by `SiteCounty`, sum `TotalReimbursement`, and keep the full `SiteCounty` -> reimbursement mapping.",
+        "Node 2: For program year `2017-2018`, group rows by `SiteCounty`, sum `TotalReimbursement`, and keep the full `SiteCounty` -> reimbursement mapping.",
+        "Node 3: For program year `2018-2019`, group rows by `SiteCounty`, sum `TotalReimbursement`, and keep the full `SiteCounty` -> reimbursement mapping.",
+        "Node 4: For program year `2019-2020`, group rows by `SiteCounty`, sum `TotalReimbursement`, and keep the full `SiteCounty` -> reimbursement mapping; treat counties missing in node 4 as `0` in the cross-year comparison.",
+        "Hop result: merge the yearly reimbursement mappings from nodes 1-4 over the union of counties, keep counties whose 2016-2019 average reimbursement is at least `50000`, compute the percentage drop from `2016-2017` to `2019-2020`, and keep the five largest drops -> `Brooks County`, `Willacy County`, `Comal County`, `Atascosa County`, `Victoria County`."
+      ],
+      "answer": [
+        "Brooks County",
+        "Willacy County",
+        "Comal County",
+        "Atascosa County",
+        "Victoria County"
+      ]
+    },
+    {
+      "hop": 2,
+      "node_ids": [
+        5,
+        6
+      ],
+      "reasoning": [
+        "Node 5: Among the counties from <hop 1 answer>, keep the counties with at least `1` `Abuse Neglect Fatalities` total from fiscal years `2018` through `2022`.",
+        "Node 6: Among the counties from <hop 1 answer>, keep the counties with at least `3` `Non-Abuse/Neglect Fatalities Investigated` total from fiscal years `2018` through `2022`.",
+        "Hop result: intersect the qualifying county sets from nodes 5-6 -> `Willacy County`, `Comal County`, `Victoria County`."
+      ],
+      "answer": [
+        "Willacy County",
+        "Comal County",
+        "Victoria County"
+      ]
+    },
+    {
+      "hop": 3,
+      "node_ids": [
+        7,
+        8
+      ],
+      "reasoning": [
+        "Node 7: Among the counties from <hop 2 answer>, sort by `Model-based Death Rate` descending for `Year` `2021` and keep the top 2 counties.",
+        "Node 8: Among the counties from <hop 2 answer>, extract the first number in `Estimated Age-adjusted Death Rate, 16 Categories (in ranges)` as the lower end of each rate range for `Year` `2016`, sort ascending, and keep the bottom 2 counties.",
+        "Hop result: intersect the county sets from nodes 7-8 -> `Victoria County`."
+      ],
+      "answer": "Victoria County"
+    },
+    {
+      "hop": 4,
+      "node_ids": [
+        9
+      ],
+      "reasoning": [
+        "Node 9: The Victoria County source states `Victoria County's county seat is Victoria.`"
+      ],
+      "answer": "Victoria"
+    }
+  ]
+}

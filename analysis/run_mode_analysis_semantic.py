@@ -1725,6 +1725,28 @@ def _plot_grouped_metrics_bars(
     plt.close(fig)
 
 
+def _plot_discovery_semantic_combined(plt, summary_rows: List[dict], output_path: Path) -> None:
+    if not summary_rows:
+        return
+    ordered_rows = sorted(
+        summary_rows,
+        key=lambda row: _condition_model_sort_key(_cm_key(str(row.get("model", "")), str(row.get("variant", "")))),
+    )
+    _plot_grouped_metrics_bars(
+        plt,
+        ordered_rows,
+        fields=[
+            ("D_ret", "D_ret", "#4C78A8"),
+            ("D_acc", "D_acc", "#F58518"),
+            ("semantic_match", "Semantic Match", "#54A24B"),
+        ],
+        label_fn=_pretty_cm_from_row,
+        title="Discovery Coverage & Semantic Match by Variant × Model",
+        y_label="Rate (%)",
+        output_path=output_path,
+    )
+
+
 def _plot_discovery_panels_for_model(plt, rows: List[dict], model: str, output_path: Path) -> None:
     if not rows:
         return
@@ -2070,6 +2092,8 @@ def _plot_stacked_buckets_on_ax(
     title: str,
     show_legend: bool = True,
     label_min_pct: float = 6.0,
+    rate_field_suffix: Optional[str] = None,
+    annotate_counts: bool = True,
 ) -> None:
     if not rows:
         return
@@ -2085,17 +2109,24 @@ def _plot_stacked_buckets_on_ax(
             total = float(row.get(total_field) or 0.0)
             count = float(row.get(bucket) or 0.0)
             counts.append(int(count))
-            heights.append((count / total) * 100.0 if total else 0.0)
+            if rate_field_suffix:
+                rate = float(row.get(f"{bucket}{rate_field_suffix}") or 0.0)
+                heights.append(rate * 100.0)
+            else:
+                heights.append((count / total) * 100.0 if total else 0.0)
         display_bucket = _display_semantic_bucket(bucket) if bucket in SEMANTIC_BUCKETS else _display_log_error_bucket(bucket)
         bars = ax.bar(x_positions, heights, bottom=bottoms, color=colors[bucket], label=display_bucket)
         label_color = _label_text_color(colors[bucket])
         for bar, height, count, bottom in zip(bars, heights, counts, bottoms):
             if count <= 0 or height < label_min_pct:
                 continue
+            label_text = f"{height:.0f}%"
+            if annotate_counts:
+                label_text += f"\n({count})"
             ax.text(
                 bar.get_x() + bar.get_width() / 2,
                 bottom + height / 2,
-                f"{height:.0f}%\n({count})",
+                label_text,
                 ha="center",
                 va="center",
                 fontsize=8,
@@ -2322,7 +2353,7 @@ def generate_figures(
 
     _plot_stacked_buckets_on_ax  # keep referenced for lint happiness
 
-    _plot_stacked_buckets = lambda rows, buckets, colors, label_fn, total_field, title, path, label_min_pct=6.0: (
+    _plot_stacked_buckets = lambda rows, buckets, colors, label_fn, total_field, title, path, label_min_pct=6.0, rate_field_suffix=None, annotate_counts=True: (
         (lambda fig, ax: (
             _plot_stacked_buckets_on_ax(
                 ax,
@@ -2334,6 +2365,8 @@ def generate_figures(
                 title=title,
                 show_legend=True,
                 label_min_pct=label_min_pct,
+                rate_field_suffix=rate_field_suffix,
+                annotate_counts=annotate_counts,
             ),
             fig.tight_layout(rect=(0, 0, 0.84, 1)),
             fig.savefig(path),
@@ -2357,10 +2390,12 @@ def generate_figures(
         variant_rows,
         DISPLAY_LOG_ERROR_BUCKETS,
         LOG_ERROR_BUCKET_COLORS,
-        lambda row: _pretty_variant_tick_label(str(row.get("variant", "")), int(row.get("n_total", 0) or 0)),
+        lambda row: _compact_variant_label(str(row.get("variant", "")), multiline=True),
         "n_total",
         "Log Error Bucket Distribution by Variant",
         fig_dir / "fig02_log_error_buckets_variant.pdf",
+        rate_field_suffix="_rate",
+        annotate_counts=False,
     )
     _plot_variant_crosstab_heatmap(
         plt,
@@ -2387,6 +2422,12 @@ def generate_figures(
         label_fn=lambda row: _compact_variant_label(str(row.get("variant", "")), multiline=True),
         title="Semantic Match by Variant × Model",
         output_path=fig_dir / "fig1_semantic_comparison.pdf",
+    )
+
+    _plot_discovery_semantic_combined(
+        plt,
+        summary_rows,
+        fig_dir / "fig2a_recall_semantic_combined.pdf",
     )
 
     _plot_grouped_metrics_bars(
@@ -2489,7 +2530,6 @@ def generate_figures(
     generate_search_bottleneck_figures(
         search_bottleneck,
         output_dir,
-        include_tool_first_hit=False,
         include_condition_breakouts=True,
         condition_label_formatter=lambda row: _compact_variant_label(str(row.get("variant", ""))),
     )

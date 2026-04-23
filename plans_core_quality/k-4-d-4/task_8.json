@@ -1,0 +1,88 @@
+{
+  "dataset_sequence": [
+    "2007-state-expenditures",
+    "2008-state-expenditures",
+    "2009-state-expenditures",
+    "2010-state-expenditures",
+    "Missouri_Department_of_Transportation",
+    "Springfield,_Missouri",
+    "500-cities-local-data-for-better-health-2016-release",
+    "500-cities-local-data-for-better-health-2018-release"
+  ],
+  "source_sequence": [
+    "datagov/2007-state-expenditures/files/rows.txt",
+    "datagov/2008-state-expenditures/files/rows.txt",
+    "datagov/2009-state-expenditures/files/rows.txt",
+    "datagov/2010-state-expenditures/files/rows.txt",
+    "wikipedia/Missouri_Department_of_Transportation/content.txt",
+    "wikipedia/Springfield,_Missouri/content.txt",
+    "datagov/500-cities-local-data-for-better-health-2016-release/files/rows.txt",
+    "datagov/500-cities-local-data-for-better-health-2018-release/files/rows.txt"
+  ],
+  "reasoning_chain_text": [
+    "1. Identify Missouri state agencies with the highest spending levels in fiscal year 2007.",
+    "2. Identify Missouri state agencies with the highest spending levels in fiscal year 2008.",
+    "3. Identify Missouri state agencies with the highest spending levels in fiscal year 2009.",
+    "4. Using fiscal year 2010 spending data, determine which Missouri state agency ranks third by average spending from 2007 to 2010.",
+    "5. Determine the city where that agency's Southwest district is based.",
+    "6. Using that city, identify the highway born there and its two terminus cities.",
+    "7. In the 2016 city health data, compare binge drinking prevalence for those two terminus cities.",
+    "8. Using the 2018 city health data, combine the 2016 and 2018 results to return the terminus city with the lower average binge drinking prevalence."
+  ],
+  "original_final_question": "Find the Missouri state agency that ranked third in average spending from 2007 to 2010. In which city is its Southwest district based, and which highway was born there? Between that highway's two terminus cities, which one had the lower average binge drinking prevalence across the 2016 and 2018 releases? Return the city name only. Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "reasoning": [
+        "Node 1: For FY2007, group rows by `agency_name`, sum `payments_total`, and keep the full `agency_name` -> total expenditure mapping.",
+        "Node 2: For FY2008, group rows by `Agency Name`, sum `Payments Total`, and keep the full `Agency Name` -> total expenditure mapping.",
+        "Node 3: For FY2009, group rows by `Agency Name`, sum `Payments Total`, and keep the full `Agency Name` -> total expenditure mapping.",
+        "Node 4: For FY2010, group rows by `Agency Name`, sum `Payments Total`, and keep the full `Agency Name` -> total expenditure mapping.",
+        "Hop result: compare the cross-year average expenditure for each agency using the full per-year agency totals from nodes 1-4; `TRANSPORTATION` ranks third on that average, corresponding to Missouri Department of Transportation."
+      ],
+      "answer": "Missouri Department of Transportation"
+    },
+    {
+      "hop": 2,
+      "node_ids": [
+        5
+      ],
+      "reasoning": [
+        "Node 5: The Missouri Department of Transportation source states that the Southwest district is based in Springfield."
+      ],
+      "answer": "Springfield"
+    },
+    {
+      "hop": 3,
+      "node_ids": [
+        6
+      ],
+      "reasoning": [
+        "Node 6: Springfield is described as the birthplace of Route 66, which the source identifies as the Chicago-to-Los Angeles highway."
+      ],
+      "answer": [
+        "Chicago",
+        "Los Angeles"
+      ]
+    },
+    {
+      "hop": 4,
+      "node_ids": [
+        7,
+        8
+      ],
+      "reasoning": [
+        "Node 7: For the cities from <hop 3 answer>, keep `CityName` -> `Data_Value` where `Short_Question_Text` equals `Binge Drinking`, `GeographicLevel` equals `City`, and `DataValueTypeID` equals `CrdPrv` in the 2016 release.",
+        "Node 8: For the cities from <hop 3 answer>, keep `CityName` -> `Data_Value` where `Short_Question_Text` equals `Binge Drinking`, `GeographicLevel` equals `City`, and `DataValueTypeID` equals `CrdPrv` in the 2018 release.",
+        "Hop result: Chicago averages (20.1 + 21.5) / 2 = 20.8, Los Angeles averages (15.9 + 16.7) / 2 = 16.3, so Los Angeles has the lower average binge drinking prevalence."
+      ],
+      "answer": "Los Angeles"
+    }
+  ]
+}

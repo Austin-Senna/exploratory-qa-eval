@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "task_id": "tasks_core/k-6-d-4/task_1.json",
+  "source_task": "tasks_core/k-6-d-4/task_1.json",
+  "source_verdict": "pass",
+  "question": "Among the five Texas counties with the highest average annual number of state prison releases from 2019 to 2022, identify the one with the most consistent annual releases based on coefficient of variation. Its county seat has an NBA champion team based in it. Now, find the county that hosts the team defeated by this champion in its first NBA championship. In 2020, what was the absolute difference between the number of firearm crimes and hate crimes reported in that county? Only report that number in your answer. Your response should be in the format [Answer].",
+  "heuristic_flags": {
+    "question_text_anomaly": false,
+    "question_text_anomaly_notes": [],
+    "has_explicit_answer_placeholders": true
+  },
+  "estimated_dataset_count": 11,
+  "estimated_min_tool_calls": 22,
+  "estimated_nice_tool_calls": 33,
+  "tool_call_budget_bucket": "within_budget_tight",
+  "quality_bucket": "medium",
+  "derivability_bucket": "strained",
+  "difficulty_bucket": "core",
+  "overall_recommendation": "keep_noncore",
+  "issue_labels": [
+    "format_noise"
+  ],
+  "strengths": [
+    "The final target and required output format are explicit.",
+    "The hop structure provides a plausible narrowing and lookup path from the question."
+  ],
+  "concerns": [
+    "Answer placeholders and/or embedded execution snippets add avoidable surface noise."
+  ],
+  "rationale": "The task is generally coherent and the answer target is clear, but the derivation relies on a fairly long or contrived bridge chain that can be brittle in a benchmark setting. It looks usable with cleanup, but it is not an ideal core-slice item as-is.",
+  "suggested_fix": "Tighten the question wording and make the key narrowing/comparison steps explicit; remove placeholder-heavy phrasing where possible."
+}

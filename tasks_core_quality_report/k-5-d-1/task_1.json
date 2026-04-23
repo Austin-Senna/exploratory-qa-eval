@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "task_id": "tasks_core/k-5-d-1/task_1.json",
+  "source_task": "tasks_core/k-5-d-1/task_1.json",
+  "source_verdict": null,
+  "question": "I am researching the capital of Texas. In 2023, which police sector had the highest number of searches? Within that specific sector, which council district saw the most incidents logged through the police dispatch system? Finally, for the sector that had the most force-applying incidents in that council district, how many total complaints were filed in 2024? Only report the number of complaints. Your response should be in the format [Answer].",
+  "heuristic_flags": {
+    "question_text_anomaly": false,
+    "question_text_anomaly_notes": [],
+    "has_explicit_answer_placeholders": true
+  },
+  "estimated_dataset_count": 5,
+  "estimated_min_tool_calls": 10,
+  "estimated_nice_tool_calls": 15,
+  "tool_call_budget_bucket": "within_budget_comfortably",
+  "quality_bucket": "high",
+  "derivability_bucket": "clean",
+  "difficulty_bucket": "core",
+  "overall_recommendation": "core_keep",
+  "issue_labels": [],
+  "strengths": [
+    "Coherent multi-hop chain with clear handoffs between sector, district, and sector again.",
+    "Five datasets keeps the task comfortably within the intended core budget."
+  ],
+  "concerns": [
+    "The opening capital-of-Texas clue is slightly indirect because the task then pivots to Austin/APD-specific data."
+  ],
+  "rationale": "The artifact is internally consistent and the main path is derivable from the question: identify Austin, find the top search sector in 2023, find the busiest dispatch district within that sector, find the top use-of-force sector within that district, then read 2024 complaints for that sector. With 5 datasets, the rough budget is 10-15 tool calls, so cost is well within core range. The only mild roughness is the implicit Austin-to-APD bridge in the opening setup, but it does not create a broken or injected reasoning path.",
+  "suggested_fix": "Optionally name Austin or the Austin Police Department explicitly in the opening sentence to remove the small APD inference step."
+}

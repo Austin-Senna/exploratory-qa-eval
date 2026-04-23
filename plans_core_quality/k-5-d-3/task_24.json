@@ -1,0 +1,91 @@
+{
+  "dataset_sequence": [
+    "2001-2018-shelter-rentals",
+    "bloomington-sidewalk-inventory-e34a7",
+    "bloomington-volunteer-network-partner-organizations",
+    "address-points-bloomington-f180c",
+    "iu-campus-area-fef86",
+    "bloomington-municipal-boundary-e8f0c",
+    "bloomington-2-mile-fringe-3e0d2"
+  ],
+  "source_sequence": [
+    "datagov/2001-2018-shelter-rentals/files/rows.txt",
+    "datagov/bloomington-sidewalk-inventory-e34a7/files/rows.txt",
+    "datagov/bloomington-volunteer-network-partner-organizations/files/rows.txt",
+    "datagov/address-points-bloomington-f180c/files/rows.txt",
+    "datagov/iu-campus-area-fef86/files/rows.txt",
+    "datagov/bloomington-municipal-boundary-e8f0c/files/rows.txt",
+    "datagov/bloomington-2-mile-fringe-3e0d2/files/rows.txt"
+  ],
+  "reasoning_chain_text": [
+    "1. Identify the Bryan Park shelter with the most rentals between 2001 and 2018.",
+    "2. Using the avenue in that shelter's name, determine which direction has the greater recorded sidewalk length.",
+    "3. On that avenue segment, identify the volunteer partner address.",
+    "4. Determine the coordinates of that address.",
+    "5. Determine whether that address falls inside the campus boundary, the city boundary, and the two-mile fringe.",
+    "6. Return how many of those three boundaries contain the address."
+  ],
+  "original_final_question": "Starting with the Bryan Park shelter that had the most rentals between 2001 and 2018, follow the avenue in its name to the direction with the most recorded sidewalk length. Find the volunteer partner address on that segment, then check whether that address falls inside each of three boundaries: the campus boundary, the city boundary, and the surrounding two-mile fringe. How many of the three boundaries contain the address? Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1
+      ],
+      "reasoning": [
+        "Node 1: Across the full 2001-2018 Bloomington shelter-rentals file, Woodlawn Bryan Park recorded 1,473 rentals, ahead of Henderson Bryan Park with 1,384 and North Bryan Park with 1,165.",
+        "Hop result: <node_1 answer>"
+      ],
+      "answer": "Woodlawn Bryan Park"
+    },
+    {
+      "hop": 2,
+      "node_ids": [
+        2
+      ],
+      "reasoning": [
+        "Node 2: In the Bloomington sidewalk inventory, N Woodlawn AVE has 6,868.8 feet of recorded sidewalk, ahead of S Woodlawn AVE with 5,165.8 feet.",
+        "Hop result: <node_2 answer>"
+      ],
+      "answer": "N Woodlawn AVE"
+    },
+    {
+      "hop": 3,
+      "node_ids": [
+        3
+      ],
+      "reasoning": [
+        "Node 3: On N Woodlawn AVE, Bloomington's volunteer partner file lists one matching street address: 700 N Woodlawn Ave.",
+        "Hop result: <node_3 answer>"
+      ],
+      "answer": "700 N Woodlawn AVE"
+    },
+    {
+      "hop": 4,
+      "node_ids": [
+        4
+      ],
+      "reasoning": [
+        "Node 4: In Bloomington's address records, 700 N Woodlawn AVE is listed at latitude 39.17274244 and longitude -86.52314395.",
+        "Hop result: <node_4 answer>"
+      ],
+      "answer": "39.17274244, -86.52314395"
+    },
+    {
+      "hop": 5,
+      "node_ids": [
+        5,
+        6,
+        7
+      ],
+      "reasoning": [
+        "Node 5: In the IU campus-area layer, the coordinates fall in Indiana University Campus.",
+        "Node 6: In the municipal-boundary layer, the coordinates fall in Bloomington.",
+        "Node 7: In the 2-mile-fringe layer, the coordinates fall in 2 Mile Fringe.",
+        "So all 3 listed area layers contain the location.",
+        "Hop result: 3"
+      ],
+      "answer": "3"
+    }
+  ]
+}

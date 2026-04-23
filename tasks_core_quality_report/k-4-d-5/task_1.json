@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "task_id": "tasks_core/k-4-d-5/task_1.json",
+  "source_task": "tasks_core/k-4-d-5/task_1.json",
+  "source_verdict": null,
+  "question": "I'm researching upstate New York counties (excluding New York City and the Adirondack/Catskill preserves) that strike a balance between conservation and public amenities. Specifically, I'm looking for the two counties that each have at least 3 state parks, 6 farmers markets, and 40 endangered species, while also recording between 800,000 and 2 million state park visitors in 2019 and receiving $10M-$35M in lottery-funded education aid in 2019-2020. For the county among these two with the higher 2020 violent crime count, in what year was the historic Paddock Arcade built in its county seat? Your response should be in the format [Answer].",
+  "heuristic_flags": {
+    "question_text_anomaly": false,
+    "question_text_anomaly_notes": [],
+    "has_explicit_answer_placeholders": true
+  },
+  "estimated_dataset_count": 9,
+  "estimated_min_tool_calls": 18,
+  "estimated_nice_tool_calls": 27,
+  "tool_call_budget_bucket": "within_budget_comfortably",
+  "quality_bucket": "low",
+  "derivability_bucket": "broken",
+  "difficulty_bucket": "unclear",
+  "overall_recommendation": "revise_or_drop",
+  "issue_labels": [
+    "internal_inconsistency",
+    "unsupported_step"
+  ],
+  "strengths": [
+    "Dataset count keeps the nominal tool budget affordable.",
+    "The intended county-filtering structure is explicit."
+  ],
+  "concerns": [
+    "Hop 1 selects Jefferson and Tompkins even though several visible node answer lists are truncated, so the intersection is not derivable from the artifact.",
+    "The final hop answers the county seat's city-incorporation year rather than the question's requested Paddock Arcade construction year."
+  ],
+  "rationale": "The task is affordable on budget, but it is not reliable enough for core use. A central intermediate result is effectively injected because the visible node outputs do not support the stated two-county intersection, and the last step changes the target entity from Paddock Arcade to city incorporation. Those two breaks make the reasoning chain non-faithful to the question.",
+  "suggested_fix": "Show complete qualifying county outputs for the intersection and replace the last lookup with a sourced Paddock Arcade build-year node."
+}

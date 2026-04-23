@@ -1,0 +1,101 @@
+{
+  "dataset_sequence": [
+    "texas-department-of-criminal-justice-releases-fy-2019",
+    "texas-department-of-criminal-justice-releases-fy-2020",
+    "texas-department-of-criminal-justice-releases-fy-2021",
+    "texas-department-of-criminal-justice-receives-fy-2019",
+    "texas-department-of-criminal-justice-receives-fy-2020",
+    "texas-department-of-criminal-justice-receives-fy-2021",
+    "Harris_County,_Texas",
+    "Houston",
+    "Houston_Rockets"
+  ],
+  "source_sequence": [
+    "datagov/texas-department-of-criminal-justice-releases-fy-2019/files/rows.txt",
+    "datagov/texas-department-of-criminal-justice-releases-fy-2020/files/rows.txt",
+    "datagov/texas-department-of-criminal-justice-releases-fy-2021/files/rows.txt",
+    "datagov/texas-department-of-criminal-justice-receives-fy-2019/files/rows.txt",
+    "datagov/texas-department-of-criminal-justice-receives-fy-2020/files/rows.txt",
+    "datagov/texas-department-of-criminal-justice-receives-fy-2021/files/rows.txt",
+    "wikipedia/Harris_County,_Texas/content.txt",
+    "wikipedia/Houston/content.txt",
+    "wikipedia/Houston_Rockets/content.txt"
+  ],
+  "reasoning_chain_text": [
+    "1. For 2019, 2020, and 2021, identify which of Harris, Travis, Dallas, and Bexar counties ranked in the statewide top five for offender releases, and keep the counties that qualified in all three years.",
+    "2. For those counties, compare average annual intake counts across 2019, 2020, and 2021 and keep the county with the highest average.",
+    "3. Determine the county seat of that county.",
+    "4. Identify the National Basketball Association franchise that has been based in that city since 1971.",
+    "5. Return who founded that franchise."
+  ],
+  "original_final_question": "Consider Harris, Travis, Dallas, and Bexar counties. Determine which of these consistently ranked in the statewide top five for offender releases from the Department of Criminal Justice from 2019 to 2021. Among those, compute the average annual intake counts from the Department of Criminal Justice over 2019-2021 and identify the county with the highest average. Its county seat has been home to a National Basketball Association franchise since 1971. Who founded that franchise? Return the name only. Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    {
+      "hop_id": 1,
+      "node_ids": [
+        1,
+        2,
+        3
+      ],
+      "reasoning": [
+        "Node 1: Convert `County` to uppercase, group FY 2019 release rows by `County`, count rows, sort descending, keep the statewide top five counties, and return the overlap with Harris, Travis, Dallas, and Bexar.",
+        "Node 2: Convert `County` to uppercase, group FY 2020 release rows by `County`, count rows, sort descending, keep the statewide top five counties, and return the overlap with Harris, Travis, Dallas, and Bexar.",
+        "Node 3: Convert `County` to uppercase, group FY 2021 release rows by `County`, count rows, sort descending, keep the statewide top five counties, and return the overlap with Harris, Travis, Dallas, and Bexar.",
+        "Hop result: intersect the three yearly overlap sets to keep the counties that were top five for releases in all three years: Harris, Dallas, and Bexar."
+      ],
+      "answer": [
+        "Harris",
+        "Dallas",
+        "Bexar"
+      ]
+    },
+    {
+      "hop_id": 2,
+      "node_ids": [
+        4,
+        5,
+        6
+      ],
+      "reasoning": [
+        "Node 4: Convert `County` to uppercase, filter FY 2019 intake rows where `County` is one of <hop 1 answer>, group by `County`, count rows, and return the yearly intake mapping.",
+        "Node 5: Convert `County` to uppercase, filter FY 2020 intake rows where `County` is one of <hop 1 answer>, group by `County`, count rows, and return the yearly intake mapping.",
+        "Node 6: Convert `County` to uppercase, filter FY 2021 intake rows where `County` is one of <hop 1 answer>, group by `County`, count rows, and return the yearly intake mapping.",
+        "Hop result: average the three yearly intake counts and select Harris because it has the highest overall average."
+      ],
+      "answer": "Harris"
+    },
+    {
+      "hop_id": 3,
+      "node_ids": [
+        7
+      ],
+      "reasoning": [
+        "Node 7: Retrieve the county seat of <hop 2 answer>.",
+        "Hop result: the county seat is Houston."
+      ],
+      "answer": "Houston"
+    },
+    {
+      "hop_id": 4,
+      "node_ids": [
+        8
+      ],
+      "reasoning": [
+        "Node 8: Retrieve the National Basketball Association franchise based in <hop 3 answer> since 1971.",
+        "Hop result: the franchise is the Houston Rockets."
+      ],
+      "answer": "Houston Rockets"
+    },
+    {
+      "hop_id": 5,
+      "node_ids": [
+        9
+      ],
+      "reasoning": [
+        "Node 9: Retrieve who founded <hop 4 answer>.",
+        "Hop result: the founder is Robert Breitbard."
+      ],
+      "answer": "Robert Breitbard"
+    }
+  ]
+}

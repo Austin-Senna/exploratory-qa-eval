@@ -1,0 +1,77 @@
+{
+  "dataset_sequence": [
+    "ocs-1-1-abuse-neglect-related-texas-child-fatalities-fy2013-fy2022",
+    "ocs-1-2-non-abuse-neglect-related-texas-child-fatality-investigations-fy2013-fy2022",
+    "nchs-drug-poisoning-mortality-by-county-united-states",
+    "nchs-drug-poisoning-mortality-by-county-united-states-20278",
+    "Victoria_County,_Texas",
+    "public-utility-commission-of-texas-informal-complaints"
+  ],
+  "source_sequence": [
+    "datagov/ocs-1-1-abuse-neglect-related-texas-child-fatalities-fy2013-fy2022/files/rows.txt",
+    "datagov/ocs-1-2-non-abuse-neglect-related-texas-child-fatality-investigations-fy2013-fy2022/files/rows.txt",
+    "datagov/nchs-drug-poisoning-mortality-by-county-united-states/files/rows.txt",
+    "datagov/nchs-drug-poisoning-mortality-by-county-united-states-20278/files/rows.txt",
+    "wikipedia/Victoria_County,_Texas/content.txt",
+    "datagov/public-utility-commission-of-texas-informal-complaints/files/rows.txt"
+  ],
+  "reasoning_chain_text": [
+    "1. Among Willacy, Comal, Atascosa, and Victoria counties, keep the counties with at least one abuse- or neglect-related child death and at least three non-abuse-or-neglect child death investigations between 2018 and 2022.",
+    "2. From the counties that remain, identify which are among the two highest estimated 2021 fatal-overdose rates.",
+    "3. From those same counties, identify which are among the two lowest lower bounds of the 2016 fatal-overdose rate ranges.",
+    "4. Keep the county that appears in both step 2 and step 3.",
+    "5. Determine the county seat of that county.",
+    "6. For water-utility complaints filed in that city from 2021 through 2024, compute the average number of days between receipt and closure."
+  ],
+  "original_final_question": "Among Willacy, Comal, Atascosa, and Victoria counties in Texas, keep those with at least one child death linked to abuse or neglect and at least three child death investigations not linked to that cause between 2018 and 2022. From the remaining counties, find the one that appears both among the two counties with the highest estimated 2021 fatal-overdose rates, where the estimates come from a hierarchical Bayesian model with spatial and temporal random effects, and among the two counties with the lowest estimated 2016 fatal-overdose rate ranges after accounting for differences in population age structure, where the estimates come from a two-stage model that first estimates the chance of any such death and then estimates the death-rate level, using the lower bound of each reported range for comparison. Identify that county's seat, and then determine how many days on average it took to close water-utility complaint cases filed with the state regulator in that city across 2021-2024. Return only the average number of days rounded to two decimals. Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1,
+        2
+      ],
+      "reasoning": [
+        "Node 1: Filter rows where `County` is in {Willacy, Comal, Atascosa, Victoria} and `Fiscal Year` is between 2018 and 2022, sum `Abuse Neglect Fatalities` by `County`, and keep counties with totals at least 1.",
+        "Node 2: Filter rows where `County` is in {Willacy, Comal, Atascosa, Victoria} and `Fiscal Year` is between 2018 and 2022, sum `Non-Abuse/Neglect Fatalities Investigated` by `County`, and keep counties with totals at least 3.",
+        "Hop result: intersection = Willacy, Comal, Victoria"
+      ],
+      "answer": "Willacy, Comal, Victoria"
+    },
+    {
+      "hop": 2,
+      "node_ids": [
+        3,
+        4
+      ],
+      "reasoning": [
+        "Node 3: Filter rows where `Year` is 2021, `State` is Texas, and `County` is in {Comal County, TX, Victoria County, TX, Willacy County, TX}, sort by `Model-based Death Rate` descending, and keep the top 2 `County` values.",
+        "Node 4: Filter rows where `Year` is 2016, `State` is Texas, and `County` is in {Comal County, TX, Victoria County, TX, Willacy County, TX}, extract the first number in `Estimated Age-adjusted Death Rate, 16 Categories (in ranges)` as the lower end of each rate range, sort ascending by that value, and keep the top 2 `County` values.",
+        "Hop result: intersection = Victoria"
+      ],
+      "answer": "Victoria"
+    },
+    {
+      "hop": 3,
+      "node_ids": [
+        5
+      ],
+      "reasoning": [
+        "Node 5: Victoria is the county seat of Victoria County, Texas.",
+        "Hop result: Victoria"
+      ],
+      "answer": "Victoria"
+    },
+    {
+      "hop": 4,
+      "node_ids": [
+        6
+      ],
+      "reasoning": [
+        "Node 6: Filter rows where `Customer City` equals <hop 3 answer> normalized to uppercase, `Utility Type` equals WATER, and the `Date Received` year is between 2021 and 2024; keep rows with non-null `Date Received` and `Date Closed`, compute closure days from `Date Closed - Date Received`, and return the mean.",
+        "Hop result: 18.06"
+      ],
+      "answer": 18.06
+    }
+  ]
+}

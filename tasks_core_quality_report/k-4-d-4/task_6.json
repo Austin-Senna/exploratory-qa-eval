@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "task_id": "tasks_core/k-4-d-4/task_6.json",
+  "source_task": "tasks_core/k-4-d-4/task_6.json",
+  "source_verdict": null,
+  "question": "Which New York City middle schools located in Queens District 26 had (1) at least 50 offers to specialized high schools on specialized high school admissions test in every school year from 2015-19, and (2) are named after scientists. In what year was the research institute founded and first directed by the older of these two scientists? Please return the year only. Your response should be in the format [Answer].",
+  "heuristic_flags": {
+    "question_text_anomaly": false,
+    "question_text_anomaly_notes": [],
+    "has_explicit_answer_placeholders": true
+  },
+  "estimated_dataset_count": 10,
+  "estimated_min_tool_calls": 20,
+  "estimated_nice_tool_calls": 30,
+  "tool_call_budget_bucket": "within_budget_comfortably",
+  "quality_bucket": "medium",
+  "derivability_bucket": "strained",
+  "difficulty_bucket": "core",
+  "overall_recommendation": "keep_noncore",
+  "issue_labels": [
+    "weak_final_hop"
+  ],
+  "strengths": [
+    "The main filter path from yearly SHSAT thresholds to District 26 scientist namesakes is natural and stays within budget."
+  ],
+  "concerns": [
+    "The last hop replaces the question's 'founded and first directed by' condition with an institute merely named after the older scientist.",
+    "The artifact does not surface the full 21-school intersection, which makes the District 26 narrowing harder to audit from the task alone."
+  ],
+  "rationale": "The task is affordable and its main narrowing path is coherent, but the final lookup is not fully faithful to the question text. The chain identifies the institute through name association rather than the stated founded-and-first-directed condition, and the hidden full intersection makes the intermediate audit a bit brittle, so this looks usable but not clean enough for a core slice.",
+  "suggested_fix": "Make the final hop explicitly verify the institute was founded and first directed by the selected scientist, and surface the full intersected school set or its exact survivors before the District 26 filter."
+}

@@ -38,7 +38,7 @@ Each plan file must be JSON and must include these required fields:
 These fields are optional and ignored by ideal-mode loaders, but useful for review:
 
 - `original_final_question`: verbatim `question` copied from the source task file.
-- `original_reasoning_chain`: verbatim `reasoning_chain` copied from the source task file.
+- `original_reasoning_chain`: verbatim reasoning trace copied from the source task file, using `reasoning_chain` when present and otherwise `reasoning_hops`.
 
 ## Current behavior in `search_ideal.py`
 - `search_ideal` is the only search tool in ideal search mode.

@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "task_id": "tasks_core/k-1-d-1/task_1.json",
+  "source_task": "tasks_core/k-1-d-1/task_1.json",
+  "source_verdict": null,
+  "question": "Which year has the highest total number of individuals receiving regular unemployment insurance benefits starting from 2001? Your response should be in the format [Answer].",
+  "heuristic_flags": {
+    "question_text_anomaly": false,
+    "question_text_anomaly_notes": [],
+    "has_explicit_answer_placeholders": true
+  },
+  "estimated_dataset_count": 1,
+  "estimated_min_tool_calls": 2,
+  "estimated_nice_tool_calls": 3,
+  "tool_call_budget_bucket": "within_budget_comfortably",
+  "quality_bucket": "high",
+  "derivability_bucket": "clean",
+  "difficulty_bucket": "too_easy",
+  "overall_recommendation": "keep_noncore",
+  "issue_labels": [],
+  "strengths": [
+    "Clear yearly-maximum aggregation with an unambiguous target."
+  ],
+  "concerns": [
+    "This is a single-dataset, single-hop lookup that is probably too easy for the core slice."
+  ],
+  "rationale": "The question, node, and reasoning hop are internally consistent and the decomposition is completely natural: group beneficiaries by year and pick the maximum total. The task is comfortably within budget, but it is so direct and shallow that it fits better as a non-core item than as a benchmark core challenge.",
+  "suggested_fix": "Keep it as non-core, or replace it with a less direct multi-step aggregation if you want it in core."
+}

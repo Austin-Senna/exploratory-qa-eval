@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "task_id": "tasks_core/k-5-d-1/task_2.json",
+  "source_task": "tasks_core/k-5-d-1/task_2.json",
+  "source_verdict": null,
+  "question": "I'm analyzing police activity in the capital of Texas. For 2023, I need to know which patrol sector had the highest volume of police dispatch incidents. Within that sector, which city council district recorded the most use-of-force incidents? Finally, for that specific council district, which sector conducted the most searches in 2023, and how many total complaints were filed against that sector in 2024? Only report the number of total complaints. Your response should be in the format [Answer].",
+  "heuristic_flags": {
+    "question_text_anomaly": false,
+    "question_text_anomaly_notes": [],
+    "has_explicit_answer_placeholders": true
+  },
+  "estimated_dataset_count": 5,
+  "estimated_min_tool_calls": 10,
+  "estimated_nice_tool_calls": 15,
+  "tool_call_budget_bucket": "within_budget_comfortably",
+  "quality_bucket": "high",
+  "derivability_bucket": "clean",
+  "difficulty_bucket": "core",
+  "overall_recommendation": "core_keep",
+  "issue_labels": [],
+  "strengths": [
+    "The question naturally motivates the full sector -> district -> sector -> complaints chain.",
+    "The final complaints lookup is a direct continuation of the stated target, not a decorative add-on."
+  ],
+  "concerns": [
+    "Node subquestions are slightly template-heavy and awkwardly phrased, but they do not distort the task."
+  ],
+  "rationale": "The artifact is internally coherent and the decomposition is faithfully implied by the final question: identify the relevant city context, find the top 2023 dispatch sector, narrow to the top 2023 use-of-force district within that sector, find the top 2023 search sector within that district, then retrieve 2024 complaints for that sector. The task stays comfortably within budget at five datasets, and the final hop remains tightly attached to the user-facing objective. Minor placeholder-heavy phrasing in node text is present, but it is cosmetic rather than benchmark-breaking.",
+  "suggested_fix": "Optional: rewrite the node subquestions to remove placeholder-heavy phrasing; otherwise keep as-is."
+}

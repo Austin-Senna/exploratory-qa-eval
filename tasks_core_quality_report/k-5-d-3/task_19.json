@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "task_id": "tasks_core/k-5-d-3/task_19.json",
+  "source_task": "tasks_core/k-5-d-3/task_19.json",
+  "source_verdict": null,
+  "question": "Among New York City schools that served high school students and reported at least 151 total VADIR incidents in 2013-2014, which schools also had at least 25 total incidents reported by school safety in 2013-2014, a safety and respect score of 7.3 or lower in 2013, and a poverty rate of at least 70% in 2013-2014? Which city was home to the school in that group with the highest four-year August graduation rate for the 2014 cohort? Your response should be in the format [Answer].",
+  "heuristic_flags": {
+    "question_text_anomaly": false,
+    "question_text_anomaly_notes": [],
+    "has_explicit_answer_placeholders": true
+  },
+  "estimated_dataset_count": 7,
+  "estimated_min_tool_calls": 14,
+  "estimated_nice_tool_calls": 21,
+  "tool_call_budget_bucket": "within_budget_comfortably",
+  "quality_bucket": "high",
+  "derivability_bucket": "clean",
+  "difficulty_bucket": "core",
+  "overall_recommendation": "core_keep",
+  "issue_labels": [],
+  "strengths": [
+    "Question directly motivates the filter-intersect-compare path.",
+    "The BEDS-to-DBN bridge is explicit and supports the downstream joins cleanly.",
+    "Seven datasets still stay within a comfortable tool budget."
+  ],
+  "concerns": [
+    "The prompt is dense and the trailing answer-format placeholder adds minor surface noise."
+  ],
+  "rationale": "This artifact is internally coherent and the reasoning chain stays faithful to the final question: identify the qualifying NYC high schools, intersect the three additional constraints, compare graduation rates within the surviving set, then look up the city's name. The seven-dataset budget estimates to 14 minimum and 21 nice tool calls, which is still comfortable for a core slice. The only notable weakness is minor prompt density rather than a derivation or consistency problem.",
+  "suggested_fix": "Optionally remove the trailing \"[Answer]\" formatting instruction and keep the task otherwise unchanged."
+}

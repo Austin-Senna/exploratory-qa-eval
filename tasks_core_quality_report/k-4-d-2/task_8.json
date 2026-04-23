@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "task_id": "tasks_core/k-4-d-2/task_8.json",
+  "source_task": "tasks_core/k-4-d-2/task_8.json",
+  "source_verdict": null,
+  "question": "I am researching identity thefts in LA. First, identify the year between 2010 and 2019 with the highest number of identity theft incidents in LA. During that peak year, which area recorded the most arrests for moving traffic violations? What is the ratio of identity theft incidents that area had in 2020 to the total number of public schools in the city that area belongs to? Round the answer to the nearest integer. Your response should be in the format [Answer].",
+  "heuristic_flags": {
+    "question_text_anomaly": false,
+    "question_text_anomaly_notes": [],
+    "has_explicit_answer_placeholders": true
+  },
+  "estimated_dataset_count": 6,
+  "estimated_min_tool_calls": 12,
+  "estimated_nice_tool_calls": 18,
+  "tool_call_budget_bucket": "within_budget_comfortably",
+  "quality_bucket": "high",
+  "derivability_bucket": "clean",
+  "difficulty_bucket": "core",
+  "overall_recommendation": "core_keep",
+  "issue_labels": [],
+  "strengths": [
+    "The question clearly defines the peak-year, area, 2020 count, and ratio target.",
+    "The nodes and reasoning hops are internally consistent end to end.",
+    "Six datasets keeps the expected tool budget comfortably within range."
+  ],
+  "concerns": [
+    "The area-name to Area ID bridge adds a mild schema-dependent hop.",
+    "The theft-description to crime-code bridge is operational rather than conceptually motivated."
+  ],
+  "rationale": "This task is coherent, affordable, and faithful to the question's requested path from peak year to area to 2020 incident ratio. The extra Area ID and crime-code translation steps add some brittleness, but they function as dataset-join mechanics rather than unsupported reasoning, so the task still reads as a strong core candidate.",
+  "suggested_fix": "If possible, keep the area and crime-type representation consistent across nodes so the schema-translation hops are unnecessary."
+}

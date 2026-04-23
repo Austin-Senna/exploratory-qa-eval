@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "task_id": "tasks_core/k-4-d-5/task_6.json",
+  "source_task": "tasks_core/k-4-d-5/task_6.json",
+  "source_verdict": null,
+  "question": "Identify the two Texas counties that are in the top 5 in the number of home-based day care sites participating in the federal meal-reimbursement program for children and adults from 2018-2022, while also having less than 14.5% of reported adult-protection victims involved in repeat investigations in 2022. Both counties are named after figures from the Texas Revolution. What is the difference in birth years between the namesakes of these two counties? Your response should be in the format [Answer].",
+  "heuristic_flags": {
+    "question_text_anomaly": false,
+    "question_text_anomaly_notes": [],
+    "has_explicit_answer_placeholders": true
+  },
+  "estimated_dataset_count": 10,
+  "estimated_min_tool_calls": 20,
+  "estimated_nice_tool_calls": 30,
+  "tool_call_budget_bucket": "within_budget_comfortably",
+  "quality_bucket": "medium",
+  "derivability_bucket": "strained",
+  "difficulty_bucket": "core",
+  "overall_recommendation": "keep_noncore",
+  "issue_labels": [
+    "question_ambiguity"
+  ],
+  "strengths": [
+    "The county-ranking to APS-filter to namesake-birthyear chain is coherent and stays within the rough core budget.",
+    "The final target is explicit, and the namesake lookup is materially connected to the question rather than purely decorative."
+  ],
+  "concerns": [
+    "The question does not specify how to aggregate 'top 5' across the five yearly CACFP files, so the first narrowing is underdefined.",
+    "The phrasing 'from 2018-2022' maps awkwardly to program-year filters ending in 2022-2023, which makes the temporal scope slightly brittle."
+  ],
+  "rationale": "This task is usable and reasonably budget-feasible, but it is not clean enough for a core benchmark slice because the first hop relies on an unstated aggregation choice across five yearly childcare datasets. A solver could plausibly interpret 'top 5 from 2018-2022' as total, average, or year-by-year membership, while the artifact silently commits to one path. The downstream APS and namesake steps are coherent, so the task looks salvageable rather than broken.",
+  "suggested_fix": "Specify the aggregation and time window explicitly in the question, e.g. rank counties by average or total CACFP site counts across the 2018-2019 through 2022-2023 program years."
+}

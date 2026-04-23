@@ -1,0 +1,75 @@
+{
+  "dataset_sequence": [
+    "street-sweeping-schedule-2022",
+    "street-sweeping-schedule-2023",
+    "street-sweeping-schedule-2024",
+    "dc-charter-schools",
+    "Sojourner_Truth",
+    "Rifton,_New_York"
+  ],
+  "source_sequence": [
+    "datagov/street-sweeping-schedule-2022/files/rows.txt",
+    "datagov/street-sweeping-schedule-2023/files/rows.txt",
+    "datagov/street-sweeping-schedule-2024/files/rows.txt",
+    "datagov/dc-charter-schools/files/data.txt",
+    "wikipedia/Sojourner_Truth/content.txt",
+    "wikipedia/Rifton,_New_York/content.txt"
+  ],
+  "reasoning_chain_text": [
+    "1. Compare scheduled street-cleaning event counts for Wards 2 and 5 across 2022, 2023, and 2024 and keep the ward with the higher average.",
+    "2. In that ward, identify the charter school whose grade span includes 8 and 9 and whose name refers to a famous person.",
+    "3. Using that person's reference page, determine the place where they were born.",
+    "4. Using the reference page for that birthplace, determine the county."
+  ],
+  "original_final_question": "Among Washington, DC wards 2 and 5, identify which ward had more scheduled street-cleaning events from 2022 to 2024. In that ward, find the charter school whose serving spans grades 8 and 9, and is named after a famous person. What county is that person's birthplace located in? Please return the county only, i.e. `XX County`. Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1,
+        2,
+        3
+      ],
+      "reasoning": [
+        "Node 1: For Wards 2 and 5, count 2022 street-sweeping schedule entries by `WARD`.",
+        "Node 2: For Wards 2 and 5, count 2023 street-sweeping schedule entries by `WARD`.",
+        "Node 3: For Wards 2 and 5, count 2024 street-sweeping schedule entries by `WARD`.",
+        "Hop result: higher average street-sweeping schedule count = {Ward 5: (80 + 83 + 87) / 3 = 83.33, Ward 2: (72 + 54 + 54) / 3 = 60.0} -> Ward 5."
+      ],
+      "answer": "Ward 5"
+    },
+    {
+      "hop": 2,
+      "node_ids": [
+        4
+      ],
+      "reasoning": [
+        "Node 4: In `Ward 5`, filter charter schools where `properties.WARD` equals `Ward 5` and `properties.GRADES` span both 8th and 9th grade, yielding Sojourner Truth PCS.",
+        "Hop result: Sojourner Truth PCS."
+      ],
+      "answer": "Sojourner Truth PCS"
+    },
+    {
+      "hop": 3,
+      "node_ids": [
+        5
+      ],
+      "reasoning": [
+        "Node 5: Sojourner Truth was born in Swartekill, New York.",
+        "Hop result: Swartekill, New York."
+      ],
+      "answer": "Swartekill, New York"
+    },
+    {
+      "hop": 4,
+      "node_ids": [
+        6
+      ],
+      "reasoning": [
+        "Node 6: Swartekill was one of the hamlets encompassed in Rifton, and Rifton is in Ulster County, New York.",
+        "Hop result: Ulster County."
+      ],
+      "answer": "Ulster County"
+    }
+  ]
+}

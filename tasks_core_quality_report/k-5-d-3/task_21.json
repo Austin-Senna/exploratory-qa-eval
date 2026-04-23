@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "task_id": "tasks_core/k-5-d-3/task_21.json",
+  "source_task": "tasks_core/k-5-d-3/task_21.json",
+  "source_verdict": null,
+  "question": "In Austin, start with the ZIP code that had the most multifamily properties without a recent audit on file. In that ZIP code, find the council district containing the affordable housing property with the most total units. From that district, take the ZIP codes of the public library branch with the most public computers, the community survey respondents from 2015 through 2019 who most often reported the same ZIP code, and the park with the largest asset size. Among those ZIP codes, which one had the most multifamily water service connections, and which public artwork there had the most recent listed artwork date? Return only the artwork title. Your response should be in the format [Answer].",
+  "heuristic_flags": {
+    "question_text_anomaly": false,
+    "question_text_anomaly_notes": [],
+    "has_explicit_answer_placeholders": true
+  },
+  "estimated_dataset_count": 7,
+  "estimated_min_tool_calls": 14,
+  "estimated_nice_tool_calls": 21,
+  "tool_call_budget_bucket": "within_budget_comfortably",
+  "quality_bucket": "medium",
+  "derivability_bucket": "strained",
+  "difficulty_bucket": "core",
+  "overall_recommendation": "keep_noncore",
+  "issue_labels": [
+    "unsupported_step",
+    "awkward_wording"
+  ],
+  "strengths": [
+    "Reasonable seven-dataset chain with a comfortable call budget.",
+    "Most hops are explicitly linked, and the final target is clear."
+  ],
+  "concerns": [
+    "Node 4 never explicitly enforces the 2015-2019 survey window, so that narrowing depends on hidden dataset scope.",
+    "The survey clause is awkwardly phrased, and the trailing [Answer] placeholder adds benchmark-noise."
+  ],
+  "rationale": "The task is mostly coherent and affordable, with a clear multi-hop path from the initial ZIP filter to the final artwork lookup. The main weakness is that the community-survey hop claims a 2015-2019 restriction without showing that restriction in the node logic, which makes the derivation less clean than it should be; the wording is also denser and noisier than ideal for a core benchmark artifact.",
+  "suggested_fix": "Explicitly enforce or document the 2015-2019 filter in node 4, and rewrite the question to ask for the ZIP code most often reported by 2015-2019 survey respondents in that district without the [Answer] placeholder."
+}

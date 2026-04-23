@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "task_id": "tasks_core/k-4-d-3/task_2.json",
+  "source_task": "tasks_core/k-4-d-3/task_2.json",
+  "source_verdict": null,
+  "question": "Can you find out the Manhattan neighborhoods containing the top 7 high schools from 2007-2010 by a comprehensive evaluation of the school. Then, find out which NYC structures are designed by Stanford White and incorporates what one of those neighborhoods are named after. Report in what year is this structure designed. Your response should be in the format [Answer].",
+  "heuristic_flags": {
+    "question_text_anomaly": false,
+    "question_text_anomaly_notes": [],
+    "has_explicit_answer_placeholders": true
+  },
+  "estimated_dataset_count": 7,
+  "estimated_min_tool_calls": 14,
+  "estimated_nice_tool_calls": 21,
+  "tool_call_budget_bucket": "within_budget_comfortably",
+  "quality_bucket": "medium",
+  "derivability_bucket": "strained",
+  "difficulty_bucket": "core",
+  "overall_recommendation": "keep_noncore",
+  "issue_labels": [
+    "unsupported_step",
+    "awkward_wording"
+  ],
+  "strengths": [
+    "Budget stays comfortably within the core target.",
+    "The Stanford White intersection is short and easy to verify.",
+    "The final answer target is explicit."
+  ],
+  "concerns": [
+    "The question does not clearly justify intersecting the three yearly top-7 school lists.",
+    "The wording around neighborhoods and 'incorporates' obscures the intended path."
+  ],
+  "rationale": "The artifact stays within budget and the later hops are coherent, but the main school-selection step is not cleanly motivated by the question. Because the wording never clearly says to keep only schools that appear in the top 7 in every year, the provided intersection feels injected rather than naturally derived, and the neighborhood-to-material phrasing is rough enough to matter. That makes the task salvageable, but weaker than a core-slice task as written.",
+  "suggested_fix": "State explicitly that the school must be top-7 in each listed year, and rewrite the structure step to ask for a Stanford White design built with the material the neighborhood is named after."
+}

@@ -1,0 +1,110 @@
+{
+  "dataset_sequence": [
+    "500-cities-city-level-data-gis-friendly-format-2016-release",
+    "500-cities-city-level-data-gis-friendly-format-2017-release",
+    "500-cities-city-level-data-gis-friendly-format-2018-release",
+    "500-cities-city-level-data-gis-friendly-format-2019-release",
+    "2020-census-redistricting-data-all-texas-places",
+    "Pharr,_Texas",
+    "Mission,_Texas",
+    "McAllen,_Texas",
+    "aps-1-1-texas-adult-populations-at-risk-by-county-region-fy2013-fy2022"
+  ],
+  "source_sequence": [
+    "datagov/500-cities-city-level-data-gis-friendly-format-2016-release/files/rows.txt",
+    "datagov/500-cities-city-level-data-gis-friendly-format-2017-release/files/rows.txt",
+    "datagov/500-cities-city-level-data-gis-friendly-format-2018-release/files/rows.txt",
+    "datagov/500-cities-city-level-data-gis-friendly-format-2019-release/files/rows.txt",
+    "datagov/2020-census-redistricting-data-all-texas-places/files/rows.txt",
+    "wikipedia/Pharr,_Texas/content.txt",
+    "wikipedia/Mission,_Texas/content.txt",
+    "wikipedia/McAllen,_Texas/content.txt",
+    "datagov/aps-1-1-texas-adult-populations-at-risk-by-county-region-fy2013-fy2022/files/rows.txt"
+  ],
+  "reasoning_chain_text": [
+    "1. Identify Texas cities with diabetes rates above 12% in each city health release for 2016, 2017, 2018, and 2019.",
+    "2. From those cities, keep the ones with 2020 population under 100,000.",
+    "3. Determine which city borders both cities remaining after step 2.",
+    "4. Determine the county containing that city.",
+    "5. Retrieve the 2022 percentage aged 65 or older for that county."
+  ],
+  "original_final_question": "What percentage of the population in the county containing the city that borders both of the Texas cities with above 12% diabetes rates between 2016 and 2019 was aged 65 or older in 2022? (These cities had populations under 100,000 in 2020.). Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "reasoning": [
+        "Node 1: Filter rows where `StateAbbr` = `TX` and `DIABETES_CrudePrev` > 12 in the 2016 release, then keep `PlaceName`.",
+        "Node 2: Apply the same Texas-city filter for the 2017 release and keep `PlaceName`.",
+        "Node 3: Apply the same Texas-city filter for the 2018 release and keep `PlaceName`.",
+        "Node 4: Apply the same Texas-city filter for the 2019 release and keep `PlaceName`.",
+        "Hop result: intersect the four yearly city lists to keep cities above 12% diabetes prevalence in every release from 2016 through 2019."
+      ],
+      "answer": [
+        "Beaumont",
+        "Brownsville",
+        "Corpus Christi",
+        "El Paso",
+        "Laredo",
+        "McAllen",
+        "Mission",
+        "Pharr",
+        "San Antonio"
+      ]
+    },
+    {
+      "hop": 2,
+      "node_ids": [
+        5
+      ],
+      "reasoning": [
+        "Node 5: Filter the 2020 Census places table to `BASENAME` values from <hop 1 answer>, convert `POP100` to numeric, and keep cities with `POP100` < 100000.",
+        "Hop result: the qualifying cities under 100,000 population are Pharr and Mission."
+      ],
+      "answer": [
+        "Pharr",
+        "Mission"
+      ]
+    },
+    {
+      "hop": 3,
+      "node_ids": [
+        6,
+        7
+      ],
+      "reasoning": [
+        "Node 6: Read the cities bordering Pharr from <hop 2 answer>.",
+        "Node 7: Read the cities bordering Mission from <hop 2 answer>.",
+        "Hop result: intersect the bordering-city sets from nodes 6 and 7."
+      ],
+      "answer": "McAllen"
+    },
+    {
+      "hop": 4,
+      "node_ids": [
+        8
+      ],
+      "reasoning": [
+        "Node 8: Read the county containing <hop 3 answer> from the cited Wikipedia source.",
+        "Hop result: McAllen is in Hidalgo County."
+      ],
+      "answer": "Hidalgo County"
+    },
+    {
+      "hop": 5,
+      "node_ids": [
+        9
+      ],
+      "reasoning": [
+        "Node 9: Filter rows where `County` = `Hidalgo` and `Fiscal Year` = 2022, then read `65 and older: % of Population`.",
+        "Hop result: the 2022 percentage of the population aged 65 or older is 12.3."
+      ],
+      "answer": 12.3
+    }
+  ]
+}

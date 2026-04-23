@@ -1,0 +1,98 @@
+{
+  "dataset_sequence": [
+    "texas-department-of-criminal-justice-receives-fy-2019",
+    "texas-department-of-criminal-justice-receives-fy-2020",
+    "texas-department-of-criminal-justice-receives-fy-2021",
+    "texas-department-of-criminal-justice-receives-fy-2022",
+    "2020-census-redistricting-data-all-texas-counties",
+    "Montgomery_County,_Texas",
+    "West_Texas",
+    "Hidalgo_County,_Texas",
+    "University_of_Texas_Rio_Grande_Valley"
+  ],
+  "source_sequence": [
+    "datagov/texas-department-of-criminal-justice-receives-fy-2019/files/rows.txt",
+    "datagov/texas-department-of-criminal-justice-receives-fy-2020/files/rows.txt",
+    "datagov/texas-department-of-criminal-justice-receives-fy-2021/files/rows.txt",
+    "datagov/texas-department-of-criminal-justice-receives-fy-2022/files/rows.txt",
+    "datagov/2020-census-redistricting-data-all-texas-counties/files/rows.txt",
+    "wikipedia/Montgomery_County,_Texas/content.txt",
+    "wikipedia/West_Texas/content.txt",
+    "wikipedia/Hidalgo_County,_Texas/content.txt",
+    "wikipedia/University_of_Texas_Rio_Grande_Valley/content.txt"
+  ],
+  "reasoning_chain_text": [
+    "1. Identify Texas counties with between 700 and 4,600 people entering the state prison system in fiscal year 2019.",
+    "2. Keep the counties that also satisfy that intake range in fiscal year 2020.",
+    "3. Keep the counties that also satisfy that intake range in fiscal year 2021.",
+    "4. Using fiscal year 2022 intake data, keep the counties that satisfy the range in every fiscal year from 2019 to 2022.",
+    "5. From those counties, keep the ones with 2020 census population under 900,000.",
+    "6. Using the relevant county and regional pages, exclude counties in the Houston metropolitan area and West Texas, then determine the county seat of the remaining qualifying county.",
+    "7. Using that county seat, identify the UT System university located there."
+  ],
+  "original_final_question": "Identify the UT System university located in a county's county seat where the county (1) has between 700 and 4,600 people entering the state prison system in each fiscal year from 2019 to 2022, (2) has population under 900,000 according to the 2020 census, (3) is not in the Houston metropolitan area, and (4) is not in West Texas. Only report the university name. Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "reasoning": [
+        "Node 1: Group FY2019 rows by `County`, count criminal intakes, and keep counties with 700 <= count <= 4600.",
+        "Node 2: Group FY2020 rows by `County`, count criminal intakes, and keep counties with 700 <= count <= 4600.",
+        "Node 3: Group FY2021 rows by `County`, count criminal intakes, and keep counties with 700 <= count <= 4600.",
+        "Node 4: Group FY2022 rows by `County`, count criminal intakes, and keep counties with 700 <= count <= 4600.",
+        "Hop result: counties meeting the intake condition in all four fiscal years = Bexar, El Paso, Hidalgo, Montgomery."
+      ],
+      "answer": [
+        "Bexar",
+        "El Paso",
+        "Hidalgo",
+        "Montgomery"
+      ]
+    },
+    {
+      "hop": 2,
+      "node_ids": [
+        5,
+        6
+      ],
+      "reasoning": [
+        "Node 5: Filter <hop 1 answer> to county-level census rows where `SUMLEV` = 50 and `POP100` < 900000.",
+        "Node 6: Montgomery County is part of the Houston metropolitan area.",
+        "Hop result: counties from <hop 1 answer> that have 2020 population under 900,000 and are not in the Houston metropolitan area = El Paso, Hidalgo."
+      ],
+      "answer": [
+        "El Paso",
+        "Hidalgo"
+      ]
+    },
+    {
+      "hop": 3,
+      "node_ids": [
+        7,
+        8
+      ],
+      "reasoning": [
+        "Node 7: El Paso is listed among West Texas counties.",
+        "Node 8: Hidalgo County is in South Texas and its county seat is Edinburg.",
+        "Hop result: county from <hop 2 answer> that is not in West Texas = Hidalgo County; county seat = Edinburg."
+      ],
+      "answer": "Edinburg"
+    },
+    {
+      "hop": 4,
+      "node_ids": [
+        9
+      ],
+      "reasoning": [
+        "Node 9: The University of Texas Rio Grande Valley is a UT System university with its main campus in Edinburg.",
+        "Hop result: University of Texas Rio Grande Valley (UTRGV)."
+      ],
+      "answer": "University of Texas Rio Grande Valley (UTRGV)"
+    }
+  ]
+}

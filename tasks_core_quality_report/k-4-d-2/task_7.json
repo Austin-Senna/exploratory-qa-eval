@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "task_id": "tasks_core/k-4-d-2/task_7.json",
+  "source_task": "tasks_core/k-4-d-2/task_7.json",
+  "source_verdict": null,
+  "question": "Between 2010 and 2019, what year has the highest number of burglaries from vehicles in Los Angeles? In that year, determine which area had the most narcotic drug laws arrests, how many vehicle burglaries occurred in that specific area in 2020? Only report the number of vehicle burglaries. Your response should be in the format [Answer].",
+  "heuristic_flags": {
+    "question_text_anomaly": false,
+    "question_text_anomaly_notes": [],
+    "has_explicit_answer_placeholders": true
+  },
+  "estimated_dataset_count": 4,
+  "estimated_min_tool_calls": 8,
+  "estimated_nice_tool_calls": 12,
+  "tool_call_budget_bucket": "within_budget_comfortably",
+  "quality_bucket": "medium",
+  "derivability_bucket": "strained",
+  "difficulty_bucket": "core",
+  "overall_recommendation": "keep_noncore",
+  "issue_labels": [
+    "unsupported_step"
+  ],
+  "strengths": [
+    "The main year-to-area-to-count chain is understandable and stays well within budget.",
+    "The final answer target is explicit and easy to evaluate once the intermediates are established."
+  ],
+  "concerns": [
+    "The area-name-to-area-ID and crime-description-to-code bridges are injected operational steps rather than question-motivated reasoning.",
+    "Those bridge hops rely on auxiliary mappings, including an unrelated stop-incident dataset, which makes the derivation feel brittle."
+  ],
+  "rationale": "The task is coherent and affordable, but it is not a clean core-slice example because two necessary bridge steps are only weakly justified by the question itself. The intended reasoning path is still recoverable, so this looks salvageable rather than broken, but the artifact feels more engineered than naturally derived.",
+  "suggested_fix": "Rewrite the final lookup to use area name and offense description directly in the 2020 crime data, or explicitly motivate the required code/ID mapping steps."
+}

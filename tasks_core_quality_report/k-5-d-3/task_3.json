@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "task_id": "tasks_core/k-5-d-3/task_3.json",
+  "source_task": "tasks_core/k-5-d-3/task_3.json",
+  "source_verdict": null,
+  "question": "Among Washington state's public four-year universities, which two had the highest average contract counts in between 2014-2016? Find the counties where those two universities are located, then choose the county with the larger 2020 census population. In its county seat, what building had the highest average greenhouse gas emissions from 2015 to 2023? Finally, report the year that building was built. Your response should be in the format [Answer].",
+  "heuristic_flags": {
+    "question_text_anomaly": false,
+    "question_text_anomaly_notes": [],
+    "has_explicit_answer_placeholders": true
+  },
+  "estimated_dataset_count": 10,
+  "estimated_min_tool_calls": 20,
+  "estimated_nice_tool_calls": 30,
+  "tool_call_budget_bucket": "within_budget_comfortably",
+  "quality_bucket": "low",
+  "derivability_bucket": "broken",
+  "difficulty_bucket": "core",
+  "overall_recommendation": "revise_or_drop",
+  "issue_labels": [
+    "unsupported_step"
+  ],
+  "strengths": [
+    "Clear intended multi-hop path with a precise numeric final answer.",
+    "Budget remains acceptable at 10 datasets and roughly 20-30 tool calls."
+  ],
+  "concerns": [
+    "Hop 3 injects King County and Spokane County from university city pages without any sourced city-to-county derivation.",
+    "Hop 4 then relies on that unsupported county set, so the main comparison path is circular and brittle."
+  ],
+  "rationale": "The task is affordable and its intended structure is understandable, but a central narrowing step is not actually derived from the artifact. Nodes 5 and 6 only establish Seattle and Cheney, while hop 3 jumps directly to King County and Spokane County; hop 4 then compares populations using those unsupported counties. Because that gap sits on the core reasoning path rather than a cosmetic edge case, the task is not benchmark-clean enough to keep as written.",
+  "suggested_fix": "Add explicit city-to-county lookup nodes for Seattle and Cheney before the county population comparison."
+}

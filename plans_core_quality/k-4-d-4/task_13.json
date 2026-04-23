@@ -1,0 +1,93 @@
+{
+  "dataset_sequence": [
+    "bank-owned-atm-locations-in-new-york-state",
+    "2023-foreclosure-avoidance-program-beneficiary-exemption-affidavits-pursuant-to-hb-2009",
+    "2014-foreclosure-avoidance-mediation-beneficiary-exemption-affidavits-pursuant-to-sb-558",
+    "2017-foreclosure-avoidance-mediation-beneficiary-exemption-affidavits-pursuant-to-sb-558",
+    "ppp-loans-to-connecticut-businesses",
+    "Greenwich,_Connecticut",
+    "places-place-data-gis-friendly-format-2021-release-725b1",
+    "places-place-data-gis-friendly-format-2022-release"
+  ],
+  "source_sequence": [
+    "datagov/bank-owned-atm-locations-in-new-york-state/files/rows.txt",
+    "datagov/2023-foreclosure-avoidance-program-beneficiary-exemption-affidavits-pursuant-to-hb-2009/files/rows.txt",
+    "datagov/2014-foreclosure-avoidance-mediation-beneficiary-exemption-affidavits-pursuant-to-sb-558/files/rows.txt",
+    "datagov/2017-foreclosure-avoidance-mediation-beneficiary-exemption-affidavits-pursuant-to-sb-558/files/rows.txt",
+    "datagov/ppp-loans-to-connecticut-businesses/files/rows.txt",
+    "wikipedia/Greenwich,_Connecticut/content.txt",
+    "datagov/places-place-data-gis-friendly-format-2021-release-725b1/files/rows.txt",
+    "datagov/places-place-data-gis-friendly-format-2022-release/files/rows.txt"
+  ],
+  "reasoning_chain_text": [
+    "1. From New York bank-owned ATM locations, identify institutions whose listed ATM locations are all concentrated in a single county.",
+    "2. From the 2023 foreclosure-avoidance affidavit data, identify beneficiaries that appear exactly once, report zero 2022 foreclosures, and use only one mailing city.",
+    "3. From the 2014 foreclosure-avoidance mediation affidavit data, identify beneficiaries that appear exactly once, report zero previous-year foreclosures, and use only one mailing state.",
+    "4. From the 2017 foreclosure-avoidance mediation affidavit data, identify beneficiaries that appear exactly once and use only one mailing state.",
+    "5. Using the institution common to steps 1-4, identify the top two Connecticut borrower cities by PPP loan count.",
+    "6. Determine which of those two cities lies farther east.",
+    "7. Record that city's crude obesity prevalence in the 2021 PLACES release.",
+    "8. Using the 2022 PLACES release, return the year in which that city's crude obesity prevalence is lower."
+  ],
+  "original_final_question": "First identify the institution that satisfies all four of these analytical conditions across four data.gov datasets: all of its listed New York bank-owned ATM locations are concentrated in a single county; it appears exactly once in the 2023 foreclosure-avoidance program beneficiary affidavit dataset, reports zero 2022 foreclosures, and uses only one mailing city; it appears exactly once in the 2014 foreclosure-avoidance mediation beneficiary affidavit dataset, reports zero previous-year foreclosures, and uses only one mailing state; and it appears exactly once in the 2017 foreclosure-avoidance mediation beneficiary affidavit dataset and uses only one mailing state. Then, among Connecticut PPP loans issued by that institution, keep the borrower cities ranked first and second by loan count. Between those two cities, which one is more to the east? Finally, compare that city's crude obesity prevalence across the 2021 and 2022 PLACES place-data GIS-friendly releases. In which release year is it lower? Return the year only. Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "reasoning": [
+        "Node 1: In the New York bank-owned ATM dataset, grouping by `Name of Institution` and keeping institutions with `county_count = 1` yields a 103-institution candidate set.",
+        "Node 2: In the 2023 foreclosure-avoidance program affidavit dataset, grouping by `Beneficiary` and keeping entities with `affidavit_count = 1`, `foreclosure_total = 0`, and `city_count = 1` yields a 119-beneficiary candidate set.",
+        "Node 3: In the 2014 foreclosure-avoidance mediation affidavit dataset, grouping by `Beneficiary` and keeping entities with `affidavit_count = 1`, `state_count = 1`, and `foreclosure_total = 0` yields a 205-beneficiary candidate set.",
+        "Node 4: In the 2017 foreclosure-avoidance mediation affidavit dataset, grouping by `Beneficiary` and keeping entities with `affidavit_count = 1` and `state_count = 1` yields a 235-beneficiary candidate set.",
+        "Necessity check: omitting node 1 leaves 6 candidates: `Blue Mountain Credit Union`, `First Republic Bank`, `People's Community Federal Credit Union`, `South Coast ILWU Federal Credit Union`, `Thrivent Federal Credit Union`, and `Westerra Credit Union`.",
+        "Necessity check: omitting node 2 leaves 2 candidates: `First Republic Bank` and `Pentagon Federal Credit Union`.",
+        "Necessity check: omitting node 3 leaves 2 candidates: `First Republic Bank` and `Webster Bank`.",
+        "Necessity check: omitting node 4 leaves 2 candidates: `First Republic Bank` and `Kinecta Federal Credit Union`.",
+        "Hop result: intersect the four analytical candidate sets from nodes 1-4. The only institution that satisfies all four conditions is `First Republic Bank`."
+      ],
+      "answer": "First Republic Bank"
+    },
+    {
+      "hop": 2,
+      "node_ids": [
+        5
+      ],
+      "reasoning": [
+        "Node 5: In the Connecticut PPP dataset, filter rows where `Lender = <hop 1 answer>`, normalize `City` to title case to merge capitalization variants such as `old Greenwich`, count loans by borrower city, sort descending, and keep the top 2 cities.",
+        "Hop result: the ranked top 2 borrower cities are `Greenwich` and `Stamford`."
+      ],
+      "answer": [
+        "Greenwich",
+        "Stamford"
+      ]
+    },
+    {
+      "hop": 3,
+      "node_ids": [
+        6
+      ],
+      "reasoning": [
+        "Node 6: The Greenwich, Connecticut article says Greenwich is bordered to the east by Stamford. Among the two cities from <hop 2 answer>, that means `Stamford` is the one farther east."
+      ],
+      "answer": "Stamford"
+    },
+    {
+      "hop": 4,
+      "node_ids": [
+        7,
+        8
+      ],
+      "reasoning": [
+        "Node 7: In the 2021 PLACES place-data GIS-friendly release, filtering to the Connecticut row with `PlaceName = <hop 3 answer>` gives `OBESITY_CrudePrev = 24.2`.",
+        "Node 8: In the 2022 PLACES place-data GIS-friendly release, filtering to the Connecticut row with `PlaceName = <hop 3 answer>` gives `OBESITY_CrudePrev = 23.5`.",
+        "Hop result: comparing Stamford's crude obesity prevalence across the two releases, `2022` is lower than `2021`."
+      ],
+      "answer": "2022"
+    }
+  ]
+}

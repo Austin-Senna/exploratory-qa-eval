@@ -1,0 +1,26 @@
+{
+  "dataset_sequence": [
+    "police-dispatched-incidents",
+    "police-arrests",
+    "pol-use-of-force"
+  ],
+  "source_sequence": [
+    "datagov/police-dispatched-incidents/files/rows.txt",
+    "datagov/police-arrests/files/rows.txt",
+    "datagov/pol-use-of-force/files/rows.txt",
+    "datagov/police-dispatched-incidents/files/rows.txt"
+  ],
+  "reasoning_chain_text": [
+    "1. In Bethesda in 2022, determine which police district had the most police dispatch incidents.",
+    "2. Within that district's division, determine which bureau made the most arrests in 2022.",
+    "3. For that bureau, determine which district had the most use-of-force incidents in 2022, then count the total police dispatch incidents in Bethesda in 2022 for that district."
+  ],
+  "original_final_question": "I'm analyzing police activity in Bethesda, Maryland for the year 2022. First, which police district recorded the highest number of police dispatch incidents? Within that district, which bureau made the most arrests? Within that specific bureau, which district saw the most incidents involving officers using force, and how many total police dispatch incidents occurred in Bethesda within that district during 2022? Only report the total number of incidents in your response. Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    "Node 1: In 2022 dispatch records for Bethesda, the top district is 2D.",
+    "Node 2 depends on node 1: In 2022 arrests within division 2D, the top bureau is PSB.",
+    "Node 3 depends on node 2: In 2022 use-of-force for bureau PSB, the top district of occurrence is 3D.",
+    "Node 4 depends on node 3: In 2022 dispatch records for Bethesda and district 3D, the count is 4.",
+    "Final answer: 4"
+  ]
+}

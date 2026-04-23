@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "task_id": "tasks_core/k-4-d-3/task_7.json",
+  "source_task": "tasks_core/k-4-d-3/task_7.json",
+  "source_verdict": null,
+  "question": "Among the Missouri Department of Corrections, the Missouri Department of Social Services, and the Missouri Department of Transportation, which had the highest average employee count from 2021 through 2023? In that agency's headquarters city, a historically Black university was founded. Who founded that university? Return the name only. Your response should be in the format [Answer].",
+  "heuristic_flags": {
+    "question_text_anomaly": false,
+    "question_text_anomaly_notes": [],
+    "has_explicit_answer_placeholders": true
+  },
+  "estimated_dataset_count": 6,
+  "estimated_min_tool_calls": 12,
+  "estimated_nice_tool_calls": 18,
+  "tool_call_budget_bucket": "within_budget_comfortably",
+  "quality_bucket": "high",
+  "derivability_bucket": "clean",
+  "difficulty_bucket": "core",
+  "overall_recommendation": "core_keep",
+  "issue_labels": [],
+  "strengths": [
+    "The question directly motivates the agency comparison and the city-to-university founder path.",
+    "The reasoning chain is short, coherent, and avoids leaking the intermediate city or university too early."
+  ],
+  "concerns": [
+    "The university clause is slightly indirect, but the intended lookup path remains clear."
+  ],
+  "rationale": "The task stays comfortably within budget at six datasets, and the decomposition follows naturally from the final question: compare the three agencies, identify the headquarters city of the winner, find the historically Black university tied to that city, and then retrieve its founder. The hops are internally consistent and the final founder lookup remains well attached to the prompt rather than decorative.",
+  "suggested_fix": "Optional: rephrase the university clause to make the city-to-university link a bit more explicit."
+}

@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "task_id": "tasks_core/k-5-d-3/task_18.json",
+  "source_task": "tasks_core/k-5-d-3/task_18.json",
+  "source_verdict": null,
+  "question": "Which applicant company appears most often among cancelled or withdrawn construction permits in DC in 2024? In 2024, among building permits in DC where that company appears as the permit owner, which ward appears most often? In 2022, among building permits in that ward, which permit subtype appears most often? Looking at the same ward and subtype in DC building permits from 2020, 2021, and 2023, which ANCs appear in the top three in each of those three years? In DC's automated traffic enforcement, among those ANCs, which one has more active cameras, and within that ANC which non-null camera mobility type appears most often? Your response should be in the format [Answer].",
+  "heuristic_flags": {
+    "question_text_anomaly": false,
+    "question_text_anomaly_notes": [],
+    "has_explicit_answer_placeholders": true
+  },
+  "estimated_dataset_count": 7,
+  "estimated_min_tool_calls": 14,
+  "estimated_nice_tool_calls": 21,
+  "tool_call_budget_bucket": "within_budget_comfortably",
+  "quality_bucket": "high",
+  "derivability_bucket": "clean",
+  "difficulty_bucket": "core",
+  "overall_recommendation": "core_keep",
+  "issue_labels": [],
+  "strengths": [
+    "Question directly motivates each hop.",
+    "Seven datasets keeps the task comfortably within budget."
+  ],
+  "concerns": [
+    "The multi-year ANC clause is somewhat dense and repetitive."
+  ],
+  "rationale": "The artifact is internally coherent and the reasoning chain follows the question faithfully: company to ward to subtype to recurring ANCs to traffic-camera mobility type. Nothing important appears injected, the final hop is still attached to the ANC intersection, and the seven-dataset footprint yields a comfortable 14/21 min-or-nice tool-call estimate. The task is long, but the added yearly intersection still contributes real reasoning signal without making the benchmark cost unreasonable.",
+  "suggested_fix": "Tighten the wording of the repeated 2020/2021/2023 ANC step to reduce prompt density."
+}

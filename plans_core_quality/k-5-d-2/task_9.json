@@ -1,0 +1,100 @@
+{
+  "dataset_sequence": [
+    "california-hospital-ratings-for-transcatheter-aortic-valve-replacement-tavr-procedures",
+    "effects-of-covid-19-on-hospital-utilization-trends-636d2",
+    "hospital-encounters-for-homeless-patients-79a6f",
+    "Santa_Clara_County,_California",
+    "places-local-data-for-better-health-place-data-2021-release-06a9b",
+    "places-local-data-for-better-health-place-data-2022-release",
+    "Obesity"
+  ],
+  "source_sequence": [
+    "datagov/california-hospital-ratings-for-transcatheter-aortic-valve-replacement-tavr-procedures/files/2022-tavr-hospital-performance-ratings.txt",
+    "datagov/effects-of-covid-19-on-hospital-utilization-trends-636d2/files/hospital-utilization-trends.txt",
+    "datagov/hospital-encounters-for-homeless-patients-79a6f/files/data-dictionary-homeless-hospital-encounters-age-race-sex-expected-payer-by-facility.txt",
+    "wikipedia/Santa_Clara_County,_California/content.txt",
+    "datagov/places-local-data-for-better-health-place-data-2021-release-06a9b/files/rows.txt",
+    "datagov/places-local-data-for-better-health-place-data-2022-release/files/rows.txt",
+    "wikipedia/Obesity/content.txt"
+  ],
+  "reasoning_chain_text": [
+    "1. Identify the California hospital with at least 250 TAVR cases and an Average mortality rating in 2022, and at least 35,000 ambulatory surgery encounters in 2019.",
+    "2. For that hospital, determine which county has the highest total homeless inpatient encounters broken down by age.",
+    "3. Determine the county seat of that county.",
+    "4. For that city, identify the three health-outcome measures with the highest crude prevalence values in 2021.",
+    "5. For that city, identify the health-outcome measures with crude prevalence values from 15 up to but not including 23 in 2022.",
+    "6. Determine which measure appears in both sets from steps 4 and 5.",
+    "7. Return the measurement used to determine whether a person falls into that category."
+  ],
+  "original_final_question": "First identify the California hospital that satisfies both of these conditions: at least 250 TAVR hospital cases with an Average mortality rating in 2022, and at least 35,000 ambulatory surgery encounters in 2019. Then, for that hospital, find the county with the highest total of homeless inpatient encounters broken down by age. What is the county seat of that county? For that city, take the three health-outcome measures with the highest crude prevalence values in 2021, and the health-outcome measures with crude prevalence values from 15 up to but not including 23 in 2022. Which measure appears in both sets? According to that measure's Wikipedia article, what measurement is used to determine whether a person falls into that category? Return the measurement name only. Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1,
+        2
+      ],
+      "title": "Identify The Hospital",
+      "reasoning": [
+        "Node 1: In the 2022 TAVR mortality rows, keep hospitals with `Total Hospital TAVR Cases >= 250` and `Performance Rating = Average`.",
+        "Node 2: In the utilization trends table, sum `Count` by `Facility Name`, `Setting`, and parsed year, then keep hospitals with `Setting = Ambulatory Surgery`, `year = 2019`, and `Count >= 35000`.",
+        "Necessity check: omitting node 1 leaves 3 hospitals: `Stanford Health Care`, `UC San Diego Health Hillcrest - Hillcrest Medical Center`, and `UCSF Medical Center`.",
+        "Necessity check: omitting node 2 leaves 5 hospitals: `Cedars-Sinai Medical Center`, `Kaiser Foundation Hospital - San Francisco`, `Mercy General Hospital`, `Scripps Memorial Hospital - La Jolla`, and `Stanford Health Care`.",
+        "Hop result: intersect the two analytical candidate sets from nodes 1 and 2. The only hospital that satisfies both conditions is `Stanford Health Care`."
+      ],
+      "answer": "Stanford Health Care"
+    },
+    {
+      "hop": 2,
+      "node_ids": [
+        3
+      ],
+      "title": "Rank The County",
+      "reasoning": [
+        "Node 3: In the homeless-hospital-encounter table, filter to `FacilityName = <hop 1 answer>`, `EncounterType = Inpatient Hospitalizations`, `HomelessIndicator = Homeless`, and `Demographic = Age`, then sum `Encounters` by `HospitalCounty` and rank descending.",
+        "Hop result: `Santa Clara County` ranks first with `1131` homeless inpatient age-sliced encounters."
+      ],
+      "answer": "Santa Clara County"
+    },
+    {
+      "hop": 3,
+      "node_ids": [
+        4
+      ],
+      "title": "Find The County Seat",
+      "reasoning": [
+        "Node 4: The Santa Clara County article states that the county seat is `San Jose`.",
+        "Hop result: `San Jose`."
+      ],
+      "answer": "San Jose"
+    },
+    {
+      "hop": 4,
+      "node_ids": [
+        5,
+        6
+      ],
+      "title": "Identify The Shared Measure",
+      "reasoning": [
+        "Node 5: In the 2021 PLACES place-data release, filter to `StateAbbr = CA`, `LocationName = <hop 3 answer>`, `Category = Health Outcomes`, and `Data_Value_Type = Crude prevalence`, then rank `Data_Value` descending and keep the top three measures.",
+        "Node 6: In the 2022 PLACES place-data release, filter to `StateAbbr = CA`, `LocationName = <hop 3 answer>`, `Category = Health Outcomes`, and `Data_Value_Type = Crude prevalence`, then keep measures with `15 <= Data_Value < 23`.",
+        "Necessity check: omitting node 5 leaves 2 candidate measures: `Obesity` and `Arthritis`.",
+        "Necessity check: omitting node 6 leaves 3 candidate measures: `High Cholesterol`, `High Blood Pressure`, and `Obesity`.",
+        "Hop result: intersect the two candidate sets from nodes 5 and 6. The only shared measure is `Obesity`."
+      ],
+      "answer": "Obesity"
+    },
+    {
+      "hop": 5,
+      "node_ids": [
+        7
+      ],
+      "title": "Read The Classification Metric",
+      "reasoning": [
+        "Node 7: The Wikipedia article for `<hop 4 answer>` states that people are classified as obese using `body mass index (BMI)`.",
+        "Hop result: `Body mass index (BMI)`."
+      ],
+      "answer": "Body mass index (BMI)"
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "task_id": "tasks_core/k-4-d-3/task_12.json",
+  "source_task": "tasks_core/k-4-d-3/task_12.json",
+  "source_verdict": null,
+  "question": "Identify the Chicago library branch that ranked in the top five for total number of items checked out over the year and total visitors, and in the top three for total public-computer logins, every year from 2019 to 2021. Which Chicago neighborhood is that branch located in? Return the neighborhood name only. Your response should be in the format [Answer].",
+  "heuristic_flags": {
+    "question_text_anomaly": false,
+    "question_text_anomaly_notes": [],
+    "has_explicit_answer_placeholders": true
+  },
+  "estimated_dataset_count": 10,
+  "estimated_min_tool_calls": 20,
+  "estimated_nice_tool_calls": 30,
+  "tool_call_budget_bucket": "within_budget_comfortably",
+  "quality_bucket": "high",
+  "derivability_bucket": "clean",
+  "difficulty_bucket": "core",
+  "overall_recommendation": "core_keep",
+  "issue_labels": [],
+  "strengths": [
+    "The question cleanly motivates intersecting yearly top-ranked branches across all three metrics.",
+    "The final neighborhood lookup is directly attached to the resolved surviving branch."
+  ],
+  "concerns": [
+    "Branch-name spelling and capitalization vary across yearly node answers, adding minor normalization brittleness.",
+    "The task sits at the upper edge of the comfortable budget with ten datasets."
+  ],
+  "rationale": "This task is internally coherent, and the reasoning chain follows naturally from the question: intersect annual top performers for circulation, visitors, and computer logins, then map the surviving branch to its neighborhood. With 10 datasets it lands at an estimated 20 minimum and 30 nice-to-have tool calls, which is still within the comfortable budget threshold. The only notable weakness is mild branch-name normalization noise across nodes, but it does not create a contradiction or meaningfully damage derivability.",
+  "suggested_fix": "Normalize branch-name spelling and casing across yearly nodes to reduce avoidable string-matching brittleness."
+}

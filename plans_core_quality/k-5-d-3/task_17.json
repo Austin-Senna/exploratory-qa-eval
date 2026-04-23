@@ -1,0 +1,92 @@
+{
+  "dataset_sequence": [
+    "crime-incidents-in-2022",
+    "crime-incidents-in-2023",
+    "crime-incidents-in-2024",
+    "wireless-hotspots-from-dc-government",
+    "libraries-39c9d",
+    "Martin_Luther_King_Jr._Memorial_Library",
+    "Ludwig_Mies_van_der_Rohe"
+  ],
+  "source_sequence": [
+    "datagov/crime-incidents-in-2022/files/data.txt",
+    "datagov/crime-incidents-in-2023/files/data.txt",
+    "datagov/crime-incidents-in-2024/files/data.txt",
+    "datagov/wireless-hotspots-from-dc-government/files/data.txt",
+    "datagov/libraries-39c9d/files/data.txt",
+    "wikipedia/Martin_Luther_King_Jr._Memorial_Library/content.txt",
+    "wikipedia/Ludwig_Mies_van_der_Rohe/content.txt"
+  ],
+  "reasoning_chain_text": [
+    "1. Among wards 2, 4, 5, and 6, identify the two wards with the highest average crime-incident counts across 2022, 2023, and 2024.",
+    "2. Among those two wards, determine which had more library wireless-hotspot sites in mid-April 2024.",
+    "3. In that ward, identify the open library that is the central library.",
+    "4. Determine who designed that library.",
+    "5. Return the city where that architect was born."
+  ],
+  "original_final_question": "Among Washington, DC wards 2, 4, 5, and 6, identify the two wards with the highest average crime-incident counts from 2022 to 2024. Among the two wards, which ward had more wireless-hotspot sites at libraries in mid-April 2024? In that ward, which open library is the central library? According to that library's Wikipedia article, who designed it? In which city was that architect born? Please return the city only. Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    {
+      "hop_id": 1,
+      "node_ids": [
+        1,
+        2,
+        3
+      ],
+      "reasoning": [
+        "Node 1: Normalize the 2022 crime-incidents GeoJSON, filter rows where `properties.WARD` is 2, 4, 5, or 6, count incidents by `properties.WARD`, and return the yearly ward mapping.",
+        "Node 2: Normalize the 2023 crime-incidents GeoJSON, filter rows where `properties.WARD` is 2, 4, 5, or 6, count incidents by `properties.WARD`, and return the yearly ward mapping.",
+        "Node 3: Normalize the 2024 crime-incidents GeoJSON, filter rows where `properties.WARD` is 2, 4, 5, or 6, count incidents by `properties.WARD`, and return the yearly ward mapping.",
+        "Hop result: average the three yearly incident counts and keep the two wards with the highest overall averages: Ward 5 and Ward 2."
+      ],
+      "answer": [
+        "Ward 5",
+        "Ward 2"
+      ]
+    },
+    {
+      "hop_id": 2,
+      "node_ids": [
+        4
+      ],
+      "reasoning": [
+        "Node 4: In the wireless-hotspots dataset, filter rows where `WARD` is Ward 2 or Ward 5 from <hop 1 answer> and `SITE_TYPE` = `Library`, count hotspot-site rows by ward, and select the ward with the higher count.",
+        "Hop result: Ward 2 has more library hotspot sites than Ward 5."
+      ],
+      "answer": "Ward 2"
+    },
+    {
+      "hop_id": 3,
+      "node_ids": [
+        5
+      ],
+      "reasoning": [
+        "Node 5: In the libraries dataset, filter rows where `WARD` = `Ward 2`, `STATUS` = `Open`, and `TYPE` = `Central Library`, then return the matching library name.",
+        "Hop result: the library is Martin Luther King Jr. Memorial Library."
+      ],
+      "answer": "Martin Luther King Jr. Memorial Library"
+    },
+    {
+      "hop_id": 4,
+      "node_ids": [
+        6
+      ],
+      "reasoning": [
+        "Node 6: Read the Wikipedia article for <hop 3 answer> and retrieve the architect who designed the library.",
+        "Hop result: the architect is Ludwig Mies van der Rohe."
+      ],
+      "answer": "Ludwig Mies van der Rohe"
+    },
+    {
+      "hop_id": 5,
+      "node_ids": [
+        7
+      ],
+      "reasoning": [
+        "Node 7: Read the Wikipedia article for <hop 4 answer> and retrieve the city where the architect was born.",
+        "Hop result: the birth city is Aachen."
+      ],
+      "answer": "Aachen"
+    }
+  ]
+}

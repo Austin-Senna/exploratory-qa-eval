@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "task_id": "tasks_core/k-5-d-2/task_9.json",
+  "source_task": "tasks_core/k-5-d-2/task_9.json",
+  "source_verdict": null,
+  "question": "First identify the California hospital that satisfies both of these conditions: at least 250 TAVR hospital cases with an Average mortality rating in 2022, and at least 35,000 ambulatory surgery encounters in 2019. Then, for that hospital, find the county with the highest total of homeless inpatient encounters broken down by age. What is the county seat of that county? For that city, take the three health-outcome measures with the highest crude prevalence values in 2021, and the health-outcome measures with crude prevalence values from 15 up to but not including 23 in 2022. Which measure appears in both sets? According to that measure's Wikipedia article, what measurement is used to determine whether a person falls into that category? Return the measurement name only. Your response should be in the format [Answer].",
+  "heuristic_flags": {
+    "question_text_anomaly": false,
+    "question_text_anomaly_notes": [],
+    "has_explicit_answer_placeholders": true
+  },
+  "estimated_dataset_count": 7,
+  "estimated_min_tool_calls": 14,
+  "estimated_nice_tool_calls": 21,
+  "tool_call_budget_bucket": "within_budget_comfortably",
+  "quality_bucket": "high",
+  "derivability_bucket": "clean",
+  "difficulty_bucket": "core",
+  "overall_recommendation": "core_keep",
+  "issue_labels": [],
+  "strengths": [
+    "Faithful multi-hop decomposition from the question",
+    "Nontrivial but still comfortably within budget"
+  ],
+  "concerns": [
+    "Long question with a mildly mechanical county-seat bridge"
+  ],
+  "rationale": "The artifact is internally coherent and each major hop is directly motivated by the final question: intersect the two hospital filters, rank the relevant county, convert that county to its seat, intersect the two health-outcome sets, then read the classification measurement from the shared measure\u2019s article. Nothing central looks injected or contradictory, and the final lookup remains attached to the stated target. With 7 datasets, the rough budget is 14 to 21 tool calls, which is comfortably inside the core budget.",
+  "suggested_fix": "Optional: tighten the county-seat bridge wording to reduce density."
+}

@@ -1,0 +1,91 @@
+{
+  "dataset_sequence": [
+    "construction-permits-in-2024",
+    "building-permits-in-2024",
+    "building-permits-in-2022",
+    "building-permits-in-2020",
+    "building-permits-in-2021",
+    "building-permits-in-2023",
+    "automated-traffic-enforcement"
+  ],
+  "source_sequence": [
+    "datagov/construction-permits-in-2024/files/data.txt",
+    "datagov/building-permits-in-2024/files/data.txt",
+    "datagov/building-permits-in-2022/files/data.txt",
+    "datagov/building-permits-in-2020/files/data.txt",
+    "datagov/building-permits-in-2021/files/data.txt",
+    "datagov/building-permits-in-2023/files/data.txt",
+    "datagov/automated-traffic-enforcement/files/data.txt"
+  ],
+  "reasoning_chain_text": [
+    "1. Identify the applicant company that appears most often among cancelled or withdrawn construction permits in DC in 2024.",
+    "2. In 2024 DC building permits where that company appears as the permit owner, determine which ward appears most often.",
+    "3. In 2022 DC building permits for that ward, determine which permit subtype appears most often.",
+    "4. In 2020, 2021, and 2023 DC building permits for that same ward and subtype, identify the top three ANCs in each year and keep the ANCs that appear in all three sets.",
+    "5. In DC's automated traffic enforcement data, determine which of those ANCs has more active cameras.",
+    "6. Within that ANC, return the most common non-null camera mobility type."
+  ],
+  "original_final_question": "Which applicant company appears most often among cancelled or withdrawn construction permits in DC in 2024? In 2024, among building permits in DC where that company appears as the permit owner, which ward appears most often? In 2022, among building permits in that ward, which permit subtype appears most often? Looking at the same ward and subtype in DC building permits from 2020, 2021, and 2023, which ANCs appear in the top three in each of those three years? In DC's automated traffic enforcement, among those ANCs, which one has more active cameras, and within that ANC which non-null camera mobility type appears most often? Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1
+      ],
+      "reasoning": [
+        "Node 1: In the 2024 DC construction permits data, Potomac Electric Power Company is the most frequent applicant company among records with status Cancel/Withdrawn, with 88 permits.",
+        "Hop result: <node_1 answer>"
+      ],
+      "answer": "Potomac Electric Power Company"
+    },
+    {
+      "hop": 2,
+      "node_ids": [
+        2
+      ],
+      "reasoning": [
+        "Node 2: In the 2024 DC building permits data, among permits whose OWNER_NAME is Potomac Electric Power Company, Ward 7 appears most often, with 7 permits.",
+        "Hop result: <node_2 answer>"
+      ],
+      "answer": "7"
+    },
+    {
+      "hop": 3,
+      "node_ids": [
+        3
+      ],
+      "reasoning": [
+        "Node 3: In the 2022 DC building permits data, Ward 7's most common permit subtype is ELECTRICAL, with 1,174 permits.",
+        "Hop result: <node_3 answer>"
+      ],
+      "answer": "ELECTRICAL"
+    },
+    {
+      "hop": 4,
+      "node_ids": [
+        4,
+        5,
+        6
+      ],
+      "reasoning": [
+        "Node 4: In 2020, the three most common ANCs for Ward 7 ELECTRICAL building permits are ANC 7B, ANC 7C, and ANC 7D.",
+        "Node 5: In 2021, the three most common ANCs for Ward 7 ELECTRICAL building permits are ANC 7B, ANC 7C, and ANC 7D.",
+        "Node 6: In 2023, the three most common ANCs for Ward 7 ELECTRICAL building permits are ANC 7B, ANC 7C, and ANC 7D.",
+        "Intersecting the three year-specific top-three lists leaves ANC 7B, ANC 7C, and ANC 7D.",
+        "Hop result: ANC 7B; ANC 7C; ANC 7D"
+      ],
+      "answer": "ANC 7B; ANC 7C; ANC 7D"
+    },
+    {
+      "hop": 5,
+      "node_ids": [
+        7
+      ],
+      "reasoning": [
+        "Node 7: Among the shared candidate ANCs ANC 7B, ANC 7C, and ANC 7D, automated traffic enforcement lists 25 active cameras in ANC 7B, 11 in ANC 7C, and 9 in ANC 7D; within ANC 7B, device mobility values are None = 18, Fixed = 4, and Portable = 3.",
+        "Hop result: Fixed"
+      ],
+      "answer": "Fixed"
+    }
+  ]
+}

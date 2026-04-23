@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "task_id": "tasks_core/k-4-d-1/task_1.json",
+  "source_task": "tasks_core/k-4-d-1/task_1.json",
+  "source_verdict": null,
+  "question": "In 2019 data reported by the Los Angeles Police Department, find the geo area with the most violations of moving traffic arrests. Then, find that area's numeric Area ID, and the most common 2019 crime description for that Area ID. Using 2020-present crime data for the same Area ID, find the 2020 incident count for that description, then in 2021 identify the crime description whose incident count is the smallest value exceeding that 2020 count and report that 2021 count as your final answer. Your response should be in the format [Answer].",
+  "heuristic_flags": {
+    "question_text_anomaly": false,
+    "question_text_anomaly_notes": [],
+    "has_explicit_answer_placeholders": true
+  },
+  "estimated_dataset_count": 4,
+  "estimated_min_tool_calls": 8,
+  "estimated_nice_tool_calls": 12,
+  "tool_call_budget_bucket": "within_budget_comfortably",
+  "quality_bucket": "high",
+  "derivability_bucket": "clean",
+  "difficulty_bucket": "core",
+  "overall_recommendation": "core_keep",
+  "issue_labels": [],
+  "strengths": [
+    "Question implies a clear multi-hop decomposition without relying on injected intermediate winners.",
+    "Dataset fan-out looks feasible within a rough 30-tool-call budget."
+  ],
+  "concerns": [
+    "No major issues spotted from the artifact surface."
+  ],
+  "rationale": "The task reads as internally coherent and the decomposition is easy to infer from the question.",
+  "suggested_fix": "No change needed."
+}

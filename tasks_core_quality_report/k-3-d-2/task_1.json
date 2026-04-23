@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "task_id": "tasks_core/k-3-d-2/task_1.json",
+  "source_task": "tasks_core/k-3-d-2/task_1.json",
+  "source_verdict": null,
+  "question": "Can you tell me the population of the largest city in the Idaho county reported in the 2020 census that had between 90 and 110 U.S. Department of Veterans Affairs disability compensation recipients in 2023 AND had between 88 and 92 recipients in 2019?. Your response should be in the format [Answer].",
+  "heuristic_flags": {
+    "question_text_anomaly": true,
+    "question_text_anomaly_notes": [
+      "malformed punctuation in question text"
+    ],
+    "has_explicit_answer_placeholders": true
+  },
+  "estimated_dataset_count": 4,
+  "estimated_min_tool_calls": 8,
+  "estimated_nice_tool_calls": 12,
+  "tool_call_budget_bucket": "within_budget_comfortably",
+  "quality_bucket": "medium",
+  "derivability_bucket": "clean",
+  "difficulty_bucket": "core",
+  "overall_recommendation": "keep_noncore",
+  "issue_labels": [
+    "awkward_wording",
+    "format_noise"
+  ],
+  "strengths": [
+    "Reasoning path is direct and faithful to the question.",
+    "The final city-population hop is well attached to the task."
+  ],
+  "concerns": [
+    "Malformed punctuation and the '[Answer]' instruction add avoidable format noise.",
+    "The 2020 census phrase is attached awkwardly enough to reduce clarity."
+  ],
+  "rationale": "The task is structurally coherent and the decomposition is easy to derive from the question: filter Idaho counties in 2023, intersect with the 2019 filter, identify the largest city in the surviving county, then read that city's 2020 census population. The budget is comfortably within range and there is no obvious answer-path leakage or unsupported central hop. The main weakness is prompt quality rather than task logic: the wording is rough, the punctuation is malformed, and the answer-format placeholder makes the artifact feel noisy rather than core-ready.",
+  "suggested_fix": "Rewrite the question to remove the '?.' and placeholder boilerplate and state explicitly that the target is the 2020 census population of the largest city in the qualifying Idaho county."
+}

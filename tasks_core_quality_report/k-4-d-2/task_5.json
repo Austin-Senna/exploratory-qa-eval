@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "task_id": "tasks_core/k-4-d-2/task_5.json",
+  "source_task": "tasks_core/k-4-d-2/task_5.json",
+  "source_verdict": null,
+  "question": "I'm analyzing simple battery assault trends in Los Angeles. First, identify the year between 2010 and 2019 that saw the highest number of these incidents. In that same year, which police area contains the neighborhood with the most arrests for the catch-all charge category? Focusing on that specific area, how many simple assault battery incidents occurred there in 2020?. Your response should be in the format [Answer].",
+  "heuristic_flags": {
+    "question_text_anomaly": true,
+    "question_text_anomaly_notes": [
+      "malformed punctuation in question text"
+    ],
+    "has_explicit_answer_placeholders": true
+  },
+  "estimated_dataset_count": 4,
+  "estimated_min_tool_calls": 8,
+  "estimated_nice_tool_calls": 12,
+  "tool_call_budget_bucket": "within_budget_comfortably",
+  "quality_bucket": "low",
+  "derivability_bucket": "broken",
+  "difficulty_bucket": "unclear",
+  "overall_recommendation": "revise_or_drop",
+  "issue_labels": [
+    "internal_inconsistency",
+    "format_noise"
+  ],
+  "strengths": [
+    "Budget is modest for a multi-hop task.",
+    "The first-year lookup and final count target are concrete."
+  ],
+  "concerns": [
+    "The question asks for the police area containing the neighborhood with the most catch-all arrests, but the chain directly selects the area with the most such arrests.",
+    "That mismatch changes the target being answered, so the decomposition does not faithfully follow the question.",
+    "Malformed punctuation and the explicit answer placeholder add avoidable surface noise."
+  ],
+  "rationale": "The task is comfortably within budget at four datasets, but the main reasoning chain does not answer the question as written. The artifact introduces a neighborhood-to-area formulation in the question, then bypasses neighborhood reasoning entirely and groups arrests by area, which is a direct internal inconsistency and breaks derivability. Because the wording is also noisy, this should be revised rather than kept in the core slice.",
+  "suggested_fix": "Either remove the neighborhood wording or add a real neighborhood-to-area step, then clean the punctuation and drop the [Answer] placeholder."
+}

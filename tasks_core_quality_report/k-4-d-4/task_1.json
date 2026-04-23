@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "task_id": "tasks_core/k-4-d-4/task_1.json",
+  "source_task": "tasks_core/k-4-d-4/task_1.json",
+  "source_verdict": "pass",
+  "question": "Can you find the NYC elementary schools that appear in the top 5 by the schools' learning environment in at least three years from 2006-2010 and is located in Bedford? Please report the school day in the MM/DD format. Your response should be in the format [Answer].",
+  "heuristic_flags": {
+    "question_text_anomaly": false,
+    "question_text_anomaly_notes": [],
+    "has_explicit_answer_placeholders": true
+  },
+  "estimated_dataset_count": 6,
+  "estimated_min_tool_calls": 12,
+  "estimated_nice_tool_calls": 18,
+  "tool_call_budget_bucket": "within_budget_comfortably",
+  "quality_bucket": "medium",
+  "derivability_bucket": "clean",
+  "difficulty_bucket": "core",
+  "overall_recommendation": "keep_noncore",
+  "issue_labels": [
+    "question_ambiguity",
+    "weak_final_hop"
+  ],
+  "strengths": [
+    "The yearly top-5 intersection is explicit and reproducible.",
+    "The Bedford filter is directly tied to the stated target."
+  ],
+  "concerns": [
+    "\"School day\" is a weakly specified final attribute.",
+    "The last lookup feels more decorative than benchmark-central."
+  ],
+  "rationale": "The task is internally coherent and stays comfortably within budget at six datasets, with a clear yearly ranking and location filter. The main weakness is the final target: \"school day\" is not a standard or well-motivated attribute, so the last hop feels lightly attached even though it is explicitly requested. That makes the task usable, but not strong enough for the core slice without cleanup.",
+  "suggested_fix": "Rewrite the question to use clearer wording and replace or better define the final \"school day\" attribute."
+}

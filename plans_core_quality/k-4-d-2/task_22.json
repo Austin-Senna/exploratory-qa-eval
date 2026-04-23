@@ -1,0 +1,78 @@
+{
+  "dataset_sequence": [
+    "income-limits-by-county",
+    "california-women-infants-and-children-program-redemption-by-county-967e9",
+    "hospitalization-counts-and-rates-of-selected-adverse-hospital-events-by-california-county-67a4a",
+    "california-county-boundaries-bd0f6",
+    "Santa_Clara_County,_California"
+  ],
+  "source_sequence": [
+    "datagov/income-limits-by-county/files/2022-income-limits.txt",
+    "datagov/income-limits-by-county/files/2023-income-limits.txt",
+    "datagov/california-women-infants-and-children-program-redemption-by-county-967e9/files/wic-redemption-by-county-by-participant-category-data-2010-2018.txt",
+    "datagov/california-women-infants-and-children-program-redemption-by-county-967e9/files/wic-redemption-by-county-by-participant-category-data-2010-2018.txt",
+    "datagov/hospitalization-counts-and-rates-of-selected-adverse-hospital-events-by-california-county-67a4a/files/ca-oshpd-adveventhospitalizationspsi-county2005-2015q3.txt",
+    "datagov/california-county-boundaries-bd0f6/files/California_County_Boundaries_9101614255844818638.txt",
+    "wikipedia/Santa_Clara_County,_California/content.txt"
+  ],
+  "reasoning_chain_text": [
+    "1. Identify California counties with area median income of at least $142,800 in 2022 and at least $147,900 in 2023.",
+    "2. From those counties, keep the ones with qualified WIC families' average benefits redeemed of at least $570 in 2018 and at least $700 in 2020.",
+    "3. From the counties that remain, keep those with a 2015 perioperative hemorrhage or hematoma observed rate of at least 19.",
+    "4. From the counties that remain, keep those with at least 3 billion square meters of area.",
+    "5. Determine the county seat of the remaining county."
+  ],
+  "original_final_question": "Identify a specific California county based on a set of health and housing statistics. The county had an area median income of at least $142,800 in 2022 and $147,900 in 2023. It also had qualified WIC families' average benefits redeemed of $570 or more in 2018 and $700 or more in 2020, a 2015 perioperative hemorrhage/hematoma observed rate of 19 or higher, and at least 3 billion square meters. Once you identify the county that matches all these figures, what is its county seat? Only report the county seat. Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1,
+        2
+      ],
+      "reasoning": [
+        "Node 1: Filter rows where `AMI` >= 142800, keep `County` and `AMI`, and return the qualifying `County` -> `AMI` mapping.",
+        "Node 2: Filter rows where `AMI` >= 147900, keep `County` and `AMI`, and return the qualifying `County` -> `AMI` mapping.",
+        "Hop result: intersect the county keys in <node 1 answer> and <node 2 answer> = Alameda, Contra Costa, Marin, San Francisco, San Mateo, Santa Clara"
+      ],
+      "answer": "Alameda, Contra Costa, Marin, San Francisco, San Mateo, Santa Clara"
+    },
+    {
+      "hop": 2,
+      "node_ids": [
+        3,
+        4
+      ],
+      "reasoning": [
+        "Node 3: Filter rows where `Obligation Year and Month` == 2018 and `Vendor County` is in <hop 1 answer>, parse `Average Cost per Family`, and keep counties with values >= 570.",
+        "Node 4: Filter rows where `Obligation Year and Month` == 2020 and `Vendor County` is in <hop 1 answer>, parse `Average Cost per Family`, and keep counties with values >= 700.",
+        "Hop result: intersect <node 3 answer> and <node 4 answer> = Alameda, San Francisco, Santa Clara"
+      ],
+      "answer": "Alameda, San Francisco, Santa Clara"
+    },
+    {
+      "hop": 3,
+      "node_ids": [
+        5,
+        6
+      ],
+      "reasoning": [
+        "Node 5: Filter rows where `Year` == 2015, `PSI` == 27, and `County` is in <hop 2 answer>, then keep counties with `ObsRate` >= 19.",
+        "Node 6: Filter rows where `COUNTY_NAME` is in <hop 2 answer>, then keep counties with `Shape__Area` >= 3000000000.",
+        "Hop result: intersect <node 5 answer> and <node 6 answer> = Santa Clara"
+      ],
+      "answer": "Santa Clara"
+    },
+    {
+      "hop": 4,
+      "node_ids": [
+        7
+      ],
+      "reasoning": [
+        "Node 7: San Jose is the county seat and largest city of Santa Clara County.",
+        "Hop result: San Jose"
+      ],
+      "answer": "San Jose"
+    }
+  ]
+}

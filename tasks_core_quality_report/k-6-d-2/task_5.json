@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "task_id": "tasks_core/k-6-d-2/task_5.json",
+  "source_task": "tasks_core/k-6-d-2/task_5.json",
+  "source_verdict": "pass",
+  "question": "Identify a specific California county seat based on a set of health and housing statistics. I'm looking for a county that had an area median income of at least $142,800 in 2022 and $147,900 in 2023. It also needs to have had average food benefits redeemed by families in the nutrition program for women, infants, and children of at least $570 in 2018 and $700 in 2020, at least 19 patients per 100,000 adults in 2015 who experienced surgery-related serious bleeding or blood collection problems, and a mapped area of at least 3 billion square meters. Once you identify the county that matches all these figures, tell me in what year the bay on the southern shore of its county seat was discovered. Only report the year. Your response should be in the format [Answer].",
+  "heuristic_flags": {
+    "question_text_anomaly": false,
+    "question_text_anomaly_notes": [],
+    "has_explicit_answer_placeholders": true
+  },
+  "estimated_dataset_count": 7,
+  "estimated_min_tool_calls": 14,
+  "estimated_nice_tool_calls": 21,
+  "tool_call_budget_bucket": "within_budget_comfortably",
+  "quality_bucket": "medium",
+  "derivability_bucket": "strained",
+  "difficulty_bucket": "too_hard",
+  "overall_recommendation": "keep_noncore",
+  "issue_labels": [
+    "format_noise",
+    "weak_final_hop"
+  ],
+  "strengths": [
+    "The final target and required output format are explicit.",
+    "The hop structure provides a plausible narrowing and lookup path from the question."
+  ],
+  "concerns": [
+    "Answer placeholders and/or embedded execution snippets add avoidable surface noise.",
+    "The final hop feels only weakly motivated by the earlier narrowing, reducing signal."
+  ],
+  "rationale": "The task is generally coherent and the answer target is clear, but the derivation relies on a fairly long or contrived bridge chain that can be brittle in a benchmark setting. It looks usable with cleanup, but it is not an ideal core-slice item as-is.",
+  "suggested_fix": "Tighten the question wording and make the key narrowing/comparison steps explicit; remove placeholder-heavy phrasing where possible."
+}

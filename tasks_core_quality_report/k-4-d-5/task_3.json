@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "task_id": "tasks_core/k-4-d-5/task_3.json",
+  "source_task": "tasks_core/k-4-d-5/task_3.json",
+  "source_verdict": null,
+  "question": "Among drugs with 5 to 10 million total annual Medicaid prescriptions across U.S. states, identify the one with the highest average prescription count from 2018 through 2022. Next, determine the top 3 leading causes of death in the year this drug first entered medical use. One of these three conditions has a different most significant risk factor than the other two. Who first described this condition? Only report the name. Your response should be in the format [Answer].",
+  "heuristic_flags": {
+    "question_text_anomaly": false,
+    "question_text_anomaly_notes": [],
+    "has_explicit_answer_placeholders": true
+  },
+  "estimated_dataset_count": 10,
+  "estimated_min_tool_calls": 20,
+  "estimated_nice_tool_calls": 30,
+  "tool_call_budget_bucket": "within_budget_comfortably",
+  "quality_bucket": "low",
+  "derivability_bucket": "broken",
+  "difficulty_bucket": "unclear",
+  "overall_recommendation": "revise_or_drop",
+  "issue_labels": [
+    "unsupported_step",
+    "answer_path_leakage"
+  ],
+  "strengths": [
+    "The question implies a coherent multi-hop path from drug filtering to a historical cause-of-death comparison.",
+    "The later risk-factor comparison is attached to the stated question rather than feeling decorative."
+  ],
+  "concerns": [
+    "Hop 1 selects TRIAMCINOL even though the visible yearly answer maps are truncated to 10 items and do not expose that candidate.",
+    "Node 6 preselects Triamcinolone as the survivor, which leaks the blocked intermediate answer instead of deriving it from the prior hop."
+  ],
+  "rationale": "The intended chain is reasonable, but the central drug-selection hop is not supported by the visible artifact: the yearly outputs are limited and the chosen drug is injected in the next node's source. That makes the derivation broken and the task unreliable as written, even though its nominal budget is still acceptable.",
+  "suggested_fix": "Expose the full cross-year candidate set or an explicit averaged comparison before the medical-use hop, and remove the preselected drug source until that survivor is derived."
+}

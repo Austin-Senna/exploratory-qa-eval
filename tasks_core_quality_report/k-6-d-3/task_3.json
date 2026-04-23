@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "task_id": "tasks_core/k-6-d-3/task_3.json",
+  "source_task": "tasks_core/k-6-d-3/task_3.json",
+  "source_verdict": null,
+  "question": "I am researching several U.S. agencies. First, identify the federal police agency that consistently ranked in the top 20 for January parking fines from 2019 to 2021. Among these agencies, identify the agency that is a national law-enforcement body and had the highest average number of moving violations in those same months. The agency belongs to a federal agency that is within a specific U.S. Department. Who is the head of that department, and which university did this person graduate from? Return the university name only. Your response should be in the format [Answer].",
+  "heuristic_flags": {
+    "question_text_anomaly": false,
+    "question_text_anomaly_notes": [],
+    "has_explicit_answer_placeholders": true
+  },
+  "estimated_dataset_count": 10,
+  "estimated_min_tool_calls": 20,
+  "estimated_nice_tool_calls": 30,
+  "tool_call_budget_bucket": "within_budget_comfortably",
+  "quality_bucket": "medium",
+  "derivability_bucket": "strained",
+  "difficulty_bucket": "core",
+  "overall_recommendation": "revise_or_drop",
+  "issue_labels": [
+    "temporal_instability",
+    "format_noise"
+  ],
+  "strengths": [
+    "The early hops define a coherent filtering objective over traffic-violation datasets."
+  ],
+  "concerns": [
+    "The \u201ccurrent head of the department\u201d hop is time-sensitive and will drift, weakening benchmark stability and reproducibility."
+  ],
+  "rationale": "Even if the agency chain is coherent, the task hinges on a \u201ccurrent head\u201d lookup for a cabinet department, which is intrinsically time-sensitive and likely to change across evaluation runs. That instability makes the task a poor fixed benchmark item without revision.",
+  "suggested_fix": "Replace the \u201ccurrent head\u201d requirement with a time-bounded version (e.g., as of a specific date/year) or swap the final hop to a stable attribute not dependent on incumbency."
+}

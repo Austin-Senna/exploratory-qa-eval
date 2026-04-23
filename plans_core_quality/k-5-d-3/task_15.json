@@ -1,0 +1,100 @@
+{
+  "dataset_sequence": [
+    "libraries-2019-visitors-by-location",
+    "libraries-2020-visitors-by-location",
+    "libraries-2021-visitors-by-location",
+    "libraries-2019-computer-sessions-by-location",
+    "libraries-2020-computer-sessions-by-location",
+    "libraries-2021-computer-sessions-by-location",
+    "Conrad_Sulzer_Regional_Library",
+    "public-health-statistics-life-expectancy-by-community-area",
+    "public-health-statistics-selected-public-health-indicators-by-chicago-community-area"
+  ],
+  "source_sequence": [
+    "datagov/libraries-2019-visitors-by-location/files/rows.txt",
+    "datagov/libraries-2020-visitors-by-location/files/rows.txt",
+    "datagov/libraries-2021-visitors-by-location/files/rows.txt",
+    "datagov/libraries-2019-computer-sessions-by-location/files/rows.txt",
+    "datagov/libraries-2020-computer-sessions-by-location/files/rows.txt",
+    "datagov/libraries-2021-computer-sessions-by-location/files/rows.txt",
+    "wikipedia/Conrad_Sulzer_Regional_Library/content.txt",
+    "datagov/public-health-statistics-life-expectancy-by-community-area/files/rows.txt",
+    "datagov/public-health-statistics-selected-public-health-indicators-by-chicago-community-area/files/rows.txt"
+  ],
+  "reasoning_chain_text": [
+    "1. Among Sulzer Regional Library, Edgewater, and Lincoln Belmont, identify the branches that ranked in the top five for total visitors in 2019, 2020, and 2021.",
+    "2. From those branches, keep the one that also ranked in the top three for total public-computer logins in 2019, 2020, and 2021.",
+    "3. Determine the community area where that library is located.",
+    "4. Determine the community area number for that area.",
+    "5. Return the per capita income for that community area, rounded to the nearest integer."
+  ],
+  "original_final_question": "Among the Chicago library branches Sulzer Regional Library, Edgewater, and Lincoln Belmont, which branch ranked in the top five for total visitors and in the top three for total public-computer logins every year from 2019 to 2021? What is the per capita income of the community area where this library is located? Return the number only, rounded to the closest integer. Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    {
+      "hop_id": 1,
+      "node_ids": [
+        1,
+        2,
+        3
+      ],
+      "reasoning": [
+        "Node 1: Filter 2019 rows where `ADDRESS` is present, group by `LOCATION NAME`, sum `YTD VISITS`, sort descending, and keep the top five library branches by visitors.",
+        "Node 2: Filter 2020 rows where `ADDRESS` is present, group by `LOCATION NAME`, sum `YTD VISITS`, sort descending, and keep the top five library branches by visitors.",
+        "Node 3: Filter 2021 rows where `ADDRESS` is present, group by `LOCATION NAME`, sum `YTD VISITS`, sort descending, and keep the top five library branches by visitors.",
+        "Hop result: intersect the three yearly top-five visitor lists with the task candidate set {Sulzer Regional Library, Edgewater, Lincoln Belmont}."
+      ],
+      "answer": [
+        "Sulzer Regional Library",
+        "Edgewater"
+      ]
+    },
+    {
+      "hop_id": 2,
+      "node_ids": [
+        4,
+        5,
+        6
+      ],
+      "reasoning": [
+        "Node 4: Filter 2019 rows where `ADDRESS` is present, group by `LOCATION NAME`, sum `YTD COMPUTER SESSIONS`, sort descending, and keep the top three branches by computer sessions.",
+        "Node 5: Filter 2020 rows where `ADDRESS` is present, group by `LOCATION NAME`, sum `YTD COMPUTER SESSIONS`, sort descending, and keep the top three branches by computer sessions.",
+        "Node 6: Filter 2021 rows where `ADDRESS` is present, group by `LOCATION NAME`, sum `YTD COMPUTER SESSIONS`, sort descending, and keep the top three branches by computer sessions.",
+        "Hop result: intersect the three yearly top-three computer-session lists with <hop 1 answer> to identify Sulzer Regional Library."
+      ],
+      "answer": "Sulzer Regional Library"
+    },
+    {
+      "hop_id": 3,
+      "node_ids": [
+        7
+      ],
+      "reasoning": [
+        "Node 7: The Wikipedia text for <hop 2 answer> states that the library is located in the Lincoln Square neighborhood.",
+        "Hop result: the neighborhood is Lincoln Square."
+      ],
+      "answer": "Lincoln Square"
+    },
+    {
+      "hop_id": 4,
+      "node_ids": [
+        8
+      ],
+      "reasoning": [
+        "Node 8: Filter rows where `Community Area` = `<hop 3 answer>` and return `Community Area Number`.",
+        "Hop result: the community area number is 4."
+      ],
+      "answer": 4
+    },
+    {
+      "hop_id": 5,
+      "node_ids": [
+        9
+      ],
+      "reasoning": [
+        "Node 9: Filter rows where `Community Area` = <hop 4 answer> and return `Per Capita Income`.",
+        "Hop result: the per capita income is 35503."
+      ],
+      "answer": 35503
+    }
+  ]
+}

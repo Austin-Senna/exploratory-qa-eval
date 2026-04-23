@@ -1,0 +1,74 @@
+{
+  "dataset_sequence": [
+    "Queens",
+    "nypd-complaint-data-historic",
+    "nypd-shooting-incident-data-historic",
+    "nypd-use-of-force-incidents"
+  ],
+  "source_sequence": [
+    "wikipedia/Queens/content.txt",
+    "datagov/nypd-complaint-data-historic/files/rows.txt",
+    "datagov/nypd-shooting-incident-data-historic/files/rows.txt",
+    "datagov/nypd-complaint-data-historic/files/rows.txt",
+    "datagov/nypd-use-of-force-incidents/files/rows.txt"
+  ],
+  "reasoning_chain_text": [
+    "1. Determine which New York City borough has the largest area, and identify the precinct in that borough with the most complaints in 2023.",
+    "2. Within that precinct, determine whether shootings in 2023 were more often inside or outside.",
+    "3. In that borough in 2023, identify the precinct with the most complaints where the incident occurred in that same setting.",
+    "4. Count use-of-force incidents in 2024 for the precinct from step 3."
+  ],
+  "original_final_question": "I'm analyzing crime patterns in the largest-area borough in NYC. First, identify the precinct that received the most complaints in 2023. Within that precinct, was it more common for shootings to happen inside or outside? Then, find which precinct in that borough had the highest number of complaints in 2023 where the incident happened in that same setting, and tell me how many incidents involving officers using force occurred in that second precinct in 2024. Only report the number of incidents. Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1
+      ],
+      "reasoning": [
+        "Node 1: Identify what Queens is within New York City from the cited Wikipedia source."
+      ],
+      "answer": "Queens"
+    },
+    {
+      "hop": 2,
+      "node_ids": [
+        2
+      ],
+      "reasoning": [
+        "Node 2: Filter rows where `CMPLNT_FR_DT` is in 2023 and `BORO_NM` = QUEENS, group by `ADDR_PCT_CD`, count complaints, sort descending, and keep the top precinct."
+      ],
+      "answer": 109
+    },
+    {
+      "hop": 3,
+      "node_ids": [
+        3
+      ],
+      "reasoning": [
+        "Node 3: Filter rows where `OCCUR_DATE` is in 2023 and `PRECINCT` = <hop 2 answer>, group by `LOC_OF_OCCUR_DESC`, count incidents, sort descending, and keep the most common location descriptor."
+      ],
+      "answer": "OUTSIDE"
+    },
+    {
+      "hop": 4,
+      "node_ids": [
+        4
+      ],
+      "reasoning": [
+        "Node 4: Filter rows where `CMPLNT_FR_DT` is in 2023, `BORO_NM` = <hop 1 answer>, and `LOC_OF_OCCUR_DESC` = <hop 3 answer>, group by `ADDR_PCT_CD`, count complaints, sort descending, and keep the top precinct."
+      ],
+      "answer": 114
+    },
+    {
+      "hop": 5,
+      "node_ids": [
+        5
+      ],
+      "reasoning": [
+        "Node 5: Filter rows where `Occurrence Date` is in 2024 and `Incident Pct` = <hop 4 answer>, then count incidents."
+      ],
+      "answer": 146
+    }
+  ]
+}

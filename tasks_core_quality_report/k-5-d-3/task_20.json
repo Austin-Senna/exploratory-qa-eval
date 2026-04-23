@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "task_id": "tasks_core/k-5-d-3/task_20.json",
+  "source_task": "tasks_core/k-5-d-3/task_20.json",
+  "source_verdict": null,
+  "question": "Among the Texas counties that ranked in the top five in 2023 for completed Adult Protective Services investigations, children removed from their homes during initial Child Protective Services investigations, and children receiving Family-Based Safety Services, which county had the lowest rate of repeat Adult Protective Services investigations in 2023? In that county, which city had the most active home-based child-care food program sites in 2022-2023, and which ZIP code in that city had the most active sites participating in the school nutrition program in the 2021-2022 school year? How many distinct employer names appeared on filings received in 2023 from employers without workers' compensation coverage in that ZIP code? Return only the number. Your response should be in the format [Answer].",
+  "heuristic_flags": {
+    "question_text_anomaly": false,
+    "question_text_anomaly_notes": [],
+    "has_explicit_answer_placeholders": true
+  },
+  "estimated_dataset_count": 7,
+  "estimated_min_tool_calls": 14,
+  "estimated_nice_tool_calls": 21,
+  "tool_call_budget_bucket": "within_budget_comfortably",
+  "quality_bucket": "medium",
+  "derivability_bucket": "clean",
+  "difficulty_bucket": "core",
+  "overall_recommendation": "keep_noncore",
+  "issue_labels": [
+    "weak_final_hop"
+  ],
+  "strengths": [
+    "The county intersection and recidivism comparison are explicitly derived.",
+    "Tie handling is mostly made concrete with assertions at key ranking steps."
+  ],
+  "concerns": [
+    "The final ZIP-to-employer lookup feels loosely attached to the earlier child-services chain.",
+    "The closing '[Answer]' instruction adds minor format noise."
+  ],
+  "rationale": "The artifact is coherent and budget-feasible: seven datasets implies roughly 14 minimum and 21 comfortable tool calls, and the main county-narrowing path is directly motivated by the question rather than injected. The task weakens as a benchmark item because the last hop pivots from school-nutrition ZIP selection to a workers' compensation employer count that reads as decorative rather than a strong continuation of the reasoning. That keeps it usable, but it is not an especially elegant core-slice task.",
+  "suggested_fix": "Replace the final employer-count hop with a more directly related county or city lookup and remove the '[Answer]' placeholder."
+}

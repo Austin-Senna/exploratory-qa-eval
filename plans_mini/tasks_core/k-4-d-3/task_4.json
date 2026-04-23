@@ -1,0 +1,92 @@
+{
+  "dataset_sequence": [
+    "annual-youth-detention-admissions-by-county-beginning-2006",
+    "jail-population-by-county-beginning-1997",
+    "nys-school-tax-relief-star-reimbursement-by-county-beginning-levy-year-1998",
+    "Erie_County,_New_York",
+    "Monroe_County,_New_York",
+    "index-violent-property-and-firearm-rates-by-county-beginning-1990",
+    "index-crimes-by-county-and-agency-beginning-1990",
+    "Buffalo,_New_York"
+  ],
+  "source_sequence": [
+    "datagov/annual-youth-detention-admissions-by-county-beginning-2006/files/rows.txt",
+    "datagov/jail-population-by-county-beginning-1997/files/rows.txt",
+    "datagov/nys-school-tax-relief-star-reimbursement-by-county-beginning-levy-year-1998/files/rows.txt",
+    "wikipedia/Erie_County,_New_York/content.txt",
+    "wikipedia/Monroe_County,_New_York/content.txt",
+    "datagov/index-violent-property-and-firearm-rates-by-county-beginning-1990/files/rows.txt",
+    "datagov/index-crimes-by-county-and-agency-beginning-1990/files/rows.txt",
+    "wikipedia/Buffalo,_New_York/content.txt"
+  ],
+  "reasoning_chain_text": [
+    "1. [Describe what to verify or compute from dataset step 1.]",
+    "2. [Describe what to verify or compute from dataset step 2.]",
+    "3. [Describe what to verify or compute from dataset step 3.]",
+    "4. [Describe what to verify or compute from dataset step 4.]",
+    "5. [Describe what to verify or compute from dataset step 5.]",
+    "6. [Describe what to verify or compute from dataset step 6.]",
+    "7. [Describe what to verify or compute from dataset step 7.]",
+    "8. [Describe what to verify or compute from dataset step 8.]"
+  ],
+  "original_final_question": "Find the New York counties outside of NYC having (1) over 90 youth sent to jail in 2015, (2) a total jail census under 750 in 2021, and (3) over 65,500 homeowner school-tax relief exemptions in 2022. Within them, identify the county with the higher 2021 violent-crime count. In what year was its county seat incorporated as a city? Please return the year only. Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1,
+        2,
+        3
+      ],
+      "reasoning": [
+        "Node 1: Filter rows where `Year` equals `2015`, exclude `County` equal to `New York City`, and keep rows where `Secure/Mixed Admissions` is greater than `90`, sort by `Secure/Mixed Admissions` descending, and keep `County`.",
+        "Node 2: Filter rows where `Year` equals `2021`, exclude `Facility Name (ORI)` equal to `All NYC Facilities`, derive county names from `Facility Name (ORI)`, sum `Census` by county, keep counties where total `Census` is under `750`, sort by `Census` descending, and keep county names.",
+        "Node 3: Filter rows where `Levy Year` equals `2022`, exclude `County` equal to `New York City`, keep rows where `Number of Basic Exemptions` is greater than `65500`, sort by `Number of Basic Exemptions` descending, and keep `County`.",
+        "Hop result: semantically intersect <node_1 answer>, <node_2 answer>, and <node_3 answer> to get Erie and Monroe."
+      ],
+      "answer": [
+        "Erie",
+        "Monroe"
+      ]
+    },
+    {
+      "hop": 2,
+      "node_ids": [
+        4,
+        5
+      ],
+      "reasoning": [
+        "Node 4: Buffalo is the county seat of Erie County.",
+        "Node 5: Rochester is the county seat of Monroe County.",
+        "Hop result: Buffalo, Rochester"
+      ],
+      "answer": [
+        "Buffalo",
+        "Rochester"
+      ]
+    },
+    {
+      "hop": 3,
+      "node_ids": [
+        6,
+        7
+      ],
+      "reasoning": [
+        "Node 6: Filter rows where `Year` equals `2021` and `County` equals `Erie`, then return `Violent Count`.",
+        "Node 7: Filter rows where `Year` equals `2021`, `County` equals `Monroe`, and `Agency` equals `County Total`, then return `Violent Total`.",
+        "Hop result: compare <node_6 answer> and <node_7 answer> -> Buffalo"
+      ],
+      "answer": "Buffalo"
+    },
+    {
+      "hop": 4,
+      "node_ids": [
+        8
+      ],
+      "reasoning": [
+        "Node 8: 1832 is the year <hop 3 answer> was incorporated as a city."
+      ],
+      "answer": "1832"
+    }
+  ]
+}

@@ -1,0 +1,90 @@
+{
+  "dataset_sequence": [
+    "missouri-first-reports-of-injury-by-county",
+    "missouri-active-alcohol-license-data",
+    "missouri-law-enforcement-agencies",
+    "missouri-fire-departments",
+    "missouri-job-centers",
+    "missouri-zipcode-data",
+    "missouri-beer-wine-and-liquor-solicitor-list-with-zip-code"
+  ],
+  "source_sequence": [
+    "datagov/missouri-first-reports-of-injury-by-county/files/rows.txt",
+    "datagov/missouri-active-alcohol-license-data/files/rows.txt",
+    "datagov/missouri-law-enforcement-agencies/files/rows.txt",
+    "datagov/missouri-fire-departments/files/rows.txt",
+    "datagov/missouri-job-centers/files/rows.txt",
+    "datagov/missouri-zipcode-data/files/rows.txt",
+    "datagov/missouri-beer-wine-and-liquor-solicitor-list-with-zip-code/files/rows.txt"
+  ],
+  "reasoning_chain_text": [
+    "1. From 2010 through 2012, identify the Missouri county with the highest average monthly number of first reports of injury after excluding Saint Louis.",
+    "2. In that county, determine which city had the most active alcohol license records.",
+    "3. In that city, identify the ZIP codes for the university law-enforcement agency with the highest ZIP code, the municipal fire department in that county, and the job centers there.",
+    "4. Determine which of those ZIP codes covers the most land.",
+    "5. Return how many businesses on the beer, wine, and liquor solicitor list are in that city and ZIP code."
+  ],
+  "original_final_question": "From 2010 through 2012, first find the Missouri county with the highest average monthly number of first reports of injury after excluding Saint Louis. In the city from that county with the most active alcohol license records, compare the ZIP codes for the university law-enforcement agency with the highest ZIP code, the municipal fire department in that county, and all job centers there. Which of those ZIP codes covers the most land, and how many businesses on the beer, wine, and liquor solicitor list are in that city and ZIP code? Return just the number. Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1
+      ],
+      "reasoning": [
+        "Node 1: Across 2010 through 2012, after excluding the St. Louis naming cluster, Jackson has the highest average monthly first-reported injury count at 1,163.972.",
+        "Hop result: <node_1 answer>"
+      ],
+      "answer": "Jackson"
+    },
+    {
+      "hop": 2,
+      "node_ids": [
+        2
+      ],
+      "reasoning": [
+        "Node 2: Within Jackson County, Kansas City has the most alcohol-license records in the Missouri active alcohol license dataset, with 1,147 records.",
+        "Hop result: <node_2 answer>"
+      ],
+      "answer": "Kansas City"
+    },
+    {
+      "hop": 3,
+      "node_ids": [
+        3,
+        4,
+        5
+      ],
+      "reasoning": [
+        "Node 3: In Kansas City, the university-type law-enforcement agency with the higher ZIP code is University of MO - K.C. Police Dept., listed at ZIP 64112.",
+        "Node 4: In Kansas City, the Jackson County municipal fire department is listed at ZIP 64105.",
+        "Node 5: The Kansas City job centers in the Missouri job-centers dataset both list ZIP 64108.",
+        "Combining nodes 3-5 gives the candidate ZIP codes 64112, 64105, and 64108.",
+        "Hop result: 64105, 64108, and 64112"
+      ],
+      "answer": "64105, 64108, and 64112"
+    },
+    {
+      "hop": 4,
+      "node_ids": [
+        6
+      ],
+      "reasoning": [
+        "Node 6: Among ZIP codes 64112, 64105, and 64108, ZIP 64108 has the largest land area in the Missouri ZIP-code geography dataset, with ALAND 9,418,079.",
+        "Hop result: <node_6 answer>"
+      ],
+      "answer": "64108"
+    },
+    {
+      "hop": 5,
+      "node_ids": [
+        7
+      ],
+      "reasoning": [
+        "Node 7: In the Missouri solicitor list, Kansas City has 19 listed beer, wine, and liquor solicitor businesses whose ZIP code begins with 64108.",
+        "Hop result: <node_7 answer>"
+      ],
+      "answer": "19"
+    }
+  ]
+}

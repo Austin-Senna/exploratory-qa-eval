@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "task_id": "tasks_core/k-5-d-3/task_27.json",
+  "source_task": "tasks_core/k-5-d-3/task_27.json",
+  "source_verdict": null,
+  "question": "Start with the Oklahoma county that has the most listings in the public library directory. Then find the city in that county with the highest total number of units across multi-family developments funded by the Oklahoma Housing Finance Agency. In that city, collect the 5-digit ZIP codes that appear among higher-education institutions, public libraries, and chambers of commerce. Keep only the ZIP codes that appear in at least two of those three lists, sort them by area in square miles, and take the second-smallest one. How many health care facilities are listed in that city in that ZIP code? Return just the number. Your response should be in the format [Answer].",
+  "heuristic_flags": {
+    "question_text_anomaly": false,
+    "question_text_anomaly_notes": [],
+    "has_explicit_answer_placeholders": true
+  },
+  "estimated_dataset_count": 7,
+  "estimated_min_tool_calls": 14,
+  "estimated_nice_tool_calls": 21,
+  "tool_call_budget_bucket": "within_budget_comfortably",
+  "quality_bucket": "high",
+  "derivability_bucket": "clean",
+  "difficulty_bucket": "core",
+  "overall_recommendation": "core_keep",
+  "issue_labels": [],
+  "strengths": [
+    "Question cleanly motivates each narrowing step.",
+    "The ZIP-overlap and area-ranking hops add real multi-hop signal without overextending cost.",
+    "The final health-care lookup is tightly attached to the selected city and ZIP."
+  ],
+  "concerns": [
+    "Trailing '[Answer]' formatting adds minor template noise."
+  ],
+  "rationale": "The artifact stays comfortably within budget at seven datasets, which implies roughly 14 minimum and 21 nice-case tool calls. The county-to-city-to-overlapping-ZIP-to-area-to-facility-count chain is coherent, directly supported by the nodes, and does not rely on injected candidates or contradictory filtering. Aside from minor templated response wording, it is a strong, affordable benchmark task.",
+  "suggested_fix": "Optionally remove the trailing '[Answer]' response-format placeholder."
+}

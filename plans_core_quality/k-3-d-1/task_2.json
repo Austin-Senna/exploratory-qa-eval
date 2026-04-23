@@ -1,0 +1,53 @@
+{
+  "dataset_sequence": [
+    "pittsburgh-international-airport-scheduled-passenger-traffic",
+    "airports-5e97a",
+    "boundaries-us-zip-codes"
+  ],
+  "source_sequence": [
+    "datagov/pittsburgh-international-airport-scheduled-passenger-traffic/files/pittsburgh-international-traffic-report-march-2019.txt",
+    "datagov/airports-5e97a/files/rows.txt",
+    "datagov/boundaries-us-zip-codes/files/rows.txt"
+  ],
+  "reasoning_chain_text": [
+    "1. Identify the destination with the most scheduled seats in Pittsburgh International Airport's in March 2019.",
+    "2. Determine the city and state for that destination airport code.",
+    "3. Within that destination city and state, identify the ZIP code with the largest land area and return the ZIP code."
+  ],
+  "original_final_question": "For Pittsburgh International Airport's March 2019 scheduled traffic report, find the destination with the most seats and map it to its city and state. What ZIP code in that destination city/state has the largest land area? Please return the ZIP code only. Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1
+      ],
+      "reasoning": [
+        "Node 1: Group rows by `Destination` and `Destination Code`, sum `Seats March 2019` within each group, and select the destination-code pair with the largest total.",
+        "Hop result: <node_1 answer>"
+      ],
+      "answer": "Atlanta (ATL)"
+    },
+    {
+      "hop": 2,
+      "node_ids": [
+        2
+      ],
+      "reasoning": [
+        "Node 2: Extract the airport code from the upstream answer, filter rows where `Loc_Id` matches that code, and read `City` and `State_Post` from the matching entry.",
+        "Hop result: <node_2 answer>"
+      ],
+      "answer": "Atlanta, GA"
+    },
+    {
+      "hop": 3,
+      "node_ids": [
+        3
+      ],
+      "reasoning": [
+        "Node 3: Filter rows where `CITY` equals the upstream city and `STATE` equals the upstream state, then select the `ZIPCODE` from the row with the maximum `SQMI`.",
+        "Hop result: <node_3 answer>"
+      ],
+      "answer": "30349"
+    }
+  ]
+}

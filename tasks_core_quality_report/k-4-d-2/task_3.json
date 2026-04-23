@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "task_id": "tasks_core/k-4-d-2/task_3.json",
+  "source_task": "tasks_core/k-4-d-2/task_3.json",
+  "source_verdict": null,
+  "question": "I'm analyzing data for the Austin City Council district represented by Zohaib Qadri. Starting from the year when the Austin City Council voted on approving a legal settlement in the Claudia Ford case against the City of Austin, identify which police sector had the highest number of searches in that district that year. Then, what is the ratio of the total number of dispatch incidents in that sector compared to the number of public schools in Austin? Round that to the nearest integer. Your response should be in the format [Answer].",
+  "heuristic_flags": {
+    "question_text_anomaly": false,
+    "question_text_anomaly_notes": [],
+    "has_explicit_answer_placeholders": true
+  },
+  "estimated_dataset_count": 5,
+  "estimated_min_tool_calls": 10,
+  "estimated_nice_tool_calls": 15,
+  "tool_call_budget_bucket": "within_budget_comfortably",
+  "quality_bucket": "low",
+  "derivability_bucket": "broken",
+  "difficulty_bucket": "unclear",
+  "overall_recommendation": "revise_or_drop",
+  "issue_labels": [
+    "internal_inconsistency"
+  ],
+  "strengths": [
+    "Question target and final computation are explicit.",
+    "Dataset count stays comfortably within budget."
+  ],
+  "concerns": [
+    "The reasoning chain says hop 2 filters by council_district, but node 2 actually derives the date from the Claudia Ford settlement item text.",
+    "Because the year-defining hop is contradictory, the downstream sector and ratio steps are not reliably derived from the stated process."
+  ],
+  "rationale": "This task is affordable at five datasets, but a central inconsistency breaks it. The question and node 2 define the year by the Claudia Ford settlement vote, while the reasoning chain instead switches to a district-based filter, which is a different operation and does not justify the same date. That contradiction makes the derivation broken and the task unsuitable to keep as-is.",
+  "suggested_fix": "Rewrite hop 2 and the reasoning chain to derive the year by matching the Claudia Ford settlement vote record, then keep the later sector and ratio steps aligned to that year."
+}

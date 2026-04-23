@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "task_id": "tasks_core/k-5-d-2/task_16.json",
+  "source_task": "tasks_core/k-5-d-2/task_16.json",
+  "source_verdict": null,
+  "question": "The Chicago Fire Department is the department meeting the budget criteria. Determine if it became a paid professional force before or after Pittsburgh's fire bureau did, and focus on the city whose department became paid later. For that city, identify its largest airport; in its March 2019 scheduled traffic report, find the destination with the most seats and map it to its city and state. What ZIP code in that destination city/state has the largest land area? Please return the ZIP code only. Your response should be in the format [Answer].",
+  "heuristic_flags": {
+    "question_text_anomaly": false,
+    "question_text_anomaly_notes": [],
+    "has_explicit_answer_placeholders": true
+  },
+  "estimated_dataset_count": 6,
+  "estimated_min_tool_calls": 12,
+  "estimated_nice_tool_calls": 18,
+  "tool_call_budget_bucket": "within_budget_comfortably",
+  "quality_bucket": "medium",
+  "derivability_bucket": "clean",
+  "difficulty_bucket": "core",
+  "overall_recommendation": "keep_noncore",
+  "issue_labels": [
+    "format_noise",
+    "awkward_wording"
+  ],
+  "strengths": [
+    "Comparison-to-airport-to-destination chain is coherent and affordable.",
+    "The final target is explicit and the intermediate hops are easy to audit from the artifact."
+  ],
+  "concerns": [
+    "The opening 'budget criteria' clause feels like leftover hidden-context scaffolding.",
+    "Placeholder-heavy node text, especially node 4's hop reference, signals avoidable artifact sloppiness."
+  ],
+  "rationale": "This task is comfortably within budget and the main reasoning path is still cleanly derivable from the question: compare Chicago vs. Pittsburgh on paid-force timing, take the later city, follow its airport traffic leader, then map to a ZIP target. The problem is artifact polish rather than core logic. The unexplained 'budget criteria' lead-in and noisy placeholder scaffolding make the task feel generated rather than cleanly authored, so it looks usable but not strong enough for the core slice as written.",
+  "suggested_fix": "Remove the unexplained budget-criteria lead-in and normalize the placeholder references, especially node 4's hop tag."
+}

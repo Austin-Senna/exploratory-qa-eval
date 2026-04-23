@@ -1,0 +1,241 @@
+{
+  "question": "I'm looking for a Texas county that consistently ranked in the top five for total number of lunches served in the Seamless Summer Option program from 2015 to 2019. Among those top counties, find the two that saw the largest percentage drops in day care home meal reimbursements from 2018-19 to 2020-21. Of those two, which one had higher child center enrollment on average from 2018-19 to 2019-20? Finally, identify the county seat of that county and tell me which specific gulf its coast borders. Please only report the name of the gulf in your answer. Your response should be in the format [Answer].",
+  "answer": "Gulf of Mexico",
+  "nodes": {
+    "1": {
+      "source": "datagov/summer-meal-programs-seamless-summer-option-sso-meal-count-information-program-period-2016/files/rows.txt",
+      "fact": "In the 2015-2016 SSO meal count program period dataset, the top five counties by LunchTotal were Harris (675,945), Hidalgo (651,134), Dallas (341,323), Cameron (325,806), and El Paso (262,063).",
+      "subquestion": "Which Texas counties were in the top five for total number of lunches served in the Seamless Summer Option program in 2015-2016?",
+      "answer": [
+        "Harris",
+        "Hidalgo",
+        "Dallas",
+        "Cameron",
+        "El Paso"
+      ]
+    },
+    "2": {
+      "source": "datagov/summer-meal-programs-seamless-summer-option-sso-meal-count-information-program-period-2017/files/rows.txt",
+      "fact": "In the 2016-2017 SSO meal count program period dataset, the top five counties by LunchTotal were Hidalgo (716,795), Harris (614,713), Dallas (376,028), Cameron (309,590), and Bexar (278,760).",
+      "subquestion": "Which Texas counties were in the top five for total number of lunches served in the Seamless Summer Option program in 2016-2017?",
+      "answer": [
+        "Hidalgo",
+        "Harris",
+        "Dallas",
+        "Cameron",
+        "Bexar"
+      ]
+    },
+    "3": {
+      "source": "datagov/summer-meal-programs-seamless-summer-option-sso-meal-count-information-program-period-2018/files/rows.txt",
+      "fact": "In the 2017-2018 SSO meal count program period dataset, the top five counties by LunchTotal were Hidalgo (667,415), Harris (480,251), Dallas (362,790), Cameron (258,875), and Bexar (235,800).",
+      "subquestion": "Which Texas counties were in the top five for total number of lunches served in the Seamless Summer Option program in 2017-2018?",
+      "answer": [
+        "Hidalgo",
+        "Harris",
+        "Dallas",
+        "Cameron",
+        "Bexar"
+      ]
+    },
+    "4": {
+      "source": "datagov/summer-meal-programs-seamless-summer-option-sso-meal-count-information-program-period-2019/files/rows.txt",
+      "fact": "In the 2018-2019 SSO meal count program period dataset, the top five counties by LunchTotal were Hidalgo (668,927), Harris (525,238), Dallas (348,923), Bexar (284,028), and Cameron (260,791).",
+      "subquestion": "Which Texas counties were in the top five for total number of lunches served in the Seamless Summer Option program in 2018-2019?",
+      "answer": [
+        "Hidalgo",
+        "Harris",
+        "Dallas",
+        "Bexar",
+        "Cameron"
+      ]
+    },
+    "5": {
+      "source": "datagov/child-and-adult-care-food-programs-cacfp-day-care-homes-meal-reimbursement-program-ye-2018/files/rows.txt",
+      "fact": "In the CACFP day care homes meal reimbursement dataset for ProgramYear 2018-2019, total reimbursements for Harris, Dallas, Hidalgo, and Cameron counties were: Harris $8,757,796.13; Dallas $2,835,278.75; Hidalgo $1,202,699.73; Cameron $392,489.51.",
+      "subquestion": "For the counties from <hop 1 answer>, what were the total day care home meal reimbursements in 2018-2019?",
+      "answer": {
+        "Harris": 8757796.13,
+        "Dallas": 2835278.75,
+        "Hidalgo": 1202699.73,
+        "Cameron": 392489.51
+      }
+    },
+    "6": {
+      "source": "datagov/child-and-adult-care-food-programs-cacfp-day-care-homes-meal-reimbursement-program-ye-2020/files/rows.txt",
+      "fact": "In the CACFP day care homes meal reimbursement dataset for ProgramYear 2020-2021, total reimbursements for Harris, Dallas, Hidalgo, and Cameron counties were: Harris $7,558,597.77; Dallas $2,393,411.26; Hidalgo $971,063.56; Cameron $330,003.06.",
+      "subquestion": "For the counties from <hop 1 answer>, what were the total day care home meal reimbursements in 2020-2021?",
+      "answer": {
+        "Harris": 7558597.77,
+        "Dallas": 2393411.26,
+        "Hidalgo": 971063.56,
+        "Cameron": 330003.06
+      }
+    },
+    "7": {
+      "source": "datagov/child-and-adult-care-food-program-cacfp-child-centers-meal-reimbursement-program-year-2018/files/rows.txt",
+      "fact": "In the CACFP child centers dataset for ProgramYear 2018-2019, total EnrollmentQty was Cameron 7,620,183 and Hidalgo 1,661,128.",
+      "subquestion": "For the counties from <hop 2 answer>, what were the total child center enrollments in 2018-2019?",
+      "answer": {
+        "Cameron": 7620183,
+        "Hidalgo": 1661128
+      }
+    },
+    "8": {
+      "source": "datagov/child-and-adult-care-food-program-cacfp-child-centers-meal-reimbursement-program-year-2019/files/rows.txt",
+      "fact": "In the CACFP child centers dataset for ProgramYear 2019-2020, total EnrollmentQty was Cameron 1,076,746 and Hidalgo 1,477,805.",
+      "subquestion": "For the counties from <hop 2 answer>, what were the total child center enrollments in 2019-2020?",
+      "answer": {
+        "Cameron": 1076746,
+        "Hidalgo": 1477805
+      }
+    },
+    "9": {
+      "source": "wikipedia/Cameron_County,_Texas/content.txt",
+      "fact": "Cameron County's county seat is Brownsville.",
+      "subquestion": "What is the county seat of <hop 3 answer>?",
+      "answer": "Brownsville"
+    },
+    "10": {
+      "source": "wikipedia/Brownsville,_Texas/content.txt",
+      "fact": "Brownsville is located on the western Gulf Coast in South Texas.",
+      "subquestion": "On which coast is <hop 4 answer> located?",
+      "answer": "Gulf Coast"
+    },
+    "11": {
+      "source": "wikipedia/Gulf_Coast_of_the_United_States/content.txt",
+      "fact": "The Gulf Coast of the United States is the coastline along the Gulf of Mexico.",
+      "subquestion": "The coast identified in <hop 5 answer> is the coastline along which gulf?",
+      "answer": "Gulf of Mexico"
+    }
+  },
+  "reasoning_hops": [
+    {
+      "hop_id": 1,
+      "node_ids": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "reasoning": [
+        "Node 1: Find the top five Texas counties by total SSO LunchTotal in ProgramYear 2015-2016.",
+        "Node 2: Find the top five Texas counties by total SSO LunchTotal in ProgramYear 2016-2017.",
+        "Node 3: Find the top five Texas counties by total SSO LunchTotal in ProgramYear 2017-2018.",
+        "Node 4: Find the top five Texas counties by total SSO LunchTotal in ProgramYear 2018-2019.",
+        "Hop result: intersect the four yearly top-five sets to keep the counties that ranked in the top five in every year: Harris, Hidalgo, Dallas, and Cameron."
+      ],
+      "answer": [
+        "Harris",
+        "Hidalgo",
+        "Dallas",
+        "Cameron"
+      ]
+    },
+    {
+      "hop_id": 2,
+      "node_ids": [
+        5,
+        6
+      ],
+      "reasoning": [
+        "Node 5: Retrieve 2018-2019 CACFP day care home TotalMealReimbursement totals for the counties from <hop 1 answer>.",
+        "Node 6: Retrieve 2020-2021 CACFP day care home TotalMealReimbursement totals for the counties from <hop 1 answer>.",
+        "Hop result: compare the percentage decreases from 2018-2019 to 2020-2021 and keep the two counties with the largest drops: Hidalgo and Cameron."
+      ],
+      "answer": [
+        "Hidalgo",
+        "Cameron"
+      ]
+    },
+    {
+      "hop_id": 3,
+      "node_ids": [
+        7,
+        8
+      ],
+      "reasoning": [
+        "Node 7: Retrieve 2018-2019 CACFP child-center EnrollmentQty totals for the counties from <hop 2 answer>.",
+        "Node 8: Retrieve 2019-2020 CACFP child-center EnrollmentQty totals for the counties from <hop 2 answer>.",
+        "Hop result: average the two years for each county and keep the county with the higher average enrollment: Cameron County."
+      ],
+      "answer": "Cameron County"
+    },
+    {
+      "hop_id": 4,
+      "node_ids": [
+        9
+      ],
+      "reasoning": [
+        "Node 9: Read the Wikipedia article for <hop 3 answer> and identify its county seat.",
+        "Hop result: the county seat is Brownsville."
+      ],
+      "answer": "Brownsville"
+    },
+    {
+      "hop_id": 5,
+      "node_ids": [
+        10
+      ],
+      "reasoning": [
+        "Node 10: Read the Wikipedia article for <hop 4 answer> and identify the coast on which it is located.",
+        "Hop result: Brownsville is on the Gulf Coast."
+      ],
+      "answer": "Gulf Coast"
+    },
+    {
+      "hop_id": 6,
+      "node_ids": [
+        11
+      ],
+      "reasoning": [
+        "Node 11: Read the Wikipedia article for the coast from <hop 5 answer> and identify which gulf it borders.",
+        "Hop result: the Gulf Coast is the coastline along the Gulf of Mexico."
+      ],
+      "answer": "Gulf of Mexico"
+    }
+  ],
+  "reasoning_chain": [
+    "HOP 1 (d=4, SSO LunchTotal 2015-2016 to 2018-2019 - nodes 1-4):",
+    "  Node 1 (2015-2016): top five LunchTotal counties -> {Harris, Hidalgo, Dallas, Cameron, El Paso}",
+    "  Node 2 (2016-2017): top five LunchTotal counties -> {Hidalgo, Harris, Dallas, Cameron, Bexar}",
+    "  Node 3 (2017-2018): top five LunchTotal counties -> {Hidalgo, Harris, Dallas, Cameron, Bexar}",
+    "  Node 4 (2018-2019): top five LunchTotal counties -> {Hidalgo, Harris, Dallas, Bexar, Cameron}",
+    "  Intersection: {Harris, Hidalgo, Dallas, Cameron}",
+    "",
+    "HOP 2 (d=2, CACFP day care homes reimbursements 2018-2019 vs 2020-2021 - nodes 5-6):",
+    "  Node 5 totals (2018-2019): Harris 8,757,796.13; Dallas 2,835,278.75; Hidalgo 1,202,699.73; Cameron 392,489.51",
+    "  Node 6 totals (2020-2021): Harris 7,558,597.77; Dallas 2,393,411.26; Hidalgo 971,063.56; Cameron 330,003.06",
+    "  Percent decreases: Hidalgo -19.26%, Cameron -15.92%, Dallas -15.58%, Harris -13.69% -> two largest decreases {Hidalgo, Cameron}",
+    "",
+    "HOP 3 (d=2, CACFP child centers EnrollmentQty 2018-2019 vs 2019-2020 - nodes 7-8):",
+    "  Node 7 totals (2018-2019): Cameron 7,620,183; Hidalgo 1,661,128",
+    "  Node 8 totals (2019-2020): Cameron 1,076,746; Hidalgo 1,477,805",
+    "  Average EnrollmentQty: Cameron 4,348,464.5 vs Hidalgo 1,569,466.5 -> Cameron County",
+    "",
+    "HOP 4 (d=1, Cameron County Wikipedia - node 9):",
+    "  Node 9: Cameron County seat is Brownsville",
+    "",
+    "HOP 5 (d=1, Brownsville Wikipedia - node 10):",
+    "  Node 10: Brownsville is on the Gulf Coast",
+    "",
+    "HOP 6 (d=1, Gulf Coast Wikipedia - node 11):",
+    "  Node 11: Gulf Coast is the coastline along the Gulf of Mexico",
+    "",
+    "Final answer: Gulf of Mexico"
+  ],
+  "verdict": "pass",
+  "datasets_used": [
+    "Brownsville,_Texas",
+    "Cameron_County,_Texas",
+    "Gulf_Coast_of_the_United_States",
+    "child-and-adult-care-food-program-cacfp-child-centers-meal-reimbursement-program-year-2018",
+    "child-and-adult-care-food-program-cacfp-child-centers-meal-reimbursement-program-year-2019",
+    "child-and-adult-care-food-programs-cacfp-day-care-homes-meal-reimbursement-program-ye-2018",
+    "child-and-adult-care-food-programs-cacfp-day-care-homes-meal-reimbursement-program-ye-2020",
+    "summer-meal-programs-seamless-summer-option-sso-meal-count-information-program-period-2016",
+    "summer-meal-programs-seamless-summer-option-sso-meal-count-information-program-period-2017",
+    "summer-meal-programs-seamless-summer-option-sso-meal-count-information-program-period-2018",
+    "summer-meal-programs-seamless-summer-option-sso-meal-count-information-program-period-2019"
+  ]
+}

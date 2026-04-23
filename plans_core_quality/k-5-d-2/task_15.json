@@ -1,0 +1,72 @@
+{
+  "dataset_sequence": [
+    "budget-2018-budget-ordinance-appropriations",
+    "budget-2019-budget-ordinance-appropriations",
+    "Chicago_Fire_Department",
+    "Pittsburgh_Bureau_of_Fire",
+    "Pittsburgh",
+    "pittsburgh-international-airport-scheduled-passenger-traffic",
+    "airports-5e97a"
+  ],
+  "source_sequence": [
+    "datagov/budget-2018-budget-ordinance-appropriations/files/rows.txt",
+    "datagov/budget-2019-budget-ordinance-appropriations/files/rows.txt",
+    "wikipedia/Chicago_Fire_Department/content.txt",
+    "wikipedia/Pittsburgh_Bureau_of_Fire/content.txt",
+    "wikipedia/Pittsburgh/content.txt",
+    "datagov/pittsburgh-international-airport-scheduled-passenger-traffic/files/pittsburgh-international-traffic-report-march-2019.txt",
+    "datagov/airports-5e97a/files/rows.txt"
+  ],
+  "reasoning_chain_text": [
+    "1. Identify the Chicago city department whose total budget is between $400 million and $700 million in 2018 and between $600 million and $700 million in 2019.",
+    "2. Determine whether that department became a paid professional force before or after Pittsburgh's fire bureau, and keep the city whose department became paid later.",
+    "3. Determine that city's largest airport.",
+    "4. In that airport's March 2019 scheduled traffic report, identify the destination airport code with the most seats.",
+    "5. Map that airport code to its destination city and return the city name."
+  ],
+  "original_final_question": "Start by finding the Chicago city department with a budget of $400 million to $700 million in 2018 and $600 million to $700 million in 2019. Determine if this department became a paid professional force before or after Pittsburgh's fire bureau did, and focus on the city whose department became paid later. For that city, identify its largest airport; in its March 2019 scheduled traffic report, find the destination with the most seats and report the destination city. Please return the city only. Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1,
+        2
+      ],
+      "question": "Which Chicago city department had total appropriations between $400 million and $700 million in 2018 and between $600 million and $700 million in 2019?",
+      "answer": "CFD"
+    },
+    {
+      "hop": 2,
+      "node_ids": [
+        3,
+        4
+      ],
+      "question": "Which fire department became a paid professional department later, CFD or the Pittsburgh Bureau of Fire?",
+      "answer": "Pittsburgh"
+    },
+    {
+      "hop": 3,
+      "node_ids": [
+        5
+      ],
+      "question": "What is the largest airport in Pittsburgh?",
+      "answer": "Pittsburgh International Airport"
+    },
+    {
+      "hop": 4,
+      "node_ids": [
+        6
+      ],
+      "question": "For Pittsburgh International Airport, which destination airport code had the most scheduled seats in March 2019?",
+      "answer": "ATL"
+    },
+    {
+      "hop": 5,
+      "node_ids": [
+        7
+      ],
+      "question": "In the airports dataset, what city corresponds to ATL?",
+      "answer": "Atlanta"
+    }
+  ]
+}

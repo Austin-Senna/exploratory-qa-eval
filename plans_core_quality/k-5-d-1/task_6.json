@@ -1,0 +1,76 @@
+{
+  "dataset_sequence": [
+    "NoMa",
+    "crime-incidents-in-2018",
+    "crime-incidents-in-2019",
+    "crime-incidents-in-2020",
+    "crime-incidents-in-2021"
+  ],
+  "source_sequence": [
+    "wikipedia/NoMa/content.txt",
+    "datagov/crime-incidents-in-2018/files/data.txt",
+    "datagov/crime-incidents-in-2019/files/data.txt",
+    "datagov/crime-incidents-in-2020/files/data.txt",
+    "datagov/crime-incidents-in-2021/files/data.txt"
+  ],
+  "reasoning_chain_text": [
+    "1. Determine which Washington, D.C. ward contains NoMa.",
+    "2. Identify the most common offense in that ward in 2018.",
+    "3. Determine which ward had the most incidents of that offense in 2019.",
+    "4. Identify the most common offense in that ward in 2020.",
+    "5. Count citywide incidents of that offense in 2021."
+  ],
+  "original_final_question": "I'm researching crime trends starting in the D.C. ward that contains the NoMa neighborhood. What was the most frequent offense there in 2018? Then, identify which ward saw the highest number of that specific crime in 2019. For that new ward, find its most common offense in 2020, and tell me the total number of incidents of that offense recorded across the city in 2021. Only report the total number in your response. Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1
+      ],
+      "reasoning": [
+        "Node 1: Identify the Washington, D.C. ward that contains NoMa from the cited Wikipedia source."
+      ],
+      "answer": "6"
+    },
+    {
+      "hop": 2,
+      "node_ids": [
+        2
+      ],
+      "reasoning": [
+        "Node 2: Filter features where `WARD` = <hop 1 answer>, group by `OFFENSE`, count incidents, sort descending, and keep the most common offense."
+      ],
+      "answer": "THEFT/OTHER"
+    },
+    {
+      "hop": 3,
+      "node_ids": [
+        3
+      ],
+      "reasoning": [
+        "Node 3: Filter features where `OFFENSE` = <hop 2 answer>, group by `WARD`, count incidents, sort descending, and keep the top ward."
+      ],
+      "answer": "2"
+    },
+    {
+      "hop": 4,
+      "node_ids": [
+        4
+      ],
+      "reasoning": [
+        "Node 4: Filter features where `WARD` = <hop 3 answer>, group by `OFFENSE`, count incidents, sort descending, and keep the most common offense."
+      ],
+      "answer": "THEFT/OTHER"
+    },
+    {
+      "hop": 5,
+      "node_ids": [
+        5
+      ],
+      "reasoning": [
+        "Node 5: Filter features where `OFFENSE` = <hop 4 answer>, then count incidents."
+      ],
+      "answer": 10890
+    }
+  ]
+}

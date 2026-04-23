@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "task_id": "tasks_core/k-5-d-3/task_9.json",
+  "source_task": "tasks_core/k-5-d-3/task_9.json",
+  "source_verdict": null,
+  "question": "Across 2019-2021, identify the Texas counties that consistently ranked in the statewide top five for spending on major asset purchases and long-term property improvements and also in the statewide top five for releases from the Texas state prison system in each of those years. Among that set, find the county with the highest average intake counts into the Texas state prison system over 2019-2021. Its county seat has been home to a National Basketball Association franchise since 1971. Which franchise is it? Return the team name only. Your response should be in the format [Answer].",
+  "heuristic_flags": {
+    "question_text_anomaly": false,
+    "question_text_anomaly_notes": [],
+    "has_explicit_answer_placeholders": true
+  },
+  "estimated_dataset_count": 11,
+  "estimated_min_tool_calls": 22,
+  "estimated_nice_tool_calls": 33,
+  "tool_call_budget_bucket": "within_budget_tight",
+  "quality_bucket": "medium",
+  "derivability_bucket": "clean",
+  "difficulty_bucket": "core",
+  "overall_recommendation": "revise_or_drop",
+  "issue_labels": [
+    "internal_inconsistency"
+  ],
+  "strengths": [
+    "The final question cleanly motivates the yearly intersection, averaging, and county-seat-to-franchise chain.",
+    "The task remains borderline feasible on budget grounds despite spanning three annual comparisons."
+  ],
+  "concerns": [
+    "Hop 2 is internally inconsistent: nodes 4-6 say they filter by <hop 1 answer>, but their embedded code uses year-specific top-five county lists instead.",
+    "Because that mismatch sits in the central narrowing step, the artifact is not reliable enough for benchmark use as-is."
+  ],
+  "rationale": "The intended decomposition is strong and the final question is clear, so the task is still cleanly derivable from the prompt. But the artifact has a central mismatch between the hop-2 subquestions/reasoning and the actual node logic, which makes it only medium quality even though the final answer path still works. With 11 datasets and a tight 30-call budget margin, that kind of inconsistency is enough to block core-benchmark use until the task is repaired.",
+  "suggested_fix": "Make nodes 4-6 actually consume <hop 1 answer>, or rewrite their subquestions and hop-2 reasoning so they explicitly use per-year expenditure-release overlaps."
+}

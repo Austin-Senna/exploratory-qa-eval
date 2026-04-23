@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "task_id": "tasks_core/k-5-d-2/task_17.json",
+  "source_task": "tasks_core/k-5-d-2/task_17.json",
+  "source_verdict": null,
+  "question": "Identify a specific California county based on a set of health and housing statistics. The county had an Area Median Income of at least $142,800 in 2022 and $147,900 in 2023. It also had an infants, children and woman average cost per family of $570 or more in 2018 and $700 or more in 2020, a 2015 perioperative hemorrhage/hematoma observed rate of 19 or higher, and a geographical shape area of at least 3 billion square meters. Once you identify the county that matches all these figures, determine its county seat and state which bay is on the southern shore of that county seat. Only report the bay. Your response should be in the format [Answer].",
+  "heuristic_flags": {
+    "question_text_anomaly": false,
+    "question_text_anomaly_notes": [],
+    "has_explicit_answer_placeholders": true
+  },
+  "estimated_dataset_count": 6,
+  "estimated_min_tool_calls": 12,
+  "estimated_nice_tool_calls": 18,
+  "tool_call_budget_bucket": "within_budget_comfortably",
+  "quality_bucket": "medium",
+  "derivability_bucket": "strained",
+  "difficulty_bucket": "core",
+  "overall_recommendation": "keep_noncore",
+  "issue_labels": [
+    "unsupported_step"
+  ],
+  "strengths": [
+    "Threshold intersections are coherent and resolve to a single county.",
+    "The county-seat to bay finish stays attached while remaining affordable."
+  ],
+  "concerns": [
+    "The PSI 27 filter is not explicitly tied to perioperative hemorrhage/hematoma in the artifact.",
+    "The WIC clause is grammatically rough and adds avoidable noise."
+  ],
+  "rationale": "This task is budget-feasible and mostly coherent: the successive threshold intersections narrow cleanly to one county, and the final county-seat to bay chain is a legitimate continuation of the prompt rather than a decorative lookup. The main problem is that a central health-statistic step is not fully derivable from the artifact alone, because node 5 switches to PSI 27 without explaining that it represents perioperative hemorrhage/hematoma. That hidden mapping, plus the awkward WIC wording, makes the task usable but not strong enough for a clean core benchmark slot as written.",
+  "suggested_fix": "Explicitly state that perioperative hemorrhage/hematoma corresponds to PSI 27 and tighten the WIC wording."
+}

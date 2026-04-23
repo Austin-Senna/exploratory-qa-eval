@@ -1,0 +1,98 @@
+{
+  "dataset_sequence": [
+    "summer-meal-programs-seamless-summer-option-sso-meal-count-information-program-period-2016",
+    "summer-meal-programs-seamless-summer-option-sso-meal-count-information-program-period-2017",
+    "summer-meal-programs-seamless-summer-option-sso-meal-count-information-program-period-2018",
+    "summer-meal-programs-seamless-summer-option-sso-meal-count-information-program-period-2019",
+    "child-and-adult-care-food-programs-cacfp-day-care-homes-meal-reimbursement-program-ye-2018",
+    "child-and-adult-care-food-programs-cacfp-day-care-homes-meal-reimbursement-program-ye-2020",
+    "child-and-adult-care-food-program-cacfp-child-centers-meal-reimbursement-program-year-2018",
+    "child-and-adult-care-food-program-cacfp-child-centers-meal-reimbursement-program-year-2019",
+    "Cameron_County,_Texas"
+  ],
+  "source_sequence": [
+    "datagov/summer-meal-programs-seamless-summer-option-sso-meal-count-information-program-period-2016/files/rows.txt",
+    "datagov/summer-meal-programs-seamless-summer-option-sso-meal-count-information-program-period-2017/files/rows.txt",
+    "datagov/summer-meal-programs-seamless-summer-option-sso-meal-count-information-program-period-2018/files/rows.txt",
+    "datagov/summer-meal-programs-seamless-summer-option-sso-meal-count-information-program-period-2019/files/rows.txt",
+    "datagov/child-and-adult-care-food-programs-cacfp-day-care-homes-meal-reimbursement-program-ye-2018/files/rows.txt",
+    "datagov/child-and-adult-care-food-programs-cacfp-day-care-homes-meal-reimbursement-program-ye-2020/files/rows.txt",
+    "datagov/child-and-adult-care-food-program-cacfp-child-centers-meal-reimbursement-program-year-2018/files/rows.txt",
+    "datagov/child-and-adult-care-food-program-cacfp-child-centers-meal-reimbursement-program-year-2019/files/rows.txt",
+    "wikipedia/Cameron_County,_Texas/content.txt"
+  ],
+  "reasoning_chain_text": [
+    "1. Identify Texas counties in the top five for total Seamless Summer Option lunch serves in program year 2015-2016.",
+    "2. Keep the counties that again rank in the top five in program year 2016-2017.",
+    "3. Keep the counties that again rank in the top five in program year 2017-2018.",
+    "4. Using 2018-2019 lunch-serve totals, keep the counties that are in the top five in every year from 2015-2016 through 2018-2019.",
+    "5. For those counties, compare child and adult care food day care home reimbursements in 2018-2019 and 2020-2021, and keep the two counties with the largest percentage decreases.",
+    "6. For those two counties, record child-center enrollment in 2018-2019.",
+    "7. Using 2019-2020 child-center enrollment, keep the county with the higher average enrollment across the two years.",
+    "8. Return the county seat of that county."
+  ],
+  "original_final_question": "Across years 2015-16 to 2018-19, which Texas county is consistently in the top five for total lunch serves in Seamless Summer Option program? Among those counties, identify the two with the largest percentage decreases in child & adult care food day program's total reimbursements from 2018-2019 to 2020-2021, then pick the one with the higher average child center enrollment across 2018-2019 and 2019-2020. What is the county seat of that county? Return the county seat name only. Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "reasoning": [
+        "Node 1: Filter rows where `ProgramYear` equals `2015-2016`, group by `SiteCounty`, sum `LunchTotal`, sort descending, and keep the top 5 counties.",
+        "Node 2: Filter rows where `ProgramYear` equals `2016-2017`, group by `SiteCounty`, sum `LunchTotal`, sort descending, and keep the top 5 counties.",
+        "Node 3: Filter rows where `ProgramYear` equals `2017-2018`, group by `SiteCounty`, sum `LunchTotal`, sort descending, and keep the top 5 counties.",
+        "Node 4: Filter rows where `ProgramYear` equals `2018-2019`, group by `SiteCounty`, sum `LunchTotal`, sort descending, and keep the top 5 counties.",
+        "Hop result: intersect the yearly top-five county sets from nodes 1-4 -> `Harris`, `Hidalgo`, `Dallas`, `Cameron`."
+      ],
+      "answer": [
+        "Harris",
+        "Hidalgo",
+        "Dallas",
+        "Cameron"
+      ]
+    },
+    {
+      "hop": 2,
+      "node_ids": [
+        5,
+        6
+      ],
+      "reasoning": [
+        "Node 5: For the counties from <hop 1 answer>, group rows by `SiteCounty`, sum `TotalMealReimbursement`, and keep the 2018-2019 totals.",
+        "Node 6: For the counties from <hop 1 answer>, group rows by `SiteCounty`, sum `TotalMealReimbursement`, and keep the 2020-2021 totals.",
+        "Hop result: compare the percentage decrease from node 5 to node 6 for the counties from <hop 1 answer>; the two largest decreases are `Hidalgo` and `Cameron`."
+      ],
+      "answer": [
+        "Hidalgo",
+        "Cameron"
+      ]
+    },
+    {
+      "hop": 3,
+      "node_ids": [
+        7,
+        8
+      ],
+      "reasoning": [
+        "Node 7: For the counties from <hop 2 answer>, group rows by `SiteCounty`, sum `EnrollmentQty`, and keep the 2018-2019 totals.",
+        "Node 8: For the counties from <hop 2 answer>, group rows by `SiteCounty`, sum `EnrollmentQty`, and keep the 2019-2020 totals.",
+        "Hop result: compare the average `EnrollmentQty` across nodes 7-8 for the counties from <hop 2 answer>; `Cameron County` is higher."
+      ],
+      "answer": "Cameron County"
+    },
+    {
+      "hop": 4,
+      "node_ids": [
+        9
+      ],
+      "reasoning": [
+        "Node 9: The Cameron County source states `Cameron County's county seat is Brownsville.`"
+      ],
+      "answer": "Brownsville"
+    }
+  ]
+}

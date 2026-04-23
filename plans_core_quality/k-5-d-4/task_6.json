@@ -1,0 +1,110 @@
+{
+  "dataset_sequence": [
+    "report-card-enrollment-2018-19-school-year",
+    "report-card-enrollment-2019-20-school-year",
+    "report-card-enrollment-2020-21-school-year",
+    "report-card-enrollment-2021-22-school-year",
+    "report-card-assessment-data-2021-22-school-year",
+    "King_County,_Washington",
+    "Kitsap_County,_Washington",
+    "Whitman_County,_Washington",
+    "Colfax,_Washington",
+    "Washington_State_University"
+  ],
+  "source_sequence": [
+    "datagov/report-card-enrollment-2018-19-school-year/files/rows.txt",
+    "datagov/report-card-enrollment-2019-20-school-year/files/rows.txt",
+    "datagov/report-card-enrollment-2020-21-school-year/files/rows.txt",
+    "datagov/report-card-enrollment-2021-22-school-year/files/rows.txt",
+    "datagov/report-card-assessment-data-2021-22-school-year/files/rows.txt",
+    "wikipedia/King_County,_Washington/content.txt",
+    "wikipedia/Kitsap_County,_Washington/content.txt",
+    "wikipedia/Whitman_County,_Washington/content.txt",
+    "wikipedia/Colfax,_Washington/content.txt",
+    "wikipedia/Washington_State_University/content.txt"
+  ],
+  "reasoning_chain_text": [
+    "1. Determine which Washington counties had low-income enrollment percentage between 32% and 40% in every school year from 2018-19 through 2021-22.",
+    "2. From those counties, keep the ones with district-average math proficiency above 40% in 2021-22.",
+    "3. Exclude the most populous county in Washington.",
+    "4. Among the counties still remaining, compare 2020 populations and keep the county with the lower population, then record its county seat.",
+    "5. Identify the town that beat that county seat in the agricultural college site-selection competition.",
+    "6. Record the date when the agricultural college in that town first opened to students."
+  ],
+  "original_final_question": "On what date did the agricultural college first open to students, given that this college was ultimately located in a town that beat the county seat (in a site selection competition) of the Washington county that had the lowest 2020 census population among those Washington counties that (1) were NOT the most populous in the state, (2) had district-average Math proficiency above 40% in the 2021-22 school year, AND (3) had Low-Income student enrollment percentage between 32-40% in every school year from 2018-19 through 2021-22? Report in the format MM/DD/YYYY. Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "reasoning": [
+        "Node 1: Filter district-level enrollment rows where `OrganizationLevel` = `District` and `GradeLevel` = `All Grades`, aggregate `All Students` and `Low-Income` by `County`, compute `Low-Income%`, and keep counties with 32% <= `Low-Income%` <= 40% for 2018-19.",
+        "Node 2: Apply the same county-level low-income aggregation and 32%-40% filter for 2019-20.",
+        "Node 3: Apply the same county-level low-income aggregation and 32%-40% filter for 2020-21.",
+        "Node 4: Apply the same county-level low-income aggregation and 32%-40% filter for 2021-22.",
+        "Hop result: intersect the four yearly county sets."
+      ],
+      "answer": [
+        "King",
+        "Kitsap",
+        "San Juan",
+        "Whitman"
+      ]
+    },
+    {
+      "hop": 2,
+      "node_ids": [
+        5,
+        6
+      ],
+      "reasoning": [
+        "Node 5: From <hop 1 answer>, keep counties whose 2021-22 district-level average `PercentMetStandard` for `TestSubject` = `Math`, `StudentGroup` = `All Students`, and `GradeLevel` = `All Grades` is above 40%.",
+        "Node 6: Confirm from the cited Wikipedia source that King County is the most populous county in Washington.",
+        "Hop result: remove King from <node 5 answer> to keep the qualifying counties that are not the most populous in the state."
+      ],
+      "answer": [
+        "Kitsap",
+        "Whitman"
+      ]
+    },
+    {
+      "hop": 3,
+      "node_ids": [
+        7,
+        8
+      ],
+      "reasoning": [
+        "Node 7: Read Kitsap County's 2020 census population.",
+        "Node 8: Read Whitman County's 2020 census population and county seat.",
+        "Hop result: compare the two populations; Whitman County has the lower 2020 census population, and its county seat is Colfax."
+      ],
+      "answer": "Colfax"
+    },
+    {
+      "hop": 4,
+      "node_ids": [
+        9
+      ],
+      "reasoning": [
+        "Node 9: Read which agricultural college Colfax competed to host and which town won the site selection.",
+        "Hop result: the college is Washington State University."
+      ],
+      "answer": "Washington State University"
+    },
+    {
+      "hop": 5,
+      "node_ids": [
+        10
+      ],
+      "reasoning": [
+        "Node 10: Read the opening date of the state's new land-grant college in Pullman from the cited Wikipedia source.",
+        "Hop result: normalize January 13, 1892 to the requested format `MM/DD/YYYY`."
+      ],
+      "answer": "01/13/1892"
+    }
+  ]
+}

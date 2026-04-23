@@ -1,0 +1,96 @@
+{
+  "dataset_sequence": [
+    "superintendent-salary-report-by-district-for-school-year-2021-2022",
+    "school-nutrition-programs-meal-reimbursement-information-program-year-2022-2023",
+    "child-and-adult-care-food-programs-cacfp-day-care-homes-site-level-contact-and-progra-2022",
+    "school-nutrition-programs-contact-information-and-site-level-program-participation-pr-2021",
+    "workers-compensation-non-subscriber-employer-information",
+    "monthly-child-care-services-data-report-child-care-facilities-2023-q4",
+    "school-nutrition-programs-contact-information-and-site-level-program-participation-pr-2022"
+  ],
+  "source_sequence": [
+    "datagov/superintendent-salary-report-by-district-for-school-year-2021-2022/files/rows.txt",
+    "datagov/school-nutrition-programs-meal-reimbursement-information-program-year-2022-2023/files/rows.txt",
+    "datagov/child-and-adult-care-food-programs-cacfp-day-care-homes-site-level-contact-and-progra-2022/files/rows.txt",
+    "datagov/school-nutrition-programs-contact-information-and-site-level-program-participation-pr-2021/files/rows.txt",
+    "datagov/workers-compensation-non-subscriber-employer-information/files/rows.txt",
+    "datagov/monthly-child-care-services-data-report-child-care-facilities-2023-q4/files/rows.txt",
+    "datagov/school-nutrition-programs-contact-information-and-site-level-program-participation-pr-2022/files/rows.txt"
+  ],
+  "reasoning_chain_text": [
+    "1. Identify the Texas education service center region with the most school districts in the 2021-2022 school year.",
+    "2. Within that region, determine which county had the largest number of unique school nutrition sites in 2022-2023.",
+    "3. Within that county, determine which city had the most active home-based child care food program sites in 2022-2023.",
+    "4. In that city, determine which ZIP code had the largest number of unique active school nutrition sites in 2021-2022.",
+    "5. For that ZIP code, count distinct employer names on 2023 non-subscriber filings.",
+    "6. For that ZIP code, count distinct child-care facilities in 2023 Q4 and unique active school nutrition sites in 2022-2023.",
+    "7. Return how many more distinct employer names there were than the combined total from step 6."
+  ],
+  "original_final_question": "Start with the Texas education service center region that had the most school districts in the 2021-2022 school year. In the county within that region with the largest number of unique school nutrition sites in 2022-2023, find the city with the most active home-based child care food program sites in 2022-2023, then the ZIP code in that city with the largest number of unique active school nutrition sites in 2021-2022. For that ZIP code, how many more distinct employer names appeared on 2023 filings from employers without workers' compensation coverage than the combined total of distinct child-care facilities reported in 2023 Q4 and unique active school nutrition sites in 2022-2023? Return only the number. Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1
+      ],
+      "reasoning": [
+        "Node 1: In the 2021-2022 Texas superintendent salary report by district, education service center region 10 has the most school districts.",
+        "Region 10 contains 115 districts, ahead of region 07 with 101, so the winner is unique.",
+        "Hop result: <node_1 answer>"
+      ],
+      "answer": "10"
+    },
+    {
+      "hop": 2,
+      "node_ids": [
+        2
+      ],
+      "reasoning": [
+        "Node 2: Within Texas education service center region 10, Dallas County has the most distinct school nutrition sites in 2022-2023.",
+        "Dallas has 701 distinct sites, ahead of Collin with 271, so the winner is unique.",
+        "Hop result: <node_2 answer>"
+      ],
+      "answer": "Dallas"
+    },
+    {
+      "hop": 3,
+      "node_ids": [
+        3
+      ],
+      "reasoning": [
+        "Node 3: In Dallas County, Dallas has the most active home-based child care food program sites in 2022-2023.",
+        "Dallas has 67 active sites, ahead of Garland with 42, so the winner is unique.",
+        "Hop result: <node_3 answer>"
+      ],
+      "answer": "Dallas"
+    },
+    {
+      "hop": 4,
+      "node_ids": [
+        4
+      ],
+      "reasoning": [
+        "Node 4: In Dallas, ZIP code 75217 has the largest number of unique active school nutrition sites in 2021-2022.",
+        "ZIP 75217 has 26 unique active sites, ahead of 75211 with 21, so the winner is unique.",
+        "Hop result: <node_4 answer>"
+      ],
+      "answer": "75217"
+    },
+    {
+      "hop": 5,
+      "node_ids": [
+        5,
+        6,
+        7
+      ],
+      "reasoning": [
+        "Node 5: In ZIP code 75217, the 2023 workers' compensation non-subscriber filing data contains 52 distinct employer names.",
+        "Node 6: In ZIP code 75217, the 2023 Q4 monthly child-care services report contains 20 distinct child-care facilities.",
+        "Node 7: In ZIP code 75217, the 2022-2023 school nutrition contact file contains 26 unique active school nutrition sites.",
+        "Subtracting the combined facility and school nutrition site counts from the distinct employer-name count gives 52 - (20 + 26) = 6.",
+        "Hop result: 6"
+      ],
+      "answer": "6"
+    }
+  ]
+}

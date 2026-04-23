@@ -1,0 +1,43 @@
+{
+  "dataset_sequence": [
+    "county-mental-health-profiles-phase-2-beginning-2014",
+    "Erie_County,_New_York",
+    "Monroe_County,_New_York",
+    "Buffalo,_New_York",
+    "Rochester,_New_York",
+    "boat-launch-sites-by-state-parks-or-marine-facility"
+  ],
+  "source_sequence": [
+    "datagov/county-mental-health-profiles-phase-2-beginning-2014/files/rows.txt",
+    "wikipedia/Erie_County,_New_York/content.txt",
+    "wikipedia/Monroe_County,_New_York/content.txt",
+    "wikipedia/Buffalo,_New_York/content.txt",
+    "wikipedia/Rochester,_New_York/content.txt",
+    "datagov/boat-launch-sites-by-state-parks-or-marine-facility/files/rows.txt"
+  ],
+  "reasoning_chain_text": [
+    "1. Identify the top two New York counties outside New York City by total mental health service recipients across 2017 and 2018.",
+    "2. Determine the county seat of each of those counties.",
+    "3. Determine when each county seat was incorporated and keep the earlier one.",
+    "4. Using the county of that earlier-incorporated seat, count the listed boat launching locations that are state parks."
+  ],
+  "original_final_question": "Among New York counties outside of NYC, identify the top two by total mental health service recipients from 2017 to 2018. Between their county seats, find the one with the earlier incorporation date, then use its county. How many boat launching locations listed in that county are from state parks? Please return the count only. Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    "HOP 1 (d=1): Identify top 2 non-NYC NY counties by total mental health service recipients (2017-2018)",
+    "  Node 1: Mental health data -> Erie County (83,049 recipients) and Monroe County (74,299 recipients)",
+    "  Result: {Erie County, Monroe County}",
+    "HOP 2 (d=2): Find county seats of both counties from hop 1",
+    "  Node 2: Erie County -> Buffalo",
+    "  Node 3: Monroe County -> Rochester",
+    "  Result: {Buffalo, Rochester}",
+    "HOP 3 (d=2): Find incorporation years of cities from hop 2 and determine which one is earlier; map it back to its county",
+    "  Node 4: Buffalo -> Erie Canal terminus; incorporated 1832",
+    "  Node 5: Rochester -> incorporated 1834",
+    "  Comparison: 1832 < 1834 -> Buffalo is earlier-incorporated",
+    "  Result: Erie",
+    "HOP 4 (d=1): Count boat launch sites in the county from hop 3",
+    "  Node 6: Erie has 2 listed boat launch sites with Category = State Park",
+    "  Result: 2",
+    "Final answer: 2"
+  ]
+}

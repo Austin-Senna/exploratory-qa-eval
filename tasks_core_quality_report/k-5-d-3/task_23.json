@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "task_id": "tasks_core/k-5-d-3/task_23.json",
+  "source_task": "tasks_core/k-5-d-3/task_23.json",
+  "source_verdict": null,
+  "question": "Start with the Texas education service center region that had the most school districts in the 2021-2022 school year. In the county within that region with the largest number of unique school nutrition sites in 2022-2023, find the city with the most active home-based child care food program sites in 2022-2023, then the ZIP code in that city with the largest number of unique active school nutrition sites in 2021-2022. For that ZIP code, how many more distinct employer names appeared on 2023 filings from employers without workers' compensation coverage than the combined total of distinct child-care facilities reported in 2023 Q4 and unique active school nutrition sites in 2022-2023? Return only the number. Your response should be in the format [Answer].",
+  "heuristic_flags": {
+    "question_text_anomaly": false,
+    "question_text_anomaly_notes": [],
+    "has_explicit_answer_placeholders": true
+  },
+  "estimated_dataset_count": 7,
+  "estimated_min_tool_calls": 14,
+  "estimated_nice_tool_calls": 21,
+  "tool_call_budget_bucket": "within_budget_comfortably",
+  "quality_bucket": "high",
+  "derivability_bucket": "clean",
+  "difficulty_bucket": "core",
+  "overall_recommendation": "core_keep",
+  "issue_labels": [
+    "format_noise"
+  ],
+  "strengths": [
+    "Each narrowing step is directly implied by the question and stays anchored to prior results.",
+    "The final arithmetic is well supported by explicit ZIP-level counts from the selected downstream datasets."
+  ],
+  "concerns": [
+    "The prompt is dense and the bracketed answer placeholder adds avoidable surface noise.",
+    "Node 3's source naming may invite mild year-label confusion even though the chain itself remains coherent."
+  ],
+  "rationale": "This artifact is a strong core candidate: the decomposition tracks the question faithfully, the intermediate entities are not leaked prematurely, and the total dataset footprint stays comfortably inside budget. The main weakness is presentation rather than logic, with a long prompt and explicit answer-format placeholder making the task read a bit more mechanically than necessary.",
+  "suggested_fix": "Remove the bracketed answer placeholder and clarify the year label on the CACFP step if possible."
+}

@@ -1,0 +1,68 @@
+{
+  "dataset_sequence": [
+    "Neighborhoods_in_Washington,_D.C.",
+    "crime-incidents-in-2017",
+    "crime-incidents-in-2018",
+    "crime-incidents-in-2019",
+    "crime-incidents-in-2020"
+  ],
+  "source_sequence": [
+    "wikipedia/Neighborhoods_in_Washington,_D.C./content.txt",
+    "datagov/crime-incidents-in-2017/files/data.txt",
+    "datagov/crime-incidents-in-2018/files/data.txt",
+    "datagov/crime-incidents-in-2019/files/data.txt",
+    "datagov/crime-incidents-in-2020/files/data.txt"
+  ],
+  "reasoning_chain_text": [
+    "1. Determine which Washington, D.C. ward contains Columbia Heights.",
+    "2. Identify the most common offense in that ward in 2017.",
+    "3. Determine which D.C. ward had the most incidents of that offense in 2018.",
+    "4. For that ward and offense, count incidents in 2019 and 2020 and return the change from 2019 to 2020."
+  ],
+  "original_final_question": "I'm looking into crime trends in the D.C. ward that contains Columbia Heights. What is the most common offense committed there in 2017? Which D.C. ward had the highest number of that specific offense in 2018, and tell me how the number of those incidents in that ward changed from 2019 to 2020. Your final answer shall be an integer (20 incidents - 19 incidents). Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1
+      ],
+      "reasoning": [
+        "Node 1: 1 is the ward containing Columbia Heights (Washington, D.C.)."
+      ],
+      "answer": "1"
+    },
+    {
+      "hop": 2,
+      "node_ids": [
+        2
+      ],
+      "reasoning": [
+        "Node 2: Filter rows where `WARD` equals <hop 1 answer>, count records by `OFFENSE`, and select the most common `OFFENSE`."
+      ],
+      "answer": "THEFT F/AUTO"
+    },
+    {
+      "hop": 3,
+      "node_ids": [
+        3
+      ],
+      "reasoning": [
+        "Node 3: Filter rows where `OFFENSE` equals <hop 2 answer>, count records by `WARD`, and select the most common `WARD`."
+      ],
+      "answer": "2"
+    },
+    {
+      "hop": 4,
+      "node_ids": [
+        4,
+        5
+      ],
+      "reasoning": [
+        "Node 4: Filter rows where `WARD` equals <hop 3 answer> and `OFFENSE` equals <hop 2 answer>, then count matching incidents.",
+        "Node 5: Filter rows where `WARD` equals <hop 3 answer> and `OFFENSE` equals <hop 2 answer>, then count matching incidents.",
+        "Hop result: 2020 incidents - 2019 incidents = 1247 - 2431 = -1184."
+      ],
+      "answer": "-1184"
+    }
+  ]
+}

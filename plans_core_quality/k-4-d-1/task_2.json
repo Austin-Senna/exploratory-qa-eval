@@ -1,0 +1,28 @@
+{
+  "dataset_sequence": [
+    "2019_Los_Angeles_Marathon",
+    "arrest-data-from-2010-to-2019",
+    "crime-data-from-2010-to-2019",
+    "crime-data-from-2020-to-present"
+  ],
+  "source_sequence": [
+    "wikipedia/2019_Los_Angeles_Marathon/content.txt",
+    "datagov/arrest-data-from-2010-to-2019/files/rows.txt",
+    "datagov/crime-data-from-2010-to-2019/files/rows.txt",
+    "datagov/crime-data-from-2020-to-present/files/rows.txt"
+  ],
+  "reasoning_chain_text": [
+    "1. Determine the year in which the 34th annual Los Angeles Marathon was held.",
+    "2. In LAPD arrest data for that year, identify the geo area with the most homicide arrests.",
+    "3. In crime data for that same year and area, determine the most common crime description.",
+    "4. In 2021 crime data for that same area, return the incident count for that crime description."
+  ],
+  "original_final_question": "In the year where the 34th annual Los Angeles Marathon was held, find the geo area where the Los Angeles Police Department has reported the most Homicide arrests, then identify the most common crime code in that area of the same year, and report the number of incidents of that crime code occurred in the same area in 2021. Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    "Node 1: The 34th annual Los Angeles Marathon held on March 24 took place in 2019.",
+    "Node 2 depends on node 1: In 2019 arrest data, the area with the most Homicide arrests is 77th Street.",
+    "Node 3 depends on node 2: In 2019 crime data for 77th Street, the most common description is VEHICLE - STOLEN.",
+    "Node 4 depends on node 3: In 2021 crime data for 77th Street, VEHICLE - STOLEN incidents = 1740.",
+    "Final answer: 1740"
+  ]
+}

@@ -1,0 +1,69 @@
+{
+  "dataset_sequence": [
+    "LAPD_Rampart_Division",
+    "arrest-data-from-2010-to-2019",
+    "lapd-ripa-ab-953-stop-incident-details-from-7-1-2018-to-present",
+    "crime-data-from-2020-to-present",
+    "public-school-locations-current-23297"
+  ],
+  "source_sequence": [
+    "wikipedia/LAPD_Rampart_Division/content.txt",
+    "datagov/arrest-data-from-2010-to-2019/files/rows.txt",
+    "datagov/lapd-ripa-ab-953-stop-incident-details-from-7-1-2018-to-present/files/rows.txt",
+    "datagov/crime-data-from-2020-to-present/files/rows.txt",
+    "datagov/public-school-locations-current-23297/files/data.txt"
+  ],
+  "reasoning_chain_text": [
+    "1. Determine which LAPD area serves Echo Park and Silver Lake.",
+    "2. Using 2019 arrest data, identify the most common arrest charge in that area, then determine which LAPD area had the most arrests for that same charge in 2019.",
+    "3. Determine the area ID for the LAPD area from step 2.",
+    "4. Using 2021 crime data for that area, identify the most frequently reported crime and its incident count.",
+    "5. Count public schools in Los Angeles and divide the incident count from step 4 by that total, rounded to the nearest integer."
+  ],
+  "original_final_question": "I am analyzing the LAPD division that covers Echo Park and Silver Lake. After identifying the most common arrest charge in that area named after this division in 2019, I want to find which LAPD area had the highest number of arrests for that charge. What is the ratio of the most frequent crime reported in 2021 for that area to the total number of public schools in Los Angeles? Round that to the nearest number. Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1
+      ],
+      "reasoning": [
+        "Node 1: Rampart is the LAPD area serving Echo Park and Silver Lake."
+      ],
+      "answer": "Rampart"
+    },
+    {
+      "hop": 2,
+      "node_ids": [
+        2
+      ],
+      "reasoning": [
+        "Node 2: Extract year from `Arrest Date`, filter rows where year of `Arrest Date` equals 2019 and `Area Name` equals <hop 1 answer>, select the most common `Charge Group Description`, then among 2019 rows with that `Charge Group Description`, select the most common `Area Name`."
+      ],
+      "answer": "Central"
+    },
+    {
+      "hop": 3,
+      "node_ids": [
+        3
+      ],
+      "reasoning": [
+        "Node 3: Filter rows where `Area Name` equals <hop 2 answer>, count records by `Area ID`, and select the most common `Area ID`."
+      ],
+      "answer": "1"
+    },
+    {
+      "hop": 4,
+      "node_ids": [
+        4,
+        5
+      ],
+      "reasoning": [
+        "Node 4: Extract year from `DATE OCC`, filter rows where year of `DATE OCC` equals 2021 and `AREA` equals <hop 3 answer>, count records by `Crm Cd Desc`, and return the most common `Crm Cd Desc` with its count.",
+        "Node 5: Count features where `properties.STATE` equals `CA` and `properties.CITY` equals `Los Angeles`.",
+        "Hop result: round(1620 / 579) = 3."
+      ],
+      "answer": "3"
+    }
+  ]
+}

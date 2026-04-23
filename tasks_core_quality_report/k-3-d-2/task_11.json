@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "task_id": "tasks_core/k-3-d-2/task_11.json",
+  "source_task": "tasks_core/k-3-d-2/task_11.json",
+  "source_verdict": null,
+  "question": "In school year 2022-2023, in the capital city of California, what is the number of public schools in its county minus the number of district administrative offices in its county? . Your response should be in the format [Answer].",
+  "heuristic_flags": {
+    "question_text_anomaly": false,
+    "question_text_anomaly_notes": [],
+    "has_explicit_answer_placeholders": true
+  },
+  "estimated_dataset_count": 4,
+  "estimated_min_tool_calls": 8,
+  "estimated_nice_tool_calls": 12,
+  "tool_call_budget_bucket": "within_budget_comfortably",
+  "quality_bucket": "low",
+  "derivability_bucket": "broken",
+  "difficulty_bucket": "unclear",
+  "overall_recommendation": "revise_or_drop",
+  "issue_labels": [
+    "internal_inconsistency"
+  ],
+  "strengths": [
+    "Short multi-hop path with a clear final arithmetic target and comfortable tool budget."
+  ],
+  "concerns": [
+    "The question asks for counts in the capital city's county, but the key counting nodes filter to the city of Sacramento rather than all of Sacramento County."
+  ],
+  "rationale": "This task is affordable, but it is not internally reliable. The question explicitly asks for county-level public school and district office counts, while nodes 3 and 4 compute city-level counts constrained to Sacramento. That is a direct mismatch between the stated target and the executed reasoning path, so the task is low quality and broken for derivability even though the overall structure is short and otherwise straightforward.",
+  "suggested_fix": "Rewrite nodes 3 and 4 to count all records in Sacramento County for 2022-2023 without filtering by city, or revise the question to ask about the capital city rather than its county."
+}

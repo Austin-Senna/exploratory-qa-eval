@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "task_id": "tasks_core/k-5-d-4/task_8.json",
+  "source_task": "tasks_core/k-5-d-4/task_8.json",
+  "source_verdict": null,
+  "question": "A Missouri state agency ranked third by average expenditures from FY2007 to FY2010.Find the city the Southwest district of the agency is based and a highway that was born in the city. Between that highway's two terminus cities, which one had higher binge drinking rates in 2016 and 2018?  For that city, which department had the second-highest cost overtime from 2014 to 2017? Return the department name only. Your response should be in the format [Answer].",
+  "heuristic_flags": {
+    "question_text_anomaly": true,
+    "question_text_anomaly_notes": [
+      "missing space after period"
+    ],
+    "has_explicit_answer_placeholders": true
+  },
+  "estimated_dataset_count": 12,
+  "estimated_min_tool_calls": 24,
+  "estimated_nice_tool_calls": 36,
+  "tool_call_budget_bucket": "within_budget_tight",
+  "quality_bucket": "medium",
+  "derivability_bucket": "strained",
+  "difficulty_bucket": "too_hard",
+  "overall_recommendation": "keep_noncore",
+  "issue_labels": [
+    "unsupported_step",
+    "format_noise"
+  ],
+  "strengths": [
+    "The main hop sequence is coherent and the question does motivate the agency-to-city-to-city-comparison path.",
+    "The artifact is easy to audit because each aggregation target is spelled out in the nodes and reasoning hops."
+  ],
+  "concerns": [
+    "Twelve datasets and two separate multi-year rollups make the task fairly serial and budget-tight for a core benchmark.",
+    "The final hop is under-supported: the node code sums a generic `TOTAL` field from `employee-overtime-and-supplemental-earnings` sources without showing an overtime-only filter.",
+    "Surface noise matters here: the question has malformed spacing and the task body uses explicit answer placeholders."
+  ],
+  "rationale": "This task is mostly coherent, and its overall decomposition can be followed from the final question, but it is expensive for a core slice because it stacks two four-year aggregations plus an additional two-year comparison across 12 datasets. The wording is also rough enough to matter for benchmark polish. More importantly, the last hop does not cleanly substantiate the requested overtime-only measure from the artifact alone, since the supporting nodes sum `TOTAL` from overtime-and-supplemental-earnings sources without an explicit overtime filter. That makes the task usable but not core-ready as written.",
+  "suggested_fix": "Tighten the question text and rewrite hop 5 to use an explicitly overtime-only field or filter."
+}

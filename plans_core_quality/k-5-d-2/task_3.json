@@ -1,0 +1,95 @@
+{
+  "dataset_sequence": [
+    "accidental-drug-related-deaths-2012-2018",
+    "connecticut-covid-19-community-levels-by-county-as-originally-posted",
+    "New_Haven_County,_Connecticut",
+    "Fairfield_County,_Connecticut",
+    "500-cities-city-level-data-gis-friendly-format-2018-release",
+    "500-cities-city-level-data-gis-friendly-format-2019-release",
+    "New_Haven,_Connecticut",
+    "Yale_University"
+  ],
+  "source_sequence": [
+    "datagov/accidental-drug-related-deaths-2012-2018/files/rows.txt",
+    "datagov/connecticut-covid-19-community-levels-by-county-as-originally-posted/files/rows.txt",
+    "wikipedia/New_Haven_County,_Connecticut/content.txt",
+    "wikipedia/Fairfield_County,_Connecticut/content.txt",
+    "datagov/500-cities-city-level-data-gis-friendly-format-2018-release/files/rows.txt",
+    "datagov/500-cities-city-level-data-gis-friendly-format-2019-release/files/rows.txt",
+    "wikipedia/New_Haven,_Connecticut/content.txt",
+    "wikipedia/Yale_University/content.txt"
+  ],
+  "reasoning_chain_text": [
+    "1. Identify Connecticut counties with more than 200 accidental overdose deaths in 2020.",
+    "2. From those counties, keep the ones assigned to a COVID health-service region with a number above 80, then determine which qualifying counties had the highest and lowest accidental drug death totals in 2020.",
+    "3. Determine the largest city in each of those two counties.",
+    "4. Compare the average unadjusted percentage of adults ages 18-64 without health insurance across 2018 and 2019 for those two cities, and keep the city with the lower average.",
+    "5. Determine the largest employer in that city.",
+    "6. Return the person after whom that employer is named."
+  ],
+  "original_final_question": "Find the Connecticut counties that satisfy both criteria: (1) more than 200 accidental overdose deaths in 2020, and (2) assignment to a COVID health-service region with a number above 80. Find the largest cities in the counties with the highest and lowest accidental drug death totals in 2020. Determine which of these two cities had the lower average unadjusted percentage of adults ages 18-64 who did not have health insurance across 2018 and 2019. Then find the largest employer in that city. Just tell me after whom that employer is named. Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    {
+      "node_ids": [
+        1,
+        2
+      ],
+      "reasoning": [
+        "Node 1: Parse 2020 `Date`, count rows by `Residence County`, keep counties with `accidental_drug_deaths_2020 > 200`, and return `county -> accidental_drug_deaths_2020`.",
+        "Node 2: Filter rows where `state` = `Connecticut` and `health_service_area_number > 80`, then return distinct `county_name` values.",
+        "Hop result: intersect node 1 counties with node 2 counties, then compare 2020 accidental drug death counts. Higher county = New Haven County; lower county = Fairfield County."
+      ],
+      "answer": {
+        "higher_accidental_drug_death_county": "New Haven County",
+        "lower_accidental_drug_death_county": "Fairfield County"
+      }
+    },
+    {
+      "node_ids": [
+        3,
+        4
+      ],
+      "reasoning": [
+        "Node 3: From the higher-accidental-drug-death county in <hop 1 answer>, select the city ranked 3rd among Connecticut's largest cities.",
+        "Node 4: From the lower-accidental-drug-death county in <hop 1 answer>, select the city ranked 1st among Connecticut's largest cities.",
+        "Hop result: the two comparison cities are New Haven and Bridgeport."
+      ],
+      "answer": [
+        "New Haven",
+        "Bridgeport"
+      ]
+    },
+    {
+      "node_ids": [
+        5,
+        6
+      ],
+      "reasoning": [
+        "Node 5: Filter 2018 rows where `StateAbbr` = `CT` and `PlaceName` is in <hop 2 answer>, then return `PlaceName -> ACCESS2_CrudePrev`.",
+        "Node 6: Filter 2019 rows where `StateAbbr` = `CT` and `PlaceName` is in <hop 2 answer>, then return `PlaceName -> ACCESS2_CrudePrev`.",
+        "Hop result: average the 2018 and 2019 ACCESS2 rates for each city. New Haven has the lower average lack-of-health-insurance rate."
+      ],
+      "answer": "New Haven"
+    },
+    {
+      "node_ids": [
+        7
+      ],
+      "reasoning": [
+        "Node 7: Identify the largest employer in <hop 3 answer>.",
+        "Hop result: Yale University."
+      ],
+      "answer": "Yale University"
+    },
+    {
+      "node_ids": [
+        8
+      ],
+      "reasoning": [
+        "Node 8: Identify the person after whom <hop 4 answer> was named.",
+        "Hop result: Elihu Yale."
+      ],
+      "answer": "Elihu Yale"
+    }
+  ]
+}

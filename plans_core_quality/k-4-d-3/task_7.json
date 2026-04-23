@@ -1,0 +1,75 @@
+{
+  "dataset_sequence": [
+    "2021-state-employee-pay",
+    "2022-state-employee-pay",
+    "2023-state-employee-pay",
+    "Missouri_Department_of_Corrections",
+    "Jefferson_City,_Missouri",
+    "Lincoln_University_(Missouri)"
+  ],
+  "source_sequence": [
+    "datagov/2021-state-employee-pay/files/rows.txt",
+    "datagov/2022-state-employee-pay/files/rows.txt",
+    "datagov/2023-state-employee-pay/files/rows.txt",
+    "wikipedia/Missouri_Department_of_Corrections/content.txt",
+    "wikipedia/Jefferson_City,_Missouri/content.txt",
+    "wikipedia/Lincoln_University_(Missouri)/content.txt"
+  ],
+  "reasoning_chain_text": [
+    "1. For 2021, 2022, and 2023, count employees for the Missouri Department of Corrections, the Missouri Department of Social Services, and the Missouri Department of Transportation and identify the agency with the highest three-year average.",
+    "2. Using that agency's reference page, determine its headquarters city.",
+    "3. Using that city's reference page, identify the historically Black university located there.",
+    "4. Using that university's reference page, determine who founded it."
+  ],
+  "original_final_question": "Among the Missouri Department of Corrections, the Missouri Department of Social Services, and the Missouri Department of Transportation, which had the highest average employee count from 2021 through 2023? In that agency's headquarters city, a historically Black university was founded. Who founded that university? Return the name only. Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1,
+        2,
+        3
+      ],
+      "reasoning": [
+        "Node 1: Filter rows where `Agency Name` is in {CORRECTIONS, SOCIAL SERVICES, TRANSPORTATION}, group by `Agency Name`, and count rows for 2021.",
+        "Node 2: Filter rows where `Agency Name` is in {CORRECTIONS, SOCIAL SERVICES, TRANSPORTATION}, group by `Agency Name`, and count rows for 2022.",
+        "Node 3: Filter rows where `Agency Name` is in {CORRECTIONS, SOCIAL SERVICES, TRANSPORTATION}, group by `Agency Name`, and count rows for 2023.",
+        "Hop result: average employee records across 2021-2023 = {CORRECTIONS: (12530 + 12380 + 13107) / 3 = 12672.33, SOCIAL SERVICES: (8362 + 8723 + 8932) / 3 = 8672.33, TRANSPORTATION: (7170 + 6917 + 6956) / 3 = 7014.33}; highest average = Missouri Department of Corrections."
+      ],
+      "answer": "Missouri Department of Corrections"
+    },
+    {
+      "hop": 2,
+      "node_ids": [
+        4
+      ],
+      "reasoning": [
+        "Node 4: Missouri Department of Corrections has its headquarters in Jefferson City.",
+        "Hop result: Jefferson City."
+      ],
+      "answer": "Jefferson City"
+    },
+    {
+      "hop": 3,
+      "node_ids": [
+        5
+      ],
+      "reasoning": [
+        "Node 5: Jefferson City is home to Lincoln University, a public historically Black university founded in 1866.",
+        "Hop result: Lincoln University."
+      ],
+      "answer": "Lincoln University"
+    },
+    {
+      "hop": 4,
+      "node_ids": [
+        6
+      ],
+      "reasoning": [
+        "Node 6: Lincoln University was founded by James Milton Turner.",
+        "Hop result: James Milton Turner."
+      ],
+      "answer": "James Milton Turner"
+    }
+  ]
+}

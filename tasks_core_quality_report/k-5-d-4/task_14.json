@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "task_id": "tasks_core/k-5-d-4/task_14.json",
+  "source_task": "tasks_core/k-5-d-4/task_14.json",
+  "source_verdict": null,
+  "question": "ACT, Inc. was founded in a city in Iowa. Determine the county for that city and the corresponding state. In that state, find the counties that rank in the top three for public schools, private schools, and school district offices; among those counties, what is the smallest postsecondary institution count? Only report the number. Your response should be in the format [Answer].",
+  "heuristic_flags": {
+    "question_text_anomaly": false,
+    "question_text_anomaly_notes": [],
+    "has_explicit_answer_placeholders": true
+  },
+  "estimated_dataset_count": 7,
+  "estimated_min_tool_calls": 14,
+  "estimated_nice_tool_calls": 21,
+  "tool_call_budget_bucket": "within_budget_comfortably",
+  "quality_bucket": "high",
+  "derivability_bucket": "clean",
+  "difficulty_bucket": "core",
+  "overall_recommendation": "core_keep",
+  "issue_labels": [],
+  "strengths": [
+    "The question naturally supports the top-three intersection and final minimum-comparison path.",
+    "Intermediate counties are not leaked early, and the task stays comfortably within the budget."
+  ],
+  "concerns": [
+    "Hop 3 uses a dataset-driven STFIP bridge that is slightly more indirect than the question itself requires."
+  ],
+  "rationale": "This task is internally coherent and the main decomposition is faithful to the question: identify ACT's founding city, map it to the relevant county/state, find the counties that land in the top three across the three school-related rankings, then compare postsecondary counts within that surviving set. The only mild roughness is the implementation-oriented conversion from state to STFIP, but it does not inject an unsupported candidate set or break the reasoning path. With 7 datasets and an estimated 14-21 tool calls, it is still a strong core-slice candidate.",
+  "suggested_fix": "Optionally replace the STFIP detour with a more direct state-to-filter step."
+}

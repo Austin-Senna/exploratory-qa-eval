@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "task_id": "tasks_core/k-5-d-4/task_12.json",
+  "source_task": "tasks_core/k-5-d-4/task_12.json",
+  "source_verdict": null,
+  "question": "Across 2016-17 through 2019-20, start with Texas counties that averaged at least $50,000 in adult day care meal reimbursements and had the five largest percentage drops over that span. From those five, keep only counties with at least one abuse/neglect-related child fatality and at least three non-abuse/neglect child fatality investigations between 2018 and 2022. Among the remaining counties, find the one that is both in the top two for 2021 model-based drug poisoning death rates and in the bottom two for 2016 age-adjusted rate categories. What river does the county seat of that county lie along? Return the river name only. Your response should be in the format [Answer].",
+  "heuristic_flags": {
+    "question_text_anomaly": false,
+    "question_text_anomaly_notes": [],
+    "has_explicit_answer_placeholders": true
+  },
+  "estimated_dataset_count": 10,
+  "estimated_min_tool_calls": 20,
+  "estimated_nice_tool_calls": 30,
+  "tool_call_budget_bucket": "within_budget_comfortably",
+  "quality_bucket": "low",
+  "derivability_bucket": "broken",
+  "difficulty_bucket": "unclear",
+  "overall_recommendation": "revise_or_drop",
+  "issue_labels": [
+    "unsupported_step",
+    "answer_path_leakage"
+  ],
+  "strengths": [
+    "The later fatality-and-poisoning filter chain is clear and the final river target is explicit."
+  ],
+  "concerns": [
+    "Hop 1 hardcodes the five reimbursement-drop counties in node 4 instead of deriving them from the prior reimbursement data.",
+    "That injected county set leaks the key survivors early, so the central narrowing is not faithful to the question."
+  ],
+  "rationale": "The task stays within the nominal tool budget, and hops 2-5 are mostly coherent once the county set is fixed. The benchmark problem is that the first major narrowing is not actually derived from the artifact: node 4 is pre-scoped to BROOKS, WILLACY, COMAL, ATASCOSA, and VICTORIA, which are exactly the hop-1 winners the model is supposed to discover. Because that central candidate set is injected and leaked rather than computed from the question-driven reimbursement comparison, the task is not a reliable core benchmark as written.",
+  "suggested_fix": "Rewrite hop 1 so the 2019-2020 reimbursement step computes all eligible counties before selecting the five largest percentage drops."
+}

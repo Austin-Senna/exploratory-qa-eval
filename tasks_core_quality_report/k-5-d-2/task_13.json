@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "task_id": "tasks_core/k-5-d-2/task_13.json",
+  "source_task": "tasks_core/k-5-d-2/task_13.json",
+  "source_verdict": null,
+  "question": "What US city had the highest average age-adjusted adult obesity rate in 2016 and 2018? Then, who founded a company sold to JP Morgan to create the corporation that founded this city? Only report the city and state this person is based in the format of `City, State`. Your response should be in the format [Answer].",
+  "heuristic_flags": {
+    "question_text_anomaly": false,
+    "question_text_anomaly_notes": [],
+    "has_explicit_answer_placeholders": true
+  },
+  "estimated_dataset_count": 6,
+  "estimated_min_tool_calls": 12,
+  "estimated_nice_tool_calls": 18,
+  "tool_call_budget_bucket": "within_budget_comfortably",
+  "quality_bucket": "medium",
+  "derivability_bucket": "strained",
+  "difficulty_bucket": "core",
+  "overall_recommendation": "keep_noncore",
+  "issue_labels": [
+    "unsupported_step",
+    "weak_final_hop"
+  ],
+  "strengths": [
+    "Affordable multi-source chain with a reasonable 2016/2018 comparison setup.",
+    "The question does not leak the intermediate city or corporation upfront."
+  ],
+  "concerns": [
+    "The J.P. Morgan precursor-company hop does not cleanly justify why Carnegie Steel is the uniquely intended company.",
+    "The final 'based in' lookup is weakly grounded because the cited Andrew Carnegie fact does not clearly establish Pittsburgh as his base."
+  ],
+  "rationale": "This task is comfortably within budget and its opening comparison is broadly motivated by the question, so the artifact is usable. However, the downstream derivation is not fully clean: the chain silently commits to Carnegie Steel as the relevant company in the U.S. Steel formation step, and the final target asks for where Andrew Carnegie was \"based\" even though the cited evidence only supports a biographical move to Pittsburgh. Those issues make the task brittle for a core benchmark even though the overall structure is still salvageable.",
+  "suggested_fix": "Make the precursor-company hop uniquely specified in the question or nodes, and replace the final 'based in' hop with a clearly supported location relation."
+}

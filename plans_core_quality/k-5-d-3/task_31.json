@@ -1,0 +1,89 @@
+{
+  "dataset_sequence": [
+    "annual-personal-income-for-state-of-iowa-by-county",
+    "city-population-in-iowa-by-county-and-year",
+    "iowa-fire-department-census",
+    "2023-2024-iowa-public-school-districts",
+    "iowa-judicial-districts-offices-and-facilities",
+    "boundaries-us-zip-codes",
+    "iowa-lottery-retailer-list"
+  ],
+  "source_sequence": [
+    "datagov/annual-personal-income-for-state-of-iowa-by-county/files/rows.txt",
+    "datagov/city-population-in-iowa-by-county-and-year/files/rows.txt",
+    "datagov/iowa-fire-department-census/files/rows.txt",
+    "datagov/2023-2024-iowa-public-school-districts/files/rows.txt",
+    "datagov/iowa-judicial-districts-offices-and-facilities/files/rows.txt",
+    "datagov/boundaries-us-zip-codes/files/rows.txt",
+    "datagov/iowa-lottery-retailer-list/files/rows.txt"
+  ],
+  "reasoning_chain_text": [
+    "1. Identify the Iowa county with the highest total personal income in 2022.",
+    "2. In that county, determine which city had the highest population in 2023.",
+    "3. In that city, identify the headquarters ZIP of the fire department named for the city, the physical ZIP of the public school district named for the city, and the ZIP code that appears most often among residential judicial facilities.",
+    "4. Determine which of those ZIP codes covers the most land.",
+    "5. Return how many Iowa lottery retailers are in that city and ZIP code."
+  ],
+  "original_final_question": "First find the Iowa county with the highest total personal income in 2022. In the most populous city in that county in 2023, compare three ZIP codes: the headquarters ZIP of the fire department named for the city, the physical ZIP of the public school district named for the city, and the ZIP code that appears most often among residential judicial facilities there. Which of those ZIP codes covers the most land, and how many Iowa lottery retailers are in that city and ZIP code? Return just the number. Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1
+      ],
+      "reasoning": [
+        "Node 1: In 2022, Polk has the highest total personal income among Iowa counties.",
+        "Hop result: <node_1 answer>"
+      ],
+      "answer": "Polk"
+    },
+    {
+      "hop": 2,
+      "node_ids": [
+        2
+      ],
+      "reasoning": [
+        "Node 2: In 2023, Des Moines has the highest population in Polk County after excluding county-balance records.",
+        "Hop result: <node_2 answer>"
+      ],
+      "answer": "Des Moines"
+    },
+    {
+      "hop": 3,
+      "node_ids": [
+        3,
+        4,
+        5
+      ],
+      "reasoning": [
+        "Node 3: In Des Moines, the fire department named for the city has headquarters ZIP code 50317.",
+        "Node 4: In Des Moines, the public school district named for the city has physical ZIP code 50321.",
+        "Node 5: In Des Moines, ZIP code 50315 appears most often among residential judicial facilities.",
+        "Hop result: <node_3 answer>, <node_4 answer>, <node_5 answer>"
+      ],
+      "answer": "50317, 50321, 50315"
+    },
+    {
+      "hop": 4,
+      "node_ids": [
+        6
+      ],
+      "reasoning": [
+        "Node 6: Among ZIP codes 50317, 50321, and 50315, ZIP code 50317 covers the most land.",
+        "Hop result: <node_6 answer>"
+      ],
+      "answer": "50317"
+    },
+    {
+      "hop": 5,
+      "node_ids": [
+        7
+      ],
+      "reasoning": [
+        "Node 7: In Des Moines, 26 Iowa lottery retailers are in ZIP code 50317.",
+        "Hop result: <node_7 answer>"
+      ],
+      "answer": "26"
+    }
+  ]
+}

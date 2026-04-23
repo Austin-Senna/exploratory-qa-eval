@@ -1,0 +1,77 @@
+{
+  "dataset_sequence": [
+    "building-permits-in-2022",
+    "building-permits-in-2023",
+    "building-permits-in-2024",
+    "crime-incidents-in-2022",
+    "crime-incidents-in-2023",
+    "crime-incidents-in-2024",
+    "street-sweeping-schedule-2022",
+    "street-sweeping-schedule-2023",
+    "street-sweeping-schedule-2024"
+  ],
+  "source_sequence": [
+    "datagov/building-permits-in-2022/files/data.txt",
+    "datagov/building-permits-in-2023/files/data.txt",
+    "datagov/building-permits-in-2024/files/data.txt",
+    "datagov/crime-incidents-in-2022/files/data.txt",
+    "datagov/crime-incidents-in-2023/files/data.txt",
+    "datagov/crime-incidents-in-2024/files/data.txt",
+    "datagov/street-sweeping-schedule-2022/files/data.txt",
+    "datagov/street-sweeping-schedule-2023/files/data.txt",
+    "datagov/street-sweeping-schedule-2024/files/data.txt"
+  ],
+  "reasoning_chain_text": [
+    "1. For 2022, 2023, and 2024, identify Washington, DC wards in the top 4 by building permits each year and keep the wards that qualify every year.",
+    "2. Among those wards, compare crime-incident counts in 2022, 2023, and 2024 and keep the two wards with the highest average crime-incident counts.",
+    "3. For the wards from step 2, compare street-sweeping schedule counts in 2022, 2023, and 2024 and return the ward with the highest average schedule count."
+  ],
+  "original_final_question": "First, identify the Washington, DC ward that consistently ranked in the top four for building permits from 2022 to 2024 and had one of the highest crime rates. Among the top candidates, identify the ward that had the most frequent street sweeping schedule. Return the ward only (e.g., `Ward X`). Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1,
+        2,
+        3
+      ],
+      "reasoning": [
+        "Node 1: In the 2022 Building Permits dataset for Washington, DC, the top 4 wards by number of permits were: Ward 6 (8,371), Ward 2 (8,286), Ward 4 (6,971), and Ward 5 (6,580).",
+        "Node 2: In the 2023 Building Permits dataset for Washington, DC, the top 4 wards by number of permits were: Ward 2 (8,392), Ward 6 (6,845), Ward 4 (6,525), and Ward 5 (6,072).",
+        "Node 3: In the 2024 Building Permits dataset for Washington, DC, the top 4 wards by number of permits were: Ward 2 (7,897), Ward 4 (6,856), Ward 6 (6,658), and Ward 5 (6,213).",
+        "Hop result: <node_1 answer> \u2229 <node_2 answer> \u2229 <node_3 answer> = [\"Ward 2\", \"Ward 4\", \"Ward 5\", \"Ward 6\"]."
+      ],
+      "answer": "Ward 2, Ward 4, Ward 5, Ward 6"
+    },
+    {
+      "hop": 2,
+      "node_ids": [
+        4,
+        5,
+        6
+      ],
+      "reasoning": [
+        "Node 4: In the 2022 Crime Incidents dataset, incident counts for the wards from hop 1 were: Ward 2 (4,794), Ward 5 (4,497), Ward 6 (3,685), and Ward 4 (2,547).",
+        "Node 5: In the 2023 Crime Incidents dataset, incident counts for the wards from hop 1 were: Ward 2 (5,469), Ward 5 (5,629), Ward 6 (4,281), and Ward 4 (3,135).",
+        "Node 6: In the 2024 Crime Incidents dataset, incident counts for the wards from hop 1 were: Ward 2 (4,420), Ward 5 (4,585), Ward 6 (3,549), and Ward 4 (2,595).",
+        "Hop result: report <node_4 answer>, <node_5 answer>, <node_6 answer> as this hop answer."
+      ],
+      "answer": "Ward 5 and Ward 2"
+    },
+    {
+      "hop": 3,
+      "node_ids": [
+        7,
+        8,
+        9
+      ],
+      "reasoning": [
+        "Node 7: In the 2022 Street Sweeping Schedule dataset, Ward 2 has 72 entries and Ward 5 has 80 entries.",
+        "Node 8: In the 2023 Street Sweeping Schedule dataset, Ward 2 has 54 entries and Ward 5 has 83 entries.",
+        "Node 9: In the 2024 Street Sweeping Schedule dataset, Ward 2 has 54 entries and Ward 5 has 87 entries.",
+        "Hop result: <node_7 answer> \u2229 <node_8 answer> \u2229 <node_9 answer> = [\"Ward 2\", \"Ward 5\"]."
+      ],
+      "answer": "Ward 5"
+    }
+  ]
+}

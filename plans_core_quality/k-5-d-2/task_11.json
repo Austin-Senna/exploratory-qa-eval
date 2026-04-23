@@ -1,0 +1,100 @@
+{
+  "dataset_sequence": [
+    "311-city-service-requests-in-2019",
+    "311-city-service-requests-in-2020",
+    "Neighborhoods_in_Washington,_D.C.",
+    "Wendell_Felder",
+    "Georgetown_University",
+    "Patrick_Francis_Healy",
+    "John_Carroll_(archbishop_of_Baltimore)"
+  ],
+  "source_sequence": [
+    "datagov/311-city-service-requests-in-2019/files/data.txt",
+    "datagov/311-city-service-requests-in-2020/files/data.txt",
+    "wikipedia/Neighborhoods_in_Washington,_D.C./content.txt",
+    "wikipedia/Wendell_Felder/content.txt",
+    "wikipedia/Georgetown_University/content.txt",
+    "wikipedia/Patrick_Francis_Healy/content.txt",
+    "wikipedia/John_Carroll_(archbishop_of_Baltimore)/content.txt",
+    "wikipedia/Patrick_Francis_Healy/content.txt"
+  ],
+  "reasoning_chain_text": [
+    "1. Compare Ward 7 and Ward 8 by their average 311 service requests across 2019 and 2020, and keep the ward with the higher average.",
+    "2. Determine who represents that ward on the DC Council.",
+    "3. Determine the university where that council member earned a graduate degree.",
+    "4. Determine the founder of that university and the person its flagship National Historic Landmark building is named after.",
+    "5. Determine the birth year of each of those two people and return the earlier year."
+  ],
+  "original_final_question": "Among DC wards 7 and 8, identify which ward had the higher average 311 service requests from 2019 through 2020. Who represents that ward on the DC Council? This council member earned a graduate degree from a university whose flagship building is a National Historic Landmark. Among the founder of the university and the person the flagship building is named after, in what year was the earlier-born individual born? Please return the year only. Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1,
+        2
+      ],
+      "title": "Compare The Two Wards",
+      "reasoning": [
+        "Node 1 retrieves the 2019 311 request counts for Ward 7 and Ward 8.",
+        "Node 2 retrieves the 2020 311 request counts for Ward 7 and Ward 8.",
+        "Hop result: averaging the two years shows `Ward 7` has the higher average 311 service requests."
+      ],
+      "answer": "Ward 7"
+    },
+    {
+      "hop": 2,
+      "node_ids": [
+        3
+      ],
+      "title": "Identify The Councilmember",
+      "reasoning": [
+        "Node 3 retrieves the DC Council representative for `<hop 1 answer>`.",
+        "Hop result: `Wendell Felder`."
+      ],
+      "answer": "Wendell Felder"
+    },
+    {
+      "hop": 3,
+      "node_ids": [
+        4
+      ],
+      "title": "Identify The Graduate University",
+      "reasoning": [
+        "Node 4 retrieves the university where `<hop 2 answer>` earned a graduate degree.",
+        "Hop result: `Georgetown University`."
+      ],
+      "answer": "Georgetown University"
+    },
+    {
+      "hop": 4,
+      "node_ids": [
+        5,
+        6
+      ],
+      "title": "Retrieve The Two Historical Figures",
+      "reasoning": [
+        "Node 5 retrieves the founder of `<hop 3 answer>`.",
+        "Node 6 retrieves the person after whom the flagship National Historic Landmark building of `<hop 3 answer>` is named.",
+        "Hop result: `John Carroll` and `Patrick Francis Healy`."
+      ],
+      "answer": [
+        "John Carroll",
+        "Patrick Francis Healy"
+      ]
+    },
+    {
+      "hop": 5,
+      "node_ids": [
+        7,
+        8
+      ],
+      "title": "Compare Birth Years",
+      "reasoning": [
+        "Node 7 retrieves the birth year of `<node 5 answer>` as `1735`.",
+        "Node 8 retrieves the birth year of `<node 6 answer>` as `1834`.",
+        "Hop result: the earlier-born individual was born in `1735`."
+      ],
+      "answer": 1735
+    }
+  ]
+}

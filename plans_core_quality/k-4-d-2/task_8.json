@@ -1,0 +1,86 @@
+{
+  "dataset_sequence": [
+    "crime-data-from-2010-to-2019",
+    "arrest-data-from-2010-to-2019",
+    "lapd-ripa-ab-953-stop-incident-details-from-7-1-2018-to-present",
+    "crime-data-from-2020-to-present",
+    "Van_Nuys",
+    "public-school-locations-current-23297"
+  ],
+  "source_sequence": [
+    "datagov/crime-data-from-2010-to-2019/files/rows.txt",
+    "datagov/arrest-data-from-2010-to-2019/files/rows.txt",
+    "datagov/lapd-ripa-ab-953-stop-incident-details-from-7-1-2018-to-present/files/rows.txt",
+    "datagov/crime-data-from-2010-to-2019/files/rows.txt",
+    "datagov/crime-data-from-2020-to-present/files/rows.txt",
+    "wikipedia/Van_Nuys/content.txt",
+    "datagov/public-school-locations-current-23297/files/data.txt"
+  ],
+  "reasoning_chain_text": [
+    "1. Identify the year from 2010 through 2019 with the most identity theft incidents in LA.",
+    "2. For that year, determine which LAPD area had the most arrests for moving traffic violations.",
+    "3. Determine that area's area ID and the crime code used for identity theft in the historical crime data.",
+    "4. Using 2020 crime data, count identity theft incidents for that area and determine the city containing that area.",
+    "5. Count public schools in that city and divide the incident count from step 4 by that total, rounded to the nearest integer."
+  ],
+  "original_final_question": "I am researching identity thefts in LA. First, identify the year between 2010 and 2019 with the highest number of identity theft incidents in LA. During that peak year, which area recorded the most arrests for moving traffic violations? What is the ratio of identity theft incidents that area had in 2020 to the total number of public schools in the city that area belongs to? Round the answer to the nearest integer. Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1
+      ],
+      "reasoning": [
+        "Node 1: Filter rows where `Crm Cd Desc` equals `THEFT OF IDENTITY`, extract year from `DATE OCC`, count records by year, and select the year with the largest count."
+      ],
+      "answer": "2016"
+    },
+    {
+      "hop": 2,
+      "node_ids": [
+        2
+      ],
+      "reasoning": [
+        "Node 2: Filter rows where year of `Arrest Date` equals <hop 1 answer> and `Charge Group Description` equals `Moving Traffic Violations`, count records by `Area Name`, and select the most common `Area Name`."
+      ],
+      "answer": "Van Nuys"
+    },
+    {
+      "hop": 3,
+      "node_ids": [
+        3,
+        4
+      ],
+      "reasoning": [
+        "Node 3: Filter rows where `Area Name` equals <hop 2 answer>, count records by `Area ID`, and select the most common `Area ID`.",
+        "Node 4: Filter rows where `Crm Cd Desc` equals `THEFT OF IDENTITY` and select the modal `Crm Cd`.",
+        "Hop result: Area ID 9 and crime code 354."
+      ],
+      "answer": "Area ID 9 and crime code 354"
+    },
+    {
+      "hop": 4,
+      "node_ids": [
+        5,
+        6
+      ],
+      "reasoning": [
+        "Node 5: Filter rows where year of `DATE OCC` equals 2020, `AREA` equals the Area ID from <hop 3 answer>, and `Crm Cd` equals the crime code from <hop 3 answer>, then count matching records.",
+        "Node 6: Los Angeles is the city containing Van Nuys.",
+        "Hop result: incident count = 761 and city = Los Angeles."
+      ],
+      "answer": "incident count = 761 and city = Los Angeles"
+    },
+    {
+      "hop": 5,
+      "node_ids": [
+        7
+      ],
+      "reasoning": [
+        "Node 7: Filter rows where `properties.STATE` equals `CA` and `properties.CITY` equals the city from <hop 4 answer>, then count matching schools.",
+        "Hop result: round(761 / 579) = 1."
+      ],
+      "answer": "1"
+    }
+  ]
+}

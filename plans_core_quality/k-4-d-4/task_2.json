@@ -1,0 +1,119 @@
+{
+  "dataset_sequence": [
+    "agency-contracts-fiscal-year-2017",
+    "agency-contracts-fiscal-year-2018",
+    "agency-contracts-fiscal-year-2019",
+    "agency-contracts-fiscal-year-2020",
+    "WSP_USA",
+    "HDR,_Inc.",
+    "Jacobs_Solutions",
+    "active-construction-projects",
+    "Omaha,_Nebraska",
+    "Logan_Fontenelle"
+  ],
+  "source_sequence": [
+    "datagov/agency-contracts-fiscal-year-2017/files/rows.txt",
+    "datagov/agency-contracts-fiscal-year-2018/files/rows.txt",
+    "datagov/agency-contracts-fiscal-year-2019/files/rows.txt",
+    "datagov/agency-contracts-fiscal-year-2020/files/rows.txt",
+    "wikipedia/WSP_USA/content.txt",
+    "wikipedia/HDR,_Inc./content.txt",
+    "wikipedia/Jacobs_Solutions/content.txt",
+    "datagov/active-construction-projects/files/rows.txt",
+    "wikipedia/Omaha,_Nebraska/content.txt",
+    "wikipedia/Logan_Fontenelle/content.txt"
+  ],
+  "reasoning_chain_text": [
+    "1. For fiscal year 2017, identify engineering firms in the top 20 Washington State contractors by contract count.",
+    "2. For fiscal year 2018, keep the engineering firms that again rank in the top 20 by contract count.",
+    "3. For fiscal year 2019, keep the engineering firms that again rank in the top 20 by contract count.",
+    "4. Using fiscal year 2020 contract data, intersect the four annual top-20 contractor sets to isolate the recurring engineering firms.",
+    "5. On the recurring engineering-firm pages, determine each firm's founding year and record the stated home city where available, then keep the firms founded after 1914.",
+    "6. Using current New York construction manager project data, keep the remaining firm with no active projects in that role.",
+    "7. Using the home city already identified for that firm, determine the Native American interpreter involved in the land-cession negotiations tied to the city's founding.",
+    "8. Return that interpreter's birth year."
+  ],
+  "original_final_question": "Consider the engineering firm founded after 1914 that has no current NY State construction manager projects, yet consistently ranked in the top 20 Washington State contractors by contract count annually from 2017 to 2020. In what year was the Native American interpreter born who helped negotiate the land cession that led to the founding of the city where that firm is based? Please return the year only. Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "reasoning": [
+        "Node 1: Resolve obvious same-contractor aliases in `Contractor Name`, count rows by canonical contractor name in the 2017 Washington State agency-contracts table, sort by contract count descending, and keep the top 20 contractors.",
+        "Node 2: Resolve obvious same-contractor aliases in `Contractor Name`, count rows by canonical contractor name in the 2018 Washington State agency-contracts table, sort by contract count descending, and keep the top 20 contractors.",
+        "Node 3: Resolve obvious same-contractor aliases in `Contractor Name`, count rows by canonical contractor name in the 2019 Washington State agency-contracts table, sort by contract count descending, and keep the top 20 contractors.",
+        "Node 4: Resolve obvious same-contractor aliases in `Contractor Name`, count rows by canonical contractor name in the 2020 Washington State agency-contracts table, sort by contract count descending, and keep the top 20 contractors.",
+        "Hop result: semantically intersect the four yearly top-20 contractor sets and keep the engineering firms that appear in all four years."
+      ],
+      "answer": [
+        "WSP USA Inc.",
+        "HDR Engineering, Inc.",
+        "Jacobs Engineering Group, Inc."
+      ]
+    },
+    {
+      "hop": 2,
+      "node_ids": [
+        5,
+        6,
+        7
+      ],
+      "reasoning": [
+        "Node 5: WSP USA was founded in 1885.",
+        "Node 6: HDR Engineering is based in Omaha, Nebraska and started in 1917.",
+        "Node 7: Jacobs Engineering Group was founded in 1947.",
+        "Hop result: among <hop 1 answer>, keep the firms founded after 1914."
+      ],
+      "answer": [
+        "HDR Engineering, Inc.",
+        "Jacobs Engineering Group, Inc."
+      ]
+    },
+    {
+      "hop": 3,
+      "node_ids": [
+        8
+      ],
+      "reasoning": [
+        "Node 8: Count exact matches in `Construction Manager` for the candidate engineering-firm labels and keep those with zero current NY State active construction projects."
+      ],
+      "answer": [
+        "WSP USA Inc.",
+        "HDR Engineering, Inc."
+      ]
+    },
+    {
+      "hop": 4,
+      "node_ids": [],
+      "reasoning": [
+        "Hop result: semantically intersect <hop 2 answer> with <hop 3 answer>."
+      ],
+      "answer": "HDR Engineering, Inc."
+    },
+    {
+      "hop": 5,
+      "node_ids": [
+        9
+      ],
+      "reasoning": [
+        "Node 9: In Omaha, the Native American interpreter who helped negotiate the 1853-1854 land cession tied to the city's founding is Logan Fontenelle."
+      ],
+      "answer": "Logan Fontenelle"
+    },
+    {
+      "hop": 6,
+      "node_ids": [
+        10
+      ],
+      "reasoning": [
+        "Node 10: Logan Fontenelle was born in 1825."
+      ],
+      "answer": "1825"
+    }
+  ]
+}

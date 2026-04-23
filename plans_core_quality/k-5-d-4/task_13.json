@@ -1,0 +1,92 @@
+{
+  "dataset_sequence": [
+    "Khan_Lab_School",
+    "Mountain_View,_California",
+    "school-district-office-locations-current-d848f",
+    "public-school-locations-current-23297",
+    "private-school-locations-current-f7d96",
+    "school-district-office-locations-2022-23",
+    "postsecondary-school-locations-2022-23"
+  ],
+  "source_sequence": [
+    "wikipedia/Khan_Lab_School/content.txt",
+    "wikipedia/Mountain_View,_California/content.txt",
+    "datagov/school-district-office-locations-current-d848f/files/nces::school-district-office-locations-current-1.txt",
+    "datagov/public-school-locations-current-23297/files/data.txt",
+    "datagov/private-school-locations-current-f7d96/files/data-FGgJBu.txt",
+    "datagov/school-district-office-locations-2022-23/files/data-8V0eVK.txt",
+    "datagov/postsecondary-school-locations-2022-23/files/data-sh56Ar.txt"
+  ],
+  "reasoning_chain_text": [
+    "1. Determine the city where Khan Lab School is located.",
+    "2. Determine the county containing that city.",
+    "3. Using current school district office listings for the city and county identified in steps 1-2, determine the state code associated with that location.",
+    "4. In that state, identify the counties common to the top three for current public schools, current private schools, and 2022-23 school district offices.",
+    "5. Return the smallest postsecondary institution count among the counties common to step 4."
+  ],
+  "original_final_question": "Find the state where Khan Lab School is located in. In that state, find the counties that rank in the top three for public schools, private schools, and school district offices; among their intersection, what is the smallest of the postsecondary institution counts? Only report the number. Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1
+      ],
+      "reasoning": [
+        "Node 1: Read the city where Khan Lab School is located from the cited Wikipedia source.",
+        "Hop result: the city is Mountain View."
+      ],
+      "answer": "Mountain View"
+    },
+    {
+      "hop": 2,
+      "node_ids": [
+        2
+      ],
+      "reasoning": [
+        "Node 2: Read the county containing <hop 1 answer> from the cited Mountain View Wikipedia source.",
+        "Hop result: the county is Santa Clara County."
+      ],
+      "answer": "Santa Clara County"
+    },
+    {
+      "hop": 3,
+      "node_ids": [
+        3
+      ],
+      "reasoning": [
+        "Node 3: From the school district office GeoJSON source, filter features where `CITY` = <hop 1 answer> and `NMCNTY` = <hop 2 answer>, extract distinct `STFIP` values, and keep the shared two-digit code.",
+        "Hop result: the shared state FIPS code is 06."
+      ],
+      "answer": "06"
+    },
+    {
+      "hop": 4,
+      "node_ids": [
+        4,
+        5,
+        6
+      ],
+      "reasoning": [
+        "Node 4: For `STFIP` = <hop 3 answer>, count public schools by county and keep the top three county names.",
+        "Node 5: For `STFIP` = <hop 3 answer>, count private schools by county and keep the top three county names.",
+        "Node 6: For `STFIP` = <hop 3 answer>, count school district offices by county and keep the top three county names.",
+        "Hop result: intersect the three top-three county sets; the shared counties are Los Angeles County and San Diego County."
+      ],
+      "answer": [
+        "Los Angeles County",
+        "San Diego County"
+      ]
+    },
+    {
+      "hop": 5,
+      "node_ids": [
+        7
+      ],
+      "reasoning": [
+        "Node 7: For `STFIP` = <hop 3 answer>, count postsecondary institutions by county, restrict to the counties in <hop 4 answer>, and take the smaller count.",
+        "Hop result: the smaller postsecondary institution count is 71."
+      ],
+      "answer": 71
+    }
+  ]
+}

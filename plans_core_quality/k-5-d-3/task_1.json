@@ -1,0 +1,116 @@
+{
+  "dataset_sequence": [
+    "2007-2008-school-progress-report",
+    "2008-2009-school-progress-report",
+    "2009-2010-school-progress-report",
+    "List_of_first_ladies_of_the_United_States",
+    "Eleanor_Roosevelt",
+    "Theodore_Roosevelt",
+    "Franklin_D._Roosevelt",
+    "Warm_Springs,_Georgia"
+  ],
+  "source_sequence": [
+    "datagov/2007-2008-school-progress-report/files/rows.txt",
+    "datagov/2008-2009-school-progress-report/files/rows.txt",
+    "datagov/2009-2010-school-progress-report/files/rows.txt",
+    "wikipedia/List_of_first_ladies_of_the_United_States/content.txt",
+    "wikipedia/Eleanor_Roosevelt/content.txt",
+    "wikipedia/Theodore_Roosevelt/content.txt",
+    "wikipedia/Franklin_D._Roosevelt/content.txt",
+    "wikipedia/Warm_Springs,_Georgia/content.txt"
+  ],
+  "reasoning_chain_text": [
+    "1. Identify Manhattan District 2 high schools that received A comprehensive performance grades in 2007-08, 2008-09, and 2009-10, and keep the schools that qualified in all three years.",
+    "2. From those schools, identify the one named after a U.S. president's relative who served as a first lady.",
+    "3. Determine which U.S. presidents that person was related to.",
+    "4. From those presidents, keep the one who served after 1920.",
+    "5. Return the 2020 census population of the city where that president died."
+  ],
+  "original_final_question": "I am looking for a specific high school in Manhattan's District 2 that consistently received 'A' grades for comprehensive performance from 2007 to 2010 and is named after a relative of a U.S. president. Then find the U.S. president to whom she was related who served after 1920. What was the 2020 census population of the city where that U.S. president died? Please return the population only. Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    {
+      "hop_id": 1,
+      "node_ids": [
+        1,
+        2,
+        3
+      ],
+      "reasoning": [
+        "Node 1 retrieves the Manhattan District 02 high schools with OVERALL GRADE A in 2007-08.",
+        "Node 2 retrieves the Manhattan District 02 high schools with OVERALL GRADE A in 2008-09.",
+        "Node 3 retrieves the Manhattan District 02 high schools with 2009-2010 OVERALL GRADE A in 2009-10.",
+        "Hop result: intersect the three yearly school sets by DBN to keep the schools that consistently received A grades across 2007-08 through 2009-10."
+      ],
+      "answer": [
+        "02M288 - Food and Finance High School",
+        "02M294 - Essex Street Academy",
+        "02M296 - High School of Hospitality Management",
+        "02M298 - Pace High School",
+        "02M408 - Professional Performing Arts High School",
+        "02M411 - Baruch College Campus High School",
+        "02M412 - N.Y.C. Lab School for Collaborative Studies",
+        "02M413 - School of the Future High School",
+        "02M414 - N.Y.C. Museum School",
+        "02M416 - Eleanor Roosevelt High School",
+        "02M418 - Millennium High School",
+        "02M439 - Manhattan Village Academy",
+        "02M475 - Stuyvesant High School",
+        "02M519 - Talent Unlimited High School",
+        "02M531 - Repertory Company High School for Theatre Arts",
+        "02M542 - Manhattan Bridges High School",
+        "02M543 - New Design High School",
+        "02M545 - High School for Dual Language and Asian Studies",
+        "02M600 - The High School of Fashion Industries"
+      ]
+    },
+    {
+      "hop_id": 2,
+      "node_ids": [
+        4
+      ],
+      "reasoning": [
+        "Node 4 matches the surviving schools in <hop 1 answer> against the First Lady roster.",
+        "Hop result: the school is Eleanor Roosevelt High School."
+      ],
+      "answer": "Eleanor Roosevelt High School"
+    },
+    {
+      "hop_id": 3,
+      "node_ids": [
+        5
+      ],
+      "reasoning": [
+        "Node 5 retrieves the U.S. presidents related to the namesake of <hop 2 answer>.",
+        "Hop result: the related presidents are Theodore Roosevelt and Franklin D. Roosevelt."
+      ],
+      "answer": [
+        "Theodore Roosevelt",
+        "Franklin D. Roosevelt"
+      ]
+    },
+    {
+      "hop_id": 4,
+      "node_ids": [
+        6,
+        7
+      ],
+      "reasoning": [
+        "Node 6 retrieves Theodore Roosevelt's presidential years from <hop 3 answer>.",
+        "Node 7 retrieves Franklin D. Roosevelt's presidential years from <hop 3 answer>.",
+        "Hop result: Franklin D. Roosevelt is the related president who served after 1920."
+      ],
+      "answer": "Franklin D. Roosevelt"
+    },
+    {
+      "hop_id": 5,
+      "node_ids": [
+        8
+      ],
+      "reasoning": [
+        "Node 8 retrieves the 2020 census population of the city where <hop 4 answer> died.",
+        "Hop result: the population is 465."
+      ],
+      "answer": 465
+    }
+  ]
+}

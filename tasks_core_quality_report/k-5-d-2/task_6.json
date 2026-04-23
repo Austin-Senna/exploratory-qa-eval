@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "task_id": "tasks_core/k-5-d-2/task_6.json",
+  "source_task": "tasks_core/k-5-d-2/task_6.json",
+  "source_verdict": null,
+  "question": "Find the New York counties, excluding NYC boroughs, satisfying both criteria: (1) an average rate of being sent back to prison or jail between 38% and 40% across 2018 and 2019, and (2) an average count of traffic crashes above 15,000 across 2019 and 2020. Among the counties that satisfy both conditions, identify the one named after a U.S. president. Then find the county where that president was born, and report the year that birth county was established. Report only the year in your response. Your response should be in the format [Answer].",
+  "heuristic_flags": {
+    "question_text_anomaly": false,
+    "question_text_anomaly_notes": [],
+    "has_explicit_answer_placeholders": true
+  },
+  "estimated_dataset_count": 6,
+  "estimated_min_tool_calls": 12,
+  "estimated_nice_tool_calls": 18,
+  "tool_call_budget_bucket": "within_budget_comfortably",
+  "quality_bucket": "high",
+  "derivability_bucket": "clean",
+  "difficulty_bucket": "core",
+  "overall_recommendation": "core_keep",
+  "issue_labels": [],
+  "strengths": [
+    "The question naturally implies the two-stage county intersection before the short biography lookup chain.",
+    "The six-dataset footprint is comfortably within the core budget.",
+    "The final target is explicit and the president-naming disambiguation is straightforward once the county set is narrowed."
+  ],
+  "concerns": [
+    "Intermediate node answer previews are truncated, so the hop-1 and hop-2 survivor sets are not fully visible inside the JSON artifact.",
+    "The last wiki hop is somewhat fact-retrieval-oriented rather than adding much extra reasoning depth."
+  ],
+  "rationale": "This task is coherent and benchmark-suitable: the question cleanly motivates averaging across years in two datasets, intersecting the qualifying counties, identifying the one named after a president, and then following a short, attached entity chain to the requested year. The budget is comfortably within range at six datasets. The main artifact-level weakness is that the node answer previews are limited, so some narrowing is supported more by the reasoning chain than by fully displayed intermediate outputs, but that does not rise to a broken or clearly unsupported step.",
+  "suggested_fix": "Expose fuller intermediate county results or a compact summary of the qualifying averages in the node outputs."
+}

@@ -106,6 +106,12 @@ class TestSearchAnalysisBottleneck(unittest.TestCase):
                     },
                     {
                         "task_id": "tasks_mini/k-1-d-1/task_1.json",
+                        "turn": 1,
+                        "tool": "query_file",
+                        "read_dataset_ids": ["gold1"],
+                    },
+                    {
+                        "task_id": "tasks_mini/k-1-d-1/task_1.json",
                         "turn": 2,
                         "tool": "search_schema",
                         "result_dataset_ids": ["gold1"],
@@ -230,6 +236,26 @@ class TestSearchAnalysisBottleneck(unittest.TestCase):
             task1_global = next(row for row in task_rows if row["task_id"] == "k-1-d-1/task_1")
             self.assertEqual(task1_global["first_hit_round_top_1"], 2)
 
+            per_call_rows = outputs["search_bottleneck"]["per_call_rows"]
+            task1_second_call = next(
+                row
+                for row in per_call_rows
+                if row["task_id"] == "k-1-d-1/task_1" and row["search_call_index"] == 2
+            )
+            self.assertEqual(task1_second_call["search_tool"], "search_schema")
+            self.assertEqual(task1_second_call["gold_hits_top_1"], 1)
+            self.assertAlmostEqual(task1_second_call["gold_recall_top_5"], 1.0, places=4)
+            self.assertAlmostEqual(task1_second_call["cumulative_search_gold_recall"], 1.0, places=4)
+            self.assertAlmostEqual(task1_second_call["cumulative_read_gold_recall"], 1.0, places=4)
+
+            task1_first_call = next(
+                row
+                for row in per_call_rows
+                if row["task_id"] == "k-1-d-1/task_1" and row["search_call_index"] == 1
+            )
+            self.assertAlmostEqual(task1_first_call["cumulative_search_gold_recall"], 1.0, places=4)
+            self.assertAlmostEqual(task1_first_call["cumulative_read_gold_recall"], 1.0, places=4)
+
     def test_generate_search_bottleneck_figures(self):
         with TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
@@ -349,11 +375,40 @@ class TestSearchAnalysisBottleneck(unittest.TestCase):
                         "avg_wasted_rounds": 0.0,
                     },
                 ],
+                "per_call_rows": [
+                    {
+                        "condition": "search_i_results_i_plani_k5/a",
+                        "task_id": "k-1-d-1/task_1",
+                        "variant": "search_i_results_i_plani_k5",
+                        "base_condition": "a",
+                        "search_call_index": 1,
+                        "cumulative_search_gold_recall": 0.3333,
+                        "cumulative_read_gold_recall": 0.0,
+                    },
+                    {
+                        "condition": "search_i_results_i_plani_k5/a",
+                        "task_id": "k-1-d-1/task_1",
+                        "variant": "search_i_results_i_plani_k5",
+                        "base_condition": "a",
+                        "search_call_index": 2,
+                        "cumulative_search_gold_recall": 0.6667,
+                        "cumulative_read_gold_recall": 0.3333,
+                    },
+                    {
+                        "condition": "search_i_results_i_plani_k5/a",
+                        "task_id": "k-1-d-1/task_2",
+                        "variant": "search_i_results_i_plani_k5",
+                        "base_condition": "a",
+                        "search_call_index": 1,
+                        "cumulative_search_gold_recall": 1.0,
+                        "cumulative_read_gold_recall": 1.0,
+                    },
+                ],
             }
             generate_search_bottleneck_figures(search_bottleneck, figure_root)
             figure_dir = figure_root / "figures"
-            self.assertTrue((figure_dir / "fig15_search_first_hit_rounds_condition.pdf").exists())
-            self.assertTrue((figure_dir / "fig16_search_first_hit_rounds_tool.pdf").exists())
+            self.assertTrue((figure_dir / "fig15_search_cumulative_retrieval_recall_condition.pdf").exists())
+            self.assertTrue((figure_dir / "fig16_search_cumulative_access_recall_condition.pdf").exists())
             self.assertTrue((figure_dir / "fig17_search_topk_miss_by_tool.pdf").exists())
             self.assertTrue((figure_dir / "fig18_search_tool_coverage_waste.pdf").exists())
 

@@ -1,0 +1,106 @@
+{
+  "dataset_sequence": [
+    "bridge-conditions-nys-department-of-transportation",
+    "fire-department-directory-for-new-york-state",
+    "bank-owned-atm-locations-in-new-york-state",
+    "large-scale-renewable-projects-reported-by-nyserda-beginning-2004",
+    "Erie_County,_New_York",
+    "Westchester_County,_New_York",
+    "index-violent-property-and-firearm-rates-by-county-beginning-1990",
+    "Buffalo,_New_York",
+    "Holland_Land_Company"
+  ],
+  "source_sequence": [
+    "datagov/bridge-conditions-nys-department-of-transportation/files/rows.txt",
+    "datagov/fire-department-directory-for-new-york-state/files/rows.txt",
+    "datagov/bank-owned-atm-locations-in-new-york-state/files/rows.txt",
+    "datagov/large-scale-renewable-projects-reported-by-nyserda-beginning-2004/files/rows.txt",
+    "wikipedia/Erie_County,_New_York/content.txt",
+    "wikipedia/Westchester_County,_New_York/content.txt",
+    "datagov/index-violent-property-and-firearm-rates-by-county-beginning-1990/files/rows.txt",
+    "wikipedia/Buffalo,_New_York/content.txt",
+    "wikipedia/Holland_Land_Company/content.txt"
+  ],
+  "reasoning_chain_text": [
+    "1. Identify New York counties with at least 65 bridges rated Poor.",
+    "2. From those counties, keep the ones with at least 50 fire departments.",
+    "3. From the remaining counties, keep the ones with at least 100 bank-owned ATMs.",
+    "4. From the remaining counties, keep the ones with at least 1.0 MW of operational renewable capacity.",
+    "5. Determine the county seats of the counties remaining after step 4.",
+    "6. Compare 2021 violent crime counts for those counties and keep the county with the higher value.",
+    "7. Using the county seat of the county selected in step 6, identify the land company associated with developing that city.",
+    "8. Record the founding year for that land company."
+  ],
+  "original_final_question": "Among NY counties with at least 65 bridges rated 'Poor' according to the department of transportation, contains at least 50 fire departments, at least 100 bank ATMs, and at least 1.0 MW of operational renewable energy capacity. Of these counties, focus on the county with more violent crimes in 2021. In what year was the land company founded that developed this county's seat? Please return the year only. Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "reasoning": [
+        "Node 1: Filter rows where `Poor Status` = `Y`, group by `County`, count bridges, and keep counties with at least 65 poor bridges.",
+        "Node 2: Group rows by `County Name`, count fire departments, and keep counties with at least 50 fire departments.",
+        "Node 3: Group rows by `County`, count bank-owned ATM locations, and keep counties with at least 100 ATMs.",
+        "Node 4: Filter rows where `Project Status` = `Operational`, sum `New Renewable Capacity (MW)` by `County/Province`, and keep counties with at least 1.0 MW.",
+        "Hop result: intersect the qualifying counties from nodes 1-4."
+      ],
+      "answer": [
+        "Erie County",
+        "Westchester County"
+      ]
+    },
+    {
+      "hop": 2,
+      "node_ids": [
+        5,
+        6
+      ],
+      "reasoning": [
+        "Node 5: Read the county seat of Erie County from <hop 1 answer>.",
+        "Node 6: Read the county seat of Westchester County from <hop 1 answer>.",
+        "Hop result: map the two qualifying counties to their county seats."
+      ],
+      "answer": {
+        "Erie County": "Buffalo",
+        "Westchester County": "White Plains"
+      }
+    },
+    {
+      "hop": 3,
+      "node_ids": [
+        7
+      ],
+      "reasoning": [
+        "Node 7: Compare 2021 `Violent Count` for Erie County and Westchester County and select the higher value.",
+        "Hop result: Erie County has the higher 2021 violent-crime total."
+      ],
+      "answer": "Erie County"
+    },
+    {
+      "hop": 4,
+      "node_ids": [
+        8
+      ],
+      "reasoning": [
+        "Node 8: Use <hop 2 answer> to identify Buffalo as the county seat of <hop 3 answer>, then read the land company that acquired the land which became Buffalo.",
+        "Hop result: the land company is Holland Land Company."
+      ],
+      "answer": "Holland Land Company"
+    },
+    {
+      "hop": 5,
+      "node_ids": [
+        9
+      ],
+      "reasoning": [
+        "Node 9: Read the founding year of <hop 4 answer> from the cited Wikipedia source.",
+        "Hop result: the company was founded in 1789."
+      ],
+      "answer": "1789"
+    }
+  ]
+}

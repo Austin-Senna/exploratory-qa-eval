@@ -1,0 +1,89 @@
+{
+  "dataset_sequence": [
+    "2021-state-employee-pay",
+    "2022-state-employee-pay",
+    "2023-state-employee-pay",
+    "Missouri_Department_of_Corrections",
+    "Jefferson_City,_Missouri",
+    "Lincoln_University_(Missouri)",
+    "James_Milton_Turner"
+  ],
+  "source_sequence": [
+    "datagov/2021-state-employee-pay/files/rows.txt",
+    "datagov/2022-state-employee-pay/files/rows.txt",
+    "datagov/2023-state-employee-pay/files/rows.txt",
+    "wikipedia/Missouri_Department_of_Corrections/content.txt",
+    "wikipedia/Jefferson_City,_Missouri/content.txt",
+    "wikipedia/Lincoln_University_(Missouri)/content.txt",
+    "wikipedia/James_Milton_Turner/content.txt"
+  ],
+  "reasoning_chain_text": [
+    "1. Compare average employee counts across 2021, 2022, and 2023 for the Missouri Department of Corrections, the Missouri Department of Social Services, and the Missouri Department of Transportation, and keep the agency with the highest average.",
+    "2. Determine that agency's headquarters city.",
+    "3. Identify the historically Black university in that city.",
+    "4. Determine who founded that university.",
+    "5. Return the year that person died."
+  ],
+  "original_final_question": "Among the Missouri Department of Corrections, the Missouri Department of Social Services, and the Missouri Department of Transportation, which had the highest average employee count from 2021 through 2023? In that agency's headquarters city, who founded the historically Black university there? In what year did this person die? Return the year only. Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    {
+      "hop_id": 1,
+      "node_ids": [
+        1,
+        2,
+        3
+      ],
+      "reasoning": [
+        "Node 1: Filter 2021 employee-pay rows where `Agency Name` is CORRECTIONS, SOCIAL SERVICES, or TRANSPORTATION, group by `Agency Name`, count rows, and return the yearly employee counts.",
+        "Node 2: Filter 2022 employee-pay rows where `Agency Name` is CORRECTIONS, SOCIAL SERVICES, or TRANSPORTATION, group by `Agency Name`, count rows, and return the yearly employee counts.",
+        "Node 3: Filter 2023 employee-pay rows where `Agency Name` is CORRECTIONS, SOCIAL SERVICES, or TRANSPORTATION, group by `Agency Name`, count rows, and return the yearly employee counts.",
+        "Hop result: average the three yearly employee counts and select CORRECTIONS because it has the highest overall average."
+      ],
+      "answer": "CORRECTIONS"
+    },
+    {
+      "hop_id": 2,
+      "node_ids": [
+        4
+      ],
+      "reasoning": [
+        "Node 4: Retrieve the headquarters city of <hop 1 answer>.",
+        "Hop result: the headquarters city is Jefferson City."
+      ],
+      "answer": "Jefferson City"
+    },
+    {
+      "hop_id": 3,
+      "node_ids": [
+        5
+      ],
+      "reasoning": [
+        "Node 5: Retrieve the historically Black university located in <hop 2 answer>.",
+        "Hop result: the university is Lincoln University."
+      ],
+      "answer": "Lincoln University"
+    },
+    {
+      "hop_id": 4,
+      "node_ids": [
+        6
+      ],
+      "reasoning": [
+        "Node 6: Retrieve the founder of <hop 3 answer>.",
+        "Hop result: the founder is James Milton Turner."
+      ],
+      "answer": "James Milton Turner"
+    },
+    {
+      "hop_id": 5,
+      "node_ids": [
+        7
+      ],
+      "reasoning": [
+        "Node 7: Retrieve the year when <hop 4 answer> died.",
+        "Hop result: the year is 1915."
+      ],
+      "answer": 1915
+    }
+  ]
+}

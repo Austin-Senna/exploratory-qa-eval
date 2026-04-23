@@ -33,6 +33,15 @@ class TestPlanVerifierScripts(unittest.TestCase):
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(json.dumps(payload, indent=2) + "\n")
 
+    def _seed_indexed_sources(self, root: Path, sources: list[str]) -> None:
+        table_path = root / "table_descriptions.jsonl"
+        prefix = "s3://lakeqa-yc4103-datalake/"
+        lines = [
+            json.dumps({"dataset_uri": f"{prefix}{source}"})
+            for source in sources
+        ]
+        table_path.write_text("\n".join(lines) + "\n")
+
     def _seed_author_checker(self, root: Path) -> None:
         source_skill = (
             Path(__file__).resolve().parent.parent
@@ -52,6 +61,15 @@ class TestPlanVerifierScripts(unittest.TestCase):
             self._seed_author_checker(root)
             task_path = root / "tasks_mini" / "k-3-d-4" / "task_6.json"
             plan_path = root / "plans_mini" / "k-3-d-4" / "task_6.json"
+            source_sequence = [
+                "datagov/fy-2020-pension-recipients-by-state/files/rows.txt",
+                "datagov/fy-2021-pension-recipients-by-state-1266e/files/rows.txt",
+                "datagov/fy-2023-pension-recipients-by-state/files/rows.txt",
+                "wikipedia/New_England/content.txt",
+                "wikipedia/Vermont/content.txt",
+                "wikipedia/Montpelier,_Vermont/content.txt",
+            ]
+            self._seed_indexed_sources(root, source_sequence)
 
             self._write_json(
                 task_path,
@@ -75,8 +93,30 @@ class TestPlanVerifierScripts(unittest.TestCase):
                         "Node 6: Find when Montpelier was chartered",
                     ],
                     "nodes": {
-                        "1": {"answer": "Vermont"},
-                        "2": {"answer": "Montpelier"},
+                        "1": {
+                            "source": source_sequence[0],
+                            "answer": ["Maine", "New Hampshire", "Vermont"],
+                        },
+                        "2": {
+                            "source": source_sequence[1],
+                            "answer": ["Vermont", "Rhode Island"],
+                        },
+                        "3": {
+                            "source": source_sequence[2],
+                            "answer": ["Vermont", "Connecticut"],
+                        },
+                        "4": {
+                            "source": source_sequence[3],
+                            "answer": ["Connecticut", "Maine", "Massachusetts", "New Hampshire", "Rhode Island", "Vermont"],
+                        },
+                        "5": {
+                            "source": source_sequence[4],
+                            "answer": "Montpelier",
+                        },
+                        "6": {
+                            "source": source_sequence[5],
+                            "answer": "1781",
+                        },
                     },
                 },
             )
@@ -92,12 +132,7 @@ class TestPlanVerifierScripts(unittest.TestCase):
                         "Montpelier,_Vermont",
                     ],
                     "source_sequence": [
-                        "datagov/fy-2020-pension-recipients-by-state/files/rows.txt",
-                        "datagov/fy-2021-pension-recipients-by-state-1266e/files/rows.txt",
-                        "datagov/fy-2023-pension-recipients-by-state/files/rows.txt",
-                        "wikipedia/New_England/content.txt",
-                        "wikipedia/Vermont/content.txt",
-                        "wikipedia/Montpelier,_Vermont/content.txt",
+                        *source_sequence,
                     ],
                     "reasoning_chain_text": [
                         "1. Identify U.S. states with between 200 and 400 VA pension recipients in FY 2020.",

@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "task_id": "tasks_core/k-5-d-3/task_5.json",
+  "source_task": "tasks_core/k-5-d-3/task_5.json",
+  "source_verdict": "pass",
+  "question": "From the counties that were in the statewide top 5 for releases from the Texas state prison system in 2019, 2020, and 2021, find the county that has the most recently established county seat. In that county, identify the school district that had the highest average percentage across its sites of students automatically recognized as eligible for free school meals without submitting a household meal application from 2019-2020 through 2021-2022. What year was that school district established? Please return the year only. Your response should be in the format [Answer].",
+  "heuristic_flags": {
+    "question_text_anomaly": false,
+    "question_text_anomaly_notes": [],
+    "has_explicit_answer_placeholders": true
+  },
+  "estimated_dataset_count": 15,
+  "estimated_min_tool_calls": 30,
+  "estimated_nice_tool_calls": 45,
+  "tool_call_budget_bucket": "within_budget_tight",
+  "quality_bucket": "high",
+  "derivability_bucket": "clean",
+  "difficulty_bucket": "too_hard",
+  "overall_recommendation": "keep_noncore",
+  "issue_labels": [],
+  "strengths": [
+    "The final question cleanly motivates the county intersection, county-seat comparison, and district-level averaging path.",
+    "The last establishment-year lookup is directly tied to the selected district rather than feeling decorative."
+  ],
+  "concerns": [
+    "The task sits exactly on the 30-call floor and stretches to 45 calls in a comfortable run, so it is expensive for a core slice.",
+    "The school-nutrition hop is reviewable but somewhat brittle because the artifact shows limited yearly answer previews rather than the full cross-year district table."
+  ],
+  "rationale": "This artifact is internally coherent and the decomposition follows naturally from the question: intersect the repeated top-five counties, compare their county-seat establishment dates, then aggregate district ISP values across three school years before looking up the winning district's establishment year. The main problem is not logic but cost. With 15 datasets, the task is right at the minimum 30-call budget and depends on a long, fairly serial chain, which makes it a weak cost-quality fit for the core benchmark even though the task itself is usable.",
+  "suggested_fix": "Reduce the county-seat/date leg or precompute one intermediate shortlist so the task clears the budget margin for core use."
+}

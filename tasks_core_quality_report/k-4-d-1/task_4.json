@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "task_id": "tasks_core/k-4-d-1/task_4.json",
+  "source_task": "tasks_core/k-4-d-1/task_4.json",
+  "source_verdict": null,
+  "question": "Can you first idenity the system that was used to survey Assateague Island National Seashore in the 2010 USGS survey. Then, find out which facility this system was developed and which county this facility is located in. Finally, report the largest town in that county. Only report the town. Your response should be in the format [Answer].",
+  "heuristic_flags": {
+    "question_text_anomaly": false,
+    "question_text_anomaly_notes": [],
+    "has_explicit_answer_placeholders": true
+  },
+  "estimated_dataset_count": 3,
+  "estimated_min_tool_calls": 6,
+  "estimated_nice_tool_calls": 9,
+  "tool_call_budget_bucket": "within_budget_comfortably",
+  "quality_bucket": "high",
+  "derivability_bucket": "clean",
+  "difficulty_bucket": "core",
+  "overall_recommendation": "core_keep",
+  "issue_labels": [],
+  "strengths": [
+    "Question implies a clear multi-hop decomposition without relying on injected intermediate winners.",
+    "Dataset fan-out looks feasible within a rough 30-tool-call budget."
+  ],
+  "concerns": [
+    "No major issues spotted from the artifact surface."
+  ],
+  "rationale": "The task reads as internally coherent and the decomposition is easy to infer from the question.",
+  "suggested_fix": "No change needed."
+}

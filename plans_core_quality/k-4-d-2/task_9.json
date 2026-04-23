@@ -1,0 +1,40 @@
+{
+  "dataset_sequence": [
+    "crime-data-from-2010-to-2019",
+    "arrest-data-from-2010-to-2019",
+    "lapd-ripa-ab-953-stop-incident-details-from-7-1-2018-to-present",
+    "crime-data-from-2020-to-present",
+    "Van_Nuys",
+    "public-school-locations-current-23297"
+  ],
+  "source_sequence": [
+    "datagov/crime-data-from-2010-to-2019/files/rows.txt",
+    "datagov/arrest-data-from-2010-to-2019/files/rows.txt",
+    "datagov/lapd-ripa-ab-953-stop-incident-details-from-7-1-2018-to-present/files/rows.txt",
+    "datagov/crime-data-from-2010-to-2019/files/rows.txt",
+    "datagov/crime-data-from-2020-to-present/files/rows.txt",
+    "wikipedia/Van_Nuys/content.txt",
+    "datagov/public-school-locations-current-23297/files/data.txt"
+  ],
+  "reasoning_chain_text": [
+    "1. Identify the year from 2010 through 2019 with the most simple assault incidents in Los Angeles.",
+    "2. For that year, determine which LAPD area had the most DUI arrests.",
+    "3. Determine that area's area ID and the crime code used for simple assault in the historical crime data.",
+    "4. Using 2020 crime data, count simple assault incidents for that area and determine the city containing that area.",
+    "5. Count public schools in that city and divide the incident count from step 4 by that total, rounded to the nearest integer."
+  ],
+  "original_final_question": "Between 2010 and 2019, which year saw the highest number of simple assault incidents in Los Angeles? For that specific year, which area in LA had the most DUI arrests? I need to know the ratio of simple assault incidents that occurred in that area in 2020 relative to the total number of public schools in the city the area belongs to. Please round the result to the nearest integer. Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    "Node 1: Filter rows where `Crm Cd Desc` equals `BATTERY - SIMPLE ASSAULT`, extract year from `DATE OCC`, count records by year, and select the year with the largest count.",
+    "Node 2: Filter rows where year of `Arrest Date` equals <hop 1 answer> and `Charge Group Description` equals `Driving Under Influence`, count records by `Area Name`, and select the most common `Area Name`.",
+    "Node 3: Filter rows where `Area Name` equals <hop 2 answer>, count records by `Area ID`, and select the most common `Area ID`.",
+    "Node 4: Filter rows where `Crm Cd Desc` equals `BATTERY - SIMPLE ASSAULT` and select the modal `Crm Cd`.",
+    "Hop result: Area ID 9 and crime code 624.",
+    "Node 5: Filter rows where year of `DATE OCC` equals 2020, `AREA` equals the Area ID from <hop 3 answer>, and `Crm Cd` equals the crime code from <hop 3 answer>, then count matching records.",
+    "Node 6: Los Angeles is the city containing Van Nuys.",
+    "Hop result: incident count = 667 and city = Los Angeles.",
+    "Node 7: Filter rows where `STATE` equals `CA` and `CITY` equals the city from <hop 4 answer>, then count matching schools.",
+    "Hop result: round(667 / 579) = 1.",
+    "Final answer: 1"
+  ]
+}

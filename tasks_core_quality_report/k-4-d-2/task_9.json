@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "task_id": "tasks_core/k-4-d-2/task_9.json",
+  "source_task": "tasks_core/k-4-d-2/task_9.json",
+  "source_verdict": null,
+  "question": "Between 2010 and 2019, which year saw the highest number of simple assault incidents in Los Angeles? For that specific year, which area in LA had the most DUI arrests? I need to know the ratio of simple assault incidents that occurred in that area in 2020 relative to the total number of public schools in the city the area belongs to. Please round the result to the nearest integer. Your response should be in the format [Answer].",
+  "heuristic_flags": {
+    "question_text_anomaly": false,
+    "question_text_anomaly_notes": [],
+    "has_explicit_answer_placeholders": true
+  },
+  "estimated_dataset_count": 6,
+  "estimated_min_tool_calls": 12,
+  "estimated_nice_tool_calls": 18,
+  "tool_call_budget_bucket": "within_budget_comfortably",
+  "quality_bucket": "high",
+  "derivability_bucket": "clean",
+  "difficulty_bucket": "core",
+  "overall_recommendation": "core_keep",
+  "issue_labels": [],
+  "strengths": [
+    "The question cleanly motivates the full year-to-area-to-ratio chain.",
+    "The dataset footprint is modest and comfortably within budget.",
+    "The final target and rounding rule are explicit and easy to evaluate."
+  ],
+  "concerns": [
+    "The Van Nuys-to-Los Angeles lookup is slightly redundant because the question already anchors the area in LA.",
+    "The Area ID and crime-code crosswalks are implementation-driven bridges rather than user-visible reasoning."
+  ],
+  "rationale": "The artifact is internally consistent and the main decomposition follows naturally from the question: find the peak assault year, identify the leading DUI area for that year, count 2020 assaults in that area, identify the city, count schools, and compute the ratio. The extra crosswalk steps add mild brittleness, but they do not create a derivation break or make the task too costly for a core slice.",
+  "suggested_fix": "Use Los Angeles directly for the denominator, or briefly justify the extra city-mapping step."
+}

@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "task_id": "tasks_core/k-5-d-4/task_6.json",
+  "source_task": "tasks_core/k-5-d-4/task_6.json",
+  "source_verdict": null,
+  "question": "On what date did the agricultural college first open to students, given that this college was ultimately located in a town that beat the county seat (in a site selection competition) of the Washington county that had the lowest 2020 census population among those Washington counties that (1) were NOT the most populous in the state, (2) had district-average Math proficiency above 40% in the 2021-22 school year, AND (3) had Low-Income student enrollment percentage between 32-40% in every school year from 2018-19 through 2021-22? Report in the format MM/DD/YYYY. Your response should be in the format [Answer].",
+  "heuristic_flags": {
+    "question_text_anomaly": false,
+    "question_text_anomaly_notes": [],
+    "has_explicit_answer_placeholders": true
+  },
+  "estimated_dataset_count": 10,
+  "estimated_min_tool_calls": 20,
+  "estimated_nice_tool_calls": 30,
+  "tool_call_budget_bucket": "within_budget_comfortably",
+  "quality_bucket": "high",
+  "derivability_bucket": "clean",
+  "difficulty_bucket": "core",
+  "overall_recommendation": "core_keep",
+  "issue_labels": [],
+  "strengths": [
+    "Question directly motivates the filtering, comparison, and county-seat-to-college chain.",
+    "Reasoning stays internally consistent and avoids injected candidate sets or contradictory hops."
+  ],
+  "concerns": [
+    "The task sits at the upper edge of the comfortable budget.",
+    "Four yearly low-income intersections add repetitive serial work."
+  ],
+  "rationale": "This artifact is coherent and benchmark-suitable: the final question itself motivates the main decomposition, the nodes support each narrowing step without contradiction, and the final college-opening lookup is a natural continuation rather than a decorative hop. Using `datasets_used`, the task lands at 10 datasets, which estimates to 20 minimum and 30 nice-case tool calls, so it is still within budget but near the ceiling; that makes it somewhat dense, though still reasonable for the core slice.",
+  "suggested_fix": "Optional: collapse the four yearly low-income checks into one multi-year aggregation step to reduce repetition."
+}

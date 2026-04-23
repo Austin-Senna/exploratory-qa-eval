@@ -1,0 +1,75 @@
+{
+  "dataset_sequence": [
+    "crime-incidents-in-2019",
+    "crime-incidents-in-2020",
+    "311-city-service-requests-in-2019",
+    "311-city-service-requests-in-2020",
+    "Neighborhoods_in_Washington,_D.C.",
+    "Wendell_Felder"
+  ],
+  "source_sequence": [
+    "datagov/crime-incidents-in-2019/files/data.txt",
+    "datagov/crime-incidents-in-2020/files/data.txt",
+    "datagov/311-city-service-requests-in-2019/files/data.txt",
+    "datagov/311-city-service-requests-in-2020/files/data.txt",
+    "wikipedia/Neighborhoods_in_Washington,_D.C./content.txt",
+    "wikipedia/Wendell_Felder/content.txt"
+  ],
+  "reasoning_chain_text": [
+    "1. Compute average violent-crime counts by ward across 2019 and 2020 and keep the top two wards.",
+    "2. For those two wards, compare average 311 service requests across 2019 and 2020 and keep the ward with the higher average.",
+    "3. Determine the D.C. Council member who represents that ward.",
+    "4. Return the university that council member attended for graduate studies."
+  ],
+  "original_final_question": "Identify the DC Council member who represents the ward that, among the top two wards, recorded both the highest average violent crimes, and the higher average 311 service requests from 2019 through 2020. Which university did this council member attend for graduate studies? Return the university name only. Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1,
+        2
+      ],
+      "reasoning": [
+        "Node 1: Filter rows where `OFFENSE` is in {HOMICIDE, ASSAULT W/DANGEROUS WEAPON, ROBBERY, SEX ABUSE}, count records by `WARD`, and return the 2019 ward-level counts.",
+        "Node 2: Filter rows where `OFFENSE` is in {HOMICIDE, ASSAULT W/DANGEROUS WEAPON, ROBBERY, SEX ABUSE}, count records by `WARD`, and return the 2020 ward-level counts.",
+        "Hop result: top 2 wards by avg violent crime = {Ward 7: (905 + 945) / 2 = 925, Ward 8: (765 + 907) / 2 = 836}"
+      ],
+      "answer": "Ward 7, Ward 8"
+    },
+    {
+      "hop": 2,
+      "node_ids": [
+        3,
+        4
+      ],
+      "reasoning": [
+        "Node 3: Normalize `WARD` to ward numbers 1 through 8, count records by `WARD`, and return the 2019 ward-level 311 request counts.",
+        "Node 4: Normalize `WARD` to ward numbers 1 through 8, count records by `WARD`, and return the 2020 ward-level 311 request counts.",
+        "Hop result: higher avg 311 requests among <hop 1 answer> = {Ward 7: (42,326 + 36,113) / 2 = 39,219.5, Ward 8: (35,025 + 37,124) / 2 = 36,074.5} -> Ward 7"
+      ],
+      "answer": "Ward 7"
+    },
+    {
+      "hop": 3,
+      "node_ids": [
+        5
+      ],
+      "reasoning": [
+        "Node 5: Wendell Felder is the Ward 7 Councilmember.",
+        "Hop result: Wendell Felder"
+      ],
+      "answer": "Wendell Felder"
+    },
+    {
+      "hop": 4,
+      "node_ids": [
+        6
+      ],
+      "reasoning": [
+        "Node 6: Georgetown University is Wendell Felder's graduate university.",
+        "Hop result: Georgetown University"
+      ],
+      "answer": "Georgetown University"
+    }
+  ]
+}

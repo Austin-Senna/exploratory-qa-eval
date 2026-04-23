@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "task_id": "tasks_core/k-5-d-2/task_7.json",
+  "source_task": "tasks_core/k-5-d-2/task_7.json",
+  "source_verdict": null,
+  "question": "The NBA champion team based in San Antonio won its first NBA Finals against another team. Find the county that `another` team is based in. In 2020, what is the absolute difference between firearm crimes and hate crime incidents reported in that county? Only report the number in your answer. Your response should be in the format [Answer].",
+  "heuristic_flags": {
+    "question_text_anomaly": false,
+    "question_text_anomaly_notes": [],
+    "has_explicit_answer_placeholders": true
+  },
+  "estimated_dataset_count": 6,
+  "estimated_min_tool_calls": 12,
+  "estimated_nice_tool_calls": 18,
+  "tool_call_budget_bucket": "within_budget_comfortably",
+  "quality_bucket": "low",
+  "derivability_bucket": "broken",
+  "difficulty_bucket": "unclear",
+  "overall_recommendation": "revise_or_drop",
+  "issue_labels": [
+    "unsupported_step"
+  ],
+  "strengths": [
+    "Early San Antonio-to-opponent-to-county hops are coherent and easy to follow.",
+    "The artifact stays comfortably within budget at six datasets."
+  ],
+  "concerns": [
+    "The decisive hate-crime hop restricts the total to persons and property crimes even though the question asks for hate crime incidents generally.",
+    "The data lookup implicitly normalizes \"New York County\" to dataset value \"New York\" without deriving that translation."
+  ],
+  "rationale": "The task is affordable and the first four hops are a faithful, compact derivation from the question. The benchmark problem is the final hate-crime aggregation: Node 5 injects a category filter that the question never specifies, so a solver following the question alone has no clear basis to reproduce the intended total. Because that unsupported narrowing sits on the core metric used in the final subtraction, the artifact is not reliably derivable as written.",
+  "suggested_fix": "Explicitly state the hate-crime scope in the question or revise Node 5 to use the full 2020 hate-crime incident total for the county."
+}
