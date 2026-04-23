@@ -4,10 +4,12 @@ import logging
 from pathlib import Path
 from typing import List, Optional
 
+from strands_evaluation.instrumentation.trace_plugin import _normalize_dataset_id
+
 logger = logging.getLogger(__name__)
 
 _PROMPTS_DIR = Path("prompts")
-_MODES = {"naive", "standard", "ideal"}
+_MODES = {"naive", "standard", "ideal", "preloaded"}
 _DEBUG_MODES = {"decision_notes"}
 
 _PLAN_AGENT_SKILL = "strands_evaluation/tools/skills/plan-agent"
@@ -74,6 +76,24 @@ def compose_baseline_prompt(search_tool_mode: Optional[str]) -> str:
     )
 
 
+def compose_preloaded_block(source_sequence: List[str]) -> str:
+    if not source_sequence:
+        raise ValueError("Preloaded mode requires a non-empty source_sequence.")
+
+    lines = [
+        "## PRELOADED DATASETS",
+        "",
+        "You have been given the complete set of datasets required to answer this",
+        "task. Do not search. Proceed directly to inspect and query the files",
+        "listed below using the available data tools.",
+        "",
+    ]
+    for source in source_sequence:
+        dataset_id = _normalize_dataset_id(source)
+        lines.append(f"- dataset_id: {dataset_id} | uri: {source}")
+    return "\n".join(lines)
+
+
 def planning_skill_path(agent_management_mode: Optional[str]) -> str:
     management_mode = _normalize_mode(agent_management_mode, "standard", "agent_management")
     return _PLAN_IDEAL_SKILL if management_mode == "ideal" else _PLAN_AGENT_SKILL
@@ -81,6 +101,8 @@ def planning_skill_path(agent_management_mode: Optional[str]) -> str:
 
 def discover_skill_path(search_tool_mode: Optional[str]) -> str:
     mode = _normalize_mode(search_tool_mode, "naive", "search_tool")
+    if mode == "preloaded":
+        raise ValueError("Preloaded mode does not use a discover-data skill.")
     return _DISCOVER_SKILL_PATHS[mode]
 
 
@@ -88,9 +110,15 @@ def skill_paths_for_modes(
     search_tool_mode: Optional[str],
     agent_management_mode: Optional[str],
 ) -> List[str]:
+    mode = _normalize_mode(search_tool_mode, "naive", "search_tool")
+    if mode == "preloaded":
+        return [
+            planning_skill_path(agent_management_mode),
+            _QUERY_DATA_SKILL,
+        ]
     return [
         planning_skill_path(agent_management_mode),
-        discover_skill_path(search_tool_mode),
+        discover_skill_path(mode),
         _QUERY_DATA_SKILL,
     ]
 
@@ -121,6 +149,7 @@ def inject_debug_prompt(prompt: str, debug_mode: Optional[str]) -> str:
 __all__ = [
     "compose_baseline_prompt",
     "compose_managed_prompt",
+    "compose_preloaded_block",
     "discover_skill_path",
     "inject_debug_prompt",
     "load_prompt_text",

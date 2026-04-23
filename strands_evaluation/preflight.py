@@ -132,7 +132,7 @@ def run_preflight(
         db_path = Path(run_config.search_db_path or "./lance_data")
         checks.append(_check_lance_db(db_path))
 
-    if st == "ideal" or am == "ideal":
+    if st in {"ideal", "preloaded"} or am == "ideal":
         if not task_files:
             checks.append(
                 PreflightCheck(
