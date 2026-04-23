@@ -144,7 +144,7 @@ def run_preflight(
         else:
             checks.extend(_check_plan_files(task_files))
 
-    if sr == "ideal":
+    if sr == "ideal" and st != "preloaded":
         checks.append(_check_desc_cache_for_enrichment())
         checks.append(_check_snippet_cache())
         checks.append(_check_schemas_jsonl_load())
