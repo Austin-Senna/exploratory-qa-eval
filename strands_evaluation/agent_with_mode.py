@@ -41,6 +41,7 @@ from strands_evaluation.helper.logger import configure_worker_logging
 from strands_evaluation.helper.prompting import (
     compose_baseline_prompt,
     compose_managed_prompt,
+    compose_preloaded_block,
     inject_debug_prompt,
     inject_sana_prompt,
     skill_paths_for_modes,
@@ -123,7 +124,7 @@ except ImportError:
 # Mode composition (inlined in this module)
 # ---------------------------------------------------------------------------
 
-_MODES = {"naive", "standard", "ideal"}
+_MODES = {"naive", "standard", "ideal", "preloaded"}
 _RESULT_MODES = {"naive", "ideal"}
 
 
@@ -181,6 +182,9 @@ def build_search(
 
         return [search_reranked_hybrid, search_schema_hybrid, search_prefix]
 
+    if search_mode == "preloaded":
+        return []
+
     import strands_evaluation.tools.external.ideal.search_ideal as search_ideal
 
     search_ideal.set_task_context(task_context or {})
@@ -196,13 +200,19 @@ def build_management(
     """Return prompt, management tools, and behavior toggles for a mode."""
     management_mode = _normalize_mode(mode, "standard", "agent_management")
 
+    def _with_preloaded_block(prompt: str) -> str:
+        if search_tool_mode != "preloaded":
+            return prompt
+        ideal_plan = load_ideal_plan_for_context(task_context)
+        return prompt.rstrip() + "\n\n" + compose_preloaded_block(ideal_plan.source_sequence)
+
     if management_mode == "naive":
-        prompt = compose_baseline_prompt(search_tool_mode)
+        prompt = _with_preloaded_block(compose_baseline_prompt(search_tool_mode))
         return prompt, [], False, False
 
     prompt = compose_managed_prompt(search_tool_mode)
     if management_mode == "standard":
-        return prompt, [plan, summarize_context], True, True
+        return _with_preloaded_block(prompt), [plan, summarize_context], True, True
 
     # ideal = managed stack with gold reasoning chain preloaded and
     # plan swapped to plan_ideal.
@@ -212,7 +222,7 @@ def build_management(
         prompt,
         ideal_plan.reasoning_chain_text,
     )
-    return prompt, [plan_ideal, summarize_context], True, True
+    return _with_preloaded_block(prompt), [plan_ideal, summarize_context], True, True
 
 
 def build_results(
@@ -222,6 +232,8 @@ def build_results(
     fixed_k: Optional[int],
 ) -> List[DecoratedFunctionTool]:
     """Apply fixed-k and payload-shaping wrappers to search tools."""
+    if not base_search_tools:
+        return []
     results_mode = _normalize_result_mode(mode, "naive", "search_results")
     return build_search_tools_by_mode(
         base_search_tools,
@@ -329,7 +341,7 @@ def _inject_search_budget_prompt(
     search_tool_names: tuple[str, ...],
 ) -> str:
     """Append search-call budget instructions when configured."""
-    if search_calls_limit is None:
+    if search_calls_limit is None or not search_tool_names:
         return system_prompt
     names = ", ".join(search_tool_names) if search_tool_names else "search tools"
     budget_note = (

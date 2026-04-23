@@ -30,6 +30,7 @@ base_eval.BatchRunner = ModeBatchRunner
 
 _MODE_LETTERS = {
     "naive": "n",
+    "preloaded": "p",
     "standard": "d",
     "ideal": "i",
 }
@@ -296,7 +297,7 @@ def main() -> None:
     # New ablation axes
     parser.add_argument(
         "--search_tool",
-        choices=["naive", "standard", "ideal"],
+        choices=["naive", "preloaded", "standard", "ideal"],
         default=None,
         help="Search tool quality axis.",
     )

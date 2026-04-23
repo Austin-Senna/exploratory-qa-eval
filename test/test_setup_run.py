@@ -125,6 +125,34 @@ class SetupRunTests(unittest.TestCase):
             self.assertEqual(command[command.index("--logs-output-dir") + 1], "logs")
             self.assertEqual(command[command.index("--results-output-dir") + 1], "results")
 
+    def test_smoke_accepts_preloaded_search_mode(self):
+        with TemporaryDirectory() as tmpdir:
+            repo_root = Path(tmpdir)
+            self._write_smoke_fixture(repo_root)
+            fake_runner = _FakeRunner()
+
+            command = setup_run.run(
+                [
+                    "smoke",
+                    "--search",
+                    "preloaded",
+                    "--results",
+                    "naive",
+                    "--plan",
+                    "ideal",
+                    "--model",
+                    "bedrock/claude-haiku-4.5",
+                    "--db",
+                    "lance_data",
+                ],
+                runner=fake_runner,
+                cwd=repo_root,
+            )
+
+            self.assertEqual(command, fake_runner.command)
+            self.assertEqual(command[command.index("--search_tool") + 1], "preloaded")
+            self.assertEqual(command[command.index("--agent_management") + 1], "ideal")
+
     def test_missing_db_has_helpful_error(self):
         with TemporaryDirectory() as tmpdir:
             repo_root = Path(tmpdir)

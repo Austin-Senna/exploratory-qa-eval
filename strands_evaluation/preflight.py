@@ -156,7 +156,7 @@ def run_preflight(
         db_path = Path(run_config.search_db_path or "./lance_data")
         checks.append(_check_lance_db(db_path))
 
-    if st == "ideal" or am == "ideal":
+    if st in {"ideal", "preloaded"} or am == "ideal":
         if not task_files:
             checks.append(
                 PreflightCheck(
@@ -169,7 +169,7 @@ def run_preflight(
             checks.extend(_check_plan_files(task_files))
 
     # SANA Agent 1 requires the three profile jsonl files; also loaded by search_results=ideal.
-    if sr == "ideal" or (sana is not None and sana >= 1):
+    if (sr == "ideal" and st != "preloaded") or (sana is not None and sana >= 1):
         checks.append(_check_desc_cache_for_enrichment())
         checks.append(_check_snippet_cache())
         checks.append(_check_schemas_jsonl_load())

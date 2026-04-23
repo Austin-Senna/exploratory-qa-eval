@@ -8,6 +8,7 @@ from strands_evaluation.agent_with_mode import build_mode_bundle
 from strands_evaluation.helper.prompting import (
     compose_baseline_prompt,
     compose_managed_prompt,
+    compose_preloaded_block,
     inject_debug_prompt,
     normalize_debug_mode,
     skill_paths_for_modes,
@@ -92,6 +93,13 @@ class TestModeWrapper(unittest.TestCase):
         self.assertNotIn("search_prefix", prompt)
         self.assertNotIn("reasoning chain", prompt.lower())
 
+    def test_managed_preloaded_prompt_mentions_authoritative_preloaded_regime(self):
+        prompt = compose_managed_prompt("preloaded")
+        self.assertIn("PRELOADED DATASETS", prompt)
+        self.assertIn("Do not search", prompt)
+        self.assertNotIn("search_ideal", prompt)
+        self.assertNotIn("search_reranked", prompt)
+
     def test_baseline_prompt_mentions_reranked_search_in_standard_mode(self):
         prompt = compose_baseline_prompt("standard")
         self.assertIn("search_reranked", prompt)
@@ -105,13 +113,30 @@ class TestModeWrapper(unittest.TestCase):
         self.assertNotIn("search_reranked", prompt)
         self.assertNotIn("reasoning chain", prompt.lower())
 
+    def test_compose_preloaded_block_lists_dataset_ids_and_uris(self):
+        block = compose_preloaded_block(
+            [
+                "datagov/ds_one/files/rows.txt",
+                "wikipedia/Cameron_County,_Texas/content.txt",
+            ]
+        )
+        self.assertIn("dataset_id: ds_one | uri: datagov/ds_one/files/rows.txt", block)
+        self.assertIn(
+            "dataset_id: Cameron_County,_Texas | uri: wikipedia/Cameron_County,_Texas/content.txt",
+            block,
+        )
+
     def test_skill_paths_are_search_and_management_aware(self):
         standard_paths = skill_paths_for_modes("standard", "standard")
         ideal_paths = skill_paths_for_modes("ideal", "ideal")
+        preloaded_paths = skill_paths_for_modes("preloaded", "standard")
         self.assertIn("strands_evaluation/tools/skills/plan-agent", standard_paths)
         self.assertIn("strands_evaluation/tools/skills/discover-data-standard", standard_paths)
         self.assertIn("strands_evaluation/tools/skills/plan-ideal", ideal_paths)
         self.assertIn("strands_evaluation/tools/skills/discover-data-ideal", ideal_paths)
+        self.assertIn("strands_evaluation/tools/skills/plan-agent", preloaded_paths)
+        self.assertIn("strands_evaluation/tools/skills/query-data", preloaded_paths)
+        self.assertFalse(any("discover-data" in path for path in preloaded_paths))
 
     def test_ideal_management_uses_managed_stack_with_plan_swap(self):
         with TemporaryDirectory() as tmpdir:
@@ -312,6 +337,77 @@ class TestModeWrapper(unittest.TestCase):
                 search_tool_mode="ideal",
                 search_results_mode="ideal",
                 agent_management_mode="ideal",
+            )
+            with self.assertRaises(ValueError):
+                build_mode_bundle(
+                    cfg,
+                    data_tools=[],
+                    task_context={"task_id": "tasks_mini/k-1-d-1/task_1.json"},
+                )
+
+    def test_preloaded_mode_disables_search_tools_and_injects_authoritative_sources(self):
+        with TemporaryDirectory() as tmpdir:
+            plans_root = Path(tmpdir) / "plans_mini"
+            self._write_valid_plan(plans_root)
+            set_plans_root(plans_root)
+
+            cfg = RunConfig(
+                search_tool_mode="preloaded",
+                search_results_mode="ideal",
+                agent_management_mode="standard",
+            )
+            bundle = build_mode_bundle(
+                cfg,
+                data_tools=[],
+                task_context={"task_id": "tasks_mini/k-1-d-1/task_1.json"},
+            )
+
+            tool_names = [tool_obj.tool_spec["name"] for tool_obj in bundle.tools]
+            self.assertEqual(bundle.search_tool_names, ())
+            self.assertNotIn("search_ideal", tool_names)
+            self.assertIn("plan", tool_names)
+            self.assertIn("summarize_context", tool_names)
+            self.assertIn("## PRELOADED DATASETS", bundle.system_prompt)
+            self.assertIn("dataset_id: ds_one | uri: datagov/ds_one/files/rows.txt", bundle.system_prompt)
+
+    def test_preloaded_mode_fails_fast_without_plan_file(self):
+        with TemporaryDirectory() as tmpdir:
+            plans_root = Path(tmpdir) / "plans_mini"
+            plans_root.mkdir(parents=True, exist_ok=True)
+            set_plans_root(plans_root)
+
+            cfg = RunConfig(
+                search_tool_mode="preloaded",
+                search_results_mode="naive",
+                agent_management_mode="naive",
+            )
+            with self.assertRaises(FileNotFoundError):
+                build_mode_bundle(
+                    cfg,
+                    data_tools=[],
+                    task_context={"task_id": "tasks_mini/k-1-d-1/task_missing.json"},
+                )
+
+    def test_preloaded_mode_fails_fast_with_empty_source_sequence(self):
+        with TemporaryDirectory() as tmpdir:
+            plans_root = Path(tmpdir) / "plans_mini"
+            target = plans_root / "k-1-d-1"
+            target.mkdir(parents=True, exist_ok=True)
+            (target / "task_1.json").write_text(
+                json.dumps(
+                    {
+                        "dataset_sequence": ["ds_one"],
+                        "source_sequence": [],
+                        "reasoning_chain_text": "Step 1",
+                    }
+                )
+            )
+            set_plans_root(plans_root)
+
+            cfg = RunConfig(
+                search_tool_mode="preloaded",
+                search_results_mode="naive",
+                agent_management_mode="standard",
             )
             with self.assertRaises(ValueError):
                 build_mode_bundle(
