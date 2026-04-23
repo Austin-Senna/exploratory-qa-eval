@@ -19,8 +19,10 @@ The existing `search_ideal` mode does not serve this thesis. It still forces the
 - A new value `preloaded` on the `search_tool` axis of the existing mode system.
 - Injection of `source_sequence` into the system prompt as a `## PRELOADED DATASETS` block containing `dataset_id` and URI only.
 - An authoritative-list instruction telling the agent it has the complete set and should not search.
-- Extension of sidecar instrumentation to support failure attribution (tool input, success/error status, error text, `submit_answer` tracing).
-- An analysis helper that classifies task failures into five categories from the enriched trace.
+- A new `prompts/search_preloaded.txt` overlay describing the no-search regime.
+- Skills selection that omits `discover-data` when `search_tool=preloaded` (keeps `plan-*` and `query-data`).
+- `submit_answer` tracing in `TracePlugin` (the one instrumentation gap — everything else for failure attribution is already captured).
+- An analysis helper that classifies task failures into four categories using existing trace + `agent_results.jsonl` data.
 
 **Out of scope:**
 - Removing the existing `search_ideal` implementation (unused by this paper but not hurting anything; separate cleanup).
@@ -43,23 +45,30 @@ The published LAKEQA baseline (ontology keyword search, basic prompting) is repo
 
 ## 4. Failure attribution
 
-Under the preloaded mode, failure attribution collapses to five mutually exclusive, exhaustive categories:
+All inputs required for failure attribution are already captured by existing instrumentation:
+
+- `ReadTracePlugin` sidecar → per-task `read_dataset_ids` and `gold_dataset_ids_read`
+- Strands `AgentResult.tool_metrics` → per-tool `call_count` and `success_count` (written to `agent_results.jsonl` as `tool_counts` and aggregated by `analysis/tool_error_analysis.py`)
+- Task result → final `submit_answer` text (compared to gold in EM evaluation)
+
+Under the preloaded mode, failure attribution uses four mutually exclusive, exhaustive categories ordered by first-matching-wins:
 
 | Category | Detection |
 |---|---|
-| didn't-open | Gold URI present in preloaded list but absent from union of `read_dataset_ids` across the task |
-| wrong-format | A read tool returned a format-unsupported error for a gold URI (detected from tool `status` + `error_text`) |
-| wrong-query | A read tool executed (status=success) but returned data inconsistent with the gold reasoning chain — detected by the absence of successful `query_file`/`grep_file` calls producing values the reasoning chain implies |
-| execution-error | `execute_code` returned a non-zero status or exception |
-| wrong-final-answer | All retrieval/execution succeeded but the `submit_answer` text does not match the gold answer |
+| didn't-open | Any gold URI absent from the union of `read_dataset_ids` across the task |
+| read-tool-error | All gold URIs opened, but any read tool (`peek_file`, `query_file`, `read_file`, `grep_file`) has `success_count < call_count` for this task |
+| execute-error | All read tools clean, but `execute_code` has `success_count < call_count` for this task |
+| wrong-answer | All tools clean, but the `submit_answer` text does not match the gold answer |
 
-The first two are derivable from trace metadata. The third is heuristic; the spec permits manual review of uncertain cases. The last two are deterministic once `submit_answer` is traced.
+`read-tool-error` intentionally does not split into wrong-format vs. wrong-query — that split would require per-call error-text capture the current instrumentation does not provide. If the aggregate rate of read errors is high enough to matter, the split can be added in a follow-up; for now the aggregate is sufficient to answer the paper's question.
+
+The only instrumentation change required to make all four derivable is ensuring `submit_answer` is wired into the trace (see §5.4) — everything else is already recorded.
 
 ## 5. Architecture
 
-### 5.1 Mode-system extension (`agent_with_mode.py`)
+### 5.1 Mode-system extension (`agent_with_mode.py`, `helper/prompting.py`)
 
-- Add `preloaded` to `_MODES` for the `search_tool` axis.
+- Add `preloaded` to `_MODES` in both `agent_with_mode.py` and `helper/prompting.py`.
 - In `_build_search_tools`, `search_mode == "preloaded"` returns `[]`.
 - In `_build_management`, after composing the base prompt, if `search_tool_mode == "preloaded"`:
   - Load the task's plan via the existing `plan_store.load_plan_for_context` helper.
@@ -67,7 +76,22 @@ The first two are derivable from trace metadata. The third is heuristic; the spe
   - Append the `## PRELOADED DATASETS` block to the prompt.
 - `search_results` mode is ignored when `search_tool=preloaded` (the payload wrapper has no search tools to wrap).
 
-### 5.2 Prompt composer
+### 5.2 Skills selection (`helper/prompting.py`)
+
+Skills are currently selected via `skill_paths_for_modes(search_tool_mode, agent_management_mode)` which returns three paths: `plan-*`, `discover-data-*`, and `query-data`.
+
+For `search_tool_mode == "preloaded"`:
+- Omit the `discover-data-*` skill entirely. There are no datasets to discover; the URIs are preloaded. Carrying a discover-data skill would only inject obsolete search-tool guidance.
+- Keep `query-data` (the agent still queries files).
+- Keep the `plan-*` skill selection as-is (controlled by `agent_management_mode`; under `preloaded × naive` it is omitted because skills are disabled, under `preloaded × standard` it is included).
+
+Implementation: `skill_paths_for_modes` branches on `search_tool_mode == "preloaded"` and returns `[planning_skill_path(...), _QUERY_DATA_SKILL]` — dropping the discover entry.
+
+### 5.3 Prompt overlay
+
+The existing pattern uses `prompts/search_{mode}.txt` overlays loaded by `_compose_search_overlay_prompt`. Add `prompts/search_preloaded.txt` with content describing the preloaded regime: no search tools exist, a `## PRELOADED DATASETS` block at the top of the prompt lists all required URIs, and the agent should proceed directly to `peek_file` / `query_file` on those URIs. The per-task URI block itself is injected separately (§5.4) because URIs are task-specific, not prompt-template-level.
+
+### 5.4 Per-task URI injection
 
 A new helper `compose_preloaded_prompt(source_sequence)` emits:
 
@@ -85,34 +109,56 @@ listed below using the available data tools.
 
 The block is appended to whatever base prompt `_build_management` has already produced. Each line in the block is derived from one URI in `source_sequence`. The `dataset_id` is extracted from the URI path (for Data.gov URIs of shape `datagov/<slug>/files/<name>`, the slug is the `dataset_id`; extraction is delegated to the existing `_normalize_dataset_id` helper in `trace_plugin.py` to keep canonical form consistent with the trace fields). This makes the composer robust to any length mismatch between `dataset_sequence` and `source_sequence` — only `source_sequence` is required.
 
-### 5.3 CLI surface (`run_mode_eval.py`)
+Inside `_build_management`, when `search_tool_mode == "preloaded"`, a helper `compose_preloaded_block(source_sequence) -> str` produces the `## PRELOADED DATASETS` block and is appended to whatever base prompt was produced. See §5.6 for the exact block format.
+
+### 5.5 CLI surface (`run_mode_eval.py`)
 
 - `--search_tool preloaded` becomes a valid value.
 - Variant label format gains `p` as a `search_tool` slot character: `search_p_results_{n|i}_plan_{n|d|i}`.
 - Because `search_results` is inert under `preloaded`, the label still reflects the configured value for traceability.
 
-### 5.4 Instrumentation extension (`read_trace_plugin.py`, `trace_plugin.py`)
+### 5.6 Preloaded-block format
 
-Extend the per-call record written by `ReadTracePlugin.on_after_tool` to include:
+```
+## PRELOADED DATASETS
 
-| Field | Source | Purpose |
-|---|---|---|
-| `tool_input` | `event.tool_use["input"]` (full, truncated to 4 KB) | Captures SQL for `query_file`, pattern for `grep_file`, code for any embedded snippet |
-| `status` | `event.result.get("status")` (`"success"` or `"error"`) | Enables error-vs-success classification |
-| `error_text` | first text block of `event.result["content"]` if `status=error`, truncated to 2 KB | Enables format-error vs execution-error classification |
+You have been given the complete set of datasets required to answer this
+task. Do not search. Proceed directly to inspect and query the files
+listed below using the available data tools.
 
-Extend `TracePlugin` to handle `submit_answer`:
+- dataset_id: <id_0> | uri: <source_0>
+- dataset_id: <id_1> | uri: <source_1>
+...
+```
 
-- On `submit_answer` calls, log `task_id`, `tool="submit_answer"`, `answer_text` (the input), `timestamp_ms`.
-- Matches the existing search-tool record shape; consumers distinguish by `tool` field.
+Each line in the block is derived from one URI in `source_sequence`. The `dataset_id` is extracted from the URI path (for Data.gov URIs of shape `datagov/<slug>/files/<name>`, the slug is the `dataset_id`; extraction is delegated to the existing `_normalize_dataset_id` helper in `trace_plugin.py` to keep canonical form consistent with the trace fields). This makes the composer robust to any length mismatch between `dataset_sequence` and `source_sequence` — only `source_sequence` is required.
 
-### 5.5 Analysis helper (`analysis/failure_attribution.py`)
+### 5.7 Instrumentation extension (`trace_plugin.py`)
 
-A new module that takes a sidecar trace file + a gold task and returns a single category label per task. Implementation notes:
+The only gap in existing instrumentation is `submit_answer` tracing. The class docstring claims it is supported, but `on_after_tool` has no branch for it.
 
-- Reads sidecar JSONL once; builds in-memory lists of read-tool calls, `submit_answer` call, and final-answer text.
-- Applies the five rules in the order listed in §4 (first-matching-wins).
-- Exposes a `classify_task(trace_path, gold_task) -> str` function and a `summarize_run(trace_dir, tasks) -> dict` helper returning category counts.
+Extend `TracePlugin.on_after_tool` with a `submit_answer` branch that writes:
+
+```
+{
+  "task_id": ...,
+  "tool": "submit_answer",
+  "answer_text": <input answer>,
+  "timestamp_ms": ...
+}
+```
+
+Consumers distinguish by `tool` field — no schema change for existing records. All other data required for failure attribution (per-tool error counts, read dataset IDs) is already recorded.
+
+### 5.8 Analysis helper (`analysis/failure_attribution.py`)
+
+A new module that takes, for a task:
+
+- the per-task read-trace sidecar
+- the per-task row from `agent_results.jsonl` (for `tool_counts`)
+- the gold task (for URIs and gold answer)
+
+Returns a single category label per task by applying the four rules in §4 first-matching-wins. Exposes `classify_task(...) -> str` and `summarize_run(results_dir, tasks_dir) -> dict` returning category counts per condition × model.
 
 ## 6. Data flow
 
@@ -120,27 +166,30 @@ A new module that takes a sidecar trace file + a gold task and returns a single 
 plans_mini/k-*-d-*/task_*.json
         │
         ▼ load_plan_for_context
-source_sequence, dataset_sequence
+source_sequence
         │
-        ▼ compose_preloaded_prompt
-system prompt with ## PRELOADED DATASETS block
+        ▼ compose_preloaded_block + prompts/search_preloaded.txt overlay
+system prompt with no search tools + ## PRELOADED DATASETS block
+        │
+        ▼ skill_paths_for_modes → [plan-*, query-data]  (discover-data omitted)
         │
         ▼ agent.run(prompt, tools=[data_tools + management_tools])
 agent uses peek_file / query_file / execute_code / submit_answer
         │
-        ▼ ReadTracePlugin + TracePlugin (extended)
-sidecar JSONL with tool_input, status, error_text, submit_answer
+        ▼ ReadTracePlugin + TracePlugin (extended with submit_answer)
+        │   + agent_results.jsonl (tool_counts per task)
         │
         ▼ analysis/failure_attribution.py
-{didn't-open | wrong-format | wrong-query | execution-error | wrong-final-answer}
+{didn't-open | read-tool-error | execute-error | wrong-answer}
 ```
 
 ## 7. Testing
 
 - **Unit:** `search_tool=preloaded` returns empty search-tool list; prompt contains expected URIs and `dataset_id`s and the authoritative-list instruction; missing plan hard-fails.
-- **Unit:** extended `ReadTracePlugin` record includes `tool_input`, `status`, `error_text` on both success and error paths; `submit_answer` trace records appear in JSONL.
-- **Unit:** `failure_attribution.classify_task` returns the correct label on fixture traces covering each of the five categories.
-- **Integration:** 5-task Haiku smoke run with `--search_tool preloaded --agent_management naive` confirms the agent never invokes a search tool (none exist), opens the preloaded URIs via `peek_file`/`query_file`, and produces a `submit_answer` traced in the sidecar.
+- **Unit:** `skill_paths_for_modes(search_tool_mode="preloaded", ...)` returns paths containing `plan-*` and `query-data` but never a `discover-data-*` entry.
+- **Unit:** `TracePlugin` `submit_answer` branch writes a record with `tool="submit_answer"` and `answer_text` populated.
+- **Unit:** `failure_attribution.classify_task` returns the correct label on fixture traces covering each of the four categories.
+- **Integration:** 5-task Haiku smoke run with `--search_tool preloaded --agent_management naive` confirms the agent never invokes a search tool (none exist), opens the preloaded URIs via `peek_file`/`query_file`, and produces a `submit_answer` record in the trace.
 
 ## 8. Validation and execution
 
@@ -164,5 +213,8 @@ Post-landing:
 - Mode name: `preloaded`
 - Block content: `dataset_id` + URI only (no description, schema, or snippet)
 - Agent is told the set is complete ("Do not search")
-- Sidecar extension is part of this workstream, not a follow-up
+- `discover-data` skill is omitted under `preloaded`; `query-data` and `plan-*` remain
+- `prompts/search_preloaded.txt` is added alongside the existing mode overlays
+- Failure attribution uses four categories; per-call error-text capture is deferred
+- Only instrumentation change in this workstream is `submit_answer` tracing
 - Existing `search_ideal` stays (unused, not removed)
