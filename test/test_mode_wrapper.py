@@ -321,5 +321,105 @@ class TestModeWrapper(unittest.TestCase):
                 )
 
 
+class TestSanaLevel(unittest.TestCase):
+    """SANA Agent 0 (labeling) and Agent 1 (enriched peek_file)."""
+
+    def setUp(self) -> None:
+        # SANA defaults resolve search_tool/search_results to ideal, which triggers
+        # plan_store lookups. Point plans_root at a temp dir with a valid plan.
+        self._tmp = TemporaryDirectory()
+        plans_root = Path(self._tmp.name) / "plans_mini"
+        target = plans_root / "k-1-d-1"
+        target.mkdir(parents=True, exist_ok=True)
+        (target / "task_1.json").write_text(
+            json.dumps({
+                "dataset_sequence": ["ds_one"],
+                "source_sequence": ["datagov/ds_one/files/rows.txt"],
+                "reasoning_chain_text": "Step 1",
+            })
+        )
+        set_plans_root(plans_root)
+        self._task_context = {"task_id": "tasks_mini/k-1-d-1/task_1.json"}
+
+    def tearDown(self) -> None:
+        from strands_evaluation.tools.agent_tools_v2 import set_peek_enrichment
+        set_peek_enrichment(False)
+        set_plans_root("plans_mini")
+        set_task_context({})
+        self._tmp.cleanup()
+
+    def test_sana_0_fills_axis_defaults_when_unset(self):
+        cfg = RunConfig(sana_level=0)
+        bundle = build_mode_bundle(cfg, data_tools=[], task_context=self._task_context)
+        self.assertEqual(bundle.modes["search_tool"], "ideal")
+        self.assertEqual(bundle.modes["search_results"], "ideal")
+        self.assertEqual(bundle.modes["agent_management"], "standard")
+
+    def test_sana_0_respects_explicit_axis_override(self):
+        cfg = RunConfig(sana_level=0, search_tool_mode="naive")
+        bundle = build_mode_bundle(cfg, data_tools=[])
+        self.assertEqual(bundle.modes["search_tool"], "naive")
+
+    def test_sana_1_enables_peek_enrichment_flag(self):
+        import strands_evaluation.tools.agent_tools_v2 as atv2
+        cfg = RunConfig(sana_level=1)
+        build_mode_bundle(cfg, data_tools=[], task_context=self._task_context)
+        self.assertTrue(atv2._PEEK_ENRICHMENT_ENABLED)
+
+    def test_sana_none_leaves_peek_enrichment_disabled(self):
+        import strands_evaluation.tools.agent_tools_v2 as atv2
+        cfg = RunConfig(sana_level=None, search_tool_mode="naive", search_results_mode="naive",
+                        agent_management_mode="naive")
+        build_mode_bundle(cfg, data_tools=[])
+        self.assertFalse(atv2._PEEK_ENRICHMENT_ENABLED)
+
+    def test_sana_1_injects_profile_section_into_system_prompt(self):
+        cfg = RunConfig(sana_level=1)
+        bundle = build_mode_bundle(cfg, data_tools=[], task_context=self._task_context)
+        self.assertIn("DATASET PROFILE", bundle.system_prompt)
+        self.assertIn("profile", bundle.system_prompt)
+        self.assertIn("row_count", bundle.system_prompt)
+        self.assertIn("top_2_rows", bundle.system_prompt)
+        self.assertIn("null_rate", bundle.system_prompt)
+        self.assertLessEqual(len(bundle.system_prompt.splitlines()), len(compose_managed_prompt("ideal").splitlines()) + 12)
+
+    def test_sana_0_does_not_inject_profile_section(self):
+        cfg = RunConfig(sana_level=0)
+        bundle = build_mode_bundle(cfg, data_tools=[], task_context=self._task_context)
+        self.assertNotIn("DATASET PROFILE", bundle.system_prompt)
+
+    def test_sana_level_none_does_not_inject_profile_section(self):
+        cfg = RunConfig(search_tool_mode="naive", search_results_mode="naive",
+                        agent_management_mode="naive")
+        bundle = build_mode_bundle(cfg, data_tools=[])
+        self.assertNotIn("DATASET PROFILE", bundle.system_prompt)
+
+
+class TestPeekFileEnrichment(unittest.TestCase):
+    """Direct tests of the peek_file enrichment path (no agent build)."""
+
+    def tearDown(self) -> None:
+        from strands_evaluation.tools.agent_tools_v2 import set_peek_enrichment
+        set_peek_enrichment(False)
+
+    def test_profile_lookup_returns_none_when_uri_not_cached(self):
+        from strands_evaluation.tools.agent_tools_v2 import _load_dataset_profile
+        profile = _load_dataset_profile("s3://nonexistent-bucket/not-a-dataset/files/foo.txt")
+        self.assertIsNone(profile)
+
+    def test_profile_lookup_returns_dict_when_uri_is_cached(self):
+        # Use a URI known to be in snippet.jsonl / table_descriptions.jsonl.
+        from strands_evaluation.tools.agent_tools_v2 import _load_dataset_profile
+        uri = ("s3://lakeqa-yc4103-datalake/datagov/"
+               "building-and-safety-electrical-permits-submitted-before-2010-n/files/rows.txt")
+        profile = _load_dataset_profile(uri)
+        self.assertIsNotNone(profile, "expected cached profile for known URI")
+        # At minimum snippet and description should be present; schema may or may not be keyed.
+        self.assertTrue(
+            "snippet" in profile or "llm_description" in profile,
+            f"expected snippet or description in profile, got keys: {list(profile.keys())}",
+        )
+
+
 if __name__ == "__main__":
     unittest.main()

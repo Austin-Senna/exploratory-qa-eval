@@ -40,6 +40,7 @@ from strands_evaluation.helper.prompting import (
     compose_baseline_prompt,
     compose_managed_prompt,
     inject_debug_prompt,
+    inject_sana_prompt,
     skill_paths_for_modes,
 )
 from strands_evaluation.helper.agent_runtime import invoke_with_watchdog
@@ -192,7 +193,14 @@ class DataLakeAgent:
             self.run_config.search_calls_limit,
             search_tool_names,
         )
+        system_prompt = inject_sana_prompt(system_prompt, self.run_config.sana_level)
         system_prompt = inject_debug_prompt(system_prompt, self.run_config.debug_mode)
+
+        # SANA Agent 1: toggle peek_file dataset-profile enrichment.
+        from strands_evaluation.tools.agent_tools_v2 import set_peek_enrichment
+        set_peek_enrichment(
+            self.run_config.sana_level is not None and self.run_config.sana_level >= 1
+        )
 
         conv_manager = build_conversation_manager(self.run_config)
 

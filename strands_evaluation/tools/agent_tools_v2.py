@@ -21,7 +21,8 @@ import traceback
 import uuid
 import xml.etree.ElementTree as ET
 from collections import Counter, deque
-from typing import Any, Dict, List, Optional
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
 
 import duckdb
 from dotenv import load_dotenv
@@ -49,6 +50,108 @@ from .agent_tools import (  # noqa: F401 — re-exported
 from .helper.detect import detect_family, should_skip
 
 load_dotenv()
+
+# ---------------------------------------------------------------------------
+# SANA Agent 1: peek_file dataset-profile enrichment
+# ---------------------------------------------------------------------------
+# When enabled, peek_file augments its response with a `profile` field sourced
+# from the cached jsonl files already loaded by the ideal-search wrapper:
+#   - datagov_tables_schemas_full.jsonl  (hard schema)
+#   - table_descriptions.jsonl           (LLM metadata)
+#   - snippet.jsonl                      (dataset snippet)
+# Activated per-agent by build_mode_bundle via set_peek_enrichment(True) when
+# sana_level >= 1. Orthogonal to existing modes.
+
+_PEEK_ENRICHMENT_ENABLED: bool = False
+_PROFILES_PATH = Path("datagov_tables_profiles.jsonl")
+_PROFILE_BY_SLUG_FILENAME: Dict[Tuple[str, str], Dict[str, Any]] = {}
+_PROFILES_LOADED: bool = False
+
+
+def set_peek_enrichment(enabled: bool) -> None:
+    """Toggle dataset-profile enrichment on peek_file (SANA Agent 1)."""
+    global _PEEK_ENRICHMENT_ENABLED
+    _PEEK_ENRICHMENT_ENABLED = bool(enabled)
+
+
+def _load_profiles_cache() -> None:
+    """Load precomputed dataset profiles keyed by (slug, filename stem)."""
+    global _PROFILES_LOADED, _PROFILE_BY_SLUG_FILENAME
+    if _PROFILES_LOADED:
+        return
+
+    profiles: Dict[Tuple[str, str], Dict[str, Any]] = {}
+    if _PROFILES_PATH.exists():
+        with _PROFILES_PATH.open() as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    obj = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+                slug = str(obj.get("slug") or "").strip()
+                filename = str(obj.get("filename") or "").strip()
+                if slug and filename and (slug, filename) not in profiles:
+                    profiles[(slug, filename)] = obj
+
+    _PROFILE_BY_SLUG_FILENAME = profiles
+    _PROFILES_LOADED = True
+
+
+def _load_legacy_dataset_profile(s3_uri: str, search_wrapper_module) -> Optional[Dict[str, Any]]:
+    """Fall back to the original schema + description + snippet enrichment path."""
+    try:
+        search_wrapper_module._load_schemas_cache()
+        search_wrapper_module._load_desc_cache()
+        search_wrapper_module._load_snippet_cache()
+    except FileNotFoundError:
+        # Expected when running without the ideal jsonl files; preflight catches this
+        # for sana_level>=1 configurations.
+        return None
+    except Exception:
+        return None
+
+    schema = search_wrapper_module._lookup_schema(s3_uri)
+    description = search_wrapper_module._DESC_BY_URI.get(s3_uri)
+    snippet = search_wrapper_module._SNIPPET_BY_URI.get(s3_uri)
+
+    if schema is None and description is None and snippet is None:
+        return None
+
+    profile: Dict[str, Any] = {}
+    if schema is not None:
+        profile["schema_columns"] = schema.get("columns")
+        profile["table_kind"] = schema.get("kind")
+    if description is not None:
+        profile["llm_description"] = description
+    if snippet is not None:
+        profile["snippet"] = snippet
+    return profile
+
+
+def _load_dataset_profile(s3_uri: str) -> Optional[Dict[str, Any]]:
+    """Look up cached profile for a dataset file URI. Returns None if no cache hit."""
+    try:
+        from strands_evaluation.tools.external.ideal import search_wrapper as _sw
+    except Exception:
+        return None
+
+    key = _sw._slug_stem_from_uri(s3_uri)
+    if key is not None:
+        try:
+            _load_profiles_cache()
+        except Exception:
+            # Soft-fail into the legacy bundle so Agent 1 remains usable even if
+            # the precomputed profiles file is malformed or absent.
+            pass
+        else:
+            profile = _PROFILE_BY_SLUG_FILENAME.get(key)
+            if profile is not None:
+                return dict(profile)
+
+    return _load_legacy_dataset_profile(s3_uri, _sw)
 
 # ---------------------------------------------------------------------------
 # Budget constants (mirrored from streams.py S3Config defaults)
@@ -539,6 +642,11 @@ def peek_file(
 
     if family == "xml":
         result.update(_build_xml_preview(text, size_bytes))
+
+    if _PEEK_ENRICHMENT_ENABLED:
+        profile = _load_dataset_profile(s3_uri)
+        if profile is not None:
+            result["profile"] = profile
 
     return result
 
