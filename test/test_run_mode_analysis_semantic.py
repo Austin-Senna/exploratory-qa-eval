@@ -719,6 +719,77 @@ class TestRunModeAnalysisSemantic(unittest.TestCase):
                     no_figures=True,
                 )
 
+    def test_run_analysis_skips_turn_waste_when_grouped_dir_none(self):
+        with TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            results_root = root / "results-ec2_semantic" / "modes"
+            base_results_root = root / "results-ec2" / "modes"
+            traces_root = root / "results-ec2" / "traces" / "modes"
+            tasks_root = root / "tasks_mini"
+            output_root = root / "analysis_results_mode_semantic"
+            variant = "search_i_results_i_plani_k5"
+
+            self._write_eval_results(
+                results_root / "openai_gpt-5.2-xhigh" / variant / "eval_results.csv",
+                [
+                    {
+                        "task_id": "tasks_mini/k-1-d-1/task_1.json",
+                        "model": "gpt-5.2",
+                        "expected_answer": "2020",
+                        "predicted_answer": "[2020]",
+                        "exact_match": "1.0",
+                        "semantic_match": "1",
+                        "semantic_reason": "same answer",
+                        "semantic_bucket": "semantic_correct",
+                        "log_error_bucket": "",
+                        "log_error_evidence": "",
+                        "runtime_seconds": "10",
+                        "input_tokens": "100",
+                        "output_tokens": "20",
+                        "total_tokens": "120",
+                        "cost_usd": "0.10",
+                        "tool_calls_total": "4",
+                        "api_tool_calls": "2",
+                        "error": "",
+                    }
+                ],
+            )
+            self._write_agent_results(
+                base_results_root / "openai_gpt-5.2-xhigh" / variant / "agent_results.jsonl",
+                [
+                    {
+                        "task_id": "tasks_mini/k-1-d-1/task_1.json",
+                        "cost_usd": 0.10,
+                        "time": 10,
+                        "tool_calls_total": 4,
+                        "tool_counts": [],
+                    }
+                ],
+            )
+            self._write_task(tasks_root / "k-1-d-1" / "task_1.json", ["ds1"])
+            self._write_trace(
+                traces_root / "openai_gpt-5.2-xhigh" / variant / "k-1-d-1" / "task_1.jsonl",
+                [{"tool": "submit_answer"}],
+            )
+
+            outputs = run_analysis(
+                results_dir=str(results_root),
+                base_results_dir=str(base_results_root),
+                turn_waste_grouped_dir=None,
+                traces_dir=str(traces_root),
+                tasks_dir=str(tasks_root),
+                output_dir=str(output_root),
+                no_figures=True,
+            )
+
+            self.assertTrue((output_root / "semantic_match.json").exists())
+            self.assertFalse((output_root / "turn_waste_global_groups.json").exists())
+            self.assertFalse((output_root / "turn_waste_global_groups.csv").exists())
+            self.assertFalse((output_root / "turn_waste_grouped_failures_joined.csv").exists())
+            self.assertEqual(outputs["turn_waste_global_groups"], {})
+            self.assertEqual(outputs["turn_waste_global_group_rows"], [])
+            self.assertEqual(outputs["turn_waste_joined_failed_rows"], [])
+
     def test_run_analysis_allows_blank_grouped_turn_waste_label_on_failed_row(self):
         with TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
