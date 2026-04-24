@@ -144,6 +144,10 @@ def _f1_score(precision: float, recall: float) -> float:
     return 2 * precision * recall / (precision + recall)
 
 
+def _has_trace_dirs(root: Path) -> bool:
+    return root.exists() and any(root.iterdir())
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--results-dir", default="results")
@@ -174,6 +178,8 @@ def main() -> None:
 
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
+    traces_root = Path(args.traces_dir)
+    traces_available = _has_trace_dirs(traces_root)
     # Remove stale legacy outputs that are no longer generated.
     for stale in output_dir.glob("fig2c*.pdf"):
         stale.unlink(missing_ok=True)
@@ -227,25 +233,25 @@ def main() -> None:
     # Fig 2: D_ret(F1) vs D_acc(F1) by condition × model (grouped bar)
     # -----------------------------------------------------------------------
     task_gold = load_task_gold_ids(args.tasks_dir)
-    traces_root = Path(args.traces_dir)
 
     # Collect discovery aggregates per (condition, model)
     discovery_by_cm: dict = {}
-    for condition_dir in sorted(traces_root.iterdir()):
-        if not condition_dir.is_dir():
-            continue
-        cond_name = condition_dir.name
-        for model_dir in condition_dir.iterdir():
-            if not model_dir.is_dir():
+    if traces_available:
+        for condition_dir in sorted(traces_root.iterdir()):
+            if not condition_dir.is_dir():
                 continue
-            model_name = model_dir.name
-            if not _keep_model(model_name):
-                continue
-            cond_traces = load_traces(str(model_dir))
-            if cond_traces:
-                disc = compute_discovery_metrics(cond_traces, task_gold)
-                if disc["aggregate"]:
-                    discovery_by_cm[(cond_name, model_name)] = disc["aggregate"]
+            cond_name = condition_dir.name
+            for model_dir in condition_dir.iterdir():
+                if not model_dir.is_dir():
+                    continue
+                model_name = model_dir.name
+                if not _keep_model(model_name):
+                    continue
+                cond_traces = load_traces(str(model_dir))
+                if cond_traces:
+                    disc = compute_discovery_metrics(cond_traces, task_gold)
+                    if disc["aggregate"]:
+                        discovery_by_cm[(cond_name, model_name)] = disc["aggregate"]
 
     if discovery_by_cm:
         conditions = sorted(set(k[0] for k in discovery_by_cm), key=_condition_sort_key)
@@ -428,7 +434,7 @@ def main() -> None:
     # Fig 3: EM × D_acc attribution by condition (100% stacked)
     # -----------------------------------------------------------------------
     # Load all traces for failure classification
-    all_traces = load_traces(args.traces_dir)
+    all_traces = load_traces(args.traces_dir) if traces_available else {}
 
     if records:
         failure_by_cond: dict = defaultdict(lambda: defaultdict(int))
@@ -439,24 +445,25 @@ def main() -> None:
         dret_decile_by_cond: dict = defaultdict(lambda: defaultdict(int))
         dret_decile_by_cm: dict = defaultdict(lambda: defaultdict(int))
         task_metrics_by_cm: dict = {}
-        for condition_dir in sorted(traces_root.iterdir()):
-            if not condition_dir.is_dir():
-                continue
-            cond_name = condition_dir.name
-            for model_dir in sorted(condition_dir.iterdir()):
-                if not model_dir.is_dir():
+        if traces_available:
+            for condition_dir in sorted(traces_root.iterdir()):
+                if not condition_dir.is_dir():
                     continue
-                model_name = model_dir.name
-                if not _keep_model(model_name):
-                    continue
-                cm_key = f"{cond_name}/{model_name}"
-                model_traces = load_traces(str(model_dir))
-                if not model_traces:
-                    continue
-                disc = compute_discovery_metrics(model_traces, task_gold)
-                task_metrics_by_cm[cm_key] = {
-                    m["task_id"]: m for m in disc["task_metrics"]
-                }
+                cond_name = condition_dir.name
+                for model_dir in sorted(condition_dir.iterdir()):
+                    if not model_dir.is_dir():
+                        continue
+                    model_name = model_dir.name
+                    if not _keep_model(model_name):
+                        continue
+                    cm_key = f"{cond_name}/{model_name}"
+                    model_traces = load_traces(str(model_dir))
+                    if not model_traces:
+                        continue
+                    disc = compute_discovery_metrics(model_traces, task_gold)
+                    task_metrics_by_cm[cm_key] = {
+                        m["task_id"]: m for m in disc["task_metrics"]
+                    }
 
         for r in records:
             cond = r.get("condition", "?")
@@ -654,31 +661,31 @@ def main() -> None:
     # Fig 8: Search-tool precision & recall by condition × model
     # Single combined chart: x-axis = condition/model, two bars (P, R) per group
     # -----------------------------------------------------------------------
-    traces_root = Path(args.traces_dir)
     cm_tool_metrics: dict = {}  # cm_label -> {"precision": float, "recall": float}
-    for condition_dir in sorted(traces_root.iterdir()):
-        if not condition_dir.is_dir():
-            continue
-        cond_name = condition_dir.name
-        for model_dir in sorted(condition_dir.iterdir()):
-            if not model_dir.is_dir() or not _keep_model(model_dir.name):
+    if traces_available:
+        for condition_dir in sorted(traces_root.iterdir()):
+            if not condition_dir.is_dir():
                 continue
-            cm_traces = load_traces(str(model_dir))
-            if not cm_traces:
-                continue
-            tools_disc = compute_tools_discovery(cm_traces, task_gold)
-            if not tools_disc:
-                continue
-            # Aggregate over search tools only (exclude read tools, submit_answer)
-            search_tool_names = [t for t in tools_disc if t.startswith("search")]
-            if not search_tool_names:
-                search_tool_names = list(tools_disc.keys())
-            ps = [tools_disc[t].get("avg_precision", 0) for t in search_tool_names]
-            rs = [tools_disc[t].get("avg_recall", 0) for t in search_tool_names]
-            cm_tool_metrics[_pretty_cm(cond_name, model_dir.name)] = {
-                "precision": sum(ps) / len(ps) if ps else 0.0,
-                "recall": sum(rs) / len(rs) if rs else 0.0,
-            }
+            cond_name = condition_dir.name
+            for model_dir in sorted(condition_dir.iterdir()):
+                if not model_dir.is_dir() or not _keep_model(model_dir.name):
+                    continue
+                cm_traces = load_traces(str(model_dir))
+                if not cm_traces:
+                    continue
+                tools_disc = compute_tools_discovery(cm_traces, task_gold)
+                if not tools_disc:
+                    continue
+                # Aggregate over search tools only (exclude read tools, submit_answer)
+                search_tool_names = [t for t in tools_disc if t.startswith("search")]
+                if not search_tool_names:
+                    search_tool_names = list(tools_disc.keys())
+                ps = [tools_disc[t].get("avg_precision", 0) for t in search_tool_names]
+                rs = [tools_disc[t].get("avg_recall", 0) for t in search_tool_names]
+                cm_tool_metrics[_pretty_cm(cond_name, model_dir.name)] = {
+                    "precision": sum(ps) / len(ps) if ps else 0.0,
+                    "recall": sum(rs) / len(rs) if rs else 0.0,
+                }
 
     if cm_tool_metrics:
         # Sort by parsing the pretty label "model/base/variant" → use cm tuples

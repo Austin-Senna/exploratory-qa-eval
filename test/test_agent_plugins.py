@@ -10,6 +10,7 @@ from strands.hooks.events import (
 )
 from strands_evaluation.config import AgentConfig
 from strands_evaluation.instrumentation.agent_plugins import LoggingPlugin, ToolLimitSteeringHandler
+from strands_evaluation.instrumentation.search_call_budget_plugin import SearchCallBudgetHandler
 from strands_evaluation.tools import agent_tools, agent_tools_v2
 
 
@@ -108,6 +109,65 @@ class TestToolLimitSteeringHandler(unittest.TestCase):
         self.assertIn("Timeout reached", action.reason)
         self.assertIn("submit_answer NOW", action.reason)
         self.assertEqual(agent.model.get_config()["params"]["max_completion_tokens"], 2048)
+
+    def test_cancelled_stop_after_submission_does_not_reenter_guidance(self):
+        handler = ToolLimitSteeringHandler(timeout_seconds=1)
+        handler._start_time = time.time() - 5
+        agent = self._make_agent()
+
+        agent_tools.clear_submitted_answer()
+        try:
+            agent_tools.submit_answer("[Ward 5]", "done")
+            action = asyncio.run(
+                handler.steer_after_model(
+                    agent=agent,
+                    message={"role": "assistant", "content": [{"text": "Cancelled by user"}]},
+                    stop_reason="cancelled",
+                )
+            )
+        finally:
+            agent_tools.clear_submitted_answer()
+
+        self.assertEqual(action.type, "proceed")
+        self.assertIn("already submitted", action.reason)
+        self.assertEqual(agent.model.get_config()["params"]["max_completion_tokens"], 8096)
+
+    def test_cancelled_stop_without_submission_does_not_reenter_guidance(self):
+        handler = ToolLimitSteeringHandler(timeout_seconds=1)
+        handler._start_time = time.time() - 5
+        agent = self._make_agent()
+
+        action = asyncio.run(
+            handler.steer_after_model(
+                agent=agent,
+                message={"role": "assistant", "content": [{"text": "Cancelled by user"}]},
+                stop_reason="cancelled",
+            )
+        )
+
+        self.assertEqual(action.type, "proceed")
+        self.assertIn("agent cancelled", action.reason)
+        self.assertEqual(agent.model.get_config()["params"]["max_completion_tokens"], 8096)
+
+
+class TestSearchCallBudgetHandler(unittest.TestCase):
+    def test_submitted_answer_short_circuits_search_budget(self):
+        handler = SearchCallBudgetHandler(max_search_calls=1)
+
+        agent_tools.clear_submitted_answer()
+        try:
+            agent_tools.submit_answer("[42]", "done")
+            action = asyncio.run(
+                handler.steer_before_tool(
+                    agent=None,
+                    tool_use={"name": "search_ideal"},
+                )
+            )
+        finally:
+            agent_tools.clear_submitted_answer()
+
+        self.assertEqual(action.type, "proceed")
+        self.assertIn("already submitted", action.reason)
 
 
 class TestTokenBudgetDefaults(unittest.TestCase):

@@ -46,6 +46,8 @@ from .agent_tools import (  # noqa: F401 — re-exported
     REGION,
     SANDBOX_BASE_DIR,
     _resolve_file_reference,
+    _run_tool_with_timeout,
+    _tool_timeout_seconds,
 )
 from .helper.detect import detect_family, should_skip
 
@@ -1006,6 +1008,33 @@ def query_file(
     Returns:
         Dict with keys: columns, rows, row_count, truncated. On error: {error: ...}
     """
+    timeout_seconds = _tool_timeout_seconds()
+    completed, result = _run_tool_with_timeout(
+        _query_file_impl,
+        dataset_id,
+        file_path,
+        sql,
+        s3_uri,
+        timeout_seconds=timeout_seconds,
+    )
+    if completed:
+        return result or {"error": "query_file failed without returning a result"}
+
+    return {
+        "error": (
+            f"Query timed out after {timeout_seconds}s. "
+            "Narrow the SQL (SELECT fewer columns, add WHERE/GROUP BY/LIMIT), "
+            "or use download + execute_code for long-running work."
+        )
+    }
+
+
+def _query_file_impl(
+    dataset_id: str | None = None,
+    file_path: str | None = None,
+    sql: str = "",
+    s3_uri: str | None = None,
+) -> Dict[str, Any]:
     if not sql or not sql.strip():
         return {"error": "sql is required"}
 

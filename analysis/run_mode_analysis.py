@@ -57,7 +57,10 @@ from analysis.search_depth import compute_search_depth_curve
 from analysis.reasoning_density import compute_reasoning_density_curve, load_task_gold_counts
 
 
-_LETTER_TO_MODE = {"n": "naive", "d": "standard", "i": "ideal"}
+_LETTER_TO_MODE = {"n": "naive", "d": "standard", "i": "ideal", "p": "preloaded"}
+_DEFAULT_RESULTS_DIR = "results/modes"
+_DEFAULT_TRACES_DIR = "results/traces/modes"
+_DEFAULT_LOGS_DIR = "logs"
 
 BUCKET_SEMANTIC = "semantic_equivalents"
 BUCKET_SEMANTIC_EXHAUSTED = "semantic_equivalents_but_exhausted"
@@ -660,6 +663,49 @@ def _collect_trace_runs(traces_root: Path) -> Dict[Tuple[str, str], Path]:
     return model_dirs
 
 
+def _replace_results_prefix(name: str, *, target_prefix: str) -> Optional[str]:
+    if name.startswith("results"):
+        return target_prefix + name[len("results") :]
+    return None
+
+
+def _resolve_input_roots(
+    *,
+    results_dir: str,
+    traces_dir: str,
+    logs_dir: str,
+) -> Tuple[str, str, str]:
+    results_root = Path(results_dir)
+    resolved_traces = Path(traces_dir)
+    resolved_logs = Path(logs_dir)
+
+    if traces_dir == _DEFAULT_TRACES_DIR:
+        candidates = []
+        if results_root.name == "modes":
+            candidates.append(results_root.parent / "traces" / "modes")
+        else:
+            candidates.append(results_root / "traces" / "modes")
+        for candidate in candidates:
+            if candidate.exists():
+                resolved_traces = candidate
+                break
+        else:
+            resolved_traces = candidates[0]
+
+    if logs_dir == _DEFAULT_LOGS_DIR:
+        candidates = [resolved_logs]
+        if results_root.name != "modes":
+            sibling = _replace_results_prefix(results_root.name, target_prefix="logs")
+            if sibling:
+                candidates.insert(0, results_root.parent / sibling)
+        for candidate in candidates:
+            if candidate.exists():
+                resolved_logs = candidate
+                break
+
+    return str(results_root), str(resolved_traces), str(resolved_logs)
+
+
 def generate_mode_figures(
     results_dir: str,
     traces_dir: str,
@@ -683,6 +729,8 @@ def generate_mode_figures(
         tmp_root = Path(tmpdir)
         flat_results = tmp_root / "results"
         flat_traces = tmp_root / "traces"
+        flat_results.mkdir(parents=True, exist_ok=True)
+        flat_traces.mkdir(parents=True, exist_ok=True)
 
         for model, variant, src_jsonl in runs:
             dst_jsonl = flat_results / variant / model / "agent_results.jsonl"
@@ -711,9 +759,9 @@ def generate_mode_figures(
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--results-dir", default="results/modes")
-    parser.add_argument("--traces-dir", default="results/traces/modes")
-    parser.add_argument("--logs-dir", default="logs")
+    parser.add_argument("--results-dir", default=_DEFAULT_RESULTS_DIR)
+    parser.add_argument("--traces-dir", default=_DEFAULT_TRACES_DIR)
+    parser.add_argument("--logs-dir", default=_DEFAULT_LOGS_DIR)
     parser.add_argument("--tasks-dir", default="tasks_mini")
     parser.add_argument("--output-dir", default="analysis_results_mode")
     parser.add_argument(
@@ -727,6 +775,11 @@ def main() -> None:
         help="Substring filter on model name (comma-separated OR). e.g. 'haiku,sonnet'.",
     )
     args = parser.parse_args()
+    args.results_dir, args.traces_dir, args.logs_dir = _resolve_input_roots(
+        results_dir=args.results_dir,
+        traces_dir=args.traces_dir,
+        logs_dir=args.logs_dir,
+    )
 
     model_filters = (
         [s.strip().lower() for s in args.model_filter.split(",")] if args.model_filter else None

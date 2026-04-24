@@ -43,7 +43,7 @@ class RunConfig:
     sliding_window_k: int = 40
     summary_ratio: float = 0.4
     preserve_recent_messages: int = 12
-    timeout_seconds: int = 450
+    timeout_seconds: int = 600
     submit_grace_seconds: int = 30
     submit_only_max_tokens: int = 2048
     tool_executor: str = "sequential"    # or "concurrent"

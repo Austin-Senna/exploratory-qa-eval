@@ -50,6 +50,8 @@ def _build_parser() -> argparse.ArgumentParser:
         default="baseline",
     )
     common.add_argument("--parallel", type=int, default=None)
+    common.add_argument("--timeout", type=int, default=None)
+    common.add_argument("--submit-grace-seconds", type=int, default=None)
     common.add_argument("--verbose", "-v", action="store_true")
     common.add_argument(
         "--sana",
@@ -69,6 +71,8 @@ def _build_parser() -> argparse.ArgumentParser:
     full = subparsers.add_parser("full", parents=[common], help="Run the full default task-set eval.")
     full.add_argument(
         "--task-continue",
+        "--continue",
+        dest="task_continue",
         action="store_true",
         help="Resume: skip tasks already recorded in this variant's CSV.",
     )
@@ -200,6 +204,10 @@ def _build_run_mode_command(args: argparse.Namespace, cwd: Path) -> tuple[list[s
         command.extend(["--openai-prompt-cache-retention", args.openai_prompt_cache_retention])
     if args.parallel is not None:
         command.extend(["--parallel", str(args.parallel)])
+    if args.timeout is not None:
+        command.extend(["--timeout", str(args.timeout)])
+    if args.submit_grace_seconds is not None:
+        command.extend(["--submit-grace-seconds", str(args.submit_grace_seconds)])
     if args.verbose:
         command.append("--verbose")
     if args.sana is not None:
@@ -278,6 +286,10 @@ def run(
         parser.error("--k must be > 0")
     if args.parallel is not None and args.parallel <= 0:
         parser.error("--parallel must be > 0")
+    if args.timeout is not None and args.timeout <= 0:
+        parser.error("--timeout must be > 0")
+    if args.submit_grace_seconds is not None and args.submit_grace_seconds < 0:
+        parser.error("--submit-grace-seconds must be >= 0")
 
     try:
         command, metadata = _build_run_mode_command(args, repo_root)

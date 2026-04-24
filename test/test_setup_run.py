@@ -125,6 +125,40 @@ class SetupRunTests(unittest.TestCase):
             self.assertEqual(command[command.index("--logs-output-dir") + 1], "logs")
             self.assertEqual(command[command.index("--results-output-dir") + 1], "results")
 
+    def test_full_continue_alias_and_timeout_passthrough(self):
+        with TemporaryDirectory() as tmpdir:
+            repo_root = Path(tmpdir)
+            (repo_root / "lance_data").mkdir(parents=True, exist_ok=True)
+            fake_runner = _FakeRunner()
+
+            command = setup_run.run(
+                [
+                    "full",
+                    "--continue",
+                    "--search",
+                    "ideal",
+                    "--results",
+                    "ideal",
+                    "--plan",
+                    "ideal",
+                    "--model",
+                    "openai/gpt-5.2",
+                    "--timeout",
+                    "600",
+                    "--submit-grace-seconds",
+                    "15",
+                    "--db",
+                    "lance_data",
+                ],
+                runner=fake_runner,
+                cwd=repo_root,
+            )
+
+            self.assertIn("--task-continue", command)
+            self.assertNotIn("--all-tasks", command)
+            self.assertEqual(command[command.index("--timeout") + 1], "600")
+            self.assertEqual(command[command.index("--submit-grace-seconds") + 1], "15")
+
     def test_smoke_accepts_preloaded_search_mode(self):
         with TemporaryDirectory() as tmpdir:
             repo_root = Path(tmpdir)

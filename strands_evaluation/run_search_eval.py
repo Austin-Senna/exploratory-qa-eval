@@ -165,7 +165,7 @@ def main() -> None:
         default=12,
         help="How many recent messages the summarizing manager always keeps verbatim.",
     )
-    parser.add_argument("--timeout", type=int, default=450, help="Per-task timeout in seconds")
+    parser.add_argument("--timeout", type=int, default=600, help="Per-task timeout in seconds")
     parser.add_argument(
         "--submit-grace-seconds",
         type=int,

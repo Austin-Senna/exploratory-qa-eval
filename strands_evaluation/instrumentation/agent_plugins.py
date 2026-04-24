@@ -260,6 +260,9 @@ class ToolLimitSteeringHandler(SteeringHandler):
         return False
 
     async def steer_before_tool(self, *, agent, tool_use, **kwargs) -> ToolSteeringAction:
+        if get_submitted_answer() is not None:
+            return Proceed(reason="answer already submitted; no further steering")
+
         if tool_use.get("name") == "submit_answer":
             return Proceed(reason="submit_answer is always allowed")
 
@@ -286,6 +289,14 @@ class ToolLimitSteeringHandler(SteeringHandler):
         )
 
     async def steer_after_model(self, *, agent, message, stop_reason, **kwargs) -> ModelSteeringAction:
+        if get_submitted_answer() is not None:
+            self._model_guides_used = 0
+            return Proceed(reason="answer already submitted")
+
+        if stop_reason == "cancelled":
+            self._model_guides_used = 0
+            return Proceed(reason="agent cancelled")
+
         if stop_reason == "tool_use":
             self._model_guides_used = 0
             return Proceed(reason="model produced a tool call")
