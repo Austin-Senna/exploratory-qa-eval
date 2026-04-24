@@ -49,6 +49,7 @@ class _NullTqdm:
         return False
 
 _DESC_PATH = Path("table_descriptions.jsonl")
+_MANIFEST_DESC_PATH = Path("tasks_core_quality_file_manifest_descriptions.jsonl")
 _SNIPPET_PATH = Path("snippet.jsonl")
 _SNIFF_BYTES = 8 * 1024
 _SNIPPET_FALLBACK_BYTES = 2 * 1024
@@ -97,15 +98,25 @@ def _peek_first_row(path: Path) -> Optional[Dict[str, Any]]:
     return None
 
 
+def _description_paths(path: Path) -> list[Path]:
+    paths: list[Path] = []
+    if path not in paths:
+        paths.append(path)
+    if _MANIFEST_DESC_PATH != path and _MANIFEST_DESC_PATH not in paths:
+        paths.append(_MANIFEST_DESC_PATH)
+    return paths
+
+
 def _load_description_cache(path: Path) -> Dict[str, str]:
     out: Dict[str, str] = {}
-    if not path.exists():
-        return out
-    for obj in _jsonl_rows(path):
-        uri = str(obj.get("dataset_uri") or obj.get("uri") or "").strip()
-        desc = str(obj.get("description") or "").strip()
-        if uri and desc and uri not in out:
-            out[uri] = desc
+    for candidate in _description_paths(path):
+        if not candidate.exists():
+            continue
+        for obj in _jsonl_rows(candidate):
+            uri = str(obj.get("dataset_uri") or obj.get("uri") or "").strip()
+            desc = str(obj.get("description") or "").strip()
+            if uri and desc:
+                out[uri] = desc
     return out
 
 

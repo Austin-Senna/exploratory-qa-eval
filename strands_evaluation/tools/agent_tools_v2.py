@@ -60,6 +60,7 @@ load_dotenv()
 # from the cached jsonl files already loaded by the ideal-search wrapper:
 #   - datagov_tables_schemas_full.jsonl  (hard schema)
 #   - table_descriptions.jsonl           (LLM metadata)
+#   - tasks_core_quality_file_manifest_descriptions.jsonl (benchmark-scoped LLM metadata)
 #   - snippet.jsonl                      (dataset snippet)
 # Activated per-agent by build_mode_bundle via set_peek_enrichment(True) when
 # sana_level >= 1. Orthogonal to existing modes.
@@ -123,9 +124,10 @@ def _load_legacy_dataset_profile(s3_uri: str, search_wrapper_module) -> Optional
 
     schema = search_wrapper_module._lookup_schema(s3_uri)
     description = search_wrapper_module._DESC_BY_URI.get(s3_uri)
+    description_row = getattr(search_wrapper_module, "_DESC_ROW_BY_URI", {}).get(s3_uri)
     snippet = search_wrapper_module._SNIPPET_BY_URI.get(s3_uri)
 
-    if schema is None and description is None and snippet is None:
+    if schema is None and description is None and description_row is None and snippet is None:
         return None
 
     profile: Dict[str, Any] = {}
@@ -134,9 +136,17 @@ def _load_legacy_dataset_profile(s3_uri: str, search_wrapper_module) -> Optional
         profile["table_kind"] = schema.get("kind")
     if description is not None:
         profile["llm_description"] = description
+    _apply_description_row(profile, description_row)
     if snippet is not None:
         profile["snippet"] = snippet
     return profile
+
+
+def _apply_description_row(profile: Dict[str, Any], description_row: Optional[Dict[str, Any]]) -> None:
+    if not description_row:
+        return
+    if description_row.get("description") and not profile.get("llm_description"):
+        profile["llm_description"] = str(description_row["description"])
 
 
 def _load_dataset_profile(s3_uri: str) -> Optional[Dict[str, Any]]:
@@ -156,11 +166,15 @@ def _load_dataset_profile(s3_uri: str) -> Optional[Dict[str, Any]]:
     else:
         profile = _PROFILE_BY_URI.get(s3_uri)
         if profile is not None:
-            return dict(profile)
+            merged = dict(profile)
+            _apply_description_row(merged, getattr(_sw, "_DESC_ROW_BY_URI", {}).get(s3_uri))
+            return merged
         if key is not None:
             profile = _PROFILE_BY_SLUG_FILENAME.get(key)
             if profile is not None:
-                return dict(profile)
+                merged = dict(profile)
+                _apply_description_row(merged, getattr(_sw, "_DESC_ROW_BY_URI", {}).get(s3_uri))
+                return merged
 
     return _load_legacy_dataset_profile(s3_uri, _sw)
 
@@ -585,7 +599,10 @@ def peek_file(
         Dict with keys: family, preview_text, header_columns, row_count_estimate,
         size_bytes, dataset_id, file_path. XML previews may also include
         xml_root_tag, xml_namespaces, xml_schema_fields,
-        xml_record_tag_candidates, xml_preview_mode. On error: {error: ...}
+        xml_record_tag_candidates, xml_preview_mode. When SANA enrichment is
+        enabled, a `profile` field may also be present with cached schema,
+        llm_description, snippet, and row stats.
+        On error: {error: ...}
     """
     ref = _resolve_file_reference(dataset_id=dataset_id, file_path=file_path, s3_uri=s3_uri)
     if "error" in ref:

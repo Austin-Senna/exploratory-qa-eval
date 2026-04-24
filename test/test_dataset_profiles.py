@@ -13,6 +13,7 @@ class DatasetProfilesTests(unittest.TestCase):
         self._root = Path(self._tmp.name)
         self._profiles_path = self._root / "datagov_tables_profiles.jsonl"
         self._desc_path = self._root / "table_descriptions.jsonl"
+        self._manifest_desc_path = self._root / "tasks_core_quality_file_manifest_descriptions.jsonl"
         self._snippet_path = self._root / "snippet.jsonl"
         self._schemas_path = self._root / "datagov_tables_schemas_full.jsonl"
 
@@ -24,10 +25,12 @@ class DatasetProfilesTests(unittest.TestCase):
         }
         self._orig_search_wrapper_state = {
             "desc_path": search_wrapper._TABLE_DESCRIPTIONS_PATH,
+            "manifest_desc_path": search_wrapper._MANIFEST_DESCRIPTIONS_PATH,
             "snippet_path": search_wrapper._SNIPPETS_PATH,
             "schemas_path": search_wrapper._SCHEMAS_PATH,
             "desc_loaded": search_wrapper._DESC_CACHE_LOADED,
             "desc_by_uri": search_wrapper._DESC_BY_URI,
+            "desc_row_by_uri": search_wrapper._DESC_ROW_BY_URI,
             "snippet_loaded": search_wrapper._SNIPPET_CACHE_LOADED,
             "snippet_by_uri": search_wrapper._SNIPPET_BY_URI,
             "schemas_loaded": search_wrapper._SCHEMAS_CACHE_LOADED,
@@ -40,6 +43,7 @@ class DatasetProfilesTests(unittest.TestCase):
         agent_tools_v2._PROFILE_BY_SLUG_FILENAME = {}
 
         search_wrapper._TABLE_DESCRIPTIONS_PATH = self._desc_path
+        search_wrapper._MANIFEST_DESCRIPTIONS_PATH = self._manifest_desc_path
         search_wrapper._SNIPPETS_PATH = self._snippet_path
         search_wrapper._SCHEMAS_PATH = self._schemas_path
         self._reset_search_wrapper_caches()
@@ -93,10 +97,12 @@ class DatasetProfilesTests(unittest.TestCase):
         agent_tools_v2._PROFILE_BY_SLUG_FILENAME = self._orig_agent_tools_state["profile_by_slug_filename"]
 
         search_wrapper._TABLE_DESCRIPTIONS_PATH = self._orig_search_wrapper_state["desc_path"]
+        search_wrapper._MANIFEST_DESCRIPTIONS_PATH = self._orig_search_wrapper_state["manifest_desc_path"]
         search_wrapper._SNIPPETS_PATH = self._orig_search_wrapper_state["snippet_path"]
         search_wrapper._SCHEMAS_PATH = self._orig_search_wrapper_state["schemas_path"]
         search_wrapper._DESC_CACHE_LOADED = self._orig_search_wrapper_state["desc_loaded"]
         search_wrapper._DESC_BY_URI = self._orig_search_wrapper_state["desc_by_uri"]
+        search_wrapper._DESC_ROW_BY_URI = self._orig_search_wrapper_state["desc_row_by_uri"]
         search_wrapper._SNIPPET_CACHE_LOADED = self._orig_search_wrapper_state["snippet_loaded"]
         search_wrapper._SNIPPET_BY_URI = self._orig_search_wrapper_state["snippet_by_uri"]
         search_wrapper._SCHEMAS_CACHE_LOADED = self._orig_search_wrapper_state["schemas_loaded"]
@@ -106,6 +112,7 @@ class DatasetProfilesTests(unittest.TestCase):
     def _reset_search_wrapper_caches(self) -> None:
         search_wrapper._DESC_CACHE_LOADED = False
         search_wrapper._DESC_BY_URI = {}
+        search_wrapper._DESC_ROW_BY_URI = {}
         search_wrapper._SNIPPET_CACHE_LOADED = False
         search_wrapper._SNIPPET_BY_URI = {}
         search_wrapper._SCHEMAS_CACHE_LOADED = False
@@ -159,6 +166,31 @@ class DatasetProfilesTests(unittest.TestCase):
                 "snippet": "Legacy snippet",
             },
         )
+
+    def test_profile_lookup_uses_manifest_description_fields_when_present(self):
+        self._write_jsonl(
+            self._manifest_desc_path,
+            [
+                {
+                    "dataset_uri": self._tabular_uri,
+                    "description": "Manifest description",
+                    "metadata": "Manifest metadata",
+                    "generated_metadata": "Generated title",
+                    "original_metadata": "Original title",
+                    "content": "Manifest content block",
+                }
+            ],
+        )
+        self._reset_search_wrapper_caches()
+
+        profile = agent_tools_v2._load_dataset_profile(self._tabular_uri)
+
+        self.assertEqual(profile["llm_description"], "Manifest description")
+        self.assertNotIn("description_metadata", profile)
+        self.assertNotIn("description_generated_metadata", profile)
+        self.assertNotIn("description_original_metadata", profile)
+        self.assertNotIn("description_content", profile)
+        self.assertNotIn("description_source_file", profile)
 
     def test_profile_lookup_returns_none_when_uri_missing_everywhere(self):
         profile = agent_tools_v2._load_dataset_profile(

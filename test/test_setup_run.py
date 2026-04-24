@@ -185,6 +185,32 @@ class SetupRunTests(unittest.TestCase):
 
             self.assertEqual(command[command.index("--model-name") + 1], "openai/gpt-5.4-nano")
 
+    def test_smoke_normalizes_gpt_5_nano_alias(self):
+        with TemporaryDirectory() as tmpdir:
+            repo_root = Path(tmpdir)
+            self._write_smoke_fixture(repo_root)
+            fake_runner = _FakeRunner()
+
+            command = setup_run.run(
+                [
+                    "smoke",
+                    "--search",
+                    "ideal",
+                    "--results",
+                    "ideal",
+                    "--plan",
+                    "ideal",
+                    "--model",
+                    "gpt-5-nano",
+                    "--db",
+                    "lance_data",
+                ],
+                runner=fake_runner,
+                cwd=repo_root,
+            )
+
+            self.assertEqual(command[command.index("--model-name") + 1], "openai/gpt-5-nano")
+
     def test_smoke_accepts_preloaded_search_mode(self):
         with TemporaryDirectory() as tmpdir:
             repo_root = Path(tmpdir)

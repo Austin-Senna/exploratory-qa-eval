@@ -45,6 +45,7 @@ MODEL_REGISTRY: Dict[str, Tuple[str, str]] = {
 
     # OpenAI
     "openai/gpt-5.2":              ("openai", "gpt-5.2"),
+    "openai/gpt-5-nano":           ("openai", "gpt-5-nano"),
     "openai/gpt-5-mini":           ("openai", "gpt-5-mini"),
     "openai/gpt-5.4-nano":         ("openai", "gpt-5.4-nano"),
 
@@ -58,10 +59,12 @@ MODEL_PRICING = {
         # OpenAI text-token pricing per 1M tokens.
         # Source: https://platform.openai.com/docs/pricing/
         "gpt-5.2": {"input": 1.75, "cache_read_input": 0.175, "output": 14.00},
+        "gpt-5-nano": {"input": 0.05, "cache_read_input": 0.005, "output": 0.40},
         "gpt-5-mini": {"input": 0.25, "cache_read_input": 0.025, "output": 2.00},
         "gpt-5.4-nano": {"input": 0.20, "cache_read_input": 0.02, "output": 1.25},
         # Alias keys for provider-prefixed model_name values
         "openai/gpt-5.2": {"input": 1.75, "cache_read_input": 0.175, "output": 14.00},
+        "openai/gpt-5-nano": {"input": 0.05, "cache_read_input": 0.005, "output": 0.40},
         "openai/gpt-5-mini": {"input": 0.25, "cache_read_input": 0.025, "output": 2.00},
         "openai/gpt-5.4-nano": {"input": 0.20, "cache_read_input": 0.02, "output": 1.25},
 

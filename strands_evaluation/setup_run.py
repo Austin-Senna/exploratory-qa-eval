@@ -20,6 +20,8 @@ _DEFAULT_SMOKE_TASK_LIMIT = 2
 _MODEL_ALIASES = {
     "gpt5.2": "openai/gpt-5.2",
     "gpt-5.2": "openai/gpt-5.2",
+    "gpt5-nano": "openai/gpt-5-nano",
+    "gpt-5-nano": "openai/gpt-5-nano",
     "gpt5.4-nano": "openai/gpt-5.4-nano",
     "gpt-5.4-nano": "openai/gpt-5.4-nano",
 }
