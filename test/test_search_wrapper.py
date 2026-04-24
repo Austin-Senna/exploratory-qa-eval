@@ -86,7 +86,7 @@ class TestSearchWrapperPayload(unittest.TestCase):
             },
         )
 
-    def test_source_driven_naive_mode_strips_noise(self):
+    def test_naive_mode_preserves_unrelated_payload_keys(self):
         payload = {
             "ideal_source_driven": True,
             "task_id": "tasks_mini/k-1-d-1/task_1.json",
@@ -106,8 +106,8 @@ class TestSearchWrapperPayload(unittest.TestCase):
                 "s3_uri": "s3://lakeqa-yc4103-datalake/datagov/foo/files/rows.txt",
             },
         )
-        self.assertNotIn("ideal_source_driven", out)
-        self.assertNotIn("task_id", out)
+        self.assertTrue(out["ideal_source_driven"])
+        self.assertEqual(out["task_id"], "tasks_mini/k-1-d-1/task_1.json")
 
     def test_ideal_mode_enriches_results_from_sidecar_files(self):
         uri = "s3://lakeqa-yc4103-datalake/datagov/foo/files/rows.txt"

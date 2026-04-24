@@ -74,8 +74,8 @@ def _emit(log, line: str = "") -> None:
     print(line)
 
 
-def _reset_ideal_cursor(task_file: str) -> None:
-    """Rewind search_ideal so every search_results combo starts from step 1."""
+def _reset_ideal_state(task_file: str) -> None:
+    """Reset search_ideal so every search_results combo sees the full candidate pool."""
     ideal_search.set_task_context({"task_id": task_file})
 
 
@@ -125,7 +125,7 @@ def run_matrix(
                 for tool in wrapped:
                     tool_name = tool.tool_spec.get("name", "?")
                     if search_tool_mode == "ideal":
-                        _reset_ideal_cursor(task_file)
+                        _reset_ideal_state(task_file)
                     try:
                         payload = _invoke_tool(tool, query=query)
                     except Exception as exc:

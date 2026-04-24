@@ -319,16 +319,6 @@ def reshape_search_payload(payload: Any, mode: str) -> Any:
     transformed = dict(payload)
     transformed["results"] = shaped
     transformed["count"] = len(shaped)
-    if payload.get("ideal_source_driven"):
-        for noise_key in (
-            "ideal_source_driven",
-            "task_id",
-            "plan_path",
-            "dataset_id",
-            "plan_step_index",
-            "plan_step_number",
-        ):
-            transformed.pop(noise_key, None)
     return transformed
 
 
@@ -354,7 +344,8 @@ def _compose_description(
     if fixed_k is not None:
         if tool_name == "search_ideal":
             notes.append(
-                f"Each call returns up to {fixed_k} planned sources from source_sequence; callers cannot change the call signature."
+                "Returns the planned sources most relevant to your query. "
+                "Count is chosen automatically based on query intent."
             )
         else:
             notes.append(f"Result limit is fixed at {fixed_k}; callers cannot change it.")
@@ -375,18 +366,19 @@ def _wrap_query_tool(
 ) -> DecoratedFunctionTool:
     spec = base_tool.tool_spec
     tool_name = spec["name"]
+    effective_fixed_k = 100 if tool_name == "search_ideal" else fixed_k
     wrapped_description = _compose_description(
         spec.get("description", ""),
         tool_name=tool_name,
-        fixed_k=fixed_k,
+        fixed_k=effective_fixed_k,
         mode=mode,
     )
     top_k_default = _query_default(spec, "top_k", 10)
 
-    if fixed_k is not None:
+    if effective_fixed_k is not None:
 
         def _wrapped(query: str) -> dict:
-            return reshape_search_payload(base_tool(query=query, top_k=fixed_k), mode)
+            return reshape_search_payload(base_tool(query=query, top_k=effective_fixed_k), mode)
 
         return tool(_wrapped, name=tool_name, description=wrapped_description)
 
