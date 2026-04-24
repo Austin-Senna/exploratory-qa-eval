@@ -109,6 +109,45 @@ class TestToolLimitSteeringHandler(unittest.TestCase):
         self.assertIn("submit_answer NOW", action.reason)
         self.assertEqual(agent.model.get_config()["params"]["max_completion_tokens"], 2048)
 
+    def test_cancelled_stop_after_submission_does_not_reenter_guidance(self):
+        handler = ToolLimitSteeringHandler(timeout_seconds=1)
+        handler._start_time = time.time() - 5
+        agent = self._make_agent()
+
+        agent_tools.clear_submitted_answer()
+        try:
+            agent_tools.submit_answer("[Ward 5]", "done")
+            action = asyncio.run(
+                handler.steer_after_model(
+                    agent=agent,
+                    message={"role": "assistant", "content": [{"text": "Cancelled by user"}]},
+                    stop_reason="cancelled",
+                )
+            )
+        finally:
+            agent_tools.clear_submitted_answer()
+
+        self.assertEqual(action.type, "proceed")
+        self.assertIn("already submitted", action.reason)
+        self.assertEqual(agent.model.get_config()["params"]["max_completion_tokens"], 8096)
+
+    def test_cancelled_stop_without_submission_does_not_reenter_guidance(self):
+        handler = ToolLimitSteeringHandler(timeout_seconds=1)
+        handler._start_time = time.time() - 5
+        agent = self._make_agent()
+
+        action = asyncio.run(
+            handler.steer_after_model(
+                agent=agent,
+                message={"role": "assistant", "content": [{"text": "Cancelled by user"}]},
+                stop_reason="cancelled",
+            )
+        )
+
+        self.assertEqual(action.type, "proceed")
+        self.assertIn("agent cancelled", action.reason)
+        self.assertEqual(agent.model.get_config()["params"]["max_completion_tokens"], 8096)
+
 
 class TestTokenBudgetDefaults(unittest.TestCase):
     def test_agent_config_default_max_tokens_is_8096(self):
