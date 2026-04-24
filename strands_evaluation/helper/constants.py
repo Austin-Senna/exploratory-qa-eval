@@ -46,6 +46,7 @@ MODEL_REGISTRY: Dict[str, Tuple[str, str]] = {
     # OpenAI
     "openai/gpt-5.2":              ("openai", "gpt-5.2"),
     "openai/gpt-5-mini":           ("openai", "gpt-5-mini"),
+    "openai/gpt-5.4-nano":         ("openai", "gpt-5.4-nano"),
 
     # Anthropic direct API
     "anthropic/claude-opus-4.6":   ("anthropic", "claude-opus-4-6-20251101"),
@@ -55,12 +56,14 @@ MODEL_REGISTRY: Dict[str, Tuple[str, str]] = {
 
 MODEL_PRICING = {
         # OpenAI text-token pricing per 1M tokens.
-        # Source: https://platform.openai.com/docs/pricing/ (checked Apr 23, 2026)
+        # Source: https://platform.openai.com/docs/pricing/
         "gpt-5.2": {"input": 1.75, "cache_read_input": 0.175, "output": 14.00},
         "gpt-5-mini": {"input": 0.25, "cache_read_input": 0.025, "output": 2.00},
+        "gpt-5.4-nano": {"input": 0.20, "cache_read_input": 0.02, "output": 1.25},
         # Alias keys for provider-prefixed model_name values
         "openai/gpt-5.2": {"input": 1.75, "cache_read_input": 0.175, "output": 14.00},
         "openai/gpt-5-mini": {"input": 0.25, "cache_read_input": 0.025, "output": 2.00},
+        "openai/gpt-5.4-nano": {"input": 0.20, "cache_read_input": 0.02, "output": 1.25},
 
         # AWS Bedrock Claude models
         "bedrock/claude-opus-4.5": {"input": 5.00, "output": 25.00},
@@ -102,4 +105,3 @@ MODEL_PRICING = {
         # OpenRouter
         "openrouter/qwen3-235b": {"input": 1.00, "output": 1.00},
     }
-

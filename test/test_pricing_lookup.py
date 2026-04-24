@@ -43,6 +43,16 @@ class PricingLookupTests(unittest.TestCase):
         unprefixed = _build_result("gpt-5.2", input_tokens=23616, output_tokens=285)
         self.assertAlmostEqual(prefixed.cost_usd, unprefixed.cost_usd, places=12)
 
+    def test_new_openai_model_uses_registered_pricing(self) -> None:
+        result = _build_result(
+            "openai/gpt-5.4-nano",
+            input_tokens=10_000,
+            output_tokens=500,
+            cached_input_tokens=8_000,
+        )
+        expected = ((2_000 * 0.20) + (8_000 * 0.02) + (500 * 1.25)) / 1_000_000
+        self.assertAlmostEqual(result.cost_usd, expected, places=12)
+
     def test_bedrock_key_is_unchanged(self) -> None:
         result = _build_result("bedrock/claude-haiku-4.5", input_tokens=1000, output_tokens=500)
         # 1.00 * 1000/1e6 + 5.00 * 500/1e6
