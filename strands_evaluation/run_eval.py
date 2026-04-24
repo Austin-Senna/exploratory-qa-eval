@@ -62,6 +62,20 @@ def _display_name(agent_config) -> str:
     return slug
 
 
+def _maybe_autoset_openai_cache_key(agent_config, variant_label: str) -> None:
+    """Auto-derive a variant-stable OpenAI prompt_cache_key when none was provided.
+
+    The key hints to OpenAI's router which shard likely has the matching prefix cached.
+    A stable `{model}:{variant}` key keeps requests in the same sweep on the same shard,
+    which raises hit rate vs. the default user-hash routing. Explicit CLI/env values win.
+    """
+    if agent_config.openai_prompt_cache_key is not None:
+        return
+    if os.getenv("OPENAI_PROMPT_CACHE_KEY"):
+        return
+    agent_config.openai_prompt_cache_key = f"{_display_name(agent_config)}:{variant_label}"
+
+
 def _results_root(run_config: RunConfig) -> str:
     return getattr(run_config, "results_output_dir", "results") or "results"
 
@@ -614,6 +628,7 @@ def main() -> None:
     )
     safe_model_name = _display_name(agent_config)
     condition_label = _with_debug_suffix(args.condition, args.debug_mode)
+    _maybe_autoset_openai_cache_key(agent_config, f"{safe_model_name}/{condition_label}")
     traces_root = os.path.join(args.results_output_dir, "traces")
     trace_dir = os.path.join(traces_root, condition_label, safe_model_name)
 

@@ -363,6 +363,7 @@ def main() -> None:
     )
     variant_condition = _with_debug_suffix(variant_condition, args.debug_mode)
     condition_label = f"modes/{safe_model_name}/{variant_condition}"
+    base_eval._maybe_autoset_openai_cache_key(agent_config, condition_label)
     traces_root = os.path.join(args.results_output_dir, "traces")
     trace_dir = os.path.join(traces_root, condition_label)
 

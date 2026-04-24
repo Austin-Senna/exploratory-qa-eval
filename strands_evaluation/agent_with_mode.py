@@ -136,6 +136,7 @@ class ModeBundle:
     enable_skills: bool
     enable_stagnation: bool
     modes: Dict[str, str]
+    task_trailer: str = ""
 
 
 def _normalize_mode(value: Optional[str], default: str, label: str) -> str:
@@ -196,33 +197,34 @@ def build_management(
     *,
     search_tool_mode: str,
     task_context: Optional[Dict[str, Any]],
-) -> tuple[str, List[Any], bool, bool]:
-    """Return prompt, management tools, and behavior toggles for a mode."""
+) -> tuple[str, List[Any], bool, bool, str]:
+    """Return stable system prompt, management tools, behavior toggles, and a task-specific trailer.
+
+    The trailer (gold reasoning chain, preloaded dataset URIs) is task-specific and must be
+    appended AFTER all variant-stable injections so the cacheable prefix stays intact across tasks.
+    """
     management_mode = _normalize_mode(mode, "standard", "agent_management")
 
-    def _with_preloaded_block(prompt: str) -> str:
-        if search_tool_mode != "preloaded":
-            return prompt
+    trailer_sections: List[str] = []
+    if management_mode == "ideal":
+        set_ideal_plan_task_context(task_context or {})
         ideal_plan = load_ideal_plan_for_context(task_context)
-        return prompt.rstrip() + "\n\n" + compose_preloaded_block(ideal_plan.source_sequence)
+        reasoning_trailer = inject_reasoning_chain_prompt("", ideal_plan.reasoning_chain_text).lstrip()
+        if reasoning_trailer:
+            trailer_sections.append(reasoning_trailer)
+    if search_tool_mode == "preloaded":
+        ideal_plan = load_ideal_plan_for_context(task_context)
+        trailer_sections.append(compose_preloaded_block(ideal_plan.source_sequence))
+    task_trailer = ("\n\n" + "\n\n".join(trailer_sections)) if trailer_sections else ""
 
     if management_mode == "naive":
-        prompt = _with_preloaded_block(compose_baseline_prompt(search_tool_mode))
-        return prompt, [], False, False
+        return compose_baseline_prompt(search_tool_mode), [], False, False, task_trailer
 
     prompt = compose_managed_prompt(search_tool_mode)
     if management_mode == "standard":
-        return _with_preloaded_block(prompt), [plan, summarize_context], True, True
+        return prompt, [plan, summarize_context], True, True, task_trailer
 
-    # ideal = managed stack with gold reasoning chain preloaded and
-    # plan swapped to plan_ideal.
-    set_ideal_plan_task_context(task_context or {})
-    ideal_plan = load_ideal_plan_for_context(task_context)
-    prompt = inject_reasoning_chain_prompt(
-        prompt,
-        ideal_plan.reasoning_chain_text,
-    )
-    return _with_preloaded_block(prompt), [plan_ideal, summarize_context], True, True
+    return prompt, [plan_ideal, summarize_context], True, True, task_trailer
 
 
 def build_results(
@@ -289,7 +291,7 @@ def build_mode_bundle(
         base_search_tools=raw_search_tools,
         fixed_k=run_config.search_k,
     )
-    system_prompt, management_tools, enable_skills, enable_stagnation = build_management(
+    system_prompt, management_tools, enable_skills, enable_stagnation, task_trailer = build_management(
         agent_management_mode,
         search_tool_mode=search_tool_mode,
         task_context=task_context,
@@ -313,6 +315,7 @@ def build_mode_bundle(
             "search_results": search_results_mode,
             "agent_management": agent_management_mode,
         },
+        task_trailer=task_trailer,
     )
 
 
@@ -395,6 +398,7 @@ class DataLakeAgent:
             submit_answer,
         ]
 
+        task_trailer = ""
         if mode_overrides_enabled:
             mode_bundle = build_mode_bundle(
                 self.run_config,
@@ -403,6 +407,7 @@ class DataLakeAgent:
             )
             tools = mode_bundle.tools
             system_prompt = mode_bundle.system_prompt
+            task_trailer = mode_bundle.task_trailer
             search_tool_names = mode_bundle.search_tool_names
             enable_skills = mode_bundle.enable_skills
             enable_stagnation = mode_bundle.enable_stagnation
@@ -455,6 +460,9 @@ class DataLakeAgent:
         )
         if not mode_overrides_enabled:
             system_prompt = inject_debug_prompt(system_prompt, self.run_config.debug_mode)
+
+        if task_trailer:
+            system_prompt = system_prompt.rstrip() + task_trailer
 
         conv_manager = build_conversation_manager(self.run_config)
 

@@ -262,6 +262,7 @@ def main() -> None:
         extra_model_kwargs=extra_model_kwargs,
     )
     safe_model_name = base_eval._display_name(agent_config)
+    base_eval._maybe_autoset_openai_cache_key(agent_config, f"{safe_model_name}/{condition_label}")
     traces_root = os.path.join(args.results_output_dir, "traces")
     trace_dir = os.path.join(traces_root, condition_label, safe_model_name)
 

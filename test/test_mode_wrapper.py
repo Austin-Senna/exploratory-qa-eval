@@ -203,10 +203,14 @@ class TestModeWrapper(unittest.TestCase):
                 task_context={"task_id": "tasks_mini/k-1-d-1/task_1.json"},
             )
 
-            self.assertIn("## GOLD REASONING CHAIN", bundle.system_prompt)
-            self.assertIn("1. Gold reasoning step.", bundle.system_prompt)
-            self.assertIn("2. Gold reasoning step two.", bundle.system_prompt)
+            # Task-specific content now lives in task_trailer so the stable system_prompt
+            # stays cacheable across tasks. The agent appends the trailer at invocation time.
+            self.assertNotIn("## GOLD REASONING CHAIN", bundle.system_prompt)
+            self.assertIn("## GOLD REASONING CHAIN", bundle.task_trailer)
+            self.assertIn("1. Gold reasoning step.", bundle.task_trailer)
+            self.assertIn("2. Gold reasoning step two.", bundle.task_trailer)
             self.assertNotIn("## IDEAL EXECUTION PLAN", bundle.system_prompt)
+            self.assertNotIn("## IDEAL EXECUTION PLAN", bundle.task_trailer)
 
     def test_standard_management_prompt_matches_standard_search_tools(self):
         cfg = RunConfig(
@@ -367,8 +371,11 @@ class TestModeWrapper(unittest.TestCase):
             self.assertNotIn("search_ideal", tool_names)
             self.assertIn("plan", tool_names)
             self.assertIn("summarize_context", tool_names)
-            self.assertIn("## PRELOADED DATASETS", bundle.system_prompt)
-            self.assertIn("dataset_id: ds_one | uri: datagov/ds_one/files/rows.txt", bundle.system_prompt)
+            # The search_preloaded overlay references the "## PRELOADED DATASETS" heading as
+            # documentation (in backticks), but the task-specific URI list only lives in the trailer.
+            self.assertNotIn("dataset_id: ds_one | uri: datagov/ds_one/files/rows.txt", bundle.system_prompt)
+            self.assertIn("## PRELOADED DATASETS", bundle.task_trailer)
+            self.assertIn("dataset_id: ds_one | uri: datagov/ds_one/files/rows.txt", bundle.task_trailer)
 
     def test_preloaded_mode_fails_fast_without_plan_file(self):
         with TemporaryDirectory() as tmpdir:
