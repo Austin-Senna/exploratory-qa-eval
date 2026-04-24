@@ -1,5 +1,6 @@
 import logging
 from strands.vended_plugins.steering import Guide, Proceed, SteeringHandler, ToolSteeringAction
+from strands_evaluation.tools.agent_tools import get_submitted_answer
 
 logger = logging.getLogger(__name__)
 
@@ -45,6 +46,9 @@ class CategoryStagnationHandler(SteeringHandler):
 
     async def steer_before_tool(self, *, agent, tool_use, **kwargs) -> ToolSteeringAction:
         tool_name = tool_use.get("name")
+
+        if get_submitted_answer() is not None:
+            return Proceed(reason="answer already submitted; no further steering")
         
         if tool_name in ["submit_answer", "plan", "download"]:
             self.last_category = "terminal_or_plan"

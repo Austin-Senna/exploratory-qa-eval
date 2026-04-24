@@ -7,6 +7,7 @@ from typing import Iterable, Optional, Set
 from strands.hooks import AfterToolCallEvent, AgentInitializedEvent
 from strands.plugins import hook
 from strands.vended_plugins.steering import Guide, Proceed, SteeringHandler, ToolSteeringAction
+from strands_evaluation.tools.agent_tools import get_submitted_answer
 
 _DEFAULT_SEARCH_TOOLS = {
     "search_value",
@@ -43,6 +44,9 @@ class SearchCallBudgetHandler(SteeringHandler):
             self._count += 1
 
     async def steer_before_tool(self, *, agent, tool_use, **kwargs) -> ToolSteeringAction:
+        if get_submitted_answer() is not None:
+            return Proceed(reason="answer already submitted; no further steering")
+
         if self._max <= 0:
             return Proceed(reason="search call budget disabled")
 

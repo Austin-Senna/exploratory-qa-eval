@@ -2,6 +2,7 @@ import asyncio
 import unittest
 
 from strands_evaluation.instrumentation.loop_plugin import CategoryStagnationHandler
+from strands_evaluation.tools import agent_tools
 
 
 class TestCategoryStagnationHandler(unittest.TestCase):
@@ -15,6 +16,19 @@ class TestCategoryStagnationHandler(unittest.TestCase):
         self.assertEqual(action.type, "guide")
         self.assertIn("used 'execute' tools 3 times in a row", action.reason)
         self.assertEqual(handler.consecutive_count, 0)
+
+    def test_submitted_answer_short_circuits_stagnation_steering(self):
+        handler = CategoryStagnationHandler(max_consecutive_category=1)
+
+        agent_tools.clear_submitted_answer()
+        try:
+            agent_tools.submit_answer("[42]", "done")
+            action = asyncio.run(handler.steer_before_tool(agent=None, tool_use={"name": "execute_code"}))
+        finally:
+            agent_tools.clear_submitted_answer()
+
+        self.assertEqual(action.type, "proceed")
+        self.assertIn("already submitted", action.reason)
 
 
 if __name__ == "__main__":

@@ -10,6 +10,7 @@ from strands.hooks.events import (
 )
 from strands_evaluation.config import AgentConfig
 from strands_evaluation.instrumentation.agent_plugins import LoggingPlugin, ToolLimitSteeringHandler
+from strands_evaluation.instrumentation.search_call_budget_plugin import SearchCallBudgetHandler
 from strands_evaluation.tools import agent_tools, agent_tools_v2
 
 
@@ -147,6 +148,26 @@ class TestToolLimitSteeringHandler(unittest.TestCase):
         self.assertEqual(action.type, "proceed")
         self.assertIn("agent cancelled", action.reason)
         self.assertEqual(agent.model.get_config()["params"]["max_completion_tokens"], 8096)
+
+
+class TestSearchCallBudgetHandler(unittest.TestCase):
+    def test_submitted_answer_short_circuits_search_budget(self):
+        handler = SearchCallBudgetHandler(max_search_calls=1)
+
+        agent_tools.clear_submitted_answer()
+        try:
+            agent_tools.submit_answer("[42]", "done")
+            action = asyncio.run(
+                handler.steer_before_tool(
+                    agent=None,
+                    tool_use={"name": "search_ideal"},
+                )
+            )
+        finally:
+            agent_tools.clear_submitted_answer()
+
+        self.assertEqual(action.type, "proceed")
+        self.assertIn("already submitted", action.reason)
 
 
 class TestTokenBudgetDefaults(unittest.TestCase):

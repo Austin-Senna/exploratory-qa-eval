@@ -13,11 +13,13 @@ import decimal
 import json
 import unittest
 import uuid
+from unittest import mock
 
 from strands_evaluation.tools.agent_tools import (
     _rewrite_execute_code_error,
     _parse_s3_reference,
     _resolve_file_reference,
+    download,
     execute_code,
 )
 from strands_evaluation.tools.agent_tools_v2 import (
@@ -26,6 +28,7 @@ from strands_evaluation.tools.agent_tools_v2 import (
     _rewrite_unqueryable_family_error,
     _strip_folder_prefix,
     _to_json_safe,
+    query_file,
 )
 
 
@@ -628,6 +631,27 @@ class TestExecuteCodeSandboxEnvAndIjson(unittest.TestCase):
         result = execute_code("raise RuntimeError('something exotic that we don\\'t recognize')")
         self.assertFalse(result.get("success"))
         self.assertNotIn("hint", result)
+
+    @mock.patch("strands_evaluation.tools.agent_tools._run_tool_with_timeout", return_value=(False, None))
+    def test_execute_code_timeout_returns_failure(self, _patched_timeout):
+        result = execute_code("print('hello')")
+        self.assertFalse(result.get("success"))
+        self.assertIn("timed out after 150s", result.get("error", ""))
+        self.assertIn("sandbox_dir", result)
+
+
+class TestToolTimeoutWrappers(unittest.TestCase):
+    @mock.patch("strands_evaluation.tools.agent_tools._run_tool_with_timeout", return_value=(False, None))
+    def test_download_timeout_returns_error(self, _patched_timeout):
+        result = download([{"dataset_id": "example", "file_path": "files/data.txt"}])
+        self.assertIn("timed out after 150s", result.get("error", ""))
+        self.assertEqual(result.get("download_count"), 0)
+
+    @mock.patch("strands_evaluation.tools.agent_tools_v2._run_tool_with_timeout", return_value=(False, None))
+    def test_query_file_timeout_returns_error(self, _patched_timeout):
+        result = query_file(dataset_id="example", file_path="files/data.txt", sql="SELECT 1")
+        self.assertIn("timed out after 150s", result.get("error", ""))
+        self.assertIn("download + execute_code", result.get("error", ""))
 
 
 if __name__ == "__main__":

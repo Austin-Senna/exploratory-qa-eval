@@ -19,9 +19,11 @@ import sys
 import tempfile
 import shutil
 import traceback
+import multiprocessing as _mp
+import queue as _queue
 from io import StringIO
 from pathlib import Path
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any, List, Callable, Tuple
 from strands import tool
 import boto3
 from botocore import UNSIGNED
@@ -42,6 +44,7 @@ REGION = "us-east-1"
 SANDBOX_BASE_DIR = Path(__file__).resolve().parent.parent.parent / ".sandbox"
 
 _TOOL_RESULT_CHAR_CAP = 6_000  # ~1.5k tokens — keeps single tool results from dominating context
+_DEFAULT_TOOL_TIMEOUT_SECONDS = 150
 
 # Global sandbox directory (created per session)
 _SANDBOX_DIR = None
@@ -214,6 +217,101 @@ def _get_sandbox_dir() -> Path:
         SANDBOX_BASE_DIR.mkdir(parents=True, exist_ok=True)
         _SANDBOX_DIR = Path(tempfile.mkdtemp(prefix="task_", dir=SANDBOX_BASE_DIR))
     return _SANDBOX_DIR
+
+
+def _tool_timeout_seconds() -> int:
+    raw = str(os.getenv("AGENT_TOOL_TIMEOUT_SECONDS", _DEFAULT_TOOL_TIMEOUT_SECONDS)).strip()
+    try:
+        value = int(raw)
+    except (TypeError, ValueError):
+        return _DEFAULT_TOOL_TIMEOUT_SECONDS
+    return value if value > 0 else _DEFAULT_TOOL_TIMEOUT_SECONDS
+
+
+def _collect_sandbox_snapshot(sandbox: Path) -> Tuple[List[str], List[str]]:
+    sandbox_files: List[str] = []
+    datasets_in_sandbox = set()
+    if sandbox.exists():
+        for file_path in sandbox.rglob('*'):
+            if not file_path.is_file():
+                continue
+            try:
+                rel_path = file_path.relative_to(sandbox)
+            except ValueError:
+                continue
+            sandbox_files.append(str(rel_path))
+            if rel_path.parts:
+                datasets_in_sandbox.add(rel_path.parts[0])
+    return sandbox_files, sorted(datasets_in_sandbox)
+
+
+def _tool_worker_entry(
+    result_queue,
+    func: Callable[..., Dict[str, Any]],
+    args: Tuple[Any, ...],
+    kwargs: Dict[str, Any],
+    sandbox_dir: str,
+) -> None:
+    try:
+        set_sandbox_dir(Path(sandbox_dir))
+        result_queue.put(("ok", func(*args, **kwargs)))
+    except BaseException as exc:
+        result_queue.put(
+            (
+                "error",
+                {
+                    "error": f"{type(exc).__name__}: {exc}",
+                    "traceback": traceback.format_exc(),
+                },
+            )
+        )
+
+
+def _run_tool_with_timeout(
+    func: Callable[..., Dict[str, Any]],
+    *args: Any,
+    timeout_seconds: Optional[int] = None,
+    **kwargs: Any,
+) -> Tuple[bool, Optional[Dict[str, Any]]]:
+    timeout = timeout_seconds if timeout_seconds is not None else _tool_timeout_seconds()
+    if timeout <= 0:
+        return True, func(*args, **kwargs)
+
+    sandbox = _get_sandbox_dir()
+    ctx = _mp.get_context("spawn")
+    result_queue = ctx.Queue(maxsize=1)
+    proc = ctx.Process(
+        target=_tool_worker_entry,
+        args=(result_queue, func, args, kwargs, str(sandbox)),
+    )
+    proc.start()
+    proc.join(timeout)
+
+    if proc.is_alive():
+        proc.terminate()
+        proc.join(5)
+        if proc.is_alive():
+            proc.kill()
+            proc.join()
+        try:
+            result_queue.close()
+            result_queue.join_thread()
+        except Exception:
+            pass
+        return False, None
+
+    try:
+        status, payload = result_queue.get_nowait()
+    except _queue.Empty:
+        payload = {"error": f"Tool subprocess exited with code {proc.exitcode} without returning a result."}
+    finally:
+        try:
+            result_queue.close()
+            result_queue.join_thread()
+        except Exception:
+            pass
+
+    return True, payload
 
 
 def _dataset_exists(s3, folder: str, dataset_id: str) -> bool:
@@ -778,6 +876,24 @@ def download(files: List[Dict[str, str]]) -> Dict[str, Any]:
         Dict with 'downloaded' list of successful downloads, 'download_count',
         'sandbox_dir', and (if any failed) 'errors'.
     """
+    timeout_seconds = _tool_timeout_seconds()
+    completed, result = _run_tool_with_timeout(_download_impl, files, timeout_seconds=timeout_seconds)
+    if completed:
+        return result or {'error': "download failed without returning a result"}
+
+    sandbox = _get_sandbox_dir()
+    return {
+        'error': (
+            f"download timed out after {timeout_seconds}s. "
+            "Try fewer files per call, download one file at a time, or narrow the task before downloading."
+        ),
+        'downloaded': [],
+        'download_count': 0,
+        'sandbox_dir': str(sandbox),
+    }
+
+
+def _download_impl(files: List[Dict[str, str]]) -> Dict[str, Any]:
     if not isinstance(files, list):
         return {'error': (
             "download requires `files` to be a list of dicts, not a single "
@@ -1019,6 +1135,27 @@ def execute_code(code: str) -> Dict[str, Any]:
         ... ''')
         {'output': '   col1  col2\\n...\\nTotal rows: 50', 'success': True}
     """
+    timeout_seconds = _tool_timeout_seconds()
+    completed, result = _run_tool_with_timeout(_execute_code_impl, code, timeout_seconds=timeout_seconds)
+    if completed:
+        return result or {'error': "execute_code failed without returning a result", 'success': False}
+
+    sandbox = _get_sandbox_dir()
+    sandbox_files, datasets_in_sandbox = _collect_sandbox_snapshot(sandbox)
+    return {
+        'output': '',
+        'error': (
+            f"execute_code timed out after {timeout_seconds}s. "
+            "Use a narrower script, stream large files, or print less intermediate data."
+        ),
+        'success': False,
+        'sandbox_dir': str(sandbox),
+        'sandbox_files': sandbox_files,
+        'datasets_in_sandbox': datasets_in_sandbox,
+    }
+
+
+def _execute_code_impl(code: str) -> Dict[str, Any]:
     if not code or not code.strip():
         return {'error': "No code provided", 'success': False}
 
@@ -1026,19 +1163,11 @@ def execute_code(code: str) -> Dict[str, Any]:
 
     # Collect downloaded files
     downloaded_files = []
-    for path in sandbox.rglob('*'):
-        if path.is_file():
-            downloaded_files.append(str(path))
-    sandbox_files = []
-    datasets_in_sandbox = set()
-    for file_path in downloaded_files:
-        try:
-            rel_path = Path(file_path).relative_to(sandbox)
-        except ValueError:
-            continue
-        sandbox_files.append(str(rel_path))
-        if rel_path.parts:
-            datasets_in_sandbox.add(rel_path.parts[0])
+    if sandbox.exists():
+        for path in sandbox.rglob('*'):
+            if path.is_file():
+                downloaded_files.append(str(path))
+    sandbox_files, datasets_in_sandbox = _collect_sandbox_snapshot(sandbox)
 
     # Prepare execution environment
     exec_globals = {
@@ -1116,7 +1245,7 @@ from pathlib import Path
             'success': True,
             'sandbox_dir': str(sandbox),
             'sandbox_files': sandbox_files,
-            'datasets_in_sandbox': sorted(datasets_in_sandbox),
+            'datasets_in_sandbox': datasets_in_sandbox,
         }
         if stdout_overflow_path:
             result['local_result_path'] = stdout_overflow_path
@@ -1142,7 +1271,7 @@ from pathlib import Path
             'success': False,
             'sandbox_dir': str(sandbox),
             'sandbox_files': sandbox_files,
-            'datasets_in_sandbox': sorted(datasets_in_sandbox)
+            'datasets_in_sandbox': datasets_in_sandbox
         }
         hint = _rewrite_execute_code_error(error_str, traceback_str)
         if hint:
