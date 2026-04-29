@@ -1,0 +1,85 @@
+from sana_evaluation.plugins.source_session import SourceSessionState, source_from_tool_use
+
+
+def test_source_from_dataset_id_input() -> None:
+    source = source_from_tool_use(
+        {"name": "peek_file", "input": {"dataset_id": "county-population"}}
+    )
+    assert source == "county-population"
+
+
+def test_source_from_single_dataset_ids_input() -> None:
+    source = source_from_tool_use(
+        {"name": "list_files", "input": {"dataset_ids": ["libraries-2021"]}}
+    )
+    assert source == "libraries-2021"
+
+
+def test_source_from_s3_uri_input() -> None:
+    source = source_from_tool_use(
+        {
+            "name": "read_file",
+            "input": {
+                "s3_uri": (
+                    "s3://lakeqa-yc4103-datalake/datagov/"
+                    "iowa-local-area-unemployment-statistics/files/rows.csv"
+                )
+            },
+        }
+    )
+    assert source == "iowa-local-area-unemployment-statistics"
+
+
+def test_source_from_batch_files_same_dataset() -> None:
+    source = source_from_tool_use(
+        {
+            "name": "peek_multiple",
+            "input": {
+                "files": [
+                    {"dataset_id": "schools", "file_path": "a.csv"},
+                    {"dataset_id": "schools", "file_path": "b.csv"},
+                ]
+            },
+        }
+    )
+    assert source == "schools"
+
+
+def test_source_from_batch_files_multiple_datasets() -> None:
+    source = source_from_tool_use(
+        {
+            "name": "peek_multiple",
+            "input": {
+                "files": [
+                    {"dataset_id": "schools", "file_path": "a.csv"},
+                    {"dataset_id": "libraries", "file_path": "b.csv"},
+                ]
+            },
+        }
+    )
+    assert source == "multi:libraries,schools"
+
+
+def test_execute_code_falls_back_to_active_source() -> None:
+    source = source_from_tool_use(
+        {"name": "execute_code", "input": {"code": "print('x')"}},
+        fallback_source="schools",
+    )
+    assert source == "schools"
+
+
+def test_session_counts_and_budget_exhaustion() -> None:
+    state = SourceSessionState(
+        current_source="schools",
+        commitment_goal="count schools",
+        max_source_calls=2,
+        success_condition="answer has count",
+    )
+    assert state.calls_used == 0
+    assert state.is_budget_exhausted() is False
+    state.record_call("peek_file")
+    assert state.calls_used == 1
+    assert state.is_budget_exhausted() is False
+    state.record_call("query_file")
+    assert state.calls_used == 2
+    assert state.is_budget_exhausted() is True
