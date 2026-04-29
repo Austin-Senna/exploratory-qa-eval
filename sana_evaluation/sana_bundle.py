@@ -82,7 +82,7 @@ class SanaDataLakeAgent(DataLakeAgent):
         if flags.CoT:
             parts.append(cot_block(st))
         if flags.short_plan:
-            parts.append(short_plan_block(st))
+            parts.append(short_plan_block(st, short_plan_mode=flags.short_plan_mode))
         # results_apis: no system-prompt block — the peek_file docstring already
         # documents the `profile` field. The flag toggles the profile loader
         # callback at runtime in _pre_build_setup.
@@ -107,6 +107,8 @@ class SanaDataLakeAgent(DataLakeAgent):
         if flags.short_plan:
             short_plan_plugin = ShortPlanSteerHandler(
                 macro_reflection_k=flags.macro_reflection_k,
+                short_plan_mode=flags.short_plan_mode,
+                source_budget_calls=flags.source_budget_calls,
             )
             plugins.append(short_plan_plugin)
 
