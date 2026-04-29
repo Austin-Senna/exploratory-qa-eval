@@ -212,6 +212,56 @@ def test_source_budget_requests_contract_on_first_source_tool() -> None:
     assert "schools" in action.reason
 
 
+def test_source_budget_blocks_additional_tool_calls_while_contract_pending() -> None:
+    h = ShortPlanSteerHandler(
+        macro_reflection_k=5,
+        short_plan_mode="source_budget",
+        source_budget_calls=3,
+    )
+    first = _run_steer(
+        h,
+        {"name": "read_file", "input": {"dataset_id": "schools"}},
+    )
+    assert isinstance(first, Guide)
+
+    second = _run_steer(
+        h,
+        {"name": "read_file", "input": {"dataset_id": "libraries"}},
+    )
+    assert isinstance(second, Guide)
+    assert "still pending" in second.reason.lower()
+
+    submit = _run_steer(
+        h,
+        {"name": "submit_answer", "input": {"answer": "0"}},
+    )
+    assert isinstance(submit, Guide)
+    assert "no tool calls" in submit.reason.lower()
+
+
+def test_source_budget_empty_model_response_keeps_contract_pending() -> None:
+    h = ShortPlanSteerHandler(
+        macro_reflection_k=5,
+        short_plan_mode="source_budget",
+        source_budget_calls=3,
+    )
+    first = _run_steer(
+        h,
+        {"name": "read_file", "input": {"dataset_id": "schools"}},
+    )
+    assert isinstance(first, Guide)
+    h.on_after_model(
+        _StubAfterModelEvent(stop_response=_StubStopResponse(_assistant_message("")))
+    )
+
+    second = _run_steer(
+        h,
+        {"name": "read_file", "input": {"dataset_id": "schools"}},
+    )
+    assert isinstance(second, Guide)
+    assert "still pending" in second.reason.lower()
+
+
 def test_source_budget_parses_contract_and_allows_retry() -> None:
     h = ShortPlanSteerHandler(
         macro_reflection_k=5,

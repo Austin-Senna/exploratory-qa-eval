@@ -88,6 +88,16 @@ def _source_reflection_guide_reason(
     )
 
 
+def _pending_source_budget_guide_reason(previous_reason: Optional[str]) -> str:
+    base = previous_reason or (
+        "Pause tool calls. A source-budget contract or reflection is still pending."
+    )
+    return (
+        f"{base} The requested JSON response is still pending. "
+        "Respond with ONE JSON object only - no tool calls."
+    )
+
+
 def _extract_assistant_text(message: Any) -> str:
     if not isinstance(message, dict):
         return ""
@@ -129,6 +139,7 @@ class ShortPlanSteerHandler(SteeringHandler):
         self._awaiting_contract_response = False
         self._pending_contract_source: Optional[str] = None
         self._pending_switch_source: Optional[str] = None
+        self._pending_guide_reason: Optional[str] = None
         self._reflections_done = 0
         self.last_reflection: Optional[Dict[str, Any]] = None
         self.source_session: Optional[SourceSessionState] = None
@@ -160,6 +171,11 @@ class ShortPlanSteerHandler(SteeringHandler):
     # ------------------------------------------------------------------
 
     async def steer_before_tool(self, *, agent, tool_use, **kwargs) -> ToolSteeringAction:
+        if self._mode == "source_budget" and (
+            self._awaiting_contract_response or self._awaiting_reflection_response
+        ):
+            return Guide(reason=_pending_source_budget_guide_reason(self._pending_guide_reason))
+
         tool_name = (tool_use or {}).get("name", "")
         if tool_name in _EXCLUDED_TOOLS:
             return Proceed(reason="administrative tool — never gated by reflection")
@@ -190,38 +206,44 @@ class ShortPlanSteerHandler(SteeringHandler):
         if self.source_session is None:
             self._awaiting_contract_response = True
             self._pending_contract_source = requested_source
-            return Guide(
-                reason=self._compose_reason(
-                    _source_contract_guide_reason(
-                        requested_source,
-                        self._source_budget_calls,
-                    )
+            reason = self._compose_reason(
+                _source_contract_guide_reason(
+                    requested_source,
+                    self._source_budget_calls,
                 )
+            )
+            self._pending_guide_reason = reason
+            return Guide(
+                reason=reason
             )
 
         if requested_source != self.source_session.current_source:
             self._awaiting_reflection_response = True
             self._pending_switch_source = requested_source
-            return Guide(
-                reason=self._compose_reason(
-                    _source_reflection_guide_reason(
-                        current_source=self.source_session.current_source,
-                        next_source=requested_source,
-                        switch_pending=True,
-                    )
+            reason = self._compose_reason(
+                _source_reflection_guide_reason(
+                    current_source=self.source_session.current_source,
+                    next_source=requested_source,
+                    switch_pending=True,
                 )
+            )
+            self._pending_guide_reason = reason
+            return Guide(
+                reason=reason
             )
 
         if self.source_session.is_budget_exhausted():
             self._awaiting_reflection_response = True
-            return Guide(
-                reason=self._compose_reason(
-                    _source_reflection_guide_reason(
-                        current_source=self.source_session.current_source,
-                        next_source=self.source_session.current_source,
-                        switch_pending=False,
-                    )
+            reason = self._compose_reason(
+                _source_reflection_guide_reason(
+                    current_source=self.source_session.current_source,
+                    next_source=self.source_session.current_source,
+                    switch_pending=False,
                 )
+            )
+            self._pending_guide_reason = reason
+            return Guide(
+                reason=reason
             )
 
         return Proceed(reason="within source-session budget")
@@ -254,8 +276,7 @@ class ShortPlanSteerHandler(SteeringHandler):
             return
         text = _extract_assistant_text(stop_response.message)
         if not text:
-            self._awaiting_reflection_response = False
-            self._awaiting_contract_response = False
+            logger.warning("Source-budget instruction still pending: model response had no text.")
             return
         if self._awaiting_contract_response:
             self._handle_contract_response(text)
@@ -284,14 +305,15 @@ class ShortPlanSteerHandler(SteeringHandler):
             success_condition=str(parsed.get("success_condition") or "unspecified"),
         )
         self._pending_contract_source = None
+        self._pending_guide_reason = None
 
     def _handle_reflection_response(self, text: str) -> None:
         parsed = self._parse_reflection_json(text)
-        self.last_reflection = parsed
-        self._awaiting_reflection_response = False
         if parsed is None:
             logger.warning("Macro-reflection response did not contain parseable JSON.")
             return
+        self.last_reflection = parsed
+        self._awaiting_reflection_response = False
         self._reflections_done += 1
         if self._mode != "source_budget" or self.source_session is None:
             return
@@ -307,6 +329,7 @@ class ShortPlanSteerHandler(SteeringHandler):
         elif next_action in {"switch_source", "submit"}:
             self.source_session = None
         self._pending_switch_source = None
+        self._pending_guide_reason = None
 
     def _parse_reflection_json(self, text: str) -> Optional[Dict[str, Any]]:
         match = _JSON_OBJECT_RE.search(text)
