@@ -1,4 +1,4 @@
-"""Tests for SanaDataLakeAgent._decorate_tools — swaps peek_file when results_apis is on."""
+"""Tests for SanaDataLakeAgent._decorate_tools — swaps peek_file when results is on."""
 
 from __future__ import annotations
 
@@ -11,8 +11,8 @@ from sana_evaluation.sana_config import SanaRunConfig
 from strands_evaluation.config import AgentConfig
 
 
-def _make_agent(*, results_apis: bool) -> SanaDataLakeAgent:
-    flags = SanaFlags(results_apis=results_apis)
+def _make_agent(*, results: bool) -> SanaDataLakeAgent:
+    flags = SanaFlags(results=results)
     rc = SanaRunConfig(
         agent_management_mode="standard",
         search_tool_mode="preloaded",
@@ -23,8 +23,8 @@ def _make_agent(*, results_apis: bool) -> SanaDataLakeAgent:
 
 
 class DecorateToolsTests(unittest.TestCase):
-    def test_results_apis_off_keeps_baseline_peek_file(self) -> None:
-        agent = _make_agent(results_apis=False)
+    def test_results_off_keeps_baseline_peek_file(self) -> None:
+        agent = _make_agent(results=False)
         baseline_peek = MagicMock()
         baseline_peek.tool_name = "peek_file"
         other = MagicMock()
@@ -37,8 +37,8 @@ class DecorateToolsTests(unittest.TestCase):
         self.assertIs(decorated[0], baseline_peek)
         self.assertIs(decorated[1], other)
 
-    def test_results_apis_on_swaps_peek_file(self) -> None:
-        agent = _make_agent(results_apis=True)
+    def test_results_on_swaps_peek_file(self) -> None:
+        agent = _make_agent(results=True)
         baseline_peek = MagicMock()
         baseline_peek.tool_name = "peek_file"
         other = MagicMock()

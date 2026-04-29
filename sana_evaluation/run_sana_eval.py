@@ -43,17 +43,6 @@ _AXIS_DEFAULTS = {
     "agent_management": "standard",
 }
 
-_SANA_FEATURE_LETTERS = {
-    "CoT": "cot",
-    "results_apis": "ra",
-}
-
-_SHORT_PLAN_MODE_LETTERS = {
-    "cadence": "spc",
-    "source_budget": "spsb",
-}
-
-
 def _variant_condition_label(
     *,
     search_tool: str,
@@ -72,19 +61,18 @@ def _variant_condition_label(
         parts.append(f"k{k}")
     if search_calls is not None:
         parts.append(f"sc{search_calls}")
-    sana_letters = []
-    if sana_flags.short_plan:
-        sana_letters.append(_SHORT_PLAN_MODE_LETTERS[sana_flags.short_plan_mode])
-    for name in ("CoT", "results_apis"):
-        if getattr(sana_flags, name):
-            sana_letters.append(_SANA_FEATURE_LETTERS[name])
-    if sana_letters:
-        parts.append("sana_" + "_".join(sana_letters))
-        if sana_flags.short_plan:
-            if sana_flags.short_plan_mode == "cadence":
-                parts.append(f"mrk{sana_flags.macro_reflection_k}")
-            elif sana_flags.short_plan_mode == "source_budget":
-                parts.append(f"sbc{sana_flags.source_budget_calls}")
+    sana_tokens = []
+    if sana_flags.cot:
+        sana_tokens.append("cot")
+    if sana_flags.results:
+        sana_tokens.append("results")
+    if sana_flags.sprint:
+        if sana_flags.sprint_mode == "commitment":
+            sana_tokens.append(f"sprint_commitment_cb{sana_flags.commitment_budget_calls}")
+        else:
+            sana_tokens.append(f"sprint_k{sana_flags.macro_reflection_k}")
+    if sana_tokens:
+        parts.append("sana_" + "_".join(sana_tokens))
     return "_".join(parts)
 
 
@@ -284,35 +272,35 @@ def main() -> None:
         "--sana-feature",
         action="append",
         default=[],
-        choices=sorted({"short_plan", "CoT", "results_apis"}),
+        choices=sorted({"sprint", "cot", "results"}),
         help=(
             "Enable a SANA feature. Repeat for multiple features. "
-            "Options: short_plan, CoT, results_apis. "
+            "Options: sprint, cot, results. "
             "(State-of-task readout, candidate-answer, and answer-confidence are "
-            "automatically bundled into short_plan's k-turn reflection.)"
+            "automatically bundled into sprint's reflection.)"
         ),
     )
     parser.add_argument(
         "--macro-reflection-k",
         type=int,
         default=5,
-        help="Tool-call cadence for macro-reflection when short_plan is on (default: 5).",
+        help="Tool-call cadence for macro-reflection when sprint is on (default: 5).",
     )
     parser.add_argument(
-        "--short-plan-mode",
-        choices=["cadence", "source_budget"],
+        "--sprint-mode",
+        choices=["cadence", "commitment"],
         default="cadence",
         help=(
-            "Short-plan control mode when --sana-feature short_plan is enabled. "
-            "cadence reflects every --macro-reflection-k tool calls; source_budget "
+            "Sprint control mode when --sana-feature sprint is enabled. "
+            "cadence reflects every --macro-reflection-k tool calls; commitment "
             "uses per-source budget contracts."
         ),
     )
     parser.add_argument(
-        "--source-budget-calls",
+        "--commitment-budget-calls",
         type=int,
         default=3,
-        help="Default per-source call budget for --short-plan-mode source_budget.",
+        help="Default per-source call budget for --sprint-mode commitment.",
     )
 
     # Execution
@@ -330,8 +318,8 @@ def main() -> None:
         parser.error("--search-calls must be > 0")
     if args.macro_reflection_k <= 0:
         parser.error("--macro-reflection-k must be > 0")
-    if args.source_budget_calls <= 0:
-        parser.error("--source-budget-calls must be > 0")
+    if args.commitment_budget_calls <= 0:
+        parser.error("--commitment-budget-calls must be > 0")
 
     extra_model_kwargs = {}
     if args.reasoning_effort is not None:
@@ -355,8 +343,8 @@ def main() -> None:
         sana_flags = SanaFlags.from_feature_names(
             args.sana_feature,
             macro_reflection_k=args.macro_reflection_k,
-            short_plan_mode=args.short_plan_mode,
-            source_budget_calls=args.source_budget_calls,
+            sprint_mode=args.sprint_mode,
+            commitment_budget_calls=args.commitment_budget_calls,
         )
         sana_flags.validate(agent_management=agent_management_mode)
     except ValueError as exc:
