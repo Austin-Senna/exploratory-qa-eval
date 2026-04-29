@@ -22,10 +22,9 @@ class SanaFlags:
     All flags default to off. One dependency rule is enforced by `validate()`:
       - `short_plan` requires `agent_management` to be `standard` or `ideal`
 
-    The state-of-task readout (formerly the `dashboard` flag) is bundled into
-    `short_plan`'s k-turn reflection. `potential_answer` and `answer_confidence`
-    (formerly the `confidence_advisory` flag) are also part of every k-turn
-    reflection JSON — no separate plugin watches confidence trends.
+    The state-of-task readout is bundled into `short_plan`'s reflection.
+    `potential_answer` and `answer_confidence` are also part of every k-turn
+    reflection JSON; no separate plugin watches confidence trends.
     """
 
     short_plan: bool = False
