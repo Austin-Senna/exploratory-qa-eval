@@ -52,15 +52,16 @@ def _variant_condition_label(
     search_calls: Optional[int],
     sana_flags: SanaFlags,
 ) -> str:
-    parts = [
-        f"search_{_MODE_LETTERS[search_tool]}",
-        f"results_{_MODE_LETTERS[search_results]}",
-        f"plan{_MODE_LETTERS[agent_management]}",
+    axis_tokens = [
+        f"s{_MODE_LETTERS[search_tool]}",
+        f"r{_MODE_LETTERS[search_results]}",
+        f"p{_MODE_LETTERS[agent_management]}",
     ]
+    run_tokens = []
     if k is not None:
-        parts.append(f"k{k}")
+        run_tokens.append(f"k{k}")
     if search_calls is not None:
-        parts.append(f"sc{search_calls}")
+        run_tokens.append(f"sc{search_calls}")
     sana_tokens = []
     if sana_flags.cot:
         sana_tokens.append("cot")
@@ -72,8 +73,8 @@ def _variant_condition_label(
         else:
             sana_tokens.append(f"sprint_k{sana_flags.macro_reflection_k}")
     if sana_tokens:
-        parts.append("sana_" + "_".join(sana_tokens))
-    return "_".join(parts)
+        return "_".join(["sana_" + "_".join(sana_tokens), *axis_tokens, *run_tokens])
+    return "_".join([*axis_tokens, *run_tokens])
 
 
 def _with_debug_suffix(label: str, debug_mode: Optional[str]) -> str:
