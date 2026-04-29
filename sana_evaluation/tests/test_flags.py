@@ -23,7 +23,7 @@ def test_from_feature_names_basic() -> None:
 
 
 def test_from_feature_names_dashboard_no_longer_valid() -> None:
-    """The `dashboard` flag was removed; readout is now bundled into short_plan."""
+    """The `dashboard` flag was removed; readout is now bundled into sprint."""
     with pytest.raises(ValueError, match="Unknown SANA feature"):
         SanaFlags.from_feature_names(["dashboard"])
 

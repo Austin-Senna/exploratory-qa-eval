@@ -1,4 +1,4 @@
-"""Source-session helpers for short_plan source-budget mode."""
+"""Source-session helpers for sprint commitment mode."""
 
 from __future__ import annotations
 

@@ -3,13 +3,13 @@
 The plugin tracks turn count, confidence trend, tool-call ledger, and plan-step
 completion via Strands hooks. It does NOT inject any messages on its own.
 `render_block()` returns the formatted readout for a peer plugin (currently
-`ShortPlanSteerHandler`) to surface at reflection time.
+`SprintSteerHandler`) to surface at reflection time.
 
 State sources:
   - confidence history: parsed from assistant CoT records on AfterModelCallEvent
   - tool-call ledger: incremented on AfterToolCallEvent
   - long_plan progress: parsed from `sufficient_to_call_step_complete` flags
-  - short_plan progress: read from a peer ShortPlanSteerHandler if available
+  - sprint progress: read from a peer SprintSteerHandler if available
     (its describe_for_dashboard() returns the active step + last reflection's
     candidate_answer + answer_confidence)
 """
@@ -64,7 +64,7 @@ class StateOfTaskDashboardPlugin(Plugin):
         self._reset()
 
         # Peer-plugin reference (set externally by sana_bundle when both are wired).
-        self.short_plan_plugin: Optional[Any] = None
+        self.sprint_plugin: Optional[Any] = None
 
     # ------------------------------------------------------------------
     # Lifecycle / state
@@ -116,7 +116,7 @@ class StateOfTaskDashboardPlugin(Plugin):
         """Compose and return the state-of-task readout as a string.
 
         Caller is responsible for surfacing it (typically prepended to the
-        ShortPlanSteerHandler reflection Guide reason).
+            SprintSteerHandler reflection Guide reason).
         """
         turn_label = f"{self._tool_call_count} / {self._max_tool_calls}"
         history = list(self._confidence_history) or ["—"]
@@ -126,9 +126,9 @@ class StateOfTaskDashboardPlugin(Plugin):
             f"long_plan: {self._step_completes} step(s) marked complete, "
             f"{self._step_incompletes} step(s) flagged incomplete"
         )
-        short_plan_line: Optional[str] = None
-        if self.short_plan_plugin is not None:
-            short_plan_line = self.short_plan_plugin.describe_for_dashboard()
+        sprint_line: Optional[str] = None
+        if self.sprint_plugin is not None:
+            sprint_line = self.sprint_plugin.describe_for_dashboard()
 
         evidence_line = f"evidence: {self._tool_call_count} tool call(s) consumed"
 
@@ -136,8 +136,8 @@ class StateOfTaskDashboardPlugin(Plugin):
             f"[State of Task — Turn {turn_label}]",
             long_plan_line,
         ]
-        if short_plan_line:
-            lines.append(short_plan_line)
+        if sprint_line:
+            lines.append(sprint_line)
         lines.append(f"confidence (last {self._history_window}): {confidence_str}")
         lines.append(evidence_line)
         return "\n".join(lines)

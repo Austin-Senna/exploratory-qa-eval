@@ -8,7 +8,7 @@ def cot_block(search_tool: str) -> str:
 
     Adds a structured pre/post-tool record requirement. The pre-record's
     `confidence` field and the post-record's `sufficient_to_call_step_complete`
-    field are read by `StateOfTaskDashboardPlugin` (when short_plan is on) to
+    field are read by `StateOfTaskDashboardPlugin` (when sprint is on) to
     populate the reflection-time state-of-task readout.
     """
     return (

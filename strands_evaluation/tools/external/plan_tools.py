@@ -8,11 +8,7 @@ plan — save a research plan to the agent's working context so it persists
 from strands import tool
 from strands.types.tools import ToolContext
 
-# ---------------------------------------------------------------------------
-# Module-level state (reset between tasks)
-# ---------------------------------------------------------------------------
-
-_base_prompt: str = ""
+from strands_evaluation.helper.prompt_sections import upsert_prompt_section
 
 
 # ---------------------------------------------------------------------------
@@ -26,15 +22,12 @@ def plan(plan_text: str, tool_context: ToolContext) -> str:
     Args:
         plan_text: Your written plan.
     """
-    global _base_prompt
     agent = tool_context.agent
-    # On the very first call, capture the base system prompt.
-    # Detect this by checking if _base_prompt is empty OR if the current
-    # system_prompt no longer contains our injected section (new task).
-    current = agent.system_prompt
-    if not _base_prompt or "\n\n## CURRENT PLAN\n" not in current:
-        _base_prompt = current
-    agent.system_prompt = _base_prompt + "\n\n## CURRENT PLAN\n" + plan_text
+    agent.system_prompt = upsert_prompt_section(
+        agent.system_prompt,
+        "CURRENT PLAN",
+        plan_text,
+    )
     return "Plan recorded."
 
 

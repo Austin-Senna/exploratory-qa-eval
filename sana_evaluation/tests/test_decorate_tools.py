@@ -11,8 +11,8 @@ from sana_evaluation.sana_config import SanaRunConfig
 from strands_evaluation.config import AgentConfig
 
 
-def _make_agent(*, results: bool) -> SanaDataLakeAgent:
-    flags = SanaFlags(results=results)
+def _make_agent(*, results: bool = False, sprint: bool = False) -> SanaDataLakeAgent:
+    flags = SanaFlags(results=results, sprint=sprint)
     rc = SanaRunConfig(
         agent_management_mode="standard",
         search_tool_mode="preloaded",
@@ -52,6 +52,17 @@ class DecorateToolsTests(unittest.TestCase):
         self.assertIsNot(decorated[0], baseline_peek)
         self.assertEqual(getattr(decorated[0], "tool_name", None), "peek_file")
         self.assertIs(decorated[1], other)
+
+    def test_sprint_on_adds_sprint_tool(self) -> None:
+        agent = _make_agent(sprint=True)
+        baseline_peek = MagicMock()
+        baseline_peek.tool_name = "peek_file"
+        decorated = agent._decorate_tools(
+            [baseline_peek],
+            search_tool_mode="preloaded",
+            agent_management_mode="standard",
+        )
+        self.assertIn("sprint", [getattr(t, "tool_name", None) for t in decorated])
 
 
 if __name__ == "__main__":

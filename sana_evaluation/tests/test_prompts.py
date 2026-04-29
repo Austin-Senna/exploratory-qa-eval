@@ -6,7 +6,7 @@ import pytest
 
 from sana_evaluation.prompts import (
     cot_block,
-    short_plan_block,
+    sprint_block,
 )
 
 
@@ -25,9 +25,10 @@ def test_cot_block_non_empty(search_tool: str) -> None:
 
 
 @pytest.mark.parametrize("search_tool", _SEARCH_MODES)
-def test_short_plan_block_describes_cadence_reflection(search_tool: str) -> None:
-    text = short_plan_block(search_tool, short_plan_mode="cadence")
+def test_sprint_block_describes_cadence_reflection(search_tool: str) -> None:
+    text = sprint_block(search_tool, sprint_mode="cadence")
     assert "K-TURN SPRINT REFLECTION" in text
+    assert "sprint tool" in text
     assert "short_forward_plan" in text
     assert "global_status" in text
     assert "potential_answer" in text
@@ -37,14 +38,15 @@ def test_short_plan_block_describes_cadence_reflection(search_tool: str) -> None
     assert "long_plan" in text
     assert "confidence" in text
     assert "evidence" in text
-    assert "source budget contract" not in text.lower()
+    assert "commitment contract" not in text.lower()
     assert "SANA" not in text
 
 
 @pytest.mark.parametrize("search_tool", _SEARCH_MODES)
-def test_short_plan_block_describes_source_budget_contract(search_tool: str) -> None:
-    text = short_plan_block(search_tool, short_plan_mode="source_budget")
-    assert "SOURCE BUDGET CONTRACT" in text
+def test_sprint_block_describes_commitment_contract(search_tool: str) -> None:
+    text = sprint_block(search_tool, sprint_mode="commitment")
+    assert "SOURCE COMMITMENT CONTRACT" in text
+    assert "sprint tool" in text
     assert "current_source" in text
     assert "commitment_goal" in text
     assert "max_source_calls" in text

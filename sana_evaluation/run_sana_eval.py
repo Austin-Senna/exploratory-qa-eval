@@ -394,7 +394,7 @@ def main() -> None:
     )
 
     logger.info(
-        "SANA variant: %s (sana_features=%s mrk=%d)",
+        "SANA variant: %s (sana_features=%s sprint_k=%d)",
         condition_label,
         sana_flags.active_features() or ["none"],
         sana_flags.macro_reflection_k,

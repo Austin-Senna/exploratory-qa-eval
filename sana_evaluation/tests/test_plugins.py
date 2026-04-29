@@ -4,13 +4,15 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import dataclass, field
+from types import SimpleNamespace
 from typing import Any, Dict, List, Optional
 
 from sana_evaluation.plugins import (
     CoTPostRecordPlugin,
-    ShortPlanSteerHandler,
+    SprintSteerHandler,
     StateOfTaskDashboardPlugin,
 )
+from sana_evaluation.tools.sprint_tool import clear_sprint_state, sprint
 from strands.vended_plugins.steering import Guide, Proceed
 
 
@@ -78,7 +80,7 @@ def test_cot_post_record_skips_on_exception() -> None:
 
 
 # ---------------------------------------------------------------------------
-# ShortPlanSteerHandler
+# SprintSteerHandler
 # ---------------------------------------------------------------------------
 
 
@@ -86,54 +88,59 @@ def _run_steer(handler, tool_use):
     return asyncio.run(handler.steer_before_tool(agent=None, tool_use=tool_use))
 
 
-def test_short_plan_steer_proceeds_within_sprint_window() -> None:
-    h = ShortPlanSteerHandler(macro_reflection_k=3)
+def _sprint_context() -> SimpleNamespace:
+    return SimpleNamespace(agent=SimpleNamespace(system_prompt="BASE PROMPT"))
+
+
+def test_sprint_steer_proceeds_within_sprint_window() -> None:
+    h = SprintSteerHandler(macro_reflection_k=3)
     for _ in range(2):
         h.on_after_tool(_StubAfterToolEvent(tool_use={"name": "peek_file"}))
     action = _run_steer(h, {"name": "peek_file"})
     assert isinstance(action, Proceed)
 
 
-def test_short_plan_steer_guides_at_k_boundary() -> None:
-    h = ShortPlanSteerHandler(macro_reflection_k=3)
+def test_sprint_steer_guides_at_k_boundary() -> None:
+    h = SprintSteerHandler(macro_reflection_k=3)
     for _ in range(3):
         h.on_after_tool(_StubAfterToolEvent(tool_use={"name": "peek_file"}))
     action = _run_steer(h, {"name": "peek_file"})
     assert isinstance(action, Guide)
-    assert "JSON" in action.reason
+    assert "sprint" in action.reason
+    assert "JSON object only" not in action.reason
 
 
-def test_short_plan_steer_passes_administrative_tools() -> None:
-    h = ShortPlanSteerHandler(macro_reflection_k=1)
-    h.on_after_tool(_StubAfterToolEvent(tool_use={"name": "peek_file"}))
+def test_sprint_steer_passes_administrative_tools_before_pending() -> None:
+    h = SprintSteerHandler(macro_reflection_k=1)
     for tool in ("plan", "submit_answer", "skills", "summarize_context"):
         action = _run_steer(h, {"name": tool})
         assert isinstance(action, Proceed)
 
 
-def test_short_plan_steer_skill_calls_dont_count_toward_sprint() -> None:
+def test_sprint_steer_skill_calls_dont_count_toward_sprint() -> None:
     """Skill calls must not advance the sprint counter."""
-    h = ShortPlanSteerHandler(macro_reflection_k=3)
+    h = SprintSteerHandler(macro_reflection_k=3)
     for _ in range(10):
         h.on_after_tool(_StubAfterToolEvent(tool_use={"name": "skills"}))
     action = _run_steer(h, {"name": "peek_file"})
     assert isinstance(action, Proceed)
 
 
-def test_short_plan_steer_parses_reflection_json_into_handler() -> None:
-    h = ShortPlanSteerHandler(macro_reflection_k=1)
+def test_sprint_tool_call_records_reflection_into_handler() -> None:
+    h = SprintSteerHandler(macro_reflection_k=1)
     h.on_after_tool(_StubAfterToolEvent(tool_use={"name": "peek_file"}))
     action = _run_steer(h, {"name": "peek_file"})
     assert isinstance(action, Guide)
-    response_text = (
-        '{"global_status": "ON_TRACK", "should_submit": false, '
-        '"potential_answer": "approximately 1.2M orders", '
-        '"answer_confidence": "medium", '
-        '"short_forward_plan": ["turns 1-2: peek X", "turns 3-5: query Y"]}'
+    result = sprint(
+        kind="cadence",
+        global_status="ON_TRACK",
+        should_submit=False,
+        potential_answer="approximately 1.2M orders",
+        answer_confidence="medium",
+        short_forward_plan=["turns 1-2: peek X", "turns 3-5: query Y"],
+        tool_context=_sprint_context(),
     )
-    h.on_after_model(
-        _StubAfterModelEvent(stop_response=_StubStopResponse(_assistant_message(response_text)))
-    )
+    assert result == "Sprint recorded."
     assert h.last_reflection is not None
     assert h.last_reflection["global_status"] == "ON_TRACK"
     assert h.last_reflection["potential_answer"] == "approximately 1.2M orders"
@@ -147,76 +154,74 @@ def test_short_plan_steer_parses_reflection_json_into_handler() -> None:
 def test_describe_for_dashboard_includes_candidate_answer_after_reflection() -> None:
     """Once a reflection has produced potential_answer + answer_confidence,
     the dashboard render should surface them on a candidate_answer line."""
-    h = ShortPlanSteerHandler(macro_reflection_k=1)
+    h = SprintSteerHandler(macro_reflection_k=1)
     h.on_after_tool(_StubAfterToolEvent(tool_use={"name": "peek_file"}))
     _run_steer(h, {"name": "peek_file"})
-    response_text = (
-        '{"global_status": "ON_TRACK", "should_submit": false, '
-        '"potential_answer": "1.2M", "answer_confidence": "medium", '
-        '"short_forward_plan": ["turns 1-2: x"]}'
-    )
-    h.on_after_model(
-        _StubAfterModelEvent(stop_response=_StubStopResponse(_assistant_message(response_text)))
+    sprint(
+        kind="cadence",
+        global_status="ON_TRACK",
+        should_submit=False,
+        potential_answer="1.2M",
+        answer_confidence="medium",
+        short_forward_plan=["turns 1-2: x"],
+        tool_context=_sprint_context(),
     )
     description = h.describe_for_dashboard()
     assert "candidate_answer: 1.2M" in description
     assert "answer_confidence: medium" in description
 
 
-def test_short_plan_steer_resets_after_reflection() -> None:
-    h = ShortPlanSteerHandler(macro_reflection_k=2)
+def test_sprint_steer_resets_after_tool_call() -> None:
+    h = SprintSteerHandler(macro_reflection_k=2)
     for _ in range(2):
         h.on_after_tool(_StubAfterToolEvent(tool_use={"name": "peek_file"}))
     action = _run_steer(h, {"name": "peek_file"})
     assert isinstance(action, Guide)
-    h.on_after_model(
-        _StubAfterModelEvent(
-            stop_response=_StubStopResponse(
-                _assistant_message('{"global_status": "ON_TRACK", "should_submit": false, "short_forward_plan": []}')
-            )
-        )
+    sprint(
+        kind="cadence",
+        global_status="ON_TRACK",
+        should_submit=False,
+        potential_answer=None,
+        answer_confidence="low",
+        short_forward_plan=[],
+        tool_context=_sprint_context(),
     )
     h.on_after_tool(_StubAfterToolEvent(tool_use={"name": "peek_file"}))
     action2 = _run_steer(h, {"name": "peek_file"})
     assert isinstance(action2, Proceed)
 
 
-def _send_source_contract(handler: ShortPlanSteerHandler, source: str, budget: int) -> None:
-    handler.on_after_model(
-        _StubAfterModelEvent(
-            stop_response=_StubStopResponse(
-                _assistant_message(
-                    '{"current_source": "'
-                    + source
-                    + '", "commitment_goal": "find enrollment count", '
-                    + f'"max_source_calls": {budget}, '
-                    + '"success_condition": "query returns count"}'
-                )
-            )
-        )
+def _send_source_contract(handler: SprintSteerHandler, source: str, budget: int) -> None:
+    sprint(
+        kind="commitment_contract",
+        current_source=source,
+        commitment_goal="find enrollment count",
+        max_source_calls=budget,
+        success_condition="query returns count",
+        tool_context=_sprint_context(),
     )
 
 
-def test_source_budget_requests_contract_on_first_source_tool() -> None:
-    h = ShortPlanSteerHandler(
+def test_commitment_requests_contract_on_first_source_tool() -> None:
+    h = SprintSteerHandler(
         macro_reflection_k=5,
-        short_plan_mode="source_budget",
-        source_budget_calls=3,
+        sprint_mode="commitment",
+        commitment_budget_calls=3,
     )
     action = _run_steer(
         h,
         {"name": "peek_file", "input": {"dataset_id": "schools"}},
     )
     assert isinstance(action, Guide)
-    assert "source budget contract" in action.reason.lower()
+    assert "commitment contract" in action.reason.lower()
     assert "schools" in action.reason
 
 
-def test_source_budget_blocks_additional_tool_calls_while_contract_pending() -> None:
-    h = ShortPlanSteerHandler(
+def test_commitment_blocks_non_sprint_tools_while_contract_pending() -> None:
+    h = SprintSteerHandler(
         macro_reflection_k=5,
-        short_plan_mode="source_budget",
-        source_budget_calls=3,
+        sprint_mode="commitment",
+        commitment_budget_calls=3,
     )
     first = _run_steer(
         h,
@@ -236,37 +241,17 @@ def test_source_budget_blocks_additional_tool_calls_while_contract_pending() -> 
         {"name": "submit_answer", "input": {"answer": "0"}},
     )
     assert isinstance(submit, Guide)
-    assert "no tool calls" in submit.reason.lower()
+    assert "call the sprint tool" in submit.reason.lower()
+
+    allowed = _run_steer(h, {"name": "sprint", "input": {"kind": "commitment_contract"}})
+    assert isinstance(allowed, Proceed)
 
 
-def test_source_budget_empty_model_response_keeps_contract_pending() -> None:
-    h = ShortPlanSteerHandler(
+def test_commitment_tool_contract_allows_retry() -> None:
+    h = SprintSteerHandler(
         macro_reflection_k=5,
-        short_plan_mode="source_budget",
-        source_budget_calls=3,
-    )
-    first = _run_steer(
-        h,
-        {"name": "read_file", "input": {"dataset_id": "schools"}},
-    )
-    assert isinstance(first, Guide)
-    h.on_after_model(
-        _StubAfterModelEvent(stop_response=_StubStopResponse(_assistant_message("")))
-    )
-
-    second = _run_steer(
-        h,
-        {"name": "read_file", "input": {"dataset_id": "schools"}},
-    )
-    assert isinstance(second, Guide)
-    assert "still pending" in second.reason.lower()
-
-
-def test_source_budget_parses_contract_and_allows_retry() -> None:
-    h = ShortPlanSteerHandler(
-        macro_reflection_k=5,
-        short_plan_mode="source_budget",
-        source_budget_calls=3,
+        sprint_mode="commitment",
+        commitment_budget_calls=3,
     )
     _run_steer(h, {"name": "peek_file", "input": {"dataset_id": "schools"}})
     _send_source_contract(h, "schools", 2)
@@ -281,11 +266,11 @@ def test_source_budget_parses_contract_and_allows_retry() -> None:
     assert h.source_session.max_source_calls == 2
 
 
-def test_source_budget_guides_when_session_budget_exhausted() -> None:
-    h = ShortPlanSteerHandler(
+def test_commitment_guides_when_session_budget_exhausted() -> None:
+    h = SprintSteerHandler(
         macro_reflection_k=5,
-        short_plan_mode="source_budget",
-        source_budget_calls=2,
+        sprint_mode="commitment",
+        commitment_budget_calls=2,
     )
     _run_steer(h, {"name": "peek_file", "input": {"dataset_id": "schools"}})
     _send_source_contract(h, "schools", 2)
@@ -301,11 +286,11 @@ def test_source_budget_guides_when_session_budget_exhausted() -> None:
     assert "next_action" in action.reason
 
 
-def test_source_budget_guides_before_source_switch() -> None:
-    h = ShortPlanSteerHandler(
+def test_commitment_guides_before_source_switch() -> None:
+    h = SprintSteerHandler(
         macro_reflection_k=5,
-        short_plan_mode="source_budget",
-        source_budget_calls=3,
+        sprint_mode="commitment",
+        commitment_budget_calls=3,
     )
     _run_steer(h, {"name": "peek_file", "input": {"dataset_id": "schools"}})
     _send_source_contract(h, "schools", 3)
@@ -321,30 +306,26 @@ def test_source_budget_guides_before_source_switch() -> None:
     assert "libraries" in action.reason
 
 
-def test_source_budget_reflection_can_extend_current_source() -> None:
-    h = ShortPlanSteerHandler(
+def test_commitment_reflection_can_extend_current_source() -> None:
+    h = SprintSteerHandler(
         macro_reflection_k=5,
-        short_plan_mode="source_budget",
-        source_budget_calls=1,
+        sprint_mode="commitment",
+        commitment_budget_calls=1,
     )
     _run_steer(h, {"name": "peek_file", "input": {"dataset_id": "schools"}})
     _send_source_contract(h, "schools", 1)
     h.on_after_tool(_StubAfterToolEvent(tool_use={"name": "peek_file", "input": {"dataset_id": "schools"}}))
     _run_steer(h, {"name": "query_file", "input": {"dataset_id": "schools"}})
-    h.on_after_model(
-        _StubAfterModelEvent(
-            stop_response=_StubStopResponse(
-                _assistant_message(
-                    '{"current_source": "schools", '
-                    '"calls_used": 1, '
-                    '"commitment_goal": "find enrollment count", '
-                    '"evidence_gained": "found schema", '
-                    '"remaining_gap": "need count", '
-                    '"next_action": "continue_source", '
-                    '"revised_budget": 2}'
-                )
-            )
-        )
+    sprint(
+        kind="commitment_reflection",
+        current_source="schools",
+        calls_used=1,
+        commitment_goal="find enrollment count",
+        evidence_gained="found schema",
+        remaining_gap="need count",
+        next_action="continue_source",
+        revised_budget=2,
+        tool_context=_sprint_context(),
     )
     assert h.source_session is not None
     assert h.source_session.max_source_calls == 3
@@ -392,18 +373,18 @@ def test_dashboard_does_not_inject_messages_on_its_own() -> None:
 
 
 # ---------------------------------------------------------------------------
-# ShortPlanSteerHandler + dashboard peer
+# SprintSteerHandler + dashboard peer
 # ---------------------------------------------------------------------------
 
 
-def test_short_plan_guide_reason_includes_dashboard_when_peer_wired() -> None:
-    """At the k-turn boundary, the Guide reason should be dashboard text + JSON instruction."""
+def test_sprint_guide_reason_includes_dashboard_when_peer_wired() -> None:
+    """At the k-turn boundary, the Guide reason should be dashboard text + sprint instruction."""
     dashboard = StateOfTaskDashboardPlugin(max_tool_calls=10)
     dashboard.on_after_tool(_StubAfterToolEvent(tool_use={"name": "peek_file"}))
     dashboard.on_after_model(
         _StubAfterModelEvent(stop_response=_StubStopResponse(_assistant_message("confidence: medium")))
     )
-    handler = ShortPlanSteerHandler(macro_reflection_k=2)
+    handler = SprintSteerHandler(macro_reflection_k=2)
     handler.dashboard_plugin = dashboard
 
     for _ in range(2):
@@ -411,7 +392,7 @@ def test_short_plan_guide_reason_includes_dashboard_when_peer_wired() -> None:
 
     action = _run_steer(handler, {"name": "peek_file"})
     assert isinstance(action, Guide)
-    # Dashboard text appears first, then the JSON instruction.
+    # Dashboard text appears first, then the sprint-tool instruction.
     state_idx = action.reason.find("State of Task")
     json_idx = action.reason.find("Pause tool calls")
     assert state_idx >= 0

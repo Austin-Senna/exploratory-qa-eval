@@ -2,7 +2,7 @@
 
 Wraps the baseline `peek_file` tool from `strands_evaluation` and merges in a
 `profile` field populated from the precomputed profile cache. When the
-`results_apis` SANA flag is on, this tool replaces the baseline `peek_file`
+`results` SANA flag is on, this tool replaces the baseline `peek_file`
 in the agent's tool list.
 
 Baseline strands_evaluation has zero awareness of profiles — all enrichment

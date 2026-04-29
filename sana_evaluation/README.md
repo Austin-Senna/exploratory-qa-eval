@@ -8,23 +8,23 @@ A SoK-aligned runtime-control framework layered on top of the `strands_evaluatio
 
 Three opt-in flags, all default off. Validated by `SanaFlags.validate(agent_management=...)` at startup.
 
-| Flag           | What it does                                                                     | Dependencies                                  |
-|----------------|----------------------------------------------------------------------------------|-----------------------------------------------|
-| `short_plan`   | k-turn sprint reflection + bundled state-of-task readout + candidate-answer fields | `agent_management ∈ {standard, ideal}`        |
-| `CoT`          | Structured pre/post tool-use records                                             | —                                             |
-| `results_apis` | `peek_file` returns a `profile` field (column stats, top rows, llm_description)  | —                                             |
+| Flag      | What it does                                                                    | Dependencies                           |
+|-----------|---------------------------------------------------------------------------------|----------------------------------------|
+| `sprint`  | k-turn sprint reflection or source commitment control, submitted with a tool    | `agent_management ∈ {standard, ideal}` |
+| `cot`     | Structured pre/post tool-use records                                            | —                                      |
+| `results` | `peek_file` returns a `profile` field (column stats, top rows, llm_description) | —                                      |
 
-Two earlier flags have been folded into `short_plan`:
+Two earlier flags have been folded into `sprint`:
 - The state-of-task readout (formerly `dashboard`) renders inside the reflection Guide reason.
-- Candidate-answer + answer-confidence fields (formerly `confidence_advisory`) are part of every reflection JSON.
+- Candidate-answer + answer-confidence fields (formerly `confidence_advisory`) are part of every sprint record.
 
 CLI:
 
 ```bash
 python -m sana_evaluation.run_sana_eval \
   --search-tool preloaded --search-results ideal --agent-management standard \
-  --sana-feature short_plan --sana-feature CoT --sana-feature results_apis \
-  --macro-reflection-k 5 \
+  --sana-feature sprint --sana-feature cot --sana-feature results \
+  --sprint-mode commitment --commitment-budget-calls 3 \
   --task-set tasks_mini --model gpt-5.4-nano
 ```
 
@@ -37,10 +37,10 @@ python -m sana_evaluation.run_sana_eval \
 | Hook                    | What SANA does with it                                                                 |
 |-------------------------|----------------------------------------------------------------------------------------|
 | `_pre_build_setup`      | No-op (currently). Reserved for runtime toggles.                                       |
-| `_extra_prompt_text`    | Appends `cot_block` / `short_plan_block` per active flag                               |
-| `_extra_plugins`        | Adds `CoTPostRecordPlugin`, `ShortPlanSteerHandler`, `StateOfTaskDashboardPlugin`      |
+| `_extra_prompt_text`    | Appends `cot_block` / `sprint_block` per active flag                                   |
+| `_extra_plugins`        | Adds `CoTPostRecordPlugin`, `SprintSteerHandler`, `StateOfTaskDashboardPlugin`         |
 | `_conversation_manager` | Returns a `SummarizingConversationManager` with the SANA-tuned summarization prompt    |
-| `_decorate_tools`       | Swaps baseline `peek_file` with SANA's profile-aware wrapper when `results_apis=on`    |
+| `_decorate_tools`       | Swaps baseline `peek_file` when `results=on`, and adds `sprint` when `sprint=on`       |
 
 `SanaBatchRunner` (in `sana_runner.py`) is just `BatchRunner` with `_AGENT_CLASS = SanaDataLakeAgent`.
 
@@ -50,7 +50,7 @@ python -m sana_evaluation.run_sana_eval \
 
 ## Per-primitive implementation
 
-### `CoT` — structured tool-use records
+### `cot` — structured tool-use records
 
 **Prompt** — `prompts/cot.py:cot_block(search_tool)`
 
@@ -66,49 +66,43 @@ The pre-record stays in the system prompt only — its compliance is naturally h
 
 ---
 
-### `short_plan` — k-turn sprint reflection (with state-of-task readout + candidate answer)
+### `sprint` — tool-submitted sprint reflection and source commitments
 
-**Prompt** — `prompts/short_plan.py:short_plan_block(search_tool)`
+**Prompt** — `prompts/sprint.py:sprint_block(search_tool)`
 
-Tells the agent that every k non-administrative tool calls, the next tool call is cancelled and a Guide-style synthetic result will arrive containing:
+Tells the agent that every k non-administrative tool calls, or at source commitment boundaries, the next tool call is cancelled and a Guide-style synthetic result will arrive containing:
 1. A state-of-task readout (turn count, plan progress, candidate answer, confidence trend, evidence consumed).
-2. An instruction to emit a single JSON object with the new richer schema:
-   ```json
-   {
-     "global_status": "ON_TRACK" | "NEEDS_REPLAN" | "ANSWER_READY",
-     "should_submit": true | false,
-     "potential_answer": "<best current candidate, or null>",
-     "answer_confidence": "low" | "medium" | "high",
-     "short_forward_plan": [
-       "turns 1-2: peek X, check schema",
-       "turns 3-5: query Y, validate vs expected"
-     ]
-   }
-   ```
+2. An instruction to call the `sprint` tool. The model must call that tool before any data tool or `submit_answer`.
 
-`short_forward_plan` is turn-budgeted free-text strings — each entry is prefixed with a turn range and covers actions for that range. The total plan covers up to k turns (one sprint ahead). `potential_answer` and `answer_confidence` capture the agent's current best answer + how confident it is in that answer (distinct from the per-tool-call `confidence` in CoT records).
+The sprint tool records the current sprint and upserts a persistent `## CURRENT SPRINT` section into the agent's system prompt after `## CURRENT PLAN`. This keeps the reflection inside the agent's durable working context without creating a text-only assistant turn.
 
-**Plugin** — `plugins/short_plan_plugin.py:ShortPlanSteerHandler`
+Cadence sprint fields: `kind="cadence"`, `global_status`, `should_submit`, `potential_answer`, `answer_confidence`, `short_forward_plan`.
 
-Subclass of Strands' `SteeringHandler`. Counts non-administrative tool calls. On the k-th call, `steer_before_tool` returns `Guide(reason=...)` which:
+Commitment fields:
+- `kind="commitment_contract"`: `current_source`, `commitment_goal`, `max_source_calls`, `success_condition`.
+- `kind="commitment_reflection"`: `current_source`, `calls_used`, `commitment_goal`, `evidence_gained`, `remaining_gap`, `next_action`, `revised_budget`.
+
+**Plugin** — `plugins/sprint_plugin.py:SprintSteerHandler`
+
+Subclass of Strands' `SteeringHandler`. Counts non-administrative tool calls or source-session calls. When a sprint is due, `steer_before_tool` returns `Guide(reason=...)` which:
 - cancels the tool the model just tried to call,
 - feeds the reason text back as a synthetic tool result,
-- does **not** consume an extra agent turn — the cancelled tool's slot becomes the reflection slot.
+- blocks all tools except `sprint` until the sprint tool succeeds.
 
-After the model produces its JSON-only response, `on_after_model` parses the JSON and stores it in `self.last_reflection`. Internal state resets (`_tool_calls_since_reflection = 0`) so the next sprint begins.
+After the model calls `sprint`, the tool updates shared sprint state, refreshes `## CURRENT SPRINT`, and clears the pending gate so normal tool use can resume.
 
-Excluded tools (don't advance the sprint counter, don't get cancelled): `plan`, `plan_ideal`, `skills`, `summarize_context`, `submit_answer`.
+Excluded tools (don't advance the sprint counter): `plan`, `plan_ideal`, `skills`, `summarize_context`, `submit_answer`, `sprint`.
 
 **Peer plugin** — `plugins/dashboard_plugin.py:StateOfTaskDashboardPlugin`
 
-Always wired alongside `ShortPlanSteerHandler` when `short_plan=on`. The plugin observes runtime state but does not inject any messages on its own:
+Always wired alongside `SprintSteerHandler` when `sprint=on`. The plugin observes runtime state but does not inject any messages on its own:
 - `on_after_tool` increments a tool-call ledger (excludes admin tools).
 - `on_after_model` regex-parses the assistant CoT text for `confidence: low|medium|high` (3-deep deque) and `sufficient_to_call_step_complete: true|false` (bumps complete/incomplete counters).
 - `render_block()` formats those signals into:
   ```
   [State of Task — Turn 5 / 30]
   long_plan: 2 step(s) marked complete, 1 step(s) flagged incomplete
-  short_plan: step 1/3 (turns 1-2: peek customer_orders) | status: ON_TRACK | reflections: 1
+  sprint: cadence | status: ON_TRACK | reflections: 1
   candidate_answer: 1.2M | answer_confidence: medium
   confidence (last 3): low, low, medium
   evidence: 5 tool call(s) consumed
@@ -116,11 +110,11 @@ Always wired alongside `ShortPlanSteerHandler` when `short_plan=on`. The plugin 
 
 The `candidate_answer` line appears once a reflection has produced `potential_answer` + `answer_confidence` (i.e. from the second sprint onward).
 
-`ShortPlanSteerHandler.steer_before_tool` calls `self.dashboard_plugin.render_block()` when triggering the k-th-call Guide and prepends it to the JSON-emit instruction. Read-then-act layout.
+`SprintSteerHandler.steer_before_tool` calls `self.dashboard_plugin.render_block()` when triggering a Guide and prepends it to the sprint-tool instruction. Read-then-act layout.
 
 ---
 
-### `results_apis` — `peek_file` profile enrichment
+### `results` — `peek_file` profile enrichment
 
 **No system prompt block.** The information is documented in the wrapped `peek_file`'s docstring — the baseline tool's docstring does not mention profiles, the SANA wrapper's does.
 
@@ -128,7 +122,7 @@ The `candidate_answer` line appears once a reflection has produced `potential_an
 
 A `@tool`-decorated function whose body delegates to `_baseline_peek_file._tool_func(...)` and then attaches a `profile` field to the result when one can be loaded for the URI. The wrapper docstring tells the agent that `peek_file` returns column statistics, top rows, and an LLM-generated description.
 
-`SanaDataLakeAgent._decorate_tools` swaps the baseline `peek_file` for the SANA wrapper when `results_apis=on` (identified by `tool_name == "peek_file"`).
+`SanaDataLakeAgent._decorate_tools` swaps the baseline `peek_file` for the SANA wrapper when `results=on` (identified by `tool_name == "peek_file"`).
 
 **Profile loader** — `helper/peek_profile.py:load_dataset_profile(s3_uri)`
 
@@ -145,7 +139,7 @@ Returns `None` softly if no profile can be assembled; `peek_file` then omits the
 When any SANA flag is active, `SanaDataLakeAgent` returns a `SummarizingConversationManager` wired with `SANA_SUMMARIZATION_PROMPT`.
 
 The prompt tells the summarization LLM to:
-- **Preserve verbatim**: the original user question, the plan emitted by `plan_ideal`/`plan_agent`, and the most recent macro-reflection JSON.
+- **Preserve verbatim**: the original user question, the plan emitted by `plan_ideal`/`plan_agent`, and the most recent `## CURRENT SPRINT` section.
 - **Render plan progress as a checklist**: walk through the preserved plan and mark each bullet with `✓` (done — bullet appeared before the most recent `current_step` line), `▸` (in progress — the `current_step` value), or `☐` (pending — bullets after `current_step`). Cross-checks `sufficient_to_call_step_complete: true` lines for explicit completions.
 - Summarize technical findings, failed approaches, and best current answer candidate alongside.
 
@@ -164,19 +158,20 @@ sana_evaluation/
   sana_config.py                        SanaRunConfig = RunConfig + sana_flags field
   run_sana_eval.py                      CLI entrypoint
   data/
-    datagov_tables_profiles.jsonl       Precomputed profiles for results_apis
+    datagov_tables_profiles.jsonl       Precomputed profiles for results
   helper/
     conversation.py                     SANA-tuned SummarizingConversationManager
     peek_profile.py                     Profile loader (precomputed + legacy fallback)
   plugins/
-    short_plan_plugin.py                ShortPlanSteerHandler (SteeringHandler.Guide)
+    sprint_plugin.py                    SprintSteerHandler (SteeringHandler.Guide)
     dashboard_plugin.py                 StateOfTaskDashboardPlugin (observe + render_block)
     cot_post_record_plugin.py           CoTPostRecordPlugin (AfterToolCallEvent.result mutation)
   prompts/
-    short_plan.py                       short_plan_block (reflection JSON + state-of-task readout)
+    sprint.py                           sprint_block (sprint tool + state-of-task readout)
     cot.py                              cot_block (pre/post-tool record schema)
   tools/
     peek_file_with_profile.py           SANA's @tool peek_file wrapping baseline + profile attach
+    sprint_tool.py                      SANA's @tool sprint persistent reflection
   tests/
     test_flags.py
     test_prompts.py
@@ -184,7 +179,7 @@ sana_evaluation/
     test_conversation.py
     test_decorate_tools.py
     test_peek_profile.py
-    test_results_apis_docstring.py
+    test_results_docstring.py
 ```
 
 ---
@@ -192,6 +187,6 @@ sana_evaluation/
 ## Design conventions
 
 - **No "SANA" vocabulary in agent-facing prompts.** Empirically confusing. Tests assert this.
-- **Prompt blocks live in the cached system prefix.** Per-task content (plan, dashboard) goes through tool results / steering Guide reasons / `BeforeModelCallEvent`-injected user messages — never the system prompt.
-- **Compliance via channel choice.** Behavior the model must follow on every turn goes in the system prompt (cached). High-priority interrupts go through `AfterToolCallEvent.result` mutation (CoT post-records) or `SteeringHandler.Guide` (k-turn reflection). Both are higher-attention channels than system rules.
+- **Prompt blocks live in the cached system prefix.** Agent-authored persistent state is limited to `## CURRENT PLAN` and `## CURRENT SPRINT`, both written by tools.
+- **Compliance via channel choice.** Behavior the model must follow on every turn goes in the system prompt (cached). High-priority interrupts go through `AfterToolCallEvent.result` mutation (CoT post-records) or `SteeringHandler.Guide` (sprint gating). Both are higher-attention channels than system rules.
 - **Baseline isolation.** `strands_evaluation/` knows nothing about SANA. The SANA module imports the baseline. The five `_*` extension hooks on `DataLakeAgent` are generic — they don't carry any SANA-specific names or data.
