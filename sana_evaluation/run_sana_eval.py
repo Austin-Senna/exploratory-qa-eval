@@ -47,8 +47,6 @@ _SANA_FEATURE_LETTERS = {
     "short_plan": "sp",
     "CoT": "cot",
     "results_apis": "ra",
-    "confidence_advisory": "ca",
-    "dashboard": "db",
 }
 
 
@@ -72,7 +70,7 @@ def _variant_condition_label(
         parts.append(f"sc{search_calls}")
     sana_letters = [
         _SANA_FEATURE_LETTERS[name]
-        for name in ("short_plan", "CoT", "results_apis", "confidence_advisory", "dashboard")
+        for name in ("short_plan", "CoT", "results_apis")
         if getattr(sana_flags, name)
     ]
     if sana_letters:
@@ -278,10 +276,12 @@ def main() -> None:
         "--sana-feature",
         action="append",
         default=[],
-        choices=sorted({"short_plan", "CoT", "results_apis", "confidence_advisory", "dashboard"}),
+        choices=sorted({"short_plan", "CoT", "results_apis"}),
         help=(
             "Enable a SANA feature. Repeat for multiple features. "
-            "Options: short_plan, CoT, results_apis, confidence_advisory, dashboard."
+            "Options: short_plan, CoT, results_apis. "
+            "(State-of-task readout, candidate-answer, and answer-confidence are "
+            "automatically bundled into short_plan's k-turn reflection.)"
         ),
     )
     parser.add_argument(

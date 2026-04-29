@@ -14,12 +14,25 @@ def test_default_all_off() -> None:
 
 
 def test_from_feature_names_basic() -> None:
-    flags = SanaFlags.from_feature_names(["CoT", "dashboard"])
+    flags = SanaFlags.from_feature_names(["CoT", "results_apis"])
     assert flags.CoT is True
-    assert flags.dashboard is True
+    assert flags.results_apis is True
     assert flags.short_plan is False
     assert "CoT" in flags.active_features()
-    assert "dashboard" in flags.active_features()
+    assert "results_apis" in flags.active_features()
+
+
+def test_from_feature_names_dashboard_no_longer_valid() -> None:
+    """The `dashboard` flag was removed; readout is now bundled into short_plan."""
+    with pytest.raises(ValueError, match="Unknown SANA feature"):
+        SanaFlags.from_feature_names(["dashboard"])
+
+
+def test_from_feature_names_confidence_advisory_no_longer_valid() -> None:
+    """The `confidence_advisory` flag was removed; potential_answer + answer_confidence
+    are now part of every k-turn reflection JSON instead."""
+    with pytest.raises(ValueError, match="Unknown SANA feature"):
+        SanaFlags.from_feature_names(["confidence_advisory"])
 
 
 def test_from_feature_names_unknown_raises() -> None:
@@ -37,17 +50,6 @@ def test_short_plan_ok_with_standard() -> None:
     flags = SanaFlags(short_plan=True)
     flags.validate(agent_management="standard")
     flags.validate(agent_management="ideal")
-
-
-def test_confidence_advisory_requires_cot() -> None:
-    flags = SanaFlags(confidence_advisory=True, CoT=False)
-    with pytest.raises(ValueError, match="confidence_advisory requires CoT"):
-        flags.validate(agent_management="naive")
-
-
-def test_confidence_advisory_ok_with_cot() -> None:
-    flags = SanaFlags(confidence_advisory=True, CoT=True)
-    flags.validate(agent_management="naive")
 
 
 def test_macro_reflection_k_must_be_positive() -> None:

@@ -1,16 +1,17 @@
-"""StateOfTaskDashboardPlugin — composes per-turn state-of-task block.
+"""StateOfTaskDashboardPlugin — observes runtime state, renders on demand.
 
-Inject point: BeforeModelCallEvent. The plugin appends a user-role message to
-`event.agent.messages` containing the rendered dashboard block. The first model
-call (which carries the user's actual question) is skipped.
+The plugin tracks turn count, confidence trend, tool-call ledger, and plan-step
+completion via Strands hooks. It does NOT inject any messages on its own.
+`render_block()` returns the formatted readout for a peer plugin (currently
+`ShortPlanSteerHandler`) to surface at reflection time.
 
 State sources:
-  - turn counter: incremented on each model call
   - confidence history: parsed from assistant CoT records on AfterModelCallEvent
   - tool-call ledger: incremented on AfterToolCallEvent
   - long_plan progress: parsed from `sufficient_to_call_step_complete` flags
-  - short_plan progress: read from a peer ShortPlanPlugin if available
-  - advisory text: read from a peer ConfidenceAdvisoryPlugin if available
+  - short_plan progress: read from a peer ShortPlanSteerHandler if available
+    (its describe_for_dashboard() returns the active step + last reflection's
+    candidate_answer + answer_confidence)
 """
 
 from __future__ import annotations
@@ -25,7 +26,6 @@ from strands.hooks import (
     AfterModelCallEvent,
     AfterToolCallEvent,
     AgentInitializedEvent,
-    BeforeModelCallEvent,
 )
 from strands.plugins import hook
 
@@ -53,7 +53,7 @@ def _extract_assistant_text(message: Any) -> str:
 
 
 class StateOfTaskDashboardPlugin(Plugin):
-    """Compose and inject a per-turn state-of-task block."""
+    """Observe runtime state; render a state-of-task block on demand."""
 
     name = "sana-dashboard"
 
@@ -63,16 +63,14 @@ class StateOfTaskDashboardPlugin(Plugin):
         self._history_window = max(int(history_window), 1)
         self._reset()
 
-        # Peer-plugin references (set externally by sana_bundle when both are wired).
+        # Peer-plugin reference (set externally by sana_bundle when both are wired).
         self.short_plan_plugin: Optional[Any] = None
-        self.confidence_advisory_plugin: Optional[Any] = None
 
     # ------------------------------------------------------------------
     # Lifecycle / state
     # ------------------------------------------------------------------
 
     def _reset(self) -> None:
-        self._model_call_count = 0
         self._tool_call_count = 0
         self._step_completes = 0
         self._step_incompletes = 0
@@ -111,29 +109,16 @@ class StateOfTaskDashboardPlugin(Plugin):
                 self._step_incompletes += 1
 
     # ------------------------------------------------------------------
-    # Injection
+    # Rendering (called by peer plugin at reflection time)
     # ------------------------------------------------------------------
 
-    @hook
-    def on_before_model(self, event: BeforeModelCallEvent) -> None:
-        self._model_call_count += 1
-        if self._model_call_count <= 1:
-            return  # First model call carries the user's actual question; no dashboard.
+    def render_block(self) -> str:
+        """Compose and return the state-of-task readout as a string.
 
-        block = self._render_block()
-        try:
-            event.agent.messages.append(
-                {"role": "user", "content": [{"text": block}]}
-            )
-        except Exception as exc:  # pragma: no cover — defensive
-            logger.warning("Dashboard injection failed: %s", exc)
-
-    # ------------------------------------------------------------------
-    # Rendering
-    # ------------------------------------------------------------------
-
-    def _render_block(self) -> str:
-        turn_label = f"{self._model_call_count} / {self._max_tool_calls}"
+        Caller is responsible for surfacing it (typically prepended to the
+        ShortPlanSteerHandler reflection Guide reason).
+        """
+        turn_label = f"{self._tool_call_count} / {self._max_tool_calls}"
         history = list(self._confidence_history) or ["—"]
         confidence_str = ", ".join(history)
 
@@ -147,12 +132,6 @@ class StateOfTaskDashboardPlugin(Plugin):
 
         evidence_line = f"evidence: {self._tool_call_count} tool call(s) consumed"
 
-        advisory_line: Optional[str] = None
-        if self.confidence_advisory_plugin is not None:
-            advisory_text = self.confidence_advisory_plugin.consume_pending_advisory()
-            if advisory_text:
-                advisory_line = f"advisory: {advisory_text}"
-
         lines = [
             f"[State of Task — Turn {turn_label}]",
             long_plan_line,
@@ -161,8 +140,6 @@ class StateOfTaskDashboardPlugin(Plugin):
             lines.append(short_plan_line)
         lines.append(f"confidence (last {self._history_window}): {confidence_str}")
         lines.append(evidence_line)
-        if advisory_line:
-            lines.append(advisory_line)
         return "\n".join(lines)
 
 

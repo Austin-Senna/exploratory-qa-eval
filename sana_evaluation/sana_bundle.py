@@ -17,15 +17,12 @@ from strands_evaluation.config import AgentConfig, RunConfig
 from sana_evaluation.helper.conversation import build_sana_conversation_manager
 from sana_evaluation.flags import SanaFlags
 from sana_evaluation.plugins import (
-    ConfidenceAdvisoryPlugin,
     CoTPostRecordPlugin,
     ShortPlanSteerHandler,
     StateOfTaskDashboardPlugin,
 )
 from sana_evaluation.prompts import (
-    confidence_advisory_block,
     cot_block,
-    dashboard_block,
     short_plan_block,
 )
 
@@ -81,16 +78,11 @@ class SanaDataLakeAgent(DataLakeAgent):
         if not flags.any_active():
             return ""
         st = (search_tool_mode or "naive").strip().lower()
-        dashboard_active = bool(flags.dashboard)
         parts: List[str] = []
         if flags.CoT:
-            parts.append(cot_block(st, dashboard_active))
+            parts.append(cot_block(st))
         if flags.short_plan:
-            parts.append(short_plan_block(st, dashboard_active))
-        if flags.confidence_advisory:
-            parts.append(confidence_advisory_block(st, dashboard_active))
-        if flags.dashboard:
-            parts.append(dashboard_block(st, dashboard_active))
+            parts.append(short_plan_block(st))
         # results_apis: no system-prompt block — the peek_file docstring already
         # documents the `profile` field. The flag toggles the profile loader
         # callback at runtime in _pre_build_setup.
@@ -106,7 +98,6 @@ class SanaDataLakeAgent(DataLakeAgent):
         if not flags.any_active():
             return []
 
-        st = (search_tool_mode or "naive").strip().lower()
         plugins: List[Any] = []
 
         if flags.CoT:
@@ -119,20 +110,15 @@ class SanaDataLakeAgent(DataLakeAgent):
             )
             plugins.append(short_plan_plugin)
 
-        advisory_plugin: Optional[ConfidenceAdvisoryPlugin] = None
-        if flags.confidence_advisory:
-            advisory_plugin = ConfidenceAdvisoryPlugin(
-                search_tool=st,
-                dashboard_active=bool(flags.dashboard),
-            )
-            plugins.append(advisory_plugin)
-
-        if flags.dashboard:
+        # State-of-task readout is bundled with short_plan: when short_plan is on,
+        # always wire the dashboard plugin and have it surface its readout inside
+        # the k-turn reflection Guide reason (peer-wired into ShortPlanSteerHandler).
+        if short_plan_plugin is not None:
             dashboard_plugin = StateOfTaskDashboardPlugin(
                 max_tool_calls=int(self.run_config.max_tool_calls),
             )
             dashboard_plugin.short_plan_plugin = short_plan_plugin
-            dashboard_plugin.confidence_advisory_plugin = advisory_plugin
+            short_plan_plugin.dashboard_plugin = dashboard_plugin
             plugins.append(dashboard_plugin)
 
         return plugins

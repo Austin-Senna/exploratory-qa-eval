@@ -30,8 +30,11 @@ _REFLECTION_GUIDE_REASON = (
     "Schema: "
     '{"global_status": "ON_TRACK" | "NEEDS_REPLAN" | "ANSWER_READY", '
     '"should_submit": true | false, '
-    '"short_forward_plan": ["<step 1>", "<step 2>", "<step 3>"]}. '
-    "After the JSON is parsed, you resume tool calls normally."
+    '"potential_answer": "<best current candidate answer, or null>", '
+    '"answer_confidence": "low" | "medium" | "high", '
+    '"short_forward_plan": ['
+    '"turns 1-2: <actions>", "turns 3-5: <actions>"]}. '
+    "Plan entries cover the next k turns total. After the JSON is parsed, you resume tool calls normally."
 )
 
 _EXCLUDED_TOOLS = {
@@ -72,6 +75,10 @@ class ShortPlanSteerHandler(SteeringHandler):
         self._k = max(int(macro_reflection_k), 1)
         self._reset()
 
+        # Peer-plugin reference (set externally by sana_bundle when both are wired).
+        # When set, render_block() output is prepended to the reflection Guide reason.
+        self.dashboard_plugin: Optional[Any] = None
+
     def _reset(self) -> None:
         self._tool_calls_since_reflection = 0
         self._awaiting_reflection_response = False
@@ -108,7 +115,13 @@ class ShortPlanSteerHandler(SteeringHandler):
         ):
             self._awaiting_reflection_response = True
             self._tool_calls_since_reflection = 0
-            return Guide(reason=_REFLECTION_GUIDE_REASON)
+            reason = _REFLECTION_GUIDE_REASON
+            if self.dashboard_plugin is not None:
+                try:
+                    reason = self.dashboard_plugin.render_block() + "\n\n" + reason
+                except Exception as exc:  # pragma: no cover — defensive
+                    logger.warning("Dashboard render_block failed: %s", exc)
+            return Guide(reason=reason)
 
         return Proceed(reason="within sprint window")
 
@@ -160,10 +173,18 @@ class ShortPlanSteerHandler(SteeringHandler):
         plan = last.get("short_forward_plan") or []
         head = plan[0] if plan else "—"
         status = last.get("global_status", "—")
-        return (
+        lines = [
             f"short_plan: step 1/{len(plan) if plan else 0} ({head}) "
             f"| status: {status} | reflections: {self._reflections_done}"
-        )
+        ]
+        answer = last.get("potential_answer")
+        answer_conf = last.get("answer_confidence")
+        if answer or answer_conf:
+            lines.append(
+                f"candidate_answer: {answer or '—'} "
+                f"| answer_confidence: {answer_conf or '—'}"
+            )
+        return "\n".join(lines)
 
 
 __all__ = ["ShortPlanSteerHandler"]

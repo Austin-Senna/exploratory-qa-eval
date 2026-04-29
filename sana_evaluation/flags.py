@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Iterable, List
 
 
@@ -10,8 +10,6 @@ _VALID_FEATURE_NAMES = {
     "short_plan",
     "CoT",
     "results_apis",
-    "confidence_advisory",
-    "dashboard",
 }
 
 
@@ -19,16 +17,18 @@ _VALID_FEATURE_NAMES = {
 class SanaFlags:
     """Feature flags controlling which SANA primitives are active for a run.
 
-    All flags default to off. Two dependency rules are enforced by `validate()`:
+    All flags default to off. One dependency rule is enforced by `validate()`:
       - `short_plan` requires `agent_management` to be `standard` or `ideal`
-      - `confidence_advisory` requires `CoT=True`
+
+    The state-of-task readout (formerly the `dashboard` flag) is bundled into
+    `short_plan`'s k-turn reflection. `potential_answer` and `answer_confidence`
+    (formerly the `confidence_advisory` flag) are also part of every k-turn
+    reflection JSON — no separate plugin watches confidence trends.
     """
 
     short_plan: bool = False
     CoT: bool = False
     results_apis: bool = False
-    confidence_advisory: bool = False
-    dashboard: bool = False
 
     macro_reflection_k: int = 5
 
@@ -37,11 +37,6 @@ class SanaFlags:
             raise ValueError(
                 "SANA flag short_plan requires agent_management ∈ {standard, ideal}; "
                 f"got agent_management={agent_management!r}."
-            )
-        if self.confidence_advisory and not self.CoT:
-            raise ValueError(
-                "SANA flag confidence_advisory requires CoT=True (confidence is parsed from "
-                "the CoT post-record). Enable both or neither."
             )
         if self.macro_reflection_k <= 0:
             raise ValueError(

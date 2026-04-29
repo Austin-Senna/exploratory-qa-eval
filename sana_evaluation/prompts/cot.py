@@ -3,18 +3,14 @@
 from __future__ import annotations
 
 
-def cot_block(search_tool: str, dashboard_active: bool) -> str:
+def cot_block(search_tool: str) -> str:
     """Return the CoT primitive prompt block.
 
-    Adds a structured pre/post-tool record requirement. The post-record's
-    `sufficient_to_call_step_complete` is evaluated by downstream plugins;
-    `confidence` is read by ConfidenceAdvisoryPlugin when active.
+    Adds a structured pre/post-tool record requirement. The pre-record's
+    `confidence` field and the post-record's `sufficient_to_call_step_complete`
+    field are read by `StateOfTaskDashboardPlugin` (when short_plan is on) to
+    populate the reflection-time state-of-task readout.
     """
-    suppression_note = (
-        "" if dashboard_active else
-        "- Per-turn state context will appear inline at the start of each user turn.\n"
-    )
-
     return (
         "\n\n## STRUCTURED TOOL-USE RECORDS\n"
         "- Wrap every tool call in a structured record so the runtime can track step progress.\n"
@@ -33,7 +29,6 @@ def cot_block(search_tool: str, dashboard_active: bool) -> str:
         "sufficient_to_call_step_complete: <true|false>\n"
         "remaining_gap_if_not_complete: <one short sentence, or 'none'>\n"
         "Then continue with your next tool call or submit_answer.\n"
-        f"{suppression_note}"
     )
 
 
