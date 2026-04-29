@@ -181,6 +181,126 @@ def test_short_plan_steer_resets_after_reflection() -> None:
     assert isinstance(action2, Proceed)
 
 
+def _send_source_contract(handler: ShortPlanSteerHandler, source: str, budget: int) -> None:
+    handler.on_after_model(
+        _StubAfterModelEvent(
+            stop_response=_StubStopResponse(
+                _assistant_message(
+                    '{"current_source": "'
+                    + source
+                    + '", "commitment_goal": "find enrollment count", '
+                    + f'"max_source_calls": {budget}, '
+                    + '"success_condition": "query returns count"}'
+                )
+            )
+        )
+    )
+
+
+def test_source_budget_requests_contract_on_first_source_tool() -> None:
+    h = ShortPlanSteerHandler(
+        macro_reflection_k=5,
+        short_plan_mode="source_budget",
+        source_budget_calls=3,
+    )
+    action = _run_steer(
+        h,
+        {"name": "peek_file", "input": {"dataset_id": "schools"}},
+    )
+    assert isinstance(action, Guide)
+    assert "source budget contract" in action.reason.lower()
+    assert "schools" in action.reason
+
+
+def test_source_budget_parses_contract_and_allows_retry() -> None:
+    h = ShortPlanSteerHandler(
+        macro_reflection_k=5,
+        short_plan_mode="source_budget",
+        source_budget_calls=3,
+    )
+    _run_steer(h, {"name": "peek_file", "input": {"dataset_id": "schools"}})
+    _send_source_contract(h, "schools", 2)
+
+    action = _run_steer(
+        h,
+        {"name": "peek_file", "input": {"dataset_id": "schools"}},
+    )
+    assert isinstance(action, Proceed)
+    assert h.source_session is not None
+    assert h.source_session.current_source == "schools"
+    assert h.source_session.max_source_calls == 2
+
+
+def test_source_budget_guides_when_session_budget_exhausted() -> None:
+    h = ShortPlanSteerHandler(
+        macro_reflection_k=5,
+        short_plan_mode="source_budget",
+        source_budget_calls=2,
+    )
+    _run_steer(h, {"name": "peek_file", "input": {"dataset_id": "schools"}})
+    _send_source_contract(h, "schools", 2)
+    h.on_after_tool(_StubAfterToolEvent(tool_use={"name": "peek_file", "input": {"dataset_id": "schools"}}))
+    h.on_after_tool(_StubAfterToolEvent(tool_use={"name": "query_file", "input": {"dataset_id": "schools"}}))
+
+    action = _run_steer(
+        h,
+        {"name": "query_file", "input": {"dataset_id": "schools"}},
+    )
+    assert isinstance(action, Guide)
+    assert "source-session budget" in action.reason.lower()
+    assert "next_action" in action.reason
+
+
+def test_source_budget_guides_before_source_switch() -> None:
+    h = ShortPlanSteerHandler(
+        macro_reflection_k=5,
+        short_plan_mode="source_budget",
+        source_budget_calls=3,
+    )
+    _run_steer(h, {"name": "peek_file", "input": {"dataset_id": "schools"}})
+    _send_source_contract(h, "schools", 3)
+    h.on_after_tool(_StubAfterToolEvent(tool_use={"name": "peek_file", "input": {"dataset_id": "schools"}}))
+
+    action = _run_steer(
+        h,
+        {"name": "list_files", "input": {"dataset_ids": ["libraries"]}},
+    )
+    assert isinstance(action, Guide)
+    assert "before switching sources" in action.reason.lower()
+    assert "schools" in action.reason
+    assert "libraries" in action.reason
+
+
+def test_source_budget_reflection_can_extend_current_source() -> None:
+    h = ShortPlanSteerHandler(
+        macro_reflection_k=5,
+        short_plan_mode="source_budget",
+        source_budget_calls=1,
+    )
+    _run_steer(h, {"name": "peek_file", "input": {"dataset_id": "schools"}})
+    _send_source_contract(h, "schools", 1)
+    h.on_after_tool(_StubAfterToolEvent(tool_use={"name": "peek_file", "input": {"dataset_id": "schools"}}))
+    _run_steer(h, {"name": "query_file", "input": {"dataset_id": "schools"}})
+    h.on_after_model(
+        _StubAfterModelEvent(
+            stop_response=_StubStopResponse(
+                _assistant_message(
+                    '{"current_source": "schools", '
+                    '"calls_used": 1, '
+                    '"commitment_goal": "find enrollment count", '
+                    '"evidence_gained": "found schema", '
+                    '"remaining_gap": "need count", '
+                    '"next_action": "continue_source", '
+                    '"revised_budget": 2}'
+                )
+            )
+        )
+    )
+    assert h.source_session is not None
+    assert h.source_session.max_source_calls == 3
+    assert h.source_session.calls_used == 1
+
+
 # ---------------------------------------------------------------------------
 # StateOfTaskDashboardPlugin — observe only, render on demand
 # ---------------------------------------------------------------------------
