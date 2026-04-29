@@ -40,6 +40,36 @@ def test_from_feature_names_unknown_raises() -> None:
         SanaFlags.from_feature_names(["bogus_feature"])
 
 
+def test_short_plan_mode_defaults_to_cadence() -> None:
+    flags = SanaFlags(short_plan=True)
+    assert flags.short_plan_mode == "cadence"
+    assert flags.source_budget_calls == 3
+
+
+def test_short_plan_accepts_source_budget_mode() -> None:
+    flags = SanaFlags.from_feature_names(
+        ["short_plan"],
+        short_plan_mode="source_budget",
+        source_budget_calls=4,
+    )
+    assert flags.short_plan is True
+    assert flags.short_plan_mode == "source_budget"
+    assert flags.source_budget_calls == 4
+    flags.validate(agent_management="standard")
+
+
+def test_short_plan_rejects_unknown_mode() -> None:
+    flags = SanaFlags(short_plan=True, short_plan_mode="bogus")
+    with pytest.raises(ValueError, match="short_plan_mode"):
+        flags.validate(agent_management="standard")
+
+
+def test_source_budget_calls_must_be_positive() -> None:
+    flags = SanaFlags(short_plan=True, short_plan_mode="source_budget", source_budget_calls=0)
+    with pytest.raises(ValueError, match="source_budget_calls"):
+        flags.validate(agent_management="standard")
+
+
 def test_short_plan_requires_management() -> None:
     flags = SanaFlags(short_plan=True)
     with pytest.raises(ValueError, match="short_plan requires agent_management"):

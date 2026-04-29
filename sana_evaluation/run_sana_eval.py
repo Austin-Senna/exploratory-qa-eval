@@ -44,9 +44,13 @@ _AXIS_DEFAULTS = {
 }
 
 _SANA_FEATURE_LETTERS = {
-    "short_plan": "sp",
     "CoT": "cot",
     "results_apis": "ra",
+}
+
+_SHORT_PLAN_MODE_LETTERS = {
+    "cadence": "spc",
+    "source_budget": "spsb",
 }
 
 
@@ -68,15 +72,19 @@ def _variant_condition_label(
         parts.append(f"k{k}")
     if search_calls is not None:
         parts.append(f"sc{search_calls}")
-    sana_letters = [
-        _SANA_FEATURE_LETTERS[name]
-        for name in ("short_plan", "CoT", "results_apis")
-        if getattr(sana_flags, name)
-    ]
+    sana_letters = []
+    if sana_flags.short_plan:
+        sana_letters.append(_SHORT_PLAN_MODE_LETTERS[sana_flags.short_plan_mode])
+    for name in ("CoT", "results_apis"):
+        if getattr(sana_flags, name):
+            sana_letters.append(_SANA_FEATURE_LETTERS[name])
     if sana_letters:
         parts.append("sana_" + "_".join(sana_letters))
         if sana_flags.short_plan:
-            parts.append(f"mrk{sana_flags.macro_reflection_k}")
+            if sana_flags.short_plan_mode == "cadence":
+                parts.append(f"mrk{sana_flags.macro_reflection_k}")
+            elif sana_flags.short_plan_mode == "source_budget":
+                parts.append(f"sbc{sana_flags.source_budget_calls}")
     return "_".join(parts)
 
 
@@ -290,6 +298,22 @@ def main() -> None:
         default=5,
         help="Tool-call cadence for macro-reflection when short_plan is on (default: 5).",
     )
+    parser.add_argument(
+        "--short-plan-mode",
+        choices=["cadence", "source_budget"],
+        default="cadence",
+        help=(
+            "Short-plan control mode when --sana-feature short_plan is enabled. "
+            "cadence reflects every --macro-reflection-k tool calls; source_budget "
+            "uses per-source budget contracts."
+        ),
+    )
+    parser.add_argument(
+        "--source-budget-calls",
+        type=int,
+        default=3,
+        help="Default per-source call budget for --short-plan-mode source_budget.",
+    )
 
     # Execution
     parser.add_argument("--parallel", type=int, default=6)
@@ -306,6 +330,8 @@ def main() -> None:
         parser.error("--search-calls must be > 0")
     if args.macro_reflection_k <= 0:
         parser.error("--macro-reflection-k must be > 0")
+    if args.source_budget_calls <= 0:
+        parser.error("--source-budget-calls must be > 0")
 
     extra_model_kwargs = {}
     if args.reasoning_effort is not None:
@@ -329,6 +355,8 @@ def main() -> None:
         sana_flags = SanaFlags.from_feature_names(
             args.sana_feature,
             macro_reflection_k=args.macro_reflection_k,
+            short_plan_mode=args.short_plan_mode,
+            source_budget_calls=args.source_budget_calls,
         )
         sana_flags.validate(agent_management=agent_management_mode)
     except ValueError as exc:
