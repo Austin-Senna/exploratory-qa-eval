@@ -21,13 +21,11 @@ import traceback
 import uuid
 import xml.etree.ElementTree as ET
 from collections import Counter, deque
-from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 import duckdb
 from dotenv import load_dotenv
 from strands import tool
-from strands.types.tools import ToolContext
 
 from .agent_tools import (  # noqa: F401 — re-exported
     search,
@@ -53,130 +51,6 @@ from .helper.detect import detect_family, should_skip
 
 load_dotenv()
 
-# ---------------------------------------------------------------------------
-# SANA Agent 1: peek_file dataset-profile enrichment
-# ---------------------------------------------------------------------------
-# When enabled, peek_file augments its response with a `profile` field sourced
-# from the cached jsonl files already loaded by the ideal-search wrapper:
-#   - datagov_tables_schemas_full.jsonl  (hard schema)
-#   - table_descriptions.jsonl           (LLM metadata)
-#   - tasks_core_quality_file_manifest_descriptions.jsonl (benchmark-scoped LLM metadata)
-#   - snippet.jsonl                      (dataset snippet)
-# Activated per-agent by build_mode_bundle via set_peek_enrichment(True) when
-# sana_level >= 1. Orthogonal to existing modes.
-
-_PEEK_ENRICHMENT_ENABLED: bool = False
-_PROFILES_PATH = Path("datagov_tables_profiles.jsonl")
-_PROFILE_BY_URI: Dict[str, Dict[str, Any]] = {}
-_PROFILE_BY_SLUG_FILENAME: Dict[Tuple[str, str], Dict[str, Any]] = {}
-_PROFILES_LOADED: bool = False
-
-
-def set_peek_enrichment(enabled: bool) -> None:
-    """Toggle dataset-profile enrichment on peek_file (SANA Agent 1)."""
-    global _PEEK_ENRICHMENT_ENABLED
-    _PEEK_ENRICHMENT_ENABLED = bool(enabled)
-
-
-def _load_profiles_cache() -> None:
-    """Load precomputed dataset profiles keyed by (slug, filename stem)."""
-    global _PROFILES_LOADED, _PROFILE_BY_URI, _PROFILE_BY_SLUG_FILENAME
-    if _PROFILES_LOADED:
-        return
-
-    profiles_by_uri: Dict[str, Dict[str, Any]] = {}
-    profiles: Dict[Tuple[str, str], Dict[str, Any]] = {}
-    if _PROFILES_PATH.exists():
-        with _PROFILES_PATH.open() as f:
-            for line in f:
-                line = line.strip()
-                if not line:
-                    continue
-                try:
-                    obj = json.loads(line)
-                except json.JSONDecodeError:
-                    continue
-                s3_uri = str(obj.get("s3_uri") or "").strip()
-                if s3_uri and s3_uri not in profiles_by_uri:
-                    profiles_by_uri[s3_uri] = obj
-                slug = str(obj.get("slug") or "").strip()
-                filename = str(obj.get("filename") or "").strip()
-                if slug and filename and (slug, filename) not in profiles:
-                    profiles[(slug, filename)] = obj
-
-    _PROFILE_BY_URI = profiles_by_uri
-    _PROFILE_BY_SLUG_FILENAME = profiles
-    _PROFILES_LOADED = True
-
-
-def _load_legacy_dataset_profile(s3_uri: str, search_wrapper_module) -> Optional[Dict[str, Any]]:
-    """Fall back to the original schema + description + snippet enrichment path."""
-    try:
-        search_wrapper_module._load_schemas_cache()
-        search_wrapper_module._load_desc_cache()
-        search_wrapper_module._load_snippet_cache()
-    except FileNotFoundError:
-        # Expected when running without the ideal jsonl files; preflight catches this
-        # for sana_level>=1 configurations.
-        return None
-    except Exception:
-        return None
-
-    schema = search_wrapper_module._lookup_schema(s3_uri)
-    description = search_wrapper_module._DESC_BY_URI.get(s3_uri)
-    description_row = getattr(search_wrapper_module, "_DESC_ROW_BY_URI", {}).get(s3_uri)
-    snippet = search_wrapper_module._SNIPPET_BY_URI.get(s3_uri)
-
-    if schema is None and description is None and description_row is None and snippet is None:
-        return None
-
-    profile: Dict[str, Any] = {}
-    if schema is not None:
-        profile["schema_columns"] = schema.get("columns")
-        profile["table_kind"] = schema.get("kind")
-    if description is not None:
-        profile["llm_description"] = description
-    _apply_description_row(profile, description_row)
-    if snippet is not None:
-        profile["snippet"] = snippet
-    return profile
-
-
-def _apply_description_row(profile: Dict[str, Any], description_row: Optional[Dict[str, Any]]) -> None:
-    if not description_row:
-        return
-    if description_row.get("description") and not profile.get("llm_description"):
-        profile["llm_description"] = str(description_row["description"])
-
-
-def _load_dataset_profile(s3_uri: str) -> Optional[Dict[str, Any]]:
-    """Look up cached profile for a dataset file URI. Returns None if no cache hit."""
-    try:
-        from strands_evaluation.tools.external.ideal import search_wrapper as _sw
-    except Exception:
-        return None
-
-    key = _sw._slug_stem_from_uri(s3_uri)
-    try:
-        _load_profiles_cache()
-    except Exception:
-        # Soft-fail into the legacy bundle so Agent 1 remains usable even if
-        # the precomputed profiles file is malformed or absent.
-        pass
-    else:
-        profile = _PROFILE_BY_URI.get(s3_uri)
-        if profile is not None:
-            merged = dict(profile)
-            _apply_description_row(merged, getattr(_sw, "_DESC_ROW_BY_URI", {}).get(s3_uri))
-            return merged
-        if key is not None:
-            profile = _PROFILE_BY_SLUG_FILENAME.get(key)
-            if profile is not None:
-                merged = dict(profile)
-                _apply_description_row(merged, getattr(_sw, "_DESC_ROW_BY_URI", {}).get(s3_uri))
-                return merged
-
-    return _load_legacy_dataset_profile(s3_uri, _sw)
 
 # ---------------------------------------------------------------------------
 # Budget constants (mirrored from streams.py S3Config defaults)
@@ -586,6 +460,9 @@ def peek_file(
     USE THIS for one file at a time. For multiple files in one call, use
     `peek_multiple` instead (different signature: takes a `files` list).
 
+    Prefer `s3_uri` when list_files/search/preloaded results gave you one; it
+    is less error-prone than reconstructing dataset_id + file_path.
+
     Args:
         dataset_id: ONE dataset identifier as a bare string, e.g. "Barack_Obama"
         file_path:  ONE relative path within the dataset, e.g. "files/data.txt"
@@ -599,9 +476,7 @@ def peek_file(
         Dict with keys: family, preview_text, header_columns, row_count_estimate,
         size_bytes, dataset_id, file_path. XML previews may also include
         xml_root_tag, xml_namespaces, xml_schema_fields,
-        xml_record_tag_candidates, xml_preview_mode. When SANA enrichment is
-        enabled, a `profile` field may also be present with cached schema,
-        llm_description, snippet, and row stats.
+        xml_record_tag_candidates, xml_preview_mode.
         On error: {error: ...}
     """
     ref = _resolve_file_reference(dataset_id=dataset_id, file_path=file_path, s3_uri=s3_uri)
@@ -671,11 +546,6 @@ def peek_file(
     if family == "xml":
         result.update(_build_xml_preview(text, size_bytes))
 
-    if _PEEK_ENRICHMENT_ENABLED:
-        profile = _load_dataset_profile(s3_uri)
-        if profile is not None:
-            result["profile"] = profile
-
     return result
 
 
@@ -695,6 +565,9 @@ def peek_multiple(
     USE THIS when you already know which 2+ files you need
     (e.g. immediately after `list_files` returned several relevant paths).
     For a single file, use `peek_file` instead — its signature is simpler.
+
+    Prefer per-entry `s3_uri` when list_files/search/preloaded results gave
+    you one.
 
     REQUIRED ARGUMENT SHAPE: You MUST pass a `files` list of dicts, NOT
     `dataset_id`/`file_path` directly:
@@ -767,6 +640,11 @@ def read_file(
     Read lines from a file in the data lake without downloading it.
     Use this to read text, CSV, or JSON files directly. Supports pagination
     via start_line for large files.
+
+    Prefer `s3_uri` when list_files/search/preloaded results gave you one; it
+    is less error-prone than reconstructing dataset_id + file_path. For datagov
+    files, both "rows.txt" and "files/rows.txt" are accepted, but
+    "files/rows.txt" is the canonical path.
 
     Args:
         dataset_id: Dataset identifier (e.g. "census")
@@ -864,6 +742,11 @@ def grep_file(
     Search for a regex pattern inside a file without downloading it.
     Streams the file from S3 and returns matching lines with surrounding context.
     Use this to locate specific values, IDs, or keywords in large files.
+
+    Prefer `s3_uri` when list_files/search/preloaded results gave you one; it
+    is less error-prone than reconstructing dataset_id + file_path. For datagov
+    files, both "rows.txt" and "files/rows.txt" are accepted, but
+    "files/rows.txt" is the canonical path.
 
     Args:
         dataset_id:    Dataset identifier (e.g. "public-school-locations-current-23297")
@@ -1014,6 +897,11 @@ def query_file(
     to use peek_file, grep_file, or download + execute_code instead.
     Results are capped at 200 rows.
 
+    Prefer `s3_uri` when list_files/search/preloaded results gave you one; it
+    is less error-prone than reconstructing dataset_id + file_path. For datagov
+    files, both "rows.txt" and "files/rows.txt" are accepted, but
+    "files/rows.txt" is the canonical path.
+
     Args:
         dataset_id: Dataset identifier (e.g. "Barack_Obama")
         file_path:  Relative path within the dataset (e.g. "table_0.csv")
@@ -1159,90 +1047,6 @@ def _query_file_impl(
 
 
 # ---------------------------------------------------------------------------
-# Tool 5: summarize_context
-# ---------------------------------------------------------------------------
-
-@tool(context=True)
-def summarize_context(
-    summary: str,
-    drop_messages: int,
-    tool_context: ToolContext,
-) -> dict:
-    """
-    Free up context space by dropping old messages and anchoring your key findings.
-
-    Write everything important you've learned so far into `summary` — datasets found,
-    values computed, hypotheses confirmed or rejected. That text is injected at the
-    start of the remaining history as a permanent memory anchor that won't be
-    truncated by the sliding window.
-
-    Call this proactively when the conversation is getting long, before making a
-    large tool call, or after receiving a truncation_note from another tool.
-
-    Args:
-        summary:       Your written summary of findings so far. Be thorough — this
-                       replaces the dropped messages as your memory. Not truncated.
-        drop_messages: Number of oldest messages to remove (must be >= 2 and even,
-                       to preserve tool use/result pairs). Use 10–20 for moderate
-                       cleanup, higher for aggressive cleanup.
-
-    Returns:
-        Dict with messages_before, messages_after, and confirmation.
-    """
-    try:
-        agent = tool_context.agent
-        messages = agent.messages
-        before = len(messages)
-
-        # Clamp and align drop_messages to an even number (preserve tool use/result pairs)
-        n = max(2, int(drop_messages))
-        n = min(n, max(0, before - 2))  # always keep at least 2 messages
-        if n % 2 != 0:
-            n -= 1  # round down to even
-
-        # Find a safe trim index: can't start on a toolResult or orphaned toolUse
-        trim = n
-        while trim < before:
-            content = messages[trim].get("content", [])
-            is_tool_result = any("toolResult" in c for c in content)
-            is_orphan_tool_use = (
-                any("toolUse" in c for c in content)
-                and trim + 1 < before
-                and not any("toolResult" in c for c in messages[trim + 1].get("content", []))
-            )
-            if is_tool_result or is_orphan_tool_use:
-                trim += 1
-            else:
-                break
-
-        # Drop the oldest `trim` messages
-        messages[:] = messages[trim:]
-
-        # Prepend the agent's summary as a user message at position 0
-        # User messages are never truncated by _truncate_tool_results
-        memory_message = {
-            "role": "user",
-            "content": [{"text": f"[Context summary — key findings so far]\n{summary}"}],
-        }
-        messages.insert(0, memory_message)
-
-        after = len(messages)
-        return {
-            "status": "ok",
-            "messages_before": before,
-            "messages_dropped": trim,
-            "messages_after": after,
-            "summary_anchored": True,
-            "note": (
-                f"Dropped {trim} oldest messages. Your summary is anchored at position 0 "
-                "and will not be truncated. Continue your task."
-            ),
-        }
-    except Exception as e:
-        return {"status": "error", "error": str(e)}
-
-
-# ---------------------------------------------------------------------------
 # Public API
 # ---------------------------------------------------------------------------
 
@@ -1253,7 +1057,6 @@ __all__ = [
     "read_file",
     "grep_file",
     "query_file",
-    "summarize_context",
     # re-exported from agent_tools
     "search",
     "search_keyword",

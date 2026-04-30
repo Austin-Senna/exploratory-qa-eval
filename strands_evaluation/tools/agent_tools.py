@@ -351,6 +351,14 @@ def _strip_known_folder_prefix(dataset_id: str) -> str:
     return dataset_id
 
 
+def _canonicalize_file_path(folder: str, file_path: str) -> str:
+    """Normalize common file-path omissions before building an S3 key."""
+    normalized = (file_path or "").lstrip("/")
+    if folder == "datagov" and normalized and "/" not in normalized:
+        return f"files/{normalized}"
+    return normalized
+
+
 def _looks_like_s3_reference(value: str) -> bool:
     """Return True when the string looks like an S3 URI or bucket-relative key."""
     if not value or not isinstance(value, str):
@@ -403,7 +411,11 @@ def _parse_s3_reference(value: str) -> Dict[str, Any]:
             )
         }
 
-    folder, dataset_id, file_path = parts[0], parts[1], parts[2].lstrip("/")
+    folder, dataset_id, file_path = (
+        parts[0],
+        parts[1],
+        _canonicalize_file_path(parts[0], parts[2]),
+    )
     if not dataset_id or not file_path:
         return {"error": "s3_uri must include both dataset_id and file_path"}
 
@@ -444,6 +456,7 @@ def _resolve_file_reference(
     if folder is None:
         return {"error": f"Dataset not found or ambiguous: {normalized_dataset_id}"}
 
+    normalized_file_path = _canonicalize_file_path(folder, normalized_file_path)
     key = f"{folder}/{normalized_dataset_id}/{normalized_file_path}"
     return {
         "bucket": BUCKET,
@@ -852,6 +865,9 @@ def download(files: List[Dict[str, str]]) -> Dict[str, Any]:
 
     REQUIRED ARGUMENT SHAPE — read carefully. You MUST pass a `files` list of
     dicts. Do NOT pass `dataset_id` / `file_path` directly at the top level.
+    Prefer per-entry `s3_uri` when list_files/search/preloaded results gave you
+    one. For datagov files, both "rows.txt" and "files/rows.txt" are accepted,
+    but "files/rows.txt" is the canonical path.
 
         CORRECT (multiple files, up to 5):
             download(files=[

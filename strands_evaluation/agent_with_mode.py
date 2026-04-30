@@ -43,7 +43,6 @@ from strands_evaluation.helper.prompting import (
     compose_managed_prompt,
     compose_preloaded_block,
     inject_debug_prompt,
-    inject_sana_prompt,
     skill_paths_for_modes,
 )
 from strands_evaluation.helper.agent_runtime import invoke_with_watchdog
@@ -74,7 +73,6 @@ from strands_evaluation.tools.agent_tools_v2 import (
     query_file,
     read_file,
     set_sandbox_dir,
-    summarize_context,
 )
 from strands_evaluation.tools.agent_tools import download
 from strands_evaluation.tools.external.plan_tools import plan
@@ -222,9 +220,9 @@ def build_management(
 
     prompt = compose_managed_prompt(search_tool_mode)
     if management_mode == "standard":
-        return prompt, [plan, summarize_context], True, True, task_trailer
+        return prompt, [plan], True, True, task_trailer
 
-    return prompt, [plan_ideal, summarize_context], True, True, task_trailer
+    return prompt, [plan_ideal], True, True, task_trailer
 
 
 def build_results(
@@ -244,32 +242,6 @@ def build_results(
     )
 
 
-# SANA Agent 0 canonical axis values (experimental.md §7).
-# Oracle-Sources baseline: gold source_sequence preloaded into the prompt,
-# no search tools, no planning scaffolding. search_results is inert under
-# preloaded (no search tools to wrap) and defaults to `naive` for clarity.
-_SANA_AGENT_0_AXES = {
-    "search_tool_mode": "preloaded",
-    "search_results_mode": "naive",
-    "agent_management_mode": "naive",
-}
-
-
-def _resolve_sana_axes(run_config: RunConfig) -> None:
-    """Preset-with-override: fill unset axes with SANA Agent 0 canonical values; warn on disagreement."""
-    if run_config.sana_level is None:
-        return
-    for axis, canonical in _SANA_AGENT_0_AXES.items():
-        current = getattr(run_config, axis)
-        if current is None:
-            setattr(run_config, axis, canonical)
-        elif current != canonical:
-            logger.warning(
-                "sana_level=%s canonical baseline is %s=%s; got %s (honoring user override)",
-                run_config.sana_level, axis, canonical, current,
-            )
-
-
 def build_mode_bundle(
     run_config: RunConfig,
     *,
@@ -277,7 +249,6 @@ def build_mode_bundle(
     task_context: Optional[Dict[str, Any]] = None,
 ) -> ModeBundle:
     """Build final tools/prompt/plugin toggles from multi-axis ablation modes."""
-    _resolve_sana_axes(run_config)
     search_tool_mode = _normalize_mode(run_config.search_tool_mode, "standard", "search_tool")
     search_results_mode = _normalize_result_mode(run_config.search_results_mode, "naive", "search_results")
     agent_management_mode = _normalize_mode(run_config.agent_management_mode, "standard", "agent_management")
@@ -296,12 +267,7 @@ def build_mode_bundle(
         search_tool_mode=search_tool_mode,
         task_context=task_context,
     )
-    system_prompt = inject_sana_prompt(system_prompt, run_config.sana_level)
     system_prompt = inject_debug_prompt(system_prompt, run_config.debug_mode)
-
-    # SANA Agent 1: toggle peek_file dataset-profile enrichment.
-    from strands_evaluation.tools.agent_tools_v2 import set_peek_enrichment
-    set_peek_enrichment(run_config.sana_level is not None and run_config.sana_level >= 1)
 
     tools = list(search_tools) + list(management_tools) + list(data_tools)
     return ModeBundle(
@@ -371,6 +337,65 @@ class DataLakeAgent:
         self.run_config = run_config or RunConfig()
         self._model = build_model(agent_config)
 
+    # ------------------------------------------------------------------
+    # Subclass extension hooks (default no-ops; SANA-agnostic).
+    # ------------------------------------------------------------------
+
+    def _pre_build_setup(
+        self,
+        *,
+        search_tool_mode: Optional[str],
+        agent_management_mode: Optional[str],
+    ) -> None:
+        """Hook for runtime toggles that must run before the Agent is constructed."""
+        return None
+
+    def _extra_prompt_text(
+        self,
+        *,
+        search_tool_mode: Optional[str],
+        agent_management_mode: Optional[str],
+    ) -> str:
+        """Return additional prompt text appended after the search-budget block but before the task trailer."""
+        return ""
+
+    def _extra_plugins(
+        self,
+        *,
+        search_tool_mode: Optional[str],
+        agent_management_mode: Optional[str],
+    ) -> List[Any]:
+        """Return additional plugins to append before the Agent is constructed."""
+        return []
+
+    def _conversation_manager(
+        self,
+        *,
+        search_tool_mode: Optional[str],
+        agent_management_mode: Optional[str],
+    ) -> Optional[Any]:
+        """Return a custom ConversationManager, or None to use the default."""
+        return None
+
+    def _decorate_tools(
+        self,
+        tools: List[Any],
+        *,
+        search_tool_mode: Optional[str],
+        agent_management_mode: Optional[str],
+    ) -> List[Any]:
+        """Return a (possibly modified) tools list. Default: identity."""
+        return tools
+
+    def _tool_limit_excluded_tools(
+        self,
+        *,
+        search_tool_mode: Optional[str],
+        agent_management_mode: Optional[str],
+    ) -> Sequence[str]:
+        """Return tool names excluded from the global tool-limit counter."""
+        return ("skills", "plan")
+
     def _build_agent(
         self,
         telemetry: "TelemetryTracker",
@@ -424,7 +449,6 @@ class DataLakeAgent:
         else:
             if condition == "b" and _CONDITION_B_TOOLS_AVAILABLE:
                 # Condition B (planning-rich): sparse search + prefix + plan tool + skills
-                # summarize_context only given to B — longer planning loops benefit from manual context control
                 raw_search_tools = [search_value_b, search_schema_b, search_prefix]
                 system_prompt = compose_managed_prompt("naive")
                 search_tools = build_search_tools(
@@ -432,7 +456,7 @@ class DataLakeAgent:
                     fixed_k=self.run_config.search_k,
                     search_descriptions=self.run_config.search_descriptions,
                 )
-                tools = search_tools + [plan] + _data_tools + [summarize_context]
+                tools = search_tools + [plan] + _data_tools
                 enable_skills = True
                 enable_stagnation = True
                 skill_paths = skill_paths_for_modes("naive", "standard")
@@ -453,6 +477,21 @@ class DataLakeAgent:
 
             search_tool_names = search_tool_names_in_legacy(search_tools)
 
+        # Resolve the active modes (None on the legacy path) for hook calls.
+        _hook_search_tool_mode: Optional[str]
+        _hook_agent_management_mode: Optional[str]
+        if mode_overrides_enabled:
+            _hook_search_tool_mode = mode_bundle.modes.get("search_tool")
+            _hook_agent_management_mode = mode_bundle.modes.get("agent_management")
+        else:
+            _hook_search_tool_mode = None
+            _hook_agent_management_mode = None
+
+        self._pre_build_setup(
+            search_tool_mode=_hook_search_tool_mode,
+            agent_management_mode=_hook_agent_management_mode,
+        )
+
         system_prompt = _inject_search_budget_prompt(
             system_prompt,
             self.run_config.search_calls_limit,
@@ -461,10 +500,22 @@ class DataLakeAgent:
         if not mode_overrides_enabled:
             system_prompt = inject_debug_prompt(system_prompt, self.run_config.debug_mode)
 
+        extra_prompt = self._extra_prompt_text(
+            search_tool_mode=_hook_search_tool_mode,
+            agent_management_mode=_hook_agent_management_mode,
+        )
+        if extra_prompt:
+            system_prompt = system_prompt.rstrip() + extra_prompt
+
         if task_trailer:
             system_prompt = system_prompt.rstrip() + task_trailer
 
-        conv_manager = build_conversation_manager(self.run_config)
+        conv_manager = self._conversation_manager(
+            search_tool_mode=_hook_search_tool_mode,
+            agent_management_mode=_hook_agent_management_mode,
+        )
+        if conv_manager is None:
+            conv_manager = build_conversation_manager(self.run_config)
 
         if self.run_config.tool_executor == "sequential":
             tool_executor = SequentialToolExecutor()
@@ -475,6 +526,10 @@ class DataLakeAgent:
             self.run_config.max_tool_calls,
             self.run_config.timeout_seconds,
             submit_only_max_tokens=self.run_config.submit_only_max_tokens,
+            excluded_tools=self._tool_limit_excluded_tools(
+                search_tool_mode=_hook_search_tool_mode,
+                agent_management_mode=_hook_agent_management_mode,
+            ),
         )
 
         def _callback(**kwargs):
@@ -507,6 +562,19 @@ class DataLakeAgent:
         read_tracer = ReadTracePlugin()
         plugins.append(read_tracer)
         plugins.append(TracePlugin(cond.trace_output_dir))
+
+        plugins.extend(
+            self._extra_plugins(
+                search_tool_mode=_hook_search_tool_mode,
+                agent_management_mode=_hook_agent_management_mode,
+            )
+        )
+
+        tools = self._decorate_tools(
+            list(tools),
+            search_tool_mode=_hook_search_tool_mode,
+            agent_management_mode=_hook_agent_management_mode,
+        )
 
         return Agent(
             model=self._model,
@@ -667,8 +735,13 @@ def _run_task_worker(
     run_config: RunConfig,
     run_id: str,
     batch_name: Optional[str],
+    agent_class: Optional[type] = None,
 ) -> Dict[str, Any]:
-    """Run a single task in a worker process."""
+    """Run a single task in a worker process.
+
+    `agent_class` lets callers swap in a DataLakeAgent subclass (e.g. for SANA).
+    Defaults to `DataLakeAgent`.
+    """
     from strands_evaluation.helper.metrics import compute_exact_match, compute_f1_score, normalize_text
 
     log_model_name = agent_config.model_name or agent_config.model_id
@@ -720,7 +793,8 @@ def _run_task_worker(
     try:
         logger.info(f"Starting task {task_index + 1}: {task.get('question', '')[:80]}...")
 
-        da = DataLakeAgent(agent_config, run_config)
+        agent_cls = agent_class or DataLakeAgent
+        da = agent_cls(agent_config, run_config)
 
         cond = run_config.condition_config
         gold_ids = task.get("datasets_used", [])
@@ -823,6 +897,9 @@ def _run_task_worker(
 class BatchRunner:
     """Run DataLakeAgent on multiple tasks with parallel ProcessPoolExecutor."""
 
+    # Subclasses can override this to swap in a DataLakeAgent subclass.
+    _AGENT_CLASS: Optional[type] = None
+
     def __init__(
         self,
         agent_config: AgentConfig,
@@ -862,6 +939,7 @@ class BatchRunner:
                     self.run_config,
                     run_id,
                     batch_label,
+                    self._AGENT_CLASS,
                 ): i
                 for i, task in enumerate(tasks)
             }

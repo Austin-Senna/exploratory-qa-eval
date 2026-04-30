@@ -1,29 +1,20 @@
-#!/usr/bin/env python3
-"""
-Run evaluation across multiple models on benchmark tasks.
+"""Orchestration library for evaluation runs.
 
-Usage:
-    # Evaluate a single task directory
-    python -m strands_evaluation.run_eval --task-dir tasks/k-3-d-2/
+Not a CLI — invoke evaluations via `strands_evaluation.run_mode_eval` or
+`sana_evaluation.run_sana_eval`. This module exposes shared helpers those
+entrypoints use:
+  - `find_all_task_dirs`, `run_evaluation`, `_run_task_files` — task discovery
+    and per-directory orchestration
+  - `_display_name`, `_results_dir`, `_maybe_autoset_openai_cache_key` —
+    naming and output-path conventions
+  - `print_comparison_table` — summary printer
+  - CSV/JSONL writers used by the above
 
-    # Evaluate a specific model by registry name
-    python -m strands_evaluation.run_eval --task-dir tasks/k-3-d-2/ \
-        --model-name bedrock/claude-sonnet-4.5
-
-    # Evaluate all task directories
-    python -m strands_evaluation.run_eval --all-tasks
-
-    # Limit tasks per directory and increase parallelism
-    python -m strands_evaluation.run_eval --all-tasks --tasks-per-dir 2 --parallel 4
-
-    # condition B:
-    python -m strands_evaluation.run_eval --task-dir tasks_mini/k-5-d-3 --tasks-per-dir 2 --parallel 2 --model-name bedrock/claude-haiku-4.5 --condition b
-
-    # condition A:
-    python -m strands_evaluation.run_eval --task-dir tasks_mini/k-5-d-3 --tasks-per-dir 2 --parallel 2 --model-name bedrock/claude-haiku-4.5 --condition a
+Caller responsibility: monkey-patch `BatchRunner` (set
+`run_eval.BatchRunner = <YourRunnerClass>`) before invoking helpers that
+construct one. Both run_mode_eval and run_sana_eval do this at module load.
 """
 
-import argparse
 import csv
 import glob
 import json
@@ -32,11 +23,14 @@ import os
 from datetime import datetime
 from typing import Optional
 
-from strands_evaluation.agent import BatchRunner
 from strands_evaluation.config import AgentConfig, ConditionConfig, RunConfig
 from strands_evaluation.helper.prompting import normalize_debug_mode
 
 logger = logging.getLogger(__name__)
+
+# Monkey-patched by callers before _run_task_files / run_evaluation are
+# invoked. Default None — using helpers without patching raises.
+BatchRunner = None
 
 
 # ---------------------------------------------------------------------------
@@ -386,72 +380,11 @@ def print_comparison_table(results: dict) -> None:
     logger.info("=" * 100)
 
 
+
+
 # ---------------------------------------------------------------------------
-# Continue mode
+# Run a fixed list of task files (bypass glob in run_evaluation)
 # ---------------------------------------------------------------------------
-
-def _run_continue(args, agent_config, run_config) -> None:
-    """Re-run evaluation over task_set, skipping already-recorded tasks."""
-    condition = run_config.condition_config.condition
-    safe_model = _display_name(agent_config)
-    results_dir = _results_dir(run_config, agent_config)
-    csv_path = os.path.join(results_dir, "eval_results.csv")
-
-    # Collect already-completed task_ids from the CSV
-    completed_ids: set = set()
-    if os.path.exists(csv_path):
-        with open(csv_path, newline="") as f:
-            for row in csv.DictReader(f):
-                tid = row.get("task_id", "").strip()
-                if tid:
-                    completed_ids.add(tid)
-
-    # Find all task dirs and their pending task files
-    all_task_dirs = find_all_task_dirs(args.task_set)
-    pending: dict[str, list[str]] = {}  # task_dir -> [task_files not yet done]
-    for task_dir in all_task_dirs:
-        task_files = sorted(glob.glob(os.path.join(task_dir, "*.json")))
-        if args.tasks_per_dir is not None:
-            task_files = task_files[:args.tasks_per_dir]
-        remaining = [p for p in task_files if p not in completed_ids]
-        if remaining:
-            pending[task_dir] = remaining
-
-    if not pending:
-        print("Nothing to do — all tasks already recorded.")
-        return
-
-    # Print summary of what will be evaluated
-    total_pending = sum(len(v) for v in pending.values())
-    print(f"\nCondition : {condition}")
-    print(f"Model     : {safe_model}")
-    print(f"Task set  : {args.task_set}")
-    print(f"Results   : {results_dir}")
-    print(f"Completed : {len(completed_ids)} tasks already recorded")
-    print(f"\nDirectories to evaluate ({len(pending)} dirs, {total_pending} tasks remaining):")
-    for task_dir, files in sorted(pending.items()):
-        print(f"  {task_dir:<40}  {len(files)} task(s)")
-
-    print()
-    answer = input("Proceed? [y/N] ").strip().lower()
-    if answer != "y":
-        print("Aborted.")
-        return
-
-    print()
-    for task_dir, task_files in sorted(pending.items()):
-        # Temporarily override task_files_to_run by passing only pending files.
-        # We reuse run_evaluation with only_new=False and pass a sliced file list
-        # via a thin wrapper that bypasses glob inside run_evaluation.
-        _run_task_files(
-            task_dir=task_dir,
-            task_files=task_files,
-            agent_config=agent_config,
-            run_config=run_config,
-            verbose=args.verbose,
-            parallel=args.parallel,
-        )
-
 
 def _run_task_files(
     task_dir: str,
@@ -462,6 +395,11 @@ def _run_task_files(
     parallel: int,
 ) -> None:
     """Run evaluation on an explicit list of task files (bypass glob in run_evaluation)."""
+    if BatchRunner is None:
+        raise RuntimeError(
+            "run_eval.BatchRunner is not configured. Set it via "
+            "`run_eval.BatchRunner = <YourBatchRunner>` before calling."
+        )
     cond = run_config.condition_config
     condition_label = cond.condition
     output_dir = _results_dir(run_config, agent_config)
@@ -496,200 +434,3 @@ def _run_task_files(
     total = len(results)
     exact_matches = sum(r.get("exact_match", 0) for r in results)
     logger.info(f"  Exact Match: {exact_matches}/{total} ({100*exact_matches/total:.1f}%)" if total else "  No results")
-
-
-# ---------------------------------------------------------------------------
-# CLI
-# ---------------------------------------------------------------------------
-
-def main() -> None:
-    parser = argparse.ArgumentParser(description="Run evaluation on data lake benchmark tasks")
-
-    # Task selection
-    parser.add_argument("--task-dir", "-d", help="Single task directory to evaluate")
-    parser.add_argument("--all-tasks", action="store_true", help="Evaluate all k-*-d-* directories")
-    parser.add_argument(
-        "--task-set",
-        default="tasks_core_quality",
-        help="Base directory for --all-tasks (default: tasks_core_quality)",
-    )
-    parser.add_argument("--tasks-per-dir", type=int, default=None,
-                        help="Limit number of tasks evaluated per directory")
-    parser.add_argument("--task-continue", action="store_true",
-                        help="Continue evaluation, skipping tasks already recorded in results. "
-                             "Requires --condition, --model-name, and --task-set.")
-
-    # Model — use a short name from MODEL_REGISTRY
-    parser.add_argument("--model-name", default="bedrock/claude-sonnet-4.5",
-                        help="Short model name from MODEL_REGISTRY e.g. bedrock/claude-sonnet-4.5 "
-                             "or bedrock/claude-haiku-4.5-arn. Resolves provider/model-id automatically.")
-    parser.add_argument("--temperature", type=float, default=0.0)
-    parser.add_argument("--max-tokens", type=int, default=8096)
-    parser.add_argument(
-        "--reasoning-effort",
-        choices=["none", "minimal", "low", "medium", "high", "xhigh"],
-        default=None,
-        help="Optional reasoning effort for OpenAI chat models (passed as reasoning_effort).",
-    )
-    parser.add_argument(
-        "--openai-prompt-cache-key",
-        default=None,
-        help="Optional OpenAI prompt_cache_key for better cache routing on repeated prefixes.",
-    )
-    parser.add_argument(
-        "--openai-prompt-cache-retention",
-        default=None,
-        help="Optional OpenAI prompt_cache_retention value such as 24h.",
-    )
-    parser.add_argument(
-        "--debug-mode",
-        choices=["none", "decision_notes"],
-        default="none",
-        help="Optional debug behavior. 'decision_notes' asks the model to emit short structured notes before tool calls.",
-    )
-    parser.add_argument(
-        "--decision-notes",
-        action="store_true",
-        help="Convenience alias for --debug-mode decision_notes.",
-    )
-
-    # RunConfig
-    parser.add_argument("--max-tool-calls", type=int, default=30,
-                        help="Max tool calls per task before agent is stopped")
-    parser.add_argument("--sliding-window", type=int, default=40,
-                        help="Conversation window size (last-k turns kept)")
-    parser.add_argument(
-        "--conversation-manager-strategy",
-        choices=["summarizing", "sliding_window"],
-        default="summarizing",
-        help="Conversation manager to use during the run.",
-    )
-    parser.add_argument(
-        "--summary-ratio",
-        type=float,
-        default=0.4,
-        help="Fraction of messages to summarize when Strands reduces context.",
-    )
-    parser.add_argument(
-        "--preserve-recent-messages",
-        type=int,
-        default=12,
-        help="How many recent messages the summarizing manager always keeps verbatim.",
-    )
-    parser.add_argument("--timeout", type=int, default=600,
-                        help="Per-task timeout in seconds")
-    parser.add_argument(
-        "--submit-grace-seconds",
-        type=int,
-        default=30,
-        help="Extra grace period reserved for submit_answer after the soft timeout.",
-    )
-    parser.add_argument(
-        "--submit-only-max-tokens",
-        type=int,
-        default=2048,
-        help="Token cap to enforce once the run enters submit-only mode.",
-    )
-
-    # Condition flags (ConditionConfig)
-    parser.add_argument("--condition", choices=["baseline", "a", "b"], default="baseline",
-                        help="Experiment condition: 'a' (tools-rich), 'b' (planning-rich), or 'baseline'")
-    parser.add_argument("--sparse-backend", choices=["bm25", "splade"], default="bm25",
-                        help="Sparse search backend for Condition A (default: bm25)")
-    parser.add_argument("--results-output-dir", default="results",
-                        help="Base directory for evaluation outputs (default: results)")
-    parser.add_argument("--logs-output-dir", default="logs",
-                        help="Base directory for per-task log files (default: logs)")
-
-    # Execution
-    parser.add_argument("--parallel", type=int, default=6,
-                        help="Number of parallel worker processes")
-    parser.add_argument("--only-new", action="store_true",
-                        help="Skip tasks already present in the results CSV")
-    parser.add_argument("--verbose", "-v", action="store_true")
-
-    args = parser.parse_args()
-    if args.decision_notes:
-        args.debug_mode = "decision_notes"
-
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-
-    extra_model_kwargs = {}
-    if args.reasoning_effort is not None:
-        extra_model_kwargs["reasoning_effort"] = args.reasoning_effort
-
-    agent_config = AgentConfig(
-        model_name=args.model_name,
-        temperature=args.temperature,
-        max_tokens=args.max_tokens,
-        openai_prompt_cache_key=args.openai_prompt_cache_key,
-        openai_prompt_cache_retention=args.openai_prompt_cache_retention,
-        extra_model_kwargs=extra_model_kwargs,
-    )
-    safe_model_name = _display_name(agent_config)
-    condition_label = _with_debug_suffix(args.condition, args.debug_mode)
-    _maybe_autoset_openai_cache_key(agent_config, f"{safe_model_name}/{condition_label}")
-    traces_root = os.path.join(args.results_output_dir, "traces")
-    trace_dir = os.path.join(traces_root, condition_label, safe_model_name)
-
-    run_config = RunConfig(
-        results_output_dir=args.results_output_dir,
-        logs_output_dir=args.logs_output_dir,
-        debug_mode=normalize_debug_mode(args.debug_mode),
-        max_tool_calls=args.max_tool_calls,
-        conversation_manager_strategy=args.conversation_manager_strategy,
-        sliding_window_k=args.sliding_window,
-        summary_ratio=args.summary_ratio,
-        preserve_recent_messages=args.preserve_recent_messages,
-        timeout_seconds=args.timeout,
-        submit_grace_seconds=args.submit_grace_seconds,
-        submit_only_max_tokens=args.submit_only_max_tokens,
-        condition_config=ConditionConfig(
-            condition=condition_label,
-            base_condition=args.condition,
-            sparse_backend=args.sparse_backend,
-            trace_output_dir=trace_dir,
-        ),
-    )
-
-    start_time = datetime.now()
-
-    if args.task_continue:
-        _run_continue(args, agent_config, run_config)
-
-    elif args.all_tasks:
-        task_dirs = find_all_task_dirs(args.task_set)
-        logger.info(f"Found {len(task_dirs)} task directories in '{args.task_set}'")
-        for task_dir in task_dirs:
-            results = run_evaluation(
-                task_dir=task_dir,
-                agent_config=agent_config,
-                run_config=run_config,
-                verbose=args.verbose,
-                only_new=args.only_new,
-                parallel=args.parallel,
-                tasks_per_dir=args.tasks_per_dir,
-            )
-            print_comparison_table(results)
-
-    elif args.task_dir:
-        results = run_evaluation(
-            task_dir=args.task_dir,
-            agent_config=agent_config,
-            run_config=run_config,
-            verbose=args.verbose,
-            only_new=args.only_new,
-            parallel=args.parallel,
-            tasks_per_dir=args.tasks_per_dir,
-        )
-        print_comparison_table(results)
-
-    else:
-        parser.print_help()
-
-    elapsed = (datetime.now() - start_time).total_seconds()
-    logger.info(f"\nTotal evaluation time: {elapsed:.1f}s")
-
-
-if __name__ == "__main__":
-    main()

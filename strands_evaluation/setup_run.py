@@ -57,13 +57,6 @@ def _build_parser() -> argparse.ArgumentParser:
     common.add_argument("--timeout", type=int, default=None)
     common.add_argument("--submit-grace-seconds", type=int, default=None)
     common.add_argument("--verbose", "-v", action="store_true")
-    common.add_argument(
-        "--sana",
-        type=int,
-        choices=(0, 1),
-        default=None,
-        help="SANA ablation level. 0 = baseline (asserts ideal/ideal/standard axes). 1 = baseline + richer peek_file.",
-    )
 
     smoke = subparsers.add_parser("smoke", parents=[common], help="Run a lightweight smoke eval.")
     smoke.add_argument(
@@ -163,14 +156,12 @@ def _display_command(command: Sequence[str]) -> str:
     return shlex.join(printable)
 
 
-_SANA_AXIS_DEFAULTS = {"search": "preloaded", "results": "naive", "plan": "naive"}
 _LEGACY_AXIS_DEFAULTS = {"search": "standard", "results": "naive", "plan": "standard"}
 
 
 def _resolve_axes(args: argparse.Namespace) -> None:
-    """Fill axis defaults based on whether --sana is active. Explicit user args always win."""
-    defaults = _SANA_AXIS_DEFAULTS if args.sana is not None else _LEGACY_AXIS_DEFAULTS
-    for axis, fallback in defaults.items():
+    """Fill axis defaults. Explicit user args always win."""
+    for axis, fallback in _LEGACY_AXIS_DEFAULTS.items():
         if getattr(args, axis) is None:
             setattr(args, axis, fallback)
 
@@ -214,8 +205,6 @@ def _build_run_mode_command(args: argparse.Namespace, cwd: Path) -> tuple[list[s
         command.extend(["--submit-grace-seconds", str(args.submit_grace_seconds)])
     if args.verbose:
         command.append("--verbose")
-    if args.sana is not None:
-        command.extend(["--sana-level", str(args.sana)])
 
     if args.subcommand == "smoke":
         task_dir = _resolve_smoke_task_dir(args.task_dir, cwd)
