@@ -60,7 +60,7 @@ Asks the agent to emit a 4-field pre-tool record (`goal`, `why_this_tool`, `what
 
 System-prompt-only directives are unreliable for the post-record (smaller models tend to skip it). The plugin hooks `AfterToolCallEvent` and **mutates `event.result.content`** to append a short reminder of the post-record schema to each non-administrative tool result. The model sees the reminder as part of the tool response — a much more attention-grabbing channel than a static system rule.
 
-Excluded tools (no reminder appended): `plan`, `plan_ideal`, `skills`, `summarize_context`, `submit_answer`.
+Excluded tools (no reminder appended): `plan`, `plan_ideal`, `skills`, `submit_answer`.
 
 The pre-record stays in the system prompt only — its compliance is naturally high since the model has to write something before calling a tool.
 
@@ -91,7 +91,7 @@ Subclass of Strands' `SteeringHandler`. Counts non-administrative tool calls or 
 
 After the model calls `sprint`, the tool updates shared sprint state, refreshes `## CURRENT SPRINT`, and clears the pending gate so normal tool use can resume.
 
-Excluded tools (don't advance the sprint counter): `plan`, `plan_ideal`, `skills`, `summarize_context`, `submit_answer`, `sprint`.
+Excluded tools (don't advance the sprint counter): `plan`, `plan_ideal`, `skills`, `submit_answer`, `sprint`.
 
 **Peer plugin** — `plugins/dashboard_plugin.py:StateOfTaskDashboardPlugin`
 

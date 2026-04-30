@@ -110,7 +110,8 @@ class SourceSessionState:
     current_source: str
     commitment_goal: str
     max_source_calls: int
-    success_condition: str
+    plan_step: str = ""
+    success_condition: str = ""
     calls_used: int = 0
     tools_used: List[str] = field(default_factory=list)
 
@@ -124,13 +125,17 @@ class SourceSessionState:
 
     def describe(self) -> str:
         tools = ", ".join(self.tools_used[-5:]) if self.tools_used else "-"
-        return (
+        pieces = [
             f"source_session: {self.current_source} | "
             f"calls: {self.calls_used}/{self.max_source_calls} | "
-            f"goal: {self.commitment_goal} | "
-            f"success: {self.success_condition} | "
-            f"recent_tools: {tools}"
-        )
+            f"goal: {self.commitment_goal}"
+        ]
+        if self.plan_step:
+            pieces.append(f"plan_step: {self.plan_step}")
+        if self.success_condition:
+            pieces.append(f"success: {self.success_condition}")
+        pieces.append(f"recent_tools: {tools}")
+        return " | ".join(pieces)
 
 
 __all__ = ["SOURCE_SESSION_TOOLS", "SourceSessionState", "source_from_tool_use"]

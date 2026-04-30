@@ -18,7 +18,16 @@ def test_cot_block_non_empty(search_tool: str) -> None:
     text = cot_block(search_tool)
     assert "STRUCTURED TOOL-USE RECORDS" in text
     assert "confidence:" in text
-    assert "sufficient_to_call_step_complete" in text
+    assert "sufficient_to_call_step_complete" not in text
+    assert "After each tool result" not in text
+    assert "data/search tools only" in text
+    assert "intent:" in text
+    for tool_name in ("skills", "plan", "plan_ideal", "sprint", "submit_answer"):
+        assert tool_name in text
+    assert "why_this_tool" not in text
+    assert "what_success_looks_like" not in text
+    assert "Never write the tool request" in text
+    assert "to=functions" not in text
     # Block must not mention "SANA" — that vocabulary leaks framework-internal naming
     # to the agent and was empirically confusing.
     assert "SANA" not in text
@@ -50,9 +59,9 @@ def test_sprint_block_describes_commitment_contract(search_tool: str) -> None:
     assert "current_source" in text
     assert "commitment_goal" in text
     assert "max_source_calls" in text
-    assert "success_condition" in text
+    assert "plan_step" in text
+    assert "success_condition" not in text
     assert "next_action" in text
-    assert "continue_source" in text
-    assert "switch_source" in text
+    assert "voluntary" in text.lower()
     assert "State of Task" in text
     assert "SANA" not in text

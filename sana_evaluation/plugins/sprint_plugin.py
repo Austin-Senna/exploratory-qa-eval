@@ -22,7 +22,6 @@ _EXCLUDED_TOOLS = {
     "plan",
     "plan_ideal",
     "skills",
-    "summarize_context",
 }
 
 
@@ -35,33 +34,19 @@ def _cadence_guide_reason() -> str:
     )
 
 
-def _commitment_contract_reason(source: str, default_budget: int) -> str:
+def _commitment_contract_reason(
+    source: str,
+    default_budget: int,
+    *,
+    action: str = "starting work on",
+) -> str:
     return (
-        f"Pause tool calls. You are starting work on source `{source}`. "
+        f"Pause tool calls. You are {action} source `{source}`. "
         "This is a source commitment contract. Call the sprint tool now with "
         "kind='commitment_contract'. Include "
         f"current_source='{source}', commitment_goal, max_source_calls "
-        f"(default {default_budget}), and success_condition. "
+        f"(default {default_budget}), and plan_step. Keep the contract short. "
         "After the sprint tool succeeds, retry the source tool call you were about to make."
-    )
-
-
-def _commitment_reflection_reason(
-    *,
-    current_source: str,
-    next_source: str,
-    switch_pending: bool,
-) -> str:
-    suffix = " Reflect before switching sources." if switch_pending else ""
-    return (
-        "Pause tool calls. The source-session budget is exhausted or a source switch "
-        f"is about to happen. Current source: `{current_source}`. "
-        f"Requested next source: `{next_source}`. "
-        "Call the sprint tool now with kind='commitment_reflection'. Include "
-        "current_source, calls_used, commitment_goal, evidence_gained, remaining_gap, "
-        "next_action ('continue_source', 'switch_source', or 'submit'), and revised_budget. "
-        "Do not call data tools or submit_answer until the sprint tool succeeds."
-        f"{suffix}"
     )
 
 
@@ -167,27 +152,32 @@ class SprintSteerHandler(SteeringHandler):
 
         if requested_source != self.state.source_session.current_source:
             reason = self._compose_reason(
-                _commitment_reflection_reason(
-                    current_source=self.state.source_session.current_source,
-                    next_source=requested_source,
-                    switch_pending=True,
+                _commitment_contract_reason(
+                    requested_source,
+                    self._commitment_budget_calls,
+                    action=(
+                        "switching from source "
+                        f"`{self.state.source_session.current_source}` to"
+                    ),
                 )
             )
-            self.state.pending_kind = "commitment_reflection"
+            self.state.pending_kind = "commitment_contract"
             self.state.pending_reason = reason
+            self.state.pending_source = requested_source
             self.state.pending_switch_source = requested_source
             return Guide(reason=reason)
 
         if self.state.source_session.is_budget_exhausted():
             reason = self._compose_reason(
-                _commitment_reflection_reason(
-                    current_source=self.state.source_session.current_source,
-                    next_source=self.state.source_session.current_source,
-                    switch_pending=False,
+                _commitment_contract_reason(
+                    self.state.source_session.current_source,
+                    self._commitment_budget_calls,
+                    action="renewing work on",
                 )
             )
-            self.state.pending_kind = "commitment_reflection"
+            self.state.pending_kind = "commitment_contract"
             self.state.pending_reason = reason
+            self.state.pending_source = self.state.source_session.current_source
             return Guide(reason=reason)
 
         return Proceed(reason="within source-session budget")

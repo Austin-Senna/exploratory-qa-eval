@@ -91,7 +91,7 @@ def test_commitment_contract_creates_source_session() -> None:
         current_source="schools",
         commitment_goal="find enrollment count",
         max_source_calls=4,
-        success_condition="query returns count",
+        plan_step="verify enrollment count",
         tool_context=ctx,
     )
 
@@ -100,5 +100,35 @@ def test_commitment_contract_creates_source_session() -> None:
     assert state.source_session is not None
     assert state.source_session.current_source == "schools"
     assert state.source_session.max_source_calls == 4
+    assert state.source_session.plan_step == "verify enrollment count"
     assert "kind: commitment_contract" in ctx.agent.system_prompt
+    assert "plan_step: verify enrollment count" in ctx.agent.system_prompt
+    clear_sprint_state()
+
+
+def test_commitment_contract_requires_plan_step_not_success_condition() -> None:
+    state = SprintState(pending_kind="commitment_contract")
+    set_sprint_state(state)
+    ctx = _tool_context("BASE PROMPT")
+
+    missing_plan = sprint(
+        kind="commitment_contract",
+        current_source="schools",
+        commitment_goal="find enrollment count",
+        max_source_calls=4,
+        tool_context=ctx,
+    )
+    assert missing_plan.startswith("Sprint not recorded:")
+    assert "plan_step" in missing_plan
+    assert "success_condition" not in missing_plan
+
+    accepted = sprint(
+        kind="commitment_contract",
+        current_source="schools",
+        commitment_goal="find enrollment count",
+        max_source_calls=4,
+        plan_step="verify enrollment count",
+        tool_context=ctx,
+    )
+    assert accepted == "Sprint recorded."
     clear_sprint_state()

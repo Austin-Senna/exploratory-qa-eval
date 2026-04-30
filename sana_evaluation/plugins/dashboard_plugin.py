@@ -87,7 +87,7 @@ class StateOfTaskDashboardPlugin(Plugin):
     @hook
     def on_after_tool(self, event: AfterToolCallEvent) -> None:
         tool_name = (getattr(event, "tool_use", {}) or {}).get("name", "")
-        if tool_name and tool_name not in {"plan", "plan_ideal", "skills", "summarize_context"}:
+        if tool_name and tool_name not in {"plan", "plan_ideal", "skills"}:
             self._tool_call_count += 1
 
     @hook

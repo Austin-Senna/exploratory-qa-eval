@@ -60,7 +60,7 @@ def test_cot_post_record_appends_to_data_tool_result() -> None:
 
 def test_cot_post_record_skips_administrative_tools() -> None:
     plugin = CoTPostRecordPlugin()
-    for tool in ("plan", "plan_ideal", "skills", "submit_answer", "summarize_context"):
+    for tool in ("plan", "plan_ideal", "skills", "submit_answer"):
         result = {"toolUseId": "x", "status": "success", "content": [{"text": "ok"}]}
         event = _StubAfterToolEvent(tool_use={"name": tool}, result=result)
         plugin.on_after_tool(event)
@@ -112,7 +112,7 @@ def test_sprint_steer_guides_at_k_boundary() -> None:
 
 def test_sprint_steer_passes_administrative_tools_before_pending() -> None:
     h = SprintSteerHandler(macro_reflection_k=1)
-    for tool in ("plan", "submit_answer", "skills", "summarize_context"):
+    for tool in ("plan", "submit_answer", "skills"):
         action = _run_steer(h, {"name": tool})
         assert isinstance(action, Proceed)
 
@@ -197,7 +197,7 @@ def _send_source_contract(handler: SprintSteerHandler, source: str, budget: int)
         current_source=source,
         commitment_goal="find enrollment count",
         max_source_calls=budget,
-        success_condition="query returns count",
+        plan_step="verify enrollment count",
         tool_context=_sprint_context(),
     )
 
@@ -215,6 +215,8 @@ def test_commitment_requests_contract_on_first_source_tool() -> None:
     assert isinstance(action, Guide)
     assert "commitment contract" in action.reason.lower()
     assert "schools" in action.reason
+    assert "plan_step" in action.reason
+    assert "success_condition" not in action.reason
 
 
 def test_commitment_blocks_non_sprint_tools_while_contract_pending() -> None:
@@ -266,7 +268,7 @@ def test_commitment_tool_contract_allows_retry() -> None:
     assert h.source_session.max_source_calls == 2
 
 
-def test_commitment_guides_when_session_budget_exhausted() -> None:
+def test_commitment_budget_exhaustion_requires_contract_renewal() -> None:
     h = SprintSteerHandler(
         macro_reflection_k=5,
         sprint_mode="commitment",
@@ -282,11 +284,14 @@ def test_commitment_guides_when_session_budget_exhausted() -> None:
         {"name": "query_file", "input": {"dataset_id": "schools"}},
     )
     assert isinstance(action, Guide)
-    assert "source-session budget" in action.reason.lower()
-    assert "next_action" in action.reason
+    assert h.state.pending_kind == "commitment_contract"
+    assert "renew" in action.reason.lower()
+    assert "commitment_contract" in action.reason
+    assert "commitment_reflection" not in action.reason
+    assert "next_action" not in action.reason
 
 
-def test_commitment_guides_before_source_switch() -> None:
+def test_commitment_source_switch_requires_new_contract_not_reflection() -> None:
     h = SprintSteerHandler(
         macro_reflection_k=5,
         sprint_mode="commitment",
@@ -301,9 +306,11 @@ def test_commitment_guides_before_source_switch() -> None:
         {"name": "list_files", "input": {"dataset_ids": ["libraries"]}},
     )
     assert isinstance(action, Guide)
-    assert "before switching sources" in action.reason.lower()
-    assert "schools" in action.reason
+    assert h.state.pending_kind == "commitment_contract"
+    assert "commitment_contract" in action.reason
+    assert "commitment_reflection" not in action.reason
     assert "libraries" in action.reason
+    assert "plan_step" in action.reason
 
 
 def test_commitment_reflection_can_extend_current_source() -> None:
@@ -315,7 +322,6 @@ def test_commitment_reflection_can_extend_current_source() -> None:
     _run_steer(h, {"name": "peek_file", "input": {"dataset_id": "schools"}})
     _send_source_contract(h, "schools", 1)
     h.on_after_tool(_StubAfterToolEvent(tool_use={"name": "peek_file", "input": {"dataset_id": "schools"}}))
-    _run_steer(h, {"name": "query_file", "input": {"dataset_id": "schools"}})
     sprint(
         kind="commitment_reflection",
         current_source="schools",
@@ -330,6 +336,26 @@ def test_commitment_reflection_can_extend_current_source() -> None:
     assert h.source_session is not None
     assert h.source_session.max_source_calls == 3
     assert h.source_session.calls_used == 1
+
+
+def test_commitment_reflection_is_voluntary_not_runtime_pending() -> None:
+    h = SprintSteerHandler(
+        macro_reflection_k=5,
+        sprint_mode="commitment",
+        commitment_budget_calls=1,
+    )
+    _run_steer(h, {"name": "peek_file", "input": {"dataset_id": "schools"}})
+    _send_source_contract(h, "schools", 1)
+    h.on_after_tool(_StubAfterToolEvent(tool_use={"name": "peek_file", "input": {"dataset_id": "schools"}}))
+
+    action = _run_steer(
+        h,
+        {"name": "query_file", "input": {"dataset_id": "schools"}},
+    )
+
+    assert isinstance(action, Guide)
+    assert h.state.pending_kind == "commitment_contract"
+    assert "commitment_reflection" not in action.reason
 
 
 # ---------------------------------------------------------------------------

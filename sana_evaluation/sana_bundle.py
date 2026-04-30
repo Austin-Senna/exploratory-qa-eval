@@ -9,7 +9,7 @@ flags off (and SanaDataLakeAgent then behaves identically to DataLakeAgent).
 from __future__ import annotations
 
 import logging
-from typing import Any, List, Optional
+from typing import Any, List, Optional, Sequence
 
 from strands_evaluation.agent_with_mode import DataLakeAgent
 from strands_evaluation.config import AgentConfig, RunConfig
@@ -17,7 +17,6 @@ from strands_evaluation.config import AgentConfig, RunConfig
 from sana_evaluation.helper.conversation import build_sana_conversation_manager
 from sana_evaluation.flags import SanaFlags
 from sana_evaluation.plugins import (
-    CoTPostRecordPlugin,
     SprintSteerHandler,
     StateOfTaskDashboardPlugin,
 )
@@ -100,9 +99,6 @@ class SanaDataLakeAgent(DataLakeAgent):
 
         plugins: List[Any] = []
 
-        if flags.cot:
-            plugins.append(CoTPostRecordPlugin())
-
         sprint_plugin: Optional[SprintSteerHandler] = None
         if flags.sprint:
             sprint_plugin = SprintSteerHandler(
@@ -144,10 +140,15 @@ class SanaDataLakeAgent(DataLakeAgent):
     ) -> List[Any]:
         decorated = list(tools)
         if self.sana_flags.results:
-            from sana_evaluation.tools.peek_file_with_profile import peek_file as sana_peek_file
+            from sana_evaluation.tools.peek_file_with_profile import (
+                peek_file as sana_peek_file,
+                peek_multiple as sana_peek_multiple,
+            )
 
             decorated = [
-                sana_peek_file if getattr(t, "tool_name", None) == "peek_file" else t
+                sana_peek_file if getattr(t, "tool_name", None) == "peek_file"
+                else sana_peek_multiple if getattr(t, "tool_name", None) == "peek_multiple"
+                else t
                 for t in decorated
             ]
         if self.sana_flags.sprint:
@@ -156,6 +157,22 @@ class SanaDataLakeAgent(DataLakeAgent):
             if not any(getattr(t, "tool_name", None) == "sprint" for t in decorated):
                 decorated.append(sprint)
         return decorated
+
+    def _tool_limit_excluded_tools(
+        self,
+        *,
+        search_tool_mode: Optional[str],
+        agent_management_mode: Optional[str],
+    ) -> Sequence[str]:
+        excluded = list(
+            super()._tool_limit_excluded_tools(
+                search_tool_mode=search_tool_mode,
+                agent_management_mode=agent_management_mode,
+            )
+        )
+        if self.sana_flags.sprint:
+            excluded.append("sprint")
+        return tuple(excluded)
 
 
 __all__ = ["SanaDataLakeAgent"]

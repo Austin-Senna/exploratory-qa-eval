@@ -90,7 +90,7 @@ def _validate_record(state: SprintState, record: Dict[str, Any]) -> List[str]:
     elif kind == "commitment_contract":
         missing = _missing(
             record,
-            ["current_source", "commitment_goal", "max_source_calls", "success_condition"],
+            ["current_source", "commitment_goal", "max_source_calls", "plan_step"],
         )
         if missing:
             errors.append("missing required field(s): " + ", ".join(missing))
@@ -145,7 +145,8 @@ def _apply_record(state: SprintState, record: Dict[str, Any]) -> None:
             current_source=str(record.get("current_source") or ""),
             commitment_goal=str(record.get("commitment_goal") or "unspecified"),
             max_source_calls=budget,
-            success_condition=str(record.get("success_condition") or "unspecified"),
+            plan_step=str(record.get("plan_step") or ""),
+            success_condition=str(record.get("success_condition") or ""),
         )
         state.pending_source = None
         state.pending_switch_source = None
@@ -188,9 +189,11 @@ def _format_sprint_section(record: Dict[str, Any]) -> str:
                 f"current_source: {record.get('current_source')}",
                 f"commitment_goal: {record.get('commitment_goal')}",
                 f"max_source_calls: {record.get('max_source_calls')}",
-                f"success_condition: {record.get('success_condition')}",
+                f"plan_step: {record.get('plan_step')}",
             ]
         )
+        if record.get("success_condition"):
+            lines.append(f"success_condition: {record.get('success_condition')}")
     else:
         lines.extend(
             [
@@ -218,6 +221,7 @@ def sprint(
     current_source: Optional[str] = None,
     commitment_goal: Optional[str] = None,
     max_source_calls: Optional[int] = None,
+    plan_step: Optional[str] = None,
     success_condition: Optional[str] = None,
     calls_used: Optional[int] = None,
     evidence_gained: Optional[str] = None,
@@ -228,9 +232,9 @@ def sprint(
     """Record the current sprint reflection or source commitment.
 
     Use `kind="cadence"` for ordinary k-turn sprint reflection,
-    `kind="commitment_contract"` before starting a dataset/source session, and
-    `kind="commitment_reflection"` when a source budget expires or before
-    switching sources.
+    `kind="commitment_contract"` before starting or renewing a dataset/source
+    session, and `kind="commitment_reflection"` as an optional source-session
+    note.
     """
 
     state = _STATE
@@ -247,6 +251,7 @@ def sprint(
         "current_source": current_source,
         "commitment_goal": commitment_goal,
         "max_source_calls": max_source_calls,
+        "plan_step": plan_step,
         "success_condition": success_condition,
         "calls_used": calls_used,
         "evidence_gained": evidence_gained,

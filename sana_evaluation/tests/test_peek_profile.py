@@ -343,5 +343,53 @@ class SanaPeekFileWrapperTests(unittest.TestCase):
         self.assertEqual(loader_called["count"], 0)
 
 
+class SanaPeekMultipleWrapperTests(unittest.TestCase):
+    """Verify SANA's peek_multiple wrapper reuses enriched peek_file for each entry."""
+
+    def test_wrapper_merges_profiles_for_each_file(self) -> None:
+        from sana_evaluation.tools import peek_file_with_profile as mod
+
+        original_impl = mod._baseline_peek_file_impl
+        original_loader = mod.load_dataset_profile
+
+        def stub_impl(**kwargs):
+            uri = kwargs.get("s3_uri") or f"s3://b/{kwargs.get('dataset_id')}/{kwargs.get('file_path')}"
+            return {
+                "dataset_id": kwargs.get("dataset_id") or "from-uri",
+                "file_path": kwargs.get("file_path") or "files/uri.csv",
+                "s3_uri": uri,
+                "family": "csv",
+            }
+
+        def stub_loader(uri):
+            return {"row_count": 10 if uri.endswith("a.csv") else 20}
+
+        try:
+            mod._baseline_peek_file_impl = stub_impl
+            mod.load_dataset_profile = stub_loader
+            result = mod.peek_multiple._tool_func(
+                files=[
+                    {"dataset_id": "ds", "file_path": "files/a.csv"},
+                    {"s3_uri": "s3://b/ds/files/b.csv"},
+                ],
+                max_rows=3,
+            )
+        finally:
+            mod._baseline_peek_file_impl = original_impl
+            mod.load_dataset_profile = original_loader
+
+        self.assertEqual(result["count"], 2)
+        self.assertEqual(result["results"][0]["profile"]["row_count"], 10)
+        self.assertEqual(result["results"][1]["profile"]["row_count"], 20)
+
+    def test_wrapper_preserves_validation_error_shape(self) -> None:
+        from sana_evaluation.tools import peek_file_with_profile as mod
+
+        result = mod.peek_multiple._tool_func(files=None)
+
+        self.assertIn("error", result)
+        self.assertIn("peek_multiple requires", result["error"])
+
+
 if __name__ == "__main__":
     unittest.main()
