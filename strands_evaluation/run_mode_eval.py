@@ -35,12 +35,6 @@ _MODE_LETTERS = {
     "ideal": "i",
 }
 
-_SANA_AXIS_DEFAULTS = {
-    "search_tool": "preloaded",
-    "search_results": "naive",
-    "agent_management": "naive",
-}
-
 _LEGACY_AXIS_DEFAULTS = {
     "search_tool": "standard",
     "search_results": "naive",
@@ -80,9 +74,8 @@ def _resolve_mode_axes(
     search_tool: Optional[str],
     search_results: Optional[str],
     agent_management: Optional[str],
-    sana_level: Optional[int],
 ) -> tuple[str, str, str]:
-    defaults = _SANA_AXIS_DEFAULTS if sana_level is not None else _LEGACY_AXIS_DEFAULTS
+    defaults = _LEGACY_AXIS_DEFAULTS
     return (
         search_tool or defaults["search_tool"],
         search_results or defaults["search_results"],
@@ -313,13 +306,6 @@ def main() -> None:
         default=None,
         help="Agent management axis.",
     )
-    parser.add_argument(
-        "--sana-level",
-        type=int,
-        choices=(0, 1),
-        default=None,
-        help="SANA ablation level. 0 = Agent 0 baseline label. 1 = Agent 1 (richer peek_file via cached profiles).",
-    )
 
     # Execution
     parser.add_argument("--parallel", type=int, default=6, help="Number of parallel worker processes")
@@ -351,7 +337,6 @@ def main() -> None:
         search_tool=args.search_tool,
         search_results=args.search_results,
         agent_management=args.agent_management,
-        sana_level=args.sana_level,
     )
     safe_model_name = base_eval._display_name(agent_config)
     variant_condition = _variant_condition_label(
@@ -386,7 +371,6 @@ def main() -> None:
         search_tool_mode=search_tool_mode,
         search_results_mode=search_results_mode,
         agent_management_mode=agent_management_mode,
-        sana_level=args.sana_level,
         condition_config=ConditionConfig(
             condition=condition_label,
             base_condition=args.condition,

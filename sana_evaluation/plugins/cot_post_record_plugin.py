@@ -39,7 +39,6 @@ _EXCLUDED_TOOLS = {
     "plan",
     "plan_ideal",
     "skills",
-    "summarize_context",
     "submit_answer",
 }
 

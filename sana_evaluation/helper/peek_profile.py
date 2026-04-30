@@ -1,8 +1,8 @@
-"""Dataset-profile enrichment loader for peek_file (SANA results_apis flag).
+"""Dataset-profile enrichment loader for peek_file (SANA results flag).
 
-When the SANA `results_apis` flag is on, `sana_bundle._pre_build_setup` registers
-`load_dataset_profile` with `set_peek_profile_loader`. peek_file then attaches a
-`profile` field to its return value when a profile is available for the URI.
+When the SANA `results` flag is on, `sana_bundle._decorate_tools` installs a
+profile-aware peek_file wrapper. peek_file then attaches a `profile` field to
+its return value when a profile is available for the URI.
 
 Profile data sources (in priority order):
 1. Precomputed profile rows from `sana_evaluation/data/datagov_tables_profiles.jsonl`

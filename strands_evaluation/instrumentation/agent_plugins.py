@@ -9,7 +9,7 @@ from __future__ import annotations
 import json
 import logging
 import time
-from typing import Any, List
+from typing import Any, Iterable, List
 
 from strands import Plugin
 from strands.hooks import (
@@ -174,6 +174,7 @@ class ToolLimitSteeringHandler(SteeringHandler):
         retry_max_tokens: int | None = 4096,
         submit_only_max_tokens: int | None = 2048,
         max_model_guides: int = 2,
+        excluded_tools: Iterable[str] = ("skills", "plan"),
     ) -> None:
         super().__init__()
         self._max = max_tool_calls
@@ -181,6 +182,7 @@ class ToolLimitSteeringHandler(SteeringHandler):
         self._retry_max_tokens = retry_max_tokens
         self._submit_only_max_tokens = submit_only_max_tokens
         self._max_model_guides = max_model_guides
+        self._excluded_tools = frozenset(str(name) for name in excluded_tools)
         self._count = 0
         self._start_time = 0.0
         self._guided = False
@@ -200,8 +202,7 @@ class ToolLimitSteeringHandler(SteeringHandler):
 
     @hook
     def on_after_tool(self, event: AfterToolCallEvent) -> None:
-        # Keep historical behavior: skills() and plan() do not count.
-        if not (event.tool_use.get("name") == "skills" or event.tool_use.get("name") == "plan"):
+        if event.tool_use.get("name") not in self._excluded_tools:
             self._count += 1
         self._model_guides_used = 0
 

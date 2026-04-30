@@ -1,9 +1,9 @@
-"""SANA's profile-enriched peek_file.
+"""SANA's profile-enriched peek tools.
 
 Wraps the baseline `peek_file` tool from `strands_evaluation` and merges in a
 `profile` field populated from the precomputed profile cache. When the
-`results_apis` SANA flag is on, this tool replaces the baseline `peek_file`
-in the agent's tool list.
+`results` SANA flag is on, these tools replace the baseline `peek_file` and
+`peek_multiple` in the agent's tool list.
 
 Baseline strands_evaluation has zero awareness of profiles — all enrichment
 plumbing lives here in SANA.
@@ -11,7 +11,7 @@ plumbing lives here in SANA.
 
 from __future__ import annotations
 
-from typing import Any, Dict
+from typing import Any, Dict, List, Optional
 
 from strands import tool
 from strands_evaluation.tools.agent_tools_v2 import peek_file as _baseline_peek_file
@@ -38,6 +38,11 @@ def peek_file(
 
     USE THIS for one file at a time. For multiple files in one call, use
     `peek_multiple` instead (different signature: takes a `files` list).
+
+    Prefer `s3_uri` when list_files/search/preloaded results gave you one; it
+    is less error-prone than reconstructing dataset_id + file_path. For datagov
+    files, both "rows.txt" and "files/rows.txt" are accepted, but
+    "files/rows.txt" is the canonical path.
 
     Args:
         dataset_id: ONE dataset identifier as a bare string, e.g. "Barack_Obama"
@@ -81,4 +86,82 @@ def peek_file(
     return result
 
 
-__all__ = ["peek_file"]
+@tool
+def peek_multiple(
+    files: Optional[List[Dict[str, str]]] = None,
+    entries: Optional[List[Dict[str, str]]] = None,
+    max_rows: int = 20,
+) -> Dict[str, Any]:
+    """
+    Inspect SEVERAL files in ONE call — a batch wrapper around enriched
+    peek_file.
+
+    USE THIS when you already know which 2+ files you need. For a single file,
+    use `peek_file` instead — its signature is simpler.
+
+    Prefer per-entry `s3_uri` when list_files/search/preloaded results gave you
+    one.
+
+    REQUIRED ARGUMENT SHAPE: pass a `files` list of dicts, NOT top-level
+    `dataset_id`/`file_path`:
+
+        peek_multiple(files=[
+            {"dataset_id": "census-2021", "file_path": "files/rows.txt"},
+            {"s3_uri": "s3://lakeqa-yc4103-datalake/datagov/x/files/y.txt"},
+        ])
+
+    Args:
+        files:    NON-EMPTY list of dicts. Each dict needs 'dataset_id' and
+                  'file_path'. The key 'path' is accepted as an alias for
+                  'file_path'. A per-entry `s3_uri` is also accepted.
+        entries:  Alias for `files`.
+        max_rows: Maximum preview rows per file (default 20).
+
+    Returns:
+        Dict with `results` list and `count`. Each result has the same shape as
+        peek_file and may include a `profile` field with cached metadata:
+        `schema_columns`, `table_kind`, `llm_description`, `snippet`. Some
+        profiles also include `row_count`, `size_bytes`, `top_2_rows`, and
+        per-column `null_rate`, `distinct_count`, `min`, `max`, `mean`.
+
+        On error: {error: ...}
+    """
+    if files is None and entries is not None:
+        files = entries
+    if isinstance(files, dict):
+        files = [files]
+    if not isinstance(files, list) or not files:
+        return {
+            "error": (
+                "peek_multiple requires a non-empty `files` list of "
+                "{dataset_id, file_path} dicts. Use peek_multiple for 2+ files "
+                "after list_files, or peek_file(dataset_id, file_path) for one "
+                "file. Example: "
+                'peek_multiple(files=[{"dataset_id": "census", "file_path": "files/rows.txt"}], max_rows=5)'
+            )
+        }
+
+    results = []
+    for spec in files:
+        if isinstance(spec, str):
+            results.append(peek_file._tool_func(s3_uri=spec, max_rows=max_rows))
+            continue
+        if not isinstance(spec, dict):
+            results.append({"error": "each entry must be a dict with dataset_id/file_path or s3_uri"})
+            continue
+        ds = spec.get("dataset_id", "")
+        fp = spec.get("file_path") or spec.get("path") or ""
+        uri = spec.get("s3_uri") or spec.get("uri") or ""
+        results.append(
+            peek_file._tool_func(
+                dataset_id=ds,
+                file_path=fp,
+                max_rows=max_rows,
+                s3_uri=uri,
+            )
+        )
+
+    return {"results": results, "count": len(results)}
+
+
+__all__ = ["peek_file", "peek_multiple"]

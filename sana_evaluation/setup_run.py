@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Friendly preset wrapper around ``run_mode_eval``."""
+"""Friendly preset wrapper around ``sana_evaluation.run_sana_eval``."""
 
 from __future__ import annotations
 
@@ -13,10 +13,14 @@ from typing import Callable, Optional, Sequence
 _SEARCH_MODE_CHOICES = ("naive", "preloaded", "standard", "ideal")
 _MANAGEMENT_MODE_CHOICES = ("naive", "standard", "ideal")
 _RESULT_MODE_CHOICES = ("naive", "ideal")
+_SHORTCUT_MODE_CHOICES = ("preloaded", "ideal")
+_SANA_FEATURE_CHOICES = ("cot", "results", "sprint")
+_SPRINT_MODE_CHOICES = ("cadence", "commitment")
 _REASONING_EFFORT_CHOICES = ("none", "minimal", "low", "medium", "high", "xhigh")
 _DEFAULT_TASK_SET = "tasks_core_quality"
 _DEFAULT_SMOKE_TASK_DIR = "k-5-d-4"
 _DEFAULT_SMOKE_TASK_LIMIT = 2
+_DEFAULT_FULL_OUTPUT_ROOT = "sana-results"
 _MODEL_ALIASES = {
     "gpt5.2": "openai/gpt-5.2",
     "gpt-5.2": "openai/gpt-5.2",
@@ -26,11 +30,16 @@ _MODEL_ALIASES = {
     "gpt-5.4-nano": "openai/gpt-5.4-nano",
 }
 _DB_HINTS = ("lance_data",)
+_SANA_AXIS_DEFAULTS = {"search": "preloaded", "results": "ideal", "plan": "standard"}
+_SHORTCUT_AXIS_DEFAULTS = {
+    "preloaded": {"search": "preloaded", "results": "ideal", "plan": "standard"},
+    "ideal": {"search": "ideal", "results": "ideal", "plan": "standard"},
+}
 
 
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Friendly presets for strands_evaluation.run_mode_eval",
+        description="Friendly presets for sana_evaluation.run_sana_eval",
     )
     subparsers = parser.add_subparsers(dest="subcommand", required=True)
 
@@ -38,7 +47,43 @@ def _build_parser() -> argparse.ArgumentParser:
     common.add_argument("--search", choices=_SEARCH_MODE_CHOICES, default=None)
     common.add_argument("--results", choices=_RESULT_MODE_CHOICES, default=None)
     common.add_argument("--plan", choices=_MANAGEMENT_MODE_CHOICES, default=None)
+    common.add_argument(
+        "--mode",
+        choices=_SHORTCUT_MODE_CHOICES,
+        default=None,
+        help=(
+            "Shortcut for common SANA axis bundles. preloaded => search preloaded, "
+            "results ideal, plan standard. ideal => search ideal, results ideal, "
+            "plan standard. Explicit --search/--results/--plan values override it."
+        ),
+    )
+    common.add_argument(
+        "--sana-feature",
+        action="append",
+        default=[],
+        choices=_SANA_FEATURE_CHOICES,
+        help="Enable a SANA feature. Repeat for multiple features.",
+    )
+    common.add_argument(
+        "--sprint-mode",
+        choices=_SPRINT_MODE_CHOICES,
+        default=None,
+        help="SANA sprint mode. Defaults to sana_evaluation.run_sana_eval's value.",
+    )
+    common.add_argument(
+        "--macro-reflection-k",
+        type=int,
+        default=None,
+        help="SANA sprint cadence. Defaults to sana_evaluation.run_sana_eval's value.",
+    )
+    common.add_argument(
+        "--commitment-budget-calls",
+        type=int,
+        default=None,
+        help="SANA commitment-mode source budget. Defaults to sana_evaluation.run_sana_eval's value.",
+    )
     common.add_argument("--k", type=int, default=None)
+    common.add_argument("--search-calls", type=int, default=None)
     common.add_argument("--model", default="bedrock/claude-sonnet-4.5")
     common.add_argument(
         "--reasoning-effort",
@@ -50,22 +95,24 @@ def _build_parser() -> argparse.ArgumentParser:
     common.add_argument("--db", default=None, help="Lance DB root, required on every run.")
     common.add_argument(
         "--condition",
-        choices=("baseline", "b"),
+        choices=("baseline", "a", "b"),
         default="baseline",
     )
     common.add_argument("--parallel", type=int, default=None)
+    common.add_argument("--max-tool-calls", type=int, default=None)
     common.add_argument("--timeout", type=int, default=None)
     common.add_argument("--submit-grace-seconds", type=int, default=None)
+    common.add_argument("--only-new", action="store_true")
     common.add_argument("--verbose", "-v", action="store_true")
 
-    smoke = subparsers.add_parser("smoke", parents=[common], help="Run a lightweight smoke eval.")
+    smoke = subparsers.add_parser("smoke", parents=[common], help="Run a lightweight SANA smoke eval.")
     smoke.add_argument(
         "--task-dir",
         default=None,
         help="Optional task directory override inside the default task set.",
     )
 
-    full = subparsers.add_parser("full", parents=[common], help="Run the full default task-set eval.")
+    full = subparsers.add_parser("full", parents=[common], help="Run the full default task-set SANA eval.")
     full.add_argument(
         "--task-continue",
         "--continue",
@@ -156,17 +203,17 @@ def _display_command(command: Sequence[str]) -> str:
     return shlex.join(printable)
 
 
-_LEGACY_AXIS_DEFAULTS = {"search": "standard", "results": "naive", "plan": "standard"}
-
-
 def _resolve_axes(args: argparse.Namespace) -> None:
-    """Fill axis defaults. Explicit user args always win."""
-    for axis, fallback in _LEGACY_AXIS_DEFAULTS.items():
+    """Fill SANA axis defaults. Explicit user args always win."""
+    defaults = dict(_SANA_AXIS_DEFAULTS)
+    if args.mode is not None:
+        defaults.update(_SHORTCUT_AXIS_DEFAULTS[args.mode])
+    for axis, fallback in defaults.items():
         if getattr(args, axis) is None:
             setattr(args, axis, fallback)
 
 
-def _build_run_mode_command(args: argparse.Namespace, cwd: Path) -> tuple[list[str], dict[str, str]]:
+def _build_sana_command(args: argparse.Namespace, cwd: Path) -> tuple[list[str], dict[str, str]]:
     _resolve_axes(args)
     model_name = _normalize_model_name(args.model)
     db_arg = _validate_db_arg(args.db, cwd)
@@ -174,7 +221,7 @@ def _build_run_mode_command(args: argparse.Namespace, cwd: Path) -> tuple[list[s
     command = [
         sys.executable,
         "-m",
-        "strands_evaluation.run_mode_eval",
+        "sana_evaluation.run_sana_eval",
         "--search_tool",
         args.search,
         "--search_results",
@@ -191,6 +238,8 @@ def _build_run_mode_command(args: argparse.Namespace, cwd: Path) -> tuple[list[s
 
     if args.k is not None:
         command.extend(["--k", str(args.k)])
+    if args.search_calls is not None:
+        command.extend(["--search-calls", str(args.search_calls)])
     if args.reasoning_effort is not None:
         command.extend(["--reasoning-effort", args.reasoning_effort])
     if args.openai_prompt_cache_key is not None:
@@ -199,10 +248,22 @@ def _build_run_mode_command(args: argparse.Namespace, cwd: Path) -> tuple[list[s
         command.extend(["--openai-prompt-cache-retention", args.openai_prompt_cache_retention])
     if args.parallel is not None:
         command.extend(["--parallel", str(args.parallel)])
+    if args.max_tool_calls is not None:
+        command.extend(["--max-tool-calls", str(args.max_tool_calls)])
     if args.timeout is not None:
         command.extend(["--timeout", str(args.timeout)])
     if args.submit_grace_seconds is not None:
         command.extend(["--submit-grace-seconds", str(args.submit_grace_seconds)])
+    for feature in args.sana_feature:
+        command.extend(["--sana-feature", feature])
+    if args.sprint_mode is not None:
+        command.extend(["--sprint-mode", args.sprint_mode])
+    if args.macro_reflection_k is not None:
+        command.extend(["--macro-reflection-k", str(args.macro_reflection_k)])
+    if args.commitment_budget_calls is not None:
+        command.extend(["--commitment-budget-calls", str(args.commitment_budget_calls)])
+    if args.only_new:
+        command.append("--only-new")
     if args.verbose:
         command.append("--verbose")
 
@@ -237,9 +298,9 @@ def _build_run_mode_command(args: argparse.Namespace, cwd: Path) -> tuple[list[s
                 "--task-set",
                 _DEFAULT_TASK_SET,
                 "--logs-output-dir",
-                "logs",
+                _DEFAULT_FULL_OUTPUT_ROOT,
                 "--results-output-dir",
-                "results",
+                _DEFAULT_FULL_OUTPUT_ROOT,
             ]
         )
         scope = f"resume pending tasks under {_DEFAULT_TASK_SET}"
@@ -250,17 +311,17 @@ def _build_run_mode_command(args: argparse.Namespace, cwd: Path) -> tuple[list[s
                 "--task-set",
                 _DEFAULT_TASK_SET,
                 "--logs-output-dir",
-                "logs",
+                _DEFAULT_FULL_OUTPUT_ROOT,
                 "--results-output-dir",
-                "results",
+                _DEFAULT_FULL_OUTPUT_ROOT,
             ]
         )
         scope = f"all tasks under {_DEFAULT_TASK_SET}"
     metadata = {
         "db_path": db_arg,
         "task_scope": scope,
-        "logs_output_dir": "logs",
-        "results_output_dir": "results",
+        "logs_output_dir": _DEFAULT_FULL_OUTPUT_ROOT,
+        "results_output_dir": _DEFAULT_FULL_OUTPUT_ROOT,
     }
     return command, metadata
 
@@ -277,15 +338,23 @@ def run(
 
     if args.k is not None and args.k <= 0:
         parser.error("--k must be > 0")
+    if args.search_calls is not None and args.search_calls <= 0:
+        parser.error("--search-calls must be > 0")
     if args.parallel is not None and args.parallel <= 0:
         parser.error("--parallel must be > 0")
+    if args.max_tool_calls is not None and args.max_tool_calls <= 0:
+        parser.error("--max-tool-calls must be > 0")
     if args.timeout is not None and args.timeout <= 0:
         parser.error("--timeout must be > 0")
     if args.submit_grace_seconds is not None and args.submit_grace_seconds < 0:
         parser.error("--submit-grace-seconds must be >= 0")
+    if args.macro_reflection_k is not None and args.macro_reflection_k <= 0:
+        parser.error("--macro-reflection-k must be > 0")
+    if args.commitment_budget_calls is not None and args.commitment_budget_calls <= 0:
+        parser.error("--commitment-budget-calls must be > 0")
 
     try:
-        command, metadata = _build_run_mode_command(args, repo_root)
+        command, metadata = _build_sana_command(args, repo_root)
     except ValueError as exc:
         parser.error(str(exc))
 

@@ -56,7 +56,6 @@ class RunConfig:
     search_tool_mode: Optional[str] = None
     search_results_mode: Optional[str] = None
     agent_management_mode: Optional[str] = None
-    sana_level: Optional[int] = None     # 0 (baseline) or 1 (Agent 1: richer peek); 2-4 reserved
 
 
 @dataclass

@@ -2,7 +2,7 @@
 
 Reuses Strands' SummarizingConversationManager but supplies a SANA-aware
 summarization prompt that explicitly preserves CoT post-tool records and the
-most recent macro-reflection JSON. No custom subclass — just a tuned prompt.
+current sprint section. No custom subclass — just a tuned prompt.
 """
 
 from __future__ import annotations
@@ -14,15 +14,14 @@ from strands_evaluation.config import RunConfig
 
 SANA_SUMMARIZATION_PROMPT = """
 You are summarizing a tool-using data-analysis conversation produced by an agent
-that emits a numbered plan, structured CoT records, and periodic macro-reflection
-JSON.
+that emits a numbered plan, structured CoT records, and periodic sprint records.
 
 PRESERVE EXACTLY (verbatim, do not paraphrase or omit):
 - The original user question.
 - The plan emitted by `plan_ideal` or `plan_agent` — preserve every numbered
   bullet exactly as the tool produced it.
-- The most recent macro-reflection JSON object — keep its `global_status`,
-  `should_submit`, and `short_forward_plan` fields exactly as emitted.
+- The most recent `## CURRENT SPRINT` section — keep its fields exactly as
+  emitted.
 
 RENDER PROGRESS:
 - The agent emits `current_step:` lines as it works through the plan.
@@ -42,7 +41,7 @@ ALSO SUMMARIZE concisely:
 
 Format:
 1. "Plan progress:" — the preserved plan rendered as a ✓ / ▸ / ☐ checklist.
-2. "Last macro-reflection:" — verbatim JSON fields.
+2. "Current sprint:" — verbatim sprint fields.
 3. "Findings & state:" — technical bullets.
 
 Use precise technical language. Omit conversational filler.
