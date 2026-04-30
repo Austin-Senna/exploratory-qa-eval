@@ -71,7 +71,7 @@ The pre-record stays in the system prompt only — its compliance is naturally h
 **Prompt** — `prompts/sprint.py:sprint_block(search_tool)`
 
 Tells the agent that every k non-administrative tool calls, or at source commitment boundaries, the next tool call is cancelled and a Guide-style synthetic result will arrive containing:
-1. A state-of-task readout (turn count, plan progress, candidate answer, confidence trend, evidence consumed).
+1. A state-of-task readout (current plan step, remaining tool budget, concise source-session state, and candidate answer when available).
 2. An instruction to call the `sprint` tool. The model must call that tool before any data tool or `submit_answer`.
 
 The sprint tool records the current sprint and upserts a persistent `## CURRENT SPRINT` section into the agent's system prompt after `## CURRENT PLAN`. This keeps the reflection inside the agent's durable working context without creating a text-only assistant turn.
@@ -79,7 +79,7 @@ The sprint tool records the current sprint and upserts a persistent `## CURRENT 
 Cadence sprint fields: `kind="cadence"`, `global_status`, `should_submit`, `potential_answer`, `answer_confidence`, `short_forward_plan`.
 
 Commitment fields:
-- `kind="commitment_contract"`: `current_source`, `commitment_goal`, `max_source_calls`, `success_condition`.
+- `kind="commitment_contract"`: `current_source`, `commitment_goal`, `max_source_calls`, `plan_step` (`success_condition` optional).
 - `kind="commitment_reflection"`: `current_source`, `calls_used`, `commitment_goal`, `evidence_gained`, `remaining_gap`, `next_action`, `revised_budget`.
 
 **Plugin** — `plugins/sprint_plugin.py:SprintSteerHandler`
@@ -89,6 +89,8 @@ Subclass of Strands' `SteeringHandler`. Counts non-administrative tool calls or 
 - feeds the reason text back as a synthetic tool result,
 - blocks all tools except `sprint` until the sprint tool succeeds.
 
+In commitment mode, a pending source contract blocks source/data tools but does not block `submit_answer`; if the answer is already ready, the final answer can be submitted without spending another bookkeeping turn.
+
 After the model calls `sprint`, the tool updates shared sprint state, refreshes `## CURRENT SPRINT`, and clears the pending gate so normal tool use can resume.
 
 Excluded tools (don't advance the sprint counter): `plan`, `plan_ideal`, `skills`, `submit_answer`, `sprint`.
@@ -96,16 +98,16 @@ Excluded tools (don't advance the sprint counter): `plan`, `plan_ideal`, `skills
 **Peer plugin** — `plugins/dashboard_plugin.py:StateOfTaskDashboardPlugin`
 
 Always wired alongside `SprintSteerHandler` when `sprint=on`. The plugin observes runtime state but does not inject any messages on its own:
-- `on_after_tool` increments a tool-call ledger (excludes admin tools).
-- `on_after_model` regex-parses the assistant CoT text for `confidence: low|medium|high` (3-deep deque) and `sufficient_to_call_step_complete: true|false` (bumps complete/incomplete counters).
+- `on_after_tool` increments a tool-call ledger (excludes admin tools) and captures the latest numbered plan from `plan` / `plan_ideal`.
 - `render_block()` formats those signals into:
   ```
-  [State of Task — Turn 5 / 30]
-  long_plan: 2 step(s) marked complete, 1 step(s) flagged incomplete
-  sprint: cadence | status: ON_TRACK | reflections: 1
+  [State of Task]
+  current_plan_step: 2) Query qualifying counties.
+  tool_calls_left: 25/30
+  sprint_status: ON_TRACK | next: turns 1-2: query county totals
   candidate_answer: 1.2M | answer_confidence: medium
-  confidence (last 3): low, low, medium
-  evidence: 5 tool call(s) consumed
+  source_session: bridge-conditions-nys-department-of-transportation | source_calls: 2/3
+  source_goal: Find NY counties with at least 65 poor bridges.
   ```
 
 The `candidate_answer` line appears once a reflection has produced `potential_answer` + `answer_confidence` (i.e. from the second sprint onward).

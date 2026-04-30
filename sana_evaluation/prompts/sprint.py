@@ -12,13 +12,13 @@ def sprint_block(search_tool: str, sprint_mode: str = "cadence") -> str:
 
 def _readout_text() -> str:
     return (
-        "   [State of Task - Turn N / MAX]\n"
-        "   long_plan: <X step(s) marked complete, Y step(s) flagged incomplete>\n"
-        "   sprint: <last sprint status and next action, when available>\n"
+        "   [State of Task]\n"
+        "   current_plan_step: <current numbered plan step, when known>\n"
+        "   tool_calls_left: <remaining>/<max>\n"
+        "   sprint_status: <last sprint status and next action, when available>\n"
         "   candidate_answer: <prior potential_answer> | answer_confidence: <low|medium|high>\n"
-        "   source_session: <source> | calls: <used>/<budget> | goal: <goal> | plan_step: <step>\n"
-        "   confidence (last 3): <low|medium|high>, <...>, <...>\n"
-        "   evidence: <Z tool call(s) consumed>\n"
+        "   source_session: <source> | source_calls: <used>/<budget>\n"
+        "   source_goal: <compact goal for this source, when available>\n"
     )
 
 
@@ -66,8 +66,9 @@ def _commitment_block() -> str:
         "- Source-session reflections are voluntary. You may call "
         "`sprint(kind='commitment_reflection')` to record what you learned, but the "
         "runtime does not require a separate reflection before switching or renewing.\n"
-        "- While a sprint is pending, data tools and `submit_answer` are blocked until "
-        "the `sprint` tool succeeds.\n"
+        "- While a source commitment contract is pending, source/data tools are blocked "
+        "until the `sprint` tool succeeds. `submit_answer` is still allowed if the "
+        "answer is already ready.\n"
         "\n"
         "When a source commitment prompt fires, the cancelled-tool synthetic result "
         "contains a state-of-task readout followed by the instruction to call the "

@@ -22,25 +22,10 @@ class _StubAgent:
 
 
 @dataclass
-class _StubStopResponse:
-    message: Dict[str, Any]
-
-
-@dataclass
-class _StubAfterModelEvent:
-    stop_response: Optional[_StubStopResponse]
-    exception: Optional[BaseException] = None
-
-
-@dataclass
 class _StubAfterToolEvent:
     tool_use: Dict[str, Any]
     result: Optional[Dict[str, Any]] = None
     exception: Optional[BaseException] = None
-
-
-def _assistant_message(text: str) -> Dict[str, Any]:
-    return {"role": "assistant", "content": [{"text": text}]}
 
 
 # ---------------------------------------------------------------------------
@@ -219,6 +204,29 @@ def test_commitment_requests_contract_on_first_source_tool() -> None:
     assert "success_condition" not in action.reason
 
 
+def test_commitment_requests_contract_on_first_relative_uri_tool() -> None:
+    h = SprintSteerHandler(
+        macro_reflection_k=5,
+        sprint_mode="commitment",
+        commitment_budget_calls=3,
+    )
+    action = _run_steer(
+        h,
+        {
+            "name": "peek_file",
+            "input": {
+                "s3_uri": (
+                    "datagov/bridge-conditions-nys-department-of-transportation/"
+                    "files/rows.txt"
+                )
+            },
+        },
+    )
+    assert isinstance(action, Guide)
+    assert h.state.pending_kind == "commitment_contract"
+    assert "bridge-conditions-nys-department-of-transportation" in action.reason
+
+
 def test_commitment_blocks_non_sprint_tools_while_contract_pending() -> None:
     h = SprintSteerHandler(
         macro_reflection_k=5,
@@ -242,8 +250,7 @@ def test_commitment_blocks_non_sprint_tools_while_contract_pending() -> None:
         h,
         {"name": "submit_answer", "input": {"answer": "0"}},
     )
-    assert isinstance(submit, Guide)
-    assert "call the sprint tool" in submit.reason.lower()
+    assert isinstance(submit, Proceed)
 
     allowed = _run_steer(h, {"name": "sprint", "input": {"kind": "commitment_contract"}})
     assert isinstance(allowed, Proceed)
@@ -365,24 +372,67 @@ def test_commitment_reflection_is_voluntary_not_runtime_pending() -> None:
 
 def test_dashboard_render_block_includes_observed_state() -> None:
     plugin = StateOfTaskDashboardPlugin(max_tool_calls=10, history_window=3)
+    plugin.on_after_tool(
+        _StubAfterToolEvent(
+            tool_use={
+                "name": "plan",
+                "input": {
+                    "plan_text": (
+                        "1) Inspect source schemas.\n"
+                        "2) Query qualifying counties.\n"
+                        "3) Submit final answer."
+                    )
+                },
+            }
+        )
+    )
     plugin.on_after_tool(_StubAfterToolEvent(tool_use={"name": "peek_file"}))
     plugin.on_after_tool(_StubAfterToolEvent(tool_use={"name": "query_file"}))
-    plugin.on_after_tool(_StubAfterToolEvent(tool_use={"name": "plan"}))  # excluded
-    plugin.on_after_model(
-        _StubAfterModelEvent(stop_response=_StubStopResponse(_assistant_message("confidence: low")))
-    )
-    plugin.on_after_model(
-        _StubAfterModelEvent(stop_response=_StubStopResponse(_assistant_message("confidence: medium")))
-    )
-    plugin.on_after_model(
-        _StubAfterModelEvent(stop_response=_StubStopResponse(_assistant_message("confidence: high")))
-    )
+    plugin.on_after_tool(_StubAfterToolEvent(tool_use={"name": "sprint"}))  # excluded
 
     text = plugin.render_block()
     assert "State of Task" in text
-    assert "long_plan" in text
-    assert "2 tool call(s)" in text  # plan excluded
-    assert "low" in text and "medium" in text and "high" in text
+    assert "current_plan_step: 1) Inspect source schemas." in text
+    assert "tool_calls_left: 8/10" in text
+    assert "long_plan" not in text
+    assert "confidence" not in text
+    assert "reflection" not in text
+
+
+def test_dashboard_uses_source_session_plan_step_when_available() -> None:
+    plugin = StateOfTaskDashboardPlugin(max_tool_calls=10)
+    handler = SprintSteerHandler(
+        macro_reflection_k=5,
+        sprint_mode="commitment",
+        commitment_budget_calls=3,
+    )
+    plugin.sprint_plugin = handler
+    _run_steer(handler, {"name": "peek_file", "input": {"dataset_id": "schools"}})
+    _send_source_contract(handler, "schools", 2)
+    handler.source_session.plan_step = "2"
+    handler.on_after_tool(_StubAfterToolEvent(tool_use={"name": "peek_file", "input": {"dataset_id": "schools"}}))
+    plugin.on_after_tool(
+        _StubAfterToolEvent(
+            tool_use={
+                "name": "plan",
+                "input": {
+                    "plan_text": (
+                        "1) Inspect source schemas.\n"
+                        "2) Query qualifying counties.\n"
+                        "3) Submit final answer."
+                    )
+                },
+            }
+        )
+    )
+    plugin.on_after_tool(_StubAfterToolEvent(tool_use={"name": "peek_file", "input": {"dataset_id": "schools"}}))
+
+    text = plugin.render_block()
+
+    assert "current_plan_step: 2) Query qualifying counties." in text
+    assert "source_session: schools | source_calls: 1/2" in text
+    assert "source_goal: find enrollment count" in text
+    assert "reflections:" not in text
 
 
 def test_dashboard_does_not_inject_messages_on_its_own() -> None:
@@ -392,9 +442,6 @@ def test_dashboard_does_not_inject_messages_on_its_own() -> None:
     # The plugin should not register a BeforeModelCallEvent hook anymore;
     # there is no dashboard hook that touches agent.messages.
     plugin.on_after_tool(_StubAfterToolEvent(tool_use={"name": "peek_file"}))
-    plugin.on_after_model(
-        _StubAfterModelEvent(stop_response=_StubStopResponse(_assistant_message("confidence: low")))
-    )
     assert agent.messages == []
 
 
@@ -407,9 +454,6 @@ def test_sprint_guide_reason_includes_dashboard_when_peer_wired() -> None:
     """At the k-turn boundary, the Guide reason should be dashboard text + sprint instruction."""
     dashboard = StateOfTaskDashboardPlugin(max_tool_calls=10)
     dashboard.on_after_tool(_StubAfterToolEvent(tool_use={"name": "peek_file"}))
-    dashboard.on_after_model(
-        _StubAfterModelEvent(stop_response=_StubStopResponse(_assistant_message("confidence: medium")))
-    )
     handler = SprintSteerHandler(macro_reflection_k=2)
     handler.dashboard_plugin = dashboard
 

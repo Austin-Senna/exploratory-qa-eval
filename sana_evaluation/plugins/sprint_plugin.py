@@ -115,6 +115,8 @@ class SprintSteerHandler(SteeringHandler):
         tool_name = (tool_use or {}).get("name", "")
         if tool_name == _SPRINT_TOOL:
             return Proceed(reason="sprint tool satisfies pending reflection")
+        if tool_name == "submit_answer" and self.state.pending_kind == "commitment_contract":
+            return Proceed(reason="submit_answer bypasses source commitment contract")
 
         if self.state.pending_kind is not None:
             return Guide(reason=_pending_reason(self.state.pending_reason))
@@ -193,15 +195,11 @@ class SprintSteerHandler(SteeringHandler):
 
     def describe_for_dashboard(self) -> str:
         last = self.state.last_reflection
-        if last is None:
-            return "sprint: (no reflection yet)"
-
-        kind = last.get("kind", "—")
-        lines = [f"sprint: {kind} | reflections: {self.state.reflections_done}"]
-        if kind == "cadence":
+        lines = []
+        if last is not None and last.get("kind") == "cadence":
             plan = last.get("short_forward_plan") or []
             head = plan[0] if plan else "-"
-            lines[0] += f" | status: {last.get('global_status', '-')} | next: {head}"
+            lines.append(f"sprint_status: {last.get('global_status', '-')} | next: {head}")
             answer = last.get("potential_answer")
             answer_conf = last.get("answer_confidence")
             if answer or answer_conf:

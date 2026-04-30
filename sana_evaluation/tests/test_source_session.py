@@ -30,6 +30,31 @@ def test_source_from_s3_uri_input() -> None:
     assert source == "iowa-local-area-unemployment-statistics"
 
 
+def test_source_from_relative_datagov_uri_input() -> None:
+    source = source_from_tool_use(
+        {
+            "name": "peek_file",
+            "input": {
+                "s3_uri": (
+                    "datagov/bridge-conditions-nys-department-of-transportation/"
+                    "files/rows.txt"
+                )
+            },
+        }
+    )
+    assert source == "bridge-conditions-nys-department-of-transportation"
+
+
+def test_source_from_relative_wikipedia_uri_input() -> None:
+    source = source_from_tool_use(
+        {
+            "name": "grep_file",
+            "input": {"s3_uri": "wikipedia/Khan_Lab_School/content.txt"},
+        }
+    )
+    assert source == "Khan_Lab_School"
+
+
 def test_source_from_batch_files_same_dataset() -> None:
     source = source_from_tool_use(
         {

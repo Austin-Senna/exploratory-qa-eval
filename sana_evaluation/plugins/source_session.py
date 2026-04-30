@@ -21,6 +21,9 @@ SOURCE_SESSION_TOOLS = {
 _S3_DATASET_RE = re.compile(
     r"^s3://[^/]+/(?:datagov|wikipedia)/(?P<dataset_id>[^/]+)/"
 )
+_RELATIVE_DATASET_RE = re.compile(
+    r"^(?:datagov|wikipedia)/(?P<dataset_id>[^/]+)/"
+)
 
 
 def _clean_source(value: Any) -> Optional[str]:
@@ -34,13 +37,16 @@ def _clean_source(value: Any) -> Optional[str]:
 
 
 def _source_from_s3_uri(uri: Any) -> Optional[str]:
-    uri = _clean_source(uri)
-    if uri is None:
+    if not isinstance(uri, str):
         return None
-    match = _S3_DATASET_RE.match(uri)
-    if not match:
+    value = uri.strip().strip("/")
+    if not value:
         return None
-    return match.group("dataset_id")
+    for pattern in (_S3_DATASET_RE, _RELATIVE_DATASET_RE):
+        match = pattern.match(value)
+        if match:
+            return match.group("dataset_id")
+    return None
 
 
 def _source_from_files(files: Any) -> Optional[str]:
@@ -124,18 +130,13 @@ class SourceSessionState:
         return self.calls_used >= self.max_source_calls
 
     def describe(self) -> str:
-        tools = ", ".join(self.tools_used[-5:]) if self.tools_used else "-"
-        pieces = [
+        source_line = (
             f"source_session: {self.current_source} | "
-            f"calls: {self.calls_used}/{self.max_source_calls} | "
-            f"goal: {self.commitment_goal}"
-        ]
-        if self.plan_step:
-            pieces.append(f"plan_step: {self.plan_step}")
-        if self.success_condition:
-            pieces.append(f"success: {self.success_condition}")
-        pieces.append(f"recent_tools: {tools}")
-        return " | ".join(pieces)
+            f"source_calls: {self.calls_used}/{self.max_source_calls}"
+        )
+        if not self.commitment_goal:
+            return source_line
+        return source_line + f"\nsource_goal: {self.commitment_goal}"
 
 
 __all__ = ["SOURCE_SESSION_TOOLS", "SourceSessionState", "source_from_tool_use"]

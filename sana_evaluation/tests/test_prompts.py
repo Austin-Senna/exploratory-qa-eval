@@ -44,9 +44,11 @@ def test_sprint_block_describes_cadence_reflection(search_tool: str) -> None:
     assert "answer_confidence" in text
     assert "turns 1-2" in text
     assert "State of Task" in text
-    assert "long_plan" in text
-    assert "confidence" in text
-    assert "evidence" in text
+    assert "current_plan_step" in text
+    assert "tool_calls_left" in text
+    assert "long_plan" not in text
+    assert "confidence (last" not in text
+    assert "evidence" not in text
     assert "commitment contract" not in text.lower()
     assert "SANA" not in text
 
@@ -64,4 +66,6 @@ def test_sprint_block_describes_commitment_contract(search_tool: str) -> None:
     assert "next_action" in text
     assert "voluntary" in text.lower()
     assert "State of Task" in text
+    assert "current_plan_step" in text
+    assert "tool_calls_left" in text
     assert "SANA" not in text
