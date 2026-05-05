@@ -20,3 +20,5 @@ results-ec2
 logs-ec2
 tmp
 results-*/
+sana-results*
+reference_papers

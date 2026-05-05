@@ -22,7 +22,8 @@ _S3_PREFIX = "s3://lakeqa-yc4103-datalake/"
 _JUDGE_SYSTEM_PROMPT = (
     "You are a dataset selector. The user gives you a search query and a list of\n"
     "candidate datasets (each with s3_uri and dataset_id). Call the `pick` tool\n"
-    "exactly once with the s3_uris most relevant to the query. Default to 1. If\n"
+    "exactly once with the s3_uris most relevant to the query. Return nothing if nothing is too semantically similar to the dataset.\n"
+    If\n"
     'the query is clearly aggregate (year ranges, "all of", multiple regions),\n'
     "pick the matching group. Never pick an s3_uri not in the list."
 )
