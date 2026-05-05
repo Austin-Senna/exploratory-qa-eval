@@ -220,7 +220,7 @@ class TestSearchIdealJudge(unittest.TestCase):
             )
         self.assertIsNone(state["picked"])
 
-    def test_fallback_pick_on_judge_no_pick(self):
+    def test_no_pick_returns_dataset_not_found_without_consuming_source(self):
         with TemporaryDirectory() as tmpdir:
             plans_root = Path(tmpdir) / "plans_mini"
             _, uris = _set_task_context(
@@ -241,13 +241,74 @@ class TestSearchIdealJudge(unittest.TestCase):
                 with self.assertLogs(search_ideal.logger, level="WARNING") as logs:
                     result = search_ideal.search_ideal("crime data in Chicago 2017")
 
-        self.assertEqual(result["count"], 1)
-        self.assertEqual(result["results"][0]["s3_uri"], uris[0])
-        self.assertEqual(result["results"][0]["dataset_id"], "chicago-crime-2017")
+        self.assertEqual(
+            result,
+            {
+                "results": [],
+                "count": 0,
+                "query": "crime data in Chicago 2017",
+                "message": "Dataset not found",
+                "plan_exhausted": False,
+            },
+        )
         self.assertFalse(result["plan_exhausted"])
-        self.assertEqual(search_ideal._USED_S3_URIS, {uris[0]})
+        self.assertEqual(search_ideal._USED_S3_URIS, set())
         self.assertEqual(len(factory.calls), 1)
-        self.assertTrue(any("falling back" in message for message in logs.output))
+        self.assertTrue(any("no pick" in message for message in logs.output))
+
+    def test_empty_pick_returns_dataset_not_found_without_consuming_source(self):
+        with TemporaryDirectory() as tmpdir:
+            plans_root = Path(tmpdir) / "plans_mini"
+            _task_id_value, uris = _set_task_context(
+                plans_root,
+                task_name="task_1.json",
+                source_sequence=[
+                    "datagov/chicago-crime-2017/files/rows.txt",
+                    "datagov/chicago-parks/files/rows.txt",
+                ],
+            )
+            factory = _FakeAgentFactory(
+                action=lambda prompt, tools: tools[0](s3_uris=[], reason="query is too vague")
+            )
+
+            with patch.object(search_ideal, "Agent", factory), patch.object(
+                search_ideal,
+                "_judge_model",
+                return_value="fake-model",
+            ):
+                result = search_ideal.search_ideal("not enough signal")
+
+        self.assertEqual(
+            result,
+            {
+                "results": [],
+                "count": 0,
+                "query": "not enough signal",
+                "message": "Dataset not found",
+                "plan_exhausted": False,
+            },
+        )
+        self.assertEqual(search_ideal._USED_S3_URIS, set())
+        self.assertEqual(len(uris), 2)
+
+    def test_judge_prompt_includes_table_descriptions(self):
+        with TemporaryDirectory() as tmpdir:
+            uri = "s3://lakeqa-yc4103-datalake/datagov/chicago-crime-2017/files/rows.txt"
+            with self._patch_support_files(
+                Path(tmpdir),
+                uri=uri,
+                dataset_slug="chicago-crime-2017",
+                desc="Chicago crime incident records for 2017 with location and offense fields.",
+            ):
+                prompt = search_ideal._format_judge_prompt(
+                    "crime data",
+                    [(uri, "chicago-crime-2017")],
+                )
+
+        self.assertIn(
+            "description=Chicago crime incident records for 2017 with location and offense fields.",
+            prompt,
+        )
 
     def test_set_task_context_resets_used(self):
         with TemporaryDirectory() as tmpdir:
@@ -288,8 +349,42 @@ class TestSearchIdealJudge(unittest.TestCase):
             ):
                 result = search_ideal.search_ideal("anything")
 
-        self.assertEqual(result, {"results": [], "count": 0, "query": "anything", "plan_exhausted": True})
+        self.assertEqual(
+            result,
+            {
+                "results": [],
+                "count": 0,
+                "query": "anything",
+                "message": "Dataset not found",
+                "plan_exhausted": True,
+            },
+        )
         self.assertEqual(len(factory.calls), 0)
+
+    def test_lessguide_omits_plan_exhausted_from_search_ideal_payloads(self):
+        with TemporaryDirectory() as tmpdir:
+            plans_root = Path(tmpdir) / "plans_mini"
+            _, uris = _set_task_context(
+                plans_root,
+                task_name="task_1.json",
+                source_sequence=["datagov/chicago-crime-2017/files/rows.txt"],
+            )
+            uri = uris[0]
+            factory = _FakeAgentFactory(
+                action=lambda prompt, tools: tools[0](s3_uris=[uri], reason="match")
+            )
+            search_ideal.set_lessguide(True)
+
+            with patch.object(search_ideal, "Agent", factory), patch.object(
+                search_ideal,
+                "_judge_model",
+                return_value="fake-model",
+            ):
+                result = search_ideal.search_ideal("crime 2017")
+
+        self.assertEqual(result["count"], 1)
+        self.assertEqual(result["results"][0]["s3_uri"], uri)
+        self.assertNotIn("plan_exhausted", result)
 
     def test_wrapper_hides_top_k_from_agent(self):
         wrapped = search_wrapper.build_search_tools(

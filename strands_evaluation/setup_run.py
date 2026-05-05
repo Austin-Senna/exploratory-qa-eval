@@ -56,6 +56,20 @@ def _build_parser() -> argparse.ArgumentParser:
     common.add_argument("--parallel", type=int, default=None)
     common.add_argument("--timeout", type=int, default=None)
     common.add_argument("--submit-grace-seconds", type=int, default=None)
+    common.add_argument(
+        "--search-free",
+        "--search_free",
+        dest="search_free",
+        action="store_true",
+        help="Make active search tools cost zero against the global max-tool-calls limit.",
+    )
+    common.add_argument(
+        "--search-lessguide",
+        "--search_lessguide",
+        dest="search_lessguide",
+        action="store_true",
+        help="Hide search_ideal plan_exhausted guidance fields from tool payloads.",
+    )
     common.add_argument("--verbose", "-v", action="store_true")
 
     smoke = subparsers.add_parser("smoke", parents=[common], help="Run a lightweight smoke eval.")
@@ -203,6 +217,10 @@ def _build_run_mode_command(args: argparse.Namespace, cwd: Path) -> tuple[list[s
         command.extend(["--timeout", str(args.timeout)])
     if args.submit_grace_seconds is not None:
         command.extend(["--submit-grace-seconds", str(args.submit_grace_seconds)])
+    if args.search_free:
+        command.append("--search-free")
+    if args.search_lessguide:
+        command.append("--search-lessguide")
     if args.verbose:
         command.append("--verbose")
 

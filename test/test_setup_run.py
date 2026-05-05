@@ -239,6 +239,33 @@ class SetupRunTests(unittest.TestCase):
             self.assertEqual(command[command.index("--search_tool") + 1], "preloaded")
             self.assertEqual(command[command.index("--agent_management") + 1], "ideal")
 
+    def test_smoke_passes_search_free_and_lessguide_aliases(self):
+        with TemporaryDirectory() as tmpdir:
+            repo_root = Path(tmpdir)
+            self._write_smoke_fixture(repo_root)
+            fake_runner = _FakeRunner()
+
+            command = setup_run.run(
+                [
+                    "smoke",
+                    "--search",
+                    "ideal",
+                    "--results",
+                    "ideal",
+                    "--plan",
+                    "standard",
+                    "--search-free",
+                    "--search_lessguide",
+                    "--db",
+                    "lance_data",
+                ],
+                runner=fake_runner,
+                cwd=repo_root,
+            )
+
+            self.assertIn("--search-free", command)
+            self.assertIn("--search-lessguide", command)
+
     def test_missing_db_has_helpful_error(self):
         with TemporaryDirectory() as tmpdir:
             repo_root = Path(tmpdir)

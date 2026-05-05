@@ -49,6 +49,8 @@ def _variant_condition_label(
     agent_management: str,
     k: Optional[int],
     search_calls: Optional[int],
+    search_free: bool = False,
+    search_lessguide: bool = False,
 ) -> str:
     parts = [
         f"search_{_MODE_LETTERS[search_tool]}",
@@ -59,6 +61,10 @@ def _variant_condition_label(
         parts.append(f"k{k}")
     if search_calls is not None:
         parts.append(f"sc{search_calls}")
+    if search_free:
+        parts.append("free")
+    if search_lessguide:
+        parts.append("lessguide")
     return "_".join(parts)
 
 
@@ -286,6 +292,20 @@ def main() -> None:
         default="naive",
         help="Legacy search wrapper mode (kept for compatibility with existing flows).",
     )
+    parser.add_argument(
+        "--search-free",
+        "--search_free",
+        dest="search_free",
+        action="store_true",
+        help="Make active search tools cost zero against the global max-tool-calls limit.",
+    )
+    parser.add_argument(
+        "--search-lessguide",
+        "--search_lessguide",
+        dest="search_lessguide",
+        action="store_true",
+        help="Hide search_ideal plan_exhausted guidance fields from tool payloads.",
+    )
 
     # New ablation axes
     parser.add_argument(
@@ -345,6 +365,8 @@ def main() -> None:
         agent_management=agent_management_mode,
         k=args.k,
         search_calls=args.search_calls,
+        search_free=args.search_free,
+        search_lessguide=args.search_lessguide,
     )
     variant_condition = _with_debug_suffix(variant_condition, args.debug_mode)
     condition_label = f"modes/{safe_model_name}/{variant_condition}"
@@ -371,6 +393,8 @@ def main() -> None:
         search_tool_mode=search_tool_mode,
         search_results_mode=search_results_mode,
         agent_management_mode=agent_management_mode,
+        search_free=args.search_free,
+        search_lessguide=args.search_lessguide,
         condition_config=ConditionConfig(
             condition=condition_label,
             base_condition=args.condition,
@@ -380,7 +404,7 @@ def main() -> None:
     )
 
     logger.info(
-        "Ablation variant: %s (base=%s, st=%s, sr=%s, am=%s, k=%s, search_calls=%s, db_path=%s)",
+        "Ablation variant: %s (base=%s, st=%s, sr=%s, am=%s, k=%s, search_calls=%s, search_free=%s, search_lessguide=%s, db_path=%s)",
         condition_label,
         args.condition,
         search_tool_mode,
@@ -388,6 +412,8 @@ def main() -> None:
         agent_management_mode,
         args.k,
         args.search_calls,
+        args.search_free,
+        args.search_lessguide,
         args.db_path or "./lance_data",
     )
 
