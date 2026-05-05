@@ -157,6 +157,7 @@ def build_search(
     mode: str,
     *,
     task_context: Optional[Dict[str, Any]] = None,
+    search_lessguide: bool = False,
 ) -> List[DecoratedFunctionTool]:
     """Return the base search tool surface for a mode."""
     search_mode = _normalize_mode(mode, "standard", "search_tool")
@@ -186,6 +187,7 @@ def build_search(
 
     import strands_evaluation.tools.external.ideal.search_ideal as search_ideal
 
+    search_ideal.set_lessguide(search_lessguide)
     search_ideal.set_task_context(task_context or {})
     return [search_ideal.search_ideal]
 
@@ -256,7 +258,11 @@ def build_mode_bundle(
     if search_tool_mode == "ideal" or agent_management_mode == "ideal":
         set_ideal_plan_task_context(task_context or {})
 
-    raw_search_tools = build_search(search_tool_mode, task_context=task_context)
+    raw_search_tools = build_search(
+        search_tool_mode,
+        task_context=task_context,
+        search_lessguide=bool(run_config.search_lessguide),
+    )
     search_tools = build_results(
         search_results_mode,
         base_search_tools=raw_search_tools,
@@ -324,6 +330,20 @@ def _inject_search_budget_prompt(
         "then call submit_answer."
     )
     return system_prompt.rstrip() + budget_note
+
+
+def _tool_limit_exclusions_for_run(
+    *,
+    base_excluded: Sequence[str],
+    search_free: bool,
+    search_tool_names: Sequence[str],
+) -> Tuple[str, ...]:
+    """Return tool-limit exclusions after applying run-level accounting flags."""
+    names = list(base_excluded)
+    if search_free:
+        names.extend(search_tool_names)
+    return tuple(dict.fromkeys(str(name) for name in names))
+
 
 class DataLakeAgent:
     """Strands-based agent for the Data Lake benchmark."""
@@ -526,9 +546,13 @@ class DataLakeAgent:
             self.run_config.max_tool_calls,
             self.run_config.timeout_seconds,
             submit_only_max_tokens=self.run_config.submit_only_max_tokens,
-            excluded_tools=self._tool_limit_excluded_tools(
-                search_tool_mode=_hook_search_tool_mode,
-                agent_management_mode=_hook_agent_management_mode,
+            excluded_tools=_tool_limit_exclusions_for_run(
+                base_excluded=self._tool_limit_excluded_tools(
+                    search_tool_mode=_hook_search_tool_mode,
+                    agent_management_mode=_hook_agent_management_mode,
+                ),
+                search_free=bool(self.run_config.search_free),
+                search_tool_names=search_tool_names,
             ),
         )
 

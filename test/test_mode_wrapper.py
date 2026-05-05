@@ -4,7 +4,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from strands_evaluation.config import RunConfig
-from strands_evaluation.agent_with_mode import build_mode_bundle
+from strands_evaluation.agent_with_mode import build_mode_bundle, _tool_limit_exclusions_for_run
 from strands_evaluation.helper.prompting import (
     compose_baseline_prompt,
     compose_managed_prompt,
@@ -293,6 +293,26 @@ class TestModeWrapper(unittest.TestCase):
         self.assertIn("why_this_tool:", bundle.system_prompt)
         self.assertIn("what_success_looks_like:", bundle.system_prompt)
         self.assertIn("confidence: <low|medium|high>", bundle.system_prompt)
+
+    def test_search_free_adds_active_search_tools_to_tool_limit_exclusions(self):
+        self.assertEqual(
+            _tool_limit_exclusions_for_run(
+                base_excluded=("skills", "plan"),
+                search_free=True,
+                search_tool_names=("search_ideal", "search_schema"),
+            ),
+            ("skills", "plan", "search_ideal", "search_schema"),
+        )
+
+    def test_tool_limit_exclusions_leave_search_tools_counted_by_default(self):
+        self.assertEqual(
+            _tool_limit_exclusions_for_run(
+                base_excluded=("skills", "plan"),
+                search_free=False,
+                search_tool_names=("search_ideal",),
+            ),
+            ("skills", "plan"),
+        )
 
     def test_inject_debug_prompt_noops_when_disabled(self):
         self.assertEqual("BASE_PROMPT", inject_debug_prompt("BASE_PROMPT", None))

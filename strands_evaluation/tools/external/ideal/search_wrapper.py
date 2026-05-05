@@ -26,6 +26,7 @@ _SCHEMAS_PATH = Path("datagov_tables_schemas_full.jsonl")
 
 _DESC_CACHE_LOADED = False
 _DESC_BY_URI: Dict[str, str] = {}
+_DESC_ROW_BY_URI: Dict[str, Dict[str, Any]] = {}
 
 _SNIPPET_CACHE_LOADED = False
 _SNIPPET_BY_URI: Dict[str, str] = {}
@@ -92,7 +93,7 @@ def _truncate_words(text: str, max_words: int) -> str:
 
 
 def _load_desc_cache() -> None:
-    global _DESC_CACHE_LOADED, _DESC_BY_URI
+    global _DESC_CACHE_LOADED, _DESC_BY_URI, _DESC_ROW_BY_URI
     if _DESC_CACHE_LOADED:
         return
 
@@ -104,6 +105,7 @@ def _load_desc_cache() -> None:
 
     _DESC_CACHE_LOADED = True
     uri_map: Dict[str, str] = {}
+    row_map: Dict[str, Dict[str, Any]] = {}
     with _TABLE_DESCRIPTIONS_PATH.open() as f:
         for line in f:
             line = line.strip()
@@ -117,8 +119,10 @@ def _load_desc_cache() -> None:
             desc = str(obj.get("description") or "").strip()
             if uri and desc and uri not in uri_map:
                 uri_map[uri] = desc
+                row_map[uri] = obj
 
     _DESC_BY_URI = uri_map
+    _DESC_ROW_BY_URI = row_map
 
 
 def _load_snippet_cache() -> None:
@@ -345,7 +349,8 @@ def _compose_description(
         if tool_name == "search_ideal":
             notes.append(
                 "Returns the planned sources most relevant to your query. "
-                "Count is chosen automatically based on query intent."
+                "Count is chosen automatically based on query intent. "
+                "Returned datasets are most likely needed for the task."
             )
         else:
             notes.append(f"Result limit is fixed at {fixed_k}; callers cannot change it.")

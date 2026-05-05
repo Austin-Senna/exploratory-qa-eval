@@ -4,18 +4,26 @@ import sys
 import unittest
 from contextlib import ExitStack
 from datetime import datetime, timezone
+from itertools import product
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+from strands_evaluation.agent_with_mode import build_mode_bundle, _tool_limit_exclusions_for_run
+from strands_evaluation.config import RunConfig
 import strands_evaluation.tools.external.ideal.search_ideal as search_ideal
 import strands_evaluation.tools.external.ideal.search_wrapper as search_wrapper
 
 _TASK_ROOT = "k-1-d-1"
 _TASK_ID_TEMPLATE = f"tasks_mini/{_TASK_ROOT}/{{task_name}}"
 _LIVE_LOG_PATH = Path("test_logs/search_ideal_judge_samples.jsonl")
+_MATRIX_LOG_PATH = Path("test_logs/search_ideal_flag_matrix.jsonl")
+_LIVE_MATRIX_LOG_PATH = Path("test_logs/search_ideal_gpt54_nano_matrix.jsonl")
+_CORE_QUALITY_TASK_ID = "tasks_core_quality/k-1-d-1/task_2.json"
+_CORE_QUALITY_QUERY = "provisional drug overdose death counts by state and year"
+_CORE_QUALITY_SOURCE = "datagov/vsrr-provisional-drug-overdose-death-counts/files/rows.txt"
 _LIVE_SOURCE_SEQUENCE = [
     "datagov/chicago-crime-2015/files/rows.txt",
     "datagov/chicago-crime-2016/files/rows.txt",
@@ -220,7 +228,7 @@ class TestSearchIdealJudge(unittest.TestCase):
             )
         self.assertIsNone(state["picked"])
 
-    def test_fallback_pick_on_judge_no_pick(self):
+    def test_no_pick_returns_dataset_not_found_without_consuming_source(self):
         with TemporaryDirectory() as tmpdir:
             plans_root = Path(tmpdir) / "plans_mini"
             _, uris = _set_task_context(
@@ -241,13 +249,74 @@ class TestSearchIdealJudge(unittest.TestCase):
                 with self.assertLogs(search_ideal.logger, level="WARNING") as logs:
                     result = search_ideal.search_ideal("crime data in Chicago 2017")
 
-        self.assertEqual(result["count"], 1)
-        self.assertEqual(result["results"][0]["s3_uri"], uris[0])
-        self.assertEqual(result["results"][0]["dataset_id"], "chicago-crime-2017")
+        self.assertEqual(
+            result,
+            {
+                "results": [],
+                "count": 0,
+                "query": "crime data in Chicago 2017",
+                "message": "Dataset not found",
+                "plan_exhausted": False,
+            },
+        )
         self.assertFalse(result["plan_exhausted"])
-        self.assertEqual(search_ideal._USED_S3_URIS, {uris[0]})
+        self.assertEqual(search_ideal._USED_S3_URIS, set())
         self.assertEqual(len(factory.calls), 1)
-        self.assertTrue(any("falling back" in message for message in logs.output))
+        self.assertTrue(any("no pick" in message for message in logs.output))
+
+    def test_empty_pick_returns_dataset_not_found_without_consuming_source(self):
+        with TemporaryDirectory() as tmpdir:
+            plans_root = Path(tmpdir) / "plans_mini"
+            _task_id_value, uris = _set_task_context(
+                plans_root,
+                task_name="task_1.json",
+                source_sequence=[
+                    "datagov/chicago-crime-2017/files/rows.txt",
+                    "datagov/chicago-parks/files/rows.txt",
+                ],
+            )
+            factory = _FakeAgentFactory(
+                action=lambda prompt, tools: tools[0](s3_uris=[], reason="query is too vague")
+            )
+
+            with patch.object(search_ideal, "Agent", factory), patch.object(
+                search_ideal,
+                "_judge_model",
+                return_value="fake-model",
+            ):
+                result = search_ideal.search_ideal("not enough signal")
+
+        self.assertEqual(
+            result,
+            {
+                "results": [],
+                "count": 0,
+                "query": "not enough signal",
+                "message": "Dataset not found",
+                "plan_exhausted": False,
+            },
+        )
+        self.assertEqual(search_ideal._USED_S3_URIS, set())
+        self.assertEqual(len(uris), 2)
+
+    def test_judge_prompt_includes_table_descriptions(self):
+        with TemporaryDirectory() as tmpdir:
+            uri = "s3://lakeqa-yc4103-datalake/datagov/chicago-crime-2017/files/rows.txt"
+            with self._patch_support_files(
+                Path(tmpdir),
+                uri=uri,
+                dataset_slug="chicago-crime-2017",
+                desc="Chicago crime incident records for 2017 with location and offense fields.",
+            ):
+                prompt = search_ideal._format_judge_prompt(
+                    "crime data",
+                    [(uri, "chicago-crime-2017")],
+                )
+
+        self.assertIn(
+            "description=Chicago crime incident records for 2017 with location and offense fields.",
+            prompt,
+        )
 
     def test_set_task_context_resets_used(self):
         with TemporaryDirectory() as tmpdir:
@@ -288,8 +357,42 @@ class TestSearchIdealJudge(unittest.TestCase):
             ):
                 result = search_ideal.search_ideal("anything")
 
-        self.assertEqual(result, {"results": [], "count": 0, "query": "anything", "plan_exhausted": True})
+        self.assertEqual(
+            result,
+            {
+                "results": [],
+                "count": 0,
+                "query": "anything",
+                "message": "Dataset not found",
+                "plan_exhausted": True,
+            },
+        )
         self.assertEqual(len(factory.calls), 0)
+
+    def test_lessguide_omits_plan_exhausted_from_search_ideal_payloads(self):
+        with TemporaryDirectory() as tmpdir:
+            plans_root = Path(tmpdir) / "plans_mini"
+            _, uris = _set_task_context(
+                plans_root,
+                task_name="task_1.json",
+                source_sequence=["datagov/chicago-crime-2017/files/rows.txt"],
+            )
+            uri = uris[0]
+            factory = _FakeAgentFactory(
+                action=lambda prompt, tools: tools[0](s3_uris=[uri], reason="match")
+            )
+            search_ideal.set_lessguide(True)
+
+            with patch.object(search_ideal, "Agent", factory), patch.object(
+                search_ideal,
+                "_judge_model",
+                return_value="fake-model",
+            ):
+                result = search_ideal.search_ideal("crime 2017")
+
+        self.assertEqual(result["count"], 1)
+        self.assertEqual(result["results"][0]["s3_uri"], uri)
+        self.assertNotIn("plan_exhausted", result)
 
     def test_wrapper_hides_top_k_from_agent(self):
         wrapped = search_wrapper.build_search_tools(
@@ -360,6 +463,242 @@ class TestSearchIdealJudge(unittest.TestCase):
                 "columns": ["col_a", "col_b"],
                 "dataset_snippet": "dataset snippet words",
             },
+        )
+
+
+class TestSearchIdealFlagMatrix(unittest.TestCase):
+    def tearDown(self) -> None:
+        search_ideal.set_plans_root("plans_mini")
+        search_ideal.reset_state()
+        _reset_wrapper_caches()
+        try:
+            from strands_evaluation.tools.external.ideal import computation_ideal
+
+            computation_ideal.reset_state()
+        except Exception:
+            pass
+
+    def _patch_support_files(
+        self,
+        root: Path,
+        *,
+        uri: str,
+        dataset_slug: str,
+    ) -> ExitStack:
+        desc_path = root / "table_descriptions.jsonl"
+        desc_path.write_text(
+            json.dumps(
+                {
+                    "dataset_uri": uri,
+                    "description": "Chicago crime incident records for 2017 with location and offense fields.",
+                }
+            )
+            + "\n"
+        )
+
+        snippet_path = root / "snippet.jsonl"
+        snippet_path.write_text(
+            json.dumps(
+                {
+                    "dataset_uri": uri,
+                    "dataset_snippet": "crime incident case number date block ward arrest district",
+                }
+            )
+            + "\n"
+        )
+
+        schema_path = root / "datagov_tables_schemas_full.jsonl"
+        schema_path.write_text(
+            json.dumps(
+                {
+                    "dataset_slug": dataset_slug,
+                    "tables": [
+                        {
+                            "relative_path": "files/rows.txt",
+                            "table_kind": "csv",
+                            "columns": ["case_number", "date", "primary_type", "arrest"],
+                        }
+                    ],
+                }
+            )
+            + "\n"
+        )
+
+        stack = ExitStack()
+        stack.enter_context(patch.object(search_wrapper, "_TABLE_DESCRIPTIONS_PATH", desc_path))
+        stack.enter_context(patch.object(search_wrapper, "_SNIPPETS_PATH", snippet_path))
+        stack.enter_context(patch.object(search_wrapper, "_SCHEMAS_PATH", schema_path))
+        return stack
+
+    def test_search_ideal_four_flag_runs_and_log_results(self):
+        rows: list[dict] = []
+        source_sequence = ["datagov/chicago-crime-2017/files/rows.txt"]
+
+        with TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            plans_root = root / "plans_mini"
+            task_id = _write_plan(
+                plans_root,
+                task_name="task_matrix.json",
+                source_sequence=source_sequence,
+            )
+            uri = search_ideal._canonical_uri(source_sequence[0])
+
+            with self._patch_support_files(root, uri=uri, dataset_slug="chicago-crime-2017"):
+                factory = _FakeAgentFactory(
+                    action=lambda prompt, tools: tools[0](s3_uris=[uri], reason="matrix match")
+                )
+                with patch.object(search_ideal, "Agent", factory), patch.object(
+                    search_ideal,
+                    "_judge_model",
+                    return_value="fake-model",
+                ):
+                    for search_results_mode, search_lessguide in product(
+                        ("naive", "ideal"),
+                        (False, True),
+                    ):
+                        search_ideal.reset_state()
+                        search_ideal.set_plans_root(plans_root)
+                        _reset_wrapper_caches()
+                        cfg = RunConfig(
+                            search_tool_mode="ideal",
+                            search_results_mode=search_results_mode,
+                            agent_management_mode="naive",
+                            computation_tool_mode="standard",
+                            search_free=False,
+                            search_lessguide=search_lessguide,
+                        )
+                        bundle = build_mode_bundle(
+                            cfg,
+                            data_tools=[],
+                            task_context={"task_id": task_id},
+                        )
+                        tool_by_name = {
+                            tool_obj.tool_spec["name"]: tool_obj
+                            for tool_obj in bundle.tools
+                            if hasattr(tool_obj, "tool_spec")
+                        }
+                        result = tool_by_name["search_ideal"](query="crime incidents 2017")
+                        exclusions = _tool_limit_exclusions_for_run(
+                            base_excluded=("skills", "plan"),
+                            search_free=False,
+                            search_tool_names=bundle.search_tool_names,
+                        )
+
+                        self.assertEqual(result["count"], 1)
+                        self.assertEqual(result["results"][0]["s3_uri"], uri)
+                        self.assertEqual(bundle.search_tool_names, ("search_ideal",))
+                        self.assertEqual(bundle.modes["search_tool"], "ideal")
+                        self.assertEqual(bundle.modes["search_results"], search_results_mode)
+                        self.assertEqual(bundle.modes["agent_management"], "naive")
+                        self.assertEqual(bundle.modes["computation_tool"], "standard")
+                        if search_lessguide:
+                            self.assertNotIn("plan_exhausted", result)
+                        else:
+                            self.assertTrue(result["plan_exhausted"])
+                        self.assertNotIn("search_ideal", exclusions)
+
+                        rows.append(
+                            {
+                                "search_tool": "ideal",
+                                "search_results": search_results_mode,
+                                "agent_management": "naive",
+                                "computation_tool": "standard",
+                                "search_free": False,
+                                "search_lessguide": search_lessguide,
+                                "search_tool_names": list(bundle.search_tool_names),
+                                "tool_limit_excluded": list(exclusions),
+                                "result": {
+                                    "count": result.get("count"),
+                                    "message": result.get("message"),
+                                    "has_plan_exhausted": "plan_exhausted" in result,
+                                    "plan_exhausted": result.get("plan_exhausted"),
+                                    "uris": [item["s3_uri"] for item in result.get("results", [])],
+                                    "result_keys": sorted(result.keys()),
+                                },
+                            }
+                        )
+
+        self.assertEqual(len(rows), 4)
+        _MATRIX_LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
+        _MATRIX_LOG_PATH.write_text(
+            "".join(json.dumps(row, sort_keys=True) + "\n" for row in rows)
+        )
+
+    @unittest.skipUnless(os.getenv("OPENAI_API_KEY"), "OPENAI_API_KEY not set")
+    def test_live_gpt54_nano_core_quality_four_flag_runs_and_log_results(self):
+        try:
+            import openai  # noqa: F401
+        except ImportError:
+            self.skipTest("openai package not installed")
+
+        rows: list[dict] = []
+        expected_uri = search_ideal._canonical_uri(_CORE_QUALITY_SOURCE)
+
+        for search_results_mode, search_lessguide in product(
+            ("naive", "ideal"),
+            (False, True),
+        ):
+            search_ideal.reset_state()
+            search_ideal.set_plans_root("plans_mini")
+            _reset_wrapper_caches()
+            cfg = RunConfig(
+                search_tool_mode="ideal",
+                search_results_mode=search_results_mode,
+                agent_management_mode="naive",
+                computation_tool_mode="standard",
+                search_free=False,
+                search_lessguide=search_lessguide,
+            )
+            bundle = build_mode_bundle(
+                cfg,
+                data_tools=[],
+                task_context={"task_id": _CORE_QUALITY_TASK_ID},
+            )
+            tool_by_name = {
+                tool_obj.tool_spec["name"]: tool_obj
+                for tool_obj in bundle.tools
+                if hasattr(tool_obj, "tool_spec")
+            }
+            result = tool_by_name["search_ideal"](query=_CORE_QUALITY_QUERY)
+            picked_uris = [item["s3_uri"] for item in result.get("results", [])]
+
+            self.assertIn(expected_uri, picked_uris)
+            if search_lessguide:
+                self.assertNotIn("plan_exhausted", result)
+            else:
+                self.assertTrue(result["plan_exhausted"])
+            if search_results_mode == "ideal":
+                self.assertIn("llm_desc", result["results"][0])
+                self.assertIn("columns", result["results"][0])
+
+            rows.append(
+                {
+                    "model": "openai/gpt-5.4-nano",
+                    "task_id": _CORE_QUALITY_TASK_ID,
+                    "query": _CORE_QUALITY_QUERY,
+                    "expected_uri": expected_uri,
+                    "search_tool": "ideal",
+                    "search_results": search_results_mode,
+                    "search_lessguide": search_lessguide,
+                    "result": {
+                        "count": result.get("count"),
+                        "message": result.get("message"),
+                        "has_plan_exhausted": "plan_exhausted" in result,
+                        "plan_exhausted": result.get("plan_exhausted"),
+                        "uris": picked_uris,
+                        "result_keys": sorted(result.keys()),
+                        "first_result_keys": sorted(result["results"][0].keys())
+                        if result.get("results")
+                        else [],
+                    },
+                }
+            )
+
+        self.assertEqual(len(rows), 4)
+        _LIVE_MATRIX_LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
+        _LIVE_MATRIX_LOG_PATH.write_text(
+            "".join(json.dumps(row, sort_keys=True) + "\n" for row in rows)
         )
 
 

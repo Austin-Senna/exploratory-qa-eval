@@ -15,15 +15,17 @@ from strands_evaluation.tools.external.ideal.plan_store import (
     set_plans_root as _set_plans_root_shared,
     set_task_context as _set_task_context_shared,
 )
+from strands_evaluation.tools.external.ideal import search_wrapper
 
 logger = logging.getLogger(__name__)
 
 _S3_PREFIX = "s3://lakeqa-yc4103-datalake/"
+_DATASET_NOT_FOUND = "Dataset not found"
 _JUDGE_SYSTEM_PROMPT = (
     "You are a dataset selector. The user gives you a search query and a list of\n"
-    "candidate datasets (each with s3_uri and dataset_id). Call the `pick` tool\n"
-    "exactly once with the s3_uris most relevant to the query. Return nothing if nothing is too semantically similar to the dataset.\n"
-    If\n"
+    "candidate datasets (each with s3_uri, dataset_id, and description). Call the `pick` tool\n"
+    "exactly once with the s3_uris most relevant to the query. If no candidate is semantically close enough,\n"
+    "call `pick` with an empty s3_uris list. If\n"
     'the query is clearly aggregate (year ranges, "all of", multiple regions),\n'
     "pick the matching group. Never pick an s3_uri not in the list."
 )
@@ -31,6 +33,7 @@ _JUDGE_SYSTEM_PROMPT = (
 # The eval runner uses one task at a time per process; parallel runs fork subprocesses.
 _CANDIDATES: list[tuple[str, str]] = []
 _USED_S3_URIS: set[str] = set()
+_LESSGUIDE = False
 
 
 def set_db_path(path: str) -> None:
@@ -43,6 +46,12 @@ def set_plans_root(path: str | Path) -> None:
     _set_plans_root_shared(path)
     _CANDIDATES.clear()
     _USED_S3_URIS.clear()
+
+
+def set_lessguide(enabled: bool) -> None:
+    """Configure whether search_ideal omits plan-exhaustion guidance fields."""
+    global _LESSGUIDE
+    _LESSGUIDE = bool(enabled)
 
 
 def set_task_context(task_context: Dict[str, Any]) -> None:
@@ -62,6 +71,7 @@ def reset_state() -> None:
     """Reset in-process candidate/judge state."""
     _CANDIDATES.clear()
     _USED_S3_URIS.clear()
+    set_lessguide(False)
     _set_task_context_shared({})
 
 
@@ -79,10 +89,19 @@ def _canonical_uri(source_path: str) -> str:
     return f"{_S3_PREFIX}{str(source_path).lstrip('/')}"
 
 
+def _description_for_uri(uri: str) -> str:
+    search_wrapper._load_desc_cache()
+    return search_wrapper._DESC_BY_URI.get(uri, "")
+
+
 def _format_judge_prompt(query: str, remaining: list[tuple[str, str]]) -> str:
     lines = [f"Query: {query}", "", "Candidates:"]
     for index, (s3_uri, dataset_id) in enumerate(remaining, start=1):
-        lines.append(f"{index}. s3_uri={s3_uri}  dataset_id={dataset_id}")
+        description = _description_for_uri(s3_uri)
+        line = f"{index}. s3_uri={s3_uri}  dataset_id={dataset_id}"
+        if description:
+            line += f"  description={description}"
+        lines.append(line)
     return "\n".join(lines)
 
 
@@ -97,8 +116,8 @@ def _build_judge(remaining: list[tuple[str, str]]) -> tuple[Agent, Dict[str, Any
     @tool
     def pick(s3_uris: list[str], reason: str) -> str:
         """Record the s3_uris most relevant to the query. Call EXACTLY once."""
-        if not isinstance(s3_uris, list) or not s3_uris:
-            raise ValueError("s3_uris must be a non-empty list of strings")
+        if not isinstance(s3_uris, list):
+            raise ValueError("s3_uris must be a list of strings")
         bad = [uri for uri in s3_uris if uri not in valid_uris]
         if bad:
             raise ValueError(
@@ -118,10 +137,24 @@ def _build_judge(remaining: list[tuple[str, str]]) -> tuple[Agent, Dict[str, Any
     return judge, state
 
 
-def _fallback_pick(remaining: list[tuple[str, str]]) -> list[str]:
-    fallback = [remaining[0][0]]
-    logger.warning("search_ideal judge failed to record a pick; falling back to first remaining uri=%s", fallback[0])
-    return fallback
+def _apply_lessguide(payload: dict) -> dict:
+    if not _LESSGUIDE:
+        return payload
+    out = dict(payload)
+    out.pop("plan_exhausted", None)
+    return out
+
+
+def _dataset_not_found_response(query: str, *, plan_exhausted: bool) -> dict:
+    return _apply_lessguide(
+        {
+            "results": [],
+            "count": 0,
+            "query": query,
+            "message": _DATASET_NOT_FOUND,
+            "plan_exhausted": plan_exhausted,
+        }
+    )
 
 
 @tool
@@ -134,17 +167,20 @@ def search_ideal(query: str, top_k: int = 100) -> dict:
 
     remaining = [(uri, dsid) for uri, dsid in _CANDIDATES if uri not in _USED_S3_URIS]
     if not remaining:
-        return {
-            "results": [],
-            "count": 0,
-            "query": query,
-            "plan_exhausted": True,
-        }
+        return _dataset_not_found_response(query, plan_exhausted=True)
 
     judge, state = _build_judge(remaining)
     judge(_format_judge_prompt(query, remaining))
 
-    picked = state["picked"] or _fallback_pick(remaining)
+    if state["picked"] is None:
+        logger.warning("search_ideal judge recorded no pick; returning dataset not found")
+        return _dataset_not_found_response(query, plan_exhausted=False)
+
+    picked = state["picked"]
+    if not picked:
+        logger.info("search_ideal judge found no similar dataset reason=%r", state["reason"])
+        return _dataset_not_found_response(query, plan_exhausted=False)
+
     _USED_S3_URIS.update(picked)
     logger.info(
         "search_ideal judge picked %d uri(s) reason=%r",
@@ -154,9 +190,11 @@ def search_ideal(query: str, top_k: int = 100) -> dict:
 
     dsid_by_uri = dict(remaining)
     results = [{"s3_uri": uri, "dataset_id": dsid_by_uri[uri]} for uri in picked]
-    return {
-        "results": results,
-        "count": len(results),
-        "query": query,
-        "plan_exhausted": len(_USED_S3_URIS) >= len(_CANDIDATES),
-    }
+    return _apply_lessguide(
+        {
+            "results": results,
+            "count": len(results),
+            "query": query,
+            "plan_exhausted": len(_USED_S3_URIS) >= len(_CANDIDATES),
+        }
+    )

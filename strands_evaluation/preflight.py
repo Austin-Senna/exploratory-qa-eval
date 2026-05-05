@@ -167,9 +167,14 @@ def run_preflight(
         else:
             checks.extend(_check_plan_files(task_files))
 
+    # search_tool=ideal needs descriptions for the internal selector context.
+    if st == "ideal":
+        checks.append(_check_desc_cache_for_enrichment())
+
     # search_results=ideal needs the description/snippet/schema caches.
     if sr == "ideal" and st != "preloaded":
-        checks.append(_check_desc_cache_for_enrichment())
+        if st != "ideal":
+            checks.append(_check_desc_cache_for_enrichment())
         checks.append(_check_snippet_cache())
         checks.append(_check_schemas_jsonl_load())
 

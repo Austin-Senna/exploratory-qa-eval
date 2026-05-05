@@ -24,6 +24,6 @@ Call `plan_ideal()` again in any of these cases:
 
 1. **Evidence conflicts with the chain** — a returned source doesn't contain what the chain implied, or values don't match. Write a short revised plan around the new evidence.
 2. **Before final extraction** — once the relevant sources have been surfaced and columns are confirmed, save a focused 1–3 step plan for the exact query that yields the answer.
-3. **Planned sources exhausted without an answer** — if `search_ideal` returns `plan_exhausted=true` and you still can't answer, summarize what was found, identify the gap, and plan around a proxy or fallback approach.
+3. **No matching planned source without an answer** — if `search_ideal` returns `Dataset not found` and you still can't answer, summarize what was found, identify the gap, and plan around a proxy or fallback approach.
 
 When replanning, focus only on the remaining gap — don't rewrite completed steps.

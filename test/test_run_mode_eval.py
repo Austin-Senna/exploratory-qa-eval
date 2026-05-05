@@ -133,6 +133,19 @@ class RunModeEvalTests(unittest.TestCase):
 
         self.assertEqual(label, "search_p_results_i_pland")
 
+    def test_variant_condition_label_appends_search_flags(self):
+        label = run_mode_eval._variant_condition_label(
+            search_tool="ideal",
+            search_results="ideal",
+            agent_management="standard",
+            k=None,
+            search_calls=None,
+            search_free=True,
+            search_lessguide=True,
+        )
+
+        self.assertEqual(label, "search_i_results_i_pland_free_lessguide")
+
     def test_mode_results_dir_does_not_append_model_twice(self):
         agent_config = types.SimpleNamespace(
             model_name="openai/gpt-5.2",

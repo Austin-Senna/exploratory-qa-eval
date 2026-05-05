@@ -169,6 +169,32 @@ class TestSearchCallBudgetHandler(unittest.TestCase):
         self.assertEqual(action.type, "proceed")
         self.assertIn("already submitted", action.reason)
 
+    def test_search_call_budget_still_counts_search_when_tool_limit_excludes_it(self):
+        tool_limit = ToolLimitSteeringHandler(
+            max_tool_calls=1,
+            timeout_seconds=9999,
+            excluded_tools=("search_ideal",),
+        )
+        search_budget = SearchCallBudgetHandler(max_search_calls=1, search_tools=("search_ideal",))
+        agent = SimpleNamespace()
+        tool_limit.on_agent_initialized(AgentInitializedEvent(agent=agent))
+        search_budget.on_agent_initialized(AgentInitializedEvent(agent=agent))
+
+        event = SimpleNamespace(tool_use={"name": "search_ideal"})
+        tool_limit.on_after_tool(event)
+        search_budget.on_after_tool(event)
+
+        tool_limit_action = asyncio.run(
+            tool_limit.steer_before_tool(agent=agent, tool_use={"name": "peek_file"})
+        )
+        search_budget_action = asyncio.run(
+            search_budget.steer_before_tool(agent=agent, tool_use={"name": "search_ideal"})
+        )
+
+        self.assertEqual(tool_limit_action.type, "proceed")
+        self.assertEqual(search_budget_action.type, "guide")
+        self.assertIn("Search call budget exhausted", search_budget_action.reason)
+
 
 class TestTokenBudgetDefaults(unittest.TestCase):
     def test_agent_config_default_max_tokens_is_8096(self):
