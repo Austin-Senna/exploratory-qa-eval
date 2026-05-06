@@ -10,19 +10,19 @@
     },
     "2": {
       "source": "datagov/pittsburgh-international-airport-scheduled-passenger-traffic/files/pittsburgh-international-traffic-report-march-2019.txt",
-      "fact": "In the March 2019 Pittsburgh International scheduled traffic report, Atlanta (ATL) has 44,912 total seats, the highest of any destination (next highest is Chicago O'Hare with 35,699).",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/pittsburgh-international-airport-scheduled-passenger-traffic/files/pittsburgh-international-traffic-report-march-2019.txt'\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\ndf[\"Seats March 2019\"] = pd.to_numeric(df[\"Seats March 2019\"], errors=\"coerce\")\nresult = (\n    df.groupby([\"Destination\", \"Destination Code\"], dropna=True)[\"Seats March 2019\"]\n      .sum()\n      .reset_index(name=\"total_seats\")\n      .sort_values([\"total_seats\", \"Destination Code\"], ascending=[False, True])\n      .reset_index(drop=True)\n)\nanswer = f'{str(result.loc[0, \"Destination\"]).strip()} ({str(result.loc[0, \"Destination Code\"]).strip()})'\n",
       "subquestion": "For <hop 1 answer>, which destination had the most scheduled seats in March 2019?",
       "answer": "Atlanta (ATL)"
     },
     "3": {
       "source": "datagov/airports-5e97a/files/rows.txt",
-      "fact": "In the airports dataset, the entry with Loc_Id ATL lists City ATLANTA and State_Post GA (Hartsfield - Jackson Atlanta Intl).",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/airports-5e97a/files/rows.txt'\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\nnode_2_answer = \"Atlanta (ATL)\"\ncode = str(node_2_answer).split(\"(\")[-1].replace(\")\", \"\").strip().upper()\nrow = df[df[\"Loc_Id\"].astype(str).str.strip().str.upper().eq(code)].iloc[0]\ncity = str(row[\"City\"]).strip().title()\nstate = str(row[\"State_Post\"]).strip().upper()\nanswer = f\"{city}, {state}\"\n",
       "subquestion": "In the airports dataset, what city and state correspond to <hop 2 answer>?",
       "answer": "Atlanta, GA"
     },
     "4": {
       "source": "datagov/boundaries-us-zip-codes/files/rows.txt",
-      "fact": "In the boundaries-us-zip-codes dataset, among ZIP codes with CITY = Atlanta and STATE = GA, ZIP 30349 has the largest land area (SQMI 45.68).",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/boundaries-us-zip-codes/files/rows.txt'\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\nnode_3_answer = \"Atlanta, GA\"\ncity, state = [part.strip().upper() for part in node_3_answer.split(\",\", 1)]\ndf[\"SQMI\"] = pd.to_numeric(df[\"SQMI\"], errors=\"coerce\")\nfiltered = df[\n    df[\"CITY\"].astype(str).str.strip().str.upper().eq(city)\n    & df[\"STATE\"].astype(str).str.strip().str.upper().eq(state)\n].copy()\nanswer = str(float(filtered[\"SQMI\"].max()))\n",
       "subquestion": "In the ZIP code boundaries dataset, what is the largest land area in square miles among ZIP codes in <hop 3 answer>?",
       "answer": "45.68"
     }
