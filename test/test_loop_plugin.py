@@ -10,8 +10,8 @@ class TestCategoryStagnationHandler(unittest.TestCase):
         handler = CategoryStagnationHandler(max_consecutive_category=2)
 
         asyncio.run(handler.steer_before_tool(agent=None, tool_use={"name": "execute_code"}))
-        asyncio.run(handler.steer_before_tool(agent=None, tool_use={"name": "query_file"}))
-        action = asyncio.run(handler.steer_before_tool(agent=None, tool_use={"name": "grep_file"}))
+        asyncio.run(handler.steer_before_tool(agent=None, tool_use={"name": "query_ideal"}))
+        action = asyncio.run(handler.steer_before_tool(agent=None, tool_use={"name": "execute_ideal"}))
 
         self.assertEqual(action.type, "guide")
         self.assertIn("used 'execute' tools 3 times in a row", action.reason)

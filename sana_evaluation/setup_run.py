@@ -13,6 +13,7 @@ from typing import Callable, Optional, Sequence
 _SEARCH_MODE_CHOICES = ("naive", "preloaded", "standard", "ideal")
 _MANAGEMENT_MODE_CHOICES = ("naive", "standard", "ideal")
 _RESULT_MODE_CHOICES = ("naive", "ideal")
+_COMPUTATION_MODE_CHOICES = ("standard", "ideal")
 _SHORTCUT_MODE_CHOICES = ("preloaded", "ideal")
 _SANA_FEATURE_CHOICES = ("cot", "results", "sprint")
 _SPRINT_MODE_CHOICES = ("cadence", "commitment")
@@ -47,6 +48,7 @@ def _build_parser() -> argparse.ArgumentParser:
     common.add_argument("--search", choices=_SEARCH_MODE_CHOICES, default=None)
     common.add_argument("--results", choices=_RESULT_MODE_CHOICES, default=None)
     common.add_argument("--plan", choices=_MANAGEMENT_MODE_CHOICES, default=None)
+    common.add_argument("--compute", choices=_COMPUTATION_MODE_CHOICES, default=None)
     common.add_argument(
         "--mode",
         choices=_SHORTCUT_MODE_CHOICES,
@@ -240,6 +242,8 @@ def _build_sana_command(args: argparse.Namespace, cwd: Path) -> tuple[list[str],
         command.extend(["--k", str(args.k)])
     if args.search_calls is not None:
         command.extend(["--search-calls", str(args.search_calls)])
+    if args.compute is not None:
+        command.extend(["--computation_tool", args.compute])
     if args.reasoning_effort is not None:
         command.extend(["--reasoning-effort", args.reasoning_effort])
     if args.openai_prompt_cache_key is not None:

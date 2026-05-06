@@ -77,5 +77,72 @@
       ],
       "answer": 71
     }
+  ],
+  "ideal_code": [
+    {
+      "node_id": "2",
+      "dataset_id": "apd-searches-by-type",
+      "source": "datagov/apd-searches-by-type/files/rows.txt",
+      "intent": "In <hop 1 answer> APD search entries for 2023, excluding `Sector` equal to `Unknown`, which sector has the most searches?",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/apd-searches-by-type/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\ndf[\"Occurred Year\"] = pd.to_numeric(df[\"Occurred Year\"], errors=\"coerce\")\n\nresult = (\n    df[\n        (df[\"Occurred Year\"] == 2023)\n        & (df[\"Sector\"] != \"Unknown\")\n    ]\n    .groupby(\"Sector\", dropna=False)\n    .size()\n    .reset_index(name=\"search_count\")\n    .sort_values([\"search_count\", \"Sector\"], ascending=[False, True])\n    .reset_index(drop=True)\n)\n\nanswer = result.iloc[0][\"Sector\"]\nprint(result)\nprint(answer)",
+      "answer": "Charlie"
+    },
+    {
+      "node_id": "3",
+      "dataset_id": "apd-computer-aided-dispatch-incidents",
+      "source": "datagov/apd-computer-aided-dispatch-incidents/files/rows.txt",
+      "intent": "In 2023 police dispatch incidents within sector <hop 2 answer>, which council district has the most incidents?",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/apd-computer-aided-dispatch-incidents/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\ndf[\"Response Year\"] = pd.to_numeric(df[\"Response Year\"], errors=\"coerce\")\n\nresult = (\n    df[\n        (df[\"Response Year\"] == 2023)\n        & (df[\"Sector\"] == \"Charlie\")\n    ]\n    .groupby(\"Council District\", dropna=False)\n    .size()\n    .reset_index(name=\"incident_count\")\n    .sort_values([\"incident_count\", \"Council District\"], ascending=[False, True])\n    .reset_index(drop=True)\n)\n\nanswer = result.iloc[0][\"Council District\"]\nprint(result)\nprint(answer)",
+      "answer": 1
+    },
+    {
+      "node_id": "4",
+      "dataset_id": "apd-use-of-force",
+      "source": "datagov/apd-use-of-force/files/rows.txt",
+      "intent": "In 2023 APD use-of-force entries within council district <hop 3 answer>, which sector has the most incidents?",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/apd-use-of-force/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\ndf[\"Occurred Date\"] = pd.to_datetime(df[\"Occurred Date\"], errors=\"coerce\")\ndf[\"Council District\"] = pd.to_numeric(df[\"Council District\"], errors=\"coerce\")\n\nresult = (\n    df[\n        (df[\"Occurred Date\"].dt.year == 2023)\n        & (df[\"Council District\"] == 1)\n    ]\n    .groupby(\"Sector\", dropna=False)\n    .size()\n    .reset_index(name=\"incident_count\")\n    .sort_values([\"incident_count\", \"Sector\"], ascending=[False, True])\n    .reset_index(drop=True)\n)\n\nanswer = result.iloc[0][\"Sector\"]\nprint(result)\nprint(answer)",
+      "answer": "Charlie"
+    },
+    {
+      "node_id": "5",
+      "dataset_id": "apd-complaints-by-sector",
+      "source": "datagov/apd-complaints-by-sector/files/rows.txt",
+      "intent": "In 2024 complaints-by-sector data, what is the total number of complaints for sector <hop 4 answer>?",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/apd-complaints-by-sector/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\ndf[\"Occurred Year\"] = pd.to_numeric(df[\"Occurred Year\"], errors=\"coerce\")\ndf[\"Total Complaints\"] = pd.to_numeric(df[\"Total Complaints\"], errors=\"coerce\")\n\nresult = (\n    df[\n        (df[\"Occurred Year\"] == 2024)\n        & (df[\"Sector\"] == \"Charlie\")\n    ]\n    .groupby(\"Sector\", dropna=False, as_index=False)[\"Total Complaints\"]\n    .sum()\n    .sort_values([\"Total Complaints\", \"Sector\"], ascending=[False, True])\n    .reset_index(drop=True)\n)\n\nanswer = result.iloc[0][\"Total Complaints\"]\nprint(result)\nprint(answer)",
+      "answer": 71
+    }
+  ],
+  "ideal_query": [
+    {
+      "node_id": "2",
+      "dataset_id": "apd-searches-by-type",
+      "source": "datagov/apd-searches-by-type/files/rows.txt",
+      "intent": "In <hop 1 answer> APD search entries for 2023, excluding `Sector` equal to `Unknown`, which sector has the most searches?",
+      "sql": "SELECT \"Sector\" AS answer\nFROM t\nWHERE TRY_CAST(\"Occurred Year\" AS INTEGER) = 2023\n  AND \"Sector\" != 'Unknown'\nGROUP BY \"Sector\"\nORDER BY COUNT(*) DESC, \"Sector\" ASC NULLS LAST\nLIMIT 1",
+      "answer": "Charlie"
+    },
+    {
+      "node_id": "3",
+      "dataset_id": "apd-computer-aided-dispatch-incidents",
+      "source": "datagov/apd-computer-aided-dispatch-incidents/files/rows.txt",
+      "intent": "In 2023 police dispatch incidents within sector <hop 2 answer>, which council district has the most incidents?",
+      "answer": "Cannot execute SQL: file is too big (1.44 GB >= 500 MB limit)."
+    },
+    {
+      "node_id": "4",
+      "dataset_id": "apd-use-of-force",
+      "source": "datagov/apd-use-of-force/files/rows.txt",
+      "intent": "In 2023 APD use-of-force entries within council district <hop 3 answer>, which sector has the most incidents?",
+      "sql": "SELECT \"Sector\" AS answer\nFROM t\nWHERE EXTRACT(year FROM TRY_CAST(\"Occurred Date\" AS DATE)) = 2023\n  AND TRY_CAST(\"Council District\" AS INTEGER) = 1\nGROUP BY \"Sector\"\nORDER BY COUNT(*) DESC, \"Sector\" ASC NULLS LAST\nLIMIT 1",
+      "answer": "Charlie"
+    },
+    {
+      "node_id": "5",
+      "dataset_id": "apd-complaints-by-sector",
+      "source": "datagov/apd-complaints-by-sector/files/rows.txt",
+      "intent": "In 2024 complaints-by-sector data, what is the total number of complaints for sector <hop 4 answer>?",
+      "sql": "SELECT SUM(TRY_CAST(\"Total Complaints\" AS INTEGER)) AS answer\nFROM t\nWHERE TRY_CAST(\"Occurred Year\" AS INTEGER) = 2024\n  AND \"Sector\" = 'Charlie' ",
+      "answer": 71
+    }
   ]
 }

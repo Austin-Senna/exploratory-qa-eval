@@ -37,6 +37,7 @@ class DatasetProfilesTests(unittest.TestCase):
             "schemas_path": search_wrapper._SCHEMAS_PATH,
             "desc_loaded": search_wrapper._DESC_CACHE_LOADED,
             "desc_by_uri": search_wrapper._DESC_BY_URI,
+            "desc_row_by_uri": search_wrapper._DESC_ROW_BY_URI,
             "snippet_loaded": search_wrapper._SNIPPET_CACHE_LOADED,
             "snippet_by_uri": search_wrapper._SNIPPET_BY_URI,
             "schemas_loaded": search_wrapper._SCHEMAS_CACHE_LOADED,
@@ -96,6 +97,7 @@ class DatasetProfilesTests(unittest.TestCase):
         search_wrapper._SCHEMAS_PATH = self._orig_search_wrapper_state["schemas_path"]
         search_wrapper._DESC_CACHE_LOADED = self._orig_search_wrapper_state["desc_loaded"]
         search_wrapper._DESC_BY_URI = self._orig_search_wrapper_state["desc_by_uri"]
+        search_wrapper._DESC_ROW_BY_URI = self._orig_search_wrapper_state["desc_row_by_uri"]
         search_wrapper._SNIPPET_CACHE_LOADED = self._orig_search_wrapper_state["snippet_loaded"]
         search_wrapper._SNIPPET_BY_URI = self._orig_search_wrapper_state["snippet_by_uri"]
         search_wrapper._SCHEMAS_CACHE_LOADED = self._orig_search_wrapper_state["schemas_loaded"]
@@ -105,6 +107,7 @@ class DatasetProfilesTests(unittest.TestCase):
     def _reset_search_wrapper_caches(self) -> None:
         search_wrapper._DESC_CACHE_LOADED = False
         search_wrapper._DESC_BY_URI = {}
+        search_wrapper._DESC_ROW_BY_URI = {}
         search_wrapper._SNIPPET_CACHE_LOADED = False
         search_wrapper._SNIPPET_BY_URI = {}
         search_wrapper._SCHEMAS_CACHE_LOADED = False

@@ -266,6 +266,32 @@ class SetupRunTests(unittest.TestCase):
             self.assertIn("--search-free", command)
             self.assertIn("--search-lessguide", command)
 
+    def test_smoke_passes_ideal_compute_axis(self):
+        with TemporaryDirectory() as tmpdir:
+            repo_root = Path(tmpdir)
+            self._write_smoke_fixture(repo_root)
+            fake_runner = _FakeRunner()
+
+            command = setup_run.run(
+                [
+                    "smoke",
+                    "--search",
+                    "preloaded",
+                    "--results",
+                    "ideal",
+                    "--plan",
+                    "standard",
+                    "--compute",
+                    "ideal",
+                    "--db",
+                    "lance_data",
+                ],
+                runner=fake_runner,
+                cwd=repo_root,
+            )
+
+            self.assertEqual(command[command.index("--computation_tool") + 1], "ideal")
+
     def test_missing_db_has_helpful_error(self):
         with TemporaryDirectory() as tmpdir:
             repo_root = Path(tmpdir)

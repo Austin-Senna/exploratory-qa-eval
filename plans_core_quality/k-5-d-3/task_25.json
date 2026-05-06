@@ -86,5 +86,121 @@
       ],
       "answer": "19"
     }
+  ],
+  "ideal_code": [
+    {
+      "node_id": "1",
+      "dataset_id": "missouri-first-reports-of-injury-by-county",
+      "source": "datagov/missouri-first-reports-of-injury-by-county/files/rows.txt",
+      "intent": "From 2010 through 2012, which Missouri county had the highest average monthly number of first reports of injury after excluding Saint Louis?",
+      "code": "import io\nimport pandas as pd\nimport boto3\n\nsource = 'datagov/missouri-first-reports-of-injury-by-county/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3').get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)\n\ndef normalize_county(value):\n    value = str(value).strip().upper()\n    value = value.replace('SAINT', 'ST').replace('ST.', 'ST')\n    value = value.replace(' COUNTY', '').replace(' CO.', ' CO')\n    value = ' '.join(value.split())\n    return value\n\nfiltered = df[\n    df['county'].astype(str).str.strip().ne('MISSING')\n    & pd.to_numeric(df['year'], errors='coerce').between(2010, 2012)\n].copy()\nfiltered['county_norm'] = filtered['county'].map(normalize_county)\nfiltered = filtered[~filtered['county_norm'].str.startswith('ST LOUIS')].copy()\nfiltered['count'] = pd.to_numeric(filtered['count'], errors='coerce')\navg_counts = filtered.groupby('county_norm')['count'].mean().sort_values(ascending=False)\nanswer = str(avg_counts.idxmax()).title()\n",
+      "answer": "Jackson"
+    },
+    {
+      "node_id": "2",
+      "dataset_id": "missouri-active-alcohol-license-data",
+      "source": "datagov/missouri-active-alcohol-license-data/files/rows.txt",
+      "intent": "Within the county from node 1, which city has the most active alcohol license records?",
+      "code": "import io\nimport pandas as pd\nimport boto3\n\nsource = 'datagov/missouri-active-alcohol-license-data/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3').get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)\n\nnode_1_answer = 'Jackson'\n\ndef normalize_county(value):\n    value = str(value).strip().upper()\n    value = value.replace('SAINT', 'ST').replace('ST.', 'ST')\n    value = value.replace(' COUNTY', '').replace(' CO.', ' CO')\n    value = ' '.join(value.split())\n    return value\n\ndef normalize_city(value):\n    value = str(value).strip().upper()\n    value = value.replace('SAINT', 'ST').replace('ST.', 'ST')\n    value = ' '.join(value.split())\n    return value\n\nfiltered = df[df['COUNTY'].map(normalize_county).eq(str(node_1_answer).upper())].copy()\nfiltered['city_norm'] = filtered['CITY'].map(normalize_city)\ncity_counts = filtered['city_norm'].value_counts()\nanswer = str(city_counts.idxmax()).title()\n",
+      "answer": "Kansas City"
+    },
+    {
+      "node_id": "3",
+      "dataset_id": "missouri-law-enforcement-agencies",
+      "source": "datagov/missouri-law-enforcement-agencies/files/rows.txt",
+      "intent": "In the city from node 2, which university law-enforcement agency has the highest ZIP code, and what is that ZIP code?",
+      "code": "import io\nimport pandas as pd\nimport boto3\n\nsource = 'datagov/missouri-law-enforcement-agencies/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3').get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)\n\nnode_2_answer = 'Kansas City'\n\nfiltered = df[\n    df['City'].astype(str).str.strip().str.upper().eq(str(node_2_answer).upper())\n    & df['Agency_Type'].astype(str).str.strip().eq('University')\n].copy()\nfiltered['zip_num'] = pd.to_numeric(filtered['Zip'], errors='coerce')\nselected = filtered.sort_values(['zip_num', 'Agency Name'], ascending=[False, True]).iloc[0]\nanswer = f\"{str(selected['Agency Name']).strip()}, {int(selected['zip_num'])}\"\n",
+      "answer": "University of MO - K.C. Police Dept., 64112"
+    },
+    {
+      "node_id": "4",
+      "dataset_id": "missouri-fire-departments",
+      "source": "datagov/missouri-fire-departments/files/rows.txt",
+      "intent": "In the city from node 2, what ZIP code is listed for the physical address of the municipal fire department in the county from node 1?",
+      "code": "import io\nimport pandas as pd\nimport boto3\n\nsource = 'datagov/missouri-fire-departments/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3').get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)\n\nnode_1_answer = 'Jackson'\nnode_2_answer = 'Kansas City'\n\nfiltered = df[\n    df['CityPhysical'].astype(str).str.strip().str.upper().eq(str(node_2_answer).upper())\n    & df['CountyName'].astype(str).str.strip().str.upper().eq(str(node_1_answer).upper())\n    & df['DepartmentType'].astype(str).str.strip().str.upper().eq('MUNICIPALITY')\n].copy()\nselected = filtered.sort_values(['DepartmentName', 'ZipCodePhysical']).iloc[0]\nanswer = str(selected['ZipCodePhysical']).strip()\n",
+      "answer": "64105"
+    },
+    {
+      "node_id": "5",
+      "dataset_id": "missouri-job-centers",
+      "source": "datagov/missouri-job-centers/files/rows.txt",
+      "intent": "In the city from node 2, what ZIP code is shared by all job centers there?",
+      "code": "import io\nimport pandas as pd\nimport boto3\n\nsource = 'datagov/missouri-job-centers/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3').get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)\n\nnode_2_answer = 'Kansas City'\n\nfiltered = df[df['City'].astype(str).str.strip().str.upper().eq(str(node_2_answer).upper())].copy()\nfiltered['zip5'] = filtered['Zipcode'].astype(str).str.extract(r'(\\d{5})', expand=False)\nzip_codes = filtered['zip5'].dropna().unique()\nassert len(zip_codes) == 1\nanswer = str(zip_codes[0])\n",
+      "answer": "64108"
+    },
+    {
+      "node_id": "6",
+      "dataset_id": "missouri-zipcode-data",
+      "source": "datagov/missouri-zipcode-data/files/rows.txt",
+      "intent": "Which of the ZIP codes from nodes 3 through 5 covers the most land?",
+      "code": "import io\nimport re\nimport pandas as pd\nimport boto3\n\nsource = 'datagov/missouri-zipcode-data/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3').get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)\n\nnode_3_answer = 'University of MO - K.C. Police Dept., 64112'\nnode_4_answer = '64105'\nnode_5_answer = '64108'\n\nzip_from_node_3 = re.search(r'(\\d{5})$', node_3_answer).group(1)\ncandidate_zips = [zip_from_node_3, node_4_answer, node_5_answer]\nfiltered = df[df['ZCTA5CE'].astype(str).isin(candidate_zips)].copy()\nfiltered['ALAND'] = pd.to_numeric(filtered['ALAND'], errors='coerce')\nselected = filtered.sort_values(['ALAND', 'ZCTA5CE'], ascending=[False, True]).iloc[0]\nanswer = str(selected['ZCTA5CE']).strip()\n",
+      "answer": "64108"
+    },
+    {
+      "node_id": "7",
+      "dataset_id": "missouri-beer-wine-and-liquor-solicitor-list-with-zip-code",
+      "source": "datagov/missouri-beer-wine-and-liquor-solicitor-list-with-zip-code/files/rows.txt",
+      "intent": "How many businesses on the beer, wine, and liquor solicitor list are in the city from node 2 and have the ZIP code from node 6? Treat ZIP+4 entries as belonging to that ZIP code.",
+      "code": "import io\nimport pandas as pd\nimport boto3\n\nsource = 'datagov/missouri-beer-wine-and-liquor-solicitor-list-with-zip-code/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3').get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)\n\nnode_2_answer = 'Kansas City'\nnode_6_answer = '64108'\n\nfiltered = df[df['City'].astype(str).str.strip().str.upper().eq(str(node_2_answer).upper())].copy()\nfiltered['zip5'] = filtered['Zip Code'].astype(str).str.extract(r'(\\d{5})', expand=False)\nanswer = str(filtered['zip5'].eq(str(node_6_answer)).sum())\n",
+      "answer": "19"
+    }
+  ],
+  "ideal_query": [
+    {
+      "node_id": "1",
+      "dataset_id": "missouri-first-reports-of-injury-by-county",
+      "source": "datagov/missouri-first-reports-of-injury-by-county/files/rows.txt",
+      "intent": "From 2010 through 2012, which Missouri county had the highest average monthly number of first reports of injury after excluding Saint Louis?",
+      "sql": "WITH prepared AS (\n  SELECT replace(replace(replace(replace(UPPER(TRIM(CAST(\"county\" AS VARCHAR))), 'SAINT', 'ST'), 'ST.', 'ST'), ' COUNTY', ''), ' CO.', ' CO') AS county_norm,\n    TRY_CAST(\"count\" AS DOUBLE) AS count_value\n  FROM t\n  WHERE TRIM(CAST(\"county\" AS VARCHAR)) != 'MISSING'\n    AND TRY_CAST(\"year\" AS INTEGER) BETWEEN 2010 AND 2012\n), filtered AS (\n  SELECT county_norm, count_value\n  FROM prepared\n  WHERE county_norm NOT LIKE 'ST LOUIS%'\n), ranked AS (\n  SELECT county_norm, AVG(count_value) AS avg_count\n  FROM filtered\n  GROUP BY county_norm\n)\nSELECT CASE county_norm WHEN 'JACKSON' THEN 'Jackson' ELSE county_norm END AS answer\nFROM ranked\nORDER BY avg_count DESC\nLIMIT 1",
+      "answer": "Jackson"
+    },
+    {
+      "node_id": "2",
+      "dataset_id": "missouri-active-alcohol-license-data",
+      "source": "datagov/missouri-active-alcohol-license-data/files/rows.txt",
+      "intent": "Within the county from node 1, which city has the most active alcohol license records?",
+      "sql": "WITH prepared AS (\n  SELECT replace(replace(replace(replace(UPPER(TRIM(CAST(\"COUNTY\" AS VARCHAR))), 'SAINT', 'ST'), 'ST.', 'ST'), ' COUNTY', ''), ' CO.', ' CO') AS county_norm,\n    replace(replace(UPPER(TRIM(CAST(\"CITY\" AS VARCHAR))), 'SAINT', 'ST'), 'ST.', 'ST') AS city_norm\n  FROM t\n), ranked AS (\n  SELECT city_norm, COUNT(*) AS cnt\n  FROM prepared\n  WHERE county_norm = 'JACKSON'\n  GROUP BY city_norm\n)\nSELECT CASE city_norm WHEN 'KANSAS CITY' THEN 'Kansas City' ELSE city_norm END AS answer\nFROM ranked\nORDER BY cnt DESC\nLIMIT 1",
+      "answer": "Kansas City"
+    },
+    {
+      "node_id": "3",
+      "dataset_id": "missouri-law-enforcement-agencies",
+      "source": "datagov/missouri-law-enforcement-agencies/files/rows.txt",
+      "intent": "In the city from node 2, which university law-enforcement agency has the highest ZIP code, and what is that ZIP code?",
+      "sql": "SELECT TRIM(CAST(\"Agency Name\" AS VARCHAR)) || ', ' || CAST(TRY_CAST(\"Zip\" AS INTEGER) AS VARCHAR) AS answer\nFROM t\nWHERE UPPER(TRIM(CAST(\"City\" AS VARCHAR))) = 'KANSAS CITY'\n  AND TRIM(CAST(\"Agency_Type\" AS VARCHAR)) = 'University'\nORDER BY TRY_CAST(\"Zip\" AS DOUBLE) DESC, \"Agency Name\" ASC\nLIMIT 1",
+      "answer": "University of MO - K.C. Police Dept., 64112"
+    },
+    {
+      "node_id": "4",
+      "dataset_id": "missouri-fire-departments",
+      "source": "datagov/missouri-fire-departments/files/rows.txt",
+      "intent": "In the city from node 2, what ZIP code is listed for the physical address of the municipal fire department in the county from node 1?",
+      "sql": "SELECT TRIM(CAST(\"ZipCodePhysical\" AS VARCHAR)) AS answer\nFROM t\nWHERE UPPER(TRIM(CAST(\"CityPhysical\" AS VARCHAR))) = 'KANSAS CITY'\n  AND UPPER(TRIM(CAST(\"CountyName\" AS VARCHAR))) = 'JACKSON'\n  AND UPPER(TRIM(CAST(\"DepartmentType\" AS VARCHAR))) = 'MUNICIPALITY'\nORDER BY \"DepartmentName\", \"ZipCodePhysical\"\nLIMIT 1",
+      "answer": "64105"
+    },
+    {
+      "node_id": "5",
+      "dataset_id": "missouri-job-centers",
+      "source": "datagov/missouri-job-centers/files/rows.txt",
+      "intent": "In the city from node 2, what ZIP code is shared by all job centers there?",
+      "sql": "SELECT regexp_extract(CAST(\"Zipcode\" AS VARCHAR), '(\\d{5})', 1) AS answer\nFROM t\nWHERE UPPER(TRIM(CAST(\"City\" AS VARCHAR))) = 'KANSAS CITY'\n  AND regexp_extract(CAST(\"Zipcode\" AS VARCHAR), '(\\d{5})', 1) IS NOT NULL\nGROUP BY answer\nLIMIT 1",
+      "answer": "64108"
+    },
+    {
+      "node_id": "6",
+      "dataset_id": "missouri-zipcode-data",
+      "source": "datagov/missouri-zipcode-data/files/rows.txt",
+      "intent": "Which of the ZIP codes from nodes 3 through 5 covers the most land?",
+      "sql": "SELECT TRIM(CAST(\"ZCTA5CE\" AS VARCHAR)) AS answer\nFROM t\nWHERE TRIM(CAST(\"ZCTA5CE\" AS VARCHAR)) IN ('64112', '64105', '64108')\nORDER BY TRY_CAST(\"ALAND\" AS DOUBLE) DESC, \"ZCTA5CE\" ASC\nLIMIT 1",
+      "answer": "64108"
+    },
+    {
+      "node_id": "7",
+      "dataset_id": "missouri-beer-wine-and-liquor-solicitor-list-with-zip-code",
+      "source": "datagov/missouri-beer-wine-and-liquor-solicitor-list-with-zip-code/files/rows.txt",
+      "intent": "How many businesses on the beer, wine, and liquor solicitor list are in the city from node 2 and have the ZIP code from node 6? Treat ZIP+4 entries as belonging to that ZIP code.",
+      "sql": "SELECT CAST(COUNT(*) AS VARCHAR) AS answer\nFROM t\nWHERE UPPER(TRIM(CAST(\"City\" AS VARCHAR))) = 'KANSAS CITY'\n  AND regexp_extract(CAST(\"Zip Code\" AS VARCHAR), '(\\d{5})', 1) = '64108' ",
+      "answer": "19"
+    }
   ]
 }

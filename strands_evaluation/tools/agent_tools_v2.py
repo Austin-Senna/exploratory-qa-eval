@@ -199,8 +199,9 @@ def _rewrite_query_error(raw: str) -> str:
     m = _MAX_OBJECT_SIZE_RE.search(raw)
     if m:
         observed = m.group(1)
+        limit_mb = _QUERY_MAX_FILE_BYTES // (1024 * 1024)
         return (
-            f"File contains a JSON object larger than the 100 MB query limit "
+            f"File contains a JSON object larger than the {limit_mb} MB query limit "
             f"({observed} bytes observed). query_file cannot stream it. "
             "Use download to fetch the file, then execute_code with a "
             "streaming JSON parser (e.g. ijson) or pandas.read_json with "
@@ -971,9 +972,9 @@ def _query_file_impl(
         return {"error": f"Could not detect file family: {e}"}
 
     if family == "csv":
-        reader = f"read_csv_auto('{s3_uri}')"
+        reader = f"read_csv_auto('{s3_uri}', quote='\"')"
     elif family == "json":
-        reader = f"read_json_auto('{s3_uri}', maximum_object_size=104857600)"
+        reader = f"read_json_auto('{s3_uri}', maximum_object_size={_QUERY_MAX_FILE_BYTES})"
     else:
         return {"error": _rewrite_unqueryable_family_error(family)}
 

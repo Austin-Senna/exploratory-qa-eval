@@ -85,5 +85,81 @@
       ],
       "answer": 1915
     }
+  ],
+  "ideal_code": [
+    {
+      "node_id": "1",
+      "dataset_id": "2021-state-employee-pay",
+      "source": "datagov/2021-state-employee-pay/files/rows.txt",
+      "intent": "For calendar year 2021, how many employee rows are there for each of CORRECTIONS, SOCIAL SERVICES, and TRANSPORTATION?",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/2021-state-employee-pay/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\nanswer = (\n    df[df[\"Agency Name\"].isin([\"CORRECTIONS\", \"SOCIAL SERVICES\", \"TRANSPORTATION\"])]\n    [\"Agency Name\"]\n    .value_counts()\n    .reindex([\"CORRECTIONS\", \"SOCIAL SERVICES\", \"TRANSPORTATION\"])\n    .to_dict()\n)",
+      "answer": {
+        "CORRECTIONS": 12530,
+        "SOCIAL SERVICES": 8362,
+        "TRANSPORTATION": 7170
+      }
+    },
+    {
+      "node_id": "2",
+      "dataset_id": "2022-state-employee-pay",
+      "source": "datagov/2022-state-employee-pay/files/rows.txt",
+      "intent": "For calendar year 2022, how many employee rows are there for each of CORRECTIONS, SOCIAL SERVICES, and TRANSPORTATION?",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/2022-state-employee-pay/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\nanswer = (\n    df[df[\"Agency Name\"].isin([\"CORRECTIONS\", \"SOCIAL SERVICES\", \"TRANSPORTATION\"])]\n    [\"Agency Name\"]\n    .value_counts()\n    .reindex([\"CORRECTIONS\", \"SOCIAL SERVICES\", \"TRANSPORTATION\"])\n    .to_dict()\n)",
+      "answer": {
+        "CORRECTIONS": 12380,
+        "SOCIAL SERVICES": 8723,
+        "TRANSPORTATION": 6917
+      }
+    },
+    {
+      "node_id": "3",
+      "dataset_id": "2023-state-employee-pay",
+      "source": "datagov/2023-state-employee-pay/files/rows.txt",
+      "intent": "For calendar year 2023, how many employee rows are there for each of CORRECTIONS, SOCIAL SERVICES, and TRANSPORTATION?",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/2023-state-employee-pay/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\nanswer = (\n    df[df[\"Agency Name\"].isin([\"CORRECTIONS\", \"SOCIAL SERVICES\", \"TRANSPORTATION\"])]\n    .groupby(\"Agency Name\")\n    .size()\n    .to_dict()\n)",
+      "answer": {
+        "CORRECTIONS": 13107,
+        "SOCIAL SERVICES": 8932,
+        "TRANSPORTATION": 6956
+      }
+    }
+  ],
+  "ideal_query": [
+    {
+      "node_id": "1",
+      "dataset_id": "2021-state-employee-pay",
+      "source": "datagov/2021-state-employee-pay/files/rows.txt",
+      "intent": "For calendar year 2021, how many employee rows are there for each of CORRECTIONS, SOCIAL SERVICES, and TRANSPORTATION?",
+      "sql": "SELECT json_group_object(\"Agency Name\", cnt) AS answer\nFROM (\n  SELECT \"Agency Name\", COUNT(*) AS cnt\n  FROM t\n  WHERE \"Agency Name\" IN ('CORRECTIONS', 'SOCIAL SERVICES', 'TRANSPORTATION')\n  GROUP BY \"Agency Name\"\n  ORDER BY cnt DESC\n) q",
+      "answer": {
+        "CORRECTIONS": 12530,
+        "SOCIAL SERVICES": 8362,
+        "TRANSPORTATION": 7170
+      }
+    },
+    {
+      "node_id": "2",
+      "dataset_id": "2022-state-employee-pay",
+      "source": "datagov/2022-state-employee-pay/files/rows.txt",
+      "intent": "For calendar year 2022, how many employee rows are there for each of CORRECTIONS, SOCIAL SERVICES, and TRANSPORTATION?",
+      "sql": "SELECT json_group_object(\"Agency Name\", cnt) AS answer\nFROM (\n  SELECT \"Agency Name\", COUNT(*) AS cnt\n  FROM t\n  WHERE \"Agency Name\" IN ('CORRECTIONS', 'SOCIAL SERVICES', 'TRANSPORTATION')\n  GROUP BY \"Agency Name\"\n  ORDER BY cnt DESC\n) q",
+      "answer": {
+        "CORRECTIONS": 12380,
+        "SOCIAL SERVICES": 8723,
+        "TRANSPORTATION": 6917
+      }
+    },
+    {
+      "node_id": "3",
+      "dataset_id": "2023-state-employee-pay",
+      "source": "datagov/2023-state-employee-pay/files/rows.txt",
+      "intent": "For calendar year 2023, how many employee rows are there for each of CORRECTIONS, SOCIAL SERVICES, and TRANSPORTATION?",
+      "sql": "SELECT json_group_object(\"Agency Name\", cnt) AS answer\nFROM (\n  SELECT \"Agency Name\", COUNT(*) AS cnt\n  FROM t\n  WHERE \"Agency Name\" IN ('CORRECTIONS', 'SOCIAL SERVICES', 'TRANSPORTATION')\n  GROUP BY \"Agency Name\"\n  ORDER BY cnt DESC\n) q",
+      "answer": {
+        "CORRECTIONS": 13107,
+        "SOCIAL SERVICES": 8932,
+        "TRANSPORTATION": 6956
+      }
+    }
   ]
 }

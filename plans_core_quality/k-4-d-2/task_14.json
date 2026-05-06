@@ -74,5 +74,121 @@
       ],
       "answer": 13.33
     }
+  ],
+  "ideal_code": [
+    {
+      "node_id": "1",
+      "dataset_id": "child-and-adult-care-food-programs-cacfp-day-care-homes-meal-reimbursement-program-ye-2018",
+      "source": "datagov/child-and-adult-care-food-programs-cacfp-day-care-homes-meal-reimbursement-program-ye-2018/files/rows.txt",
+      "intent": "For ProgramYear 2018-2019, what were the total day care home meal reimbursements for Harris, Hidalgo, Dallas, and Cameron counties? (Filter for this node: group by SiteCounty; sum TotalMealReimbursement.)",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/child-and-adult-care-food-programs-cacfp-day-care-homes-meal-reimbursement-program-ye-2018/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\ndf[\"SiteCounty\"] = df[\"SiteCounty\"].astype(str).str.strip()\ndf = df[df[\"SiteCounty\"].isin([\"HARRIS\", \"HIDALGO\", \"DALLAS\", \"CAMERON\"])].copy()\ndf[\"TotalMealReimbursement\"] = pd.to_numeric(df[\"TotalMealReimbursement\"], errors=\"coerce\")\ncounty_totals = df.groupby(\"SiteCounty\", dropna=True)[\"TotalMealReimbursement\"].sum()\nanswer = {county: round(float(county_totals.loc[county]), 2) for county in county_totals.sort_index().index}\n",
+      "answer": {
+        "CAMERON": 392489.51,
+        "DALLAS": 2835278.75,
+        "HARRIS": 8757796.13,
+        "HIDALGO": 1202699.73
+      }
+    },
+    {
+      "node_id": "2",
+      "dataset_id": "child-and-adult-care-food-programs-cacfp-day-care-homes-meal-reimbursement-program-ye-2020",
+      "source": "datagov/child-and-adult-care-food-programs-cacfp-day-care-homes-meal-reimbursement-program-ye-2020/files/rows.txt",
+      "intent": "For ProgramYear 2020-2021, what were the total day care home meal reimbursements for Harris, Hidalgo, Dallas, and Cameron counties? (Filter for this node: group by SiteCounty; sum TotalMealReimbursement.)",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/child-and-adult-care-food-programs-cacfp-day-care-homes-meal-reimbursement-program-ye-2020/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\ndf[\"SiteCounty\"] = df[\"SiteCounty\"].astype(str).str.strip()\ndf = df[df[\"SiteCounty\"].isin([\"HARRIS\", \"HIDALGO\", \"DALLAS\", \"CAMERON\"])].copy()\ndf[\"TotalMealReimbursement\"] = pd.to_numeric(df[\"TotalMealReimbursement\"], errors=\"coerce\")\ncounty_totals = df.groupby(\"SiteCounty\", dropna=True)[\"TotalMealReimbursement\"].sum()\nanswer = {county: round(float(county_totals.loc[county]), 2) for county in county_totals.sort_index().index}\n",
+      "answer": {
+        "CAMERON": 330003.06,
+        "DALLAS": 2393411.26,
+        "HARRIS": 7558597.77,
+        "HIDALGO": 971063.56
+      }
+    },
+    {
+      "node_id": "3",
+      "dataset_id": "child-and-adult-care-food-program-cacfp-child-centers-meal-reimbursement-program-year-2018",
+      "source": "datagov/child-and-adult-care-food-program-cacfp-child-centers-meal-reimbursement-program-year-2018/files/rows.txt",
+      "intent": "For ProgramYear 2018-2019, what were the total child center enrollments for Hidalgo and Cameron counties? (Filter for this node: group by SiteCounty; sum EnrollmentQty.)",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/child-and-adult-care-food-program-cacfp-child-centers-meal-reimbursement-program-year-2018/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\ndf[\"SiteCounty\"] = df[\"SiteCounty\"].astype(str).str.strip()\ndf = df[df[\"SiteCounty\"].isin([\"CAMERON\", \"HIDALGO\"])].copy()\ndf[\"EnrollmentQty\"] = pd.to_numeric(df[\"EnrollmentQty\"], errors=\"coerce\")\ncounty_totals = df.groupby(\"SiteCounty\", dropna=True)[\"EnrollmentQty\"].sum()\nanswer = {county: int(county_totals.loc[county]) for county in county_totals.sort_index().index}\n",
+      "answer": {
+        "CAMERON": 7620183,
+        "HIDALGO": 1661128
+      }
+    },
+    {
+      "node_id": "4",
+      "dataset_id": "child-and-adult-care-food-program-cacfp-child-centers-meal-reimbursement-program-year-2019",
+      "source": "datagov/child-and-adult-care-food-program-cacfp-child-centers-meal-reimbursement-program-year-2019/files/rows.txt",
+      "intent": "For ProgramYear 2019-2020, what were the total child center enrollments for Hidalgo and Cameron counties? (Filter for this node: group by SiteCounty; sum EnrollmentQty.)",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/child-and-adult-care-food-program-cacfp-child-centers-meal-reimbursement-program-year-2019/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\ndf[\"SiteCounty\"] = df[\"SiteCounty\"].astype(str).str.strip()\ndf = df[df[\"SiteCounty\"].isin([\"CAMERON\", \"HIDALGO\"])].copy()\ndf[\"EnrollmentQty\"] = pd.to_numeric(df[\"EnrollmentQty\"], errors=\"coerce\")\ncounty_totals = df.groupby(\"SiteCounty\", dropna=True)[\"EnrollmentQty\"].sum()\nanswer = {county: int(county_totals.loc[county]) for county in county_totals.sort_index().index}\n",
+      "answer": {
+        "CAMERON": 1076746,
+        "HIDALGO": 1477805
+      }
+    },
+    {
+      "node_id": "6",
+      "dataset_id": "trec-hoa-management-certificates",
+      "source": "datagov/trec-hoa-management-certificates/files/rows.txt",
+      "intent": "What percentage of residential community association management listings in <hop 2 answer: Cameron County> are in <node_5 answer>?",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/trec-hoa-management-certificates/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\nfor col in [\"County\", \"City\"]:\n    df[col] = df[col].astype(str).str.strip().str.upper()\ncounty_records = df[df[\"County\"] == \"CAMERON\"].copy()\ncity_records = county_records[county_records[\"City\"] == \"BROWNSVILLE\"].copy()\nanswer = round(100 * len(city_records) / len(county_records), 2)\n",
+      "answer": 13.33
+    }
+  ],
+  "ideal_query": [
+    {
+      "node_id": "1",
+      "dataset_id": "child-and-adult-care-food-programs-cacfp-day-care-homes-meal-reimbursement-program-ye-2018",
+      "source": "datagov/child-and-adult-care-food-programs-cacfp-day-care-homes-meal-reimbursement-program-ye-2018/files/rows.txt",
+      "intent": "For ProgramYear 2018-2019, what were the total day care home meal reimbursements for Harris, Hidalgo, Dallas, and Cameron counties? (Filter for this node: group by SiteCounty; sum TotalMealReimbursement.)",
+      "sql": "SELECT json_group_object(SiteCounty, total) AS answer\nFROM (\n  SELECT trim(SiteCounty) AS SiteCounty, round(sum(TRY_CAST(TotalMealReimbursement AS DOUBLE)), 2) AS total\n  FROM t\n  WHERE trim(SiteCounty) IN ('HARRIS', 'HIDALGO', 'DALLAS', 'CAMERON')\n  GROUP BY trim(SiteCounty)\n  ORDER BY trim(SiteCounty)\n)",
+      "answer": {
+        "CAMERON": 392489.51,
+        "DALLAS": 2835278.75,
+        "HARRIS": 8757796.13,
+        "HIDALGO": 1202699.73
+      }
+    },
+    {
+      "node_id": "2",
+      "dataset_id": "child-and-adult-care-food-programs-cacfp-day-care-homes-meal-reimbursement-program-ye-2020",
+      "source": "datagov/child-and-adult-care-food-programs-cacfp-day-care-homes-meal-reimbursement-program-ye-2020/files/rows.txt",
+      "intent": "For ProgramYear 2020-2021, what were the total day care home meal reimbursements for Harris, Hidalgo, Dallas, and Cameron counties? (Filter for this node: group by SiteCounty; sum TotalMealReimbursement.)",
+      "sql": "SELECT json_group_object(SiteCounty, total) AS answer\nFROM (\n  SELECT trim(SiteCounty) AS SiteCounty, round(sum(TRY_CAST(TotalMealReimbursement AS DOUBLE)), 2) AS total\n  FROM t\n  WHERE trim(SiteCounty) IN ('HARRIS', 'HIDALGO', 'DALLAS', 'CAMERON')\n  GROUP BY trim(SiteCounty)\n  ORDER BY trim(SiteCounty)\n)",
+      "answer": {
+        "CAMERON": 330003.06,
+        "DALLAS": 2393411.26,
+        "HARRIS": 7558597.77,
+        "HIDALGO": 971063.56
+      }
+    },
+    {
+      "node_id": "3",
+      "dataset_id": "child-and-adult-care-food-program-cacfp-child-centers-meal-reimbursement-program-year-2018",
+      "source": "datagov/child-and-adult-care-food-program-cacfp-child-centers-meal-reimbursement-program-year-2018/files/rows.txt",
+      "intent": "For ProgramYear 2018-2019, what were the total child center enrollments for Hidalgo and Cameron counties? (Filter for this node: group by SiteCounty; sum EnrollmentQty.)",
+      "sql": "SELECT json_group_object(SiteCounty, total) AS answer\nFROM (\n  SELECT trim(SiteCounty) AS SiteCounty, CAST(sum(TRY_CAST(EnrollmentQty AS DOUBLE)) AS INTEGER) AS total\n  FROM t\n  WHERE trim(SiteCounty) IN ('CAMERON', 'HIDALGO')\n  GROUP BY trim(SiteCounty)\n  ORDER BY trim(SiteCounty)\n)",
+      "answer": {
+        "CAMERON": 7620183,
+        "HIDALGO": 1661128
+      }
+    },
+    {
+      "node_id": "4",
+      "dataset_id": "child-and-adult-care-food-program-cacfp-child-centers-meal-reimbursement-program-year-2019",
+      "source": "datagov/child-and-adult-care-food-program-cacfp-child-centers-meal-reimbursement-program-year-2019/files/rows.txt",
+      "intent": "For ProgramYear 2019-2020, what were the total child center enrollments for Hidalgo and Cameron counties? (Filter for this node: group by SiteCounty; sum EnrollmentQty.)",
+      "sql": "SELECT json_group_object(SiteCounty, total) AS answer\nFROM (\n  SELECT trim(SiteCounty) AS SiteCounty, CAST(sum(TRY_CAST(EnrollmentQty AS DOUBLE)) AS INTEGER) AS total\n  FROM t\n  WHERE trim(SiteCounty) IN ('CAMERON', 'HIDALGO')\n  GROUP BY trim(SiteCounty)\n  ORDER BY trim(SiteCounty)\n)",
+      "answer": {
+        "CAMERON": 1076746,
+        "HIDALGO": 1477805
+      }
+    },
+    {
+      "node_id": "6",
+      "dataset_id": "trec-hoa-management-certificates",
+      "source": "datagov/trec-hoa-management-certificates/files/rows.txt",
+      "intent": "What percentage of residential community association management listings in <hop 2 answer: Cameron County> are in <node_5 answer>?",
+      "sql": "SELECT round(100.0 * sum(CASE WHEN upper(trim(City)) = 'BROWNSVILLE' THEN 1 ELSE 0 END) / count(*), 2) AS answer\nFROM t\nWHERE upper(trim(County)) = 'CAMERON'",
+      "answer": 13.33
+    }
   ]
 }

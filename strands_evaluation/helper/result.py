@@ -8,7 +8,15 @@ from typing import Any, Dict, List, Optional, Tuple
 from strands_evaluation.helper.constants import MODEL_PRICING
 
 # Baseline API tools
-_API_TOOL_NAMES = {"search", "search_keyword", "list_files", "peek_file", "query_file", "download"}
+_API_TOOL_NAMES = {
+    "search",
+    "search_keyword",
+    "list_files",
+    "peek_file",
+    "query_file",
+    "query_ideal",
+    "download",
+}
 # Condition A (augmented search backends — sparse/hybrid/graph)
 _CONDITION_A_TOOL_NAMES = {"search_sparse", "search_hybrid", "search_graph"}
 

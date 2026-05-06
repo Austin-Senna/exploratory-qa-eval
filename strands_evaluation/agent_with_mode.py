@@ -124,6 +124,7 @@ except ImportError:
 
 _MODES = {"naive", "standard", "ideal", "preloaded"}
 _RESULT_MODES = {"naive", "ideal"}
+_COMPUTATION_MODES = {"standard", "ideal"}
 
 
 @dataclass
@@ -149,6 +150,15 @@ def _normalize_result_mode(value: Optional[str], default: str, label: str) -> st
     if mode not in _RESULT_MODES:
         raise ValueError(
             f"Unsupported {label} mode '{value}'. Expected one of: {', '.join(sorted(_RESULT_MODES))}"
+        )
+    return mode
+
+
+def _normalize_computation_mode(value: Optional[str], default: str = "standard") -> str:
+    mode = (value or default).strip().lower()
+    if mode not in _COMPUTATION_MODES:
+        raise ValueError(
+            f"Unsupported computation_tool mode '{value}'. Expected one of: {', '.join(sorted(_COMPUTATION_MODES))}"
         )
     return mode
 
@@ -254,8 +264,9 @@ def build_mode_bundle(
     search_tool_mode = _normalize_mode(run_config.search_tool_mode, "standard", "search_tool")
     search_results_mode = _normalize_result_mode(run_config.search_results_mode, "naive", "search_results")
     agent_management_mode = _normalize_mode(run_config.agent_management_mode, "standard", "agent_management")
+    computation_tool_mode = _normalize_computation_mode(run_config.computation_tool_mode)
 
-    if search_tool_mode == "ideal" or agent_management_mode == "ideal":
+    if search_tool_mode == "ideal" or agent_management_mode == "ideal" or computation_tool_mode == "ideal":
         set_ideal_plan_task_context(task_context or {})
 
     raw_search_tools = build_search(
@@ -275,7 +286,15 @@ def build_mode_bundle(
     )
     system_prompt = inject_debug_prompt(system_prompt, run_config.debug_mode)
 
-    tools = list(search_tools) + list(management_tools) + list(data_tools)
+    data_tool_list = _apply_computation_tool_mode(
+        data_tools,
+        computation_tool_mode=computation_tool_mode,
+        task_context=task_context,
+    )
+    if computation_tool_mode == "ideal":
+        system_prompt = _inject_ideal_computation_prompt(system_prompt)
+
+    tools = list(search_tools) + list(management_tools) + list(data_tool_list)
     return ModeBundle(
         tools=tools,
         system_prompt=system_prompt,
@@ -286,9 +305,49 @@ def build_mode_bundle(
             "search_tool": search_tool_mode,
             "search_results": search_results_mode,
             "agent_management": agent_management_mode,
+            "computation_tool": computation_tool_mode,
         },
         task_trailer=task_trailer,
     )
+
+
+def _apply_computation_tool_mode(
+    data_tools: Sequence[Any],
+    *,
+    computation_tool_mode: str,
+    task_context: Optional[Dict[str, Any]],
+) -> List[Any]:
+    if computation_tool_mode != "ideal":
+        return list(data_tools)
+
+    from strands_evaluation.tools.external.ideal import computation_ideal
+
+    computation_ideal.set_task_context(task_context or {})
+    out: List[Any] = []
+    for tool_obj in data_tools:
+        tool_name = getattr(tool_obj, "tool_name", None)
+        if tool_name is None and hasattr(tool_obj, "tool_spec"):
+            tool_name = tool_obj.tool_spec.get("name")
+        if tool_name == "query_file":
+            if not any(getattr(t, "tool_name", None) == "query_ideal" for t in out):
+                out.append(computation_ideal.query_ideal)
+            continue
+        if tool_name == "execute_code":
+            if not any(getattr(t, "tool_name", None) == "execute_ideal" for t in out):
+                out.append(computation_ideal.execute_ideal)
+            continue
+        out.append(tool_obj)
+    return out
+
+
+def _inject_ideal_computation_prompt(system_prompt: str) -> str:
+    section = (
+        "\n\n## IDEAL COMPUTATION TOOLS\n"
+        "- `query_file` and `execute_code` are replaced in this run.\n"
+        "- Use `query_ideal(..., intent=...)` for SQL-style computation and `execute_ideal(code, intent)` for Python computation.\n"
+        "- Always write a concise intent describing the computation you are trying to perform.\n"
+    )
+    return system_prompt.rstrip() + section
 
 
 # Shared callback tracking and plugin classes are defined in
@@ -429,6 +488,7 @@ class DataLakeAgent:
                 self.run_config.search_tool_mode,
                 self.run_config.search_results_mode,
                 self.run_config.agent_management_mode,
+                self.run_config.computation_tool_mode,
             ]
         )
 

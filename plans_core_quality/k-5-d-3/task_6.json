@@ -6,8 +6,8 @@
     "Harris_County,_Texas",
     "Houston",
     "University_of_Houston",
-    "University_of_Houston\u2013Clear_Lake",
-    "University_of_Houston\u2013Downtown"
+    "University_of_Houston–Clear_Lake",
+    "University_of_Houston–Downtown"
   ],
   "source_sequence": [
     "wikipedia/List_of_counties_in_Texas/content.txt",
@@ -16,8 +16,8 @@
     "wikipedia/Harris_County,_Texas/content.txt",
     "wikipedia/Houston/content.txt",
     "wikipedia/University_of_Houston/content.txt",
-    "wikipedia/University_of_Houston\u2013Clear_Lake/content.txt",
-    "wikipedia/University_of_Houston\u2013Downtown/content.txt"
+    "wikipedia/University_of_Houston–Clear_Lake/content.txt",
+    "wikipedia/University_of_Houston–Downtown/content.txt"
   ],
   "reasoning_chain_text": [
     "1. Identify the two most populous Texas counties in 2024.",
@@ -73,12 +73,12 @@
       ],
       "reasoning": [
         "Node 5: Retrieve the University of Houston System universities identified in <hop 3 answer>.",
-        "Hop result: the universities are University of Houston, University of Houston\u2013Clear Lake, and University of Houston\u2013Downtown."
+        "Hop result: the universities are University of Houston, University of Houston–Clear Lake, and University of Houston–Downtown."
       ],
       "answer": [
         "University of Houston",
-        "University of Houston\u2013Clear Lake",
-        "University of Houston\u2013Downtown"
+        "University of Houston–Clear Lake",
+        "University of Houston–Downtown"
       ]
     },
     {
@@ -90,11 +90,59 @@
       ],
       "reasoning": [
         "Node 6: Retrieve the founding year of University of Houston from <hop 4 answer>.",
-        "Node 7: Retrieve the founding year of University of Houston\u2013Clear Lake from <hop 4 answer>.",
-        "Node 8: Retrieve the founding year of University of Houston\u2013Downtown from <hop 4 answer>.",
+        "Node 7: Retrieve the founding year of University of Houston–Clear Lake from <hop 4 answer>.",
+        "Node 8: Retrieve the founding year of University of Houston–Downtown from <hop 4 answer>.",
         "Hop result: compare the founding years and select University of Houston because it was founded earliest."
       ],
       "answer": "University of Houston"
+    }
+  ],
+  "ideal_code": [
+    {
+      "node_id": "2",
+      "dataset_id": "fy-2020-disability-compensation-recipients-by-county",
+      "source": "datagov/fy-2020-disability-compensation-recipients-by-county/files/rows.txt",
+      "intent": "For <hop 1 answer>, what were the number of veterans receiving disability compensation in 2020?",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/fy-2020-disability-compensation-recipients-by-county/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\nanswer = (\n    df[\n        (df[\"State\"] == \"Texas\")\n        & (df[\"County Name\"].isin([\"Harris\", \"Dallas\"]))\n    ][[\"County Name\", \"Total: Disability Compensation Recipients\"]]\n    .set_index(\"County Name\")[\"Total: Disability Compensation Recipients\"]\n    .to_dict()\n)",
+      "answer": {
+        "Harris": 49804,
+        "Dallas": 26317
+      }
+    },
+    {
+      "node_id": "3",
+      "dataset_id": "fy-2023-disability-compensation-recipients-by-county",
+      "source": "datagov/fy-2023-disability-compensation-recipients-by-county/files/rows.txt",
+      "intent": "For <hop 1 answer>, what were the number of veterans receiving disability compensation in 2023?",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/fy-2023-disability-compensation-recipients-by-county/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\nanswer = (\n    df[\n        (df[\"State\"] == \"Texas\")\n        & (df[\"County Name\"].isin([\"Harris\", \"Dallas\"]))\n    ][[\"County Name\", \"Total: Disability Compensation Recipients\"]]\n    .set_index(\"County Name\")[\"Total: Disability Compensation Recipients\"]\n    .to_dict()\n)",
+      "answer": {
+        "Harris": 54266,
+        "Dallas": 25704
+      }
+    }
+  ],
+  "ideal_query": [
+    {
+      "node_id": "2",
+      "dataset_id": "fy-2020-disability-compensation-recipients-by-county",
+      "source": "datagov/fy-2020-disability-compensation-recipients-by-county/files/rows.txt",
+      "intent": "For <hop 1 answer>, what were the number of veterans receiving disability compensation in 2020?",
+      "sql": "SELECT json_group_object(\"County Name\", TRY_CAST(\"Total: Disability Compensation Recipients\" AS INTEGER)) AS answer\nFROM t\nWHERE \"State\" = 'Texas'\n  AND \"County Name\" IN ('Harris', 'Dallas')",
+      "answer": {
+        "Harris": 49804,
+        "Dallas": 26317
+      }
+    },
+    {
+      "node_id": "3",
+      "dataset_id": "fy-2023-disability-compensation-recipients-by-county",
+      "source": "datagov/fy-2023-disability-compensation-recipients-by-county/files/rows.txt",
+      "intent": "For <hop 1 answer>, what were the number of veterans receiving disability compensation in 2023?",
+      "sql": "SELECT json_group_object(\"County Name\", TRY_CAST(\"Total: Disability Compensation Recipients\" AS INTEGER)) AS answer\nFROM t\nWHERE \"State\" = 'Texas'\n  AND \"County Name\" IN ('Harris', 'Dallas')",
+      "answer": {
+        "Harris": 54266,
+        "Dallas": 25704
+      }
     }
   ]
 }

@@ -2,7 +2,8 @@
 """Run SANA-enabled multi-axis ablation evaluation.
 
 Mirrors strands_evaluation.run_mode_eval but uses SanaBatchRunner and adds
-SANA feature flags. Baseline axes (search_tool, search_results, agent_management)
+SANA feature flags. Baseline axes (search_tool, search_results, agent_management,
+computation_tool)
 behave identically to run_mode_eval.
 """
 
@@ -41,6 +42,7 @@ _AXIS_DEFAULTS = {
     "search_tool": "preloaded",
     "search_results": "ideal",
     "agent_management": "standard",
+    "computation_tool": "standard",
 }
 
 def _variant_condition_label(
@@ -48,15 +50,18 @@ def _variant_condition_label(
     search_tool: str,
     search_results: str,
     agent_management: str,
-    k: Optional[int],
-    search_calls: Optional[int],
     sana_flags: SanaFlags,
+    computation_tool: str = "standard",
+    k: Optional[int] = None,
+    search_calls: Optional[int] = None,
 ) -> str:
     axis_tokens = [
         f"s{_MODE_LETTERS[search_tool]}",
         f"r{_MODE_LETTERS[search_results]}",
         f"p{_MODE_LETTERS[agent_management]}",
     ]
+    if computation_tool != "standard":
+        axis_tokens.append(f"c{_MODE_LETTERS[computation_tool]}")
     run_tokens = []
     if k is not None:
         run_tokens.append(f"k{k}")
@@ -89,11 +94,13 @@ def _resolve_mode_axes(
     search_tool: Optional[str],
     search_results: Optional[str],
     agent_management: Optional[str],
-) -> tuple[str, str, str]:
+    computation_tool: Optional[str] = None,
+) -> tuple[str, str, str, str]:
     return (
         search_tool or _AXIS_DEFAULTS["search_tool"],
         search_results or _AXIS_DEFAULTS["search_results"],
         agent_management or _AXIS_DEFAULTS["agent_management"],
+        computation_tool or _AXIS_DEFAULTS["computation_tool"],
     )
 
 
@@ -267,6 +274,11 @@ def main() -> None:
         choices=["naive", "standard", "ideal"],
         default=None,
     )
+    parser.add_argument(
+        "--computation_tool",
+        choices=["standard", "ideal"],
+        default=None,
+    )
 
     # SANA feature flags
     parser.add_argument(
@@ -334,10 +346,11 @@ def main() -> None:
         openai_prompt_cache_retention=args.openai_prompt_cache_retention,
         extra_model_kwargs=extra_model_kwargs,
     )
-    search_tool_mode, search_results_mode, agent_management_mode = _resolve_mode_axes(
+    search_tool_mode, search_results_mode, agent_management_mode, computation_tool_mode = _resolve_mode_axes(
         search_tool=args.search_tool,
         search_results=args.search_results,
         agent_management=args.agent_management,
+        computation_tool=args.computation_tool,
     )
 
     try:
@@ -356,6 +369,7 @@ def main() -> None:
         search_tool=search_tool_mode,
         search_results=search_results_mode,
         agent_management=agent_management_mode,
+        computation_tool=computation_tool_mode,
         k=args.k,
         search_calls=args.search_calls,
         sana_flags=sana_flags,
@@ -385,6 +399,7 @@ def main() -> None:
         search_tool_mode=search_tool_mode,
         search_results_mode=search_results_mode,
         agent_management_mode=agent_management_mode,
+        computation_tool_mode=computation_tool_mode,
         sana_flags=sana_flags,
         condition_config=ConditionConfig(
             condition=condition_label,
@@ -395,8 +410,12 @@ def main() -> None:
     )
 
     logger.info(
-        "SANA variant: %s (sana_features=%s sprint_k=%d)",
+        "SANA variant: %s (st=%s sr=%s am=%s ct=%s sana_features=%s sprint_k=%d)",
         condition_label,
+        search_tool_mode,
+        search_results_mode,
+        agent_management_mode,
+        computation_tool_mode,
         sana_flags.active_features() or ["none"],
         sana_flags.macro_reflection_k,
     )

@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """Run multi-axis ablation evaluation with independent mode controls.
 
-This runner extends search-ablation controls with three orthogonal axes:
+This runner extends search-ablation controls with four orthogonal axes:
   - search_tool quality
   - search_results richness
   - agent_management style
+  - computation_tool behavior
 """
 
 from __future__ import annotations
@@ -39,6 +40,7 @@ _LEGACY_AXIS_DEFAULTS = {
     "search_tool": "standard",
     "search_results": "naive",
     "agent_management": "standard",
+    "computation_tool": "standard",
 }
 
 
@@ -47,8 +49,9 @@ def _variant_condition_label(
     search_tool: str,
     search_results: str,
     agent_management: str,
-    k: Optional[int],
-    search_calls: Optional[int],
+    computation_tool: str = "standard",
+    k: Optional[int] = None,
+    search_calls: Optional[int] = None,
     search_free: bool = False,
     search_lessguide: bool = False,
 ) -> str:
@@ -57,6 +60,8 @@ def _variant_condition_label(
         f"results_{_MODE_LETTERS[search_results]}",
         f"plan{_MODE_LETTERS[agent_management]}",
     ]
+    if computation_tool != "standard":
+        parts.append(f"compute{_MODE_LETTERS[computation_tool]}")
     if k is not None:
         parts.append(f"k{k}")
     if search_calls is not None:
@@ -80,12 +85,14 @@ def _resolve_mode_axes(
     search_tool: Optional[str],
     search_results: Optional[str],
     agent_management: Optional[str],
-) -> tuple[str, str, str]:
+    computation_tool: Optional[str] = None,
+) -> tuple[str, str, str, str]:
     defaults = _LEGACY_AXIS_DEFAULTS
     return (
         search_tool or defaults["search_tool"],
         search_results or defaults["search_results"],
         agent_management or defaults["agent_management"],
+        computation_tool or defaults["computation_tool"],
     )
 
 
@@ -326,6 +333,12 @@ def main() -> None:
         default=None,
         help="Agent management axis.",
     )
+    parser.add_argument(
+        "--computation_tool",
+        choices=["standard", "ideal"],
+        default=None,
+        help="Computation tool axis.",
+    )
 
     # Execution
     parser.add_argument("--parallel", type=int, default=6, help="Number of parallel worker processes")
@@ -353,16 +366,18 @@ def main() -> None:
         openai_prompt_cache_retention=args.openai_prompt_cache_retention,
         extra_model_kwargs=extra_model_kwargs,
     )
-    search_tool_mode, search_results_mode, agent_management_mode = _resolve_mode_axes(
+    search_tool_mode, search_results_mode, agent_management_mode, computation_tool_mode = _resolve_mode_axes(
         search_tool=args.search_tool,
         search_results=args.search_results,
         agent_management=args.agent_management,
+        computation_tool=args.computation_tool,
     )
     safe_model_name = base_eval._display_name(agent_config)
     variant_condition = _variant_condition_label(
         search_tool=search_tool_mode,
         search_results=search_results_mode,
         agent_management=agent_management_mode,
+        computation_tool=computation_tool_mode,
         k=args.k,
         search_calls=args.search_calls,
         search_free=args.search_free,
@@ -393,6 +408,7 @@ def main() -> None:
         search_tool_mode=search_tool_mode,
         search_results_mode=search_results_mode,
         agent_management_mode=agent_management_mode,
+        computation_tool_mode=computation_tool_mode,
         search_free=args.search_free,
         search_lessguide=args.search_lessguide,
         condition_config=ConditionConfig(
@@ -404,12 +420,13 @@ def main() -> None:
     )
 
     logger.info(
-        "Ablation variant: %s (base=%s, st=%s, sr=%s, am=%s, k=%s, search_calls=%s, search_free=%s, search_lessguide=%s, db_path=%s)",
+        "Ablation variant: %s (base=%s, st=%s, sr=%s, am=%s, ct=%s, k=%s, search_calls=%s, search_free=%s, search_lessguide=%s, db_path=%s)",
         condition_label,
         args.condition,
         search_tool_mode,
         search_results_mode,
         agent_management_mode,
+        computation_tool_mode,
         args.k,
         args.search_calls,
         args.search_free,

@@ -71,5 +71,81 @@
       ],
       "answer": "Doug Burgum"
     }
+  ],
+  "ideal_code": [
+    {
+      "node_id": "1",
+      "dataset_id": "moving-violations-issued-in-january-2019",
+      "source": "datagov/moving-violations-issued-in-january-2019/files/data.txt",
+      "intent": "In January 2019, how many driving-related violations did each of the United States Park Police, United States Capitol Police, and U.S. Secret Service Uniform Division issue?",
+      "code": "import boto3\nimport io\nimport json\nimport pandas as pd\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nbucket_name = \"lakeqa-yc4103-datalake\"\nobject_key = \"datagov/moving-violations-issued-in-january-2019/files/data.txt\"\ntarget_agencies = [\"UNITED STATES CAPITOL POLICE\", \"US. SECRET SERVICE UNIFORM DIVISION\", \"UNITED STATES PARK POLICE\"]\ns3 = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED))\nobj = s3.get_object(Bucket=bucket_name, Key=object_key)\ngeojson = json.loads(obj[\"Body\"].read())\nrows = [feature.get(\"properties\", {}) for feature in geojson[\"features\"]]\ndf = pd.DataFrame(rows)\nanswer = (\n    df[df[\"ISSUING_AGENCY_NAME\"].isin(target_agencies)]\n    .groupby(\"ISSUING_AGENCY_NAME\", dropna=True)\n    .size()\n    .sort_values(ascending=False)\n    .to_dict()\n)",
+      "answer": {
+        "UNITED STATES CAPITOL POLICE": 176,
+        "US. SECRET SERVICE UNIFORM DIVISION": 145,
+        "UNITED STATES PARK POLICE": 103
+      }
+    },
+    {
+      "node_id": "2",
+      "dataset_id": "moving-violations-issued-in-january-2020",
+      "source": "datagov/moving-violations-issued-in-january-2020/files/data.txt",
+      "intent": "In January 2020, how many driving-related violations did each of the United States Park Police, United States Capitol Police, and U.S. Secret Service Uniform Division issue?",
+      "code": "import boto3\nimport io\nimport json\nimport pandas as pd\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nbucket_name = \"lakeqa-yc4103-datalake\"\nobject_key = \"datagov/moving-violations-issued-in-january-2020/files/data.txt\"\ntarget_agencies = [\"UNITED STATES CAPITOL POLICE\", \"US. SECRET SERVICE UNIFORM DIVISION\", \"UNITED STATES PARK POLICE\"]\ns3 = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED))\nobj = s3.get_object(Bucket=bucket_name, Key=object_key)\ngeojson = json.loads(obj[\"Body\"].read())\nrows = [feature.get(\"properties\", {}) for feature in geojson[\"features\"]]\ndf = pd.DataFrame(rows)\nanswer = (\n    df[df[\"ISSUING_AGENCY_NAME\"].isin(target_agencies)]\n    .groupby(\"ISSUING_AGENCY_NAME\", dropna=True)\n    .size()\n    .sort_values(ascending=False)\n    .to_dict()\n)",
+      "answer": {
+        "UNITED STATES PARK POLICE": 204,
+        "UNITED STATES CAPITOL POLICE": 139,
+        "US. SECRET SERVICE UNIFORM DIVISION": 118
+      }
+    },
+    {
+      "node_id": "3",
+      "dataset_id": "moving-violations-issued-in-january-2021",
+      "source": "datagov/moving-violations-issued-in-january-2021/files/data.txt",
+      "intent": "In January 2021, how many driving-related violations did each of the United States Park Police, United States Capitol Police, and U.S. Secret Service Uniform Division issue?",
+      "code": "import boto3\nimport io\nimport json\nimport pandas as pd\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nbucket_name = \"lakeqa-yc4103-datalake\"\nobject_key = \"datagov/moving-violations-issued-in-january-2021/files/data.txt\"\ntarget_agencies = [\"UNITED STATES CAPITOL POLICE\", \"US. SECRET SERVICE UNIFORM DIVISION\", \"UNITED STATES PARK POLICE\"]\ns3 = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED))\nobj = s3.get_object(Bucket=bucket_name, Key=object_key)\ngeojson = json.loads(obj[\"Body\"].read())\nrows = [feature.get(\"properties\", {}) for feature in geojson[\"features\"]]\ndf = pd.DataFrame(rows)\nanswer = (\n    df[df[\"ISSUING_AGENCY_NAME\"].isin(target_agencies)]\n    .groupby(\"ISSUING_AGENCY_NAME\", dropna=True)\n    .size()\n    .sort_values(ascending=False)\n    .to_dict()\n)",
+      "answer": {
+        "UNITED STATES PARK POLICE": 71,
+        "US. SECRET SERVICE UNIFORM DIVISION": 32,
+        "UNITED STATES CAPITOL POLICE": 30
+      }
+    }
+  ],
+  "ideal_query": [
+    {
+      "node_id": "1",
+      "dataset_id": "moving-violations-issued-in-january-2019",
+      "source": "datagov/moving-violations-issued-in-january-2019/files/data.txt",
+      "intent": "In January 2019, how many driving-related violations did each of the United States Park Police, United States Capitol Police, and U.S. Secret Service Uniform Division issue?",
+      "sql": "WITH props AS (\n  SELECT feature.properties.ISSUING_AGENCY_NAME AS agency\n  FROM t, UNNEST(features) AS u(feature)\n), counts AS (\n  SELECT agency, COUNT(*) AS cnt\n  FROM props\n  WHERE agency IN ('UNITED STATES CAPITOL POLICE', 'US. SECRET SERVICE UNIFORM DIVISION', 'UNITED STATES PARK POLICE')\n  GROUP BY agency\n)\nSELECT json_group_object(agency, cnt) AS answer\nFROM counts",
+      "answer": {
+        "UNITED STATES CAPITOL POLICE": 176,
+        "US. SECRET SERVICE UNIFORM DIVISION": 145,
+        "UNITED STATES PARK POLICE": 103
+      }
+    },
+    {
+      "node_id": "2",
+      "dataset_id": "moving-violations-issued-in-january-2020",
+      "source": "datagov/moving-violations-issued-in-january-2020/files/data.txt",
+      "intent": "In January 2020, how many driving-related violations did each of the United States Park Police, United States Capitol Police, and U.S. Secret Service Uniform Division issue?",
+      "sql": "WITH props AS (\n  SELECT feature.properties.ISSUING_AGENCY_NAME AS agency\n  FROM t, UNNEST(features) AS u(feature)\n), counts AS (\n  SELECT agency, COUNT(*) AS cnt\n  FROM props\n  WHERE agency IN ('UNITED STATES CAPITOL POLICE', 'US. SECRET SERVICE UNIFORM DIVISION', 'UNITED STATES PARK POLICE')\n  GROUP BY agency\n)\nSELECT json_group_object(agency, cnt) AS answer\nFROM counts",
+      "answer": {
+        "UNITED STATES PARK POLICE": 204,
+        "UNITED STATES CAPITOL POLICE": 139,
+        "US. SECRET SERVICE UNIFORM DIVISION": 118
+      }
+    },
+    {
+      "node_id": "3",
+      "dataset_id": "moving-violations-issued-in-january-2021",
+      "source": "datagov/moving-violations-issued-in-january-2021/files/data.txt",
+      "intent": "In January 2021, how many driving-related violations did each of the United States Park Police, United States Capitol Police, and U.S. Secret Service Uniform Division issue?",
+      "sql": "WITH props AS (\n  SELECT feature.properties.ISSUING_AGENCY_NAME AS agency\n  FROM t, UNNEST(features) AS u(feature)\n), counts AS (\n  SELECT agency, COUNT(*) AS cnt\n  FROM props\n  WHERE agency IN ('UNITED STATES CAPITOL POLICE', 'US. SECRET SERVICE UNIFORM DIVISION', 'UNITED STATES PARK POLICE')\n  GROUP BY agency\n)\nSELECT json_group_object(agency, cnt) AS answer\nFROM counts",
+      "answer": {
+        "UNITED STATES PARK POLICE": 71,
+        "US. SECRET SERVICE UNIFORM DIVISION": 32,
+        "UNITED STATES CAPITOL POLICE": 30
+      }
+    }
   ]
 }

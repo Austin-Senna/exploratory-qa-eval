@@ -91,5 +91,103 @@
       ],
       "answer": "Elihu Yale"
     }
+  ],
+  "ideal_code": [
+    {
+      "node_id": "1",
+      "dataset_id": "accidental-drug-related-deaths-2012-2018",
+      "source": "datagov/accidental-drug-related-deaths-2012-2018/files/rows.txt",
+      "intent": "Which Connecticut counties had more than 200 accidental overdose deaths in 2020, and what were those totals?",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/accidental-drug-related-deaths-2012-2018/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\ndf[\"Date\"] = pd.to_datetime(df[\"Date\"], errors=\"coerce\")\ndf_2020 = df[df[\"Date\"].dt.year == 2020].copy()\ndf_2020[\"Residence County\"] = df_2020[\"Residence County\"].fillna(\"\").astype(str).str.strip()\n\ncounty_counts = (\n    df_2020.loc[df_2020[\"Residence County\"] != \"\", \"Residence County\"]\n    .value_counts()\n    .rename_axis(\"county\")\n    .reset_index(name=\"accidental_drug_deaths_2020\")\n)\ncounty_counts[\"county\"] = county_counts[\"county\"].str.title() + \" County\"\nfiltered = county_counts[county_counts[\"accidental_drug_deaths_2020\"] > 200].copy()\nanswer = dict(zip(filtered[\"county\"], filtered[\"accidental_drug_deaths_2020\"]))",
+      "answer": {
+        "New Haven County": 383,
+        "Hartford County": 335,
+        "Fairfield County": 208
+      }
+    },
+    {
+      "node_id": "2",
+      "dataset_id": "connecticut-covid-19-community-levels-by-county-as-originally-posted",
+      "source": "datagov/connecticut-covid-19-community-levels-by-county-as-originally-posted/files/rows.txt",
+      "intent": "Which Connecticut counties were assigned to a COVID health-service region with a number above 80?",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/connecticut-covid-19-community-levels-by-county-as-originally-posted/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\nfiltered = df[(df[\"state\"] == \"Connecticut\") & (df[\"health_service_area_number\"] > 80)].copy()\nanswer = filtered[\"county_name\"].drop_duplicates().tolist()",
+      "answer": [
+        "Fairfield County",
+        "New Haven County",
+        "Middlesex County",
+        "Litchfield County"
+      ]
+    },
+    {
+      "node_id": "5",
+      "dataset_id": "500-cities-city-level-data-gis-friendly-format-2018-release",
+      "source": "datagov/500-cities-city-level-data-gis-friendly-format-2018-release/files/rows.txt",
+      "intent": "What was the unadjusted percentage of adults ages 18-64 in <hop 2 answer> who currently did not have health insurance in 2018?",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/500-cities-city-level-data-gis-friendly-format-2018-release/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\nfiltered = df[(df[\"StateAbbr\"] == \"CT\") & (df[\"PlaceName\"].isin([\"New Haven\", \"Bridgeport\"]))].copy()\nanswer = dict(zip(filtered[\"PlaceName\"], filtered[\"ACCESS2_CrudePrev\"].map(lambda x: f\"{x}%\")))",
+      "answer": {
+        "New Haven": "13.9%",
+        "Bridgeport": "16.9%"
+      }
+    },
+    {
+      "node_id": "6",
+      "dataset_id": "500-cities-city-level-data-gis-friendly-format-2019-release",
+      "source": "datagov/500-cities-city-level-data-gis-friendly-format-2019-release/files/rows.txt",
+      "intent": "What was the unadjusted percentage of adults ages 18-64 in <hop 2 answer> who currently did not have health insurance in 2019?",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/500-cities-city-level-data-gis-friendly-format-2019-release/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\nfiltered = df[(df[\"StateAbbr\"] == \"CT\") & (df[\"PlaceName\"].isin([\"New Haven\", \"Bridgeport\"]))].copy()\nanswer = dict(zip(filtered[\"PlaceName\"], filtered[\"ACCESS2_CrudePrev\"].map(lambda x: f\"{x}%\")))",
+      "answer": {
+        "New Haven": "15.4%",
+        "Bridgeport": "19.3%"
+      }
+    }
+  ],
+  "ideal_query": [
+    {
+      "node_id": "1",
+      "dataset_id": "accidental-drug-related-deaths-2012-2018",
+      "source": "datagov/accidental-drug-related-deaths-2012-2018/files/rows.txt",
+      "intent": "Which Connecticut counties had more than 200 accidental overdose deaths in 2020, and what were those totals?",
+      "sql": "WITH counts AS (\n  SELECT CASE UPPER(TRIM(CAST(\"Residence County\" AS VARCHAR)))\n           WHEN 'NEW HAVEN' THEN 'New Haven County'\n           WHEN 'HARTFORD' THEN 'Hartford County'\n           WHEN 'FAIRFIELD' THEN 'Fairfield County'\n           ELSE CONCAT(TRIM(CAST(\"Residence County\" AS VARCHAR)), ' County')\n         END AS county,\n         COUNT(*) AS total\n  FROM t\n  WHERE EXTRACT(year FROM TRY_CAST(\"Date\" AS DATE)) = 2020\n    AND TRIM(COALESCE(CAST(\"Residence County\" AS VARCHAR), '')) != ''\n  GROUP BY county\n)\nSELECT json_group_object(county, total) AS answer\nFROM counts\nWHERE total > 200",
+      "answer": {
+        "New Haven County": 383,
+        "Hartford County": 335,
+        "Fairfield County": 208
+      }
+    },
+    {
+      "node_id": "2",
+      "dataset_id": "connecticut-covid-19-community-levels-by-county-as-originally-posted",
+      "source": "datagov/connecticut-covid-19-community-levels-by-county-as-originally-posted/files/rows.txt",
+      "intent": "Which Connecticut counties were assigned to a COVID health-service region with a number above 80?",
+      "sql": "SELECT json_group_array(county_name) AS answer\nFROM (\n  SELECT DISTINCT county_name\n  FROM t\n  WHERE state = 'Connecticut'\n    AND TRY_CAST(health_service_area_number AS DOUBLE) > 80\n  ORDER BY CASE county_name\n    WHEN 'Fairfield County' THEN 1\n    WHEN 'New Haven County' THEN 2\n    WHEN 'Middlesex County' THEN 3\n    WHEN 'Litchfield County' THEN 4\n    ELSE 99\n  END\n)",
+      "answer": [
+        "Fairfield County",
+        "New Haven County",
+        "Middlesex County",
+        "Litchfield County"
+      ]
+    },
+    {
+      "node_id": "5",
+      "dataset_id": "500-cities-city-level-data-gis-friendly-format-2018-release",
+      "source": "datagov/500-cities-city-level-data-gis-friendly-format-2018-release/files/rows.txt",
+      "intent": "What was the unadjusted percentage of adults ages 18-64 in <hop 2 answer> who currently did not have health insurance in 2018?",
+      "sql": "SELECT json_group_object(\"PlaceName\", CONCAT(CAST(\"ACCESS2_CrudePrev\" AS VARCHAR), '%')) AS answer\nFROM t\nWHERE \"StateAbbr\" = 'CT'\n  AND \"PlaceName\" IN ('New Haven', 'Bridgeport')",
+      "answer": {
+        "New Haven": "13.9%",
+        "Bridgeport": "16.9%"
+      }
+    },
+    {
+      "node_id": "6",
+      "dataset_id": "500-cities-city-level-data-gis-friendly-format-2019-release",
+      "source": "datagov/500-cities-city-level-data-gis-friendly-format-2019-release/files/rows.txt",
+      "intent": "What was the unadjusted percentage of adults ages 18-64 in <hop 2 answer> who currently did not have health insurance in 2019?",
+      "sql": "SELECT json_group_object(\"PlaceName\", CONCAT(CAST(\"ACCESS2_CrudePrev\" AS VARCHAR), '%')) AS answer\nFROM t\nWHERE \"StateAbbr\" = 'CT'\n  AND \"PlaceName\" IN ('New Haven', 'Bridgeport')",
+      "answer": {
+        "New Haven": "15.4%",
+        "Bridgeport": "19.3%"
+      }
+    }
   ]
 }

@@ -28,5 +28,72 @@
     "Node 4 depends on node 3: In 2023 searches within district 4, the top sector is Edward.",
     "Node 5 depends on node 4: In 2024 complaints-by-sector, Edward has 52 complaints.",
     "Final answer: 52"
+  ],
+  "ideal_code": [
+    {
+      "node_id": "2",
+      "dataset_id": "apd-computer-aided-dispatch-incidents",
+      "source": "datagov/apd-computer-aided-dispatch-incidents/files/rows.txt",
+      "intent": "For 2023 <hop 1 answer> police dispatch incidents, which sector has the most incidents?",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/apd-computer-aided-dispatch-incidents/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\nresult = (\n    df.loc[df[\"Response Year\"] == 2023, [\"Sector\"]]\n      .groupby(\"Sector\", dropna=False)\n      .size()\n      .reset_index(name=\"incident_count\")\n      .sort_values([\"incident_count\", \"Sector\"], ascending=[False, True])\n      .reset_index(drop=True)\n)\n\nanswer = result.iloc[0][\"Sector\"]\n",
+      "answer": "Edward"
+    },
+    {
+      "node_id": "3",
+      "dataset_id": "apd-use-of-force",
+      "source": "datagov/apd-use-of-force/files/rows.txt",
+      "intent": "In 2023 APD use-of-force entries within sector <hop 2 answer>, which council district has the most incidents?",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/apd-use-of-force/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\ndf[\"Occurred Date\"] = pd.to_datetime(df[\"Occurred Date\"], errors=\"coerce\")\n\nresult = (\n    df.loc[(df[\"Sector\"] == \"Edward\") & (df[\"Occurred Date\"].dt.year == 2023), [\"Council District\"]]\n      .groupby(\"Council District\", dropna=False)\n      .size()\n      .reset_index(name=\"incident_count\")\n      .sort_values([\"incident_count\", \"Council District\"], ascending=[False, True])\n      .reset_index(drop=True)\n)\n\nanswer = int(result.iloc[0][\"Council District\"])\n",
+      "answer": 4
+    },
+    {
+      "node_id": "4",
+      "dataset_id": "apd-searches-by-type",
+      "source": "datagov/apd-searches-by-type/files/rows.txt",
+      "intent": "In 2023 APD search entries within council district <hop 3 answer>, which sector has the most searches?",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/apd-searches-by-type/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\nresult = (\n    df.loc[(df[\"Occurred Year\"] == 2023) & (df[\"Council District\"] == 4), [\"Sector\"]]\n      .groupby(\"Sector\", dropna=False)\n      .size()\n      .reset_index(name=\"search_count\")\n      .sort_values([\"search_count\", \"Sector\"], ascending=[False, True])\n      .reset_index(drop=True)\n)\n\nanswer = result.iloc[0][\"Sector\"]\n",
+      "answer": "Edward"
+    },
+    {
+      "node_id": "5",
+      "dataset_id": "apd-complaints-by-sector",
+      "source": "datagov/apd-complaints-by-sector/files/rows.txt",
+      "intent": "In 2024 complaints-by-sector data, what is the total number of complaints for sector <hop 4 answer>?",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/apd-complaints-by-sector/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\nanswer = df.loc[(df[\"Occurred Year\"] == 2024) & (df[\"Sector\"] == \"Edward\"), \"Total Complaints\"].sum()",
+      "answer": 52
+    }
+  ],
+  "ideal_query": [
+    {
+      "node_id": "2",
+      "dataset_id": "apd-computer-aided-dispatch-incidents",
+      "source": "datagov/apd-computer-aided-dispatch-incidents/files/rows.txt",
+      "intent": "For 2023 <hop 1 answer> police dispatch incidents, which sector has the most incidents?",
+      "answer": "Cannot execute SQL: file is too big (1.44 GB >= 500 MB limit)."
+    },
+    {
+      "node_id": "3",
+      "dataset_id": "apd-use-of-force",
+      "source": "datagov/apd-use-of-force/files/rows.txt",
+      "intent": "In 2023 APD use-of-force entries within sector <hop 2 answer>, which council district has the most incidents?",
+      "sql": "SELECT TRY_CAST(\"Council District\" AS INTEGER) AS answer\nFROM t\nWHERE \"Sector\" = 'Edward'\n  AND EXTRACT(year FROM TRY_CAST(\"Occurred Date\" AS DATE)) = 2023\nGROUP BY \"Council District\"\nORDER BY COUNT(*) DESC, \"Council District\" ASC NULLS LAST\nLIMIT 1",
+      "answer": 4
+    },
+    {
+      "node_id": "4",
+      "dataset_id": "apd-searches-by-type",
+      "source": "datagov/apd-searches-by-type/files/rows.txt",
+      "intent": "In 2023 APD search entries within council district <hop 3 answer>, which sector has the most searches?",
+      "sql": "SELECT \"Sector\" AS answer\nFROM t\nWHERE TRY_CAST(\"Occurred Year\" AS INTEGER) = 2023\n  AND TRY_CAST(\"Council District\" AS INTEGER) = 4\nGROUP BY \"Sector\"\nORDER BY COUNT(*) DESC, \"Sector\" ASC NULLS LAST\nLIMIT 1",
+      "answer": "Edward"
+    },
+    {
+      "node_id": "5",
+      "dataset_id": "apd-complaints-by-sector",
+      "source": "datagov/apd-complaints-by-sector/files/rows.txt",
+      "intent": "In 2024 complaints-by-sector data, what is the total number of complaints for sector <hop 4 answer>?",
+      "sql": "SELECT SUM(TRY_CAST(\"Total Complaints\" AS INTEGER)) AS answer\nFROM t\nWHERE TRY_CAST(\"Occurred Year\" AS INTEGER) = 2024\n  AND \"Sector\" = 'Edward' ",
+      "answer": 52
+    }
   ]
 }

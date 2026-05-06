@@ -14,8 +14,10 @@ SOURCE_SESSION_TOOLS = {
     "read_file",
     "grep_file",
     "query_file",
+    "query_ideal",
     "download",
     "execute_code",
+    "execute_ideal",
 }
 
 _S3_DATASET_RE = re.compile(
@@ -89,7 +91,7 @@ def source_from_tool_use(
 
     tool_input = (tool_use or {}).get("input", {}) or {}
 
-    if tool_name == "execute_code":
+    if tool_name in {"execute_code", "execute_ideal"}:
         return fallback_source
 
     source = _clean_source(tool_input.get("dataset_id"))

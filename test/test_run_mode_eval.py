@@ -98,7 +98,7 @@ class RunModeEvalTests(unittest.TestCase):
                 search_results=None,
                 agent_management=None,
             ),
-            ("standard", "naive", "standard"),
+            ("standard", "naive", "standard", "standard"),
         )
 
     def test_resolve_mode_axes_honors_explicit_override(self):
@@ -108,7 +108,7 @@ class RunModeEvalTests(unittest.TestCase):
                 search_results=None,
                 agent_management=None,
             ),
-            ("naive", "naive", "standard"),
+            ("naive", "naive", "standard", "standard"),
         )
 
     def test_variant_condition_label_uses_compact_mode_letters(self):
@@ -145,6 +145,16 @@ class RunModeEvalTests(unittest.TestCase):
         )
 
         self.assertEqual(label, "search_i_results_i_pland_free_lessguide")
+
+    def test_variant_condition_label_appends_ideal_computation_axis(self):
+        label = run_mode_eval._variant_condition_label(
+            search_tool="preloaded",
+            search_results="ideal",
+            agent_management="standard",
+            computation_tool="ideal",
+        )
+
+        self.assertEqual(label, "search_p_results_i_pland_computei")
 
     def test_mode_results_dir_does_not_append_model_twice(self):
         agent_config = types.SimpleNamespace(

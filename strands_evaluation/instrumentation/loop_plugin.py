@@ -30,7 +30,7 @@ class CategoryStagnationHandler(SteeringHandler):
                 "search_ideal",
             },
             "inspect": {"list_files", "peek_file", "peek_multiple", "get_sandbox_info", "read_file"},
-            "execute": {"execute_code", "query_file", "grep_file"},
+            "execute": {"execute_code", "execute_ideal", "query_file", "query_ideal", "grep_file"},
         }
         self.category_thresholds = {
             "search": max_consecutive_category,
@@ -50,7 +50,7 @@ class CategoryStagnationHandler(SteeringHandler):
         if get_submitted_answer() is not None:
             return Proceed(reason="answer already submitted; no further steering")
         
-        if tool_name in ["submit_answer", "plan", "download"]:
+        if tool_name in ["submit_answer", "plan", "plan_ideal", "download"]:
             self.last_category = "terminal_or_plan"
             self.consecutive_count = 0
             return Proceed(reason="Allowed tool")

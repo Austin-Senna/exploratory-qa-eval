@@ -89,5 +89,215 @@
       ],
       "answer": "2022"
     }
+  ],
+  "ideal_code": [
+    {
+      "node_id": "1",
+      "dataset_id": "bank-owned-atm-locations-in-new-york-state",
+      "source": "datagov/bank-owned-atm-locations-in-new-york-state/files/rows.txt",
+      "intent": "Which institutions have all listed New York bank-owned ATM locations concentrated within a single county? (Group by `Name of Institution` and keep institutions with `county_count = 1`.)",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/bank-owned-atm-locations-in-new-york-state/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\n\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\nfor column in [\"Name of Institution\", \"County\"]:\n    df[column] = df[column].astype(str).str.replace(r\"\\\\s+\", \" \", regex=True).str.strip()\n\nfiltered = df[\n    df[\"Name of Institution\"].ne(\"\")\n    & df[\"Name of Institution\"].ne(\"nan\")\n    & df[\"County\"].ne(\"\")\n    & df[\"County\"].ne(\"nan\")\n].copy()\n\nranked = (\n    filtered.groupby(\"Name of Institution\")\n    .agg(county_count=(\"County\", \"nunique\"))\n    .reset_index()\n)\n\nanswer = ranked.loc[\n    ranked[\"county_count\"].eq(1),\n    \"Name of Institution\"\n].sort_values(key=lambda s: s.str.lower()).tolist()",
+      "answer": [
+        "ACMG Federal Credit Union",
+        "Advantage Federal C.U.",
+        "Alco Federal Credit Union",
+        "Alden State Bank",
+        "Alternatives Federal Credit Union",
+        "Amerasia Bank",
+        "American Broadcast Employees Federal Credit Union",
+        "Bank of Akron",
+        "Bank of Cattaraugus",
+        "Bank of Millbrook"
+      ]
+    },
+    {
+      "node_id": "2",
+      "dataset_id": "2023-foreclosure-avoidance-program-beneficiary-exemption-affidavits-pursuant-to-hb-2009",
+      "source": "datagov/2023-foreclosure-avoidance-program-beneficiary-exemption-affidavits-pursuant-to-hb-2009/files/rows.txt",
+      "intent": "Which beneficiaries filed exactly one 2023 foreclosure-avoidance program affidavit, reported zero 2022 foreclosures, and used only one mailing city? (Group by `Beneficiary`; keep rows with `affidavit_count = 1`, `foreclosure_total = 0`, and `city_count = 1`.)",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/2023-foreclosure-avoidance-program-beneficiary-exemption-affidavits-pursuant-to-hb-2009/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\n\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\nfor column in [\"Beneficiary\", \"City\", \"Foreclosures \\n2022 year\"]:\n    df[column] = df[column].astype(str).str.replace(r\"\\\\s+\", \" \", regex=True).str.strip()\n\nfiltered = df[\n    df[\"Beneficiary\"].ne(\"\")\n    & df[\"Beneficiary\"].ne(\"nan\")\n].copy()\nfiltered[\"foreclosures_2022\"] = pd.to_numeric(filtered[\"Foreclosures \\n2022 year\"], errors=\"coerce\").fillna(0)\n\nranked = (\n    filtered.groupby(\"Beneficiary\")\n    .agg(\n        affidavit_count=(\"Beneficiary\", \"size\"),\n        foreclosure_total=(\"foreclosures_2022\", \"sum\"),\n        city_count=(\"City\", lambda s: s[(s != \"\") & (s != \"nan\")].nunique())\n    )\n    .reset_index()\n)\n\nanswer = ranked.loc[\n    ranked[\"affidavit_count\"].eq(1)\n    & ranked[\"foreclosure_total\"].eq(0)\n    & ranked[\"city_count\"].eq(1),\n    \"Beneficiary\"\n].sort_values(key=lambda s: s.str.lower()).tolist()",
+      "answer": [
+        "Ajax Mortgage Loan Trust 2021-C, US Bank National Ass as Indenture Trustee",
+        "Alaska Air Group Credit Union",
+        "Alaska USA Federal Credit Union",
+        "Alliant Credit Union",
+        "Ally Bank",
+        "American Neighborhood Mortgage Acceptance Company LLC",
+        "AmeriSave Mortgage Corporation",
+        "Arc Home LLC",
+        "Avista Corp. Credit Union",
+        "Baker Boyer National Bank"
+      ]
+    },
+    {
+      "node_id": "3",
+      "dataset_id": "2014-foreclosure-avoidance-mediation-beneficiary-exemption-affidavits-pursuant-to-sb-558",
+      "source": "datagov/2014-foreclosure-avoidance-mediation-beneficiary-exemption-affidavits-pursuant-to-sb-558/files/rows.txt",
+      "intent": "Which beneficiaries filed exactly one 2014 foreclosure-avoidance mediation affidavit, reported zero previous-year foreclosures, and used only one mailing state? (Group by `Beneficiary`; keep rows with `affidavit_count = 1`, `state_count = 1`, and `foreclosure_total = 0`.)",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/2014-foreclosure-avoidance-mediation-beneficiary-exemption-affidavits-pursuant-to-sb-558/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\n\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\nfor column in [\"Beneficiary\", \"State\", \"Foreclosures previous year\"]:\n    df[column] = df[column].astype(str).str.replace(r\"\\\\s+\", \" \", regex=True).str.strip()\n\nfiltered = df[\n    df[\"Beneficiary\"].ne(\"\")\n    & df[\"Beneficiary\"].ne(\"nan\")\n].copy()\nfiltered[\"foreclosures_previous_year\"] = pd.to_numeric(filtered[\"Foreclosures previous year\"], errors=\"coerce\").fillna(0)\n\nranked = (\n    filtered.groupby(\"Beneficiary\")\n    .agg(\n        affidavit_count=(\"Beneficiary\", \"size\"),\n        state_count=(\"State\", lambda s: s[(s != \"\") & (s != \"nan\")].nunique()),\n        foreclosure_total=(\"foreclosures_previous_year\", \"sum\")\n    )\n    .reset_index()\n)\n\nanswer = ranked.loc[\n    ranked[\"affidavit_count\"].eq(1)\n    & ranked[\"state_count\"].eq(1)\n    & ranked[\"foreclosure_total\"].eq(0),\n    \"Beneficiary\"\n].sort_values(key=lambda s: s.str.lower()).tolist()",
+      "answer": [
+        "A. Wayne Scott & Marlene L. Scott",
+        "Aaron S. Yerzy & Jacqueline S. Yerzy Trustee",
+        "Ada Mae Farrar, Trustee of the Trust of George Farrar and Ada Mae Farrar dated May 6, 1991",
+        "AKT America Capital, Inc",
+        "Albert Thibodeau",
+        "Albina Community Bank",
+        "Alerus Financial N.A.",
+        "Alfonso V. Cadena and Annette R. Cadena",
+        "Allen Bigelow & Nancy Muktoyuk Co-Trustees of the Bigelow Revocable Trust U/T/A Dated 1/31/13",
+        "AllQuest Home Mortgage Coroporation"
+      ]
+    },
+    {
+      "node_id": "4",
+      "dataset_id": "2017-foreclosure-avoidance-mediation-beneficiary-exemption-affidavits-pursuant-to-sb-558",
+      "source": "datagov/2017-foreclosure-avoidance-mediation-beneficiary-exemption-affidavits-pursuant-to-sb-558/files/rows.txt",
+      "intent": "Which beneficiaries filed exactly one 2017 foreclosure-avoidance mediation affidavit and used only one mailing state? (Group by `Beneficiary`; keep rows with `affidavit_count = 1` and `state_count = 1`.)",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/2017-foreclosure-avoidance-mediation-beneficiary-exemption-affidavits-pursuant-to-sb-558/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\n\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\nfor column in [\"Beneficiary\", \"State\"]:\n    df[column] = df[column].astype(str).str.replace(r\"\\\\s+\", \" \", regex=True).str.strip()\n\nfiltered = df[\n    df[\"Beneficiary\"].ne(\"\")\n    & df[\"Beneficiary\"].ne(\"nan\")\n].copy()\n\nranked = (\n    filtered.groupby(\"Beneficiary\")\n    .agg(\n        affidavit_count=(\"Beneficiary\", \"size\"),\n        state_count=(\"State\", lambda s: s[(s != \"\") & (s != \"nan\")].nunique())\n    )\n    .reset_index()\n)\n\nanswer = ranked.loc[\n    ranked[\"affidavit_count\"].eq(1)\n    & ranked[\"state_count\"].eq(1),\n    \"Beneficiary\"\n].sort_values(key=lambda s: s.str.lower()).tolist()",
+      "answer": [
+        "21st Mortgage Corporation",
+        "360 Mortgage Group, LLC",
+        "Ader Holdings, LLC",
+        "Advantis Credit Union",
+        "AgStar Financial Services, FLCA",
+        "Alaska USA Federal Credit Union",
+        "Alder Financial, LLC",
+        "Alera Management Group, LLC",
+        "Allen W. Koftinow",
+        "Alvin L. Van Hulzen and Jean Van Hulzen"
+      ]
+    },
+    {
+      "node_id": "5",
+      "dataset_id": "ppp-loans-to-connecticut-businesses",
+      "source": "datagov/ppp-loans-to-connecticut-businesses/files/rows.txt",
+      "intent": "For the institution from <hop 1 answer>, which borrower cities rank first and second by Connecticut PPP loan count after normalizing `City` capitalization variants? (Filter `Lender = <hop 1 answer>`, normalize `City` to title case, count rows by `City`, sort descending, and keep the top 2 cities.)",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/ppp-loans-to-connecticut-businesses/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\n\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\nfor column in [\"Lender\", \"City\"]:\n    df[column] = df[column].astype(str).str.replace(r\"\\\\s+\", \" \", regex=True).str.strip()\n\ndf[\"City\"] = df[\"City\"].str.title()\nfiltered = df[\n    df[\"Lender\"].eq(\"First Republic Bank\")\n    & df[\"City\"].ne(\"\")\n    & df[\"City\"].ne(\"Nan\")\n].copy()\n\nanswer = filtered[\"City\"].value_counts().sort_values(ascending=False).head(2).index.tolist()",
+      "answer": [
+        "Greenwich",
+        "Stamford"
+      ]
+    },
+    {
+      "node_id": "7",
+      "dataset_id": "places-place-data-gis-friendly-format-2021-release-725b1",
+      "source": "datagov/places-place-data-gis-friendly-format-2021-release-725b1/files/rows.txt",
+      "intent": "In the 2021 PLACES place-data GIS-friendly release, what is the crude obesity prevalence for the city from <hop 3 answer>? (Filter to the Connecticut row with `PlaceName = <hop 3 answer>` and read `OBESITY_CrudePrev`.)",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/places-place-data-gis-friendly-format-2021-release-725b1/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\n\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\nfiltered = df[\n    df[\"StateAbbr\"].astype(str).str.strip().eq(\"CT\")\n    & df[\"PlaceName\"].astype(str).str.strip().eq(\"Stamford\")\n].copy()\nfiltered[\"OBESITY_CrudePrev\"] = pd.to_numeric(filtered[\"OBESITY_CrudePrev\"], errors=\"coerce\")\n\nanswer = float(filtered[\"OBESITY_CrudePrev\"].iloc[0])",
+      "answer": 24.2
+    },
+    {
+      "node_id": "8",
+      "dataset_id": "places-place-data-gis-friendly-format-2022-release",
+      "source": "datagov/places-place-data-gis-friendly-format-2022-release/files/rows.txt",
+      "intent": "In the 2022 PLACES place-data GIS-friendly release, what is the crude obesity prevalence for the city from <hop 3 answer>? (Filter to the Connecticut row with `PlaceName = <hop 3 answer>` and read `OBESITY_CrudePrev`.)",
+      "code": "import json\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/places-place-data-gis-friendly-format-2022-release/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\n\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\npayload = json.loads(obj[\"Body\"].read().decode(\"utf-8\"))\ncolumns = [column[\"name\"] for column in payload[\"meta\"][\"view\"][\"columns\"]]\nname_to_idx = {name: idx for idx, name in enumerate(columns)}\n\nanswer = None\nfor record in payload[\"data\"]:\n    if record[name_to_idx[\"StateAbbr\"]] == \"CT\" and record[name_to_idx[\"PlaceName\"]] == \"Stamford\":\n        answer = float(record[name_to_idx[\"OBESITY_CrudePrev\"]])\n        break",
+      "answer": 23.5
+    }
+  ],
+  "ideal_query": [
+    {
+      "node_id": "1",
+      "dataset_id": "bank-owned-atm-locations-in-new-york-state",
+      "source": "datagov/bank-owned-atm-locations-in-new-york-state/files/rows.txt",
+      "intent": "Which institutions have all listed New York bank-owned ATM locations concentrated within a single county? (Group by `Name of Institution` and keep institutions with `county_count = 1`.)",
+      "answer": [
+        "ACMG Federal Credit Union",
+        "Advantage Federal C.U.",
+        "Alco Federal Credit Union",
+        "Alden State Bank",
+        "Alternatives Federal Credit Union",
+        "Amerasia Bank",
+        "American Broadcast Employees Federal Credit Union",
+        "Bank of Akron",
+        "Bank of Cattaraugus",
+        "Bank of Millbrook"
+      ],
+      "sql": "SELECT to_json(list(value)) AS answer\nFROM (\nWITH cleaned AS (\n  SELECT trim(regexp_replace(CAST(\"Name of Institution\" AS VARCHAR), '\\s+', ' ', 'g')) AS institution,\n         trim(regexp_replace(CAST(\"County\" AS VARCHAR), '\\s+', ' ', 'g')) AS county\n  FROM t\n), ranked AS (\n  SELECT institution, COUNT(DISTINCT county) AS county_count\n  FROM cleaned\n  WHERE institution <> ''\n    AND institution <> 'nan'\n    AND county <> ''\n    AND county <> 'nan'\n  GROUP BY institution\n)\nSELECT institution AS value\nFROM ranked\nWHERE county_count = 1\nORDER BY lower(institution)\nLIMIT 10\n) q"
+    },
+    {
+      "node_id": "2",
+      "dataset_id": "2023-foreclosure-avoidance-program-beneficiary-exemption-affidavits-pursuant-to-hb-2009",
+      "source": "datagov/2023-foreclosure-avoidance-program-beneficiary-exemption-affidavits-pursuant-to-hb-2009/files/rows.txt",
+      "intent": "Which beneficiaries filed exactly one 2023 foreclosure-avoidance program affidavit, reported zero 2022 foreclosures, and used only one mailing city? (Group by `Beneficiary`; keep rows with `affidavit_count = 1`, `foreclosure_total = 0`, and `city_count = 1`.)",
+      "answer": [
+        "Ajax Mortgage Loan Trust 2021-C, US Bank National Ass as Indenture Trustee",
+        "Alaska Air Group Credit Union",
+        "Alaska USA Federal Credit Union",
+        "Alliant Credit Union",
+        "Ally Bank",
+        "American Neighborhood Mortgage Acceptance Company LLC",
+        "AmeriSave Mortgage Corporation",
+        "Arc Home LLC",
+        "Avista Corp. Credit Union",
+        "Baker Boyer National Bank"
+      ],
+      "sql": "SELECT to_json(list(value)) AS answer\nFROM (\nWITH cleaned AS (\n  SELECT trim(regexp_replace(CAST(\"Beneficiary\" AS VARCHAR), '\\s+', ' ', 'g')) AS beneficiary,\n         trim(regexp_replace(CAST(\"City\" AS VARCHAR), '\\s+', ' ', 'g')) AS city,\n         COALESCE(try_cast(trim(regexp_replace(CAST(\"Foreclosures \n2022 year\" AS VARCHAR), '\\s+', ' ', 'g')) AS DOUBLE), 0) AS foreclosures_2022\n  FROM t\n), ranked AS (\n  SELECT beneficiary,\n         COUNT(*) AS affidavit_count,\n         SUM(foreclosures_2022) AS foreclosure_total,\n         COUNT(DISTINCT CASE WHEN city <> '' AND city <> 'nan' THEN city END) AS city_count\n  FROM cleaned\n  WHERE beneficiary <> ''\n    AND beneficiary <> 'nan'\n  GROUP BY beneficiary\n)\nSELECT beneficiary AS value\nFROM ranked\nWHERE affidavit_count = 1\n  AND foreclosure_total = 0\n  AND city_count = 1\nORDER BY lower(beneficiary)\nLIMIT 10\n) q"
+    },
+    {
+      "node_id": "3",
+      "dataset_id": "2014-foreclosure-avoidance-mediation-beneficiary-exemption-affidavits-pursuant-to-sb-558",
+      "source": "datagov/2014-foreclosure-avoidance-mediation-beneficiary-exemption-affidavits-pursuant-to-sb-558/files/rows.txt",
+      "intent": "Which beneficiaries filed exactly one 2014 foreclosure-avoidance mediation affidavit, reported zero previous-year foreclosures, and used only one mailing state? (Group by `Beneficiary`; keep rows with `affidavit_count = 1`, `state_count = 1`, and `foreclosure_total = 0`.)",
+      "answer": [
+        "A. Wayne Scott & Marlene L. Scott",
+        "Aaron S. Yerzy & Jacqueline S. Yerzy Trustee",
+        "Ada Mae Farrar, Trustee of the Trust of George Farrar and Ada Mae Farrar dated May 6, 1991",
+        "AKT America Capital, Inc",
+        "Albert Thibodeau",
+        "Albina Community Bank",
+        "Alerus Financial N.A.",
+        "Alfonso V. Cadena and Annette R. Cadena",
+        "Allen Bigelow & Nancy Muktoyuk Co-Trustees of the Bigelow Revocable Trust U/T/A Dated 1/31/13",
+        "AllQuest Home Mortgage Coroporation"
+      ],
+      "sql": "SELECT to_json(list(value)) AS answer\nFROM (\nWITH cleaned AS (\n  SELECT trim(regexp_replace(CAST(\"Beneficiary\" AS VARCHAR), '\\s+', ' ', 'g')) AS beneficiary,\n         trim(regexp_replace(CAST(\"State\" AS VARCHAR), '\\s+', ' ', 'g')) AS state,\n         COALESCE(try_cast(trim(regexp_replace(CAST(\"Foreclosures previous year\" AS VARCHAR), '\\s+', ' ', 'g')) AS DOUBLE), 0) AS foreclosures_previous_year\n  FROM t\n), ranked AS (\n  SELECT beneficiary,\n         COUNT(*) AS affidavit_count,\n         COUNT(DISTINCT CASE WHEN state <> '' AND state <> 'nan' THEN state END) AS state_count,\n         SUM(foreclosures_previous_year) AS foreclosure_total\n  FROM cleaned\n  WHERE beneficiary <> ''\n    AND beneficiary <> 'nan'\n  GROUP BY beneficiary\n)\nSELECT beneficiary AS value\nFROM ranked\nWHERE affidavit_count = 1\n  AND state_count = 1\n  AND foreclosure_total = 0\nORDER BY lower(beneficiary)\nLIMIT 10\n) q"
+    },
+    {
+      "node_id": "4",
+      "dataset_id": "2017-foreclosure-avoidance-mediation-beneficiary-exemption-affidavits-pursuant-to-sb-558",
+      "source": "datagov/2017-foreclosure-avoidance-mediation-beneficiary-exemption-affidavits-pursuant-to-sb-558/files/rows.txt",
+      "intent": "Which beneficiaries filed exactly one 2017 foreclosure-avoidance mediation affidavit and used only one mailing state? (Group by `Beneficiary`; keep rows with `affidavit_count = 1` and `state_count = 1`.)",
+      "answer": [
+        "21st Mortgage Corporation",
+        "360 Mortgage Group, LLC",
+        "Ader Holdings, LLC",
+        "Advantis Credit Union",
+        "AgStar Financial Services, FLCA",
+        "Alaska USA Federal Credit Union",
+        "Alder Financial, LLC",
+        "Alera Management Group, LLC",
+        "Allen W. Koftinow",
+        "Alvin L. Van Hulzen and Jean Van Hulzen"
+      ],
+      "sql": "SELECT to_json(list(value)) AS answer\nFROM (\nWITH cleaned AS (\n  SELECT trim(regexp_replace(CAST(\"Beneficiary\" AS VARCHAR), '\\s+', ' ', 'g')) AS beneficiary,\n         trim(regexp_replace(CAST(\"State\" AS VARCHAR), '\\s+', ' ', 'g')) AS state\n  FROM t\n), ranked AS (\n  SELECT beneficiary,\n         COUNT(*) AS affidavit_count,\n         COUNT(DISTINCT CASE WHEN state <> '' AND state <> 'nan' THEN state END) AS state_count\n  FROM cleaned\n  WHERE beneficiary <> ''\n    AND beneficiary <> 'nan'\n  GROUP BY beneficiary\n)\nSELECT beneficiary AS value\nFROM ranked\nWHERE affidavit_count = 1\n  AND state_count = 1\nORDER BY lower(beneficiary)\nLIMIT 10\n) q"
+    },
+    {
+      "node_id": "5",
+      "dataset_id": "ppp-loans-to-connecticut-businesses",
+      "source": "datagov/ppp-loans-to-connecticut-businesses/files/rows.txt",
+      "intent": "For the institution from <hop 1 answer>, which borrower cities rank first and second by Connecticut PPP loan count after normalizing `City` capitalization variants? (Filter `Lender = <hop 1 answer>`, normalize `City` to title case, count rows by `City`, sort descending, and keep the top 2 cities.)",
+      "answer": [
+        "Greenwich",
+        "Stamford"
+      ],
+      "sql": "SELECT to_json(list(value)) AS answer\nFROM (\nWITH cleaned AS (\n  SELECT trim(regexp_replace(CAST(\"Lender\" AS VARCHAR), '\\s+', ' ', 'g')) AS lender,\n         lower(trim(regexp_replace(CAST(\"City\" AS VARCHAR), '\\s+', ' ', 'g'))) AS city_key,\n         row_number() OVER () AS rn\n  FROM t\n), counts AS (\n  SELECT city_key, COUNT(*) AS cnt, MIN(rn) AS first_rn\n  FROM cleaned\n  WHERE lender = 'First Republic Bank'\n    AND city_key <> ''\n    AND city_key <> 'nan'\n  GROUP BY city_key\n)\nSELECT array_to_string(list_transform(string_split(city_key, ' '), x -> upper(substr(x, 1, 1)) || substr(x, 2)), ' ') AS value\nFROM counts\nORDER BY cnt DESC, first_rn ASC\nLIMIT 2\n) q"
+    },
+    {
+      "node_id": "7",
+      "dataset_id": "places-place-data-gis-friendly-format-2021-release-725b1",
+      "source": "datagov/places-place-data-gis-friendly-format-2021-release-725b1/files/rows.txt",
+      "intent": "In the 2021 PLACES place-data GIS-friendly release, what is the crude obesity prevalence for the city from <hop 3 answer>? (Filter to the Connecticut row with `PlaceName = <hop 3 answer>` and read `OBESITY_CrudePrev`.)",
+      "answer": 24.2,
+      "sql": "SELECT try_cast(\"OBESITY_CrudePrev\" AS DOUBLE) AS answer\nFROM t\nWHERE trim(CAST(\"StateAbbr\" AS VARCHAR)) = 'CT'\n  AND trim(CAST(\"PlaceName\" AS VARCHAR)) = 'Stamford'\nLIMIT 1"
+    },
+    {
+      "node_id": "8",
+      "dataset_id": "places-place-data-gis-friendly-format-2022-release",
+      "source": "datagov/places-place-data-gis-friendly-format-2022-release/files/rows.txt",
+      "intent": "In the 2022 PLACES place-data GIS-friendly release, what is the crude obesity prevalence for the city from <hop 3 answer>? (Filter to the Connecticut row with `PlaceName = <hop 3 answer>` and read `OBESITY_CrudePrev`.)",
+      "answer": 23.5,
+      "sql": "SELECT try_cast(json_extract_string(row[114], '$') AS DOUBLE) AS answer\nFROM t, unnest(data) AS u(row)\nWHERE json_extract_string(row[9], '$') = 'CT'\n  AND json_extract_string(row[11], '$') = 'Stamford'\nLIMIT 1"
+    }
   ]
 }

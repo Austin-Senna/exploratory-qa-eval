@@ -54,5 +54,72 @@
       ],
       "answer": "915"
     }
+  ],
+  "ideal_code": [
+    {
+      "node_id": "1",
+      "dataset_id": "arrest-data-from-2010-to-2019",
+      "source": "datagov/arrest-data-from-2010-to-2019/files/rows.txt",
+      "intent": "In 2019 arrest data, which area has the most arrests in the charge group \"Moving Traffic Violations\"?",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/arrest-data-from-2010-to-2019/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ncsv_path = io.BytesIO(obj[\"Body\"].read())\n\ncounts = {}\nfor chunk in pd.read_csv(\n    csv_path,\n    usecols=[\"Arrest Date\", \"Area Name\", \"Charge Group Description\"],\n    dtype=str,\n    chunksize=500000,\n    low_memory=False,\n):\n    filtered = chunk[\n        chunk[\"Arrest Date\"].astype(str).str.contains(\"2019\", na=False)\n        & chunk[\"Charge Group Description\"].astype(str).str.strip().str.lower().eq(\"moving traffic violations\")\n    ]\n    vc = filtered[\"Area Name\"].astype(str).str.strip().value_counts()\n    for area, cnt in vc.items():\n        counts[area] = counts.get(area, 0) + int(cnt)\nanswer = str(max(counts, key=counts.get))\n",
+      "answer": "Van Nuys"
+    },
+    {
+      "node_id": "2",
+      "dataset_id": "lapd-ripa-ab-953-stop-incident-details-from-7-1-2018-to-present",
+      "source": "datagov/lapd-ripa-ab-953-stop-incident-details-from-7-1-2018-to-present/files/rows.txt",
+      "intent": "In the LAPD RIPA stop-incident records, what Area ID corresponds to area name <node_1 answer> (answer as an integer)?",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/lapd-ripa-ab-953-stop-incident-details-from-7-1-2018-to-present/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), sep=\",\", engine=\"c\", low_memory=False)\nnode_1_answer = 'Van Nuys'\n\n\nfiltered = df[df[\"Area Name\"].astype(str).str.strip().str.lower().eq(str(node_1_answer).strip().lower())]\narea_ids = pd.to_numeric(filtered[\"Area ID\"], errors=\"coerce\").dropna().astype(int)\nanswer = int(area_ids.mode().iloc[0])\n",
+      "answer": "9"
+    },
+    {
+      "node_id": "3",
+      "dataset_id": "crime-data-from-2010-to-2019",
+      "source": "datagov/crime-data-from-2010-to-2019/files/rows.txt",
+      "intent": "In 2019 crime data, within Area ID <node_2 answer>, which crime description is most common (and what is its incident count)?",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/crime-data-from-2010-to-2019/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ncsv_path = io.BytesIO(obj[\"Body\"].read())\nnode_2_answer = '9'\n\n\narea_id = pd.to_numeric(str(node_2_answer).strip(), errors=\"coerce\")\ncounts = {}\nfor chunk in pd.read_csv(\n    csv_path,\n    usecols=[\"DATE OCC\", \"AREA \", \"Crm Cd Desc\"],\n    dtype=str,\n    chunksize=500000,\n    low_memory=False,\n):\n    filtered = chunk[chunk[\"DATE OCC\"].astype(str).str.contains(\"2019\", na=False)]\n    area_col = pd.to_numeric(filtered[\"AREA \"], errors=\"coerce\")\n    filtered = filtered[area_col.eq(area_id)]\n    vc = filtered[\"Crm Cd Desc\"].astype(str).str.strip().value_counts()\n    for offense, cnt in vc.items():\n        counts[offense] = counts.get(offense, 0) + int(cnt)\ntop_offense = max(counts, key=counts.get)\nanswer = f\"{top_offense} ({counts[top_offense]})\"\n",
+      "answer": "THEFT OF IDENTITY (807)"
+    },
+    {
+      "node_id": "4",
+      "dataset_id": "crime-data-from-2020-to-present",
+      "source": "datagov/crime-data-from-2020-to-present/files/rows.txt",
+      "intent": "In 2020 crime data, within Area ID <node_2 answer>, which crime description is most common (and what is its incident count)?",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/crime-data-from-2020-to-present/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ncsv_path = io.BytesIO(obj[\"Body\"].read())\nnode_2_answer = '9'\n\n\narea_id = pd.to_numeric(str(node_2_answer).strip(), errors=\"coerce\")\ncounts = {}\nfor chunk in pd.read_csv(\n    csv_path,\n    usecols=[\"DATE OCC\", \"AREA\", \"Crm Cd Desc\"],\n    dtype=str,\n    chunksize=500000,\n    low_memory=False,\n):\n    filtered = chunk[chunk[\"DATE OCC\"].astype(str).str.contains(\"2020\", na=False)]\n    area_col = pd.to_numeric(filtered[\"AREA\"], errors=\"coerce\")\n    filtered = filtered[area_col.eq(area_id)]\n    vc = filtered[\"Crm Cd Desc\"].astype(str).str.strip().value_counts()\n    for offense, cnt in vc.items():\n        counts[offense] = counts.get(offense, 0) + int(cnt)\ntop_offense = max(counts, key=counts.get)\nanswer = f\"{top_offense} ({counts[top_offense]})\"\n",
+      "answer": "VEHICLE - STOLEN (915)"
+    }
+  ],
+  "ideal_query": [
+    {
+      "node_id": "1",
+      "dataset_id": "arrest-data-from-2010-to-2019",
+      "source": "datagov/arrest-data-from-2010-to-2019/files/rows.txt",
+      "intent": "In 2019 arrest data, which area has the most arrests in the charge group \"Moving Traffic Violations\"?",
+      "sql": "SELECT TRIM(\"Area Name\") AS answer\nFROM t\nWHERE CAST(\"Arrest Date\" AS VARCHAR) LIKE '%2019%'\n  AND lower(trim(CAST(\"Charge Group Description\" AS VARCHAR))) = 'moving traffic violations'\nGROUP BY answer\nORDER BY COUNT(*) DESC\nLIMIT 1",
+      "answer": "Van Nuys"
+    },
+    {
+      "node_id": "2",
+      "dataset_id": "lapd-ripa-ab-953-stop-incident-details-from-7-1-2018-to-present",
+      "source": "datagov/lapd-ripa-ab-953-stop-incident-details-from-7-1-2018-to-present/files/rows.txt",
+      "intent": "In the LAPD RIPA stop-incident records, what Area ID corresponds to area name <node_1 answer> (answer as an integer)?",
+      "sql": "SELECT CAST(CAST(\"Area ID\" AS INTEGER) AS VARCHAR) AS answer\nFROM t\nWHERE lower(trim(CAST(\"Area Name\" AS VARCHAR))) = lower('Van Nuys')\nGROUP BY CAST(\"Area ID\" AS INTEGER)\nORDER BY COUNT(*) DESC, CAST(\"Area ID\" AS INTEGER) ASC\nLIMIT 1",
+      "answer": "9"
+    },
+    {
+      "node_id": "3",
+      "dataset_id": "crime-data-from-2010-to-2019",
+      "source": "datagov/crime-data-from-2010-to-2019/files/rows.txt",
+      "intent": "In 2019 crime data, within Area ID <node_2 answer>, which crime description is most common (and what is its incident count)?",
+      "answer": "Cannot execute SQL: file is too big (505 MB >= 500 MB limit)."
+    },
+    {
+      "node_id": "4",
+      "dataset_id": "crime-data-from-2020-to-present",
+      "source": "datagov/crime-data-from-2020-to-present/files/rows.txt",
+      "intent": "In 2020 crime data, within Area ID <node_2 answer>, which crime description is most common (and what is its incident count)?",
+      "sql": "SELECT CONCAT(TRIM(CAST(\"Crm Cd Desc\" AS VARCHAR)), ' (', CAST(COUNT(*) AS VARCHAR), ')') AS answer\nFROM t\nWHERE CAST(\"DATE OCC\" AS VARCHAR) LIKE '%2020%'\n  AND TRY_CAST(\"AREA\" AS INTEGER) = 9\nGROUP BY TRIM(CAST(\"Crm Cd Desc\" AS VARCHAR))\nORDER BY COUNT(*) DESC\nLIMIT 1",
+      "answer": "VEHICLE - STOLEN (915)"
+    }
   ]
 }

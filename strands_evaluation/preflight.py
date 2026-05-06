@@ -130,6 +130,54 @@ def _check_plan_files(task_files: Sequence[str]) -> List[PreflightCheck]:
     return checks
 
 
+def _check_ideal_computation_records(task_files: Sequence[str]) -> List[PreflightCheck]:
+    from strands_evaluation.tools.external.ideal import plan_store
+
+    checks: List[PreflightCheck] = []
+    for task_path in task_files:
+        try:
+            plan = plan_store.load_plan_for_task(task_path)
+        except Exception as exc:
+            checks.append(PreflightCheck(f"ideal_query:{task_path}", False, str(exc)))
+            checks.append(PreflightCheck(f"ideal_code:{task_path}", False, str(exc)))
+            continue
+
+        if plan.ideal_query:
+            checks.append(
+                PreflightCheck(
+                    f"ideal_query:{task_path}",
+                    True,
+                    f"loaded {len(plan.ideal_query)} query record(s)",
+                )
+            )
+        else:
+            checks.append(
+                PreflightCheck(
+                    f"ideal_query:{task_path}",
+                    False,
+                    "missing non-empty ideal_query records in mapped plan file",
+                )
+            )
+
+        if plan.ideal_code:
+            checks.append(
+                PreflightCheck(
+                    f"ideal_code:{task_path}",
+                    True,
+                    f"loaded {len(plan.ideal_code)} code record(s)",
+                )
+            )
+        else:
+            checks.append(
+                PreflightCheck(
+                    f"ideal_code:{task_path}",
+                    False,
+                    "missing non-empty ideal_code records in mapped plan file",
+                )
+            )
+    return checks
+
+
 def run_preflight(
     run_config: RunConfig,
     task_files: Sequence[str],
@@ -145,6 +193,7 @@ def run_preflight(
     st = (run_config.search_tool_mode or "standard").strip().lower()
     sr = (run_config.search_results_mode or "naive").strip().lower()
     am = (run_config.agent_management_mode or "standard").strip().lower()
+    ct = (getattr(run_config, "computation_tool_mode", None) or "standard").strip().lower()
 
     checks: List[PreflightCheck] = []
 
@@ -155,7 +204,7 @@ def run_preflight(
         db_path = Path(run_config.search_db_path or "./lance_data")
         checks.append(_check_lance_db(db_path))
 
-    if st in {"ideal", "preloaded"} or am == "ideal":
+    if st in {"ideal", "preloaded"} or am == "ideal" or ct == "ideal":
         if not task_files:
             checks.append(
                 PreflightCheck(
@@ -166,6 +215,18 @@ def run_preflight(
             )
         else:
             checks.extend(_check_plan_files(task_files))
+
+    if ct == "ideal":
+        if not task_files:
+            checks.append(
+                PreflightCheck(
+                    "ideal_computation_records",
+                    False,
+                    "ideal computation mode requires resolvable task files at preflight time.",
+                )
+            )
+        else:
+            checks.extend(_check_ideal_computation_records(task_files))
 
     # search_tool=ideal needs descriptions for the internal selector context.
     if st == "ideal":

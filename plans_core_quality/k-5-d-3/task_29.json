@@ -93,5 +93,173 @@
       ],
       "answer": "[-10.0%, 17.4%]"
     }
+  ],
+  "ideal_code": [
+    {
+      "node_id": "1",
+      "dataset_id": "2006-2007-school-progress-report",
+      "source": "datagov/2006-2007-school-progress-report/files/rows.txt",
+      "intent": "Which five high schools had the highest overall scores in the 2006-2007 progress report?",
+      "code": "import io\nimport os\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.client import Config\n\nsource = 'datagov/2006-2007-school-progress-report/files/rows.txt'\nbucket = \"lakeqa-yc4103-datalake\"\nlocal_path = source if os.path.exists(source) else \"/tmp/k123_data_cache/\" + source\n\nif os.path.exists(local_path):\n    df = pd.read_csv(local_path, dtype=str, low_memory=False)\nelse:\n    obj = boto3.client(\"s3\", region_name=\"us-east-1\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\n    df = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), dtype=str, low_memory=False)\n\ndf[\"DBN\"] = df[\"DBN\"].astype(str).str.strip()\ndf[\"SCHOOL\"] = df[\"SCHOOL\"].astype(str).str.strip()\ndf[\"SCHOOL LEVEL*\"] = df[\"SCHOOL LEVEL*\"].astype(str).str.strip()\ndf[\"OVERALL SCORE\"] = pd.to_numeric(df[\"OVERALL SCORE\"], errors=\"coerce\")\n\nfiltered = df[\n    df[\"SCHOOL LEVEL*\"].str.contains(\"High\", case=False, na=False)\n    & df[\"OVERALL SCORE\"].notna()\n].copy()\n\ntop = filtered.sort_values([\"OVERALL SCORE\", \"DBN\"], ascending=[False, True]).head(5)\nanswer = {\n    f\"{row['DBN']} | {row['SCHOOL']}\": round(float(row[\"OVERALL SCORE\"]), 2)\n    for _, row in top.iterrows()\n}\n",
+      "answer": {
+        "02M542 | MANHATTAN BRIDGES HIGH SCHOOL": 104.4,
+        "13K595 | BEDFORD ACADEMY HIGH SCHOOL": 103.6,
+        "10X477 | MARBLE HILL HIGH SCHOOL FOR INTERNATIONAL STUDIES": 98.13,
+        "11X544 | HIGH SCHOOL FOR CONTEMPORARY ARTS": 96.05,
+        "11X545 | BRONX AEROSPACE HIGH SCHOOL": 93.65
+      }
+    },
+    {
+      "node_id": "2",
+      "dataset_id": "2007-2008-school-progress-report",
+      "source": "datagov/2007-2008-school-progress-report/files/rows.txt",
+      "intent": "Which five high schools had the highest overall scores in the 2007-2008 progress report?",
+      "code": "import io\nimport os\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.client import Config\n\nsource = 'datagov/2007-2008-school-progress-report/files/rows.txt'\nbucket = \"lakeqa-yc4103-datalake\"\nlocal_path = source if os.path.exists(source) else \"/tmp/k123_data_cache/\" + source\n\nif os.path.exists(local_path):\n    df = pd.read_csv(local_path, dtype=str, low_memory=False)\nelse:\n    obj = boto3.client(\"s3\", region_name=\"us-east-1\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\n    df = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), dtype=str, low_memory=False)\n\ndf[\"DBN\"] = df[\"DBN\"].astype(str).str.strip()\ndf[\"SCHOOL\"] = df[\"SCHOOL\"].astype(str).str.strip()\ndf[\"SCHOOL LEVEL*\"] = df[\"SCHOOL LEVEL*\"].astype(str).str.strip()\ndf[\"OVERALL SCORE\"] = pd.to_numeric(df[\"OVERALL SCORE\"], errors=\"coerce\")\n\nfiltered = df[\n    df[\"SCHOOL LEVEL*\"].str.contains(\"High\", case=False, na=False)\n    & df[\"OVERALL SCORE\"].notna()\n].copy()\n\ntop = filtered.sort_values([\"OVERALL SCORE\", \"DBN\"], ascending=[False, True]).head(5)\nanswer = {\n    f\"{row['DBN']} | {row['SCHOOL']}\": round(float(row[\"OVERALL SCORE\"]), 2)\n    for _, row in top.iterrows()\n}\n",
+      "answer": {
+        "13K439 | BROOKLYN INTERNATIONAL HIGH SCHOOL": 106.5,
+        "06M552 | GREGORIO LUPERON HIGH SCHOOL FOR SCIENCE AND MATHEMATICS": 100.4,
+        "11X544 | HIGH SCHOOL FOR CONTEMPORARY ARTS": 99.1,
+        "13K595 | BEDFORD ACADEMY HIGH SCHOOL": 98.7,
+        "02M542 | MANHATTAN BRIDGES HIGH SCHOOL": 97.8
+      }
+    },
+    {
+      "node_id": "3",
+      "dataset_id": "2008-2009-school-progress-report",
+      "source": "datagov/2008-2009-school-progress-report/files/rows.txt",
+      "intent": "Which five high schools had the highest overall scores in the 2008-2009 progress report?",
+      "code": "import io\nimport os\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.client import Config\n\nsource = 'datagov/2008-2009-school-progress-report/files/rows.txt'\nbucket = \"lakeqa-yc4103-datalake\"\nlocal_path = source if os.path.exists(source) else \"/tmp/k123_data_cache/\" + source\n\nif os.path.exists(local_path):\n    df = pd.read_csv(local_path, dtype=str, low_memory=False)\nelse:\n    obj = boto3.client(\"s3\", region_name=\"us-east-1\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\n    df = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), dtype=str, low_memory=False)\n\ndf[\"DBN\"] = df[\"DBN\"].astype(str).str.strip()\ndf[\"SCHOOL\"] = df[\"SCHOOL\"].astype(str).str.strip()\ndf[\"SCHOOL LEVEL*\"] = df[\"SCHOOL LEVEL*\"].astype(str).str.strip()\ndf[\"OVERALL SCORE\"] = pd.to_numeric(df[\"OVERALL SCORE\"], errors=\"coerce\")\n\nfiltered = df[\n    df[\"SCHOOL LEVEL*\"].str.contains(\"High\", case=False, na=False)\n    & df[\"OVERALL SCORE\"].notna()\n].copy()\n\ntop = filtered.sort_values([\"OVERALL SCORE\", \"DBN\"], ascending=[False, True]).head(5)\nanswer = {\n    f\"{row['DBN']} | {row['SCHOOL']}\": round(float(row[\"OVERALL SCORE\"]), 2)\n    for _, row in top.iterrows()\n}\n",
+      "answer": {
+        "02M296 | HIGH SCHOOL OF HOSPITALITY MANAGEMENT": 105.3,
+        "13K595 | BEDFORD ACADEMY HIGH SCHOOL": 103.3,
+        "14K561 | WILLIAMSBURG PREPARATORY SCHOOL": 102.3,
+        "07X221 | SOUTH BRONX PREPARATORY: A COLLEGE BOARD SCHOOL": 101.7,
+        "10X477 | MARBLE HILL HIGH SCHOOL FOR INTERNATIONAL STUDIES": 101.3
+      }
+    },
+    {
+      "node_id": "4",
+      "dataset_id": "2017-doe-high-school-directory",
+      "source": "datagov/2017-doe-high-school-directory/files/rows.txt",
+      "intent": "For the school identified in hop 1, which listed program drew the most ninth-grade applicants for general education relative to its number of available seats in 2017?",
+      "code": "import io\nimport os\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.client import Config\n\nsource = 'datagov/2017-doe-high-school-directory/files/rows.txt'\nbucket = \"lakeqa-yc4103-datalake\"\nlocal_path = source if os.path.exists(source) else \"/tmp/k123_data_cache/\" + source\n\nif os.path.exists(local_path):\n    df = pd.read_csv(local_path, dtype=str, low_memory=False)\nelse:\n    obj = boto3.client(\"s3\", region_name=\"us-east-1\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\n    df = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), dtype=str, low_memory=False)\n\nhop_1_answer = \"13K595\"\n\ndf[\"dbn\"] = df[\"dbn\"].astype(str).str.strip()\nrow = df[df[\"dbn\"].eq(hop_1_answer)].iloc[0]\n\n# In this directory, competitiveness for grade 9 general-education seats is measured by applicants per seat.\ncompetitiveness_records = []\nfor i in range(1, 11):\n    program = str(row.get(f\"program{i}\", \"\")).strip()\n    applicants_per_seat = pd.to_numeric(\n        str(row.get(f\"grade9geapplicantsperseat{i}\", \"\")).strip(),\n        errors=\"coerce\",\n    )\n    if program and pd.notna(applicants_per_seat):\n        competitiveness_records.append(\n            {\n                \"program\": program,\n                \"applicants_per_seat\": float(applicants_per_seat),\n                \"slot\": i,\n            }\n        )\n\ncompetitiveness_records.sort(\n    key=lambda item: (-item[\"applicants_per_seat\"], item[\"slot\"], item[\"program\"])\n)\nanswer = competitiveness_records[0][\"program\"]\n",
+      "answer": "Technology"
+    },
+    {
+      "node_id": "5",
+      "dataset_id": "2018-doe-high-school-directory",
+      "source": "datagov/2018-doe-high-school-directory/files/rows.txt",
+      "intent": "In 2018, how many ninth-grade applicants for general education did the program identified in node 4 attract at the school identified in hop 1?",
+      "code": "import io\nimport os\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.client import Config\n\nsource = 'datagov/2018-doe-high-school-directory/files/rows.txt'\nbucket = \"lakeqa-yc4103-datalake\"\nlocal_path = source if os.path.exists(source) else \"/tmp/k123_data_cache/\" + source\n\nif os.path.exists(local_path):\n    df = pd.read_csv(local_path, dtype=str, low_memory=False)\nelse:\n    obj = boto3.client(\"s3\", region_name=\"us-east-1\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\n    df = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), dtype=str, low_memory=False)\n\nhop_1_answer = \"13K595\"\nnode_4_answer = \"Technology\"\n\ndf[\"dbn\"] = df[\"dbn\"].astype(str).str.strip()\nrow = df[df[\"dbn\"].eq(hop_1_answer)].iloc[0]\n\nrecords = []\nfor i in range(1, 11):\n    program = str(row.get(f\"program{i}\", \"\")).strip()\n    applicants = pd.to_numeric(str(row.get(f\"grade9geapplicants{i}\", \"\")).strip(), errors=\"coerce\")\n    if program == node_4_answer and pd.notna(applicants):\n        records.append({\"slot\": i, \"applicants\": int(applicants)})\n\nrecords.sort(key=lambda item: item[\"slot\"])\nanswer = str(records[0][\"applicants\"])\n",
+      "answer": "2100"
+    },
+    {
+      "node_id": "6",
+      "dataset_id": "2019-doe-high-school-directory",
+      "source": "datagov/2019-doe-high-school-directory/files/rows.txt",
+      "intent": "In 2019, how many ninth-grade applicants for general education did the program identified in node 4 attract at the school identified in hop 1?",
+      "code": "import io\nimport os\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.client import Config\n\nsource = 'datagov/2019-doe-high-school-directory/files/rows.txt'\nbucket = \"lakeqa-yc4103-datalake\"\nlocal_path = source if os.path.exists(source) else \"/tmp/k123_data_cache/\" + source\n\nif os.path.exists(local_path):\n    df = pd.read_csv(local_path, dtype=str, low_memory=False)\nelse:\n    obj = boto3.client(\"s3\", region_name=\"us-east-1\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\n    df = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), dtype=str, low_memory=False)\n\nhop_1_answer = \"13K595\"\nnode_4_answer = \"Technology\"\n\ndf[\"dbn\"] = df[\"dbn\"].astype(str).str.strip()\nrow = df[df[\"dbn\"].eq(hop_1_answer)].iloc[0]\n\nrecords = []\nfor i in range(1, 11):\n    program = str(row.get(f\"program{i}\", \"\")).strip()\n    applicants = pd.to_numeric(str(row.get(f\"grade9geapplicants{i}\", \"\")).strip(), errors=\"coerce\")\n    if program == node_4_answer and pd.notna(applicants):\n        records.append({\"slot\": i, \"applicants\": int(applicants)})\n\nrecords.sort(key=lambda item: item[\"slot\"])\nanswer = str(records[0][\"applicants\"])\n",
+      "answer": "1889"
+    },
+    {
+      "node_id": "7",
+      "dataset_id": "2013-2018-demographic-snapshot-school",
+      "source": "datagov/2013-2018-demographic-snapshot-school/files/rows.txt",
+      "intent": "In the 2017-18 demographic snapshot for the school identified in hop 1, how many students with disabilities were enrolled?",
+      "code": "import io\nimport os\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.client import Config\n\nsource = 'datagov/2013-2018-demographic-snapshot-school/files/rows.txt'\nbucket = \"lakeqa-yc4103-datalake\"\nlocal_path = source if os.path.exists(source) else \"/tmp/k123_data_cache/\" + source\n\nif os.path.exists(local_path):\n    df = pd.read_csv(local_path, dtype=str, low_memory=False)\nelse:\n    obj = boto3.client(\"s3\", region_name=\"us-east-1\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\n    df = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), dtype=str, low_memory=False)\n\nhop_1_answer = \"13K595\"\n\ndf[\"DBN\"] = df[\"DBN\"].astype(str).str.strip()\ndf[\"Year\"] = df[\"Year\"].astype(str).str.strip()\nfiltered = df[\n    df[\"DBN\"].eq(hop_1_answer)\n    & df[\"Year\"].eq(\"2017-18\")\n].copy()\n\ndisability_count = int(pd.to_numeric(filtered.iloc[0][\"# Students with Disabilities\"], errors=\"coerce\"))\nanswer = str(disability_count)\n",
+      "answer": "46"
+    },
+    {
+      "node_id": "8",
+      "dataset_id": "2018-2019-school-demographic-snapshot",
+      "source": "datagov/2018-2019-school-demographic-snapshot/files/rows.txt",
+      "intent": "Using the 2018 and 2019 applicant counts for the program identified in node 4 and the school's 2017-18 and 2018-19 disability counts, what were the percentage changes in ninth-grade applicants for general education and in the number of students with disabilities? Return the answer in the format [general-ed change, disability-count change].",
+      "code": "import io\nimport os\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.client import Config\n\nsource = 'datagov/2018-2019-school-demographic-snapshot/files/rows.txt'\nbucket = \"lakeqa-yc4103-datalake\"\nlocal_path = source if os.path.exists(source) else \"/tmp/k123_data_cache/\" + source\n\nif os.path.exists(local_path):\n    df = pd.read_csv(local_path, dtype=str, low_memory=False)\nelse:\n    obj = boto3.client(\"s3\", region_name=\"us-east-1\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\n    df = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), dtype=str, low_memory=False)\n\nhop_1_answer = \"13K595\"\nnode_5_answer = \"2100\"\nnode_6_answer = \"1889\"\nnode_7_answer = \"46\"\n\ndf[\"DBN\"] = df[\"DBN\"].astype(str).str.strip()\ndf[\"Year\"] = df[\"Year\"].astype(str).str.strip()\nfiltered = df[\n    df[\"DBN\"].eq(hop_1_answer)\n    & df[\"Year\"].eq(\"2018-19\")\n].copy()\n\ndisability_count_2018_19 = int(pd.to_numeric(filtered.iloc[0][\"# Students with Disabilities\"], errors=\"coerce\"))\napplicants_2018 = int(node_5_answer)\napplicants_2019 = int(node_6_answer)\ndisability_count_2017_18 = int(node_7_answer)\n\ngeneral_ed_change_pct = (applicants_2019 - applicants_2018) / applicants_2018 * 100\ndisability_change_pct = (disability_count_2018_19 - disability_count_2017_18) / disability_count_2017_18 * 100\nanswer = f\"[{general_ed_change_pct:.1f}%, {disability_change_pct:.1f}%]\"\n",
+      "answer": "[-10.0%, 17.4%]"
+    }
+  ],
+  "ideal_query": [
+    {
+      "node_id": "1",
+      "dataset_id": "2006-2007-school-progress-report",
+      "source": "datagov/2006-2007-school-progress-report/files/rows.txt",
+      "intent": "Which five high schools had the highest overall scores in the 2006-2007 progress report?",
+      "sql": "SELECT json_group_object(key, value) AS answer\nFROM (\n  SELECT TRIM(CAST(\"DBN\" AS VARCHAR)) || ' | ' || TRIM(CAST(\"SCHOOL\" AS VARCHAR)) AS key,\n    ROUND(TRY_CAST(\"OVERALL SCORE\" AS DOUBLE), 2) AS value\n  FROM t\n  WHERE lower(TRIM(CAST(\"SCHOOL LEVEL*\" AS VARCHAR))) LIKE '%high%'\n    AND TRY_CAST(\"OVERALL SCORE\" AS DOUBLE) IS NOT NULL\n  ORDER BY TRY_CAST(\"OVERALL SCORE\" AS DOUBLE) DESC, TRIM(CAST(\"DBN\" AS VARCHAR)) ASC\n  LIMIT 5\n) q",
+      "answer": {
+        "02M542 | MANHATTAN BRIDGES HIGH SCHOOL": 104.4,
+        "13K595 | BEDFORD ACADEMY HIGH SCHOOL": 103.6,
+        "10X477 | MARBLE HILL HIGH SCHOOL FOR INTERNATIONAL STUDIES": 98.13,
+        "11X544 | HIGH SCHOOL FOR CONTEMPORARY ARTS": 96.05,
+        "11X545 | BRONX AEROSPACE HIGH SCHOOL": 93.65
+      }
+    },
+    {
+      "node_id": "2",
+      "dataset_id": "2007-2008-school-progress-report",
+      "source": "datagov/2007-2008-school-progress-report/files/rows.txt",
+      "intent": "Which five high schools had the highest overall scores in the 2007-2008 progress report?",
+      "sql": "SELECT json_group_object(key, value) AS answer\nFROM (\n  SELECT TRIM(CAST(\"DBN\" AS VARCHAR)) || ' | ' || TRIM(CAST(\"SCHOOL\" AS VARCHAR)) AS key,\n    ROUND(TRY_CAST(\"OVERALL SCORE\" AS DOUBLE), 2) AS value\n  FROM t\n  WHERE lower(TRIM(CAST(\"SCHOOL LEVEL*\" AS VARCHAR))) LIKE '%high%'\n    AND TRY_CAST(\"OVERALL SCORE\" AS DOUBLE) IS NOT NULL\n  ORDER BY TRY_CAST(\"OVERALL SCORE\" AS DOUBLE) DESC, TRIM(CAST(\"DBN\" AS VARCHAR)) ASC\n  LIMIT 5\n) q",
+      "answer": {
+        "13K439 | BROOKLYN INTERNATIONAL HIGH SCHOOL": 106.5,
+        "06M552 | GREGORIO LUPERON HIGH SCHOOL FOR SCIENCE AND MATHEMATICS": 100.4,
+        "11X544 | HIGH SCHOOL FOR CONTEMPORARY ARTS": 99.1,
+        "13K595 | BEDFORD ACADEMY HIGH SCHOOL": 98.7,
+        "02M542 | MANHATTAN BRIDGES HIGH SCHOOL": 97.8
+      }
+    },
+    {
+      "node_id": "3",
+      "dataset_id": "2008-2009-school-progress-report",
+      "source": "datagov/2008-2009-school-progress-report/files/rows.txt",
+      "intent": "Which five high schools had the highest overall scores in the 2008-2009 progress report?",
+      "sql": "SELECT json_group_object(key, value) AS answer\nFROM (\n  SELECT TRIM(CAST(\"DBN\" AS VARCHAR)) || ' | ' || TRIM(CAST(\"SCHOOL\" AS VARCHAR)) AS key,\n    ROUND(TRY_CAST(\"OVERALL SCORE\" AS DOUBLE), 2) AS value\n  FROM t\n  WHERE lower(TRIM(CAST(\"SCHOOL LEVEL*\" AS VARCHAR))) LIKE '%high%'\n    AND TRY_CAST(\"OVERALL SCORE\" AS DOUBLE) IS NOT NULL\n  ORDER BY TRY_CAST(\"OVERALL SCORE\" AS DOUBLE) DESC, TRIM(CAST(\"DBN\" AS VARCHAR)) ASC\n  LIMIT 5\n) q",
+      "answer": {
+        "02M296 | HIGH SCHOOL OF HOSPITALITY MANAGEMENT": 105.3,
+        "13K595 | BEDFORD ACADEMY HIGH SCHOOL": 103.3,
+        "14K561 | WILLIAMSBURG PREPARATORY SCHOOL": 102.3,
+        "07X221 | SOUTH BRONX PREPARATORY: A COLLEGE BOARD SCHOOL": 101.7,
+        "10X477 | MARBLE HILL HIGH SCHOOL FOR INTERNATIONAL STUDIES": 101.3
+      }
+    },
+    {
+      "node_id": "4",
+      "dataset_id": "2017-doe-high-school-directory",
+      "source": "datagov/2017-doe-high-school-directory/files/rows.txt",
+      "intent": "For the school identified in hop 1, which listed program drew the most ninth-grade applicants for general education relative to its number of available seats in 2017?",
+      "sql": "SELECT program AS answer\nFROM t\nCROSS JOIN LATERAL (VALUES\n  (1, CAST(\"program1\" AS VARCHAR), CAST(\"grade9geapplicantsperseat1\" AS VARCHAR)),\n  (2, CAST(\"program2\" AS VARCHAR), CAST(\"grade9geapplicantsperseat2\" AS VARCHAR)),\n  (3, CAST(\"program3\" AS VARCHAR), CAST(\"grade9geapplicantsperseat3\" AS VARCHAR)),\n  (4, CAST(\"program4\" AS VARCHAR), CAST(\"grade9geapplicantsperseat4\" AS VARCHAR)),\n  (5, CAST(\"program5\" AS VARCHAR), CAST(\"grade9geapplicantsperseat5\" AS VARCHAR)),\n  (6, CAST(\"program6\" AS VARCHAR), CAST(\"grade9geapplicantsperseat6\" AS VARCHAR)),\n  (7, CAST(\"program7\" AS VARCHAR), CAST(\"grade9geapplicantsperseat7\" AS VARCHAR)),\n  (8, CAST(\"program8\" AS VARCHAR), CAST(\"grade9geapplicantsperseat8\" AS VARCHAR)),\n  (9, CAST(\"program9\" AS VARCHAR), CAST(\"grade9geapplicantsperseat9\" AS VARCHAR)),\n  (10, CAST(\"program10\" AS VARCHAR), CAST(\"grade9geapplicantsperseat10\" AS VARCHAR))\n) AS v(slot, program, applicants_per_seat)\nWHERE TRIM(CAST(\"dbn\" AS VARCHAR)) = '13K595'\n  AND TRIM(CAST(program AS VARCHAR)) != ''\n  AND TRY_CAST(applicants_per_seat AS DOUBLE) IS NOT NULL\nORDER BY TRY_CAST(applicants_per_seat AS DOUBLE) DESC, slot ASC, program ASC\nLIMIT 1",
+      "answer": "Technology"
+    },
+    {
+      "node_id": "5",
+      "dataset_id": "2018-doe-high-school-directory",
+      "source": "datagov/2018-doe-high-school-directory/files/rows.txt",
+      "intent": "In 2018, how many ninth-grade applicants for general education did the program identified in node 4 attract at the school identified in hop 1?",
+      "sql": "SELECT CAST(TRY_CAST(applicants AS INTEGER) AS VARCHAR) AS answer\nFROM t\nCROSS JOIN LATERAL (VALUES\n  (1, CAST(\"program1\" AS VARCHAR), CAST(\"grade9geapplicants1\" AS VARCHAR)),\n  (2, CAST(\"program2\" AS VARCHAR), CAST(\"grade9geapplicants2\" AS VARCHAR)),\n  (3, CAST(\"program3\" AS VARCHAR), CAST(\"grade9geapplicants3\" AS VARCHAR)),\n  (4, CAST(\"program4\" AS VARCHAR), CAST(\"grade9geapplicants4\" AS VARCHAR)),\n  (5, CAST(\"program5\" AS VARCHAR), CAST(\"grade9geapplicants5\" AS VARCHAR)),\n  (6, CAST(\"program6\" AS VARCHAR), CAST(\"grade9geapplicants6\" AS VARCHAR)),\n  (7, CAST(\"program7\" AS VARCHAR), CAST(\"grade9geapplicants7\" AS VARCHAR)),\n  (8, CAST(\"program8\" AS VARCHAR), CAST(\"grade9geapplicants8\" AS VARCHAR)),\n  (9, CAST(\"program9\" AS VARCHAR), CAST(\"grade9geapplicants9\" AS VARCHAR)),\n  (10, CAST(\"program10\" AS VARCHAR), CAST(\"grade9geapplicants10\" AS VARCHAR))\n) AS v(slot, program, applicants)\nWHERE TRIM(CAST(\"dbn\" AS VARCHAR)) = '13K595'\n  AND TRIM(CAST(program AS VARCHAR)) = 'Technology'\n  AND TRY_CAST(applicants AS DOUBLE) IS NOT NULL\nORDER BY slot ASC\nLIMIT 1",
+      "answer": "2100"
+    },
+    {
+      "node_id": "6",
+      "dataset_id": "2019-doe-high-school-directory",
+      "source": "datagov/2019-doe-high-school-directory/files/rows.txt",
+      "intent": "In 2019, how many ninth-grade applicants for general education did the program identified in node 4 attract at the school identified in hop 1?",
+      "sql": "SELECT CAST(TRY_CAST(applicants AS INTEGER) AS VARCHAR) AS answer\nFROM t\nCROSS JOIN LATERAL (VALUES\n  (1, CAST(\"program1\" AS VARCHAR), CAST(\"grade9geapplicants1\" AS VARCHAR)),\n  (2, CAST(\"program2\" AS VARCHAR), CAST(\"grade9geapplicants2\" AS VARCHAR)),\n  (3, CAST(\"program3\" AS VARCHAR), CAST(\"grade9geapplicants3\" AS VARCHAR)),\n  (4, CAST(\"program4\" AS VARCHAR), CAST(\"grade9geapplicants4\" AS VARCHAR)),\n  (5, CAST(\"program5\" AS VARCHAR), CAST(\"grade9geapplicants5\" AS VARCHAR)),\n  (6, CAST(\"program6\" AS VARCHAR), CAST(\"grade9geapplicants6\" AS VARCHAR)),\n  (7, CAST(\"program7\" AS VARCHAR), CAST(\"grade9geapplicants7\" AS VARCHAR)),\n  (8, CAST(\"program8\" AS VARCHAR), CAST(\"grade9geapplicants8\" AS VARCHAR)),\n  (9, CAST(\"program9\" AS VARCHAR), CAST(\"grade9geapplicants9\" AS VARCHAR)),\n  (10, CAST(\"program10\" AS VARCHAR), CAST(\"grade9geapplicants10\" AS VARCHAR))\n) AS v(slot, program, applicants)\nWHERE TRIM(CAST(\"dbn\" AS VARCHAR)) = '13K595'\n  AND TRIM(CAST(program AS VARCHAR)) = 'Technology'\n  AND TRY_CAST(applicants AS DOUBLE) IS NOT NULL\nORDER BY slot ASC\nLIMIT 1",
+      "answer": "1889"
+    },
+    {
+      "node_id": "7",
+      "dataset_id": "2013-2018-demographic-snapshot-school",
+      "source": "datagov/2013-2018-demographic-snapshot-school/files/rows.txt",
+      "intent": "In the 2017-18 demographic snapshot for the school identified in hop 1, how many students with disabilities were enrolled?",
+      "sql": "SELECT CAST(TRY_CAST(\"# Students with Disabilities\" AS INTEGER) AS VARCHAR) AS answer\nFROM t\nWHERE TRIM(CAST(\"DBN\" AS VARCHAR)) = '13K595'\n  AND TRIM(CAST(\"Year\" AS VARCHAR)) = '2017-18'\nLIMIT 1",
+      "answer": "46"
+    },
+    {
+      "node_id": "8",
+      "dataset_id": "2018-2019-school-demographic-snapshot",
+      "source": "datagov/2018-2019-school-demographic-snapshot/files/rows.txt",
+      "intent": "Using the 2018 and 2019 applicant counts for the program identified in node 4 and the school's 2017-18 and 2018-19 disability counts, what were the percentage changes in ninth-grade applicants for general education and in the number of students with disabilities? Return the answer in the format [general-ed change, disability-count change].",
+      "sql": "WITH values AS (\n  SELECT TRY_CAST(\"# Students with Disabilities\" AS DOUBLE) AS disability_count_2018_19\n  FROM t\n  WHERE TRIM(CAST(\"DBN\" AS VARCHAR)) = '13K595'\n    AND TRIM(CAST(\"Year\" AS VARCHAR)) = '2018-19'\n  LIMIT 1\n)\nSELECT '[' || printf('%.1f', ((1889 - 2100) / 2100.0 * 100)) || '%, ' ||\n       printf('%.1f', ((disability_count_2018_19 - 46) / 46.0 * 100)) || '%]' AS answer\nFROM values",
+      "answer": "[-10.0%, 17.4%]"
+    }
   ]
 }

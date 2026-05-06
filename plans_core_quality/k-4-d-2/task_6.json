@@ -64,5 +64,73 @@
       ],
       "answer": "-1675"
     }
+  ],
+  "ideal_code": [
+    {
+      "node_id": "2",
+      "dataset_id": "crime-incidents-in-2017",
+      "source": "datagov/crime-incidents-in-2017/files/data.txt",
+      "intent": "In 2017, within Ward <node_1 answer>, which offense is most common?",
+      "code": "import io\nimport json\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/crime-incidents-in-2017/files/data.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndata = json.load(io.BytesIO(obj[\"Body\"].read()))\ndf = pd.json_normalize(data[\"features\"])\ndf.columns = [c.replace(\"properties.\", \"\") for c in df.columns]\n\nanswer = (\n    df[df[\"WARD\"].astype(str) == \"6\"][\"OFFENSE\"]\n    .value_counts()\n    .idxmax()\n)\nprint(answer)",
+      "answer": "THEFT/OTHER"
+    },
+    {
+      "node_id": "3",
+      "dataset_id": "crime-incidents-in-2018",
+      "source": "datagov/crime-incidents-in-2018/files/data.txt",
+      "intent": "In 2018, which ward has the most <node_2 answer> incidents?",
+      "code": "import io\nimport json\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/crime-incidents-in-2018/files/data.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndata = json.load(io.BytesIO(obj[\"Body\"].read()))\ndf = pd.json_normalize(data[\"features\"])\ndf.columns = [c.replace(\"properties.\", \"\") for c in df.columns]\n\nanswer = (\n    df[df[\"OFFENSE\"] == \"THEFT/OTHER\"][\"WARD\"]\n    .value_counts()\n    .idxmax()\n)\nprint(answer)",
+      "answer": "2"
+    },
+    {
+      "node_id": "4",
+      "dataset_id": "crime-incidents-in-2019",
+      "source": "datagov/crime-incidents-in-2019/files/data.txt",
+      "intent": "In 2019, how many <node_2 answer> incidents occurred in Ward <node_3 answer>?",
+      "code": "import io\nimport json\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/crime-incidents-in-2019/files/data.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndata = json.load(io.BytesIO(obj[\"Body\"].read()))\ndf = pd.json_normalize(data[\"features\"])\ndf.columns = [c.replace(\"properties.\", \"\") for c in df.columns]\n\nanswer = int(((df[\"WARD\"].astype(str) == \"2\") & (df[\"OFFENSE\"] == \"THEFT/OTHER\")).sum())\nprint(answer)",
+      "answer": "4118"
+    },
+    {
+      "node_id": "5",
+      "dataset_id": "crime-incidents-in-2020",
+      "source": "datagov/crime-incidents-in-2020/files/data.txt",
+      "intent": "In 2020, how many <node_2 answer> incidents occurred in Ward <node_3 answer>?",
+      "code": "import io\nimport json\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/crime-incidents-in-2020/files/data.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndata = json.load(io.BytesIO(obj[\"Body\"].read()))\ndf = pd.json_normalize(data[\"features\"])\ndf.columns = [c.replace(\"properties.\", \"\") for c in df.columns]\n\nanswer = int(((df[\"WARD\"].astype(str) == \"2\") & (df[\"OFFENSE\"] == \"THEFT/OTHER\")).sum())\nprint(answer)",
+      "answer": "2443"
+    }
+  ],
+  "ideal_query": [
+    {
+      "node_id": "2",
+      "dataset_id": "crime-incidents-in-2017",
+      "source": "datagov/crime-incidents-in-2017/files/data.txt",
+      "intent": "In 2017, within Ward <node_1 answer>, which offense is most common?",
+      "sql": "SELECT u.feature.properties.OFFENSE AS answer\nFROM t, UNNEST(features) AS u(feature)\nWHERE CAST(u.feature.properties.WARD AS VARCHAR) = '6'\nGROUP BY u.feature.properties.OFFENSE\nORDER BY count(*) DESC\nLIMIT 1",
+      "answer": "THEFT/OTHER"
+    },
+    {
+      "node_id": "3",
+      "dataset_id": "crime-incidents-in-2018",
+      "source": "datagov/crime-incidents-in-2018/files/data.txt",
+      "intent": "In 2018, which ward has the most <node_2 answer> incidents?",
+      "sql": "SELECT CAST(u.feature.properties.WARD AS VARCHAR) AS answer\nFROM t, UNNEST(features) AS u(feature)\nWHERE u.feature.properties.OFFENSE = 'THEFT/OTHER'\nGROUP BY CAST(u.feature.properties.WARD AS VARCHAR)\nORDER BY count(*) DESC\nLIMIT 1",
+      "answer": "2"
+    },
+    {
+      "node_id": "4",
+      "dataset_id": "crime-incidents-in-2019",
+      "source": "datagov/crime-incidents-in-2019/files/data.txt",
+      "intent": "In 2019, how many <node_2 answer> incidents occurred in Ward <node_3 answer>?",
+      "sql": "SELECT count(*) AS answer\nFROM t, UNNEST(features) AS u(feature)\nWHERE CAST(u.feature.properties.WARD AS VARCHAR) = '2'\n  AND u.feature.properties.OFFENSE = 'THEFT/OTHER'",
+      "answer": "4118"
+    },
+    {
+      "node_id": "5",
+      "dataset_id": "crime-incidents-in-2020",
+      "source": "datagov/crime-incidents-in-2020/files/data.txt",
+      "intent": "In 2020, how many <node_2 answer> incidents occurred in Ward <node_3 answer>?",
+      "sql": "SELECT count(*) AS answer\nFROM t, UNNEST(features) AS u(feature)\nWHERE CAST(u.feature.properties.WARD AS VARCHAR) = '2'\n  AND u.feature.properties.OFFENSE = 'THEFT/OTHER'",
+      "answer": "2443"
+    }
   ]
 }

@@ -21,5 +21,25 @@
       ],
       "answer": "2021"
     }
+  ],
+  "ideal_code": [
+    {
+      "node_id": "1",
+      "dataset_id": "vsrr-provisional-drug-overdose-death-counts",
+      "source": "datagov/vsrr-provisional-drug-overdose-death-counts/files/rows.txt",
+      "intent": "For each year from 2016 through 2023, compute a growth-amplified overdose burden score as annual drug overdose deaths across all U.S. states multiplied by (1 + year-over-year growth rate). Which year has the highest score?",
+      "code": "import pandas as pd\n\ndf = pd.read_csv(\"datagov/vsrr-provisional-drug-overdose-death-counts/files/rows.txt\", sep=None, engine=\"python\")\ndf[\"Year\"] = pd.to_numeric(df[\"Year\"], errors=\"coerce\")\ndf[\"Data Value\"] = pd.to_numeric(df[\"Data Value\"], errors=\"coerce\")\n\nfiltered = df[\n    df[\"Indicator\"].astype(str).str.strip().eq(\"Number of Drug Overdose Deaths\")\n    & df[\"Period\"].astype(str).str.strip().eq(\"12 month-ending\")\n    & df[\"Month\"].astype(str).str.strip().eq(\"December\")\n    & df[\"State\"].astype(str).str.strip().ne(\"US\")\n    & df[\"Year\"].between(2015, 2023)\n]\n\nyearly = filtered.groupby(\"Year\", as_index=False)[\"Data Value\"].sum().sort_values(\"Year\")\nyearly[\"growth_rate\"] = yearly[\"Data Value\"].pct_change()\nscored = yearly[yearly[\"Year\"].between(2016, 2023)].copy()\nscored[\"score\"] = scored[\"Data Value\"] * (1 + scored[\"growth_rate\"])\n\nanswer = str(int(scored.sort_values([\"score\", \"Year\"], ascending=[False, True]).iloc[0][\"Year\"]))\n",
+      "answer": "2021"
+    }
+  ],
+  "ideal_query": [
+    {
+      "node_id": "1",
+      "dataset_id": "vsrr-provisional-drug-overdose-death-counts",
+      "source": "datagov/vsrr-provisional-drug-overdose-death-counts/files/rows.txt",
+      "intent": "For each year from 2016 through 2023, compute a growth-amplified overdose burden score as annual drug overdose deaths across all U.S. states multiplied by (1 + year-over-year growth rate). Which year has the highest score?",
+      "sql": "WITH yearly AS (\n  SELECT\n    TRY_CAST(\"Year\" AS INTEGER) AS year,\n    SUM(TRY_CAST(\"Data Value\" AS DOUBLE)) AS total_deaths\n  FROM t\n  WHERE trim(CAST(\"Indicator\" AS VARCHAR)) = 'Number of Drug Overdose Deaths'\n    AND trim(CAST(\"Period\" AS VARCHAR)) = '12 month-ending'\n    AND trim(CAST(\"Month\" AS VARCHAR)) = 'December'\n    AND trim(CAST(\"State\" AS VARCHAR)) <> 'US'\n    AND TRY_CAST(\"Year\" AS INTEGER) BETWEEN 2015 AND 2023\n  GROUP BY year\n), scored AS (\n  SELECT\n    year,\n    total_deaths,\n    LAG(total_deaths) OVER (ORDER BY year) AS prev_total\n  FROM yearly\n)\nSELECT CAST(year AS VARCHAR) AS answer\nFROM scored\nWHERE year BETWEEN 2016 AND 2023\n  AND prev_total IS NOT NULL\nORDER BY total_deaths * (1 + ((total_deaths - prev_total) / prev_total)) DESC, year ASC\nLIMIT 1",
+      "answer": "2021"
+    }
   ]
 }

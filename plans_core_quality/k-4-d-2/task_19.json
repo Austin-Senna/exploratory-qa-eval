@@ -38,5 +38,41 @@
     "  Maximum = 100261931.64, rounded to nearest integer -> 100261932",
     "",
     "Final answer: 100261932"
+  ],
+  "ideal_code": [
+    {
+      "node_id": "4",
+      "dataset_id": "2011-2023-city-of-pittsburgh-operating-budget",
+      "source": "datagov/2011-2023-city-of-pittsburgh-operating-budget/files/2017-operating.txt",
+      "intent": "What was the total police department expenditure of <hop 3 answer> in 2017?",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/2011-2023-city-of-pittsburgh-operating-budget/files/2017-operating.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\nanswer = round(float(df.loc[\n    (df[\"Year\"] == 2017)\n    & (df[\"Type\"] == \"Expenditure\")\n    & (df[\"Department\"] == \"PS - POLICE BUREAU\"),\n    \"Amount\"\n].sum()), 2)\n",
+      "answer": 98453962.68
+    },
+    {
+      "node_id": "5",
+      "dataset_id": "2011-2023-city-of-pittsburgh-operating-budget",
+      "source": "datagov/2011-2023-city-of-pittsburgh-operating-budget/files/2018-operating.txt",
+      "intent": "What was the total police department expenditure of <hop 3 answer> in 2018?",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/2011-2023-city-of-pittsburgh-operating-budget/files/2018-operating.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\nanswer = round(float(df.loc[\n    (df[\"Year\"] == 2018)\n    & (df[\"Type\"] == \"Expenditure\")\n    & (df[\"Department\"] == \"PS - POLICE BUREAU\"),\n    \"Amount\"\n].sum()), 2)\n",
+      "answer": 100261931.64
+    }
+  ],
+  "ideal_query": [
+    {
+      "node_id": "4",
+      "dataset_id": "2011-2023-city-of-pittsburgh-operating-budget",
+      "source": "datagov/2011-2023-city-of-pittsburgh-operating-budget/files/2017-operating.txt",
+      "intent": "What was the total police department expenditure of <hop 3 answer> in 2017?",
+      "sql": "SELECT round(sum(TRY_CAST(Amount AS DOUBLE)), 2) AS answer\nFROM t\nWHERE Year = 2017 AND Type = 'Expenditure' AND Department = 'PS - POLICE BUREAU'",
+      "answer": 98453962.68
+    },
+    {
+      "node_id": "5",
+      "dataset_id": "2011-2023-city-of-pittsburgh-operating-budget",
+      "source": "datagov/2011-2023-city-of-pittsburgh-operating-budget/files/2018-operating.txt",
+      "intent": "What was the total police department expenditure of <hop 3 answer> in 2018?",
+      "sql": "SELECT round(sum(TRY_CAST(Amount AS DOUBLE)), 2) AS answer\nFROM t\nWHERE Year = 2018 AND Type = 'Expenditure' AND Department = 'PS - POLICE BUREAU'",
+      "answer": 100261931.64
+    }
   ]
 }

@@ -85,5 +85,121 @@
       ],
       "answer": "26"
     }
+  ],
+  "ideal_code": [
+    {
+      "node_id": "1",
+      "dataset_id": "annual-personal-income-for-state-of-iowa-by-county",
+      "source": "datagov/annual-personal-income-for-state-of-iowa-by-county/files/rows.txt",
+      "intent": "In 2022, which Iowa county had the highest total personal income?",
+      "code": "import io\nimport boto3\nimport pandas as pd\n\nsource = 'datagov/annual-personal-income-for-state-of-iowa-by-county/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3').get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), dtype=str)\n\ndf = df[\n    df['Date'].astype(str).str.contains('2022', na=False)\n    & df['Variable'].astype(str).str.strip().eq('Personal income')\n].copy()\ndf['Value_num'] = pd.to_numeric(df['Value'], errors='coerce')\nanswer = str(df.groupby('Name', dropna=True)['Value_num'].sum().idxmax())\n",
+      "answer": "Polk"
+    },
+    {
+      "node_id": "2",
+      "dataset_id": "city-population-in-iowa-by-county-and-year",
+      "source": "datagov/city-population-in-iowa-by-county-and-year/files/rows.txt",
+      "intent": "In 2023, which city in the county from node 1 has the highest population? Exclude county-balance records.",
+      "code": "import io\nimport boto3\nimport pandas as pd\n\nsource = 'datagov/city-population-in-iowa-by-county-and-year/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3').get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), dtype=str)\n\nnode_1_answer = 'Polk'\nfiltered = df[df['County'].astype(str).str.strip().str.upper().eq(node_1_answer.upper())].copy()\nfiltered['Year_dt'] = pd.to_datetime(filtered['Year'], errors='coerce')\nfiltered = filtered[filtered['Year_dt'].dt.year.eq(2023)].copy()\nfiltered = filtered[~filtered['City'].astype(str).str.contains('Balance of', case=False, na=False)].copy()\nfiltered['City_clean'] = filtered['City'].astype(str).str.replace(r'\\s*\\(pt\\.\\)$', '', regex=True).str.strip()\nfiltered['Estimate_num'] = pd.to_numeric(filtered['Estimate'], errors='coerce')\nanswer = str(filtered.groupby('City_clean', dropna=True)['Estimate_num'].sum().idxmax())\n",
+      "answer": "Des Moines"
+    },
+    {
+      "node_id": "3",
+      "dataset_id": "iowa-fire-department-census",
+      "source": "datagov/iowa-fire-department-census/files/rows.txt",
+      "intent": "In the city from node 2, what is the headquarters ZIP code of the fire department named for the city?",
+      "code": "import io\nimport boto3\nimport pandas as pd\n\nsource = 'datagov/iowa-fire-department-census/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3').get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), dtype=str)\n\nnode_2_answer = 'Des Moines'\nfiltered = df[df['Headquarters City'].astype(str).str.strip().str.upper().eq(node_2_answer.upper())].copy()\nname_target = f'{node_2_answer} Fire Department'.upper()\nfiltered = filtered[filtered['Fire Department Name'].astype(str).str.strip().str.upper().eq(name_target)].copy()\nanswer = str(filtered.iloc[0]['Headquarters Zip Code'])[:5]\n",
+      "answer": "50317"
+    },
+    {
+      "node_id": "4",
+      "dataset_id": "2023-2024-iowa-public-school-districts",
+      "source": "datagov/2023-2024-iowa-public-school-districts/files/rows.txt",
+      "intent": "In the city from node 2, what is the physical ZIP code of the public school district named for the city?",
+      "code": "import io\nimport re\nimport boto3\nimport pandas as pd\n\nsource = 'datagov/2023-2024-iowa-public-school-districts/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3').get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), dtype=str)\n\nnode_2_answer = 'Des Moines'\nfiltered = df[df['Physical City'].astype(str).str.strip().str.upper().eq(node_2_answer.upper())].copy()\nfiltered = filtered[\n    filtered['School District Name'].astype(str).str.contains(re.escape(node_2_answer), case=False, na=False)\n].copy()\nanswer = str(filtered.iloc[0]['Physical Zip Code'])[:5]\n",
+      "answer": "50321"
+    },
+    {
+      "node_id": "5",
+      "dataset_id": "iowa-judicial-districts-offices-and-facilities",
+      "source": "datagov/iowa-judicial-districts-offices-and-facilities/files/rows.txt",
+      "intent": "In the city from node 2, which ZIP code appears most often among residential judicial facilities?",
+      "code": "import io\nimport boto3\nimport pandas as pd\n\nsource = 'datagov/iowa-judicial-districts-offices-and-facilities/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3').get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), dtype=str)\n\nnode_2_answer = 'Des Moines'\nfiltered = df[df['City'].astype(str).str.strip().str.upper().eq(node_2_answer.upper())].copy()\nfiltered = filtered[filtered['Residential Facility'].astype(str).str.strip().str.lower().eq('true')].copy()\nzip_counts = filtered['Zipcode'].astype(str).str.extract(r'(\\d{5})', expand=False).value_counts()\nanswer = str(zip_counts.idxmax())\n",
+      "answer": "50315"
+    },
+    {
+      "node_id": "6",
+      "dataset_id": "boundaries-us-zip-codes",
+      "source": "datagov/boundaries-us-zip-codes/files/rows.txt",
+      "intent": "Which of the ZIP codes from nodes 3 through 5 covers the most land?",
+      "code": "import io\nimport boto3\nimport pandas as pd\n\nsource = 'datagov/boundaries-us-zip-codes/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3').get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), dtype=str, usecols=['ZIPCODE', 'CITY', 'STATE', 'SQMI'], low_memory=False)\n\nnode_3_answer = '50317'\nnode_4_answer = '50321'\nnode_5_answer = '50315'\ncandidates = {node_3_answer, node_4_answer, node_5_answer}\nfiltered = df[df['ZIPCODE'].astype(str).str.extract(r'(\\d{5})', expand=False).isin(candidates)].copy()\nfiltered = filtered[filtered['STATE'].astype(str).str.strip().str.upper().eq('IA')].copy()\nfiltered['SQMI_num'] = pd.to_numeric(filtered['SQMI'], errors='coerce')\nzip_value = str(filtered.loc[filtered['SQMI_num'].idxmax(), 'ZIPCODE'])\nanswer = zip_value[:5]\n",
+      "answer": "50317"
+    },
+    {
+      "node_id": "7",
+      "dataset_id": "iowa-lottery-retailer-list",
+      "source": "datagov/iowa-lottery-retailer-list/files/rows.txt",
+      "intent": "How many Iowa lottery retailers are in the city from node 2 with the ZIP code from node 6?",
+      "code": "import io\nimport boto3\nimport pandas as pd\n\nsource = 'datagov/iowa-lottery-retailer-list/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3').get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), dtype=str)\n\nnode_2_answer = 'Des Moines'\nnode_6_answer = '50317'\nfiltered = df[df['CITY'].astype(str).str.strip().str.upper().eq(node_2_answer.upper())].copy()\nfiltered = filtered[filtered['ZIP'].astype(str).str.extract(r'(\\d{5})', expand=False).eq(node_6_answer)].copy()\nanswer = str(int(len(filtered)))\n",
+      "answer": "26"
+    }
+  ],
+  "ideal_query": [
+    {
+      "node_id": "1",
+      "dataset_id": "annual-personal-income-for-state-of-iowa-by-county",
+      "source": "datagov/annual-personal-income-for-state-of-iowa-by-county/files/rows.txt",
+      "intent": "In 2022, which Iowa county had the highest total personal income?",
+      "sql": "SELECT \"Name\" AS answer\nFROM t\nWHERE CAST(\"Date\" AS VARCHAR) LIKE '%2022%'\n  AND TRIM(CAST(\"Variable\" AS VARCHAR)) = 'Personal income'\nGROUP BY \"Name\"\nORDER BY SUM(TRY_CAST(\"Value\" AS DOUBLE)) DESC\nLIMIT 1",
+      "answer": "Polk"
+    },
+    {
+      "node_id": "2",
+      "dataset_id": "city-population-in-iowa-by-county-and-year",
+      "source": "datagov/city-population-in-iowa-by-county-and-year/files/rows.txt",
+      "intent": "In 2023, which city in the county from node 1 has the highest population? Exclude county-balance records.",
+      "sql": "WITH filtered AS (\n  SELECT regexp_replace(TRIM(CAST(\"City\" AS VARCHAR)), '\\s*\\(pt\\.\\)$', '') AS city_clean,\n    TRY_CAST(\"Estimate\" AS DOUBLE) AS estimate_num\n  FROM t\n  WHERE UPPER(TRIM(CAST(\"County\" AS VARCHAR))) = 'POLK'\n    AND CAST(\"Year\" AS VARCHAR) LIKE '%2023%'\n    AND lower(CAST(\"City\" AS VARCHAR)) NOT LIKE '%balance of%'\n)\nSELECT city_clean AS answer\nFROM filtered\nGROUP BY city_clean\nORDER BY SUM(estimate_num) DESC\nLIMIT 1",
+      "answer": "Des Moines"
+    },
+    {
+      "node_id": "3",
+      "dataset_id": "iowa-fire-department-census",
+      "source": "datagov/iowa-fire-department-census/files/rows.txt",
+      "intent": "In the city from node 2, what is the headquarters ZIP code of the fire department named for the city?",
+      "sql": "SELECT SUBSTR(TRIM(CAST(\"Headquarters Zip Code\" AS VARCHAR)), 1, 5) AS answer\nFROM t\nWHERE UPPER(TRIM(CAST(\"Headquarters City\" AS VARCHAR))) = 'DES MOINES'\n  AND UPPER(TRIM(CAST(\"Fire Department Name\" AS VARCHAR))) = 'DES MOINES FIRE DEPARTMENT'\nLIMIT 1",
+      "answer": "50317"
+    },
+    {
+      "node_id": "4",
+      "dataset_id": "2023-2024-iowa-public-school-districts",
+      "source": "datagov/2023-2024-iowa-public-school-districts/files/rows.txt",
+      "intent": "In the city from node 2, what is the physical ZIP code of the public school district named for the city?",
+      "sql": "SELECT SUBSTR(TRIM(CAST(\"Physical Zip Code\" AS VARCHAR)), 1, 5) AS answer\nFROM t\nWHERE UPPER(TRIM(CAST(\"Physical City\" AS VARCHAR))) = 'DES MOINES'\n  AND regexp_matches(CAST(\"School District Name\" AS VARCHAR), 'Des Moines', 'i')\nLIMIT 1",
+      "answer": "50321"
+    },
+    {
+      "node_id": "5",
+      "dataset_id": "iowa-judicial-districts-offices-and-facilities",
+      "source": "datagov/iowa-judicial-districts-offices-and-facilities/files/rows.txt",
+      "intent": "In the city from node 2, which ZIP code appears most often among residential judicial facilities?",
+      "sql": "SELECT regexp_extract(CAST(\"Zipcode\" AS VARCHAR), '(\\d{5})', 1) AS answer\nFROM t\nWHERE UPPER(TRIM(CAST(\"City\" AS VARCHAR))) = 'DES MOINES'\n  AND lower(TRIM(CAST(\"Residential Facility\" AS VARCHAR))) = 'true'\nGROUP BY answer\nORDER BY COUNT(*) DESC\nLIMIT 1",
+      "answer": "50315"
+    },
+    {
+      "node_id": "6",
+      "dataset_id": "boundaries-us-zip-codes",
+      "source": "datagov/boundaries-us-zip-codes/files/rows.txt",
+      "intent": "Which of the ZIP codes from nodes 3 through 5 covers the most land?",
+      "sql": "SELECT SUBSTR(TRIM(CAST(\"ZIPCODE\" AS VARCHAR)), 1, 5) AS answer\nFROM t\nWHERE regexp_extract(CAST(\"ZIPCODE\" AS VARCHAR), '(\\d{5})', 1) IN ('50317', '50321', '50315')\n  AND UPPER(TRIM(CAST(\"STATE\" AS VARCHAR))) = 'IA'\nORDER BY TRY_CAST(\"SQMI\" AS DOUBLE) DESC\nLIMIT 1",
+      "answer": "50317"
+    },
+    {
+      "node_id": "7",
+      "dataset_id": "iowa-lottery-retailer-list",
+      "source": "datagov/iowa-lottery-retailer-list/files/rows.txt",
+      "intent": "How many Iowa lottery retailers are in the city from node 2 with the ZIP code from node 6?",
+      "sql": "SELECT CAST(COUNT(*) AS VARCHAR) AS answer\nFROM t\nWHERE UPPER(TRIM(CAST(\"CITY\" AS VARCHAR))) = 'DES MOINES'\n  AND regexp_extract(CAST(\"ZIP\" AS VARCHAR), '(\\d{5})', 1) = '50317' ",
+      "answer": "26"
+    }
   ]
 }

@@ -1,4 +1,8 @@
-from sana_evaluation.plugins.source_session import SourceSessionState, source_from_tool_use
+from sana_evaluation.plugins.source_session import (
+    SOURCE_SESSION_TOOLS,
+    SourceSessionState,
+    source_from_tool_use,
+)
 
 
 def test_source_from_dataset_id_input() -> None:
@@ -91,6 +95,20 @@ def test_execute_code_falls_back_to_active_source() -> None:
         fallback_source="schools",
     )
     assert source == "schools"
+
+
+def test_ideal_computation_tools_participate_in_source_sessions() -> None:
+    assert "query_ideal" in SOURCE_SESSION_TOOLS
+    assert "execute_ideal" in SOURCE_SESSION_TOOLS
+    query_source = source_from_tool_use(
+        {"name": "query_ideal", "input": {"dataset_id": "schools"}}
+    )
+    execute_source = source_from_tool_use(
+        {"name": "execute_ideal", "input": {"code": "print('x')"}},
+        fallback_source="schools",
+    )
+    assert query_source == "schools"
+    assert execute_source == "schools"
 
 
 def test_session_counts_and_budget_exhaustion() -> None:

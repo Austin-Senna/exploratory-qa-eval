@@ -23,6 +23,8 @@ from strands_evaluation.tools.agent_tools import (
     execute_code,
 )
 from strands_evaluation.tools.agent_tools_v2 import (
+    _QUERY_MAX_FILE_BYTES,
+    _query_file_impl,
     _normalize_sql_backticks,
     _rewrite_query_error,
     _rewrite_unqueryable_family_error,
@@ -180,6 +182,110 @@ class TestRewriteQueryError(unittest.TestCase):
         # unchanged so we don't mislead the agent.
         raw = "Parser Error: syntax error at or near \"FRUM\""
         self.assertEqual(_rewrite_query_error(raw), raw)
+
+
+class TestQueryFileJsonReaderLimit(unittest.TestCase):
+    def test_json_reader_uses_direct_query_file_size_limit(self):
+        executed_sql = []
+
+        class FakeRelation:
+            description = [("answer",)]
+
+            def fetchmany(self, _limit):
+                return [(1,)]
+
+        class FakeConnection:
+            def execute(self, sql):
+                executed_sql.append(sql)
+                return FakeRelation()
+
+        with (
+            mock.patch(
+                "strands_evaluation.tools.agent_tools_v2._resolve_file_reference",
+                return_value={
+                    "dataset_id": "example",
+                    "file_path": "files/data.json",
+                    "s3_uri": "s3://bucket/example/files/data.json",
+                    "key": "example/files/data.json",
+                },
+            ),
+            mock.patch("strands_evaluation.tools.agent_tools_v2._get_s3_client"),
+            mock.patch(
+                "strands_evaluation.tools.agent_tools_v2._s3_head",
+                return_value=_QUERY_MAX_FILE_BYTES,
+            ),
+            mock.patch(
+                "strands_evaluation.tools.agent_tools_v2._s3_range_get",
+                return_value=b'{"features":[]}',
+            ),
+            mock.patch(
+                "strands_evaluation.tools.agent_tools_v2._duckdb_connection",
+                return_value=FakeConnection(),
+            ),
+        ):
+            result = _query_file_impl(
+                s3_uri="s3://bucket/example/files/data.json",
+                sql="SELECT 1 AS answer",
+            )
+
+        self.assertNotIn("error", result)
+        create_view_sql = executed_sql[0]
+        self.assertIn(
+            f"maximum_object_size={_QUERY_MAX_FILE_BYTES}",
+            create_view_sql,
+        )
+
+
+class TestQueryFileCsvReader(unittest.TestCase):
+    def test_csv_reader_sets_standard_quote_character(self):
+        executed_sql = []
+
+        class FakeRelation:
+            description = [("answer",)]
+
+            def fetchmany(self, _limit):
+                return [(1,)]
+
+        class FakeConnection:
+            def execute(self, sql):
+                executed_sql.append(sql)
+                return FakeRelation()
+
+        with (
+            mock.patch(
+                "strands_evaluation.tools.agent_tools_v2._resolve_file_reference",
+                return_value={
+                    "dataset_id": "example",
+                    "file_path": "files/data.csv",
+                    "s3_uri": "s3://bucket/example/files/data.csv",
+                    "key": "example/files/data.csv",
+                },
+            ),
+            mock.patch("strands_evaluation.tools.agent_tools_v2._get_s3_client"),
+            mock.patch(
+                "strands_evaluation.tools.agent_tools_v2._s3_head",
+                return_value=100,
+            ),
+            mock.patch(
+                "strands_evaluation.tools.agent_tools_v2._s3_range_get",
+                return_value=b'name,value\n"contains, comma",1\n',
+            ),
+            mock.patch(
+                "strands_evaluation.tools.agent_tools_v2._duckdb_connection",
+                return_value=FakeConnection(),
+            ),
+        ):
+            result = _query_file_impl(
+                s3_uri="s3://bucket/example/files/data.csv",
+                sql="SELECT 1 AS answer",
+            )
+
+        self.assertNotIn("error", result)
+        create_view_sql = executed_sql[0]
+        self.assertIn(
+            """read_csv_auto('s3://bucket/example/files/data.csv', quote='"')""",
+            create_view_sql,
+        )
 
 
 class TestNormalizeSqlBackticks(unittest.TestCase):
