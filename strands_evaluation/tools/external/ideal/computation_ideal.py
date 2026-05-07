@@ -133,16 +133,37 @@ def _best_record(
     return best if best_score >= 0.9 else None
 
 
-def _answer_payload(record: IdealComputationRecord) -> Dict[str, Any]:
+def _s3_uri_for_record(record: IdealComputationRecord) -> str:
+    return _canonical_uri(record.source)
+
+
+def _file_path_for_record(record: IdealComputationRecord) -> str:
+    marker = f"/{record.dataset_id}/"
+    if marker in record.source:
+        return record.source.split(marker, 1)[1]
+    parts = record.source.split("/")
+    if len(parts) >= 3 and parts[1] == record.dataset_id:
+        return "/".join(parts[2:])
+    return record.source
+
+
+def _query_answer_payload(record: IdealComputationRecord) -> Dict[str, Any]:
     return {
         "success": True,
-        "ideal_oracle": True,
-        "node_id": record.node_id,
         "dataset_id": record.dataset_id,
-        "source": record.source,
-        "intent": record.intent,
-        "answer": record.answer,
-        "output": json.dumps(record.answer, ensure_ascii=False),
+        "file_path": _file_path_for_record(record),
+        "s3_uri": _s3_uri_for_record(record),
+        "columns": ["answer"],
+        "rows": [[record.answer]],
+        "row_count": 1,
+        "truncated": False,
+    }
+
+
+def _execute_answer_payload(record: IdealComputationRecord) -> Dict[str, Any]:
+    return {
+        "output": str(record.answer),
+        "success": True,
     }
 
 
@@ -155,12 +176,8 @@ def _is_success(result: Any) -> bool:
 
 
 def _decorate_repair_result(result: Dict[str, Any], *, attempts: int, repairs: List[Dict[str, str]]) -> Dict[str, Any]:
-    out = dict(result)
-    out.setdefault("success", _is_success(result))
-    out["ideal_oracle"] = False
-    out["repair_attempts"] = attempts
-    out["repairs"] = repairs
-    return out
+    _ = attempts, repairs
+    return dict(result)
 
 
 def _plan_records_for_prompt(plan: IdealTaskPlan, records: Iterable[IdealComputationRecord]) -> str:
@@ -321,7 +338,7 @@ def query_ideal(
         source=s3_uri,
     )
     if record is not None:
-        return _answer_payload(record)
+        return _query_answer_payload(record)
 
     repairs: List[Dict[str, str]] = []
     previous_error = ""
@@ -371,7 +388,7 @@ def execute_ideal(code: str, intent: str) -> Dict[str, Any]:
     plan = _active_plan()
     record = _best_record(plan.ideal_code, payload=code, intent=intent)
     if record is not None:
-        return _answer_payload(record)
+        return _execute_answer_payload(record)
 
     repairs: List[Dict[str, str]] = []
     previous_error = ""

@@ -1,14 +1,35 @@
 import json
+import logging
 import unittest
+from datetime import datetime, timezone
 from pathlib import Path
+from types import SimpleNamespace
 from tempfile import TemporaryDirectory
 from unittest.mock import patch
 
+from strands.hooks.events import (
+    AfterModelCallEvent,
+    AfterToolCallEvent,
+    AgentInitializedEvent,
+    BeforeModelCallEvent,
+    BeforeToolCallEvent,
+)
+
+from strands_evaluation.agent_with_mode import build_mode_bundle
+from strands_evaluation.config import RunConfig
+from strands_evaluation.instrumentation.agent_plugins import LoggingPlugin
+from strands_evaluation.tools.agent_tools import execute_code
+from strands_evaluation.tools.agent_tools_v2 import query_file
 from strands_evaluation.tools.external.ideal import computation_ideal
 from strands_evaluation.tools.external.ideal.plan_store import (
+    load_plan_for_task,
     set_plans_root,
     set_task_context,
 )
+
+_COMPUTATION_LOG_PATH = Path("test_logs/ideal_computation_tools.jsonl")
+_COMPUTATION_TRANSCRIPT_LOG_PATH = Path("test_logs/ideal_computation_tool_transcript.log")
+_CORE_QUALITY_TASK_ID = "tasks_core_quality/k-1-d-1/task_2.json"
 
 
 class IdealComputationToolTests(unittest.TestCase):
@@ -63,9 +84,14 @@ class IdealComputationToolTests(unittest.TestCase):
         )
 
         self.assertTrue(result["success"])
-        self.assertTrue(result["ideal_oracle"])
-        self.assertEqual(result["answer"], 7)
-        self.assertEqual(result["node_id"], "1")
+        self.assertEqual(result["columns"], ["answer"])
+        self.assertEqual(result["rows"], [[7]])
+        self.assertEqual(result["row_count"], 1)
+        self.assertFalse(result["truncated"])
+        self.assertNotIn("ideal_oracle", result)
+        self.assertNotIn("intent", result)
+        self.assertNotIn("source", result)
+        self.assertNotIn("node_id", result)
 
     def test_execute_ideal_returns_plan_answer_on_match(self):
         result = computation_ideal.execute_ideal._tool_func(
@@ -74,9 +100,11 @@ class IdealComputationToolTests(unittest.TestCase):
         )
 
         self.assertTrue(result["success"])
-        self.assertTrue(result["ideal_oracle"])
-        self.assertEqual(result["answer"], "7")
-        self.assertEqual(result["node_id"], "2")
+        self.assertEqual(result["output"], "7")
+        self.assertNotIn("ideal_oracle", result)
+        self.assertNotIn("intent", result)
+        self.assertNotIn("source", result)
+        self.assertNotIn("node_id", result)
 
     def test_query_ideal_uses_repair_fallback_when_no_oracle_match(self):
         with patch.object(
@@ -93,11 +121,12 @@ class IdealComputationToolTests(unittest.TestCase):
                 file_path="files/rows.txt",
                 sql="SELECT bad FROM t",
                 intent="not in the plan",
-            )
+        )
 
         self.assertTrue(result["success"])
-        self.assertFalse(result["ideal_oracle"])
-        self.assertEqual(result["repair_attempts"], 1)
+        self.assertNotIn("ideal_oracle", result)
+        self.assertNotIn("repair_attempts", result)
+        self.assertNotIn("repairs", result)
         repair.assert_called_once()
         base.assert_called_once()
         self.assertEqual(base.call_args.kwargs["sql"], "SELECT 7 AS n")
@@ -123,10 +152,10 @@ class IdealComputationToolTests(unittest.TestCase):
             )
 
         self.assertTrue(result["success"])
-        self.assertFalse(result["ideal_oracle"])
-        self.assertEqual(result["repair_attempts"], 2)
+        self.assertNotIn("ideal_oracle", result)
+        self.assertNotIn("repair_attempts", result)
+        self.assertNotIn("repairs", result)
         self.assertEqual(repair.call_count, 2)
-        self.assertIn("transient", result["repairs"][0]["error"])
 
     def test_query_ideal_does_not_oracle_match_wrong_dataset(self):
         with patch.object(
@@ -145,8 +174,9 @@ class IdealComputationToolTests(unittest.TestCase):
                 intent="count all rows",
             )
 
-        self.assertFalse(result["ideal_oracle"])
-        self.assertEqual(result["repair_attempts"], 1)
+        self.assertNotIn("ideal_oracle", result)
+        self.assertNotIn("repair_attempts", result)
+        self.assertNotIn("repairs", result)
         repair.assert_called_once()
 
     def test_execute_ideal_returns_failure_after_repair_exhaustion(self):
@@ -168,9 +198,163 @@ class IdealComputationToolTests(unittest.TestCase):
             )
 
         self.assertFalse(result["success"])
-        self.assertFalse(result["ideal_oracle"])
-        self.assertEqual(result["repair_attempts"], 2)
+        self.assertNotIn("ideal_oracle", result)
+        self.assertNotIn("repair_attempts", result)
+        self.assertNotIn("repairs", result)
         self.assertIn("ValueError", result["error"])
+
+    def test_ideal_computation_tools_log_results(self):
+        plan = load_plan_for_task(_CORE_QUALITY_TASK_ID)
+        query_record = plan.ideal_query[0]
+        code_record = plan.ideal_code[0]
+        query_file_path = query_record.source.split(f"/{query_record.dataset_id}/", 1)[-1]
+
+        cfg = RunConfig(
+            search_tool_mode="preloaded",
+            search_results_mode="naive",
+            agent_management_mode="naive",
+            computation_tool_mode="ideal",
+        )
+        bundle = build_mode_bundle(
+            cfg,
+            data_tools=[query_file, execute_code],
+            task_context={"task_id": _CORE_QUALITY_TASK_ID},
+        )
+        tool_by_name = {
+            tool_obj.tool_spec["name"]: tool_obj
+            for tool_obj in bundle.tools
+            if hasattr(tool_obj, "tool_spec")
+        }
+
+        plugin = LoggingPlugin()
+        agent = SimpleNamespace()
+        log_logger = logging.getLogger("strands_evaluation.instrumentation.agent_plugins")
+        previous_level = log_logger.level
+        _COMPUTATION_TRANSCRIPT_LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
+        handler = logging.FileHandler(_COMPUTATION_TRANSCRIPT_LOG_PATH, mode="w", encoding="utf-8")
+        handler.setLevel(logging.DEBUG)
+        handler.setFormatter(logging.Formatter("%(levelname)s | %(name)s | %(message)s"))
+        log_logger.setLevel(logging.DEBUG)
+        log_logger.addHandler(handler)
+
+        def run_logged_tool(tool_name: str, tool_input: dict) -> dict:
+            tool_use = {
+                "name": tool_name,
+                "toolUseId": f"{tool_name}-1",
+                "input": tool_input,
+            }
+            plugin.on_before_model(BeforeModelCallEvent(agent=agent, invocation_state={}))
+            plugin.on_after_model(
+                AfterModelCallEvent(
+                    agent=agent,
+                    invocation_state={},
+                    stop_response=AfterModelCallEvent.ModelStopResponse(
+                        message={
+                            "role": "assistant",
+                            "content": [{"toolUse": tool_use}],
+                        },
+                        stop_reason="tool_use",
+                    ),
+                )
+            )
+            plugin.on_before_tool(
+                BeforeToolCallEvent(
+                    agent=agent,
+                    selected_tool=tool_by_name[tool_name],
+                    tool_use=tool_use,
+                    invocation_state={},
+                )
+            )
+            result = tool_by_name[tool_name](**tool_input)
+            plugin.on_after_tool(
+                AfterToolCallEvent(
+                    agent=agent,
+                    selected_tool=tool_by_name[tool_name],
+                    tool_use=tool_use,
+                    invocation_state={},
+                    result={
+                        "toolUseId": tool_use["toolUseId"],
+                        "status": "success",
+                        "content": [{"text": json.dumps(result, sort_keys=True)}],
+                    },
+                )
+            )
+            return result
+
+        try:
+            plugin.on_agent_initialized(AgentInitializedEvent(agent=agent))
+            query_result = run_logged_tool(
+                "query_ideal",
+                {
+                    "dataset_id": query_record.dataset_id,
+                    "file_path": query_file_path,
+                    "sql": query_record.payload,
+                    "intent": query_record.intent,
+                },
+            )
+            execute_result = run_logged_tool(
+                "execute_ideal",
+                {
+                    "code": code_record.payload,
+                    "intent": code_record.intent,
+                },
+            )
+        finally:
+            log_logger.removeHandler(handler)
+            log_logger.setLevel(previous_level)
+            handler.close()
+
+        self.assertEqual(bundle.modes["computation_tool"], "ideal")
+        self.assertIn("query_ideal", tool_by_name)
+        self.assertIn("execute_ideal", tool_by_name)
+        self.assertNotIn("query_file", tool_by_name)
+        self.assertNotIn("execute_code", tool_by_name)
+        self.assertTrue(query_result["success"])
+        self.assertEqual(query_result["columns"], ["answer"])
+        self.assertEqual(query_result["rows"], [[query_record.answer]])
+        self.assertEqual(query_result["row_count"], 1)
+        self.assertFalse(query_result["truncated"])
+        self.assertNotIn("ideal_oracle", query_result)
+        self.assertNotIn("intent", query_result)
+        self.assertNotIn("source", query_result)
+        self.assertTrue(execute_result["success"])
+        self.assertEqual(execute_result["output"], str(code_record.answer))
+        self.assertNotIn("ideal_oracle", execute_result)
+        self.assertNotIn("intent", execute_result)
+        self.assertNotIn("source", execute_result)
+
+        row = {
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "task_id": _CORE_QUALITY_TASK_ID,
+            "plan_path": str(plan.plan_path),
+            "modes": dict(bundle.modes),
+            "tool_names": sorted(tool_by_name),
+            "results": {
+                "query_ideal": {
+                    "success": query_result.get("success"),
+                    "dataset_id": query_result.get("dataset_id"),
+                    "s3_uri": query_result.get("s3_uri"),
+                    "columns": query_result.get("columns"),
+                    "rows": query_result.get("rows"),
+                    "row_count": query_result.get("row_count"),
+                    "result_keys": sorted(query_result.keys()),
+                },
+                "execute_ideal": {
+                    "success": execute_result.get("success"),
+                    "output": execute_result.get("output"),
+                    "result_keys": sorted(execute_result.keys()),
+                },
+            },
+        }
+        _COMPUTATION_LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
+        _COMPUTATION_LOG_PATH.write_text(json.dumps(row, sort_keys=True) + "\n")
+        transcript = _COMPUTATION_TRANSCRIPT_LOG_PATH.read_text()
+        self.assertIn("[role=assistant block=1 tool_use] query_ideal(", transcript)
+        self.assertIn("Executing: query_ideal(", transcript)
+        self.assertIn("Tool result:", transcript)
+        self.assertIn("[role=assistant block=1 tool_use] execute_ideal(", transcript)
+        self.assertIn(query_record.dataset_id, transcript)
+        self.assertIn(str(query_record.answer), transcript)
 
 
 if __name__ == "__main__":
