@@ -30,7 +30,14 @@ class CategoryStagnationHandler(SteeringHandler):
                 "search_ideal",
             },
             "inspect": {"list_files", "peek_file", "peek_multiple", "get_sandbox_info", "read_file"},
-            "execute": {"execute_code", "execute_ideal", "query_file", "query_ideal", "grep_file"},
+            "execute": {
+                "execute_code",
+                "execute_ideal",
+                "query_file",
+                "query_ideal",
+                "parse_xml_records",
+                "grep_file",
+            },
         }
         self.category_thresholds = {
             "search": max_consecutive_category,

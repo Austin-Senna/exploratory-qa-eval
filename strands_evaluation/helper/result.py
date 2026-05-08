@@ -13,6 +13,7 @@ _API_TOOL_NAMES = {
     "search_keyword",
     "list_files",
     "peek_file",
+    "parse_xml_records",
     "query_file",
     "query_ideal",
     "download",

@@ -4,6 +4,7 @@ Data Lake Access Tools v2 for LLM Agent
 Improvements over v1 (agent_tools.py):
   - peek_file: range-GET + family detection + column headers (replaces inspect_file)
   - query_file: query S3 directly via DuckDB httpfs — no download needed
+  - parse_xml_records: stream XML/KML records into fields/counts without arbitrary Python
   - download_smart: budget-aware range-GET per content family, skips metadata/binary files
   - execute_code, search, search_keyword, list_files, get_sandbox_info, cleanup_sandbox: unchanged
 
@@ -233,10 +234,11 @@ def _rewrite_unqueryable_family_error(family: str) -> str:
     if family == "xml":
         return (
             "XML/KML was detected. query_file does not support XML because "
-            "there is no stable row model for arbitrary XML documents yet. "
-            "Use peek_file to inspect tags and schema fields, grep_file to "
-            "search for specific values, or download + execute_code with "
-            "xml.etree.ElementTree for custom extraction."
+            "SQL has no stable row model for arbitrary XML documents. "
+            "Use peek_file to inspect tags and schema fields, parse_xml_records "
+            "to extract/filter/group structured XML/KML records, grep_file to "
+            "search for specific values, or read_file to inspect nearby text. "
+            "Do not use query_file or execute_code for XML/KML sources."
         )
     if family == "text":
         return (
@@ -248,8 +250,8 @@ def _rewrite_unqueryable_family_error(family: str) -> str:
         f"File family '{family}' is not queryable with SQL via query_file "
         "(only CSV and JSON are supported). Use peek_file to inspect what "
         "the file actually contains, then pick a tool that matches its "
-        "format (read_file for text, download + execute_code for binary "
-        "or unsupported formats)."
+        "format. Do not use query_file or execute_code unless the source is "
+        "tabular or JSON."
     )
 
 
@@ -440,6 +442,89 @@ def _build_xml_preview(text: str, size_bytes: int) -> Dict[str, Any]:
         "xml_record_tag_candidates": _extract_xml_record_tag_candidates(text, root_tag),
         "xml_preview_mode": "heuristic",
     }
+
+
+def _coerce_string_list(value: Any) -> List[str]:
+    if value is None:
+        return []
+    if isinstance(value, str):
+        values = [value]
+    elif isinstance(value, (list, tuple, set)):
+        values = list(value)
+    else:
+        values = [value]
+    return [str(item).strip() for item in values if str(item).strip()]
+
+
+def _normalize_xml_record_tag(record_tag: str | None) -> str | None:
+    if not record_tag:
+        return None
+    tag = str(record_tag).strip().strip("<>/")
+    return _local_xml_name(tag)
+
+
+def _xml_text(elem: ET.Element) -> str:
+    return " ".join(part.strip() for part in elem.itertext() if part and part.strip())
+
+
+def _xml_record_to_row(record: ET.Element) -> Dict[str, str]:
+    """
+    Convert one XML/KML record element into a shallow row.
+
+    KML data.gov exports usually store useful attributes as
+    `<SimpleData name="FIELD">value</SimpleData>`. Plain XML often stores
+    useful values in leaf child tags. We support both without inventing a full
+    XML-to-table model.
+    """
+    row: Dict[str, str] = {}
+
+    for name, value in record.attrib.items():
+        field = _local_xml_name(name)
+        text = str(value).strip()
+        if field and text:
+            row[field] = text
+
+    for elem in record.iter():
+        if not isinstance(elem.tag, str):
+            continue
+        local = _local_xml_name(elem.tag)
+        if local == "SimpleData":
+            name = elem.attrib.get("name", "").strip()
+            text = _xml_text(elem)
+            if name and text:
+                row[name] = text
+
+    for elem in record.iter():
+        if elem is record or not isinstance(elem.tag, str):
+            continue
+        local = _local_xml_name(elem.tag)
+        if not local or local in {"ExtendedData", "SchemaData", "SimpleData", "SimpleField"}:
+            continue
+        if list(elem):
+            continue
+        text = _xml_text(elem)
+        if text and local not in row:
+            row[local] = text
+
+    return row
+
+
+def _xml_row_matches_filters(row: Dict[str, str], filters: Dict[str, Any]) -> bool:
+    for field, expected in filters.items():
+        actual = row.get(str(field))
+        if isinstance(expected, (list, tuple, set)):
+            allowed = {str(value) for value in expected}
+            if actual not in allowed:
+                return False
+        elif actual != str(expected):
+            return False
+    return True
+
+
+def _select_xml_row_fields(row: Dict[str, str], fields: List[str]) -> Dict[str, str]:
+    if not fields:
+        return row
+    return {field: row.get(field, "") for field in fields}
 
 
 # ---------------------------------------------------------------------------
@@ -879,7 +964,194 @@ def grep_file(
     return result
 
 # ---------------------------------------------------------------------------
-# Tool 4: query_file
+# Tool 4: parse_xml_records
+# ---------------------------------------------------------------------------
+
+@tool
+def parse_xml_records(
+    dataset_id: str | None = None,
+    file_path: str | None = None,
+    record_tag: str | None = None,
+    fields: Optional[List[str]] = None,
+    filters: Optional[Dict[str, Any]] = None,
+    group_by: Optional[List[str]] = None,
+    limit: int = 50,
+    s3_uri: str | None = None,
+) -> Dict[str, Any]:
+    """
+    Parse XML/KML records directly from S3 without downloading or executing
+    arbitrary Python.
+
+    Use this for XML/KML sources after peek_file has shown record tags/schema
+    fields. It supports KML SimpleData fields, plain XML leaf-tag fields,
+    exact-match filters, and COUNT-style grouping.
+
+    Do not use this for CSV/JSON; use query_file for those.
+
+    Args:
+        dataset_id: Dataset identifier (e.g. "public-school-locations-current-23297")
+        file_path: Relative path within the dataset (e.g. "files/schools.kml")
+        record_tag: XML tag for one logical record (e.g. "Placemark"). If omitted,
+                    parse_xml_records uses the first record candidate from peek_file.
+        fields: Optional field names to return for each matched record.
+        filters: Optional exact-match filters, e.g. {"STFIP": "06"}.
+        group_by: Optional field names to group by. When provided, rows contain
+                  the group fields plus "count".
+        limit: Maximum rows/groups to return, capped at 200.
+        s3_uri: Optional full object URI instead of dataset_id/file_path.
+
+    Returns:
+        Dict with keys: rows, row_count, scanned_records, matched_records,
+        truncated. On error: {error: ...}
+    """
+    timeout_seconds = _tool_timeout_seconds()
+    completed, result = _run_tool_with_timeout(
+        _parse_xml_records_impl,
+        dataset_id,
+        file_path,
+        record_tag,
+        fields,
+        filters,
+        group_by,
+        limit,
+        s3_uri,
+        timeout_seconds=timeout_seconds,
+    )
+    if completed:
+        return result or {"error": "parse_xml_records failed without returning a result"}
+
+    return {
+        "error": (
+            f"XML/KML parsing timed out after {timeout_seconds}s. "
+            "Use peek_file to confirm the record_tag and filters, then retry "
+            "with a narrower filter or lower limit."
+        )
+    }
+
+
+def _parse_xml_records_impl(
+    dataset_id: str | None = None,
+    file_path: str | None = None,
+    record_tag: str | None = None,
+    fields: Optional[List[str]] = None,
+    filters: Optional[Dict[str, Any]] = None,
+    group_by: Optional[List[str]] = None,
+    limit: int = 50,
+    s3_uri: str | None = None,
+) -> Dict[str, Any]:
+    fields_list = _coerce_string_list(fields)
+    group_fields = _coerce_string_list(group_by)
+    filters = filters if isinstance(filters, dict) else {}
+    try:
+        limit = max(1, min(int(limit), _QUERY_ROW_CAP))
+    except (TypeError, ValueError):
+        limit = 50
+
+    ref = _resolve_file_reference(dataset_id=dataset_id, file_path=file_path, s3_uri=s3_uri)
+    if "error" in ref:
+        return {"error": ref["error"]}
+
+    dataset_id = _strip_folder_prefix(ref["dataset_id"])
+    file_path = ref["file_path"]
+    s3_uri = ref["s3_uri"]
+    key = ref["key"]
+    s3 = _get_s3_client()
+
+    try:
+        size = _s3_head(s3, key)
+        end = min(_PEEK_BYTES - 1, size - 1)
+        raw = _s3_range_get(s3, key, 0, end)
+        text = raw.decode("utf-8", errors="replace")
+        family = detect_family(text)
+    except Exception as e:
+        return {"error": f"Could not inspect XML/KML file: {e}"}
+
+    if family != "xml":
+        return {
+            "error": (
+                f"parse_xml_records only supports XML/KML files. Detected {family!r}. "
+                "Use query_file for CSV/JSON or read_file/grep_file for text."
+            )
+        }
+
+    preview = _build_xml_preview(text, size)
+    chosen_record_tag = _normalize_xml_record_tag(record_tag)
+    if not chosen_record_tag:
+        candidates = preview.get("xml_record_tag_candidates") or []
+        chosen_record_tag = _normalize_xml_record_tag(candidates[0]) if candidates else None
+    if not chosen_record_tag:
+        return {
+            "error": (
+                "Could not infer an XML record_tag. Call peek_file first and pass one "
+                "of xml_record_tag_candidates to parse_xml_records."
+            ),
+            **preview,
+        }
+
+    rows: List[Dict[str, Any]] = []
+    groups: Counter = Counter()
+    scanned_records = 0
+    matched_records = 0
+    body = None
+
+    try:
+        resp = s3.get_object(Bucket=BUCKET, Key=key)
+        body = resp["Body"]
+        for _event, elem in ET.iterparse(body, events=("end",)):
+            if _local_xml_name(elem.tag) != chosen_record_tag:
+                continue
+
+            scanned_records += 1
+            row = _xml_record_to_row(elem)
+            if filters and not _xml_row_matches_filters(row, filters):
+                elem.clear()
+                continue
+
+            matched_records += 1
+            if group_fields:
+                group_key = tuple(row.get(field, "") for field in group_fields)
+                groups[group_key] += 1
+            elif len(rows) < limit:
+                rows.append(_select_xml_row_fields(row, fields_list))
+
+            elem.clear()
+    except ET.ParseError as e:
+        return {"error": f"XML/KML parse failed: {e}", "traceback": traceback.format_exc()}
+    except Exception as e:
+        return {"error": f"XML/KML stream parse failed: {e}", "traceback": traceback.format_exc()}
+    finally:
+        if body is not None and hasattr(body, "close"):
+            body.close()
+
+    if group_fields:
+        rows = []
+        for group_key, count in sorted(groups.items(), key=lambda item: (-item[1], item[0]))[:limit]:
+            group_row = {field: group_key[i] for i, field in enumerate(group_fields)}
+            group_row["count"] = count
+            rows.append(group_row)
+        truncated = len(groups) > limit
+    else:
+        truncated = matched_records > len(rows)
+
+    return {
+        "dataset_id": dataset_id,
+        "file_path": file_path,
+        "s3_uri": s3_uri,
+        "family": family,
+        "record_tag": chosen_record_tag,
+        "fields": fields_list,
+        "filters": filters,
+        "group_by": group_fields,
+        "scanned_records": scanned_records,
+        "matched_records": matched_records,
+        "rows": rows,
+        "row_count": len(rows),
+        "truncated": truncated,
+    }
+
+
+# ---------------------------------------------------------------------------
+# Tool 5: query_file
 # ---------------------------------------------------------------------------
 
 @tool
@@ -894,8 +1166,10 @@ def query_file(
     No download required. The file is referenced as table alias 't'.
 
     Supported file types: CSV (.csv), JSON (.json, .jsonl, .ndjson).
+    Do not use query_file for non-tabular/non-JSON sources such as
+    Wikipedia/content.txt, prose/plain text, XML/KML, HTML, PDFs, or binary files.
     XML/KML is detected but not queryable here; query_file returns a hint
-    to use peek_file, grep_file, or download + execute_code instead.
+    to use parse_xml_records, peek_file, grep_file, or read_file instead.
     Results are capped at 200 rows.
 
     Prefer `s3_uri` when list_files/search/preloaded results gave you one; it
@@ -930,7 +1204,7 @@ def query_file(
         "error": (
             f"Query timed out after {timeout_seconds}s. "
             "Narrow the SQL (SELECT fewer columns, add WHERE/GROUP BY/LIMIT), "
-            "or use download + execute_code for long-running work."
+            "or use download + execute_code for long-running tabular/JSON work."
         )
     }
 
@@ -962,14 +1236,22 @@ def _query_file_impl(
         s3 = _get_s3_client()
         key = ref["key"]
         size = _s3_head(s3, key)
-        if size > _QUERY_MAX_FILE_BYTES:
-            return {"error": f"File too large to query directly ({size // (1024*1024)} MB). Use download + execute_code instead."}
         end = min(_PEEK_BYTES - 1, size - 1)
         raw = _s3_range_get(s3, key, 0, end)
         text = raw.decode("utf-8", errors="replace")
         family = detect_family(text)
     except Exception as e:
         return {"error": f"Could not detect file family: {e}"}
+
+    if size > _QUERY_MAX_FILE_BYTES:
+        if family not in {"csv", "json"}:
+            return {"error": _rewrite_unqueryable_family_error(family)}
+        return {
+            "error": (
+                f"File too large to query directly ({size // (1024*1024)} MB). "
+                "Use download + execute_code only if the source is tabular or JSON."
+            )
+        }
 
     if family == "csv":
         reader = f"read_csv_auto('{s3_uri}', quote='\"')"
@@ -1057,6 +1339,7 @@ __all__ = [
     "peek_multiple",
     "read_file",
     "grep_file",
+    "parse_xml_records",
     "query_file",
     # re-exported from agent_tools
     "search",

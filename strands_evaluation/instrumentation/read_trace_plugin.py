@@ -19,7 +19,15 @@ from strands.plugins import hook
 import strands_evaluation.instrumentation.trace_plugin as _tp
 from strands_evaluation.instrumentation.trace_plugin import _normalize_dataset_id, _write_record
 
-_READ_TOOLS = {"read_file", "peek_file", "peek_multiple", "grep_file", "query_file", "query_ideal"}
+_READ_TOOLS = {
+    "read_file",
+    "peek_file",
+    "peek_multiple",
+    "grep_file",
+    "parse_xml_records",
+    "query_file",
+    "query_ideal",
+}
 
 def _extract_read_dataset_ids(tool_name: str, tool_input: dict) -> List[str]:
     """Return normalized dataset_id(s) from a read tool's input."""

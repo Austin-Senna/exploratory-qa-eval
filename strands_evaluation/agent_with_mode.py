@@ -68,6 +68,7 @@ from strands_evaluation.tools.agent_tools_v2 import (
     get_sandbox_info,
     grep_file,
     list_files,
+    parse_xml_records,
     peek_file,
     peek_multiple,
     query_file,
@@ -285,6 +286,10 @@ def build_mode_bundle(
         task_context=task_context,
     )
     system_prompt = inject_debug_prompt(system_prompt, run_config.debug_mode)
+    system_prompt = _inject_computation_file_family_prompt(
+        system_prompt,
+        computation_tool_mode=computation_tool_mode,
+    )
 
     data_tool_list = _apply_computation_tool_mode(
         data_tools,
@@ -346,6 +351,22 @@ def _inject_ideal_computation_prompt(system_prompt: str) -> str:
         "- `query_file` and `execute_code` are replaced in this run.\n"
         "- Use `query_ideal(..., intent=...)` for SQL-style computation and `execute_ideal(code, intent)` for Python computation.\n"
         "- Always write a concise intent describing the computation you are trying to perform.\n"
+    )
+    return system_prompt.rstrip() + section
+
+
+def _inject_computation_file_family_prompt(system_prompt: str, *, computation_tool_mode: str) -> str:
+    if computation_tool_mode == "ideal":
+        blocked_tools = "`query_file`, `execute_code`, `query_ideal`, or `execute_ideal`"
+    else:
+        blocked_tools = "`query_file` or `execute_code`"
+    section = (
+        "\n\n## COMPUTATION FILE FAMILY RULE\n"
+        f"- Do not use {blocked_tools} when the target source is non-tabular or non-JSON.\n"
+        "- Eligible computation sources are tabular or JSON-like files only: CSV/TSV/delimited tables, JSON, JSONL/NDJSON, or GeoJSON feature collections.\n"
+        "- For XML/KML, use `parse_xml_records` for structured records/counts, or `peek_file`, `grep_file`, and `read_file` for inspection/search.\n"
+        "- For Wikipedia/content.txt, prose/plain text, HTML, PDFs, binary files, or other non-tabular sources, use `read_file`, `grep_file`, or `peek_file` and extract the fact directly.\n"
+        "- Do not download a non-tabular/non-JSON source just to parse it with Python.\n"
     )
     return system_prompt.rstrip() + section
 
@@ -499,7 +520,7 @@ class DataLakeAgent:
         # Core data-manipulation tools shared across all conditions
         _data_tools = [
             list_files, peek_file, peek_multiple, read_file, grep_file,
-            query_file, download, execute_code, get_sandbox_info, cleanup_sandbox,
+            parse_xml_records, query_file, download, execute_code, get_sandbox_info, cleanup_sandbox,
             submit_answer,
         ]
 
@@ -845,6 +866,9 @@ def _run_task_worker(
     mode_search_tool = (run_config.search_tool_mode or "").strip().lower() or None
     if mode_search_tool is None:
         mode_search_tool = "naive"
+    mode_computation_tool = (run_config.computation_tool_mode or "").strip().lower() or None
+    if mode_computation_tool is None:
+        mode_computation_tool = "standard"
 
     if mode_search_tool == "standard" and _CONDITION_A_TOOLS_AVAILABLE:
         try:
@@ -928,6 +952,11 @@ def _run_task_worker(
 
         # Per-tool breakdown (for tools CSV) — List[Dict], pickle-safe
         result_dict["tool_counts"]      = result.get_tool_counts()
+
+        if mode_computation_tool == "ideal":
+            from strands_evaluation.tools.external.ideal import computation_ideal as _ci
+
+            result_dict.update(_ci.get_stats())
 
         # Compute accuracy metrics if ground truth available
         if task.get("answer"):

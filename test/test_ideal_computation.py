@@ -17,6 +17,7 @@ from strands.hooks.events import (
 
 from strands_evaluation.agent_with_mode import build_mode_bundle
 from strands_evaluation.config import RunConfig
+from strands_evaluation.instrumentation.trace_plugin import set_trace_context
 from strands_evaluation.instrumentation.agent_plugins import LoggingPlugin
 from strands_evaluation.tools.agent_tools import execute_code
 from strands_evaluation.tools.agent_tools_v2 import query_file
@@ -202,6 +203,153 @@ class IdealComputationToolTests(unittest.TestCase):
         self.assertNotIn("repair_attempts", result)
         self.assertNotIn("repairs", result)
         self.assertIn("ValueError", result["error"])
+
+    def test_repair_agent_calls_are_counted_and_traced(self):
+        trace_root = Path(self._tmp.name) / "traces"
+        set_trace_context(
+            "tasks_mini/k-1-d-1/task_1.json",
+            [],
+            str(trace_root),
+        )
+
+        class _RepairAgent:
+            def __init__(self, *args, **kwargs):
+                self.tools = kwargs["tools"]
+                self.plugins = kwargs.get("plugins", [])
+                self.__class__.last_plugins = self.plugins
+
+            def __call__(self, prompt: str) -> None:
+                _ = prompt
+                self.tools[0](code="print(7)", reason="matched authored computation")
+
+        with patch.object(computation_ideal, "Agent", _RepairAgent), patch.object(
+            computation_ideal,
+            "_repair_model",
+            return_value="fake-model",
+        ), patch.object(
+            computation_ideal,
+            "_base_execute_code",
+            return_value={"success": True, "output": "7"},
+        ):
+            result = computation_ideal.execute_ideal._tool_func(
+                code="print('not a plan match')",
+                intent="not in the plan",
+            )
+
+        self.assertEqual(result, {"success": True, "output": "7"})
+        self.assertTrue(
+            any(isinstance(plugin, LoggingPlugin) for plugin in _RepairAgent.last_plugins)
+        )
+        self.assertEqual(
+            computation_ideal.get_stats(),
+            {
+                "execute_ideal_agent_repair_calls": 1,
+                "query_ideal_agent_repair_calls": 0,
+            },
+        )
+        trace_path = trace_root / "k-1-d-1" / "task_1.jsonl"
+        events = [json.loads(line) for line in trace_path.read_text().splitlines()]
+        self.assertEqual(
+            [event["event"] for event in events],
+            ["repair_agent_invoked", "repair_agent_completed"],
+        )
+        self.assertEqual(events[0]["tool"], "execute_ideal")
+        self.assertEqual(events[0]["attempt"], 1)
+        self.assertEqual(events[1]["repair_reason"], "matched authored computation")
+        self.assertIn("submitted_code", events[1])
+
+    def test_repair_stats_reset_with_task_context(self):
+        with patch.object(
+            computation_ideal,
+            "_repair_code",
+            return_value={"code": "print(7)", "reason": "fixed"},
+        ), patch.object(
+            computation_ideal,
+            "_base_execute_code",
+            return_value={"success": True, "output": "7"},
+        ):
+            computation_ideal.execute_ideal._tool_func(
+                code="print('not a plan match')",
+                intent="not in the plan",
+            )
+
+        self.assertEqual(computation_ideal.get_stats()["execute_ideal_agent_repair_calls"], 1)
+        computation_ideal.set_task_context({"task_id": "tasks_mini/k-1-d-1/task_1.json"})
+        self.assertEqual(
+            computation_ideal.get_stats(),
+            {
+                "execute_ideal_agent_repair_calls": 0,
+                "query_ideal_agent_repair_calls": 0,
+            },
+        )
+
+    def test_execute_repair_prompt_includes_target_dataset_context(self):
+        captured: dict[str, str] = {}
+
+        class _PromptCapturingAgent:
+            def __init__(self, *args, **kwargs):
+                self.tools = kwargs["tools"]
+
+            def __call__(self, prompt: str) -> None:
+                captured["prompt"] = prompt
+                self.tools[0](code="print(7)", reason="context was sufficient")
+
+        with patch.object(computation_ideal, "Agent", _PromptCapturingAgent), patch.object(
+            computation_ideal,
+            "_repair_model",
+            return_value="fake-model",
+        ), patch.object(
+            computation_ideal,
+            "_base_execute_code",
+            return_value={"success": True, "output": "7"},
+        ), patch.object(
+            computation_ideal,
+            "_enhanced_peek_context",
+            return_value='{"dataset_description": "Target dataset description", "enhanced_peek_file": {"header_columns": ["value"]}}',
+        ):
+            computation_ideal.execute_ideal._tool_func(
+                code="print('not a plan match')",
+                intent="not in the plan",
+            )
+
+        self.assertIn("Target dataset context", captured["prompt"])
+        self.assertIn("Target dataset description", captured["prompt"])
+        self.assertIn("enhanced_peek_file", captured["prompt"])
+
+    def test_query_repair_prompt_includes_enhanced_peek_context(self):
+        captured: dict[str, str] = {}
+
+        class _PromptCapturingAgent:
+            def __init__(self, *args, **kwargs):
+                self.tools = kwargs["tools"]
+
+            def __call__(self, prompt: str) -> None:
+                captured["prompt"] = prompt
+                self.tools[0](sql="SELECT 7 AS answer", reason="context was sufficient")
+
+        with patch.object(computation_ideal, "Agent", _PromptCapturingAgent), patch.object(
+            computation_ideal,
+            "_repair_model",
+            return_value="fake-model",
+        ), patch.object(
+            computation_ideal,
+            "_base_query_file",
+            return_value={"success": True, "rows": [[7]], "columns": ["answer"]},
+        ), patch.object(
+            computation_ideal,
+            "_enhanced_peek_context",
+            return_value='{"dataset_description": "Target query description", "enhanced_peek_file": {"header_columns": ["n"]}}',
+        ):
+            computation_ideal.query_ideal._tool_func(
+                dataset_id="ds_a",
+                file_path="files/rows.txt",
+                sql="SELECT bad FROM t",
+                intent="not in the plan",
+            )
+
+        self.assertIn("Target dataset context", captured["prompt"])
+        self.assertIn("Target query description", captured["prompt"])
+        self.assertIn("enhanced_peek_file", captured["prompt"])
 
     def test_ideal_computation_tools_log_results(self):
         plan = load_plan_for_task(_CORE_QUALITY_TASK_ID)

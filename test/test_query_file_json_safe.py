@@ -463,10 +463,20 @@ class TestRewriteUnqueryableFamilyError(unittest.TestCase):
         # Explicitly says query_file doesn't apply
         self.assertIn("query_file", msg)
 
+    def test_xml_family_message_does_not_suggest_execute_code(self):
+        msg = _rewrite_unqueryable_family_error("xml")
+        self.assertIn("XML/KML", msg)
+        self.assertIn("parse_xml_records", msg)
+        self.assertIn("peek_file", msg)
+        self.assertIn("grep_file", msg)
+        self.assertNotIn("download + execute_code", msg)
+        self.assertNotIn("xml.etree.ElementTree", msg)
+
     def test_unknown_family_message_still_useful(self):
         msg = _rewrite_unqueryable_family_error("binary")
         self.assertIn("binary", msg)
         self.assertIn("query_file", msg)
+        self.assertNotIn("download + execute_code", msg)
 
 
 class TestStripFolderPrefix(unittest.TestCase):
@@ -672,6 +682,18 @@ class TestRewriteExecuteCodeError(unittest.TestCase):
         hint = _rewrite_execute_code_error(err, tb)
         self.assertIsNotNone(hint)
         self.assertIn("peek_file", hint)
+        self.assertIn("parse_xml_records", hint)
+        self.assertIn("Do not use execute_code", hint)
+
+    def test_execute_code_docstring_points_xml_to_parse_xml_records(self):
+        fn = getattr(
+            execute_code,
+            "_tool_func",
+            getattr(execute_code, "original_function", execute_code),
+        )
+        doc = fn.__doc__ or ""
+        self.assertIn("XML/KML", doc)
+        self.assertIn("parse_xml_records", doc)
 
     def test_unknown_error_returns_none(self):
         # Errors we don't have a pattern for should pass through unchanged

@@ -1110,7 +1110,8 @@ def _rewrite_execute_code_error(error_str: str, traceback_str: str) -> Optional[
     if "ParseError" in combined and "not well-formed" in combined:
         return (
             "XML parser hit a non-XML file. Use peek_file to check the family "
-            "before parsing."
+            "before parsing. For XML/KML structured records, use parse_xml_records. "
+            "Do not use execute_code for XML/KML extraction."
         )
 
     return None
@@ -1120,6 +1121,10 @@ def _rewrite_execute_code_error(error_str: str, traceback_str: str) -> Optional[
 def execute_code(code: str) -> Dict[str, Any]:
     """
     Execute Python code in a sandbox environment with access to downloaded files.
+    Use only for tabular or JSON-like sources. Do not use execute_code to
+    parse Wikipedia/content.txt, prose/plain text, XML/KML, HTML, PDFs, binary
+    files, or other non-tabular/non-JSON sources. Use parse_xml_records for
+    XML/KML structured records.
 
     The code runs with:
     - Working directory set to the sandbox directory
@@ -1129,7 +1134,8 @@ def execute_code(code: str) -> Dict[str, Any]:
     - Variable `FILES` containing list of downloaded file paths
 
     Write your analysis code and print() results. The printed output will be returned.
-    You can use this tool both to query data and to view/preview files (txt, csv, etc).
+    Do not use this tool to view or extract facts from non-tabular text files;
+    use read_file or grep_file for those sources.
     Note: execution has a timeout; avoid inefficient code.
 
     For large JSON files (100+ MB), use the pre-imported `ijson` module to
