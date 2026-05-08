@@ -1,4 +1,3 @@
-import contextlib
 import io
 import json
 import unittest
@@ -6,7 +5,6 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from strands_evaluation.config import RunConfig
-import strands_evaluation.preflight as preflight
 from strands_evaluation.preflight import run_preflight
 from strands_evaluation.tools.external.ideal.plan_store import set_plans_root
 
@@ -19,7 +17,7 @@ class PreflightModeTests(unittest.TestCase):
         cfg = RunConfig(
             search_tool_mode="preloaded",
             search_results_mode="ideal",
-            agent_management_mode="ideal",
+            plan_mode="ideal",
         )
         output = io.StringIO()
         checks = run_preflight(
@@ -35,7 +33,7 @@ class PreflightModeTests(unittest.TestCase):
         self.assertNotIn("datagov_tables_schemas_full.jsonl", names)
         self.assertIn("Preflight OK", output.getvalue())
 
-    def test_ideal_computation_preflight_requires_code_and_query_records(self):
+    def test_ideal_computation_preflight_allows_missing_code_and_query_records(self):
         with TemporaryDirectory() as tmpdir:
             plans_root = Path(tmpdir) / "plans_mini"
             target = plans_root / "k-1-d-1"
@@ -53,16 +51,21 @@ class PreflightModeTests(unittest.TestCase):
             cfg = RunConfig(
                 search_tool_mode="preloaded",
                 search_results_mode="naive",
-                agent_management_mode="naive",
+                plan_mode="naive",
                 computation_tool_mode="ideal",
             )
 
-            with self.assertRaises(preflight.PreflightError):
-                run_preflight(
-                    cfg,
-                    ["tasks_mini/k-1-d-1/task_1.json"],
-                    stream=io.StringIO(),
-                )
+            checks = run_preflight(
+                cfg,
+                ["tasks_mini/k-1-d-1/task_1.json"],
+                stream=io.StringIO(),
+            )
+
+        by_name = {check.name: check for check in checks}
+        self.assertIn("ideal_query:tasks_mini/k-1-d-1/task_1.json", by_name)
+        self.assertIn("ideal_code:tasks_mini/k-1-d-1/task_1.json", by_name)
+        self.assertIn("no authored ideal_query records", by_name["ideal_query:tasks_mini/k-1-d-1/task_1.json"].detail)
+        self.assertIn("no authored ideal_code records", by_name["ideal_code:tasks_mini/k-1-d-1/task_1.json"].detail)
 
     def test_ideal_computation_preflight_accepts_code_and_query_records(self):
         with TemporaryDirectory() as tmpdir:
@@ -100,7 +103,7 @@ class PreflightModeTests(unittest.TestCase):
             cfg = RunConfig(
                 search_tool_mode="preloaded",
                 search_results_mode="naive",
-                agent_management_mode="naive",
+                plan_mode="naive",
                 computation_tool_mode="ideal",
             )
 

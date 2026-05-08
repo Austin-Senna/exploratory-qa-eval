@@ -630,7 +630,7 @@ class TestSearchIdealFlagMatrix(unittest.TestCase):
                         cfg = RunConfig(
                             search_tool_mode="ideal",
                             search_results_mode=search_results_mode,
-                            agent_management_mode="naive",
+                            plan_mode="naive",
                             computation_tool_mode="standard",
                             search_free=False,
                             search_lessguide=search_lessguide,
@@ -657,7 +657,7 @@ class TestSearchIdealFlagMatrix(unittest.TestCase):
                         self.assertEqual(bundle.search_tool_names, ("search_ideal",))
                         self.assertEqual(bundle.modes["search_tool"], "ideal")
                         self.assertEqual(bundle.modes["search_results"], search_results_mode)
-                        self.assertEqual(bundle.modes["agent_management"], "naive")
+                        self.assertEqual(bundle.modes["plan"], "naive")
                         self.assertEqual(bundle.modes["computation_tool"], "standard")
                         if search_lessguide:
                             self.assertNotIn("plan_exhausted", result)
@@ -669,7 +669,7 @@ class TestSearchIdealFlagMatrix(unittest.TestCase):
                             {
                                 "search_tool": "ideal",
                                 "search_results": search_results_mode,
-                                "agent_management": "naive",
+                                "plan": "naive",
                                 "computation_tool": "standard",
                                 "search_free": False,
                                 "search_lessguide": search_lessguide,
@@ -712,7 +712,7 @@ class TestSearchIdealFlagMatrix(unittest.TestCase):
             cfg = RunConfig(
                 search_tool_mode="ideal",
                 search_results_mode=search_results_mode,
-                agent_management_mode="naive",
+                plan_mode="naive",
                 computation_tool_mode="standard",
                 search_free=False,
                 search_lessguide=search_lessguide,

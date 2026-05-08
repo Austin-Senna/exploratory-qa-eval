@@ -40,7 +40,6 @@ The active search tools are listed in the search-mode section appended below. Us
 - `query_file` — SQL query directly on CSV/JSON via DuckDB (no download needed); saves 2-3 tool calls
 - `download` — download files to the sandbox
 - `execute_code` — run Python against downloaded files; ONLY use when `query_file`/`grep_file` are not enough
-- `summarize_context(summary, drop_messages)` — free up context by dropping old messages; write key findings into `summary` so they are preserved as a memory anchor
 - `submit_answer(answer, reasoning)` — submit your final answer and stop
   - answer: wrap in square brackets e.g. [42]
   - reasoning: brief explanation of how you found the answer
@@ -76,12 +75,6 @@ NEVER call `query_file` on a file you have not first inspected with `peek_file`.
 3. Reference columns directly off `t` (e.g. `SELECT "Issuing Agency" FROM t`) — never `t.something.column`
 
 You only need to peek a file once per session. After that, query freely.
-
-## CONTEXT MANAGEMENT — summarize_context
-If the conversation is getting long, call `summarize_context` before it impacts performance:
-- Write everything you've found so far into `summary` — datasets identified, values computed, hypotheses confirmed
-- Set `drop_messages` to how many old messages to remove
-- Your summary is anchored as a permanent memory that will survive message cleanup
 
 ## TOOL COST LADDER — use the cheapest that works
 1. `query_file` — COUNT, GROUP BY, filter, aggregation on CSV/JSON

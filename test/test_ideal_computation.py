@@ -690,7 +690,7 @@ class IdealComputationToolTests(unittest.TestCase):
         cfg = RunConfig(
             search_tool_mode="preloaded",
             search_results_mode="naive",
-            agent_management_mode="naive",
+            plan_mode="naive",
             computation_tool_mode="ideal",
         )
         bundle = build_mode_bundle(

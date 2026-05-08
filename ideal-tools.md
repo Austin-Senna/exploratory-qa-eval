@@ -31,7 +31,7 @@ authored computation records before returning the plan.
 Ideal planning lives in
 `strands_evaluation/tools/external/ideal/plan_ideal.py`.
 
-When `agent_management_mode == "ideal"`, `agent_with_mode.py` loads the
+When `plan_mode == "ideal"`, `agent_with_mode.py` loads the
 ideal plan, injects `reasoning_chain_text` into the system prompt as
 `GOLD REASONING CHAIN`, and swaps the normal `plan` tool for `plan_ideal`.
 
@@ -97,13 +97,13 @@ The central assembler is `build_mode_bundle()` in
 
 - `search_tool_mode`
 - `search_results_mode`
-- `agent_management_mode`
+- `plan_mode`
 - `computation_tool_mode`
 
 Then it builds the final tool list:
 
 ```python
-tools = list(search_tools) + list(management_tools) + list(data_tool_list)
+tools = list(search_tools) + list(plan_tools) + list(data_tool_list)
 ```
 
 That bundle is used when constructing the Strands `Agent`, along with the
@@ -114,7 +114,8 @@ The CLI exposes these axes in `strands_evaluation/run_mode_eval.py`:
 
 - `--search_tool`
 - `--search_results`
-- `--agent_management`
+- `--plan`
+- `--skills`
 - `--computation_tool`
 
 In short:

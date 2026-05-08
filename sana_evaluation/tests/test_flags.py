@@ -61,34 +61,34 @@ def test_sprint_accepts_commitment_mode() -> None:
     assert flags.sprint is True
     assert flags.sprint_mode == "commitment"
     assert flags.commitment_budget_calls == 4
-    flags.validate(agent_management="standard")
+    flags.validate(plan_mode="standard")
 
 
 def test_sprint_rejects_unknown_mode() -> None:
     flags = SanaFlags(sprint=True, sprint_mode="bogus")
     with pytest.raises(ValueError, match="sprint_mode"):
-        flags.validate(agent_management="standard")
+        flags.validate(plan_mode="standard")
 
 
 def test_commitment_budget_calls_must_be_positive() -> None:
     flags = SanaFlags(sprint=True, sprint_mode="commitment", commitment_budget_calls=0)
     with pytest.raises(ValueError, match="commitment_budget_calls"):
-        flags.validate(agent_management="standard")
+        flags.validate(plan_mode="standard")
 
 
 def test_sprint_requires_management() -> None:
     flags = SanaFlags(sprint=True)
-    with pytest.raises(ValueError, match="sprint requires agent_management"):
-        flags.validate(agent_management="naive")
+    with pytest.raises(ValueError, match="sprint requires plan"):
+        flags.validate(plan_mode="naive")
 
 
 def test_sprint_ok_with_standard() -> None:
     flags = SanaFlags(sprint=True)
-    flags.validate(agent_management="standard")
-    flags.validate(agent_management="ideal")
+    flags.validate(plan_mode="standard")
+    flags.validate(plan_mode="ideal")
 
 
 def test_macro_reflection_k_must_be_positive() -> None:
     flags = SanaFlags(macro_reflection_k=0)
     with pytest.raises(ValueError, match="macro_reflection_k"):
-        flags.validate(agent_management="naive")
+        flags.validate(plan_mode="naive")

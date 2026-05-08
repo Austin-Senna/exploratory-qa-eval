@@ -6,11 +6,11 @@ A SoK-aligned runtime-control framework layered on top of the `strands_evaluatio
 
 ## Feature flags
 
-Three opt-in flags, all default off. Validated by `SanaFlags.validate(agent_management=...)` at startup.
+Three opt-in flags, all default off. Validated by `SanaFlags.validate(plan_mode=...)` at startup.
 
 | Flag      | What it does                                                                    | Dependencies                           |
 |-----------|---------------------------------------------------------------------------------|----------------------------------------|
-| `sprint`  | k-turn sprint reflection or source commitment control, submitted with a tool    | `agent_management ∈ {standard, ideal}` |
+| `sprint`  | k-turn sprint reflection or source commitment control, submitted with a tool    | `plan ∈ {standard, ideal}` |
 | `cot`     | Structured pre/post tool-use records                                            | —                                      |
 | `results` | `peek_file` returns a `profile` field (column stats, top rows, llm_description) | —                                      |
 
@@ -22,7 +22,7 @@ CLI:
 
 ```bash
 python -m sana_evaluation.run_sana_eval \
-  --search-tool preloaded --search-results ideal --agent-management standard \
+  --search_tool preloaded --search_results ideal --plan standard --skills off \
   --sana-feature sprint --sana-feature cot --sana-feature results \
   --sprint-mode commitment --commitment-budget-calls 3 \
   --task-set tasks_mini --model gpt-5.4-nano

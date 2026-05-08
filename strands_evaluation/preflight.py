@@ -28,8 +28,8 @@ class PreflightError(RuntimeError):
     """Raised when one or more preflight checks fail."""
 
 
-def _prompt_files_for_modes(search_tool_mode: str, agent_management_mode: str) -> List[Path]:
-    base_name = "baseline.txt" if agent_management_mode == "naive" else "managed.txt"
+def _prompt_files_for_modes(search_tool_mode: str, plan_mode: str) -> List[Path]:
+    base_name = "baseline.txt" if plan_mode == "naive" else "managed.txt"
     overlay_name = f"search_{search_tool_mode}.txt"
     return [_PROMPTS_DIR / base_name, _PROMPTS_DIR / overlay_name]
 
@@ -200,19 +200,19 @@ def run_preflight(
 
     st = (run_config.search_tool_mode or "standard").strip().lower()
     sr = (run_config.search_results_mode or "naive").strip().lower()
-    am = (run_config.agent_management_mode or "standard").strip().lower()
+    pm = (run_config.plan_mode or "standard").strip().lower()
     ct = (getattr(run_config, "computation_tool_mode", None) or "standard").strip().lower()
 
     checks: List[PreflightCheck] = []
 
-    for prompt_path in _prompt_files_for_modes(st, am):
+    for prompt_path in _prompt_files_for_modes(st, pm):
         checks.append(_check_file_exists(prompt_path, f"prompt:{prompt_path.name}"))
 
     if st in {"standard", "naive"}:
         db_path = Path(run_config.search_db_path or "./lance_data")
         checks.append(_check_lance_db(db_path))
 
-    if st in {"ideal", "preloaded"} or am == "ideal" or ct == "ideal":
+    if st in {"ideal", "preloaded"} or pm == "ideal" or ct == "ideal":
         if not task_files:
             checks.append(
                 PreflightCheck(
@@ -246,6 +246,10 @@ def run_preflight(
             checks.append(_check_desc_cache_for_enrichment())
         checks.append(_check_snippet_cache())
         checks.append(_check_schemas_jsonl_load())
+
+    sana_flags = getattr(run_config, "sana_flags", None)
+    if getattr(sana_flags, "results", False):
+        checks.append(_check_profiles_jsonl())
 
     ok_count = sum(1 for c in checks if c.ok)
     fail_count = len(checks) - ok_count

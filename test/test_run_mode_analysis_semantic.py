@@ -7,10 +7,17 @@ from tempfile import TemporaryDirectory
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from analysis.run_mode_analysis_semantic import run_analysis
+from analysis.run_mode_analysis_semantic import _parse_variant, run_analysis
 
 
 class TestRunModeAnalysisSemantic(unittest.TestCase):
+    def test_parse_variant_exposes_plan_and_skills_axes(self):
+        axes = _parse_variant("search_p_results_i_pland_computei_skills_on")
+        self.assertEqual(axes["plan"], "standard")
+        self.assertEqual(axes["skills"], "on")
+        self.assertNotIn("agent_management", axes)
+        self.assertNotIn("plan_skills", axes)
+
     def _write_eval_results(self, path: Path, rows: list[dict]) -> None:
         path.parent.mkdir(parents=True, exist_ok=True)
         fieldnames = [

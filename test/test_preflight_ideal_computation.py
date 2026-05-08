@@ -37,7 +37,7 @@ class IdealComputationPreflightTests(unittest.TestCase):
                 RunConfig(
                     search_tool_mode="preloaded",
                     search_results_mode="naive",
-                    agent_management_mode="naive",
+                    plan_mode="naive",
                     computation_tool_mode="ideal",
                 ),
                 ["tasks_mini/k-1-d-1/task_text.json"],

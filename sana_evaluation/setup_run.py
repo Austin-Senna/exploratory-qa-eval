@@ -14,6 +14,7 @@ _SEARCH_MODE_CHOICES = ("naive", "preloaded", "standard", "ideal")
 _MANAGEMENT_MODE_CHOICES = ("naive", "standard", "ideal")
 _RESULT_MODE_CHOICES = ("naive", "ideal")
 _COMPUTATION_MODE_CHOICES = ("standard", "ideal")
+_SKILLS_CHOICES = ("on", "off")
 _SHORTCUT_MODE_CHOICES = ("preloaded", "ideal")
 _SANA_FEATURE_CHOICES = ("cot", "results", "sprint")
 _SPRINT_MODE_CHOICES = ("cadence", "commitment")
@@ -47,7 +48,15 @@ def _build_parser() -> argparse.ArgumentParser:
     common = argparse.ArgumentParser(add_help=False)
     common.add_argument("--search", choices=_SEARCH_MODE_CHOICES, default=None)
     common.add_argument("--results", choices=_RESULT_MODE_CHOICES, default=None)
-    common.add_argument("--plan", choices=_MANAGEMENT_MODE_CHOICES, default=None)
+    common.add_argument(
+        "--plan",
+        "--agent-management",
+        "--agent_management",
+        dest="plan",
+        choices=_MANAGEMENT_MODE_CHOICES,
+        default=None,
+    )
+    common.add_argument("--skills", choices=_SKILLS_CHOICES, default=None)
     common.add_argument("--compute", choices=_COMPUTATION_MODE_CHOICES, default=None)
     common.add_argument(
         "--mode",
@@ -228,7 +237,7 @@ def _build_sana_command(args: argparse.Namespace, cwd: Path) -> tuple[list[str],
         args.search,
         "--search_results",
         args.results,
-        "--agent_management",
+        "--plan",
         args.plan,
         "--model-name",
         model_name,
@@ -244,6 +253,8 @@ def _build_sana_command(args: argparse.Namespace, cwd: Path) -> tuple[list[str],
         command.extend(["--search-calls", str(args.search_calls)])
     if args.compute is not None:
         command.extend(["--computation_tool", args.compute])
+    if args.skills is not None:
+        command.extend(["--skills", args.skills])
     if args.reasoning_effort is not None:
         command.extend(["--reasoning-effort", args.reasoning_effort])
     if args.openai_prompt_cache_key is not None:

@@ -172,7 +172,7 @@ LOG_ERROR_BUCKET_DISPLAY = {
     "error_unknown": "Unknown",
 }
 
-_LETTER_TO_MODE = {"n": "naive", "d": "standard", "i": "ideal"}
+_LETTER_TO_MODE = {"n": "naive", "d": "standard", "i": "ideal", "p": "preloaded"}
 _MODE_PRIORITY = {"ideal": 0, "standard": 1, "naive": 2, None: 3}
 _UNIMPORTANT_TOOLS = {"get_sandbox_info", "submit_answer", "plan", "think"}
 _MODE_DISPLAY = {"ideal": "Ideal", "standard": "Std", "naive": "Naive", None: "?"}
@@ -227,7 +227,8 @@ def _parse_variant(variant: str) -> Dict[str, Optional[object]]:
         "variant": variant,
         "search_tool": None,
         "search_results": None,
-        "agent_management": None,
+        "plan": None,
+        "skills": None,
         "k": None,
         "sc": None,
     }
@@ -238,7 +239,9 @@ def _parse_variant(variant: str) -> Dict[str, Optional[object]]:
         elif token == "results" and idx + 1 < len(parts):
             out["search_results"] = _LETTER_TO_MODE.get(parts[idx + 1])
         elif token.startswith("plan") and len(token) > 4:
-            out["agent_management"] = _LETTER_TO_MODE.get(token[4:])
+            out["plan"] = _LETTER_TO_MODE.get(token[4:])
+        elif token == "skills" and idx + 1 < len(parts):
+            out["skills"] = parts[idx + 1]
         elif token.startswith("k") and token[1:].isdigit():
             out["k"] = int(token[1:])
         elif token.startswith("sc") and token[2:].isdigit():
@@ -251,6 +254,7 @@ def _parse_variant_mode_codes(variant: str) -> Dict[str, Optional[str]]:
         "search": None,
         "results": None,
         "plan": None,
+        "skills": None,
         "k": None,
         "sc": None,
     }
@@ -262,6 +266,8 @@ def _parse_variant_mode_codes(variant: str) -> Dict[str, Optional[str]]:
             out["results"] = parts[idx + 1]
         elif token.startswith("plan") and len(token) > 4:
             out["plan"] = token[4:]
+        elif token == "skills" and idx + 1 < len(parts):
+            out["skills"] = parts[idx + 1]
         elif token.startswith("k") and token[1:].isdigit():
             out["k"] = token[1:]
         elif token.startswith("sc") and token[2:].isdigit():
@@ -282,6 +288,8 @@ def _compact_variant_label(variant: str, *, multiline: bool = False) -> str:
         parts.append(f"R:{_mode_display(_LETTER_TO_MODE.get(codes['results']))}")
     if codes.get("plan"):
         parts.append(f"P:{_mode_display(_LETTER_TO_MODE.get(codes['plan']))}")
+    if codes.get("skills") == "on":
+        parts.append("Skills:on")
     if codes.get("k") and codes.get("k") != "5":
         parts.append(f"k={codes['k']}")
     if codes.get("sc"):
@@ -294,13 +302,13 @@ def _compact_variant_label(variant: str, *, multiline: bool = False) -> str:
 def _variant_sort_key(variant: str) -> tuple:
     axes = _parse_variant(variant)
     search_tool = axes.get("search_tool")
-    agent_management = axes.get("agent_management")
+    plan = axes.get("plan")
 
-    if search_tool == "ideal" and agent_management == "ideal":
+    if search_tool == "ideal" and plan == "ideal":
         ideal_group = 0
     elif search_tool == "ideal":
         ideal_group = 1
-    elif agent_management == "ideal":
+    elif plan == "ideal":
         ideal_group = 2
     else:
         ideal_group = 3
@@ -308,7 +316,7 @@ def _variant_sort_key(variant: str) -> tuple:
     return (
         ideal_group,
         _MODE_PRIORITY.get(search_tool, 4),
-        _MODE_PRIORITY.get(agent_management, 4),
+        _MODE_PRIORITY.get(plan, 4),
         _MODE_PRIORITY.get(axes.get("search_results"), 4),
         axes.get("k") if axes.get("k") is not None else 10**9,
         axes.get("sc") if axes.get("sc") is not None else 10**9,
@@ -476,7 +484,8 @@ def _normalize_eval_row(row: dict, model: str, variant: str, csv_path: Path) -> 
     normalized["model_dir"] = model
     normalized["search_tool"] = axes["search_tool"]
     normalized["search_results"] = axes["search_results"]
-    normalized["agent_management"] = axes["agent_management"]
+    normalized["plan"] = axes["plan"]
+    normalized["skills"] = axes["skills"]
     normalized["k"] = axes["k"]
     normalized["sc"] = axes["sc"]
     normalized["task_stem"] = make_task_stem_key(task_id) if task_id else ""
@@ -966,7 +975,8 @@ def _init_binned_outcome_row(model: str, variant: str, bin_labels: List[str]) ->
         "variant": variant,
         "search_tool": axes["search_tool"],
         "search_results": axes["search_results"],
-        "agent_management": axes["agent_management"],
+        "plan": axes["plan"],
+        "skills": axes["skills"],
         "k": axes["k"],
         "sc": axes["sc"],
         "bins": {label: _empty_bucket_entry() for label in bin_labels},
@@ -1045,7 +1055,8 @@ def build_summary(
             "variant": variant,
             "search_tool": axes["search_tool"],
             "search_results": axes["search_results"],
-            "agent_management": axes["agent_management"],
+            "plan": axes["plan"],
+            "skills": axes["skills"],
             "k": axes["k"],
             "sc": axes["sc"],
             "n": n,
@@ -1180,7 +1191,8 @@ def build_variant_summary(summary_rows: List[dict]) -> List[dict]:
             "variant": variant,
             "search_tool": axes["search_tool"],
             "search_results": axes["search_results"],
-            "agent_management": axes["agent_management"],
+            "plan": axes["plan"],
+            "skills": axes["skills"],
             "k": axes["k"],
             "sc": axes["sc"],
             "n_total": total_n,
@@ -1534,7 +1546,8 @@ def build_per_task_rows(
                 "variant": variant,
                 "search_tool": axes["search_tool"],
                 "search_results": axes["search_results"],
-                "agent_management": axes["agent_management"],
+                "plan": axes["plan"],
+                "skills": axes["skills"],
                 "k": axes["k"],
                 "sc": axes["sc"],
                 "task_stem": record.get("task_stem", ""),
@@ -1562,7 +1575,8 @@ def build_per_task_rows(
         "variant",
         "search_tool",
         "search_results",
-        "agent_management",
+        "plan",
+        "skills",
         "k",
         "sc",
         "task_stem",

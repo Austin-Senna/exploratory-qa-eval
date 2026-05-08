@@ -96,7 +96,7 @@ class RunModeEvalTests(unittest.TestCase):
             run_mode_eval._resolve_mode_axes(
                 search_tool=None,
                 search_results=None,
-                agent_management=None,
+                plan=None,
             ),
             ("standard", "naive", "standard", "standard"),
         )
@@ -106,7 +106,7 @@ class RunModeEvalTests(unittest.TestCase):
             run_mode_eval._resolve_mode_axes(
                 search_tool="naive",
                 search_results=None,
-                agent_management=None,
+                plan=None,
             ),
             ("naive", "naive", "standard", "standard"),
         )
@@ -115,46 +115,56 @@ class RunModeEvalTests(unittest.TestCase):
         label = run_mode_eval._variant_condition_label(
             search_tool="ideal",
             search_results="naive",
-            agent_management="naive",
+            plan="naive",
             k=5,
             search_calls=2,
         )
 
-        self.assertEqual(label, "search_i_results_n_plann_k5_sc2")
+        self.assertEqual(label, "search_i_results_n_plann_k5_sc2_skills_off")
 
     def test_variant_condition_label_uses_preloaded_letter(self):
         label = run_mode_eval._variant_condition_label(
             search_tool="preloaded",
             search_results="ideal",
-            agent_management="standard",
+            plan="standard",
             k=None,
             search_calls=None,
         )
 
-        self.assertEqual(label, "search_p_results_i_pland")
+        self.assertEqual(label, "search_p_results_i_pland_skills_off")
 
     def test_variant_condition_label_appends_search_flags(self):
         label = run_mode_eval._variant_condition_label(
             search_tool="ideal",
             search_results="ideal",
-            agent_management="standard",
+            plan="standard",
             k=None,
             search_calls=None,
             search_free=True,
             search_lessguide=True,
         )
 
-        self.assertEqual(label, "search_i_results_i_pland_free_lessguide")
+        self.assertEqual(label, "search_i_results_i_pland_free_lessguide_skills_off")
 
     def test_variant_condition_label_appends_ideal_computation_axis(self):
         label = run_mode_eval._variant_condition_label(
             search_tool="preloaded",
             search_results="ideal",
-            agent_management="standard",
+            plan="standard",
             computation_tool="ideal",
         )
 
-        self.assertEqual(label, "search_p_results_i_pland_computei")
+        self.assertEqual(label, "search_p_results_i_pland_computei_skills_off")
+
+    def test_variant_condition_label_appends_skills_on(self):
+        label = run_mode_eval._variant_condition_label(
+            search_tool="preloaded",
+            search_results="ideal",
+            plan="standard",
+            skills_enabled=True,
+        )
+
+        self.assertEqual(label, "search_p_results_i_pland_skills_on")
 
     def test_mode_results_dir_does_not_append_model_twice(self):
         agent_config = types.SimpleNamespace(
