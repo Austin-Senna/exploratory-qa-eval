@@ -157,6 +157,8 @@ files, write SQL, download data, or execute code. The planner has two typed
 tools:
 
 - `search_subagent`: source discovery with search plus light peek/profile tools only.
+  It is not exposed to the planner in `search_tool=preloaded`, because source
+  discovery is already complete from the preloaded source block.
 - `inspect_subagent`: extraction from explicit `source_family_ids` with data,
   query, and execution tools.
 
@@ -187,10 +189,11 @@ status, and budget metadata.
 
 `SanaDataLakeAgent._decorate_tools` configures the runtime with the current run
 config, task context, and already-decorated tools. In delegation mode it returns
-only planner/admin tools plus `search_subagent`, `inspect_subagent`, and
-`submit_answer`. Each subagent call starts a fresh Strands agent, inherits the
-run's search/results/computation tool surfaces through the provided tool list,
-and writes compact start/end records to the active trace.
+only planner/admin tools plus `inspect_subagent`, `submit_answer`, and
+`search_subagent` when source discovery is not preloaded. Each subagent call
+starts a fresh Strands agent, inherits the run's search/results/computation tool
+surfaces through the provided tool list, and writes compact start/end records to
+the active trace.
 
 ---
 

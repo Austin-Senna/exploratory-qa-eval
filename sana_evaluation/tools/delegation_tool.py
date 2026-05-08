@@ -58,12 +58,16 @@ _PLANNER_TOOL_NAMES = {
 }
 
 
-def tools_for_delegation_planner(tools: Sequence[Any]) -> List[Any]:
+def tools_for_delegation_planner(
+    tools: Sequence[Any],
+    *,
+    include_search_subagent: bool = True,
+) -> List[Any]:
     """Return planner tools plus the two delegation entrypoints."""
 
     out = [tool_obj for tool_obj in tools if _tool_name(tool_obj) in _PLANNER_TOOL_NAMES]
     existing = set(tool_names(out))
-    if "search_subagent" not in existing:
+    if include_search_subagent and "search_subagent" not in existing:
         out.append(search_subagent)
     if "inspect_subagent" not in existing:
         out.append(inspect_subagent)

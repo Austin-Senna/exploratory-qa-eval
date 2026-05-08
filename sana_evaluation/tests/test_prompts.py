@@ -78,7 +78,7 @@ def test_sprint_block_describes_commitment_contract(search_tool: str) -> None:
     assert "SANA" not in text
 
 
-@pytest.mark.parametrize("search_tool", _SEARCH_MODES)
+@pytest.mark.parametrize("search_tool", ["naive", "standard", "ideal"])
 def test_delegation_block_describes_planner_subagent_tools(search_tool: str) -> None:
     text = delegation_block(search_tool)
     assert "PLANNER WITH BOUNDED SUBAGENTS" in text
@@ -90,6 +90,18 @@ def test_delegation_block_describes_planner_subagent_tools(search_tool: str) -> 
     assert "write SQL" in text
     assert "grep_file" in text
     assert "read_file" in text
+    assert "s3_uri" in text
+    assert "file_path" in text
+    assert "SANA" not in text
+
+
+def test_delegation_block_preloaded_is_inspect_only() -> None:
+    text = delegation_block("preloaded")
+    assert "PLANNER WITH BOUNDED SUBAGENTS" in text
+    assert "search_subagent" not in text
+    assert "inspect_subagent" in text
+    assert "PRELOADED DATASETS" in text
+    assert "source_family_ids" in text
     assert "s3_uri" in text
     assert "file_path" in text
     assert "SANA" not in text
