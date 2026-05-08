@@ -132,6 +132,53 @@ class IdealComputationToolTests(unittest.TestCase):
         base.assert_called_once()
         self.assertEqual(base.call_args.kwargs["sql"], "SELECT 7 AS n")
 
+    def test_query_ideal_blocked_record_returns_tool_error_without_repair(self):
+        target = self._plans_root / "k-1-d-1"
+        (target / "task_blocked.json").write_text(
+            json.dumps(
+                {
+                    "dataset_sequence": ["ds_huge"],
+                    "source_sequence": ["datagov/ds_huge/files/huge.csv"],
+                    "reasoning_chain_text": "1. Use code against the large file.",
+                    "ideal_query": [
+                        {
+                            "node_id": "1",
+                            "dataset_id": "ds_huge",
+                            "intent": "count all rows",
+                            "answer": "Cannot execute SQL: file is too big (1377 MB >= 500 MB limit).",
+                        }
+                    ],
+                    "ideal_code": [
+                        {
+                            "node_id": "1",
+                            "dataset_id": "ds_huge",
+                            "intent": "count all rows",
+                            "code": "print(7)",
+                            "answer": "7",
+                        }
+                    ],
+                }
+            )
+        )
+        computation_ideal.set_task_context({"task_id": "tasks_mini/k-1-d-1/task_blocked.json"})
+
+        with patch.object(computation_ideal, "_repair_query") as repair:
+            result = computation_ideal.query_ideal._tool_func(
+                dataset_id="ds_huge",
+                file_path="files/huge.csv",
+                sql="SELECT COUNT(*) FROM t",
+                intent="count all rows",
+            )
+
+        self.assertFalse(result["success"])
+        self.assertIn("Cannot execute SQL", result["error"])
+        self.assertIn("execute_ideal", result["recommendation"])
+        self.assertEqual(result["dataset_id"], "ds_huge")
+        self.assertNotIn("ideal_oracle", result)
+        self.assertNotIn("intent", result)
+        self.assertNotIn("source", result)
+        repair.assert_not_called()
+
     def test_query_ideal_retries_after_repair_failure(self):
         with patch.object(
             computation_ideal,

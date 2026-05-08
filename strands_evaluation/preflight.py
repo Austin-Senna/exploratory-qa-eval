@@ -142,20 +142,28 @@ def _check_ideal_computation_records(task_files: Sequence[str]) -> List[Prefligh
             checks.append(PreflightCheck(f"ideal_code:{task_path}", False, str(exc)))
             continue
 
-        if plan.ideal_query:
-            checks.append(
-                PreflightCheck(
-                    f"ideal_query:{task_path}",
-                    True,
-                    f"loaded {len(plan.ideal_query)} query record(s)",
+        runnable_query_records = [
+            record for record in plan.ideal_query if not getattr(record, "blocked", False)
+        ]
+        blocked_query_records = [
+            record for record in plan.ideal_query if getattr(record, "blocked", False)
+        ]
+        if runnable_query_records or blocked_query_records:
+            detail = f"loaded {len(runnable_query_records)} runnable query record(s)"
+            if blocked_query_records:
+                detail += (
+                    f"; {len(blocked_query_records)} blocked by query_file limits "
+                    "(use execute_ideal/download-style code)"
                 )
+            checks.append(
+                PreflightCheck(f"ideal_query:{task_path}", True, detail)
             )
         else:
             checks.append(
                 PreflightCheck(
                     f"ideal_query:{task_path}",
-                    False,
-                    "missing non-empty ideal_query records in mapped plan file",
+                    True,
+                    "no authored ideal_query records; use read/grep/parse tools or execute_ideal as appropriate",
                 )
             )
 
@@ -171,8 +179,8 @@ def _check_ideal_computation_records(task_files: Sequence[str]) -> List[Prefligh
             checks.append(
                 PreflightCheck(
                     f"ideal_code:{task_path}",
-                    False,
-                    "missing non-empty ideal_code records in mapped plan file",
+                    True,
+                    "no authored ideal_code records; task may be text/prose-only",
                 )
             )
     return checks

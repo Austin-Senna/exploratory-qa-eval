@@ -27,6 +27,7 @@ class IdealComputationRecord:
     intent: str
     payload: str
     answer: Any
+    blocked: bool = False
 
 
 @dataclass(frozen=True)
@@ -238,12 +239,16 @@ def _validate_computation_records(
         if not intent:
             raise ValueError(f"Invalid plan at '{plan_path}': {label}.intent is required.")
 
-        payload = str(item.get(payload_key) or "").strip()
-        if not payload:
-            raise ValueError(f"Invalid plan at '{plan_path}': {label}.{payload_key} is required.")
-
         if "answer" not in item:
             raise ValueError(f"Invalid plan at '{plan_path}': {label}.answer is required.")
+
+        payload = str(item.get(payload_key) or "").strip()
+        blocked = False
+        if not payload:
+            answer_text = str(item.get("answer") or "").strip().lower()
+            blocked = key == "ideal_query" and answer_text.startswith("cannot execute sql:")
+            if not blocked:
+                raise ValueError(f"Invalid plan at '{plan_path}': {label}.{payload_key} is required.")
 
         out.append(
             IdealComputationRecord(
@@ -254,6 +259,7 @@ def _validate_computation_records(
                 intent=intent,
                 payload=payload,
                 answer=item["answer"],
+                blocked=blocked,
             )
         )
 

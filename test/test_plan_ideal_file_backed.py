@@ -225,6 +225,46 @@ class TestPlanIdealFileBacked(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "ideal_query\\[0\\].*sql"):
                 load_plan_for_task("tasks_mini/k-1-d-1/task_5.json")
 
+    def test_load_plan_accepts_unsupported_query_blocker_record(self):
+        with TemporaryDirectory() as tmpdir:
+            plans_root = Path(tmpdir) / "plans_mini"
+            target = plans_root / "k-1-d-1"
+            target.mkdir(parents=True, exist_ok=True)
+            (target / "task_8.json").write_text(
+                json.dumps(
+                    {
+                        "dataset_sequence": ["ds_a"],
+                        "source_sequence": ["datagov/ds_a/files/huge_rows.txt"],
+                        "reasoning_chain_text": "1. Compute the answer.",
+                        "ideal_query": [
+                            {
+                                "node_id": "1",
+                                "dataset_id": "ds_a",
+                                "intent": "count all rows",
+                                "answer": "Cannot execute SQL: file is too big (1377 MB >= 500 MB limit).",
+                            }
+                        ],
+                        "ideal_code": [
+                            {
+                                "node_id": "1",
+                                "dataset_id": "ds_a",
+                                "intent": "count all rows",
+                                "code": "print(7)",
+                                "answer": "7",
+                            }
+                        ],
+                    }
+                )
+            )
+
+            set_plans_root(plans_root)
+            plan = load_plan_for_task("tasks_mini/k-1-d-1/task_8.json")
+
+            self.assertEqual(len(plan.ideal_query), 1)
+            self.assertTrue(plan.ideal_query[0].blocked)
+            self.assertEqual(plan.ideal_query[0].payload, "")
+            self.assertIn("Cannot execute SQL", plan.ideal_query[0].answer)
+
     def test_plan_ideal_records_execution_plan_and_preserves_gold_chain(self):
         gold_prompt = inject_reasoning_chain_prompt("BASE", "1. Gold step.")
         fake_agent = _FakeAgent(gold_prompt)

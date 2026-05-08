@@ -211,6 +211,60 @@ class SetupRunTests(unittest.TestCase):
 
             self.assertEqual(command[command.index("--model-name") + 1], "openai/gpt-5-nano")
 
+    def test_ideal_search_and_plan_use_default_compute_when_not_explicit(self):
+        with TemporaryDirectory() as tmpdir:
+            repo_root = Path(tmpdir)
+            (repo_root / "lance_data").mkdir(parents=True, exist_ok=True)
+            fake_runner = _FakeRunner()
+
+            command = setup_run.run(
+                [
+                    "full",
+                    "--search",
+                    "ideal",
+                    "--results",
+                    "ideal",
+                    "--plan",
+                    "ideal",
+                    "--model",
+                    "gpt-5.4-nano",
+                    "--db",
+                    "lance_data",
+                ],
+                runner=fake_runner,
+                cwd=repo_root,
+            )
+
+            self.assertNotIn("--computation_tool", command)
+
+    def test_explicit_standard_compute_is_passed_through(self):
+        with TemporaryDirectory() as tmpdir:
+            repo_root = Path(tmpdir)
+            (repo_root / "lance_data").mkdir(parents=True, exist_ok=True)
+            fake_runner = _FakeRunner()
+
+            command = setup_run.run(
+                [
+                    "full",
+                    "--search",
+                    "ideal",
+                    "--results",
+                    "ideal",
+                    "--plan",
+                    "ideal",
+                    "--compute",
+                    "standard",
+                    "--model",
+                    "gpt-5.4-nano",
+                    "--db",
+                    "lance_data",
+                ],
+                runner=fake_runner,
+                cwd=repo_root,
+            )
+
+            self.assertEqual(command[command.index("--computation_tool") + 1], "standard")
+
     def test_smoke_accepts_preloaded_search_mode(self):
         with TemporaryDirectory() as tmpdir:
             repo_root = Path(tmpdir)

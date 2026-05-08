@@ -140,6 +140,8 @@ def _best_record(
     scored: List[tuple[float, IdealComputationRecord]] = []
     normalized_payload = " ".join(str(payload or "").split()).lower()
     for record in candidates:
+        if getattr(record, "blocked", False):
+            continue
         score = 0.0
         payload_exact = False
         if normalized_payload and normalized_payload == " ".join(record.payload.split()).lower():
@@ -158,6 +160,15 @@ def _best_record(
         return None
     best_score, best = scored[0]
     return best if best_score >= 0.9 else None
+
+
+def _blocked_record(
+    records: Iterable[IdealComputationRecord], dataset_id: str, source: str
+) -> Optional[IdealComputationRecord]:
+    for record in _source_filter(records, dataset_id, source):
+        if getattr(record, "blocked", False):
+            return record
+    return None
 
 
 def _s3_uri_for_record(record: IdealComputationRecord) -> str:
@@ -184,6 +195,17 @@ def _query_answer_payload(record: IdealComputationRecord) -> Dict[str, Any]:
         "rows": [[record.answer]],
         "row_count": 1,
         "truncated": False,
+    }
+
+
+def _blocked_query_payload(record: IdealComputationRecord) -> Dict[str, Any]:
+    return {
+        "success": False,
+        "error": str(record.answer),
+        "dataset_id": record.dataset_id,
+        "file_path": _file_path_for_record(record),
+        "s3_uri": _s3_uri_for_record(record),
+        "recommendation": "Use execute_ideal or download-style code for this source; query_ideal only supports files that can be queried directly.",
     }
 
 
@@ -218,6 +240,7 @@ def _plan_records_for_prompt(plan: IdealTaskPlan, records: Iterable[IdealComputa
                 "intent": record.intent,
                 "payload": record.payload,
                 "answer": record.answer,
+                "blocked": bool(getattr(record, "blocked", False)),
             }
         )
     return json.dumps(
@@ -434,6 +457,10 @@ def query_ideal(
     )
     if record is not None:
         return _query_answer_payload(record)
+
+    blocked_record = _blocked_record(plan.ideal_query, dataset_id, s3_uri)
+    if blocked_record is not None:
+        return _blocked_query_payload(blocked_record)
 
     repairs: List[Dict[str, str]] = []
     previous_error = ""
