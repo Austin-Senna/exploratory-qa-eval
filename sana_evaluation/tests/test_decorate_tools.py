@@ -135,6 +135,27 @@ class DecorateToolsTests(unittest.TestCase):
         self.assertNotIn("query_file", decorated_names)
         self.assertNotIn("execute_code", decorated_names)
 
+    def test_delegation_preloaded_planner_omits_search_subagent(self) -> None:
+        agent = _make_agent(delegation=True)
+        tools = []
+        for name in ["plan", "submit_answer", "peek_file", "query_file"]:
+            tool = MagicMock()
+            tool.tool_name = name
+            tools.append(tool)
+
+        decorated = agent._decorate_tools(
+            tools,
+            search_tool_mode="preloaded",
+            agent_management_mode="standard",
+        )
+
+        decorated_names = [getattr(t, "tool_name", None) for t in decorated]
+        self.assertEqual(
+            decorated_names,
+            ["plan", "submit_answer", "inspect_subagent"],
+        )
+        self.assertNotIn("search_subagent", decorated_names)
+
     def test_delegation_removes_agent_skills_plugin(self) -> None:
         agent = _make_agent(delegation=True)
         skills_plugin = MagicMock()
