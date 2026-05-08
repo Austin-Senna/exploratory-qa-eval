@@ -216,4 +216,3 @@ The safe production order is:
 4. Use `$author-ideal-computations` to seed and author `ideal_code` / `ideal_query` records for executable nodes.
 5. Validate computation records locally, execute SQL when present, and run independent computation review.
 6. Accept the plan only when all required checks are clean, or mark it explicitly blocked with narrow blocker records/notes.
-
