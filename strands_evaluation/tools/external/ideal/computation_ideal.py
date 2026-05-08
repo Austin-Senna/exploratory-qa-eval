@@ -295,10 +295,15 @@ def _enhanced_peek_context(source: str) -> str:
     return json.dumps(payload, ensure_ascii=False)[:10000]
 
 
-def _target_sources_for_code(plan: IdealTaskPlan, code: str, intent: str) -> List[str]:
+def _target_sources_for_code(
+    plan: IdealTaskPlan,
+    code: str,
+    intent: str,
+    records: Optional[Iterable[IdealComputationRecord]] = None,
+) -> List[str]:
     scored: List[tuple[float, str]] = []
     code_text = str(code or "").lower()
-    for record in plan.ideal_code:
+    for record in list(records) if records is not None else plan.ideal_code:
         score = _overlap_score(intent, record.intent)
         if record.source and record.source.lower() in code_text:
             score += 3.0
@@ -315,9 +320,14 @@ def _target_sources_for_code(plan: IdealTaskPlan, code: str, intent: str) -> Lis
     return out
 
 
-def _target_dataset_context_for_code(plan: IdealTaskPlan, code: str, intent: str) -> str:
+def _target_dataset_context_for_code(
+    plan: IdealTaskPlan,
+    code: str,
+    intent: str,
+    records: Optional[Iterable[IdealComputationRecord]] = None,
+) -> str:
     contexts = []
-    for source in _target_sources_for_code(plan, code, intent):
+    for source in _target_sources_for_code(plan, code, intent, records=records):
         context = _enhanced_peek_context(source)
         if context:
             contexts.append({"source": source, "context": json.loads(context)})
@@ -351,6 +361,154 @@ def _repair_model():
     )
 
 
+def _semantic_model():
+    return build_model(AgentConfig(model_name="openai/gpt-5.4-nano"))
+
+
+def _normalized_file_path(value: Any) -> str:
+    text = str(value or "").strip()
+    if text.startswith(_S3_PREFIX):
+        text = text[len(_S3_PREFIX) :]
+    elif text.startswith("s3://"):
+        text = text.split("/", 3)[-1]
+    text = text.lstrip("/")
+    parts = text.split("/")
+    if len(parts) >= 3 and parts[0] in {"datagov", "wikipedia"}:
+        return "/".join(parts[2:])
+    return text
+
+
+def _records_for_target(
+    records: Iterable[IdealComputationRecord],
+    *,
+    dataset_id: str = "",
+    file_path: str = "",
+    s3_uri: str = "",
+    fallback_all: bool = False,
+) -> List[IdealComputationRecord]:
+    rows = list(records)
+    if not rows:
+        return []
+
+    target_dataset = _dataset_id_from_source(dataset_id) or _dataset_id_from_source(s3_uri)
+    target_file = _normalized_file_path(file_path or s3_uri)
+
+    if s3_uri:
+        wanted_uri = _canonical_uri(s3_uri)
+        exact = [record for record in rows if _canonical_uri(record.source) == wanted_uri]
+        if exact:
+            return exact
+
+    if target_dataset and target_file:
+        exact_file = [
+            record
+            for record in rows
+            if record.dataset_id == target_dataset
+            and _normalized_file_path(record.source) == target_file
+        ]
+        if exact_file:
+            return exact_file
+
+    if target_file:
+        file_matches = [
+            record
+            for record in rows
+            if (not target_dataset or record.dataset_id == target_dataset)
+            and (
+                _normalized_file_path(record.source) == target_file
+                or _normalized_file_path(record.source).endswith(f"/{target_file}")
+                or target_file.endswith(f"/{_normalized_file_path(record.source)}")
+            )
+        ]
+        if file_matches:
+            return file_matches
+
+    if target_dataset:
+        dataset_matches = [record for record in rows if record.dataset_id == target_dataset]
+        if dataset_matches:
+            return dataset_matches
+
+    grep_terms = [
+        term.lower()
+        for term in {
+            str(dataset_id or "").strip(),
+            str(file_path or "").strip(),
+            Path(target_file).name if target_file else "",
+        }
+        if term
+    ]
+    if grep_terms:
+        grep_matches = [
+            record
+            for record in rows
+            if (not target_dataset or record.dataset_id == target_dataset)
+            and any(term in f"{record.dataset_id}/{record.source}".lower() for term in grep_terms)
+        ]
+        if grep_matches:
+            return grep_matches
+
+    return rows if fallback_all else []
+
+
+def _semantic_record_match(
+    *,
+    plan: IdealTaskPlan,
+    tool_name: str,
+    payload_label: str,
+    payload: str,
+    intent: str,
+    candidates: Iterable[IdealComputationRecord],
+) -> Optional[IdealComputationRecord]:
+    records = list(candidates)
+    if not records:
+        return None
+
+    state: Dict[str, Any] = {"index": None, "reason": ""}
+
+    @tool
+    def select_match(index: int, reason: str) -> str:
+        """Select the equivalent candidate by 1-based index, or 0 for no match."""
+        if not isinstance(index, int):
+            raise ValueError("index must be an integer")
+        if index < 0 or index > len(records):
+            raise ValueError(f"index must be between 0 and {len(records)}")
+        state["index"] = index
+        state["reason"] = reason
+        return "semantic match recorded"
+
+    candidates_json = _plan_records_for_prompt(plan, records)
+    prompt = (
+        f"Tool: {tool_name}\n"
+        f"Submitted intent:\n{intent}\n\n"
+        f"Submitted {payload_label}:\n{payload}\n\n"
+        f"Candidate authored records:\n{candidates_json}\n\n"
+        "Call select_match exactly once. Select a candidate only if the submitted "
+        f"{payload_label} and/or intent are semantically equivalent to that authored "
+        "record's computation for the same source. Select 0 if the submitted call is "
+        "unrelated, too vague, only asking for the answer, or not clearly the same computation. "
+        "Never select a record merely because its answer would be useful."
+    )
+    judge = Agent(
+        model=_semantic_model(),
+        system_prompt=(
+            "You judge semantic equivalence between a submitted computation "
+            "tool call and authored computation records."
+        ),
+        tools=[select_match],
+        callback_handler=None,
+    )
+    judge(prompt)
+    index = state["index"]
+    if index is None:
+        logger.warning("%s semantic judge recorded no decision", tool_name)
+        return None
+    if index == 0:
+        logger.info("%s semantic judge found no equivalent record reason=%r", tool_name, state["reason"])
+        return None
+    logger.info("%s semantic judge matched record index=%s reason=%r", tool_name, index, state["reason"])
+    return records[index - 1]
+
+
 def _repair_query(
     *,
     plan: IdealTaskPlan,
@@ -359,6 +517,7 @@ def _repair_query(
     s3_uri: str,
     sql: str,
     intent: str,
+    records: Optional[Iterable[IdealComputationRecord]] = None,
     previous_error: str = "",
 ) -> Dict[str, str]:
     state: Dict[str, str] = {}
@@ -373,12 +532,14 @@ def _repair_query(
     source = s3_uri or ""
     if not source and dataset_id and file_path:
         source = f"datagov/{dataset_id}/{file_path.lstrip('/')}"
-    records = _source_filter(plan.ideal_query, dataset_id, source)
+    prompt_records = list(records) if records is not None else _source_filter(plan.ideal_query, dataset_id, source)
+    if not prompt_records:
+        prompt_records = list(plan.ideal_query)
     prompt = (
         "Rewrite the SQL so it accomplishes the user's intent against table alias t.\n"
         "Call submit_repaired_sql exactly once. Return only executable DuckDB SQL via the tool.\n\n"
         f"Intent:\n{intent}\n\nOriginal SQL:\n{sql}\n\nPrevious error:\n{previous_error}\n\n"
-        f"Plan records:\n{_plan_records_for_prompt(plan, records)}\n\n"
+        f"Plan records:\n{_plan_records_for_prompt(plan, prompt_records)}\n\n"
         f"Profile context:\n{_profile_context(source)}\n\n"
         f"Target dataset context:\n{_enhanced_peek_context(source)}"
     )
@@ -399,6 +560,7 @@ def _repair_code(
     plan: IdealTaskPlan,
     code: str,
     intent: str,
+    records: Optional[Iterable[IdealComputationRecord]] = None,
     previous_error: str = "",
 ) -> Dict[str, str]:
     state: Dict[str, str] = {}
@@ -410,12 +572,15 @@ def _repair_code(
         state["reason"] = reason
         return "repaired code recorded"
 
+    prompt_records = list(records) if records is not None else list(plan.ideal_code)
+    if not prompt_records:
+        prompt_records = list(plan.ideal_code)
     prompt = (
         "Rewrite the Python code so it accomplishes the user's intent in the sandbox.\n"
         "The code must print the result. Call submit_repaired_code exactly once.\n\n"
         f"Intent:\n{intent}\n\nOriginal code:\n{code}\n\nPrevious error:\n{previous_error}\n\n"
-        f"Plan records:\n{_plan_records_for_prompt(plan, plan.ideal_code)}\n\n"
-        f"Target dataset context:\n{_target_dataset_context_for_code(plan, code, intent)}\n\n"
+        f"Plan records:\n{_plan_records_for_prompt(plan, prompt_records)}\n\n"
+        f"Target dataset context:\n{_target_dataset_context_for_code(plan, code, intent, records=prompt_records)}\n\n"
         f"Sandbox context:\n{_sandbox_context()}"
     )
     from strands_evaluation.instrumentation.agent_plugins import LoggingPlugin
@@ -448,17 +613,31 @@ def query_ideal(
     dataset_id = dataset_id or ""
     file_path = file_path or ""
     s3_uri = s3_uri or ""
-    record = _best_record(
+    candidate_records = _records_for_target(
         plan.ideal_query,
+        dataset_id=dataset_id,
+        file_path=file_path,
+        s3_uri=s3_uri,
+        fallback_all=not (dataset_id or file_path or s3_uri),
+    )
+    runnable_records = [
+        record for record in candidate_records if not getattr(record, "blocked", False)
+    ]
+    record = _semantic_record_match(
+        plan=plan,
+        tool_name="query_ideal",
+        payload_label="SQL",
         payload=sql,
         intent=intent,
-        dataset_id=dataset_id,
-        source=s3_uri,
+        candidates=runnable_records,
     )
     if record is not None:
         return _query_answer_payload(record)
 
-    blocked_record = _blocked_record(plan.ideal_query, dataset_id, s3_uri)
+    blocked_record = next(
+        (record for record in candidate_records if getattr(record, "blocked", False)),
+        None,
+    )
     if blocked_record is not None:
         return _blocked_query_payload(blocked_record)
 
@@ -485,6 +664,7 @@ def query_ideal(
                 s3_uri=s3_uri,
                 sql=sql,
                 intent=intent,
+                records=candidate_records or plan.ideal_query,
                 previous_error=previous_error,
             )
         except Exception as exc:
@@ -526,7 +706,13 @@ def query_ideal(
 
 
 @tool
-def execute_ideal(code: str, intent: str) -> Dict[str, Any]:
+def execute_ideal(
+    code: str,
+    intent: str,
+    dataset_id: str | None = None,
+    file_path: str | None = None,
+    s3_uri: str | None = None,
+) -> Dict[str, Any]:
     """
     Ideal Python tool for tabular or JSON-like sources only.
     Do not use execute_ideal for non-tabular/non-JSON sources such as
@@ -534,7 +720,24 @@ def execute_ideal(code: str, intent: str) -> Dict[str, Any]:
     For XML/KML structured records, use parse_xml_records instead.
     """
     plan = _active_plan()
-    record = _best_record(plan.ideal_code, payload=code, intent=intent)
+    dataset_id = dataset_id or ""
+    file_path = file_path or ""
+    s3_uri = s3_uri or ""
+    candidate_records = _records_for_target(
+        plan.ideal_code,
+        dataset_id=dataset_id,
+        file_path=file_path,
+        s3_uri=s3_uri,
+        fallback_all=True,
+    )
+    record = _semantic_record_match(
+        plan=plan,
+        tool_name="execute_ideal",
+        payload_label="Python code",
+        payload=code,
+        intent=intent,
+        candidates=candidate_records,
+    )
     if record is not None:
         return _execute_answer_payload(record)
 
@@ -558,6 +761,7 @@ def execute_ideal(code: str, intent: str) -> Dict[str, Any]:
                 plan=plan,
                 code=code,
                 intent=intent,
+                records=candidate_records or plan.ideal_code,
                 previous_error=previous_error,
             )
         except Exception as exc:

@@ -70,6 +70,10 @@ class IdealComputationToolTests(unittest.TestCase):
         computation_ideal.reset_state()
         computation_ideal.set_task_context({"task_id": "tasks_mini/k-1-d-1/task_1.json"})
 
+    @staticmethod
+    def _first_semantic_candidate(*, candidates, **_kwargs):
+        return list(candidates)[0] if candidates else None
+
     def tearDown(self) -> None:
         computation_ideal.reset_state()
         set_plans_root("plans_mini")
@@ -77,12 +81,18 @@ class IdealComputationToolTests(unittest.TestCase):
         self._tmp.cleanup()
 
     def test_query_ideal_returns_plan_answer_on_match(self):
-        result = computation_ideal.query_ideal._tool_func(
-            dataset_id="ds_a",
-            file_path="files/rows.txt",
-            sql="SELECT COUNT(*) AS n FROM t",
-            intent="count all rows",
-        )
+        with patch.object(
+            computation_ideal,
+            "_semantic_record_match",
+            create=True,
+            side_effect=self._first_semantic_candidate,
+        ) as semantic:
+            result = computation_ideal.query_ideal._tool_func(
+                dataset_id="ds_a",
+                file_path="files/rows.txt",
+                sql="SELECT COUNT(*) AS n FROM t",
+                intent="count all rows",
+            )
 
         self.assertTrue(result["success"])
         self.assertEqual(result["columns"], ["answer"])
@@ -93,12 +103,19 @@ class IdealComputationToolTests(unittest.TestCase):
         self.assertNotIn("intent", result)
         self.assertNotIn("source", result)
         self.assertNotIn("node_id", result)
+        semantic.assert_called_once()
 
     def test_execute_ideal_returns_plan_answer_on_match(self):
-        result = computation_ideal.execute_ideal._tool_func(
-            code="print(3 + 4)",
-            intent="sum values",
-        )
+        with patch.object(
+            computation_ideal,
+            "_semantic_record_match",
+            create=True,
+            side_effect=self._first_semantic_candidate,
+        ) as semantic:
+            result = computation_ideal.execute_ideal._tool_func(
+                code="print(3 + 4)",
+                intent="sum values",
+            )
 
         self.assertTrue(result["success"])
         self.assertEqual(result["output"], "7")
@@ -106,9 +123,130 @@ class IdealComputationToolTests(unittest.TestCase):
         self.assertNotIn("intent", result)
         self.assertNotIn("source", result)
         self.assertNotIn("node_id", result)
+        semantic.assert_called_once()
+
+    def test_semantic_record_match_uses_nano_judge_selection(self):
+        plan = load_plan_for_task("tasks_mini/k-1-d-1/task_1.json")
+        captured: dict[str, str] = {}
+
+        class _JudgeAgent:
+            def __init__(self, *args, **kwargs):
+                self.tools = kwargs["tools"]
+                captured["model"] = kwargs["model"]
+                captured["system_prompt"] = kwargs["system_prompt"]
+
+            def __call__(self, prompt: str) -> None:
+                captured["prompt"] = prompt
+                self.tools[0](index=1, reason="same computation")
+
+        with patch.object(computation_ideal, "Agent", _JudgeAgent), patch.object(
+            computation_ideal,
+            "_semantic_model",
+            return_value="fake-nano-model",
+        ):
+            record = computation_ideal._semantic_record_match(
+                plan=plan,
+                tool_name="execute_ideal",
+                payload_label="Python code",
+                payload="print(3 + 4)",
+                intent="sum values",
+                candidates=plan.ideal_code,
+            )
+
+        self.assertEqual(record, plan.ideal_code[0])
+        self.assertEqual(captured["model"], "fake-nano-model")
+        self.assertIn("semantic equivalence", captured["system_prompt"])
+        self.assertIn("Submitted Python code", captured["prompt"])
+        self.assertIn("Never select a record merely because its answer would be useful", captured["prompt"])
+
+    def test_execute_ideal_filters_semantic_candidates_by_s3_uri(self):
+        target = self._plans_root / "k-1-d-1"
+        (target / "task_sources.json").write_text(
+            json.dumps(
+                {
+                    "dataset_sequence": ["ds_a", "ds_b"],
+                    "source_sequence": [
+                        "datagov/ds_a/files/a.csv",
+                        "datagov/ds_b/files/b.csv",
+                    ],
+                    "reasoning_chain_text": "1. Compute the answer from the requested source.",
+                    "ideal_query": [],
+                    "ideal_code": [
+                        {
+                            "node_id": "1",
+                            "dataset_id": "ds_a",
+                            "source": "datagov/ds_a/files/a.csv",
+                            "intent": "count ds_a rows",
+                            "code": "print('a')",
+                            "answer": "7",
+                        },
+                        {
+                            "node_id": "2",
+                            "dataset_id": "ds_b",
+                            "source": "datagov/ds_b/files/b.csv",
+                            "intent": "count ds_b rows",
+                            "code": "print('b')",
+                            "answer": "11",
+                        },
+                    ],
+                }
+            )
+        )
+        computation_ideal.set_task_context({"task_id": "tasks_mini/k-1-d-1/task_sources.json"})
+        captured: dict[str, list[str]] = {}
+
+        def semantic(*, candidates, **_kwargs):
+            rows = list(candidates)
+            captured["sources"] = [record.source for record in rows]
+            return rows[0] if rows else None
+
+        with patch.object(
+            computation_ideal,
+            "_semantic_record_match",
+            create=True,
+            side_effect=semantic,
+        ):
+            result = computation_ideal.execute_ideal._tool_func(
+                code="print('semantically equivalent to b')",
+                intent="count ds_b rows",
+                s3_uri="s3://lakeqa-yc4103-datalake/datagov/ds_b/files/b.csv",
+            )
+
+        self.assertEqual(captured["sources"], ["datagov/ds_b/files/b.csv"])
+        self.assertEqual(result, {"output": "11", "success": True})
+
+    def test_execute_ideal_semantic_reject_falls_back_to_repair(self):
+        with patch.object(
+            computation_ideal,
+            "_semantic_record_match",
+            create=True,
+            return_value=None,
+        ) as semantic, patch.object(
+            computation_ideal,
+            "_repair_code",
+            return_value={"code": "print(99)", "reason": "not equivalent"},
+        ) as repair, patch.object(
+            computation_ideal,
+            "_base_execute_code",
+            return_value={"success": True, "output": "99"},
+        ) as base:
+            result = computation_ideal.execute_ideal._tool_func(
+                code="print('just give me the answer')",
+                intent="sum values",
+            )
+
+        self.assertEqual(result, {"success": True, "output": "99"})
+        semantic.assert_called_once()
+        repair.assert_called_once()
+        base.assert_called_once_with("print(99)")
 
     def test_query_ideal_uses_repair_fallback_when_no_oracle_match(self):
         with patch.object(
+            computation_ideal,
+            "_semantic_record_match",
+            create=True,
+            return_value=None,
+        ) as semantic, patch.object(
             computation_ideal,
             "_repair_query",
             return_value={"sql": "SELECT 7 AS n", "reason": "matched intent"},
@@ -128,6 +266,7 @@ class IdealComputationToolTests(unittest.TestCase):
         self.assertNotIn("ideal_oracle", result)
         self.assertNotIn("repair_attempts", result)
         self.assertNotIn("repairs", result)
+        semantic.assert_called_once()
         repair.assert_called_once()
         base.assert_called_once()
         self.assertEqual(base.call_args.kwargs["sql"], "SELECT 7 AS n")
@@ -182,6 +321,10 @@ class IdealComputationToolTests(unittest.TestCase):
     def test_query_ideal_retries_after_repair_failure(self):
         with patch.object(
             computation_ideal,
+            "_semantic_record_match",
+            return_value=None,
+        ), patch.object(
+            computation_ideal,
             "_repair_query",
             side_effect=[
                 RuntimeError("transient"),
@@ -208,6 +351,10 @@ class IdealComputationToolTests(unittest.TestCase):
     def test_query_ideal_does_not_oracle_match_wrong_dataset(self):
         with patch.object(
             computation_ideal,
+            "_semantic_record_match",
+            return_value=None,
+        ) as semantic, patch.object(
+            computation_ideal,
             "_repair_query",
             return_value={"sql": "SELECT 0 AS n", "reason": "wrong source"},
         ) as repair, patch.object(
@@ -225,10 +372,16 @@ class IdealComputationToolTests(unittest.TestCase):
         self.assertNotIn("ideal_oracle", result)
         self.assertNotIn("repair_attempts", result)
         self.assertNotIn("repairs", result)
+        semantic.assert_called_once()
+        self.assertEqual(list(semantic.call_args.kwargs["candidates"]), [])
         repair.assert_called_once()
 
     def test_execute_ideal_returns_failure_after_repair_exhaustion(self):
         with patch.object(
+            computation_ideal,
+            "_semantic_record_match",
+            return_value=None,
+        ), patch.object(
             computation_ideal,
             "_repair_code",
             side_effect=[
@@ -269,7 +422,9 @@ class IdealComputationToolTests(unittest.TestCase):
                 _ = prompt
                 self.tools[0](code="print(7)", reason="matched authored computation")
 
-        with patch.object(computation_ideal, "Agent", _RepairAgent), patch.object(
+        with patch.object(computation_ideal, "_semantic_record_match", return_value=None), patch.object(
+            computation_ideal, "Agent", _RepairAgent
+        ), patch.object(
             computation_ideal,
             "_repair_model",
             return_value="fake-model",
@@ -308,6 +463,10 @@ class IdealComputationToolTests(unittest.TestCase):
     def test_repair_stats_reset_with_task_context(self):
         with patch.object(
             computation_ideal,
+            "_semantic_record_match",
+            return_value=None,
+        ), patch.object(
+            computation_ideal,
             "_repair_code",
             return_value={"code": "print(7)", "reason": "fixed"},
         ), patch.object(
@@ -341,7 +500,9 @@ class IdealComputationToolTests(unittest.TestCase):
                 captured["prompt"] = prompt
                 self.tools[0](code="print(7)", reason="context was sufficient")
 
-        with patch.object(computation_ideal, "Agent", _PromptCapturingAgent), patch.object(
+        with patch.object(computation_ideal, "_semantic_record_match", return_value=None), patch.object(
+            computation_ideal, "Agent", _PromptCapturingAgent
+        ), patch.object(
             computation_ideal,
             "_repair_model",
             return_value="fake-model",
@@ -374,7 +535,9 @@ class IdealComputationToolTests(unittest.TestCase):
                 captured["prompt"] = prompt
                 self.tools[0](sql="SELECT 7 AS answer", reason="context was sufficient")
 
-        with patch.object(computation_ideal, "Agent", _PromptCapturingAgent), patch.object(
+        with patch.object(computation_ideal, "_semantic_record_match", return_value=None), patch.object(
+            computation_ideal, "Agent", _PromptCapturingAgent
+        ), patch.object(
             computation_ideal,
             "_repair_model",
             return_value="fake-model",
@@ -477,23 +640,28 @@ class IdealComputationToolTests(unittest.TestCase):
             return result
 
         try:
-            plugin.on_agent_initialized(AgentInitializedEvent(agent=agent))
-            query_result = run_logged_tool(
-                "query_ideal",
-                {
-                    "dataset_id": query_record.dataset_id,
-                    "file_path": query_file_path,
-                    "sql": query_record.payload,
-                    "intent": query_record.intent,
-                },
-            )
-            execute_result = run_logged_tool(
-                "execute_ideal",
-                {
-                    "code": code_record.payload,
-                    "intent": code_record.intent,
-                },
-            )
+            with patch.object(
+                computation_ideal,
+                "_semantic_record_match",
+                side_effect=self._first_semantic_candidate,
+            ):
+                plugin.on_agent_initialized(AgentInitializedEvent(agent=agent))
+                query_result = run_logged_tool(
+                    "query_ideal",
+                    {
+                        "dataset_id": query_record.dataset_id,
+                        "file_path": query_file_path,
+                        "sql": query_record.payload,
+                        "intent": query_record.intent,
+                    },
+                )
+                execute_result = run_logged_tool(
+                    "execute_ideal",
+                    {
+                        "code": code_record.payload,
+                        "intent": code_record.intent,
+                    },
+                )
         finally:
             log_logger.removeHandler(handler)
             log_logger.setLevel(previous_level)

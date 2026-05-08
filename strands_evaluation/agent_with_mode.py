@@ -349,7 +349,9 @@ def _inject_ideal_computation_prompt(system_prompt: str) -> str:
     section = (
         "\n\n## IDEAL COMPUTATION TOOLS\n"
         "- `query_file` and `execute_code` are replaced in this run.\n"
-        "- Use `query_ideal(..., intent=...)` for SQL-style computation and `execute_ideal(code, intent)` for Python computation.\n"
+        "- Use `query_ideal(..., intent=...)` for SQL-style computation and "
+        "`execute_ideal(code, intent, dataset_id=..., file_path=... or s3_uri=...)` "
+        "for Python computation.\n"
         "- Always write a concise intent describing the computation you are trying to perform.\n"
     )
     return system_prompt.rstrip() + section
