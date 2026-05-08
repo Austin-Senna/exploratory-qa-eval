@@ -29,6 +29,8 @@ class TestRunModeAnalysisSemantic(unittest.TestCase):
             "output_tokens",
             "total_tokens",
             "cost_usd",
+            "ideal_subagent_cost_usd",
+            "total_cost_with_ideal_subagents_usd",
             "tool_calls_total",
             "api_tool_calls",
             "error",
@@ -56,6 +58,8 @@ class TestRunModeAnalysisSemantic(unittest.TestCase):
             "output_tokens",
             "total_tokens",
             "cost_usd",
+            "ideal_subagent_cost_usd",
+            "total_cost_with_ideal_subagents_usd",
             "tool_calls_total",
             "api_tool_calls",
             "error",
@@ -127,6 +131,8 @@ class TestRunModeAnalysisSemantic(unittest.TestCase):
                         "output_tokens": "20",
                         "total_tokens": "120",
                         "cost_usd": "0.10",
+                        "ideal_subagent_cost_usd": "0.01",
+                        "total_cost_with_ideal_subagents_usd": "0.11",
                         "tool_calls_total": "4",
                         "api_tool_calls": "2",
                         "error": "",
@@ -147,6 +153,8 @@ class TestRunModeAnalysisSemantic(unittest.TestCase):
                         "output_tokens": "30",
                         "total_tokens": "230",
                         "cost_usd": "0.20",
+                        "ideal_subagent_cost_usd": "0.03",
+                        "total_cost_with_ideal_subagents_usd": "0.23",
                         "tool_calls_total": "6",
                         "api_tool_calls": "3",
                         "error": "MaxTokensReachedException",
@@ -480,6 +488,12 @@ class TestRunModeAnalysisSemantic(unittest.TestCase):
             self.assertEqual(row["D_acc"], 0.5)
             self.assertEqual(row["avg_runtime_seconds"], 15.0)
             self.assertEqual(row["avg_total_tokens"], 175.0)
+            self.assertEqual(row["avg_cost_usd"], 0.15)
+            self.assertEqual(row["total_cost_usd"], 0.3)
+            self.assertEqual(row["avg_ideal_subagent_cost_usd"], 0.02)
+            self.assertEqual(row["total_ideal_subagent_cost_usd"], 0.04)
+            self.assertEqual(row["avg_total_cost_with_ideal_subagents_usd"], 0.17)
+            self.assertEqual(row["total_cost_with_ideal_subagents_usd"], 0.34)
             self.assertEqual(row["avg_query_file_calls"], 1.5)
             self.assertEqual(row["query_file_error_rate"], 0.3333)
             self.assertEqual(row["n_tasks_with_search"], 2)
@@ -504,6 +518,10 @@ class TestRunModeAnalysisSemantic(unittest.TestCase):
             self.assertEqual(variant_row["semantic_correct"], 1)
             self.assertEqual(variant_row["semantic_incorrect"], 1)
             self.assertEqual(variant_row["answer_unknown_blank"], 1)
+            self.assertEqual(variant_row["avg_ideal_subagent_cost_usd"], 0.0133)
+            self.assertEqual(variant_row["total_ideal_subagent_cost_usd"], 0.04)
+            self.assertEqual(variant_row["avg_total_cost_with_ideal_subagents_usd"], 0.2133)
+            self.assertEqual(variant_row["total_cost_with_ideal_subagents_usd"], 0.64)
             self.assertEqual(variant_row["error_turns_exhausted"], 1)
             self.assertEqual(variant_row["error_tokens_reached"], 1)
             self.assertNotIn("search_avg_recall", variant_row)
@@ -573,6 +591,8 @@ class TestRunModeAnalysisSemantic(unittest.TestCase):
             self.assertEqual(task_1_tool["first_hit_round_top_1"], 1)
 
             self.assertIn("failure", outputs)
+            runtime_row = outputs["runtime"][f"openai_gpt-5.2-xhigh/{variant_a}"]
+            self.assertEqual(runtime_row["total_cost_with_ideal_subagents_usd"], 0.34)
             failure_row = outputs["failure"][f"openai_gpt-5.2-xhigh/{variant_a}"]
             self.assertEqual(failure_row["primary"]["semantic_correct"]["n"], 1)
             self.assertEqual(failure_row["primary"]["error_tokens_reached"]["n"], 1)

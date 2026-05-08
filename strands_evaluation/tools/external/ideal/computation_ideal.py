@@ -4,13 +4,14 @@ from __future__ import annotations
 
 import json
 import logging
-import re
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional
 
 from strands import Agent, tool
 
 from strands_evaluation.config import AgentConfig
+from strands_evaluation.instrumentation.agent_plugins import LoggingPlugin
+from strands_evaluation.instrumentation.ideal_subagent_costs import record_subagent_call
 from strands_evaluation.llm.llm_factory import build_model
 from strands_evaluation.tools.agent_tools import _get_sandbox_dir, execute_code as _execute_code_tool
 from strands_evaluation.tools.agent_tools_v2 import peek_file as _peek_file_tool
@@ -26,6 +27,69 @@ logger = logging.getLogger(__name__)
 
 _S3_PREFIX = "s3://lakeqa-yc4103-datalake/"
 _MAX_REPAIR_ATTEMPTS = 2
+_REPAIR_MODEL_NAME = "openai/gpt-5.4"
+_SEMANTIC_MODEL_NAME = "openai/gpt-5.4-nano"
+_MAX_ENHANCED_CONTEXT_CHARS = 10_000
+_MAX_TARGET_CONTEXT_CHARS = 12_000
+
+_SEMANTIC_JUDGE_SYSTEM_PROMPT = (
+    "You judge semantic equivalence between a submitted computation "
+    "tool call and authored computation records."
+)
+_QUERY_REPAIR_SYSTEM_PROMPT = "You repair DuckDB SQL for a benchmark tool call."
+_CODE_REPAIR_SYSTEM_PROMPT = "You repair Python data-analysis code for a benchmark tool call."
+
+_SEMANTIC_JUDGE_PROMPT_TEMPLATE = """Tool: {tool_name}
+Submitted intent:
+{intent}
+
+Submitted {payload_label}:
+{payload}
+
+Candidate authored records:
+{candidates_json}
+
+Call select_match exactly once. Select a candidate only if the submitted {payload_label} and/or intent are semantically equivalent to that authored record's computation for the same source. Select 0 if the submitted call is unrelated, too vague, only asking for the answer, or not clearly the same computation. Never select a record merely because its answer would be useful."""
+
+_QUERY_REPAIR_PROMPT_TEMPLATE = """Rewrite the SQL so it accomplishes the user's intent against table alias t.
+Call submit_repaired_sql exactly once. Return only executable DuckDB SQL via the tool.
+
+Intent:
+{intent}
+
+Original SQL:
+{sql}
+
+Previous error:
+{previous_error}
+
+Plan records:
+{plan_records}
+
+Target dataset context:
+{target_dataset_context}"""
+
+_CODE_REPAIR_PROMPT_TEMPLATE = """Rewrite the Python code so it accomplishes the user's intent in the sandbox.
+The code must print the result. Call submit_repaired_code exactly once.
+
+Intent:
+{intent}
+
+Original code:
+{code}
+
+Previous error:
+{previous_error}
+
+Plan records:
+{plan_records}
+
+Target dataset context:
+{target_dataset_context}
+
+Sandbox context:
+{sandbox_context}"""
+
 _TASK_CONTEXT: Dict[str, Any] = {}
 _ACTIVE_PLAN: Optional[IdealTaskPlan] = None
 _STATS: Dict[str, int] = {
@@ -103,74 +167,6 @@ def _canonical_uri(source: str) -> str:
     return _S3_PREFIX + source.lstrip("/")
 
 
-def _tokens(text: Any) -> set[str]:
-    return set(re.findall(r"[a-z0-9]+", str(text or "").lower()))
-
-
-def _overlap_score(a: Any, b: Any) -> float:
-    left = _tokens(a)
-    right = _tokens(b)
-    if not left or not right:
-        return 0.0
-    return len(left & right) / len(left | right)
-
-
-def _source_filter(records: Iterable[IdealComputationRecord], dataset_id: str, source: str) -> List[IdealComputationRecord]:
-    dataset_id = _dataset_id_from_source(dataset_id)
-    source_dataset = _dataset_id_from_source(source)
-    wanted = dataset_id or source_dataset
-    records = list(records)
-    if not wanted:
-        return records
-    return [record for record in records if record.dataset_id == wanted]
-
-
-def _best_record(
-    records: Iterable[IdealComputationRecord],
-    *,
-    payload: str,
-    intent: str,
-    dataset_id: str = "",
-    source: str = "",
-) -> Optional[IdealComputationRecord]:
-    candidates = _source_filter(records, dataset_id, source)
-    if not candidates:
-        return None
-
-    scored: List[tuple[float, IdealComputationRecord]] = []
-    normalized_payload = " ".join(str(payload or "").split()).lower()
-    for record in candidates:
-        if getattr(record, "blocked", False):
-            continue
-        score = 0.0
-        payload_exact = False
-        if normalized_payload and normalized_payload == " ".join(record.payload.split()).lower():
-            payload_exact = True
-            score += 3.0
-        intent_score = _overlap_score(intent, record.intent)
-        payload_score = _overlap_score(payload, record.payload)
-        if not payload_exact and intent_score < 0.34 and payload_score < 0.65:
-            continue
-        score += intent_score * 2.0
-        score += payload_score
-        scored.append((score, record))
-
-    scored.sort(key=lambda item: item[0], reverse=True)
-    if not scored:
-        return None
-    best_score, best = scored[0]
-    return best if best_score >= 0.9 else None
-
-
-def _blocked_record(
-    records: Iterable[IdealComputationRecord], dataset_id: str, source: str
-) -> Optional[IdealComputationRecord]:
-    for record in _source_filter(records, dataset_id, source):
-        if getattr(record, "blocked", False):
-            return record
-    return None
-
-
 def _s3_uri_for_record(record: IdealComputationRecord) -> str:
     return _canonical_uri(record.source)
 
@@ -224,11 +220,6 @@ def _is_success(result: Any) -> bool:
     return "error" not in result
 
 
-def _decorate_repair_result(result: Dict[str, Any], *, attempts: int, repairs: List[Dict[str, str]]) -> Dict[str, Any]:
-    _ = attempts, repairs
-    return dict(result)
-
-
 def _plan_records_for_prompt(plan: IdealTaskPlan, records: Iterable[IdealComputationRecord]) -> str:
     rows = []
     for record in records:
@@ -254,22 +245,6 @@ def _plan_records_for_prompt(plan: IdealTaskPlan, records: Iterable[IdealComputa
     )
 
 
-def _profile_context(source: str) -> str:
-    if not source:
-        return ""
-    try:
-        from strands_evaluation.helper.peek_profile import load_dataset_profile
-    except Exception:
-        return ""
-    try:
-        profile = load_dataset_profile(_canonical_uri(source))
-    except Exception:
-        profile = None
-    if profile is None:
-        return ""
-    return json.dumps(profile, ensure_ascii=False)[:6000]
-
-
 def _enhanced_peek_context(source: str) -> str:
     if not source:
         return ""
@@ -292,48 +267,29 @@ def _enhanced_peek_context(source: str) -> str:
         if description:
             payload["dataset_description"] = str(description)
 
-    return json.dumps(payload, ensure_ascii=False)[:10000]
+    return json.dumps(payload, ensure_ascii=False)[:_MAX_ENHANCED_CONTEXT_CHARS]
 
 
-def _target_sources_for_code(
-    plan: IdealTaskPlan,
-    code: str,
-    intent: str,
-    records: Optional[Iterable[IdealComputationRecord]] = None,
-) -> List[str]:
-    scored: List[tuple[float, str]] = []
-    code_text = str(code or "").lower()
-    for record in list(records) if records is not None else plan.ideal_code:
-        score = _overlap_score(intent, record.intent)
-        if record.source and record.source.lower() in code_text:
-            score += 3.0
-        if record.dataset_id and record.dataset_id.lower() in code_text:
-            score += 2.0
-        scored.append((score, record.source))
-    scored.sort(key=lambda item: item[0], reverse=True)
+def _target_sources_for_records(records: Iterable[IdealComputationRecord]) -> List[str]:
     out: List[str] = []
-    for score, source in scored:
-        if source and source not in out and (score > 0 or not out):
+    for record in records:
+        source = record.source
+        if source and source not in out:
             out.append(source)
         if len(out) >= 3:
             break
     return out
 
 
-def _target_dataset_context_for_code(
-    plan: IdealTaskPlan,
-    code: str,
-    intent: str,
-    records: Optional[Iterable[IdealComputationRecord]] = None,
-) -> str:
+def _target_dataset_context(records: Iterable[IdealComputationRecord]) -> str:
     contexts = []
-    for source in _target_sources_for_code(plan, code, intent, records=records):
+    for source in _target_sources_for_records(records):
         context = _enhanced_peek_context(source)
         if context:
             contexts.append({"source": source, "context": json.loads(context)})
     if not contexts:
         return ""
-    return json.dumps(contexts, ensure_ascii=False)[:12000]
+    return json.dumps(contexts, ensure_ascii=False)[:_MAX_TARGET_CONTEXT_CHARS]
 
 
 def _sandbox_context() -> str:
@@ -355,14 +311,14 @@ def _sandbox_context() -> str:
 def _repair_model():
     return build_model(
         AgentConfig(
-            model_name="openai/gpt-5.4",
+            model_name=_REPAIR_MODEL_NAME,
             max_tokens=4096,
         )
     )
 
 
 def _semantic_model():
-    return build_model(AgentConfig(model_name="openai/gpt-5.4-nano"))
+    return build_model(AgentConfig(model_name=_SEMANTIC_MODEL_NAME))
 
 
 def _normalized_file_path(value: Any) -> str:
@@ -477,27 +433,43 @@ def _semantic_record_match(
         return "semantic match recorded"
 
     candidates_json = _plan_records_for_prompt(plan, records)
-    prompt = (
-        f"Tool: {tool_name}\n"
-        f"Submitted intent:\n{intent}\n\n"
-        f"Submitted {payload_label}:\n{payload}\n\n"
-        f"Candidate authored records:\n{candidates_json}\n\n"
-        "Call select_match exactly once. Select a candidate only if the submitted "
-        f"{payload_label} and/or intent are semantically equivalent to that authored "
-        "record's computation for the same source. Select 0 if the submitted call is "
-        "unrelated, too vague, only asking for the answer, or not clearly the same computation. "
-        "Never select a record merely because its answer would be useful."
+    prompt = _SEMANTIC_JUDGE_PROMPT_TEMPLATE.format(
+        tool_name=tool_name,
+        intent=intent,
+        payload_label=payload_label,
+        payload=payload,
+        candidates_json=candidates_json,
     )
     judge = Agent(
         model=_semantic_model(),
-        system_prompt=(
-            "You judge semantic equivalence between a submitted computation "
-            "tool call and authored computation records."
-        ),
+        system_prompt=_SEMANTIC_JUDGE_SYSTEM_PROMPT,
         tools=[select_match],
+        plugins=[LoggingPlugin()],
         callback_handler=None,
     )
-    judge(prompt)
+    try:
+        judge_result = judge(prompt)
+    except Exception as exc:
+        record_subagent_call(
+            tool=tool_name,
+            subagent_kind="semantic_judge",
+            model_name=_SEMANTIC_MODEL_NAME,
+            agent_result=None,
+            success=False,
+            candidate_count=len(records),
+            error=f"{type(exc).__name__}: {exc}",
+        )
+        raise
+    record_subagent_call(
+        tool=tool_name,
+        subagent_kind="semantic_judge",
+        model_name=_SEMANTIC_MODEL_NAME,
+        agent_result=judge_result,
+        success=True,
+        candidate_count=len(records),
+        selected_index=state["index"],
+        decision_recorded=state["index"] is not None,
+    )
     index = state["index"]
     if index is None:
         logger.warning("%s semantic judge recorded no decision", tool_name)
@@ -512,13 +484,11 @@ def _semantic_record_match(
 def _repair_query(
     *,
     plan: IdealTaskPlan,
-    dataset_id: str,
-    file_path: str,
-    s3_uri: str,
     sql: str,
     intent: str,
     records: Optional[Iterable[IdealComputationRecord]] = None,
     previous_error: str = "",
+    attempt: int | None = None,
 ) -> Dict[str, str]:
     state: Dict[str, str] = {}
 
@@ -529,29 +499,45 @@ def _repair_query(
         state["reason"] = reason
         return "repaired SQL recorded"
 
-    source = s3_uri or ""
-    if not source and dataset_id and file_path:
-        source = f"datagov/{dataset_id}/{file_path.lstrip('/')}"
-    prompt_records = list(records) if records is not None else _source_filter(plan.ideal_query, dataset_id, source)
+    prompt_records = list(records) if records is not None else list(plan.ideal_query)
     if not prompt_records:
         prompt_records = list(plan.ideal_query)
-    prompt = (
-        "Rewrite the SQL so it accomplishes the user's intent against table alias t.\n"
-        "Call submit_repaired_sql exactly once. Return only executable DuckDB SQL via the tool.\n\n"
-        f"Intent:\n{intent}\n\nOriginal SQL:\n{sql}\n\nPrevious error:\n{previous_error}\n\n"
-        f"Plan records:\n{_plan_records_for_prompt(plan, prompt_records)}\n\n"
-        f"Profile context:\n{_profile_context(source)}\n\n"
-        f"Target dataset context:\n{_enhanced_peek_context(source)}"
+    prompt = _QUERY_REPAIR_PROMPT_TEMPLATE.format(
+        intent=intent,
+        sql=sql,
+        previous_error=previous_error,
+        plan_records=_plan_records_for_prompt(plan, prompt_records),
+        target_dataset_context=_target_dataset_context(prompt_records),
     )
-    from strands_evaluation.instrumentation.agent_plugins import LoggingPlugin
-
-    Agent(
+    repair_agent = Agent(
         model=_repair_model(),
-        system_prompt="You repair DuckDB SQL for a benchmark tool call.",
+        system_prompt=_QUERY_REPAIR_SYSTEM_PROMPT,
         tools=[submit_repaired_sql],
         plugins=[LoggingPlugin()],
         callback_handler=None,
-    )(prompt)
+    )
+    try:
+        repair_result = repair_agent(prompt)
+    except Exception as exc:
+        record_subagent_call(
+            tool="query_ideal",
+            subagent_kind="repair_agent",
+            model_name=_REPAIR_MODEL_NAME,
+            agent_result=None,
+            attempt=attempt,
+            success=False,
+            error=f"{type(exc).__name__}: {exc}",
+        )
+        raise
+    record_subagent_call(
+        tool="query_ideal",
+        subagent_kind="repair_agent",
+        model_name=_REPAIR_MODEL_NAME,
+        agent_result=repair_result,
+        attempt=attempt,
+        success=True,
+        repair_tool_called=bool(state.get("sql")),
+    )
     return state
 
 
@@ -562,6 +548,7 @@ def _repair_code(
     intent: str,
     records: Optional[Iterable[IdealComputationRecord]] = None,
     previous_error: str = "",
+    attempt: int | None = None,
 ) -> Dict[str, str]:
     state: Dict[str, str] = {}
 
@@ -575,23 +562,43 @@ def _repair_code(
     prompt_records = list(records) if records is not None else list(plan.ideal_code)
     if not prompt_records:
         prompt_records = list(plan.ideal_code)
-    prompt = (
-        "Rewrite the Python code so it accomplishes the user's intent in the sandbox.\n"
-        "The code must print the result. Call submit_repaired_code exactly once.\n\n"
-        f"Intent:\n{intent}\n\nOriginal code:\n{code}\n\nPrevious error:\n{previous_error}\n\n"
-        f"Plan records:\n{_plan_records_for_prompt(plan, prompt_records)}\n\n"
-        f"Target dataset context:\n{_target_dataset_context_for_code(plan, code, intent, records=prompt_records)}\n\n"
-        f"Sandbox context:\n{_sandbox_context()}"
+    prompt = _CODE_REPAIR_PROMPT_TEMPLATE.format(
+        intent=intent,
+        code=code,
+        previous_error=previous_error,
+        plan_records=_plan_records_for_prompt(plan, prompt_records),
+        target_dataset_context=_target_dataset_context(prompt_records),
+        sandbox_context=_sandbox_context(),
     )
-    from strands_evaluation.instrumentation.agent_plugins import LoggingPlugin
-
-    Agent(
+    repair_agent = Agent(
         model=_repair_model(),
-        system_prompt="You repair Python data-analysis code for a benchmark tool call.",
+        system_prompt=_CODE_REPAIR_SYSTEM_PROMPT,
         tools=[submit_repaired_code],
         plugins=[LoggingPlugin()],
         callback_handler=None,
-    )(prompt)
+    )
+    try:
+        repair_result = repair_agent(prompt)
+    except Exception as exc:
+        record_subagent_call(
+            tool="execute_ideal",
+            subagent_kind="repair_agent",
+            model_name=_REPAIR_MODEL_NAME,
+            agent_result=None,
+            attempt=attempt,
+            success=False,
+            error=f"{type(exc).__name__}: {exc}",
+        )
+        raise
+    record_subagent_call(
+        tool="execute_ideal",
+        subagent_kind="repair_agent",
+        model_name=_REPAIR_MODEL_NAME,
+        agent_result=repair_result,
+        attempt=attempt,
+        success=True,
+        repair_tool_called=bool(state.get("code")),
+    )
     return state
 
 
@@ -641,7 +648,6 @@ def query_ideal(
     if blocked_record is not None:
         return _blocked_query_payload(blocked_record)
 
-    repairs: List[Dict[str, str]] = []
     previous_error = ""
     last_result: Dict[str, Any] = {
         "success": False,
@@ -659,13 +665,11 @@ def query_ideal(
         try:
             repaired = _repair_query(
                 plan=plan,
-                dataset_id=dataset_id,
-                file_path=file_path,
-                s3_uri=s3_uri,
                 sql=sql,
                 intent=intent,
                 records=candidate_records or plan.ideal_query,
                 previous_error=previous_error,
+                attempt=attempt,
             )
         except Exception as exc:
             error = f"SQL repair failed: {type(exc).__name__}: {exc}"
@@ -675,7 +679,6 @@ def query_ideal(
                 attempt=attempt,
                 error=error,
             )
-            repairs.append({"sql": "", "reason": "", "error": error})
             last_result = {"success": False, "error": error}
             previous_error = error
             continue
@@ -687,7 +690,6 @@ def query_ideal(
             repair_reason=str(repaired.get("reason") or ""),
             submitted_sql=repaired_sql,
         )
-        repairs.append({"sql": repaired_sql, "reason": str(repaired.get("reason") or "")})
         if not repaired_sql:
             last_result = {"success": False, "error": "SQL repair returned empty SQL."}
             previous_error = last_result["error"]
@@ -699,10 +701,10 @@ def query_ideal(
             s3_uri=s3_uri,
         )
         if _is_success(last_result):
-            return _decorate_repair_result(last_result, attempts=attempt, repairs=repairs)
+            return dict(last_result)
         previous_error = str(last_result.get("error") or last_result)
 
-    return _decorate_repair_result(last_result, attempts=len(repairs), repairs=repairs)
+    return dict(last_result)
 
 
 @tool
@@ -741,7 +743,6 @@ def execute_ideal(
     if record is not None:
         return _execute_answer_payload(record)
 
-    repairs: List[Dict[str, str]] = []
     previous_error = ""
     last_result: Dict[str, Any] = {
         "success": False,
@@ -763,6 +764,7 @@ def execute_ideal(
                 intent=intent,
                 records=candidate_records or plan.ideal_code,
                 previous_error=previous_error,
+                attempt=attempt,
             )
         except Exception as exc:
             error = f"Code repair failed: {type(exc).__name__}: {exc}"
@@ -772,7 +774,6 @@ def execute_ideal(
                 attempt=attempt,
                 error=error,
             )
-            repairs.append({"code": "", "reason": "", "error": error})
             last_result = {"success": False, "error": error}
             previous_error = error
             continue
@@ -784,17 +785,16 @@ def execute_ideal(
             repair_reason=str(repaired.get("reason") or ""),
             submitted_code=repaired_code,
         )
-        repairs.append({"code": repaired_code, "reason": str(repaired.get("reason") or "")})
         if not repaired_code:
             last_result = {"success": False, "error": "Code repair returned empty code."}
             previous_error = last_result["error"]
             continue
         last_result = _base_execute_code(repaired_code)
         if _is_success(last_result):
-            return _decorate_repair_result(last_result, attempts=attempt, repairs=repairs)
+            return dict(last_result)
         previous_error = str(last_result.get("error") or last_result)
 
-    return _decorate_repair_result(last_result, attempts=len(repairs), repairs=repairs)
+    return dict(last_result)
 
 
 __all__ = [

@@ -68,6 +68,20 @@ def _dist(vals: list) -> dict:
     }
 
 
+def _as_float(value) -> float:
+    try:
+        return float(value or 0.0)
+    except (TypeError, ValueError):
+        return 0.0
+
+
+def _total_cost_with_ideal_subagents(record: dict) -> float:
+    explicit = record.get("total_cost_with_ideal_subagents_usd")
+    if explicit not in (None, ""):
+        return _as_float(explicit)
+    return _as_float(record.get("cost_usd")) + _as_float(record.get("ideal_subagent_cost_usd"))
+
+
 # ---------------------------------------------------------------------------
 # EM / F1
 # ---------------------------------------------------------------------------
@@ -197,11 +211,18 @@ def run_efficiency(results_dir: str) -> dict:
 
     out = {}
     for key, rows in sorted(by_cm.items()):
+        main_costs = [_as_float(r.get("cost_usd")) for r in rows]
+        ideal_subagent_costs = [_as_float(r.get("ideal_subagent_cost_usd")) for r in rows]
+        combined_costs = [_total_cost_with_ideal_subagents(r) for r in rows]
         out[key] = {
-            "cost_usd": _dist([r.get("cost_usd", 0.0) for r in rows]),
+            "cost_usd": _dist(main_costs),
+            "ideal_subagent_cost_usd": _dist(ideal_subagent_costs),
+            "total_cost_with_ideal_subagents_usd": _dist(combined_costs),
             "time_s": _dist([r.get("time", 0.0) for r in rows]),
             "tool_calls": _dist([r.get("tool_calls_total", 0) for r in rows]),
-            "total_cost_usd": sum(r.get("cost_usd", 0.0) for r in rows),
+            "total_cost_usd": sum(main_costs),
+            "total_ideal_subagent_cost_usd": sum(ideal_subagent_costs),
+            "total_cost_with_ideal_subagents_sum_usd": sum(combined_costs),
             "n": len(rows),
         }
     return out
@@ -324,6 +345,15 @@ def build_summary(em: dict, discovery: dict, failure: dict, efficiency: dict, se
             row["em"] = round(e.get("em", 0) or 0, 3)
             row["f1"] = round(e.get("f1", 0) or 0, 3)
             row["avg_cost_usd"] = round(e.get("avg_cost_usd", 0), 4)
+            row["total_cost_usd"] = round(e.get("total_cost_usd", 0), 4)
+            row["avg_ideal_subagent_cost_usd"] = round(e.get("avg_ideal_subagent_cost_usd", 0), 4)
+            row["total_ideal_subagent_cost_usd"] = round(e.get("total_ideal_subagent_cost_usd", 0), 4)
+            row["avg_total_cost_with_ideal_subagents_usd"] = round(
+                e.get("avg_total_cost_with_ideal_subagents_usd", 0), 4
+            )
+            row["total_cost_with_ideal_subagents_usd"] = round(
+                e.get("total_cost_with_ideal_subagents_usd", 0), 4
+            )
             row["avg_tool_calls"] = round(e.get("avg_tool_calls", 0), 1)
             row["avg_search_calls"] = round(e.get("avg_search_calls", 0), 1)
             row["avg_query_file_calls"] = round(e.get("avg_query_file_calls", 0), 1)

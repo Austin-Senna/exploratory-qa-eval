@@ -13,7 +13,20 @@ import json
 from collections import defaultdict
 from pathlib import Path
 
-_READ_TOOLS = {"read_file", "grep_file", "query_file"}
+_READ_TOOLS = {
+    "read_file",
+    "peek_file",
+    "peek_multiple",
+    "grep_file",
+    "parse_xml_records",
+    "query_file",
+    "query_ideal",
+}
+_AUXILIARY_TRACE_EVENTS = {"ideal_subagent_cost"}
+
+
+def _is_auxiliary_trace(record: dict) -> bool:
+    return record.get("event") in _AUXILIARY_TRACE_EVENTS
 
 
 def make_task_stem_key(task_id: str) -> str:
@@ -76,7 +89,13 @@ def compute_discovery_metrics(
             continue
 
         # Separate search traces from read traces and submit_answer record
-        search_traces = [t for t in task_traces if t.get("tool") not in _READ_TOOLS and t.get("tool") != "submit_answer"]
+        search_traces = [
+            t
+            for t in task_traces
+            if not _is_auxiliary_trace(t)
+            and t.get("tool") not in _READ_TOOLS
+            and t.get("tool") != "submit_answer"
+        ]
         submit_record = next((t for t in task_traces if t.get("tool") == "submit_answer"), None)
 
         # D_ret coverage: how much of the gold set was retrieved by search results?
@@ -119,7 +138,9 @@ def compute_discovery_metrics(
         # - d_acc_recall (legacy D_acc): how much of the gold set was accessed
         # - d_acc_precision: how much of accessed set is gold
         # - d_acc_f1: harmonic mean of read precision/recall
-        read_records = [t for t in task_traces if t.get("tool") in _READ_TOOLS]
+        read_records = [
+            t for t in task_traces if not _is_auxiliary_trace(t) and t.get("tool") in _READ_TOOLS
+        ]
         all_read_ids: set = set()
         for rec in read_records:
             all_read_ids.update(rec.get("read_dataset_ids", []))
@@ -250,6 +271,8 @@ def compute_tools_discovery(
         if not gold_ids:
             continue
         for rec in task_traces:
+            if _is_auxiliary_trace(rec):
+                continue
             tool = rec.get("tool")
             if not tool or tool == "submit_answer" or tool in _READ_TOOLS:
                 continue

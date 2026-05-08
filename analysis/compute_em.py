@@ -56,6 +56,24 @@ def _count_tool_calls(record: dict, tool_name: str) -> int:
     )
 
 
+def _as_float(value) -> float:
+    try:
+        return float(value or 0.0)
+    except (TypeError, ValueError):
+        return 0.0
+
+
+def _ideal_subagent_cost(record: dict) -> float:
+    return _as_float(record.get("ideal_subagent_cost_usd"))
+
+
+def _total_cost_with_ideal_subagents(record: dict) -> float:
+    explicit = record.get("total_cost_with_ideal_subagents_usd")
+    if explicit not in (None, ""):
+        return _as_float(explicit)
+    return _as_float(record.get("cost_usd")) + _ideal_subagent_cost(record)
+
+
 def compute_stats(records: list[dict]) -> dict:
     """Group by (condition, model) and compute EM, F1, cost, tool_calls, search_calls."""
     groups: dict = defaultdict(list)
@@ -68,7 +86,9 @@ def compute_stats(records: list[dict]) -> dict:
         n = len(rows)
         em_vals = [r.get("exact_match", 0) for r in rows if "exact_match" in r]
         f1_vals = [r.get("f1_score", 0.0) for r in rows if "f1_score" in r]
-        cost_vals = [r.get("cost_usd", 0.0) for r in rows]
+        cost_vals = [_as_float(r.get("cost_usd")) for r in rows]
+        ideal_subagent_cost_vals = [_ideal_subagent_cost(r) for r in rows]
+        total_with_ideal_vals = [_total_cost_with_ideal_subagents(r) for r in rows]
         tool_vals = [r.get("tool_calls_total", 0) for r in rows]
         time_vals = [r.get("time", 0.0) for r in rows]
         search_vals = [_count_search_calls(r) for r in rows]
@@ -84,6 +104,10 @@ def compute_stats(records: list[dict]) -> dict:
             "f1": sum(f1_vals) / len(f1_vals) if f1_vals else None,
             "avg_cost_usd": sum(cost_vals) / n if n else 0.0,
             "total_cost_usd": sum(cost_vals),
+            "avg_ideal_subagent_cost_usd": sum(ideal_subagent_cost_vals) / n if n else 0.0,
+            "total_ideal_subagent_cost_usd": sum(ideal_subagent_cost_vals),
+            "avg_total_cost_with_ideal_subagents_usd": sum(total_with_ideal_vals) / n if n else 0.0,
+            "total_cost_with_ideal_subagents_usd": sum(total_with_ideal_vals),
             "avg_tool_calls": sum(tool_vals) / n if n else 0.0,
             "avg_search_calls": sum(search_vals) / n if n else 0.0,
             "avg_query_file_calls": sum(query_file_vals) / n if n else 0.0,
@@ -123,8 +147,13 @@ def main() -> None:
 
     if args.output:
         import csv
-        fields = ["condition", "model", "n", "em", "em_count", "f1",
-                  "avg_cost_usd", "total_cost_usd", "avg_tool_calls", "avg_time_s"]
+        fields = [
+            "condition", "model", "n", "em", "em_count", "f1",
+            "avg_cost_usd", "total_cost_usd",
+            "avg_ideal_subagent_cost_usd", "total_ideal_subagent_cost_usd",
+            "avg_total_cost_with_ideal_subagents_usd", "total_cost_with_ideal_subagents_usd",
+            "avg_tool_calls", "avg_time_s",
+        ]
         with open(args.output, "w", newline="") as f:
             writer = csv.DictWriter(f, fieldnames=fields)
             writer.writeheader()

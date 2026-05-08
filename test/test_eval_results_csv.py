@@ -71,6 +71,19 @@ class EvalResultsCsvTests(unittest.TestCase):
                     "api_tool_calls": 2,
                     "execute_ideal_agent_repair_calls": 1,
                     "query_ideal_agent_repair_calls": 2,
+                    "ideal_subagent_calls": 3,
+                    "ideal_subagent_input_tokens": 100,
+                    "ideal_subagent_cached_input_tokens": 70,
+                    "ideal_subagent_uncached_input_tokens": 30,
+                    "ideal_subagent_output_tokens": 20,
+                    "ideal_subagent_total_tokens": 120,
+                    "ideal_subagent_cost_usd": 0.05,
+                    "search_ideal_subagent_calls": 1,
+                    "search_ideal_subagent_cost_usd": 0.01,
+                    "query_ideal_subagent_calls": 1,
+                    "query_ideal_subagent_cost_usd": 0.02,
+                    "execute_ideal_subagent_calls": 1,
+                    "execute_ideal_subagent_cost_usd": 0.02,
                     "success": True,
                     "error": "",
                     "reasoning": "should not appear in csv",
@@ -113,12 +126,32 @@ class EvalResultsCsvTests(unittest.TestCase):
                     "api_tool_calls",
                     "execute_ideal_agent_repair_calls",
                     "query_ideal_agent_repair_calls",
+                    "ideal_subagent_calls",
+                    "ideal_subagent_input_tokens",
+                    "ideal_subagent_cached_input_tokens",
+                    "ideal_subagent_uncached_input_tokens",
+                    "ideal_subagent_output_tokens",
+                    "ideal_subagent_total_tokens",
+                    "ideal_subagent_cost_usd",
+                    "search_ideal_subagent_calls",
+                    "search_ideal_subagent_cost_usd",
+                    "query_ideal_subagent_calls",
+                    "query_ideal_subagent_cost_usd",
+                    "execute_ideal_subagent_calls",
+                    "execute_ideal_subagent_cost_usd",
+                    "total_cost_with_ideal_subagents_usd",
                     "success",
                     "error",
                 },
             )
             self.assertEqual(row["execute_ideal_agent_repair_calls"], "1")
             self.assertEqual(row["query_ideal_agent_repair_calls"], "2")
+            self.assertEqual(row["ideal_subagent_calls"], "3")
+            self.assertEqual(row["ideal_subagent_uncached_input_tokens"], "30")
+            self.assertEqual(row["search_ideal_subagent_cost_usd"], "0.01")
+            self.assertEqual(row["query_ideal_subagent_cost_usd"], "0.02")
+            self.assertEqual(row["execute_ideal_subagent_cost_usd"], "0.02")
+            self.assertAlmostEqual(float(row["total_cost_with_ideal_subagents_usd"]), 0.30)
             self.assertEqual(row["required_dataset_count"], "2")
             self.assertEqual(row["sources_used_count"], "2")
             self.assertNotIn("reasoning", row)
@@ -151,6 +184,7 @@ class EvalResultsCsvTests(unittest.TestCase):
                         "api_tool_calls",
                         "execute_ideal_agent_repair_calls",
                         "query_ideal_agent_repair_calls",
+                        "ideal_subagent_cost_usd",
                         "success",
                         "error",
                     ],
@@ -177,6 +211,7 @@ class EvalResultsCsvTests(unittest.TestCase):
                         "api_tool_calls": "2",
                         "execute_ideal_agent_repair_calls": "4",
                         "query_ideal_agent_repair_calls": "5",
+                        "ideal_subagent_cost_usd": "0.03",
                         "success": "True",
                         "error": "",
                     }
@@ -193,6 +228,8 @@ class EvalResultsCsvTests(unittest.TestCase):
             self.assertEqual(row["sources_used_count"], "1")
             self.assertEqual(row["execute_ideal_agent_repair_calls"], "4")
             self.assertEqual(row["query_ideal_agent_repair_calls"], "5")
+            self.assertEqual(row["ideal_subagent_cost_usd"], "0.03")
+            self.assertAlmostEqual(float(row["total_cost_with_ideal_subagents_usd"]), 0.28)
             self.assertNotIn("reasoning", row)
             self.assertNotIn("required_datasets", row)
             self.assertNotIn("sources_used", row)

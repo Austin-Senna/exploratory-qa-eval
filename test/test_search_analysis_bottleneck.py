@@ -54,6 +54,8 @@ class TestSearchAnalysisBottleneck(unittest.TestCase):
                         "exact_match": 1,
                         "f1_score": 1.0,
                         "cost_usd": 0.1,
+                        "ideal_subagent_cost_usd": 0.01,
+                        "total_cost_with_ideal_subagents_usd": 0.11,
                         "tool_calls_total": 2,
                         "time": 1.0,
                         "tool_counts": [
@@ -66,6 +68,7 @@ class TestSearchAnalysisBottleneck(unittest.TestCase):
                         "exact_match": 0,
                         "f1_score": 0.0,
                         "cost_usd": 0.2,
+                        "ideal_subagent_cost_usd": 0.02,
                         "tool_calls_total": 2,
                         "time": 2.0,
                         "tool_counts": [
@@ -177,6 +180,10 @@ class TestSearchAnalysisBottleneck(unittest.TestCase):
             summary_row = summary[0]
             self.assertEqual(summary_row["condition_model"], condition_model)
             self.assertEqual(summary_row["n_tasks_with_search"], 3)
+            self.assertEqual(summary_row["total_cost_usd"], 0.5)
+            self.assertEqual(summary_row["total_ideal_subagent_cost_usd"], 0.03)
+            self.assertEqual(summary_row["total_cost_with_ideal_subagents_usd"], 0.53)
+            self.assertEqual(summary_row["avg_total_cost_with_ideal_subagents_usd"], 0.1325)
             self.assertEqual(summary_row["n_tasks_without_search"], 1)
             self.assertEqual(summary_row["found_tasks_top_1"], 2)
             self.assertEqual(summary_row["not_found_tasks_top_1"], 1)

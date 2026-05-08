@@ -9,6 +9,8 @@ from typing import Any, Dict
 from strands import Agent, tool
 
 from strands_evaluation.config import AgentConfig
+from strands_evaluation.instrumentation.agent_plugins import LoggingPlugin
+from strands_evaluation.instrumentation.ideal_subagent_costs import record_subagent_call
 from strands_evaluation.llm.llm_factory import build_model
 from strands_evaluation.tools.external.ideal.plan_store import (
     load_plan_for_context,
@@ -132,6 +134,7 @@ def _build_judge(remaining: list[tuple[str, str]]) -> tuple[Agent, Dict[str, Any
         model=_judge_model(),
         system_prompt=_JUDGE_SYSTEM_PROMPT,
         tools=[pick],
+        plugins=[LoggingPlugin()],
         callback_handler=None,
     )
     return judge, state
@@ -170,7 +173,29 @@ def search_ideal(query: str, top_k: int = 100) -> dict:
         return _dataset_not_found_response(query, plan_exhausted=True)
 
     judge, state = _build_judge(remaining)
-    judge(_format_judge_prompt(query, remaining))
+    try:
+        judge_result = judge(_format_judge_prompt(query, remaining))
+    except Exception as exc:
+        record_subagent_call(
+            tool="search_ideal",
+            subagent_kind="judge",
+            model_name="openai/gpt-5.4-nano",
+            agent_result=None,
+            success=False,
+            candidate_count=len(remaining),
+            error=f"{type(exc).__name__}: {exc}",
+        )
+        raise
+    record_subagent_call(
+        tool="search_ideal",
+        subagent_kind="judge",
+        model_name="openai/gpt-5.4-nano",
+        agent_result=judge_result,
+        success=True,
+        candidate_count=len(remaining),
+        selected_count=len(state["picked"] or []),
+        decision_recorded=state["picked"] is not None,
+    )
 
     if state["picked"] is None:
         logger.warning("search_ideal judge recorded no pick; returning dataset not found")

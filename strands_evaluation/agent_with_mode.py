@@ -910,6 +910,9 @@ def _run_task_worker(
         gold_ids = task.get("datasets_used", [])
         task_id = task.get("id", str(task_index))
         set_trace_context(task_id, gold_ids, cond.trace_output_dir)
+        from strands_evaluation.instrumentation import ideal_subagent_costs as _ideal_costs
+
+        _ideal_costs.reset_stats()
 
         task_context = {
             "task_id": task_id,
@@ -959,6 +962,12 @@ def _run_task_worker(
             from strands_evaluation.tools.external.ideal import computation_ideal as _ci
 
             result_dict.update(_ci.get_stats())
+
+        ideal_subagent_stats = _ideal_costs.get_stats()
+        result_dict.update(ideal_subagent_stats)
+        result_dict["total_cost_with_ideal_subagents_usd"] = (
+            result.cost_usd + float(ideal_subagent_stats.get("ideal_subagent_cost_usd", 0.0) or 0.0)
+        )
 
         # Compute accuracy metrics if ground truth available
         if task.get("answer"):

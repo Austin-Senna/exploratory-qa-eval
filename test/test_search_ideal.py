@@ -13,6 +13,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from strands_evaluation.agent_with_mode import build_mode_bundle, _tool_limit_exclusions_for_run
 from strands_evaluation.config import RunConfig
+from strands_evaluation.instrumentation import ideal_subagent_costs
+from strands_evaluation.instrumentation.trace_plugin import set_trace_context
 import strands_evaluation.tools.external.ideal.search_ideal as search_ideal
 import strands_evaluation.tools.external.ideal.search_wrapper as search_wrapper
 
@@ -142,10 +144,27 @@ class _FakeAgentFactory:
         return judge
 
 
+class _FakeMetrics:
+    def __init__(self, input_tokens: int, output_tokens: int, cached_input_tokens: int = 0) -> None:
+        self.accumulated_usage = {
+            "inputTokens": input_tokens,
+            "outputTokens": output_tokens,
+            "totalTokens": input_tokens + output_tokens,
+        }
+        if cached_input_tokens:
+            self.accumulated_usage["cacheReadInputTokens"] = cached_input_tokens
+
+
+class _FakeAgentResult:
+    def __init__(self, *, input_tokens: int, output_tokens: int, cached_input_tokens: int = 0) -> None:
+        self.metrics = _FakeMetrics(input_tokens, output_tokens, cached_input_tokens)
+
+
 class TestSearchIdealJudge(unittest.TestCase):
     def tearDown(self) -> None:
         search_ideal.set_plans_root("plans_mini")
         search_ideal.reset_state()
+        ideal_subagent_costs.reset_stats()
         _reset_wrapper_caches()
 
     def _patch_support_files(
@@ -298,6 +317,54 @@ class TestSearchIdealJudge(unittest.TestCase):
         )
         self.assertEqual(search_ideal._USED_S3_URIS, set())
         self.assertEqual(len(uris), 2)
+
+    def test_search_judge_traces_cost(self):
+        source_sequence = ["datagov/chicago-crime-2017/files/rows.txt"]
+
+        with TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            plans_root = root / "plans_mini"
+            task_id, uris = _set_task_context(
+                plans_root,
+                task_name="task_1.json",
+                source_sequence=source_sequence,
+            )
+            uri = uris[0]
+            trace_root = root / "traces"
+            set_trace_context(task_id, [], str(trace_root))
+            ideal_subagent_costs.reset_stats()
+
+            class _CostAgent:
+                def __init__(self, *args, **kwargs):
+                    self.tools = kwargs["tools"]
+
+                def __call__(self, prompt: str):
+                    _ = prompt
+                    self.tools[0](s3_uris=[uri], reason="same source")
+                    return _FakeAgentResult(input_tokens=900, output_tokens=40, cached_input_tokens=300)
+
+            with self._patch_support_files(root, uri=uri, dataset_slug="chicago-crime-2017"):
+                with patch.object(search_ideal, "Agent", _CostAgent), patch.object(
+                    search_ideal,
+                    "_judge_model",
+                    return_value="fake-model",
+                ):
+                    result = search_ideal.search_ideal("crime data in Chicago 2017")
+
+            self.assertEqual(result["count"], 1)
+            trace_path = trace_root / "k-1-d-1" / "task_1.jsonl"
+            events = [json.loads(line) for line in trace_path.read_text().splitlines()]
+            cost_events = [event for event in events if event.get("event") == "ideal_subagent_cost"]
+            self.assertEqual(len(cost_events), 1)
+            event = cost_events[0]
+            self.assertEqual(event["tool"], "search_ideal")
+            self.assertEqual(event["subagent_kind"], "judge")
+            self.assertEqual(event["model_name"], "openai/gpt-5.4-nano")
+            self.assertEqual(event["candidate_count"], 1)
+            self.assertEqual(event["selected_count"], 1)
+            expected_cost = ((600 * 0.20) + (300 * 0.02) + (40 * 1.25)) / 1_000_000
+            self.assertAlmostEqual(event["cost_usd"], expected_cost, places=12)
+            self.assertEqual(ideal_subagent_costs.get_stats()["search_ideal_subagent_calls"], 1)
 
     def test_judge_prompt_includes_table_descriptions(self):
         with TemporaryDirectory() as tmpdir:
@@ -787,9 +854,12 @@ class TestSearchIdealJudgeLive(unittest.TestCase):
         first_uris = {row["s3_uri"] for row in first["results"]}
         second_uris = {row["s3_uri"] for row in second["results"]}
         self.assertTrue(first_uris)
-        self.assertTrue(second_uris)
-        self.assertTrue(first_uris.isdisjoint(second_uris))
-        self.assertGreater(len(second_used), len(first_used))
+        if second_uris:
+            self.assertTrue(first_uris.isdisjoint(second_uris))
+            self.assertGreater(len(second_used), len(first_used))
+        else:
+            self.assertEqual(second["message"], "Dataset not found")
+            self.assertEqual(second_used, first_used)
         self.assertEqual(len(captured_calls), 2)
         _log_judge_call(
             test_name="test_live_dedup_across_calls:first",

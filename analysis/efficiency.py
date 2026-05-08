@@ -66,6 +66,20 @@ def print_distribution(label: str, vals: list, unit: str = "") -> None:
     print(f"  {label}: mean={mean:.2f}{unit}  p50={p50:.2f}{unit}  p90={p90:.2f}{unit}  p99={p99:.2f}{unit}  n={n}")
 
 
+def as_float(value) -> float:
+    try:
+        return float(value or 0.0)
+    except (TypeError, ValueError):
+        return 0.0
+
+
+def total_cost_with_ideal_subagents(record: dict) -> float:
+    explicit = record.get("total_cost_with_ideal_subagents_usd")
+    if explicit not in (None, ""):
+        return as_float(explicit)
+    return as_float(record.get("cost_usd")) + as_float(record.get("ideal_subagent_cost_usd"))
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--results-dir", default="results")
@@ -85,11 +99,15 @@ def main() -> None:
     print("\n=== Per-Task Efficiency by Condition ===")
     for cond, rows in sorted(by_condition.items()):
         print(f"\nCondition: {cond} (n={len(rows)})")
-        costs = [r.get("cost_usd", 0.0) for r in rows]
+        costs = [as_float(r.get("cost_usd")) for r in rows]
+        ideal_subagent_costs = [as_float(r.get("ideal_subagent_cost_usd")) for r in rows]
+        combined_costs = [total_cost_with_ideal_subagents(r) for r in rows]
         times = [r.get("time", 0.0) for r in rows]
         tools = [r.get("tool_calls_total", 0) for r in rows]
         cycles = [r.get("cycle_count", 0) for r in rows if r.get("cycle_count")]
-        print_distribution("Cost (USD)", costs, "$")
+        print_distribution("Cost (USD, main agent)", costs, "$")
+        print_distribution("Ideal subagent cost (USD)", ideal_subagent_costs, "$")
+        print_distribution("Total cost incl. ideal subagents (USD)", combined_costs, "$")
         print_distribution("Runtime (s)", times, "s")
         print_distribution("Tool calls", tools)
         if cycles:

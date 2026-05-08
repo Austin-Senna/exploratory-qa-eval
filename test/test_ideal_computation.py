@@ -17,6 +17,7 @@ from strands.hooks.events import (
 
 from strands_evaluation.agent_with_mode import build_mode_bundle
 from strands_evaluation.config import RunConfig
+from strands_evaluation.instrumentation import ideal_subagent_costs
 from strands_evaluation.instrumentation.trace_plugin import set_trace_context
 from strands_evaluation.instrumentation.agent_plugins import LoggingPlugin
 from strands_evaluation.tools.agent_tools import execute_code
@@ -31,6 +32,22 @@ from strands_evaluation.tools.external.ideal.plan_store import (
 _COMPUTATION_LOG_PATH = Path("test_logs/ideal_computation_tools.jsonl")
 _COMPUTATION_TRANSCRIPT_LOG_PATH = Path("test_logs/ideal_computation_tool_transcript.log")
 _CORE_QUALITY_TASK_ID = "tasks_core_quality/k-1-d-1/task_2.json"
+
+
+class _FakeMetrics:
+    def __init__(self, input_tokens: int, output_tokens: int, cached_input_tokens: int = 0) -> None:
+        self.accumulated_usage = {
+            "inputTokens": input_tokens,
+            "outputTokens": output_tokens,
+            "totalTokens": input_tokens + output_tokens,
+        }
+        if cached_input_tokens:
+            self.accumulated_usage["cacheReadInputTokens"] = cached_input_tokens
+
+
+class _FakeAgentResult:
+    def __init__(self, *, input_tokens: int, output_tokens: int, cached_input_tokens: int = 0) -> None:
+        self.metrics = _FakeMetrics(input_tokens, output_tokens, cached_input_tokens)
 
 
 class IdealComputationToolTests(unittest.TestCase):
@@ -68,6 +85,7 @@ class IdealComputationToolTests(unittest.TestCase):
         )
         set_plans_root(self._plans_root)
         computation_ideal.reset_state()
+        ideal_subagent_costs.reset_stats()
         computation_ideal.set_task_context({"task_id": "tasks_mini/k-1-d-1/task_1.json"})
 
     @staticmethod
@@ -76,6 +94,7 @@ class IdealComputationToolTests(unittest.TestCase):
 
     def tearDown(self) -> None:
         computation_ideal.reset_state()
+        ideal_subagent_costs.reset_stats()
         set_plans_root("plans_mini")
         set_task_context({})
         self._tmp.cleanup()
@@ -138,6 +157,7 @@ class IdealComputationToolTests(unittest.TestCase):
             def __call__(self, prompt: str) -> None:
                 captured["prompt"] = prompt
                 self.tools[0](index=1, reason="same computation")
+                return _FakeAgentResult(input_tokens=1000, output_tokens=50, cached_input_tokens=400)
 
         with patch.object(computation_ideal, "Agent", _JudgeAgent), patch.object(
             computation_ideal,
@@ -158,6 +178,54 @@ class IdealComputationToolTests(unittest.TestCase):
         self.assertIn("semantic equivalence", captured["system_prompt"])
         self.assertIn("Submitted Python code", captured["prompt"])
         self.assertIn("Never select a record merely because its answer would be useful", captured["prompt"])
+
+    def test_semantic_record_match_traces_cost(self):
+        plan = load_plan_for_task("tasks_mini/k-1-d-1/task_1.json")
+        trace_root = Path(self._tmp.name) / "semantic_traces"
+        set_trace_context("tasks_mini/k-1-d-1/task_1.json", [], str(trace_root))
+        ideal_subagent_costs.reset_stats()
+
+        class _JudgeAgent:
+            def __init__(self, *args, **kwargs):
+                self.tools = kwargs["tools"]
+
+            def __call__(self, prompt: str):
+                _ = prompt
+                self.tools[0](index=1, reason="same computation")
+                return _FakeAgentResult(input_tokens=1000, output_tokens=50, cached_input_tokens=400)
+
+        with patch.object(computation_ideal, "Agent", _JudgeAgent), patch.object(
+            computation_ideal,
+            "_semantic_model",
+            return_value="fake-nano-model",
+        ):
+            record = computation_ideal._semantic_record_match(
+                plan=plan,
+                tool_name="query_ideal",
+                payload_label="SQL",
+                payload="SELECT COUNT(*) AS n FROM t",
+                intent="count all rows",
+                candidates=plan.ideal_query,
+            )
+
+        self.assertEqual(record, plan.ideal_query[0])
+        trace_path = trace_root / "k-1-d-1" / "task_1.jsonl"
+        events = [json.loads(line) for line in trace_path.read_text().splitlines()]
+        cost_events = [event for event in events if event.get("event") == "ideal_subagent_cost"]
+        self.assertEqual(len(cost_events), 1)
+        event = cost_events[0]
+        self.assertEqual(event["tool"], "query_ideal")
+        self.assertEqual(event["subagent_kind"], "semantic_judge")
+        self.assertEqual(event["model_name"], "openai/gpt-5.4-nano")
+        self.assertEqual(event["input_tokens"], 1000)
+        self.assertEqual(event["cached_input_tokens"], 400)
+        self.assertEqual(event["uncached_input_tokens"], 600)
+        self.assertEqual(event["output_tokens"], 50)
+        self.assertEqual(event["candidate_count"], 1)
+        self.assertEqual(event["selected_index"], 1)
+        expected_cost = ((600 * 0.20) + (400 * 0.02) + (50 * 1.25)) / 1_000_000
+        self.assertAlmostEqual(event["cost_usd"], expected_cost, places=12)
+        self.assertEqual(ideal_subagent_costs.get_stats()["query_ideal_subagent_calls"], 1)
 
     def test_execute_ideal_filters_semantic_candidates_by_s3_uri(self):
         target = self._plans_root / "k-1-d-1"
@@ -421,6 +489,7 @@ class IdealComputationToolTests(unittest.TestCase):
             def __call__(self, prompt: str) -> None:
                 _ = prompt
                 self.tools[0](code="print(7)", reason="matched authored computation")
+                return _FakeAgentResult(input_tokens=2000, output_tokens=100, cached_input_tokens=500)
 
         with patch.object(computation_ideal, "_semantic_record_match", return_value=None), patch.object(
             computation_ideal, "Agent", _RepairAgent
@@ -453,12 +522,63 @@ class IdealComputationToolTests(unittest.TestCase):
         events = [json.loads(line) for line in trace_path.read_text().splitlines()]
         self.assertEqual(
             [event["event"] for event in events],
-            ["repair_agent_invoked", "repair_agent_completed"],
+            ["repair_agent_invoked", "ideal_subagent_cost", "repair_agent_completed"],
         )
         self.assertEqual(events[0]["tool"], "execute_ideal")
         self.assertEqual(events[0]["attempt"], 1)
-        self.assertEqual(events[1]["repair_reason"], "matched authored computation")
-        self.assertIn("submitted_code", events[1])
+        self.assertEqual(events[1]["tool"], "execute_ideal")
+        self.assertEqual(events[1]["subagent_kind"], "repair_agent")
+        self.assertEqual(events[1]["model_name"], "openai/gpt-5.4")
+        self.assertEqual(events[1]["attempt"], 1)
+        expected_cost = ((1500 * 2.50) + (500 * 0.25) + (100 * 15.00)) / 1_000_000
+        self.assertAlmostEqual(events[1]["cost_usd"], expected_cost, places=12)
+        self.assertEqual(events[2]["repair_reason"], "matched authored computation")
+        self.assertIn("submitted_code", events[2])
+
+    def test_query_repair_agent_traces_cost(self):
+        trace_root = Path(self._tmp.name) / "query_repair_traces"
+        set_trace_context("tasks_mini/k-1-d-1/task_1.json", [], str(trace_root))
+        ideal_subagent_costs.reset_stats()
+
+        class _RepairAgent:
+            def __init__(self, *args, **kwargs):
+                self.tools = kwargs["tools"]
+
+            def __call__(self, prompt: str):
+                _ = prompt
+                self.tools[0](sql="SELECT 7 AS answer", reason="matched authored computation")
+                return _FakeAgentResult(input_tokens=3000, output_tokens=120, cached_input_tokens=1000)
+
+        with patch.object(computation_ideal, "_semantic_record_match", return_value=None), patch.object(
+            computation_ideal, "Agent", _RepairAgent
+        ), patch.object(
+            computation_ideal,
+            "_repair_model",
+            return_value="fake-model",
+        ), patch.object(
+            computation_ideal,
+            "_base_query_file",
+            return_value={"success": True, "rows": [[7]], "columns": ["answer"]},
+        ):
+            result = computation_ideal.query_ideal._tool_func(
+                dataset_id="ds_a",
+                file_path="files/rows.txt",
+                sql="SELECT bad FROM t",
+                intent="not in the plan",
+            )
+
+        self.assertTrue(result["success"])
+        trace_path = trace_root / "k-1-d-1" / "task_1.jsonl"
+        events = [json.loads(line) for line in trace_path.read_text().splitlines()]
+        cost_events = [event for event in events if event.get("event") == "ideal_subagent_cost"]
+        self.assertEqual(len(cost_events), 1)
+        event = cost_events[0]
+        self.assertEqual(event["tool"], "query_ideal")
+        self.assertEqual(event["subagent_kind"], "repair_agent")
+        self.assertEqual(event["attempt"], 1)
+        expected_cost = ((2000 * 2.50) + (1000 * 0.25) + (120 * 15.00)) / 1_000_000
+        self.assertAlmostEqual(event["cost_usd"], expected_cost, places=12)
+        self.assertEqual(ideal_subagent_costs.get_stats()["query_ideal_subagent_calls"], 1)
 
     def test_repair_stats_reset_with_task_context(self):
         with patch.object(

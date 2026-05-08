@@ -232,8 +232,39 @@ def _json_list_count(raw) -> int:
     return len(payload) if isinstance(payload, list) else 0
 
 
+_IDEAL_SUBAGENT_CSV_FIELDS = [
+    "ideal_subagent_calls",
+    "ideal_subagent_input_tokens",
+    "ideal_subagent_cached_input_tokens",
+    "ideal_subagent_uncached_input_tokens",
+    "ideal_subagent_output_tokens",
+    "ideal_subagent_total_tokens",
+    "ideal_subagent_cost_usd",
+    "search_ideal_subagent_calls",
+    "search_ideal_subagent_cost_usd",
+    "query_ideal_subagent_calls",
+    "query_ideal_subagent_cost_usd",
+    "execute_ideal_subagent_calls",
+    "execute_ideal_subagent_cost_usd",
+    "total_cost_with_ideal_subagents_usd",
+]
+
+
+def _float_value(raw) -> float:
+    try:
+        return float(raw or 0.0)
+    except (TypeError, ValueError):
+        return 0.0
+
+
+def _combined_cost(row: dict) -> float:
+    if row.get("total_cost_with_ideal_subagents_usd") not in (None, ""):
+        return _float_value(row.get("total_cost_with_ideal_subagents_usd"))
+    return _float_value(row.get("cost_usd")) + _float_value(row.get("ideal_subagent_cost_usd"))
+
+
 def _normalize_main_csv_row(row: dict) -> dict:
-    return {
+    normalized = {
         "task_id": row.get("task_id", ""),
         "model": row.get("model", ""),
         "expected_answer": row.get("expected_answer", ""),
@@ -266,6 +297,12 @@ def _normalize_main_csv_row(row: dict) -> dict:
         "success": row.get("success", False),
         "error": row.get("error", ""),
     }
+    for field in _IDEAL_SUBAGENT_CSV_FIELDS:
+        if field == "total_cost_with_ideal_subagents_usd":
+            normalized[field] = _combined_cost(row)
+        else:
+            normalized[field] = row.get(field, 0)
+    return normalized
 
 
 def _write_main_csv(csv_path: str, results: list, tasks_by_id: dict) -> None:
@@ -278,6 +315,7 @@ def _write_main_csv(csv_path: str, results: list, tasks_by_id: dict) -> None:
         "output_tokens", "total_tokens", "cost_usd",
         "tool_calls_total", "api_tool_calls",
         "execute_ideal_agent_repair_calls", "query_ideal_agent_repair_calls",
+        *_IDEAL_SUBAGENT_CSV_FIELDS,
         "success", "error",
     ]
     existing_rows: dict = {}
@@ -292,7 +330,7 @@ def _write_main_csv(csv_path: str, results: list, tasks_by_id: dict) -> None:
         task = tasks_by_id.get(task_id, {})
         required = task.get("datasets_used", [])
         sources_used = r.get("sources_used", []) or []
-        existing_rows[str(task_id)] = {
+        row = {
             "task_id": task_id,
             "model": r.get("model", ""),
             "expected_answer": task.get("answer", ""),
@@ -319,6 +357,12 @@ def _write_main_csv(csv_path: str, results: list, tasks_by_id: dict) -> None:
             "success": r.get("success", False),
             "error": r.get("error", ""),
         }
+        for field in _IDEAL_SUBAGENT_CSV_FIELDS:
+            if field == "total_cost_with_ideal_subagents_usd":
+                row[field] = _combined_cost(r)
+            else:
+                row[field] = r.get(field, 0)
+        existing_rows[str(task_id)] = row
 
     with open(csv_path, "w", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)

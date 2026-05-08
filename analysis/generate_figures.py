@@ -617,12 +617,13 @@ def main() -> None:
         fig, ax = plt.subplots(figsize=(7, 5))
         for (cond, model), s in em_table.items():
             if s["em"] is not None:
-                ax.scatter(s["avg_cost_usd"], s["em"] * 100,
+                avg_cost = s.get("avg_total_cost_with_ideal_subagents_usd", s["avg_cost_usd"])
+                ax.scatter(avg_cost, s["em"] * 100,
                            label=_pretty_cm(cond, model), s=80, zorder=3)
                 ax.annotate(model.split("/")[-1],
-                            (s["avg_cost_usd"], s["em"] * 100),
+                            (avg_cost, s["em"] * 100),
                             textcoords="offset points", xytext=(5, 3), fontsize=7)
-        ax.set_xlabel("Avg Cost per Task (USD)")
+        ax.set_xlabel("Avg Cost per Task incl. Ideal Subagents (USD)")
         ax.set_ylabel("Exact Match (%)")
         ax.set_title("Cost–Accuracy Frontier")
         ax.legend(loc="upper left", bbox_to_anchor=(1.02, 1), fontsize=7)

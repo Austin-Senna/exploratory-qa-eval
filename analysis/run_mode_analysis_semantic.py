@@ -489,6 +489,13 @@ def _normalize_eval_row(row: dict, model: str, variant: str, csv_path: Path) -> 
     normalized["_output_tokens"] = as_float(row.get("output_tokens"))
     normalized["_total_tokens"] = as_float(row.get("total_tokens"))
     normalized["_cost_usd"] = as_float(row.get("cost_usd"))
+    normalized["_ideal_subagent_cost_usd"] = as_float(row.get("ideal_subagent_cost_usd"))
+    total_with_ideal = row.get("total_cost_with_ideal_subagents_usd")
+    normalized["_total_cost_with_ideal_subagents_usd"] = (
+        as_float(total_with_ideal)
+        if total_with_ideal not in (None, "")
+        else normalized["_cost_usd"] + normalized["_ideal_subagent_cost_usd"]
+    )
     normalized["_tool_calls_total"] = as_float(row.get("tool_calls_total"))
     normalized["_api_tool_calls"] = as_float(row.get("api_tool_calls"))
     return normalized
@@ -694,9 +701,21 @@ def run_efficiency(by_key_records: Dict[str, List[dict]]) -> dict:
     for key, rows in sorted(by_key_records.items(), key=lambda item: _condition_model_sort_key(item[0])):
         out[key] = {
             "cost_usd": dist([float(row.get("_cost_usd", 0.0) or 0.0) for row in rows]),
+            "ideal_subagent_cost_usd": dist(
+                [float(row.get("_ideal_subagent_cost_usd", 0.0) or 0.0) for row in rows]
+            ),
+            "total_cost_with_ideal_subagents_usd": dist(
+                [float(row.get("_total_cost_with_ideal_subagents_usd", 0.0) or 0.0) for row in rows]
+            ),
             "time_s": dist([float(row.get("_runtime_seconds", 0.0) or 0.0) for row in rows]),
             "tool_calls": dist([float(row.get("_tool_calls_total", 0.0) or 0.0) for row in rows]),
             "total_cost_usd": round(sum(float(row.get("_cost_usd", 0.0) or 0.0) for row in rows), 4),
+            "total_ideal_subagent_cost_usd": round(
+                sum(float(row.get("_ideal_subagent_cost_usd", 0.0) or 0.0) for row in rows), 4
+            ),
+            "total_cost_with_ideal_subagents_sum_usd": round(
+                sum(float(row.get("_total_cost_with_ideal_subagents_usd", 0.0) or 0.0) for row in rows), 4
+            ),
             "n": len(rows),
         }
     return out
@@ -1037,6 +1056,18 @@ def build_summary(
             "avg_total_tokens": _round_or_none(_mean([record["_total_tokens"] for record in records])),
             "avg_cost_usd": _round_or_none(_mean([record["_cost_usd"] for record in records])),
             "total_cost_usd": round(sum(record["_cost_usd"] for record in records), 4),
+            "avg_ideal_subagent_cost_usd": _round_or_none(
+                _mean([record["_ideal_subagent_cost_usd"] for record in records])
+            ),
+            "total_ideal_subagent_cost_usd": round(
+                sum(record["_ideal_subagent_cost_usd"] for record in records), 4
+            ),
+            "avg_total_cost_with_ideal_subagents_usd": _round_or_none(
+                _mean([record["_total_cost_with_ideal_subagents_usd"] for record in records])
+            ),
+            "total_cost_with_ideal_subagents_usd": round(
+                sum(record["_total_cost_with_ideal_subagents_usd"] for record in records), 4
+            ),
             "avg_tool_calls_total": _round_or_none(_mean([record["_tool_calls_total"] for record in records])),
             "avg_tool_calls": _round_or_none(_mean([record["_tool_calls_total"] for record in records])),
             "avg_api_tool_calls": _round_or_none(_mean([record["_api_tool_calls"] for record in records])),
@@ -1173,6 +1204,18 @@ def build_variant_summary(summary_rows: List[dict]) -> List[dict]:
             "avg_total_tokens": _round_or_none(_weighted_avg(rows, "avg_total_tokens")),
             "avg_cost_usd": _round_or_none(_weighted_avg(rows, "avg_cost_usd")),
             "total_cost_usd": round(sum(float(row.get("total_cost_usd", 0) or 0) for row in rows), 4),
+            "avg_ideal_subagent_cost_usd": _round_or_none(
+                _weighted_avg(rows, "avg_ideal_subagent_cost_usd")
+            ),
+            "total_ideal_subagent_cost_usd": round(
+                sum(float(row.get("total_ideal_subagent_cost_usd", 0) or 0) for row in rows), 4
+            ),
+            "avg_total_cost_with_ideal_subagents_usd": _round_or_none(
+                _weighted_avg(rows, "avg_total_cost_with_ideal_subagents_usd")
+            ),
+            "total_cost_with_ideal_subagents_usd": round(
+                sum(float(row.get("total_cost_with_ideal_subagents_usd", 0) or 0) for row in rows), 4
+            ),
             "avg_tool_calls_total": _round_or_none(_weighted_avg(rows, "avg_tool_calls_total")),
             "avg_tool_calls": _round_or_none(_weighted_avg(rows, "avg_tool_calls")),
             "avg_api_tool_calls": _round_or_none(_weighted_avg(rows, "avg_api_tool_calls")),
@@ -1264,6 +1307,10 @@ def build_metric_mappings(summary_rows: List[dict]) -> Tuple[dict, dict, dict, d
             "avg_total_tokens": row.get("avg_total_tokens"),
             "avg_cost_usd": row.get("avg_cost_usd"),
             "total_cost_usd": row.get("total_cost_usd"),
+            "avg_ideal_subagent_cost_usd": row.get("avg_ideal_subagent_cost_usd"),
+            "total_ideal_subagent_cost_usd": row.get("total_ideal_subagent_cost_usd"),
+            "avg_total_cost_with_ideal_subagents_usd": row.get("avg_total_cost_with_ideal_subagents_usd"),
+            "total_cost_with_ideal_subagents_usd": row.get("total_cost_with_ideal_subagents_usd"),
             "avg_tool_calls_total": row.get("avg_tool_calls_total"),
             "avg_api_tool_calls": row.get("avg_api_tool_calls"),
         }
@@ -1851,7 +1898,9 @@ def _plot_cost_vs_semantic(plt, summary_rows: List[dict], output_path: Path) -> 
     fig, ax = plt.subplots(figsize=(7.5, 5.5))
     for row in summary_rows:
         semantic_match = row.get("semantic_match")
-        cost = row.get("avg_cost_usd")
+        cost = row.get("avg_total_cost_with_ideal_subagents_usd")
+        if cost is None:
+            cost = row.get("avg_cost_usd")
         if semantic_match is None or cost is None:
             continue
         ax.scatter(cost, float(semantic_match) * 100.0, s=80, zorder=3)
@@ -1862,7 +1911,7 @@ def _plot_cost_vs_semantic(plt, summary_rows: List[dict], output_path: Path) -> 
             xytext=(5, 3),
             fontsize=7,
         )
-    ax.set_xlabel("Avg Cost per Task (USD)")
+    ax.set_xlabel("Avg Cost per Task incl. Ideal Subagents (USD)")
     ax.set_ylabel("Semantic Match (%)")
     ax.set_title("Cost–Semantic Match Frontier")
     fig.tight_layout()

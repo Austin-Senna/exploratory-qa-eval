@@ -36,6 +36,11 @@ class TestRunModeTopkMissAnalysis(unittest.TestCase):
                 traces_root / "openai_gpt-5.2-xhigh" / variant / "k-1-d-1" / "task_1.jsonl",
                 [
                     {
+                        "event": "ideal_subagent_cost",
+                        "tool": "search_ideal",
+                        "cost_usd": 0.001,
+                    },
+                    {
                         "task_id": "tasks_mini/k-1-d-1/task_1.json",
                         "turn": 1,
                         "tool": "search_value",

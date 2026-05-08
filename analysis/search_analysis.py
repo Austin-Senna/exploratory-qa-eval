@@ -263,13 +263,29 @@ def run_efficiency(by_key_records: Dict[str, List[dict]]) -> dict:
             "n": n,
         }
 
+    def as_float(value) -> float:
+        try:
+            return float(value or 0.0)
+        except (TypeError, ValueError):
+            return 0.0
+
+    def total_with_ideal(row: dict) -> float:
+        explicit = row.get("total_cost_with_ideal_subagents_usd")
+        if explicit not in (None, ""):
+            return as_float(explicit)
+        return as_float(row.get("cost_usd")) + as_float(row.get("ideal_subagent_cost_usd"))
+
     out = {}
     for key, rows in sorted(by_key_records.items()):
         out[key] = {
-            "cost_usd": dist([r.get("cost_usd", 0.0) for r in rows]),
+            "cost_usd": dist([as_float(r.get("cost_usd")) for r in rows]),
+            "ideal_subagent_cost_usd": dist([as_float(r.get("ideal_subagent_cost_usd")) for r in rows]),
+            "total_cost_with_ideal_subagents_usd": dist([total_with_ideal(r) for r in rows]),
             "time_s": dist([r.get("time", 0.0) for r in rows]),
             "tool_calls": dist([r.get("tool_calls_total", 0) for r in rows]),
-            "total_cost_usd": sum(r.get("cost_usd", 0.0) for r in rows),
+            "total_cost_usd": sum(as_float(r.get("cost_usd")) for r in rows),
+            "total_ideal_subagent_cost_usd": sum(as_float(r.get("ideal_subagent_cost_usd")) for r in rows),
+            "total_cost_with_ideal_subagents_sum_usd": sum(total_with_ideal(r) for r in rows),
             "n": len(rows),
         }
     return out
@@ -374,6 +390,14 @@ def build_summary(
             row["f1"] = round(e.get("f1", 0) or 0, 3)
             row["avg_cost_usd"] = round(e.get("avg_cost_usd", 0), 4)
             row["total_cost_usd"] = round(e.get("total_cost_usd", 0), 4)
+            row["avg_ideal_subagent_cost_usd"] = round(e.get("avg_ideal_subagent_cost_usd", 0), 4)
+            row["total_ideal_subagent_cost_usd"] = round(e.get("total_ideal_subagent_cost_usd", 0), 4)
+            row["avg_total_cost_with_ideal_subagents_usd"] = round(
+                e.get("avg_total_cost_with_ideal_subagents_usd", 0), 4
+            )
+            row["total_cost_with_ideal_subagents_usd"] = round(
+                e.get("total_cost_with_ideal_subagents_usd", 0), 4
+            )
             row["avg_tool_calls"] = round(e.get("avg_tool_calls", 0), 1)
             row["avg_search_calls"] = round(e.get("avg_search_calls", 0), 1)
             row["avg_query_file_calls"] = round(e.get("avg_query_file_calls", 0), 1)
@@ -470,6 +494,12 @@ def build_variant_summary(summary_rows: List[dict]) -> List[dict]:
     for variant, rows in sorted(groups.items()):
         total_n = sum(int(r.get("n", 0) or 0) for r in rows)
         total_cost = round(sum(float(r.get("total_cost_usd", 0) or 0) for r in rows), 4)
+        total_ideal_subagent_cost = round(
+            sum(float(r.get("total_ideal_subagent_cost_usd", 0) or 0) for r in rows), 4
+        )
+        total_cost_with_ideal = round(
+            sum(float(r.get("total_cost_with_ideal_subagents_usd", 0) or 0) for r in rows), 4
+        )
         avg_search_calls = weighted_avg(rows, "avg_search_calls")
         em = weighted_avg(rows, "em")
         row = {
@@ -479,6 +509,8 @@ def build_variant_summary(summary_rows: List[dict]) -> List[dict]:
             "conditions": sorted({r.get("base_condition", "") for r in rows if r.get("base_condition")}),
             "models": sorted({r.get("model", "") for r in rows if r.get("model")}),
             "total_cost_usd": total_cost,
+            "total_ideal_subagent_cost_usd": total_ideal_subagent_cost,
+            "total_cost_with_ideal_subagents_usd": total_cost_with_ideal,
             "em": em,
             "f1": weighted_avg(rows, "f1"),
             "D_ret": weighted_avg(rows, "D_ret"),
@@ -487,6 +519,10 @@ def build_variant_summary(summary_rows: List[dict]) -> List[dict]:
             "D_acc_recall": weighted_avg(rows, "dacc_recall"),
             "D_acc_f1": weighted_avg(rows, "dacc_f1"),
             "avg_cost_usd": weighted_avg(rows, "avg_cost_usd"),
+            "avg_ideal_subagent_cost_usd": weighted_avg(rows, "avg_ideal_subagent_cost_usd"),
+            "avg_total_cost_with_ideal_subagents_usd": weighted_avg(
+                rows, "avg_total_cost_with_ideal_subagents_usd"
+            ),
             "avg_tool_calls": weighted_avg(rows, "avg_tool_calls"),
             "avg_search_calls": avg_search_calls,
             "search_efficiency": round(em / avg_search_calls, 4) if (em is not None and avg_search_calls) else None,
