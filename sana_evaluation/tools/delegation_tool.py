@@ -62,6 +62,17 @@ _VALID_INSPECT_STATUS = {"success", "partial", "failed", "budget_exhausted"}
 _SUBAGENT_GRACE_TOOL_CALLS = 1
 _DATA_LAKE_BUCKET = "lakeqa-yc4103-datalake"
 _DATA_LAKE_FOLDERS = {"datagov", "wikipedia"}
+_SINGLE_FILE_REFERENCE_TOOLS = {
+    "peek_file",
+    "read_file",
+    "grep_file",
+    "parse_xml_records",
+    "query_file",
+}
+_BATCH_FILE_REFERENCE_TOOLS = {
+    "peek_multiple",
+    "download",
+}
 
 
 def _tool_name(tool_obj: Any) -> str:
@@ -388,6 +399,72 @@ class _SubagentBudgetSteer(SteeringHandler):
         )
 
 
+def _has_text(value: Any) -> bool:
+    return isinstance(value, str) and bool(value.strip())
+
+
+def _has_single_file_reference(tool_input: Dict[str, Any]) -> bool:
+    if _has_text(tool_input.get("s3_uri") or tool_input.get("uri")):
+        return True
+    return _has_text(tool_input.get("dataset_id")) and _has_text(
+        tool_input.get("file_path") or tool_input.get("path")
+    )
+
+
+def _batch_file_reference_error(tool_input: Dict[str, Any]) -> Optional[str]:
+    files = tool_input.get("files")
+    if files is None:
+        files = tool_input.get("entries")
+    if isinstance(files, str):
+        return None if _has_text(files) else "empty string entry"
+    if isinstance(files, dict):
+        files = [files]
+    if not isinstance(files, list) or not files:
+        return "missing non-empty `files` list"
+    for index, entry in enumerate(files, start=1):
+        if isinstance(entry, str):
+            if _has_text(entry):
+                continue
+            return f"entry {index} is empty"
+        if not isinstance(entry, dict):
+            return f"entry {index} is not a file reference object"
+        if _has_single_file_reference(entry):
+            continue
+        return f"entry {index} is missing `s3_uri` or `dataset_id` + `file_path`"
+    return None
+
+
+class _FileReferenceGuard(SteeringHandler):
+    name = "sana-delegation-file-reference-guard"
+
+    async def steer_before_tool(self, *, agent, tool_use, **kwargs) -> ToolSteeringAction:
+        tool_name = (tool_use or {}).get("name", "")
+        tool_input = (tool_use or {}).get("input", {}) or {}
+        if tool_name in _SINGLE_FILE_REFERENCE_TOOLS:
+            if _has_single_file_reference(tool_input):
+                return Proceed(reason="file tool has exact file reference")
+            return Guide(
+                reason=(
+                    f"`{tool_name}` must include an exact file reference: either `s3_uri`, "
+                    "or both `dataset_id` and `file_path`. Do not call file tools with "
+                    "a dataset_id alone. Use the source hints from the contract, or return "
+                    "partial/failed if no exact file path is available."
+                )
+            )
+        if tool_name in _BATCH_FILE_REFERENCE_TOOLS:
+            error = _batch_file_reference_error(tool_input)
+            if error is None:
+                return Proceed(reason="batch file tool has exact file references")
+            return Guide(
+                reason=(
+                    f"`{tool_name}` requires exact file references in `files`: each entry "
+                    "must include `s3_uri`, or both `dataset_id` and `file_path`; "
+                    f"{error}. Do not use dataset_id-only entries."
+                )
+            )
+        return Proceed(reason="tool does not require file reference")
+
+
 class _InspectSourceGuard(SteeringHandler):
     name = "sana-delegation-inspect-source-guard"
 
@@ -495,6 +572,7 @@ class DelegationRuntime:
         ledger = _SubagentToolLedger(return_tool_name)
         max_calls = int(getattr(contract, "budget_calls", 1) or 1)
         plugins: List[Any] = [
+            _FileReferenceGuard(),
             _SubagentBudgetSteer(
                 ledger=ledger,
                 max_tool_calls=max_calls,
@@ -643,6 +721,8 @@ def _subagent_system_prompt(kind: str, return_tool_name: str) -> str:
         )
     return (
         role
+        + "\nFor every file tool call, pass an exact `s3_uri`, or pass both "
+        "`dataset_id` and `file_path`; never call file tools with dataset_id alone."
         + "\nCall `"
         + return_tool_name
         + "` exactly once before finishing. Return compact summaries only; do not "
@@ -665,7 +745,8 @@ def _format_search_prompt(
             "Preloaded candidate sources:\n"
             f"{_json_block(source_hints)}\n"
             "If a candidate satisfies the contract, return candidates from this list "
-            "with its exact `s3_uri`; do not claim no search tool is available.\n"
+            "with its exact `s3_uri`; do not claim no search tool is available. If "
+            "you inspect a candidate, pass its exact `s3_uri` to file tools.\n"
         )
     return (
         f"Contract id: {contract.contract_id}\n"
@@ -690,7 +771,7 @@ def _format_inspect_prompt(
             "Known source file hints:\n"
             f"{_json_block(source_hints)}\n"
             "When a source hint is present, pass the exact `s3_uri` directly "
-            "to file tools. Do not guess file paths.\n"
+            "to file tools. Do not guess file paths. Never call file tools with only a dataset_id.\n"
         )
     return (
         f"Contract id: {contract.contract_id}\n"
@@ -703,6 +784,7 @@ def _format_inspect_prompt(
         f"Known context:\n{contract.known_context or '(none)'}\n"
         f"Retry of contract id: {contract.retry_of_contract_id or '(none)'}\n"
         "For text-based result sources, prefer `grep_file` or `read_file` over SQL.\n"
+        "Every file tool call must include `s3_uri`, or both `dataset_id` and `file_path`.\n"
         f"Budget: {contract.budget_calls} tool calls, plus one grace call if needed, "
         "before returning a result.\n"
     )

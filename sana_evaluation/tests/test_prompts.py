@@ -84,4 +84,6 @@ def test_delegation_block_describes_planner_subagent_tools(search_tool: str) -> 
     assert "write SQL" in text
     assert "grep_file" in text
     assert "read_file" in text
+    assert "s3_uri" in text
+    assert "file_path" in text
     assert "SANA" not in text

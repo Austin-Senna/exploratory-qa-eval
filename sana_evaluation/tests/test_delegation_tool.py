@@ -10,6 +10,7 @@ from strands.vended_plugins.steering import Guide, Proceed
 from sana_evaluation.tools.delegation_tool import (
     InspectContract,
     SearchContract,
+    _FileReferenceGuard,
     _InspectSourceGuard,
     _SubagentBudgetSteer,
     _SubagentToolLedger,
@@ -257,6 +258,7 @@ def test_subagent_system_prompts_route_text_sources_without_listing() -> None:
     assert "list" not in search_prompt.lower()
     assert "grep_file" in inspect_prompt
     assert "read_file" in inspect_prompt
+    assert "dataset_id alone" in inspect_prompt
 
 
 def test_source_hints_from_preloaded_sequence_include_s3_uris() -> None:
@@ -317,6 +319,7 @@ def test_inspect_prompt_includes_source_hints_and_s3_uri_instruction() -> None:
     assert "s3_uri" in prompt
     assert "files/data.csv" in prompt
     assert "Do not guess file paths" in prompt
+    assert "Never call file tools with only a dataset_id" in prompt
 
 
 def test_search_prompt_includes_preloaded_candidate_sources() -> None:
@@ -340,6 +343,7 @@ def test_search_prompt_includes_preloaded_candidate_sources() -> None:
     assert "Preloaded candidate sources" in prompt
     assert "Khan_Lab_School" in prompt
     assert "return candidates from this list" in prompt
+    assert "s3_uri" in prompt
 
 
 def test_inspect_source_guard_normalizes_contract_s3_uris() -> None:
@@ -361,6 +365,82 @@ def test_inspect_source_guard_normalizes_contract_s3_uris() -> None:
     )
 
     assert isinstance(action, Proceed)
+
+
+def test_file_reference_guard_blocks_bare_dataset_id_file_tools() -> None:
+    guard = _FileReferenceGuard()
+
+    action = asyncio.run(
+        guard.steer_before_tool(
+            agent=None,
+            tool_use={
+                "name": "peek_file",
+                "input": {"dataset_id": "public-school-locations-current-23297", "max_rows": 20},
+            },
+        )
+    )
+
+    assert isinstance(action, Guide)
+    assert "s3_uri" in action.reason
+    assert "file_path" in action.reason
+
+
+def test_file_reference_guard_allows_exact_references() -> None:
+    guard = _FileReferenceGuard()
+
+    with_s3_uri = asyncio.run(
+        guard.steer_before_tool(
+            agent=None,
+            tool_use={
+                "name": "grep_file",
+                "input": {
+                    "s3_uri": "s3://lakeqa-yc4103-datalake/wikipedia/Khan_Lab_School/content.txt",
+                    "regex_pattern": "California",
+                },
+            },
+        )
+    )
+    with_file_path = asyncio.run(
+        guard.steer_before_tool(
+            agent=None,
+            tool_use={
+                "name": "query_file",
+                "input": {
+                    "dataset_id": "bridge-conditions-nys-department-of-transportation",
+                    "file_path": "files/rows.txt",
+                    "sql": "SELECT 1",
+                },
+            },
+        )
+    )
+
+    assert isinstance(with_s3_uri, Proceed)
+    assert isinstance(with_file_path, Proceed)
+
+
+def test_file_reference_guard_blocks_incomplete_batch_entries() -> None:
+    guard = _FileReferenceGuard()
+
+    action = asyncio.run(
+        guard.steer_before_tool(
+            agent=None,
+            tool_use={
+                "name": "peek_multiple",
+                "input": {
+                    "files": [
+                        {"dataset_id": "public-school-locations-current-23297"},
+                        {
+                            "dataset_id": "Khan_Lab_School",
+                            "file_path": "content.txt",
+                        },
+                    ],
+                },
+            },
+        )
+    )
+
+    assert isinstance(action, Guide)
+    assert "entry 1" in action.reason
 
 
 def test_inspect_return_tool_defaults_missing_answer_fragments() -> None:
