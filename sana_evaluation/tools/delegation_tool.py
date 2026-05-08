@@ -60,6 +60,8 @@ _PLANNER_TOOL_NAMES = {
 _VALID_SEARCH_STATUS = {"success", "partial", "failed", "budget_exhausted"}
 _VALID_INSPECT_STATUS = {"success", "partial", "failed", "budget_exhausted"}
 _SUBAGENT_GRACE_TOOL_CALLS = 1
+_DATA_LAKE_BUCKET = "lakeqa-yc4103-datalake"
+_DATA_LAKE_FOLDERS = {"datagov", "wikipedia"}
 
 
 def _tool_name(tool_obj: Any) -> str:
@@ -113,6 +115,97 @@ def _clean_list(values: Optional[Sequence[Any]]) -> List[str]:
     if isinstance(values, (str, bytes)):
         return [_clean_str(values)] if _clean_str(values) else []
     return [text for text in (_clean_str(value) for value in values) if text]
+
+
+def _split_source_reference(value: Any) -> Optional[tuple[str, str]]:
+    """Return (dataset_id, file_path) for lake-relative or S3 source refs."""
+
+    if not isinstance(value, str):
+        return None
+    raw = value.strip()
+    if not raw:
+        return None
+    if raw.startswith("s3://"):
+        remainder = raw[len("s3://") :]
+        _bucket, sep, raw = remainder.partition("/")
+        if not sep:
+            return None
+    else:
+        raw = raw.lstrip("/")
+        bucket_prefix = _DATA_LAKE_BUCKET + "/"
+        if raw.startswith(bucket_prefix):
+            raw = raw[len(bucket_prefix) :]
+
+    parts = raw.split("/", 2)
+    if len(parts) < 2 or parts[0] not in _DATA_LAKE_FOLDERS:
+        return None
+    return parts[1], parts[2] if len(parts) > 2 else ""
+
+
+def _source_id_from_reference(value: Any) -> str:
+    parsed = _split_source_reference(value)
+    if parsed is not None:
+        return parsed[0]
+    return _clean_str(value)
+
+
+def _canonical_source_s3_uri(value: str) -> str:
+    raw = value.strip()
+    if raw.startswith("s3://"):
+        return raw
+    raw = raw.lstrip("/")
+    if raw.startswith(_DATA_LAKE_BUCKET + "/"):
+        return "s3://" + raw
+    return f"s3://{_DATA_LAKE_BUCKET}/{raw}"
+
+
+def _source_hints_from_sequence(
+    source_family_ids: Sequence[Any],
+    source_sequence: Sequence[Any],
+) -> List[Dict[str, str]]:
+    """Return exact file handles from a preloaded plan for requested datasets."""
+
+    requested = {
+        source_id
+        for source_id in (_source_id_from_reference(value) for value in source_family_ids)
+        if source_id
+    }
+    if not requested:
+        return []
+
+    hints: List[Dict[str, str]] = []
+    seen_uris: set[str] = set()
+
+    def add_hint(source: Any) -> None:
+        parsed = _split_source_reference(source)
+        if parsed is None:
+            return
+        dataset_id, file_path = parsed
+        if dataset_id not in requested or not file_path:
+            return
+        s3_uri = _canonical_source_s3_uri(str(source))
+        if s3_uri in seen_uris:
+            return
+        seen_uris.add(s3_uri)
+        hints.append({"dataset_id": dataset_id, "s3_uri": s3_uri})
+
+    for source in source_sequence:
+        add_hint(source)
+    for source in source_family_ids:
+        add_hint(source)
+    return hints
+
+
+def _preloaded_source_sequence(task_context: Dict[str, Any]) -> List[str]:
+    try:
+        from strands_evaluation.tools.external.ideal.plan_store import load_ideal_plan_for_context
+    except Exception:
+        return []
+    try:
+        plan = load_ideal_plan_for_context(task_context)
+    except Exception:
+        return []
+    return [str(source) for source in getattr(plan, "source_sequence", []) or [] if str(source).strip()]
 
 
 def _search_failure_payload(contract_id: str, reason: str, *, status: str = "failed") -> Dict[str, Any]:
@@ -296,7 +389,11 @@ class _InspectSourceGuard(SteeringHandler):
 
     def __init__(self, allowed_dataset_ids: Sequence[str]) -> None:
         super().__init__()
-        self.allowed = set(_clean_list(allowed_dataset_ids))
+        self.allowed = {
+            source_id
+            for source_id in (_source_id_from_reference(value) for value in _clean_list(allowed_dataset_ids))
+            if source_id
+        }
 
     async def steer_before_tool(self, *, agent, tool_use, **kwargs) -> ToolSteeringAction:
         try:
@@ -348,7 +445,14 @@ class DelegationRuntime:
 
     def run_inspect_contract(self, contract: InspectContract) -> Dict[str, Any]:
         tools = tools_for_inspect_subagent(self.base_tools)
-        prompt = _format_inspect_prompt(contract)
+        source_hints: List[Dict[str, str]] = []
+        search_mode = (self.run_config.search_tool_mode or "").strip().lower()
+        if search_mode == "preloaded":
+            source_hints = _source_hints_from_sequence(
+                contract.source_family_ids,
+                _preloaded_source_sequence(self.task_context),
+            )
+        prompt = _format_inspect_prompt(contract, source_hints=source_hints)
         return self._run_agent_contract(
             kind="inspect",
             contract_id=contract.contract_id,
@@ -550,11 +654,24 @@ def _format_search_prompt(contract: SearchContract) -> str:
     )
 
 
-def _format_inspect_prompt(contract: InspectContract) -> str:
+def _format_inspect_prompt(
+    contract: InspectContract,
+    *,
+    source_hints: Optional[List[Dict[str, str]]] = None,
+) -> str:
+    source_hint_block = ""
+    if source_hints:
+        source_hint_block = (
+            "Known source file hints:\n"
+            f"{_json_block(source_hints)}\n"
+            "When a source hint is present, pass the exact `s3_uri` directly "
+            "to file tools. Do not guess file paths.\n"
+        )
     return (
         f"Contract id: {contract.contract_id}\n"
         f"Objective: {contract.objective}\n"
         f"Source family dataset ids:\n{_json_block(contract.source_family_ids)}\n"
+        f"{source_hint_block}"
         f"Required outputs:\n{_json_block(contract.required_outputs)}\n"
         f"Success criteria: {contract.success_criteria}\n"
         f"Constraints:\n{_json_block(contract.constraints)}\n"
@@ -597,11 +714,11 @@ def _build_inspect_return_tool(result_state: Dict[str, Any]):
     @tool(context=True)
     def return_inspect_result(
         status: str,
-        answer_fragments: List[Dict[str, Any]],
-        missing_outputs: List[str],
-        evidence: List[str],
-        executor_summary: str,
         tool_context: ToolContext,
+        answer_fragments: Optional[List[Dict[str, Any]]] = None,
+        missing_outputs: Optional[List[str]] = None,
+        evidence: Optional[List[str]] = None,
+        executor_summary: str = "",
         retry_recommended: bool = False,
         failure_reason: str = "",
     ) -> str:

@@ -8,11 +8,16 @@ from unittest.mock import MagicMock
 from strands.vended_plugins.steering import Guide, Proceed
 
 from sana_evaluation.tools.delegation_tool import (
+    InspectContract,
+    _InspectSourceGuard,
     _SubagentBudgetSteer,
     _SubagentToolLedger,
+    _build_inspect_return_tool,
     clear_delegation_runtime,
+    _format_inspect_prompt,
     inspect_subagent,
     search_subagent,
+    _source_hints_from_sequence,
     _subagent_system_prompt,
     set_delegation_runtime,
     tool_names,
@@ -66,6 +71,19 @@ def _tool(name: str):
     tool = MagicMock()
     tool.tool_name = name
     return tool
+
+
+class _FakeAgent:
+    def __init__(self) -> None:
+        self.cancelled = False
+
+    def cancel(self) -> None:
+        self.cancelled = True
+
+
+class _FakeToolContext:
+    def __init__(self) -> None:
+        self.agent = _FakeAgent()
 
 
 def test_search_subagent_validates_required_fields() -> None:
@@ -235,3 +253,90 @@ def test_subagent_system_prompts_route_text_sources_without_listing() -> None:
     assert "list" not in search_prompt.lower()
     assert "grep_file" in inspect_prompt
     assert "read_file" in inspect_prompt
+
+
+def test_source_hints_from_preloaded_sequence_include_s3_uris() -> None:
+    hints = _source_hints_from_sequence(
+        ["public-school-locations-current-23297", "Khan_Lab_School"],
+        [
+            "datagov/public-school-locations-current-23297/files/data.csv",
+            "datagov/private-school-locations-current-f7d96/files/data.csv",
+            "wikipedia/Khan_Lab_School/content.txt",
+        ],
+    )
+
+    assert hints == [
+        {
+            "dataset_id": "public-school-locations-current-23297",
+            "s3_uri": "s3://lakeqa-yc4103-datalake/datagov/public-school-locations-current-23297/files/data.csv",
+        },
+        {
+            "dataset_id": "Khan_Lab_School",
+            "s3_uri": "s3://lakeqa-yc4103-datalake/wikipedia/Khan_Lab_School/content.txt",
+        },
+    ]
+
+
+def test_inspect_prompt_includes_source_hints_and_s3_uri_instruction() -> None:
+    contract = InspectContract(
+        contract_id="i1",
+        objective="count schools",
+        source_family_ids=["public-school-locations-current-23297"],
+        required_outputs=["top_counties"],
+        success_criteria="Return top counties.",
+        budget_calls=3,
+    )
+
+    prompt = _format_inspect_prompt(
+        contract,
+        source_hints=[
+            {
+                "dataset_id": "public-school-locations-current-23297",
+                "s3_uri": "s3://lakeqa-yc4103-datalake/datagov/public-school-locations-current-23297/files/data.csv",
+            }
+        ],
+    )
+
+    assert "Known source file hints" in prompt
+    assert "s3_uri" in prompt
+    assert "files/data.csv" in prompt
+    assert "Do not guess file paths" in prompt
+
+
+def test_inspect_source_guard_normalizes_contract_s3_uris() -> None:
+    guard = _InspectSourceGuard(
+        ["s3://lakeqa-yc4103-datalake/datagov/public-school-locations-current-23297/files/data.csv"]
+    )
+
+    action = asyncio.run(
+        guard.steer_before_tool(
+            agent=None,
+            tool_use={
+                "name": "query_file",
+                "input": {
+                    "s3_uri": "s3://lakeqa-yc4103-datalake/datagov/public-school-locations-current-23297/files/data.csv",
+                    "sql": "SELECT 1",
+                },
+            },
+        )
+    )
+
+    assert isinstance(action, Proceed)
+
+
+def test_inspect_return_tool_defaults_missing_answer_fragments() -> None:
+    result_state = {}
+    tool = _build_inspect_return_tool(result_state)
+    context = _FakeToolContext()
+
+    result = tool._tool_func(
+        status="failed",
+        missing_outputs=["top3_public_counties"],
+        evidence=["404 on source file"],
+        executor_summary="Could not read the file.",
+        tool_context=context,
+    )
+
+    assert result == "Inspection contract result recorded."
+    assert result_state["payload"]["answer_fragments"] == []
+    assert context.agent.cancelled is True
