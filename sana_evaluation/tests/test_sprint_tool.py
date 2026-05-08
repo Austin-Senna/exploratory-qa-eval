@@ -29,6 +29,7 @@ def test_sprint_tool_records_current_sprint_after_current_plan() -> None:
         should_submit=False,
         potential_answer="2369",
         answer_confidence="medium",
+        settled_facts=["Source A contains the relevant count."],
         short_forward_plan=["turns 1-2: verify count", "turns 3-5: submit"],
         tool_context=ctx,
     )
@@ -40,6 +41,49 @@ def test_sprint_tool_records_current_sprint_after_current_plan() -> None:
         "## CURRENT SPRINT"
     )
     assert "potential_answer: 2369" in ctx.agent.system_prompt
+    assert "settled_facts: Source A contains the relevant count." in ctx.agent.system_prompt
+    clear_sprint_state()
+
+
+def test_sprint_tool_requires_cadence_settled_facts() -> None:
+    state = SprintState()
+    set_sprint_state(state)
+    ctx = _tool_context("BASE PROMPT")
+
+    result = sprint(
+        kind="cadence",
+        global_status="ON_TRACK",
+        should_submit=False,
+        potential_answer=None,
+        answer_confidence="low",
+        short_forward_plan=["turns 1-2: inspect"],
+        tool_context=ctx,
+    )
+
+    assert result.startswith("Sprint not recorded:")
+    assert "settled_facts" in result
+    assert "## CURRENT SPRINT" not in ctx.agent.system_prompt
+    clear_sprint_state()
+
+
+def test_sprint_tool_accepts_empty_cadence_settled_facts() -> None:
+    state = SprintState()
+    set_sprint_state(state)
+    ctx = _tool_context("BASE PROMPT")
+
+    result = sprint(
+        kind="cadence",
+        global_status="ON_TRACK",
+        should_submit=False,
+        potential_answer=None,
+        answer_confidence="low",
+        settled_facts=[],
+        short_forward_plan=["turns 1-2: inspect"],
+        tool_context=ctx,
+    )
+
+    assert result == "Sprint recorded."
+    assert "settled_facts: none" in ctx.agent.system_prompt
     clear_sprint_state()
 
 
@@ -53,6 +97,7 @@ def test_plan_tool_preserves_existing_current_sprint() -> None:
         should_submit=False,
         potential_answer=None,
         answer_confidence="low",
+        settled_facts=[],
         short_forward_plan=["turns 1-2: inspect"],
         tool_context=ctx,
     )
@@ -92,6 +137,7 @@ def test_commitment_contract_creates_source_session() -> None:
         commitment_goal="find enrollment count",
         max_source_calls=4,
         plan_step="verify enrollment count",
+        related_sources=["school-sites", "school-results"],
         tool_context=ctx,
     )
 
@@ -101,8 +147,10 @@ def test_commitment_contract_creates_source_session() -> None:
     assert state.source_session.current_source == "schools"
     assert state.source_session.max_source_calls == 4
     assert state.source_session.plan_step == "verify enrollment count"
+    assert state.source_session.related_sources == ["school-sites", "school-results"]
     assert "kind: commitment_contract" in ctx.agent.system_prompt
     assert "plan_step: verify enrollment count" in ctx.agent.system_prompt
+    assert "related_sources: school-sites; school-results" in ctx.agent.system_prompt
     clear_sprint_state()
 
 

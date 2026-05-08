@@ -105,6 +105,7 @@ class SanaDataLakeAgent(DataLakeAgent):
                 macro_reflection_k=flags.macro_reflection_k,
                 sprint_mode=flags.sprint_mode,
                 commitment_budget_calls=flags.commitment_budget_calls,
+                max_tool_calls=int(self.run_config.max_tool_calls),
             )
             plugins.append(sprint_plugin)
 

@@ -25,6 +25,7 @@ class SprintState:
     pending_reason: Optional[str] = None
     pending_source: Optional[str] = None
     pending_switch_source: Optional[str] = None
+    pending_requires_evidence: bool = False
     last_reflection: Optional[Dict[str, Any]] = None
     reflections_done: int = 0
     source_session: Optional[Any] = None
@@ -77,7 +78,13 @@ def _validate_record(state: SprintState, record: Dict[str, Any]) -> List[str]:
     if kind == "cadence":
         missing = _missing(
             record,
-            ["global_status", "should_submit", "answer_confidence", "short_forward_plan"],
+            [
+                "global_status",
+                "should_submit",
+                "answer_confidence",
+                "settled_facts",
+                "short_forward_plan",
+            ],
         )
         if missing:
             errors.append("missing required field(s): " + ", ".join(missing))
@@ -85,6 +92,8 @@ def _validate_record(state: SprintState, record: Dict[str, Any]) -> List[str]:
             errors.append(f"global_status must be one of {sorted(_VALID_STATUS)}")
         if record.get("answer_confidence") not in _VALID_CONFIDENCE:
             errors.append(f"answer_confidence must be one of {sorted(_VALID_CONFIDENCE)}")
+        if not isinstance(record.get("settled_facts"), list):
+            errors.append("settled_facts must be a list")
         if not isinstance(record.get("short_forward_plan"), list):
             errors.append("short_forward_plan must be a list")
     elif kind == "commitment_contract":
@@ -96,6 +105,15 @@ def _validate_record(state: SprintState, record: Dict[str, Any]) -> List[str]:
             errors.append("missing required field(s): " + ", ".join(missing))
         if _coerce_positive_int(record.get("max_source_calls")) is None:
             errors.append("max_source_calls must be a positive integer")
+        if "related_sources" in record and not isinstance(record.get("related_sources"), list):
+            errors.append("related_sources must be a list")
+        if state.pending_requires_evidence:
+            evidence_missing = _missing(record, ["evidence_gained", "remaining_gap"])
+            if evidence_missing:
+                errors.append(
+                    "missing required renewal field(s): "
+                    + ", ".join(evidence_missing)
+                )
     else:
         missing = _missing(
             record,
@@ -136,6 +154,7 @@ def _apply_record(state: SprintState, record: Dict[str, Any]) -> None:
     state.reflections_done += 1
     state.pending_kind = None
     state.pending_reason = None
+    state.pending_requires_evidence = False
 
     if kind == "commitment_contract":
         from sana_evaluation.plugins.source_session import SourceSessionState
@@ -147,6 +166,11 @@ def _apply_record(state: SprintState, record: Dict[str, Any]) -> None:
             max_source_calls=budget,
             plan_step=str(record.get("plan_step") or ""),
             success_condition=str(record.get("success_condition") or ""),
+            related_sources=[
+                str(source).strip()
+                for source in (record.get("related_sources") or [])
+                if str(source).strip()
+            ],
         )
         state.pending_source = None
         state.pending_switch_source = None
@@ -174,12 +198,19 @@ def _format_sprint_section(record: Dict[str, Any]) -> str:
     if kind == "cadence":
         plan = record.get("short_forward_plan") or []
         plan_text = "; ".join(str(item) for item in plan) if isinstance(plan, list) else str(plan)
+        settled = record.get("settled_facts") or []
+        settled_text = (
+            "; ".join(str(item) for item in settled)
+            if isinstance(settled, list) and settled
+            else "none"
+        )
         lines.extend(
             [
                 f"global_status: {record.get('global_status')}",
                 f"should_submit: {record.get('should_submit')}",
                 f"potential_answer: {record.get('potential_answer') or 'null'}",
                 f"answer_confidence: {record.get('answer_confidence')}",
+                f"settled_facts: {settled_text}",
                 f"short_forward_plan: {plan_text}",
             ]
         )
@@ -192,8 +223,15 @@ def _format_sprint_section(record: Dict[str, Any]) -> str:
                 f"plan_step: {record.get('plan_step')}",
             ]
         )
+        related = record.get("related_sources") or []
+        if related:
+            lines.append("related_sources: " + "; ".join(str(item) for item in related))
         if record.get("success_condition"):
             lines.append(f"success_condition: {record.get('success_condition')}")
+        if record.get("evidence_gained"):
+            lines.append(f"evidence_gained: {record.get('evidence_gained')}")
+        if record.get("remaining_gap"):
+            lines.append(f"remaining_gap: {record.get('remaining_gap')}")
     else:
         lines.extend(
             [
@@ -217,8 +255,10 @@ def sprint(
     should_submit: Optional[bool] = None,
     potential_answer: Optional[str] = None,
     answer_confidence: Optional[str] = None,
+    settled_facts: Optional[List[str]] = None,
     short_forward_plan: Optional[List[str]] = None,
     current_source: Optional[str] = None,
+    related_sources: Optional[List[str]] = None,
     commitment_goal: Optional[str] = None,
     max_source_calls: Optional[int] = None,
     plan_step: Optional[str] = None,
@@ -247,8 +287,10 @@ def sprint(
         "should_submit": should_submit,
         "potential_answer": potential_answer,
         "answer_confidence": answer_confidence,
+        "settled_facts": settled_facts,
         "short_forward_plan": short_forward_plan,
         "current_source": current_source,
+        "related_sources": related_sources,
         "commitment_goal": commitment_goal,
         "max_source_calls": max_source_calls,
         "plan_step": plan_step,

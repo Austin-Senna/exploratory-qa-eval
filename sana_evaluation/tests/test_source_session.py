@@ -126,3 +126,17 @@ def test_session_counts_and_budget_exhaustion() -> None:
     state.record_call("query_file")
     assert state.calls_used == 2
     assert state.is_budget_exhausted() is True
+
+
+def test_session_contains_current_and_related_sources() -> None:
+    state = SourceSessionState(
+        current_source="schools",
+        commitment_goal="compare enrollment sources",
+        max_source_calls=3,
+        related_sources=["school-sites", "school-results"],
+    )
+
+    assert state.contains_source("schools") is True
+    assert state.contains_source("school-sites") is True
+    assert state.contains_source("school-results") is True
+    assert state.contains_source("libraries") is False

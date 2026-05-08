@@ -120,8 +120,20 @@ class SourceSessionState:
     max_source_calls: int
     plan_step: str = ""
     success_condition: str = ""
+    related_sources: List[str] = field(default_factory=list)
     calls_used: int = 0
     tools_used: List[str] = field(default_factory=list)
+
+    def _source_package(self) -> set[str]:
+        return {self.current_source, *self.related_sources}
+
+    def contains_source(self, source: Optional[str]) -> bool:
+        if source is None:
+            return False
+        if source.startswith("multi:"):
+            parts = [part for part in source[len("multi:") :].split(",") if part]
+            return bool(parts) and all(part in self._source_package() for part in parts)
+        return source in self._source_package()
 
     def record_call(self, tool_name: str) -> None:
         self.calls_used += 1

@@ -24,12 +24,18 @@ _EXCLUDED_TOOLS = {
     "skills",
 }
 
+_FINAL_BUDGET_THRESHOLD = 2
+_FINAL_INACTIVE = "inactive"
+_FINAL_AWAITING_LOOKUP = "awaiting_lookup"
+_FINAL_LOCKED = "locked"
+
 
 def _cadence_guide_reason() -> str:
     return (
         "Pause tool calls. The k-turn sprint window is up. "
         "Call the sprint tool now with kind='cadence'. Include global_status, "
-        "should_submit, potential_answer, answer_confidence, and short_forward_plan. "
+        "should_submit, potential_answer, answer_confidence, settled_facts, "
+        "and short_forward_plan. "
         "Do not call data tools or submit_answer until the sprint tool succeeds."
     )
 
@@ -39,14 +45,21 @@ def _commitment_contract_reason(
     default_budget: int,
     *,
     action: str = "starting work on",
+    require_evidence: bool = False,
 ) -> str:
+    evidence_text = (
+        " Also include evidence_gained and remaining_gap to justify renewal."
+        if require_evidence
+        else ""
+    )
     return (
         f"Pause tool calls. You are {action} source `{source}`. "
         "This is a source commitment contract. Call the sprint tool now with "
         "kind='commitment_contract'. Include "
         f"current_source='{source}', commitment_goal, max_source_calls "
         f"(default {default_budget}), and plan_step. Keep the contract short. "
-        "After the sprint tool succeeds, retry the source tool call you were about to make."
+        f"{evidence_text} After the sprint tool succeeds, retry the source tool "
+        "call you were about to make."
     )
 
 
@@ -54,6 +67,23 @@ def _pending_reason(previous_reason: Optional[str]) -> str:
     base = previous_reason or "Pause tool calls. A sprint reflection is still pending."
     return (
         f"{base} The sprint is still pending: call the sprint tool before any other tool."
+    )
+
+
+def _final_budget_warning_reason(tool_calls_left: int) -> str:
+    return (
+        f"Pause tool calls. Final budget: {tool_calls_left} counted tool call(s) left. "
+        "If the answer is ready, call submit_answer now. Otherwise choose exactly "
+        "one final highest-value lookup; after that lookup, submit_answer is the "
+        "only allowed non-administrative action."
+    )
+
+
+def _final_budget_locked_reason() -> str:
+    return (
+        "Pause tool calls. Final budget is locked after the one final lookup. "
+        "Do not call more data/source tools; call submit_answer with the best "
+        "answer supported by the current evidence."
     )
 
 
@@ -68,13 +98,17 @@ class SprintSteerHandler(SteeringHandler):
         macro_reflection_k: int,
         sprint_mode: str = "cadence",
         commitment_budget_calls: int = 3,
+        max_tool_calls: int = 30,
     ) -> None:
         super().__init__()
         self._k = max(int(macro_reflection_k), 1)
         self._mode = sprint_mode
         self._commitment_budget_calls = max(int(commitment_budget_calls), 1)
+        self._max_tool_calls = max(int(max_tool_calls), 1)
         self.state = SprintState()
         self._tool_calls_since_reflection = 0
+        self._counted_tool_calls = 0
+        self._final_budget_state = _FINAL_INACTIVE
         self.dashboard_plugin: Optional[Any] = None
         set_sprint_state(self.state)
 
@@ -89,6 +123,8 @@ class SprintSteerHandler(SteeringHandler):
     def _reset(self) -> None:
         self.state = SprintState()
         self._tool_calls_since_reflection = 0
+        self._counted_tool_calls = 0
+        self._final_budget_state = _FINAL_INACTIVE
         set_sprint_state(self.state)
 
     @hook
@@ -101,11 +137,17 @@ class SprintSteerHandler(SteeringHandler):
         tool_name = tool_use.get("name", "")
         if tool_name in _EXCLUDED_TOOLS or tool_name == "submit_answer":
             return
+        self._counted_tool_calls += 1
+        if self._final_budget_state == _FINAL_AWAITING_LOOKUP:
+            self._final_budget_state = _FINAL_LOCKED
 
         if self._mode == "commitment":
             active_source = self.state.source_session.current_source if self.state.source_session else None
             requested_source = source_from_tool_use(tool_use, fallback_source=active_source)
-            if self.state.source_session is not None and requested_source == self.state.source_session.current_source:
+            if (
+                self.state.source_session is not None
+                and self.state.source_session.contains_source(requested_source)
+            ):
                 self.state.source_session.record_call(tool_name)
             return
 
@@ -115,18 +157,46 @@ class SprintSteerHandler(SteeringHandler):
         tool_name = (tool_use or {}).get("name", "")
         if tool_name == _SPRINT_TOOL:
             return Proceed(reason="sprint tool satisfies pending reflection")
+        if tool_name in _EXCLUDED_TOOLS:
+            return Proceed(reason="administrative tool")
+        if tool_name == "submit_answer" and self._is_in_final_budget():
+            return Proceed(reason="submit_answer allowed by final-budget gate")
         if tool_name == "submit_answer" and self.state.pending_kind == "commitment_contract":
             return Proceed(reason="submit_answer bypasses source commitment contract")
+
+        final_action = self._steer_final_budget()
+        if final_action is not None:
+            return final_action
 
         if self.state.pending_kind is not None:
             return Guide(reason=_pending_reason(self.state.pending_reason))
 
-        if tool_name in _EXCLUDED_TOOLS:
-            return Proceed(reason="administrative tool")
-
         if self._mode == "commitment":
             return self._steer_commitment(tool_use or {})
         return self._steer_cadence()
+
+    def _tool_calls_left(self) -> int:
+        return max(self._max_tool_calls - self._counted_tool_calls, 0)
+
+    def _is_in_final_budget(self) -> bool:
+        return (
+            self._final_budget_state != _FINAL_INACTIVE
+            or self._tool_calls_left() <= _FINAL_BUDGET_THRESHOLD
+        )
+
+    def _steer_final_budget(self) -> Optional[ToolSteeringAction]:
+        if self._final_budget_state == _FINAL_LOCKED:
+            return Guide(reason=self._compose_reason(_final_budget_locked_reason()))
+        if self._final_budget_state == _FINAL_AWAITING_LOOKUP:
+            return Proceed(reason="one final lookup allowed by final-budget gate")
+        if self._tool_calls_left() <= _FINAL_BUDGET_THRESHOLD:
+            self._final_budget_state = _FINAL_AWAITING_LOOKUP
+            return Guide(
+                reason=self._compose_reason(
+                    _final_budget_warning_reason(self._tool_calls_left())
+                )
+            )
+        return None
 
     def _steer_cadence(self) -> ToolSteeringAction:
         if self._tool_calls_since_reflection >= self._k:
@@ -150,9 +220,10 @@ class SprintSteerHandler(SteeringHandler):
             self.state.pending_kind = "commitment_contract"
             self.state.pending_reason = reason
             self.state.pending_source = requested_source
+            self.state.pending_requires_evidence = False
             return Guide(reason=reason)
 
-        if requested_source != self.state.source_session.current_source:
+        if not self.state.source_session.contains_source(requested_source):
             reason = self._compose_reason(
                 _commitment_contract_reason(
                     requested_source,
@@ -167,6 +238,7 @@ class SprintSteerHandler(SteeringHandler):
             self.state.pending_reason = reason
             self.state.pending_source = requested_source
             self.state.pending_switch_source = requested_source
+            self.state.pending_requires_evidence = False
             return Guide(reason=reason)
 
         if self.state.source_session.is_budget_exhausted():
@@ -175,11 +247,13 @@ class SprintSteerHandler(SteeringHandler):
                     self.state.source_session.current_source,
                     self._commitment_budget_calls,
                     action="renewing work on",
+                    require_evidence=True,
                 )
             )
             self.state.pending_kind = "commitment_contract"
             self.state.pending_reason = reason
             self.state.pending_source = self.state.source_session.current_source
+            self.state.pending_requires_evidence = True
             return Guide(reason=reason)
 
         return Proceed(reason="within source-session budget")

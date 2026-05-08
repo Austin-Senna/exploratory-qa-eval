@@ -42,6 +42,8 @@ def test_sprint_block_describes_cadence_reflection(search_tool: str) -> None:
     assert "global_status" in text
     assert "potential_answer" in text
     assert "answer_confidence" in text
+    assert "settled_facts" in text
+    assert "should not be rechecked" in text
     assert "turns 1-2" in text
     assert "State of Task" in text
     assert "current_plan_step" in text
@@ -59,9 +61,13 @@ def test_sprint_block_describes_commitment_contract(search_tool: str) -> None:
     assert "SOURCE COMMITMENT CONTRACT" in text
     assert "sprint tool" in text
     assert "current_source" in text
+    assert "related_sources" in text
     assert "commitment_goal" in text
     assert "max_source_calls" in text
     assert "plan_step" in text
+    assert "renewal" in text
+    assert "evidence_gained" in text
+    assert "remaining_gap" in text
     assert "success_condition" not in text
     assert "next_action" in text
     assert "voluntary" in text.lower()

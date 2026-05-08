@@ -76,10 +76,11 @@ Tells the agent that every k non-administrative tool calls, or at source commitm
 
 The sprint tool records the current sprint and upserts a persistent `## CURRENT SPRINT` section into the agent's system prompt after `## CURRENT PLAN`. This keeps the reflection inside the agent's durable working context without creating a text-only assistant turn.
 
-Cadence sprint fields: `kind="cadence"`, `global_status`, `should_submit`, `potential_answer`, `answer_confidence`, `short_forward_plan`.
+Cadence sprint fields: `kind="cadence"`, `global_status`, `should_submit`, `potential_answer`, `answer_confidence`, `settled_facts`, `short_forward_plan`. `settled_facts` is required but may be `[]`; the agent should treat listed facts as already established unless later findings contradict them.
 
 Commitment fields:
-- `kind="commitment_contract"`: `current_source`, `commitment_goal`, `max_source_calls`, `plan_step` (`success_condition` optional).
+- `kind="commitment_contract"`: `current_source`, `commitment_goal`, `max_source_calls`, `plan_step` (`related_sources` and `success_condition` optional). `current_source + related_sources` form one source package with a shared budget.
+- Renewal contracts after budget exhaustion also require `evidence_gained` and `remaining_gap`.
 - `kind="commitment_reflection"`: `current_source`, `calls_used`, `commitment_goal`, `evidence_gained`, `remaining_gap`, `next_action`, `revised_budget`.
 
 **Plugin** — `plugins/sprint_plugin.py:SprintSteerHandler`
@@ -89,7 +90,7 @@ Subclass of Strands' `SteeringHandler`. Counts non-administrative tool calls or 
 - feeds the reason text back as a synthetic tool result,
 - blocks all tools except `sprint` until the sprint tool succeeds.
 
-In commitment mode, a pending source contract blocks source/data tools but does not block `submit_answer`; if the answer is already ready, the final answer can be submitted without spending another bookkeeping turn.
+In commitment mode, a pending source contract blocks source/data tools but does not block `submit_answer`; if the answer is already ready, the final answer can be submitted without spending another bookkeeping turn. When the global counted-tool budget reaches the final two calls, sprint bookkeeping is bypassed: the agent gets a Guide to submit if ready or spend exactly one final lookup, then further data/source tools are blocked and only `submit_answer` plus administrative tools can proceed.
 
 After the model calls `sprint`, the tool updates shared sprint state, refreshes `## CURRENT SPRINT`, and clears the pending gate so normal tool use can resume.
 

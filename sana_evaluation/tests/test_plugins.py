@@ -122,6 +122,7 @@ def test_sprint_tool_call_records_reflection_into_handler() -> None:
         should_submit=False,
         potential_answer="approximately 1.2M orders",
         answer_confidence="medium",
+        settled_facts=["peek X returned the order schema"],
         short_forward_plan=["turns 1-2: peek X", "turns 3-5: query Y"],
         tool_context=_sprint_context(),
     )
@@ -130,6 +131,7 @@ def test_sprint_tool_call_records_reflection_into_handler() -> None:
     assert h.last_reflection["global_status"] == "ON_TRACK"
     assert h.last_reflection["potential_answer"] == "approximately 1.2M orders"
     assert h.last_reflection["answer_confidence"] == "medium"
+    assert h.last_reflection["settled_facts"] == ["peek X returned the order schema"]
     assert h.last_reflection["short_forward_plan"] == [
         "turns 1-2: peek X",
         "turns 3-5: query Y",
@@ -148,6 +150,7 @@ def test_describe_for_dashboard_includes_candidate_answer_after_reflection() -> 
         should_submit=False,
         potential_answer="1.2M",
         answer_confidence="medium",
+        settled_facts=["the order count is approximately 1.2M"],
         short_forward_plan=["turns 1-2: x"],
         tool_context=_sprint_context(),
     )
@@ -168,6 +171,7 @@ def test_sprint_steer_resets_after_tool_call() -> None:
         should_submit=False,
         potential_answer=None,
         answer_confidence="low",
+        settled_facts=[],
         short_forward_plan=[],
         tool_context=_sprint_context(),
     )
@@ -176,13 +180,20 @@ def test_sprint_steer_resets_after_tool_call() -> None:
     assert isinstance(action2, Proceed)
 
 
-def _send_source_contract(handler: SprintSteerHandler, source: str, budget: int) -> None:
+def _send_source_contract(
+    handler: SprintSteerHandler,
+    source: str,
+    budget: int,
+    *,
+    related_sources: Optional[List[str]] = None,
+) -> None:
     sprint(
         kind="commitment_contract",
         current_source=source,
         commitment_goal="find enrollment count",
         max_source_calls=budget,
         plan_step="verify enrollment count",
+        related_sources=related_sources,
         tool_context=_sprint_context(),
     )
 
@@ -294,8 +305,46 @@ def test_commitment_budget_exhaustion_requires_contract_renewal() -> None:
     assert h.state.pending_kind == "commitment_contract"
     assert "renew" in action.reason.lower()
     assert "commitment_contract" in action.reason
+    assert "evidence_gained" in action.reason
+    assert "remaining_gap" in action.reason
     assert "commitment_reflection" not in action.reason
     assert "next_action" not in action.reason
+
+
+def test_commitment_renewal_contract_requires_evidence_and_gap() -> None:
+    h = SprintSteerHandler(
+        macro_reflection_k=5,
+        sprint_mode="commitment",
+        commitment_budget_calls=1,
+    )
+    _run_steer(h, {"name": "peek_file", "input": {"dataset_id": "schools"}})
+    _send_source_contract(h, "schools", 1)
+    h.on_after_tool(_StubAfterToolEvent(tool_use={"name": "peek_file", "input": {"dataset_id": "schools"}}))
+    _run_steer(h, {"name": "query_file", "input": {"dataset_id": "schools"}})
+
+    missing = sprint(
+        kind="commitment_contract",
+        current_source="schools",
+        commitment_goal="find enrollment count",
+        max_source_calls=2,
+        plan_step="verify enrollment count",
+        tool_context=_sprint_context(),
+    )
+    assert missing.startswith("Sprint not recorded:")
+    assert "evidence_gained" in missing
+    assert "remaining_gap" in missing
+
+    accepted = sprint(
+        kind="commitment_contract",
+        current_source="schools",
+        commitment_goal="find enrollment count",
+        max_source_calls=2,
+        plan_step="verify enrollment count",
+        evidence_gained="found the schema but not the count",
+        remaining_gap="need aggregate enrollment count",
+        tool_context=_sprint_context(),
+    )
+    assert accepted == "Sprint recorded."
 
 
 def test_commitment_source_switch_requires_new_contract_not_reflection() -> None:
@@ -318,6 +367,61 @@ def test_commitment_source_switch_requires_new_contract_not_reflection() -> None
     assert "commitment_reflection" not in action.reason
     assert "libraries" in action.reason
     assert "plan_step" in action.reason
+
+    accepted = sprint(
+        kind="commitment_contract",
+        current_source="libraries",
+        commitment_goal="inspect library rows",
+        max_source_calls=2,
+        plan_step="switch to library lookup",
+        tool_context=_sprint_context(),
+    )
+    assert accepted == "Sprint recorded."
+
+
+def test_commitment_related_source_uses_same_package_budget() -> None:
+    h = SprintSteerHandler(
+        macro_reflection_k=5,
+        sprint_mode="commitment",
+        commitment_budget_calls=3,
+    )
+    _run_steer(h, {"name": "peek_file", "input": {"dataset_id": "schools"}})
+    _send_source_contract(h, "schools", 2, related_sources=["school-sites"])
+    h.on_after_tool(_StubAfterToolEvent(tool_use={"name": "peek_file", "input": {"dataset_id": "schools"}}))
+
+    action = _run_steer(
+        h,
+        {"name": "query_file", "input": {"dataset_id": "school-sites"}},
+    )
+
+    assert isinstance(action, Proceed)
+    h.on_after_tool(
+        _StubAfterToolEvent(
+            tool_use={"name": "query_file", "input": {"dataset_id": "school-sites"}}
+        )
+    )
+    assert h.source_session is not None
+    assert h.source_session.calls_used == 2
+    assert h.source_session.is_budget_exhausted() is True
+
+
+def test_commitment_outside_related_sources_still_requires_switch_contract() -> None:
+    h = SprintSteerHandler(
+        macro_reflection_k=5,
+        sprint_mode="commitment",
+        commitment_budget_calls=3,
+    )
+    _run_steer(h, {"name": "peek_file", "input": {"dataset_id": "schools"}})
+    _send_source_contract(h, "schools", 3, related_sources=["school-sites"])
+
+    action = _run_steer(
+        h,
+        {"name": "query_file", "input": {"dataset_id": "libraries"}},
+    )
+
+    assert isinstance(action, Guide)
+    assert h.state.pending_kind == "commitment_contract"
+    assert "libraries" in action.reason
 
 
 def test_commitment_reflection_can_extend_current_source() -> None:
@@ -363,6 +467,67 @@ def test_commitment_reflection_is_voluntary_not_runtime_pending() -> None:
     assert isinstance(action, Guide)
     assert h.state.pending_kind == "commitment_contract"
     assert "commitment_reflection" not in action.reason
+
+
+def test_final_budget_overrides_cadence_reflection() -> None:
+    h = SprintSteerHandler(macro_reflection_k=1, max_tool_calls=3)
+    h.on_after_tool(_StubAfterToolEvent(tool_use={"name": "peek_file"}))
+
+    action = _run_steer(h, {"name": "query_file"})
+
+    assert isinstance(action, Guide)
+    assert "final budget" in action.reason.lower()
+    assert h.state.pending_kind is None
+
+
+def test_final_budget_allows_one_lookup_then_blocks_data_tools() -> None:
+    h = SprintSteerHandler(macro_reflection_k=5, max_tool_calls=3)
+    h.on_after_tool(_StubAfterToolEvent(tool_use={"name": "peek_file"}))
+    first = _run_steer(h, {"name": "query_file", "input": {"dataset_id": "schools"}})
+    assert isinstance(first, Guide)
+    assert "one final" in first.reason.lower()
+
+    final_lookup = _run_steer(
+        h,
+        {"name": "grep_file", "input": {"dataset_id": "libraries"}},
+    )
+    assert isinstance(final_lookup, Proceed)
+    h.on_after_tool(
+        _StubAfterToolEvent(
+            tool_use={"name": "grep_file", "input": {"dataset_id": "libraries"}}
+        )
+    )
+
+    blocked = _run_steer(
+        h,
+        {"name": "query_file", "input": {"dataset_id": "schools"}},
+    )
+    assert isinstance(blocked, Guide)
+    assert "submit_answer" in blocked.reason
+
+    submit = _run_steer(h, {"name": "submit_answer", "input": {"answer": "42"}})
+    assert isinstance(submit, Proceed)
+
+
+def test_final_budget_overrides_commitment_renewal() -> None:
+    h = SprintSteerHandler(
+        macro_reflection_k=5,
+        sprint_mode="commitment",
+        commitment_budget_calls=1,
+        max_tool_calls=3,
+    )
+    _run_steer(h, {"name": "peek_file", "input": {"dataset_id": "schools"}})
+    _send_source_contract(h, "schools", 1)
+    h.on_after_tool(_StubAfterToolEvent(tool_use={"name": "peek_file", "input": {"dataset_id": "schools"}}))
+
+    action = _run_steer(
+        h,
+        {"name": "query_file", "input": {"dataset_id": "schools"}},
+    )
+
+    assert isinstance(action, Guide)
+    assert "final budget" in action.reason.lower()
+    assert h.state.pending_kind is None
 
 
 # ---------------------------------------------------------------------------
