@@ -155,11 +155,18 @@ Tells the main agent that it is the planner: it must not directly search, inspec
 files, write SQL, download data, or execute code. The planner has two typed
 tools:
 
-- `search_subagent`: source discovery with search/list/peek/profile tools only.
+- `search_subagent`: source discovery with search plus light peek/profile tools only.
 - `inspect_subagent`: extraction from explicit `source_family_ids` with data,
   query, and execution tools.
 
-**Tools** — `tools/delegation_tool.py`
+**Tools** — `tools/delegation_tool.py`, `tools/delegation_search.py`,
+`tools/delegation_inspect.py`, `tools/delegation_common.py`
+
+`delegation_tool.py` is the planner-facing facade and runtime. The two typed
+planner tools live in separate modules: `delegation_search.py` owns
+`search_subagent`, and `delegation_inspect.py` owns `inspect_subagent`. Shared
+runtime registry, source guards, budget steering, and file-reference validation
+live in `delegation_common.py`.
 
 `search_subagent` validates a search contract, clamps the requested budget to
 `max_search_subagent_calls`, spawns a fresh bounded search worker, and returns
@@ -170,6 +177,10 @@ to `max_inspect_subagent_calls`, spawns a fresh bounded inspector, and returns
 `success`, `partial`, `failed`, or `budget_exhausted` with compact evidence. The
 planner receives `answer_fragments`, `missing_outputs`, `retry_recommended`, and
 subagent stats instead of raw schemas, tracebacks, or row dumps.
+
+Each disposable worker emits a `delegation_subagent_cost` trace/log record with
+model name, token usage, cache-read tokens, computed USD cost, contract id,
+status, and budget metadata.
 
 **Runtime** — `DelegationRuntime`
 
@@ -214,12 +225,17 @@ sana_evaluation/
     sprint_plugin.py                    SprintSteerHandler (SteeringHandler.Guide)
     dashboard_plugin.py                 StateOfTaskDashboardPlugin (observe + render_block)
     cot_post_record_plugin.py           CoTPostRecordPlugin (AfterToolCallEvent.result mutation)
+  instrumentation/
+    delegation_subagent_costs.py        Per-task delegation subagent cost telemetry
   prompts/
     delegation.py                      delegation_block (planner/subagent contract prompt)
     sprint.py                           sprint_block (sprint tool + state-of-task readout)
     cot.py                              cot_block (pre/post-tool record schema)
   tools/
-    delegation_tool.py                  search_subagent / inspect_subagent runtime
+    delegation_tool.py                  planner facade + DelegationRuntime
+    delegation_common.py                shared runtime registry, guards, budget steering
+    delegation_search.py                SearchContract + search_subagent
+    delegation_inspect.py               InspectContract + inspect_subagent
     peek_file_with_profile.py           SANA's @tool peek_file wrapping baseline + profile attach
     sprint_tool.py                      SANA's @tool sprint persistent reflection
   tests/

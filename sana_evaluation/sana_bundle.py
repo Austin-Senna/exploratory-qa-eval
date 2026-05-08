@@ -64,6 +64,10 @@ class SanaDataLakeAgent(DataLakeAgent):
         search_tool_mode: Optional[str],
         agent_management_mode: Optional[str],
     ) -> None:
+        if self.sana_flags.delegation:
+            from sana_evaluation.instrumentation import delegation_subagent_costs
+
+            delegation_subagent_costs.reset_stats()
         # results is a tool swap (see _decorate_tools), not a runtime
         # toggle. Nothing to do here.
         return None

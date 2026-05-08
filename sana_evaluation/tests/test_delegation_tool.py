@@ -3,11 +3,17 @@
 from __future__ import annotations
 
 import asyncio
+import importlib
+import json
 from unittest.mock import MagicMock
 
 from strands.vended_plugins.steering import Guide, Proceed
 
+from strands_evaluation.config import AgentConfig, RunConfig
+from strands_evaluation.instrumentation.trace_plugin import set_trace_context
+
 from sana_evaluation.tools.delegation_tool import (
+    DelegationRuntime,
     InspectContract,
     SearchContract,
     _FileReferenceGuard,
@@ -91,6 +97,26 @@ class _FakeToolContext:
         self.agent = _FakeAgent()
 
 
+class _FakeMetrics:
+    def __init__(self, *, input_tokens: int, output_tokens: int, cached_input_tokens: int = 0) -> None:
+        self.accumulated_usage = {
+            "inputTokens": input_tokens,
+            "outputTokens": output_tokens,
+            "totalTokens": input_tokens + output_tokens,
+        }
+        if cached_input_tokens:
+            self.accumulated_usage["cacheReadInputTokens"] = cached_input_tokens
+
+
+class _FakeAgentResult:
+    def __init__(self, *, input_tokens: int, output_tokens: int, cached_input_tokens: int = 0) -> None:
+        self.metrics = _FakeMetrics(
+            input_tokens=input_tokens,
+            output_tokens=output_tokens,
+            cached_input_tokens=cached_input_tokens,
+        )
+
+
 def test_search_subagent_validates_required_fields() -> None:
     set_delegation_runtime(_FakeRuntime())
     try:
@@ -105,6 +131,121 @@ def test_search_subagent_validates_required_fields() -> None:
 
     assert result["status"] == "failed"
     assert "required_source_traits" in result["failure_reason"]
+
+
+def test_delegation_facade_reexports_split_subagent_modules() -> None:
+    search_module = importlib.import_module("sana_evaluation.tools.delegation_search")
+    inspect_module = importlib.import_module("sana_evaluation.tools.delegation_inspect")
+
+    assert search_subagent is search_module.search_subagent
+    assert inspect_subagent is inspect_module.inspect_subagent
+    assert SearchContract.__module__ == "sana_evaluation.tools.delegation_search"
+    assert InspectContract.__module__ == "sana_evaluation.tools.delegation_inspect"
+
+
+def test_delegation_subagent_cost_recorder_tracks_costs_and_trace(tmp_path) -> None:
+    from sana_evaluation.instrumentation import delegation_subagent_costs
+
+    trace_root = tmp_path / "traces"
+    set_trace_context("tasks_core_quality/k-1-d-1/task_1.json", [], str(trace_root))
+    delegation_subagent_costs.reset_stats()
+
+    record = delegation_subagent_costs.record_subagent_call(
+        tool="search_subagent",
+        subagent_kind="search",
+        model_name="openai/gpt-5.4-nano",
+        agent_result=_FakeAgentResult(input_tokens=900, output_tokens=40, cached_input_tokens=300),
+        contract_id="s1",
+        status="success",
+        budget_calls=3,
+    )
+
+    expected_cost = ((600 * 0.20) + (300 * 0.02) + (40 * 1.25)) / 1_000_000
+    assert record["event"] == "delegation_subagent_cost"
+    assert record["tool"] == "search_subagent"
+    assert record["subagent_kind"] == "search"
+    assert record["input_tokens"] == 900
+    assert record["cached_input_tokens"] == 300
+    assert record["uncached_input_tokens"] == 600
+    assert record["output_tokens"] == 40
+    assert record["contract_id"] == "s1"
+    assert record["status"] == "success"
+    assert record["budget_calls"] == 3
+    assert record["success"] is True
+    assert record["cost_usd"] == expected_cost
+
+    stats = delegation_subagent_costs.get_stats()
+    assert stats["delegation_subagent_calls"] == 1
+    assert stats["search_subagent_calls"] == 1
+    assert stats["search_subagent_cost_usd"] == expected_cost
+    assert stats["delegation_subagent_cost_usd"] == expected_cost
+
+    trace_path = trace_root / "k-1-d-1" / "task_1.jsonl"
+    events = [json.loads(line) for line in trace_path.read_text().splitlines()]
+    assert [event["event"] for event in events] == ["delegation_subagent_cost"]
+    assert events[0]["cost_usd"] == expected_cost
+
+
+def test_delegation_runtime_records_subagent_cost(monkeypatch) -> None:
+    import sana_evaluation.tools.delegation_tool as delegation_tool
+
+    recorded = []
+
+    def fake_record_subagent_call(**kwargs):
+        recorded.append(kwargs)
+        return {
+            "input_tokens": 900,
+            "cached_input_tokens": 300,
+            "uncached_input_tokens": 600,
+            "output_tokens": 40,
+            "total_tokens": 940,
+            "cost_usd": 0.000176,
+        }
+
+    class _CostAgent:
+        def __init__(self, *args, **kwargs):
+            self.tools = kwargs["tools"]
+
+        def __call__(self, prompt: str):
+            _ = prompt
+            return_tool = next(t for t in self.tools if getattr(t, "tool_name", "") == "return_search_result")
+            return_tool._tool_func(
+                status="success",
+                search_summary="found source",
+                candidates=[],
+                tool_context=_FakeToolContext(),
+            )
+            return _FakeAgentResult(input_tokens=900, output_tokens=40, cached_input_tokens=300)
+
+    monkeypatch.setattr(delegation_tool, "record_delegation_subagent_call", fake_record_subagent_call)
+    monkeypatch.setattr(delegation_tool, "Agent", _CostAgent)
+    monkeypatch.setattr(delegation_tool, "build_model", lambda agent_config: object())
+
+    runtime = DelegationRuntime(
+        agent_config=AgentConfig(model_name="openai/gpt-5.4-nano"),
+        run_config=RunConfig(search_tool_mode="standard"),
+        task_context={},
+        base_tools=[],
+    )
+    payload = runtime.run_search_contract(
+        SearchContract(
+            contract_id="s1",
+            search_goal="find school data",
+            required_source_traits=["schools"],
+            budget_calls=3,
+        )
+    )
+
+    assert payload["status"] == "success"
+    assert payload["subagent_stats"]["cost_usd"] == 0.000176
+    assert len(recorded) == 1
+    assert recorded[0]["tool"] == "search_subagent"
+    assert recorded[0]["subagent_kind"] == "search"
+    assert recorded[0]["model_name"] == "openai/gpt-5.4-nano"
+    assert recorded[0]["contract_id"] == "s1"
+    assert recorded[0]["status"] == "success"
+    assert recorded[0]["budget_calls"] == 3
+    assert recorded[0]["success"] is True
 
 
 def test_search_subagent_clamps_budget_and_returns_candidates() -> None:
