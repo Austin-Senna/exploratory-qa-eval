@@ -10,6 +10,7 @@ _VALID_FEATURE_NAMES = {
     "sprint",
     "cot",
     "results",
+    "delegation",
 }
 
 _VALID_SPRINT_MODES = {"cadence", "commitment"}
@@ -30,15 +31,25 @@ class SanaFlags:
     sprint: bool = False
     cot: bool = False
     results: bool = False
+    delegation: bool = False
 
     macro_reflection_k: int = 5
     sprint_mode: str = "cadence"
     commitment_budget_calls: int = 3
+    max_search_subagent_calls: int = 3
+    max_inspect_subagent_calls: int = 8
 
     def validate(self, *, agent_management: str) -> None:
+        if self.sprint and self.delegation:
+            raise ValueError("SANA features sprint and delegation are mutually exclusive.")
         if self.sprint and agent_management not in {"standard", "ideal"}:
             raise ValueError(
                 "SANA flag sprint requires agent_management ∈ {standard, ideal}; "
+                f"got agent_management={agent_management!r}."
+            )
+        if self.delegation and agent_management not in {"standard", "ideal"}:
+            raise ValueError(
+                "SANA flag delegation requires agent_management ∈ {standard, ideal}; "
                 f"got agent_management={agent_management!r}."
             )
         if self.sprint_mode not in _VALID_SPRINT_MODES:
@@ -54,6 +65,16 @@ class SanaFlags:
             raise ValueError(
                 f"commitment_budget_calls must be > 0; got {self.commitment_budget_calls}."
             )
+        if self.max_search_subagent_calls <= 0:
+            raise ValueError(
+                "max_search_subagent_calls must be > 0; "
+                f"got {self.max_search_subagent_calls}."
+            )
+        if self.max_inspect_subagent_calls <= 0:
+            raise ValueError(
+                "max_inspect_subagent_calls must be > 0; "
+                f"got {self.max_inspect_subagent_calls}."
+            )
 
     @classmethod
     def from_feature_names(
@@ -63,6 +84,8 @@ class SanaFlags:
         macro_reflection_k: int = 5,
         sprint_mode: str = "cadence",
         commitment_budget_calls: int = 3,
+        max_search_subagent_calls: int = 3,
+        max_inspect_subagent_calls: int = 8,
     ) -> "SanaFlags":
         """Build a SanaFlags from a list of feature-name strings (e.g. CLI repeats)."""
         normalized = [str(n).strip() for n in feature_names if str(n).strip()]
@@ -77,6 +100,8 @@ class SanaFlags:
             macro_reflection_k=macro_reflection_k,
             sprint_mode=sprint_mode,
             commitment_budget_calls=commitment_budget_calls,
+            max_search_subagent_calls=max_search_subagent_calls,
+            max_inspect_subagent_calls=max_inspect_subagent_calls,
             **kwargs,
         )
 

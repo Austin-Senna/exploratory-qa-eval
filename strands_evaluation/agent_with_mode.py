@@ -485,9 +485,21 @@ class DataLakeAgent:
         *,
         search_tool_mode: Optional[str],
         agent_management_mode: Optional[str],
+        task_context: Optional[Dict[str, Any]] = None,
     ) -> List[Any]:
         """Return a (possibly modified) tools list. Default: identity."""
+        _ = task_context
         return tools
+
+    def _decorate_plugins(
+        self,
+        plugins: List[Any],
+        *,
+        search_tool_mode: Optional[str],
+        agent_management_mode: Optional[str],
+    ) -> List[Any]:
+        """Return a (possibly modified) plugins list. Default: identity."""
+        return plugins
 
     def _tool_limit_excluded_tools(
         self,
@@ -676,11 +688,17 @@ class DataLakeAgent:
                 agent_management_mode=_hook_agent_management_mode,
             )
         )
+        plugins = self._decorate_plugins(
+            list(plugins),
+            search_tool_mode=_hook_search_tool_mode,
+            agent_management_mode=_hook_agent_management_mode,
+        )
 
         tools = self._decorate_tools(
             list(tools),
             search_tool_mode=_hook_search_tool_mode,
             agent_management_mode=_hook_agent_management_mode,
+            task_context=task_context,
         )
 
         return Agent(

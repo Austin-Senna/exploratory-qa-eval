@@ -39,10 +39,10 @@ def peek_file(
     USE THIS for one file at a time. For multiple files in one call, use
     `peek_multiple` instead (different signature: takes a `files` list).
 
-    Prefer `s3_uri` when list_files/search/preloaded results gave you one; it
-    is less error-prone than reconstructing dataset_id + file_path. For datagov
-    files, both "rows.txt" and "files/rows.txt" are accepted, but
-    "files/rows.txt" is the canonical path.
+    Prefer `s3_uri` when search/preloaded results gave you one; it is less
+    error-prone than reconstructing dataset_id + file_path. For datagov files,
+    both "rows.txt" and "files/rows.txt" are accepted, but "files/rows.txt" is
+    the canonical path.
 
     Args:
         dataset_id: ONE dataset identifier as a bare string, e.g. "Barack_Obama"
@@ -99,8 +99,7 @@ def peek_multiple(
     USE THIS when you already know which 2+ files you need. For a single file,
     use `peek_file` instead — its signature is simpler.
 
-    Prefer per-entry `s3_uri` when list_files/search/preloaded results gave you
-    one.
+    Prefer per-entry `s3_uri` when search/preloaded results gave you one.
 
     REQUIRED ARGUMENT SHAPE: pass a `files` list of dicts, NOT top-level
     `dataset_id`/`file_path`:
@@ -135,7 +134,7 @@ def peek_multiple(
             "error": (
                 "peek_multiple requires a non-empty `files` list of "
                 "{dataset_id, file_path} dicts. Use peek_multiple for 2+ files "
-                "after list_files, or peek_file(dataset_id, file_path) for one "
+                "when you already know the exact files, or peek_file(dataset_id, file_path) for one "
                 "file. Example: "
                 'peek_multiple(files=[{"dataset_id": "census", "file_path": "files/rows.txt"}], max_rows=5)'
             )

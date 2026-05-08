@@ -11,8 +11,14 @@ from sana_evaluation.sana_config import SanaRunConfig
 from strands_evaluation.config import AgentConfig
 
 
-def _make_agent(*, results: bool = False, sprint: bool = False, cot: bool = False) -> SanaDataLakeAgent:
-    flags = SanaFlags(results=results, sprint=sprint, cot=cot)
+def _make_agent(
+    *,
+    results: bool = False,
+    sprint: bool = False,
+    cot: bool = False,
+    delegation: bool = False,
+) -> SanaDataLakeAgent:
+    flags = SanaFlags(results=results, sprint=sprint, cot=cot, delegation=delegation)
     rc = SanaRunConfig(
         agent_management_mode="standard",
         search_tool_mode="preloaded",
@@ -97,6 +103,52 @@ class DecorateToolsTests(unittest.TestCase):
             agent_management_mode="standard",
         )
         self.assertNotIn("sana-cot-post-record", [plugin.name for plugin in plugins])
+
+    def test_delegation_filters_planner_tools_to_delegation_surface(self) -> None:
+        agent = _make_agent(delegation=True)
+        tool_names = [
+            "search_reranked",
+            "plan",
+            "list_files",
+            "peek_file",
+            "query_file",
+            "execute_code",
+            "submit_answer",
+        ]
+        tools = []
+        for name in tool_names:
+            tool = MagicMock()
+            tool.tool_name = name
+            tools.append(tool)
+
+        decorated = agent._decorate_tools(
+            tools,
+            search_tool_mode="standard",
+            agent_management_mode="standard",
+        )
+
+        decorated_names = [getattr(t, "tool_name", None) for t in decorated]
+        self.assertEqual(
+            decorated_names,
+            ["plan", "submit_answer", "search_subagent", "inspect_subagent"],
+        )
+        self.assertNotIn("query_file", decorated_names)
+        self.assertNotIn("execute_code", decorated_names)
+
+    def test_delegation_removes_agent_skills_plugin(self) -> None:
+        agent = _make_agent(delegation=True)
+        skills_plugin = MagicMock()
+        skills_plugin.name = "agent_skills"
+        logging_plugin = MagicMock()
+        logging_plugin.name = "logging"
+
+        decorated = agent._decorate_plugins(
+            [skills_plugin, logging_plugin],
+            search_tool_mode="preloaded",
+            agent_management_mode="standard",
+        )
+
+        self.assertEqual([plugin.name for plugin in decorated], ["logging"])
 
 
 if __name__ == "__main__":

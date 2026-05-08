@@ -392,6 +392,7 @@ class SanaPeekMultipleWrapperTests(unittest.TestCase):
 
         self.assertIn("error", result)
         self.assertIn("peek_multiple requires", result["error"])
+        self.assertNotIn("list_files", result["error"])
 
 
 if __name__ == "__main__":
