@@ -9,12 +9,15 @@ from strands.vended_plugins.steering import Guide, Proceed
 
 from sana_evaluation.tools.delegation_tool import (
     InspectContract,
+    SearchContract,
     _InspectSourceGuard,
     _SubagentBudgetSteer,
     _SubagentToolLedger,
+    _build_search_return_tool,
     _build_inspect_return_tool,
     clear_delegation_runtime,
     _format_inspect_prompt,
+    _format_search_prompt,
     inspect_subagent,
     _preloaded_source_sequence,
     search_subagent,
@@ -316,6 +319,29 @@ def test_inspect_prompt_includes_source_hints_and_s3_uri_instruction() -> None:
     assert "Do not guess file paths" in prompt
 
 
+def test_search_prompt_includes_preloaded_candidate_sources() -> None:
+    contract = SearchContract(
+        contract_id="s1",
+        search_goal="find Khan Lab School page",
+        required_source_traits=["Khan Lab School location"],
+        budget_calls=2,
+    )
+
+    prompt = _format_search_prompt(
+        contract,
+        source_hints=[
+            {
+                "dataset_id": "Khan_Lab_School",
+                "s3_uri": "s3://lakeqa-yc4103-datalake/wikipedia/Khan_Lab_School/content.txt",
+            }
+        ],
+    )
+
+    assert "Preloaded candidate sources" in prompt
+    assert "Khan_Lab_School" in prompt
+    assert "return candidates from this list" in prompt
+
+
 def test_inspect_source_guard_normalizes_contract_s3_uris() -> None:
     guard = _InspectSourceGuard(
         ["s3://lakeqa-yc4103-datalake/datagov/public-school-locations-current-23297/files/data.csv"]
@@ -352,4 +378,20 @@ def test_inspect_return_tool_defaults_missing_answer_fragments() -> None:
 
     assert result == "Inspection contract result recorded."
     assert result_state["payload"]["answer_fragments"] == []
+    assert context.agent.cancelled is True
+
+
+def test_search_return_tool_defaults_missing_candidates() -> None:
+    result_state = {}
+    tool = _build_search_return_tool(result_state)
+    context = _FakeToolContext()
+
+    result = tool._tool_func(
+        status="failed",
+        search_summary="No match.",
+        tool_context=context,
+    )
+
+    assert result == "Search contract result recorded."
+    assert result_state["payload"]["candidates"] == []
     assert context.agent.cancelled is True

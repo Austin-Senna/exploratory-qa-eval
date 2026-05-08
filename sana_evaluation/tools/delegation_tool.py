@@ -162,6 +162,8 @@ def _canonical_source_s3_uri(value: str) -> str:
 def _source_hints_from_sequence(
     source_family_ids: Sequence[Any],
     source_sequence: Sequence[Any],
+    *,
+    include_all: bool = False,
 ) -> List[Dict[str, str]]:
     """Return exact file handles from a preloaded plan for requested datasets."""
 
@@ -170,7 +172,7 @@ def _source_hints_from_sequence(
         for source_id in (_source_id_from_reference(value) for value in source_family_ids)
         if source_id
     }
-    if not requested:
+    if not requested and not include_all:
         return []
 
     hints: List[Dict[str, str]] = []
@@ -181,7 +183,9 @@ def _source_hints_from_sequence(
         if parsed is None:
             return
         dataset_id, file_path = parsed
-        if dataset_id not in requested or not file_path:
+        if not include_all and dataset_id not in requested:
+            return
+        if not file_path:
             return
         s3_uri = _canonical_source_s3_uri(str(source))
         if s3_uri in seen_uris:
@@ -431,7 +435,15 @@ class DelegationRuntime:
 
     def run_search_contract(self, contract: SearchContract) -> Dict[str, Any]:
         tools = tools_for_search_subagent(self.base_tools)
-        prompt = _format_search_prompt(contract)
+        source_hints: List[Dict[str, str]] = []
+        search_mode = (self.run_config.search_tool_mode or "").strip().lower()
+        if search_mode == "preloaded":
+            source_hints = _source_hints_from_sequence(
+                [],
+                _preloaded_source_sequence(self.task_context),
+                include_all=True,
+            )
+        prompt = _format_search_prompt(contract, source_hints=source_hints)
         return self._run_agent_contract(
             kind="search",
             contract_id=contract.contract_id,
@@ -642,11 +654,24 @@ def _json_block(value: Any) -> str:
     return json.dumps(value, ensure_ascii=False, indent=2)
 
 
-def _format_search_prompt(contract: SearchContract) -> str:
+def _format_search_prompt(
+    contract: SearchContract,
+    *,
+    source_hints: Optional[List[Dict[str, str]]] = None,
+) -> str:
+    source_hint_block = ""
+    if source_hints:
+        source_hint_block = (
+            "Preloaded candidate sources:\n"
+            f"{_json_block(source_hints)}\n"
+            "If a candidate satisfies the contract, return candidates from this list "
+            "with its exact `s3_uri`; do not claim no search tool is available.\n"
+        )
     return (
         f"Contract id: {contract.contract_id}\n"
         f"Search goal: {contract.search_goal}\n"
         f"Required source traits:\n{_json_block(contract.required_source_traits)}\n"
+        f"{source_hint_block}"
         f"Constraints:\n{_json_block(contract.constraints)}\n"
         f"Known context:\n{contract.known_context or '(none)'}\n"
         f"Budget: {contract.budget_calls} tool calls, plus one grace call if needed, "
@@ -687,9 +712,9 @@ def _build_search_return_tool(result_state: Dict[str, Any]):
     @tool(context=True)
     def return_search_result(
         status: str,
-        candidates: List[Dict[str, Any]],
         search_summary: str,
         tool_context: ToolContext,
+        candidates: Optional[List[Dict[str, Any]]] = None,
         missing_or_uncertain_coverage: Optional[List[str]] = None,
         retry_recommended: bool = False,
         failure_reason: str = "",
