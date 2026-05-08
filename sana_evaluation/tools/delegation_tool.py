@@ -198,11 +198,11 @@ def _source_hints_from_sequence(
 
 def _preloaded_source_sequence(task_context: Dict[str, Any]) -> List[str]:
     try:
-        from strands_evaluation.tools.external.ideal.plan_store import load_ideal_plan_for_context
+        from strands_evaluation.tools.external.ideal.plan_store import load_plan_for_context
     except Exception:
         return []
     try:
-        plan = load_ideal_plan_for_context(task_context)
+        plan = load_plan_for_context(task_context)
     except Exception:
         return []
     return [str(source) for source in getattr(plan, "source_sequence", []) or [] if str(source).strip()]

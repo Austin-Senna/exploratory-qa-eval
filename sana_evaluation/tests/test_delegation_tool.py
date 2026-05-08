@@ -16,6 +16,7 @@ from sana_evaluation.tools.delegation_tool import (
     clear_delegation_runtime,
     _format_inspect_prompt,
     inspect_subagent,
+    _preloaded_source_sequence,
     search_subagent,
     _source_hints_from_sequence,
     _subagent_system_prompt,
@@ -275,6 +276,18 @@ def test_source_hints_from_preloaded_sequence_include_s3_uris() -> None:
             "s3_uri": "s3://lakeqa-yc4103-datalake/wikipedia/Khan_Lab_School/content.txt",
         },
     ]
+
+
+def test_preloaded_source_sequence_loads_task_plan_sources() -> None:
+    sources = _preloaded_source_sequence(
+        {
+            "task_id": "tasks_core_quality/k-5-d-4/task_13.json",
+            "datasets_used": [],
+            "reasoning_chain": [],
+        }
+    )
+
+    assert "datagov/public-school-locations-current-23297/files/data.txt" in sources
 
 
 def test_inspect_prompt_includes_source_hints_and_s3_uri_instruction() -> None:
