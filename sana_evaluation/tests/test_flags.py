@@ -22,6 +22,18 @@ def test_from_feature_names_basic() -> None:
     assert "results" in flags.active_features()
 
 
+def test_from_feature_names_accepts_delegation() -> None:
+    flags = SanaFlags.from_feature_names(
+        ["delegation"],
+        max_search_subagent_calls=4,
+        max_inspect_subagent_calls=9,
+    )
+    assert flags.delegation is True
+    assert flags.max_search_subagent_calls == 4
+    assert flags.max_inspect_subagent_calls == 9
+    assert flags.active_features() == ["delegation"]
+
+
 def test_from_feature_names_dashboard_no_longer_valid() -> None:
     """The `dashboard` flag was removed; readout is now bundled into sprint."""
     with pytest.raises(ValueError, match="Unknown SANA feature"):
@@ -92,3 +104,27 @@ def test_macro_reflection_k_must_be_positive() -> None:
     flags = SanaFlags(macro_reflection_k=0)
     with pytest.raises(ValueError, match="macro_reflection_k"):
         flags.validate(agent_management="naive")
+
+
+def test_delegation_rejects_sprint_combination() -> None:
+    flags = SanaFlags(delegation=True, sprint=True)
+    with pytest.raises(ValueError, match="mutually exclusive"):
+        flags.validate(agent_management="standard")
+
+
+def test_delegation_requires_management() -> None:
+    flags = SanaFlags(delegation=True)
+    with pytest.raises(ValueError, match="delegation requires agent_management"):
+        flags.validate(agent_management="naive")
+    flags.validate(agent_management="standard")
+    flags.validate(agent_management="ideal")
+
+
+def test_delegation_budget_caps_must_be_positive() -> None:
+    flags = SanaFlags(delegation=True, max_search_subagent_calls=0)
+    with pytest.raises(ValueError, match="max_search_subagent_calls"):
+        flags.validate(agent_management="standard")
+
+    flags = SanaFlags(delegation=True, max_inspect_subagent_calls=0)
+    with pytest.raises(ValueError, match="max_inspect_subagent_calls"):
+        flags.validate(agent_management="standard")

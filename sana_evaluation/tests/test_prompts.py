@@ -6,6 +6,7 @@ import pytest
 
 from sana_evaluation.prompts import (
     cot_block,
+    delegation_block,
     sprint_block,
 )
 
@@ -68,4 +69,17 @@ def test_sprint_block_describes_commitment_contract(search_tool: str) -> None:
     assert "State of Task" in text
     assert "current_plan_step" in text
     assert "tool_calls_left" in text
+    assert "SANA" not in text
+
+
+@pytest.mark.parametrize("search_tool", _SEARCH_MODES)
+def test_delegation_block_describes_planner_subagent_tools(search_tool: str) -> None:
+    text = delegation_block(search_tool)
+    assert "PLANNER WITH BOUNDED SUBAGENTS" in text
+    assert "search_subagent" in text
+    assert "inspect_subagent" in text
+    assert "source_family_ids" in text
+    assert "answer_fragments" in text
+    assert "missing_outputs" in text
+    assert "write SQL" in text
     assert "SANA" not in text

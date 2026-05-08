@@ -45,6 +45,22 @@ def test_variant_label_uses_readable_feature_names() -> None:
     assert "ra" not in label
 
 
+def test_variant_label_includes_delegation_caps() -> None:
+    label = _variant_condition_label(
+        search_tool="preloaded",
+        search_results="ideal",
+        agent_management="standard",
+        k=None,
+        search_calls=None,
+        sana_flags=SanaFlags(
+            delegation=True,
+            max_search_subagent_calls=4,
+            max_inspect_subagent_calls=9,
+        ),
+    )
+    assert label == "sana_delegation_search4_inspect9_sp_ri_pd"
+
+
 def test_variant_label_keeps_axis_suffix_for_non_sana_runs() -> None:
     label = _variant_condition_label(
         search_tool="preloaded",

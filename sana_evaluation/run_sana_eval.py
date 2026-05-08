@@ -72,6 +72,12 @@ def _variant_condition_label(
         sana_tokens.append("cot")
     if sana_flags.results:
         sana_tokens.append("results")
+    if sana_flags.delegation:
+        sana_tokens.append(
+            "delegation"
+            f"_search{sana_flags.max_search_subagent_calls}"
+            f"_inspect{sana_flags.max_inspect_subagent_calls}"
+        )
     if sana_flags.sprint:
         if sana_flags.sprint_mode == "commitment":
             sana_tokens.append(f"sprint_commitment_cb{sana_flags.commitment_budget_calls}")
@@ -285,10 +291,10 @@ def main() -> None:
         "--sana-feature",
         action="append",
         default=[],
-        choices=sorted({"sprint", "cot", "results"}),
+        choices=sorted({"sprint", "cot", "results", "delegation"}),
         help=(
             "Enable a SANA feature. Repeat for multiple features. "
-            "Options: sprint, cot, results. "
+            "Options: sprint, cot, results, delegation. "
             "(State-of-task readout, candidate-answer, and answer-confidence are "
             "automatically bundled into sprint's reflection.)"
         ),
@@ -315,6 +321,18 @@ def main() -> None:
         default=3,
         help="Default per-source call budget for --sprint-mode commitment.",
     )
+    parser.add_argument(
+        "--max-search-subagent-calls",
+        type=int,
+        default=3,
+        help="Hard cap for a planner-requested search_subagent budget.",
+    )
+    parser.add_argument(
+        "--max-inspect-subagent-calls",
+        type=int,
+        default=8,
+        help="Hard cap for a planner-requested inspect_subagent budget.",
+    )
 
     # Execution
     parser.add_argument("--parallel", type=int, default=6)
@@ -333,6 +351,10 @@ def main() -> None:
         parser.error("--macro-reflection-k must be > 0")
     if args.commitment_budget_calls <= 0:
         parser.error("--commitment-budget-calls must be > 0")
+    if args.max_search_subagent_calls <= 0:
+        parser.error("--max-search-subagent-calls must be > 0")
+    if args.max_inspect_subagent_calls <= 0:
+        parser.error("--max-inspect-subagent-calls must be > 0")
 
     extra_model_kwargs = {}
     if args.reasoning_effort is not None:
@@ -359,6 +381,8 @@ def main() -> None:
             macro_reflection_k=args.macro_reflection_k,
             sprint_mode=args.sprint_mode,
             commitment_budget_calls=args.commitment_budget_calls,
+            max_search_subagent_calls=args.max_search_subagent_calls,
+            max_inspect_subagent_calls=args.max_inspect_subagent_calls,
         )
         sana_flags.validate(agent_management=agent_management_mode)
     except ValueError as exc:

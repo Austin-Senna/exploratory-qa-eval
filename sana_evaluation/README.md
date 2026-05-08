@@ -10,9 +10,10 @@ Three opt-in flags, all default off. Validated by `SanaFlags.validate(agent_mana
 
 | Flag      | What it does                                                                    | Dependencies                           |
 |-----------|---------------------------------------------------------------------------------|----------------------------------------|
-| `sprint`  | k-turn sprint reflection or source commitment control, submitted with a tool    | `agent_management ∈ {standard, ideal}` |
-| `cot`     | Structured pre/post tool-use records                                            | —                                      |
-| `results` | `peek_file` returns a `profile` field (column stats, top rows, llm_description) | —                                      |
+| `sprint`     | k-turn sprint reflection or source commitment control, submitted with a tool    | `agent_management ∈ {standard, ideal}` |
+| `cot`        | Structured pre/post tool-use records                                            | —                                      |
+| `results`    | `peek_file` returns a `profile` field (column stats, top rows, llm_description) | —                                      |
+| `delegation` | Planner-only mode with bounded `search_subagent` and `inspect_subagent` tools   | `agent_management ∈ {standard, ideal}`; mutually exclusive with `sprint` |
 
 Two earlier flags have been folded into `sprint`:
 - The state-of-task readout (formerly `dashboard`) renders inside the reflection Guide reason.
@@ -28,6 +29,16 @@ python -m sana_evaluation.run_sana_eval \
   --task-set tasks_mini --model gpt-5.4-nano
 ```
 
+Delegation mode:
+
+```bash
+python -m sana_evaluation.run_sana_eval \
+  --search-tool standard --search-results ideal --agent-management standard \
+  --sana-feature delegation --sana-feature results \
+  --max-search-subagent-calls 3 --max-inspect-subagent-calls 8 \
+  --task-set tasks_mini --model gpt-5.4-nano
+```
+
 ---
 
 ## How wiring works
@@ -40,7 +51,7 @@ python -m sana_evaluation.run_sana_eval \
 | `_extra_prompt_text`    | Appends `cot_block` / `sprint_block` per active flag                                   |
 | `_extra_plugins`        | Adds `CoTPostRecordPlugin`, `SprintSteerHandler`, `StateOfTaskDashboardPlugin`         |
 | `_conversation_manager` | Returns a `SummarizingConversationManager` with the SANA-tuned summarization prompt    |
-| `_decorate_tools`       | Swaps baseline `peek_file` when `results=on`, and adds `sprint` when `sprint=on`       |
+| `_decorate_tools`       | Swaps baseline `peek_file` when `results=on`; adds `sprint`; or filters to delegation tools |
 
 `SanaBatchRunner` (in `sana_runner.py`) is just `BatchRunner` with `_AGENT_CLASS = SanaDataLakeAgent`.
 
@@ -136,6 +147,41 @@ Returns `None` softly if no profile can be assembled; `peek_file` then omits the
 
 ---
 
+### `delegation` — planner/subagent context firewall
+
+**Prompt** — `prompts/delegation.py:delegation_block(search_tool)`
+
+Tells the main agent that it is the planner: it must not directly search, inspect
+files, write SQL, download data, or execute code. The planner has two typed
+tools:
+
+- `search_subagent`: source discovery with search/list/peek/profile tools only.
+- `inspect_subagent`: extraction from explicit `source_family_ids` with data,
+  query, and execution tools.
+
+**Tools** — `tools/delegation_tool.py`
+
+`search_subagent` validates a search contract, clamps the requested budget to
+`max_search_subagent_calls`, spawns a fresh bounded search worker, and returns
+compact candidates with rationale, confidence, and known gaps.
+
+`inspect_subagent` validates an inspection contract, clamps the requested budget
+to `max_inspect_subagent_calls`, spawns a fresh bounded inspector, and returns
+`success`, `partial`, `failed`, or `budget_exhausted` with compact evidence. The
+planner receives `answer_fragments`, `missing_outputs`, `retry_recommended`, and
+subagent stats instead of raw schemas, tracebacks, or row dumps.
+
+**Runtime** — `DelegationRuntime`
+
+`SanaDataLakeAgent._decorate_tools` configures the runtime with the current run
+config, task context, and already-decorated tools. In delegation mode it returns
+only planner/admin tools plus `search_subagent`, `inspect_subagent`, and
+`submit_answer`. Each subagent call starts a fresh Strands agent, inherits the
+run's search/results/computation tool surfaces through the provided tool list,
+and writes compact start/end records to the active trace.
+
+---
+
 ## Conversation manager — `helper/conversation.py`
 
 When any SANA flag is active, `SanaDataLakeAgent` returns a `SummarizingConversationManager` wired with `SANA_SUMMARIZATION_PROMPT`.
@@ -169,9 +215,11 @@ sana_evaluation/
     dashboard_plugin.py                 StateOfTaskDashboardPlugin (observe + render_block)
     cot_post_record_plugin.py           CoTPostRecordPlugin (AfterToolCallEvent.result mutation)
   prompts/
+    delegation.py                      delegation_block (planner/subagent contract prompt)
     sprint.py                           sprint_block (sprint tool + state-of-task readout)
     cot.py                              cot_block (pre/post-tool record schema)
   tools/
+    delegation_tool.py                  search_subagent / inspect_subagent runtime
     peek_file_with_profile.py           SANA's @tool peek_file wrapping baseline + profile attach
     sprint_tool.py                      SANA's @tool sprint persistent reflection
   tests/

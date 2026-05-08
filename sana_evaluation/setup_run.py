@@ -15,7 +15,7 @@ _MANAGEMENT_MODE_CHOICES = ("naive", "standard", "ideal")
 _RESULT_MODE_CHOICES = ("naive", "ideal")
 _COMPUTATION_MODE_CHOICES = ("standard", "ideal")
 _SHORTCUT_MODE_CHOICES = ("preloaded", "ideal")
-_SANA_FEATURE_CHOICES = ("cot", "results", "sprint")
+_SANA_FEATURE_CHOICES = ("cot", "delegation", "results", "sprint")
 _SPRINT_MODE_CHOICES = ("cadence", "commitment")
 _REASONING_EFFORT_CHOICES = ("none", "minimal", "low", "medium", "high", "xhigh")
 _DEFAULT_TASK_SET = "tasks_core_quality"
@@ -83,6 +83,18 @@ def _build_parser() -> argparse.ArgumentParser:
         type=int,
         default=None,
         help="SANA commitment-mode source budget. Defaults to sana_evaluation.run_sana_eval's value.",
+    )
+    common.add_argument(
+        "--max-search-subagent-calls",
+        type=int,
+        default=None,
+        help="Hard cap for planner-requested search_subagent budgets.",
+    )
+    common.add_argument(
+        "--max-inspect-subagent-calls",
+        type=int,
+        default=None,
+        help="Hard cap for planner-requested inspect_subagent budgets.",
     )
     common.add_argument("--k", type=int, default=None)
     common.add_argument("--search-calls", type=int, default=None)
@@ -266,6 +278,10 @@ def _build_sana_command(args: argparse.Namespace, cwd: Path) -> tuple[list[str],
         command.extend(["--macro-reflection-k", str(args.macro_reflection_k)])
     if args.commitment_budget_calls is not None:
         command.extend(["--commitment-budget-calls", str(args.commitment_budget_calls)])
+    if args.max_search_subagent_calls is not None:
+        command.extend(["--max-search-subagent-calls", str(args.max_search_subagent_calls)])
+    if args.max_inspect_subagent_calls is not None:
+        command.extend(["--max-inspect-subagent-calls", str(args.max_inspect_subagent_calls)])
     if args.only_new:
         command.append("--only-new")
     if args.verbose:
@@ -356,6 +372,10 @@ def run(
         parser.error("--macro-reflection-k must be > 0")
     if args.commitment_budget_calls is not None and args.commitment_budget_calls <= 0:
         parser.error("--commitment-budget-calls must be > 0")
+    if args.max_search_subagent_calls is not None and args.max_search_subagent_calls <= 0:
+        parser.error("--max-search-subagent-calls must be > 0")
+    if args.max_inspect_subagent_calls is not None and args.max_inspect_subagent_calls <= 0:
+        parser.error("--max-inspect-subagent-calls must be > 0")
 
     try:
         command, metadata = _build_sana_command(args, repo_root)

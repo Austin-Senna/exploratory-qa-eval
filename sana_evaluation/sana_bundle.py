@@ -22,6 +22,7 @@ from sana_evaluation.plugins import (
 )
 from sana_evaluation.prompts import (
     cot_block,
+    delegation_block,
     sprint_block,
 )
 
@@ -80,6 +81,8 @@ class SanaDataLakeAgent(DataLakeAgent):
         parts: List[str] = []
         if flags.cot:
             parts.append(cot_block(st))
+        if flags.delegation:
+            parts.append(delegation_block(st))
         if flags.sprint:
             parts.append(sprint_block(st, sprint_mode=flags.sprint_mode))
         # results: no system-prompt block — the peek_file docstring already
@@ -137,6 +140,7 @@ class SanaDataLakeAgent(DataLakeAgent):
         *,
         search_tool_mode: Optional[str],
         agent_management_mode: Optional[str],
+        task_context: Optional[dict[str, Any]] = None,
     ) -> List[Any]:
         decorated = list(tools)
         if self.sana_flags.results:
@@ -151,12 +155,45 @@ class SanaDataLakeAgent(DataLakeAgent):
                 else t
                 for t in decorated
             ]
+        if self.sana_flags.delegation:
+            from sana_evaluation.tools.delegation_tool import (
+                DelegationRuntime,
+                set_delegation_runtime,
+                tools_for_delegation_planner,
+            )
+
+            set_delegation_runtime(
+                DelegationRuntime(
+                    agent_config=self.agent_config,
+                    run_config=self.run_config,
+                    task_context=dict(task_context or {}),
+                    base_tools=list(decorated),
+                    max_search_subagent_calls=self.sana_flags.max_search_subagent_calls,
+                    max_inspect_subagent_calls=self.sana_flags.max_inspect_subagent_calls,
+                )
+            )
+            return tools_for_delegation_planner(decorated)
         if self.sana_flags.sprint:
             from sana_evaluation.tools.sprint_tool import sprint
 
             if not any(getattr(t, "tool_name", None) == "sprint" for t in decorated):
                 decorated.append(sprint)
         return decorated
+
+    def _decorate_plugins(
+        self,
+        plugins: List[Any],
+        *,
+        search_tool_mode: Optional[str],
+        agent_management_mode: Optional[str],
+    ) -> List[Any]:
+        if not self.sana_flags.delegation:
+            return plugins
+        return [
+            plugin
+            for plugin in plugins
+            if getattr(plugin, "name", None) != "agent_skills"
+        ]
 
     def _tool_limit_excluded_tools(
         self,
