@@ -41,9 +41,9 @@ class SanaDataLakeAgent(DataLakeAgent):
         flags = getattr(self.run_config, "sana_flags", None)
         self.sana_flags: SanaFlags = flags if isinstance(flags, SanaFlags) else SanaFlags()
 
-        am = (self.run_config.agent_management_mode or "").strip().lower() or "naive"
+        active_plan_mode = (self.run_config.plan_mode or "").strip().lower() or "naive"
         try:
-            self.sana_flags.validate(agent_management=am)
+            self.sana_flags.validate(plan_mode=active_plan_mode)
         except ValueError as exc:
             raise ValueError(f"SanaFlags validation failed: {exc}") from exc
 
@@ -62,7 +62,7 @@ class SanaDataLakeAgent(DataLakeAgent):
         self,
         *,
         search_tool_mode: Optional[str],
-        agent_management_mode: Optional[str],
+        plan_mode: Optional[str],
     ) -> None:
         if self.sana_flags.delegation:
             from sana_evaluation.instrumentation import delegation_subagent_costs
@@ -76,7 +76,7 @@ class SanaDataLakeAgent(DataLakeAgent):
         self,
         *,
         search_tool_mode: Optional[str],
-        agent_management_mode: Optional[str],
+        plan_mode: Optional[str],
     ) -> str:
         flags = self.sana_flags
         if not flags.any_active():
@@ -98,7 +98,7 @@ class SanaDataLakeAgent(DataLakeAgent):
         self,
         *,
         search_tool_mode: Optional[str],
-        agent_management_mode: Optional[str],
+        plan_mode: Optional[str],
     ) -> List[Any]:
         flags = self.sana_flags
         if not flags.any_active():
@@ -133,7 +133,7 @@ class SanaDataLakeAgent(DataLakeAgent):
         self,
         *,
         search_tool_mode: Optional[str],
-        agent_management_mode: Optional[str],
+        plan_mode: Optional[str],
     ) -> Optional[Any]:
         if not self.sana_flags.any_active():
             return None
@@ -144,7 +144,7 @@ class SanaDataLakeAgent(DataLakeAgent):
         tools: List[Any],
         *,
         search_tool_mode: Optional[str],
-        agent_management_mode: Optional[str],
+        plan_mode: Optional[str],
         task_context: Optional[dict[str, Any]] = None,
     ) -> List[Any]:
         decorated = list(tools)
@@ -190,7 +190,7 @@ class SanaDataLakeAgent(DataLakeAgent):
         plugins: List[Any],
         *,
         search_tool_mode: Optional[str],
-        agent_management_mode: Optional[str],
+        plan_mode: Optional[str],
     ) -> List[Any]:
         if not self.sana_flags.delegation:
             return plugins
@@ -204,12 +204,12 @@ class SanaDataLakeAgent(DataLakeAgent):
         self,
         *,
         search_tool_mode: Optional[str],
-        agent_management_mode: Optional[str],
+        plan_mode: Optional[str],
     ) -> Sequence[str]:
         excluded = list(
             super()._tool_limit_excluded_tools(
                 search_tool_mode=search_tool_mode,
-                agent_management_mode=agent_management_mode,
+                plan_mode=plan_mode,
             )
         )
         if self.sana_flags.sprint:

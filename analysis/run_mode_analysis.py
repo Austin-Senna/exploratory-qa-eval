@@ -109,7 +109,8 @@ def _parse_variant(variant: str) -> Dict[str, Optional[object]]:
         "variant": variant,
         "search_tool": None,
         "search_results": None,
-        "agent_management": None,
+        "plan": None,
+        "skills": None,
         "k": None,
         "sc": None,
     }
@@ -120,7 +121,9 @@ def _parse_variant(variant: str) -> Dict[str, Optional[object]]:
         elif token == "results" and idx + 1 < len(parts):
             out["search_results"] = _LETTER_TO_MODE.get(parts[idx + 1])
         elif token.startswith("plan") and len(token) > 4:
-            out["agent_management"] = _LETTER_TO_MODE.get(token[4:])
+            out["plan"] = _LETTER_TO_MODE.get(token[4:])
+        elif token == "skills" and idx + 1 < len(parts):
+            out["skills"] = parts[idx + 1]
         elif token.startswith("k") and token[1:].isdigit():
             out["k"] = int(token[1:])
         elif token.startswith("sc") and token[2:].isdigit():
@@ -460,7 +463,8 @@ def build_summary(
             "variant": variant,
             "search_tool": axes["search_tool"],
             "search_results": axes["search_results"],
-            "agent_management": axes["agent_management"],
+            "plan": axes["plan"],
+            "skills": axes["skills"],
             "k": axes["k"],
             "sc": axes["sc"],
         }
@@ -577,7 +581,8 @@ def build_variant_summary(summary_rows: List[dict]) -> List[dict]:
                 "variant": variant,
                 "search_tool": axes["search_tool"],
                 "search_results": axes["search_results"],
-                "agent_management": axes["agent_management"],
+                "plan": axes["plan"],
+                "skills": axes["skills"],
                 "k": axes["k"],
                 "sc": axes["sc"],
                 "n_total": total_n,
@@ -622,7 +627,8 @@ def write_per_task_retrieval_csv(discovery: dict, output_csv: Path) -> int:
         "variant",
         "search_tool",
         "search_results",
-        "agent_management",
+        "plan",
+        "skills",
         "k",
         "task_id",
         "search_calls_count",
@@ -651,7 +657,8 @@ def write_per_task_retrieval_csv(discovery: dict, output_csv: Path) -> int:
                     "variant": variant,
                     "search_tool": axes["search_tool"],
                     "search_results": axes["search_results"],
-                    "agent_management": axes["agent_management"],
+                    "plan": axes["plan"],
+                    "skills": axes["skills"],
                     "k": axes["k"],
                     "task_id": m.get("task_id", ""),
                     "search_calls_count": int(m.get("num_search_calls", 0) or 0),

@@ -2,8 +2,7 @@
 """Run SANA-enabled multi-axis ablation evaluation.
 
 Mirrors strands_evaluation.run_mode_eval but uses SanaBatchRunner and adds
-SANA feature flags. Baseline axes (search_tool, search_results, agent_management,
-computation_tool)
+SANA feature flags. Baseline axes (search_tool, search_results, plan, computation_tool)
 behave identically to run_mode_eval.
 """
 
@@ -41,24 +40,26 @@ _MODE_LETTERS = {
 _AXIS_DEFAULTS = {
     "search_tool": "preloaded",
     "search_results": "ideal",
-    "agent_management": "standard",
+    "plan": "standard",
     "computation_tool": "standard",
 }
+
 
 def _variant_condition_label(
     *,
     search_tool: str,
     search_results: str,
-    agent_management: str,
+    plan: str,
     sana_flags: SanaFlags,
     computation_tool: str = "standard",
     k: Optional[int] = None,
     search_calls: Optional[int] = None,
+    skills_enabled: bool = False,
 ) -> str:
     axis_tokens = [
         f"s{_MODE_LETTERS[search_tool]}",
         f"r{_MODE_LETTERS[search_results]}",
-        f"p{_MODE_LETTERS[agent_management]}",
+        f"p{_MODE_LETTERS[plan]}",
     ]
     if computation_tool != "standard":
         axis_tokens.append(f"c{_MODE_LETTERS[computation_tool]}")
@@ -83,9 +84,10 @@ def _variant_condition_label(
             sana_tokens.append(f"sprint_commitment_cb{sana_flags.commitment_budget_calls}")
         else:
             sana_tokens.append(f"sprint_k{sana_flags.macro_reflection_k}")
+    skills_token = "skills_on" if skills_enabled else "skills_off"
     if sana_tokens:
-        return "_".join(["sana_" + "_".join(sana_tokens), *axis_tokens, *run_tokens])
-    return "_".join([*axis_tokens, *run_tokens])
+        return "_".join(["sana_" + "_".join(sana_tokens), *axis_tokens, *run_tokens, skills_token])
+    return "_".join([*axis_tokens, *run_tokens, skills_token])
 
 
 def _with_debug_suffix(label: str, debug_mode: Optional[str]) -> str:
@@ -99,13 +101,13 @@ def _resolve_mode_axes(
     *,
     search_tool: Optional[str],
     search_results: Optional[str],
-    agent_management: Optional[str],
+    plan: Optional[str],
     computation_tool: Optional[str] = None,
 ) -> tuple[str, str, str, str]:
     return (
         search_tool or _AXIS_DEFAULTS["search_tool"],
         search_results or _AXIS_DEFAULTS["search_results"],
-        agent_management or _AXIS_DEFAULTS["agent_management"],
+        plan or _AXIS_DEFAULTS["plan"],
         computation_tool or _AXIS_DEFAULTS["computation_tool"],
     )
 
@@ -276,9 +278,18 @@ def main() -> None:
         default=None,
     )
     parser.add_argument(
+        "--plan",
+        "--agent-management",
         "--agent_management",
+        dest="plan",
         choices=["naive", "standard", "ideal"],
         default=None,
+    )
+    parser.add_argument(
+        "--skills",
+        choices=["on", "off"],
+        default="off",
+        help="Enable or disable AgentSkills for managed plan modes.",
     )
     parser.add_argument(
         "--computation_tool",
@@ -368,12 +379,13 @@ def main() -> None:
         openai_prompt_cache_retention=args.openai_prompt_cache_retention,
         extra_model_kwargs=extra_model_kwargs,
     )
-    search_tool_mode, search_results_mode, agent_management_mode, computation_tool_mode = _resolve_mode_axes(
+    search_tool_mode, search_results_mode, plan_mode, computation_tool_mode = _resolve_mode_axes(
         search_tool=args.search_tool,
         search_results=args.search_results,
-        agent_management=args.agent_management,
+        plan=args.plan,
         computation_tool=args.computation_tool,
     )
+    skills_enabled = args.skills == "on"
 
     try:
         sana_flags = SanaFlags.from_feature_names(
@@ -384,7 +396,7 @@ def main() -> None:
             max_search_subagent_calls=args.max_search_subagent_calls,
             max_inspect_subagent_calls=args.max_inspect_subagent_calls,
         )
-        sana_flags.validate(agent_management=agent_management_mode)
+        sana_flags.validate(plan_mode=plan_mode)
     except ValueError as exc:
         parser.error(str(exc))
 
@@ -392,10 +404,11 @@ def main() -> None:
     variant_condition = _variant_condition_label(
         search_tool=search_tool_mode,
         search_results=search_results_mode,
-        agent_management=agent_management_mode,
+        plan=plan_mode,
         computation_tool=computation_tool_mode,
         k=args.k,
         search_calls=args.search_calls,
+        skills_enabled=skills_enabled,
         sana_flags=sana_flags,
     )
     variant_condition = _with_debug_suffix(variant_condition, args.debug_mode)
@@ -422,7 +435,8 @@ def main() -> None:
         search_db_path=args.db_path,
         search_tool_mode=search_tool_mode,
         search_results_mode=search_results_mode,
-        agent_management_mode=agent_management_mode,
+        plan_mode=plan_mode,
+        skills_enabled=skills_enabled,
         computation_tool_mode=computation_tool_mode,
         sana_flags=sana_flags,
         condition_config=ConditionConfig(
@@ -434,11 +448,12 @@ def main() -> None:
     )
 
     logger.info(
-        "SANA variant: %s (st=%s sr=%s am=%s ct=%s sana_features=%s sprint_k=%d)",
+        "SANA variant: %s (st=%s sr=%s plan=%s skills=%s ct=%s sana_features=%s sprint_k=%d)",
         condition_label,
         search_tool_mode,
         search_results_mode,
-        agent_management_mode,
+        plan_mode,
+        args.skills,
         computation_tool_mode,
         sana_flags.active_features() or ["none"],
         sana_flags.macro_reflection_k,

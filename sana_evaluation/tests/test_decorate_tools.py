@@ -20,7 +20,7 @@ def _make_agent(
 ) -> SanaDataLakeAgent:
     flags = SanaFlags(results=results, sprint=sprint, cot=cot, delegation=delegation)
     rc = SanaRunConfig(
-        agent_management_mode="standard",
+        plan_mode="standard",
         search_tool_mode="preloaded",
         search_results_mode="ideal",
         sana_flags=flags,
@@ -38,7 +38,7 @@ class DecorateToolsTests(unittest.TestCase):
         decorated = agent._decorate_tools(
             [baseline_peek, other],
             search_tool_mode="preloaded",
-            agent_management_mode="standard",
+            plan_mode="standard",
         )
         self.assertIs(decorated[0], baseline_peek)
         self.assertIs(decorated[1], other)
@@ -52,7 +52,7 @@ class DecorateToolsTests(unittest.TestCase):
         decorated = agent._decorate_tools(
             [baseline_peek, other],
             search_tool_mode="preloaded",
-            agent_management_mode="standard",
+            plan_mode="standard",
         )
         # peek_file should be replaced; query_file untouched
         self.assertIsNot(decorated[0], baseline_peek)
@@ -70,7 +70,7 @@ class DecorateToolsTests(unittest.TestCase):
         decorated = agent._decorate_tools(
             [baseline_peek, baseline_multi, other],
             search_tool_mode="preloaded",
-            agent_management_mode="standard",
+            plan_mode="standard",
         )
         self.assertEqual(getattr(decorated[0], "tool_name", None), "peek_file")
         self.assertEqual(getattr(decorated[1], "tool_name", None), "peek_multiple")
@@ -84,7 +84,7 @@ class DecorateToolsTests(unittest.TestCase):
         decorated = agent._decorate_tools(
             [baseline_peek],
             search_tool_mode="preloaded",
-            agent_management_mode="standard",
+            plan_mode="standard",
         )
         self.assertIn("sprint", [getattr(t, "tool_name", None) for t in decorated])
 
@@ -92,7 +92,7 @@ class DecorateToolsTests(unittest.TestCase):
         agent = _make_agent(sprint=True)
         excluded = agent._tool_limit_excluded_tools(
             search_tool_mode="preloaded",
-            agent_management_mode="standard",
+            plan_mode="standard",
         )
         self.assertIn("sprint", excluded)
 
@@ -100,7 +100,7 @@ class DecorateToolsTests(unittest.TestCase):
         agent = _make_agent(cot=True)
         plugins = agent._extra_plugins(
             search_tool_mode="preloaded",
-            agent_management_mode="standard",
+            plan_mode="standard",
         )
         self.assertNotIn("sana-cot-post-record", [plugin.name for plugin in plugins])
 
@@ -124,7 +124,7 @@ class DecorateToolsTests(unittest.TestCase):
         decorated = agent._decorate_tools(
             tools,
             search_tool_mode="standard",
-            agent_management_mode="standard",
+            plan_mode="standard",
         )
 
         decorated_names = [getattr(t, "tool_name", None) for t in decorated]
@@ -145,7 +145,7 @@ class DecorateToolsTests(unittest.TestCase):
         decorated = agent._decorate_plugins(
             [skills_plugin, logging_plugin],
             search_tool_mode="preloaded",
-            agent_management_mode="standard",
+            plan_mode="standard",
         )
 
         self.assertEqual([plugin.name for plugin in decorated], ["logging"])

@@ -78,6 +78,8 @@ class SetupRunTests(unittest.TestCase):
             self.assertEqual(command[1:3], ["-m", "strands_evaluation.run_mode_eval"])
             self.assertIn("--search_tool", command)
             self.assertIn("ideal", command)
+            self.assertEqual(command[command.index("--plan") + 1], "ideal")
+            self.assertNotIn("--agent_management", command)
             self.assertEqual(command[command.index("--model-name") + 1], "openai/gpt-5.2")
             self.assertEqual(command[command.index("--db-path") + 1], "lance_data")
             self.assertEqual(command[command.index("--task-dir") + 1], "tasks_core_quality/k-5-d-4")
@@ -291,7 +293,7 @@ class SetupRunTests(unittest.TestCase):
 
             self.assertEqual(command, fake_runner.command)
             self.assertEqual(command[command.index("--search_tool") + 1], "preloaded")
-            self.assertEqual(command[command.index("--agent_management") + 1], "ideal")
+            self.assertEqual(command[command.index("--plan") + 1], "ideal")
 
     def test_smoke_passes_search_free_and_lessguide_aliases(self):
         with TemporaryDirectory() as tmpdir:
@@ -319,6 +321,102 @@ class SetupRunTests(unittest.TestCase):
 
             self.assertIn("--search-free", command)
             self.assertIn("--search-lessguide", command)
+
+    def test_smoke_passes_skills_flag_when_explicit(self):
+        with TemporaryDirectory() as tmpdir:
+            repo_root = Path(tmpdir)
+            self._write_smoke_fixture(repo_root)
+
+            command = setup_run.run(
+                [
+                    "smoke",
+                    "--search",
+                    "ideal",
+                    "--results",
+                    "ideal",
+                    "--plan",
+                    "standard",
+                    "--skills",
+                    "on",
+                    "--db",
+                    "lance_data",
+                ],
+                runner=_FakeRunner(),
+                cwd=repo_root,
+            )
+
+            self.assertEqual(command[command.index("--skills") + 1], "on")
+
+        with TemporaryDirectory() as tmpdir:
+            repo_root = Path(tmpdir)
+            self._write_smoke_fixture(repo_root)
+
+            command = setup_run.run(
+                [
+                    "smoke",
+                    "--search",
+                    "ideal",
+                    "--results",
+                    "ideal",
+                    "--plan",
+                    "standard",
+                    "--skills",
+                    "off",
+                    "--db",
+                    "lance_data",
+                ],
+                runner=_FakeRunner(),
+                cwd=repo_root,
+            )
+
+            self.assertEqual(command[command.index("--skills") + 1], "off")
+
+    def test_smoke_omits_skills_when_default_off(self):
+        with TemporaryDirectory() as tmpdir:
+            repo_root = Path(tmpdir)
+            self._write_smoke_fixture(repo_root)
+
+            command = setup_run.run(
+                [
+                    "smoke",
+                    "--search",
+                    "ideal",
+                    "--results",
+                    "ideal",
+                    "--plan",
+                    "standard",
+                    "--db",
+                    "lance_data",
+                ],
+                runner=_FakeRunner(),
+                cwd=repo_root,
+            )
+
+            self.assertNotIn("--skills", command)
+
+    def test_deprecated_agent_management_alias_maps_to_plan(self):
+        with TemporaryDirectory() as tmpdir:
+            repo_root = Path(tmpdir)
+            self._write_smoke_fixture(repo_root)
+
+            command = setup_run.run(
+                [
+                    "smoke",
+                    "--search",
+                    "ideal",
+                    "--results",
+                    "ideal",
+                    "--agent-management",
+                    "ideal",
+                    "--db",
+                    "lance_data",
+                ],
+                runner=_FakeRunner(),
+                cwd=repo_root,
+            )
+
+            self.assertEqual(command[command.index("--plan") + 1], "ideal")
+            self.assertNotIn("--agent_management", command)
 
     def test_smoke_passes_ideal_compute_axis(self):
         with TemporaryDirectory() as tmpdir:

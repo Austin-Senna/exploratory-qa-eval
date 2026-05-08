@@ -89,7 +89,7 @@ def _build_run_config(
         search_db_path=db_path,
         search_tool_mode="preloaded",
         search_results_mode="ideal",
-        agent_management_mode=management_mode,
+        plan_mode=management_mode,
         condition_config=ConditionConfig(
             condition=f"diagnostic/preloaded_recitation_{management_mode}",
             base_condition="baseline",

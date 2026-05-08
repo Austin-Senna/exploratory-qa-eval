@@ -39,9 +39,9 @@ Implemented by `build_results(...)` through `strands_evaluation/tools/external/i
   - `search_results=ideal` returns the richer file-oriented payload with `dataset_snippet`
 - Fixed `k` is enforced here when `RunConfig.search_k` is set, including source-driven `search_ideal`, where `top_k` controls how many sequential planned sources are returned per call
 
-### `agent_management=ideal`
+### `plan=ideal`
 
-Implemented by `build_management(...)` in `strands_evaluation/agent_with_mode.py`.
+Implemented by `build_plan(...)` in `strands_evaluation/agent_with_mode.py`.
 
 - Prompt:
   - composed from:
@@ -50,11 +50,10 @@ Implemented by `build_management(...)` in `strands_evaluation/agent_with_mode.py
       - `prompts/search_naive.txt`
       - `prompts/search_standard.txt`
       - `prompts/search_ideal.txt`
-- Management tools:
+- Planning tools:
   - `plan_ideal`
-  - `summarize_context`
-- Skills:
-  - enabled
+- AgentSkills:
+  - enabled only when `--skills on`
   - uses:
     - `plan-ideal`
     - one discovery skill chosen by `search_tool`:
@@ -150,7 +149,8 @@ The three axes are:
 
 - `search_tool`
 - `search_results`
-- `agent_management`
+- `plan`
+- `skills`
 
 `run_mode_eval.py` builds output paths like:
 
@@ -189,7 +189,7 @@ The `base_condition` is still carried in config for behavior selection and compa
 - Special case:
   - when `search_tool=ideal`, it returns only `dataset_id`
 
-### `agent_management=standard`
+### `plan=standard`
 
 - Prompt:
   - composed from:
@@ -198,11 +198,10 @@ The `base_condition` is still carried in config for behavior selection and compa
       - `prompts/search_naive.txt`
       - `prompts/search_standard.txt`
       - `prompts/search_ideal.txt`
-- Management tools:
+- Planning tools:
   - `plan`
-  - `summarize_context`
-- Skills:
-  - enabled
+- AgentSkills:
+  - enabled only when `--skills on`
   - uses:
     - `plan-agent`
     - one discovery skill chosen by `search_tool`:
@@ -213,7 +212,7 @@ The `base_condition` is still carried in config for behavior selection and compa
 - Stagnation plugin:
   - enabled
 
-### `agent_management=naive`
+### `plan=naive`
 
 - Prompt:
   - composed from:
@@ -222,9 +221,9 @@ The `base_condition` is still carried in config for behavior selection and compa
       - `prompts/search_naive.txt`
       - `prompts/search_standard.txt`
       - `prompts/search_ideal.txt`
-- Management tools:
+- Planning tools:
   - none
-- Skills:
+- AgentSkills:
   - disabled
 - Stagnation plugin:
   - disabled
@@ -292,7 +291,6 @@ Implemented in `strands_evaluation/agent.py`.
     - `prompts/search_naive.txt`
 - Management tools:
   - `plan`
-  - `summarize_context`
 - Data tools:
   - standard file/query/download/execute/submit tool set
 - Skills:
@@ -355,4 +353,5 @@ Across both legacy and mode-based agents:
 
 - `search_tool` controls which search tools exist
 - `search_results` controls how much result content is exposed
-- `agent_management` controls prompt source, planning tools, skills, and stagnation handling
+- `plan` controls prompt source, planning tools, gold reasoning injection, and stagnation handling
+- `skills` controls whether AgentSkills are attached for managed plan modes
