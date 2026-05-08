@@ -82,4 +82,6 @@ def test_delegation_block_describes_planner_subagent_tools(search_tool: str) -> 
     assert "answer_fragments" in text
     assert "missing_outputs" in text
     assert "write SQL" in text
+    assert "grep_file" in text
+    assert "read_file" in text
     assert "SANA" not in text

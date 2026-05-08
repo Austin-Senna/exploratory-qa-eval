@@ -2,12 +2,18 @@
 
 from __future__ import annotations
 
+import asyncio
 from unittest.mock import MagicMock
 
+from strands.vended_plugins.steering import Guide, Proceed
+
 from sana_evaluation.tools.delegation_tool import (
+    _SubagentBudgetSteer,
+    _SubagentToolLedger,
     clear_delegation_runtime,
     inspect_subagent,
     search_subagent,
+    _subagent_system_prompt,
     set_delegation_runtime,
     tool_names,
     tools_for_inspect_subagent,
@@ -155,7 +161,6 @@ def test_search_subagent_tool_scope_is_light_peek_only() -> None:
     assert tool_names(filtered) == [
         "search_reranked",
         "search_schema",
-        "list_files",
         "peek_file",
         "peek_multiple",
     ]
@@ -167,9 +172,15 @@ def test_inspect_subagent_tool_scope_excludes_planner_tools() -> None:
         _tool("search_reranked"),
         _tool("list_files"),
         _tool("peek_file"),
+        _tool("peek_multiple"),
         _tool("read_file"),
+        _tool("grep_file"),
+        _tool("parse_xml_records"),
         _tool("query_file"),
+        _tool("download"),
         _tool("execute_code"),
+        _tool("get_sandbox_info"),
+        _tool("cleanup_sandbox"),
         _tool("submit_answer"),
         _tool("search_subagent"),
         _tool("inspect_subagent"),
@@ -178,9 +189,49 @@ def test_inspect_subagent_tool_scope_excludes_planner_tools() -> None:
     filtered = tools_for_inspect_subagent(tools)
 
     assert tool_names(filtered) == [
-        "list_files",
         "peek_file",
+        "peek_multiple",
         "read_file",
+        "grep_file",
+        "parse_xml_records",
         "query_file",
+        "download",
         "execute_code",
+        "get_sandbox_info",
+        "cleanup_sandbox",
     ]
+
+
+def test_subagent_budget_steer_allows_one_grace_tool_call() -> None:
+    ledger = _SubagentToolLedger("return_inspect_result")
+    steer = _SubagentBudgetSteer(
+        ledger=ledger,
+        max_tool_calls=3,
+        return_tool_name="return_inspect_result",
+    )
+
+    ledger.tool_calls = 2
+    action = asyncio.run(steer.steer_before_tool(agent=None, tool_use={"name": "query_file"}))
+    assert isinstance(action, Proceed)
+
+    ledger.tool_calls = 3
+    action = asyncio.run(steer.steer_before_tool(agent=None, tool_use={"name": "read_file"}))
+    assert isinstance(action, Proceed)
+    assert "grace" in action.reason
+
+    ledger.tool_calls = 4
+    action = asyncio.run(steer.steer_before_tool(agent=None, tool_use={"name": "read_file"}))
+    assert isinstance(action, Guide)
+    assert "return_inspect_result" in action.reason
+
+    action = asyncio.run(steer.steer_before_tool(agent=None, tool_use={"name": "return_inspect_result"}))
+    assert isinstance(action, Proceed)
+
+
+def test_subagent_system_prompts_route_text_sources_without_listing() -> None:
+    search_prompt = _subagent_system_prompt("search", "return_search_result")
+    inspect_prompt = _subagent_system_prompt("inspect", "return_inspect_result")
+
+    assert "list" not in search_prompt.lower()
+    assert "grep_file" in inspect_prompt
+    assert "read_file" in inspect_prompt

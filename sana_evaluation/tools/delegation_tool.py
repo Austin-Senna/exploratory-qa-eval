@@ -32,13 +32,11 @@ _SEARCH_TOOL_NAMES = {
 }
 
 _LIGHT_PEEK_TOOL_NAMES = {
-    "list_files",
     "peek_file",
     "peek_multiple",
 }
 
 _INSPECT_TOOL_NAMES = {
-    "list_files",
     "peek_file",
     "peek_multiple",
     "read_file",
@@ -61,6 +59,7 @@ _PLANNER_TOOL_NAMES = {
 
 _VALID_SEARCH_STATUS = {"success", "partial", "failed", "budget_exhausted"}
 _VALID_INSPECT_STATUS = {"success", "partial", "failed", "budget_exhausted"}
+_SUBAGENT_GRACE_TOOL_CALLS = 1
 
 
 def _tool_name(tool_obj: Any) -> str:
@@ -256,11 +255,23 @@ class _SubagentToolLedger(Plugin):
 class _SubagentBudgetSteer(SteeringHandler):
     name = "sana-delegation-budget-steer"
 
-    def __init__(self, *, ledger: _SubagentToolLedger, max_tool_calls: int, return_tool_name: str) -> None:
+    def __init__(
+        self,
+        *,
+        ledger: _SubagentToolLedger,
+        max_tool_calls: int,
+        return_tool_name: str,
+        grace_tool_calls: int = _SUBAGENT_GRACE_TOOL_CALLS,
+    ) -> None:
         super().__init__()
         self.ledger = ledger
         self.max_tool_calls = max(int(max_tool_calls), 1)
         self.return_tool_name = return_tool_name
+        try:
+            self.grace_tool_calls = max(int(grace_tool_calls), 0)
+        except (TypeError, ValueError):
+            self.grace_tool_calls = 0
+        self.hard_tool_call_limit = self.max_tool_calls + self.grace_tool_calls
 
     async def steer_before_tool(self, *, agent, tool_use, **kwargs) -> ToolSteeringAction:
         tool_name = (tool_use or {}).get("name", "")
@@ -268,9 +279,12 @@ class _SubagentBudgetSteer(SteeringHandler):
             return Proceed(reason="contract return tool is allowed")
         if self.ledger.tool_calls < self.max_tool_calls:
             return Proceed(reason="within subagent tool budget")
+        if self.ledger.tool_calls < self.hard_tool_call_limit:
+            return Proceed(reason="within one-call subagent grace window after nominal budget")
         return Guide(
             reason=(
-                f"The bounded contract budget of {self.max_tool_calls} tool calls is exhausted. "
+                f"The bounded contract budget of {self.max_tool_calls} tool calls plus "
+                f"{self.grace_tool_calls} grace call(s) is exhausted. "
                 f"Call `{self.return_tool_name}` now with status='budget_exhausted' and a compact "
                 "summary of what was learned. Do not call any other tool."
             )
@@ -369,6 +383,7 @@ class DelegationRuntime:
                 ledger=ledger,
                 max_tool_calls=max_calls,
                 return_tool_name=return_tool_name,
+                grace_tool_calls=_SUBAGENT_GRACE_TOOL_CALLS,
             ),
             ledger,
             LoggingPlugin(),
@@ -382,6 +397,8 @@ class DelegationRuntime:
                 "subagent_kind": kind,
                 "contract_id": contract_id,
                 "budget_calls": max_calls,
+                "grace_tool_calls": _SUBAGENT_GRACE_TOOL_CALLS,
+                "hard_budget_calls": max_calls + _SUBAGENT_GRACE_TOOL_CALLS,
             }
         )
 
@@ -427,6 +444,8 @@ class DelegationRuntime:
             "subagent_kind": kind,
             "model_name": self.agent_config.model_name,
             "budget_calls": max_calls,
+            "grace_tool_calls": _SUBAGENT_GRACE_TOOL_CALLS,
+            "hard_budget_calls": max_calls + _SUBAGENT_GRACE_TOOL_CALLS,
             "requested_budget_calls": int(getattr(contract, "requested_budget_calls", max_calls) or max_calls),
             "tool_calls": ledger.tool_calls,
             "tools_used": list(ledger.tools_used),
@@ -439,6 +458,9 @@ class DelegationRuntime:
                 "subagent_kind": kind,
                 "contract_id": contract_id,
                 "status": payload.get("status"),
+                "budget_calls": max_calls,
+                "grace_tool_calls": _SUBAGENT_GRACE_TOOL_CALLS,
+                "hard_budget_calls": max_calls + _SUBAGENT_GRACE_TOOL_CALLS,
                 "tool_calls": ledger.tool_calls,
                 "tools_used": list(ledger.tools_used),
                 **usage,
@@ -493,14 +515,15 @@ def _subagent_system_prompt(kind: str, return_tool_name: str) -> str:
     if kind == "search":
         role = (
             "You are a bounded dataset-search worker. Find useful datasets for the "
-            "contract. You may use search, list, and peek/profile tools only. Do not "
+            "contract. You may use search and peek/profile tools only. Do not "
             "perform the final computation."
         )
     else:
         role = (
             "You are a bounded tabular-inspection worker. Inspect only the explicit "
             "dataset ids in the contract, handle schema/query/parsing issues locally, "
-            "and return compact extracted evidence."
+            "and return compact extracted evidence. For text-based sources, use "
+            "`grep_file` or `read_file` to inspect content."
         )
     return (
         role
@@ -522,7 +545,8 @@ def _format_search_prompt(contract: SearchContract) -> str:
         f"Required source traits:\n{_json_block(contract.required_source_traits)}\n"
         f"Constraints:\n{_json_block(contract.constraints)}\n"
         f"Known context:\n{contract.known_context or '(none)'}\n"
-        f"Budget: {contract.budget_calls} tool calls before returning a result.\n"
+        f"Budget: {contract.budget_calls} tool calls, plus one grace call if needed, "
+        "before returning a result.\n"
     )
 
 
@@ -536,7 +560,9 @@ def _format_inspect_prompt(contract: InspectContract) -> str:
         f"Constraints:\n{_json_block(contract.constraints)}\n"
         f"Known context:\n{contract.known_context or '(none)'}\n"
         f"Retry of contract id: {contract.retry_of_contract_id or '(none)'}\n"
-        f"Budget: {contract.budget_calls} tool calls before returning a result.\n"
+        "For text-based result sources, prefer `grep_file` or `read_file` over SQL.\n"
+        f"Budget: {contract.budget_calls} tool calls, plus one grace call if needed, "
+        "before returning a result.\n"
     )
 
 
