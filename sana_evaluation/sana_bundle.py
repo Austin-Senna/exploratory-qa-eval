@@ -177,7 +177,11 @@ class SanaDataLakeAgent(DataLakeAgent):
                     max_inspect_subagent_calls=self.sana_flags.max_inspect_subagent_calls,
                 )
             )
-            return tools_for_delegation_planner(decorated)
+            include_search_subagent = (search_tool_mode or "").strip().lower() != "preloaded"
+            return tools_for_delegation_planner(
+                decorated,
+                include_search_subagent=include_search_subagent,
+            )
         if self.sana_flags.sprint:
             from sana_evaluation.tools.sprint_tool import sprint
 
