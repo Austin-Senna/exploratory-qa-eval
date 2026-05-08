@@ -71,5 +71,91 @@
       ],
       "answer": "Ulster County"
     }
+  ],
+  "ideal_code": [
+    {
+      "node_id": "1",
+      "dataset_id": "street-sweeping-schedule-2022",
+      "source": "datagov/street-sweeping-schedule-2022/files/rows.txt",
+      "intent": "For Wards 2 and 5, how many scheduled street-cleaning events were listed in 2022?",
+      "code": "import boto3\nimport io\nimport pandas as pd\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nbucket_name = \"lakeqa-yc4103-datalake\"\nobject_key = \"datagov/street-sweeping-schedule-2022/files/rows.txt\"\ns3 = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED))\nobj = s3.get_object(Bucket=bucket_name, Key=object_key)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()))\nward_numeric = pd.to_numeric(df[\"WARD\"], errors=\"coerce\")\ncounts = (\n    df[ward_numeric.isin([2, 5])]\n    .groupby(ward_numeric[ward_numeric.isin([2, 5])])\n    .size()\n    .sort_index()\n)\ncounts.index = counts.index.map(lambda x: f\"Ward {int(x)}\")\nanswer = counts.to_dict()\n",
+      "answer": {
+        "Ward 2": 72,
+        "Ward 5": 80
+      }
+    },
+    {
+      "node_id": "2",
+      "dataset_id": "street-sweeping-schedule-2023",
+      "source": "datagov/street-sweeping-schedule-2023/files/rows.txt",
+      "intent": "For Wards 2 and 5, how many scheduled street-cleaning events were listed in 2023?",
+      "code": "import boto3\nimport io\nimport pandas as pd\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nbucket_name = \"lakeqa-yc4103-datalake\"\nobject_key = \"datagov/street-sweeping-schedule-2023/files/rows.txt\"\ns3 = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED))\nobj = s3.get_object(Bucket=bucket_name, Key=object_key)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()))\nward_numeric = pd.to_numeric(df[\"WARD\"], errors=\"coerce\")\ncounts = (\n    df[ward_numeric.isin([2, 5])]\n    .groupby(ward_numeric[ward_numeric.isin([2, 5])])\n    .size()\n    .sort_index()\n)\ncounts.index = counts.index.map(lambda x: f\"Ward {int(x)}\")\nanswer = counts.to_dict()\n",
+      "answer": {
+        "Ward 2": 54,
+        "Ward 5": 83
+      }
+    },
+    {
+      "node_id": "3",
+      "dataset_id": "street-sweeping-schedule-2024",
+      "source": "datagov/street-sweeping-schedule-2024/files/rows.txt",
+      "intent": "For Wards 2 and 5, how many scheduled street-cleaning events were listed in 2024?",
+      "code": "import boto3\nimport io\nimport pandas as pd\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nbucket_name = \"lakeqa-yc4103-datalake\"\nobject_key = \"datagov/street-sweeping-schedule-2024/files/rows.txt\"\ns3 = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED))\nobj = s3.get_object(Bucket=bucket_name, Key=object_key)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()))\nward_numeric = pd.to_numeric(df[\"WARD\"], errors=\"coerce\")\ncounts = (\n    df[ward_numeric.isin([2, 5])]\n    .groupby(ward_numeric[ward_numeric.isin([2, 5])])\n    .size()\n    .sort_index()\n)\ncounts.index = counts.index.map(lambda x: f\"Ward {int(x)}\")\nanswer = counts.to_dict()\n",
+      "answer": {
+        "Ward 2": 54,
+        "Ward 5": 87
+      }
+    },
+    {
+      "node_id": "4",
+      "dataset_id": "dc-charter-schools",
+      "source": "datagov/dc-charter-schools/files/data.txt",
+      "intent": "Which charter school in <hop 1 answer> spans grades 8 and 9?",
+      "code": "import boto3\nimport io\nimport json\nimport pandas as pd\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nbucket_name = \"lakeqa-yc4103-datalake\"\nobject_key = \"datagov/dc-charter-schools/files/data.txt\"\ns3 = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED))\nobj = s3.get_object(Bucket=bucket_name, Key=object_key)\ndata = json.load(io.TextIOWrapper(obj[\"Body\"], encoding=\"utf-8\"))\ndf = pd.json_normalize(data[\"features\"])\n\ngrade_map = {\n    \"PK3\": -2,\n    \"PK4\": -1,\n    \"KG\": 0,\n    \"1st\": 1,\n    \"2nd\": 2,\n    \"3rd\": 3,\n    \"4th\": 4,\n    \"5th\": 5,\n    \"6th\": 6,\n    \"7th\": 7,\n    \"8th\": 8,\n    \"9th\": 9,\n    \"10th\": 10,\n    \"11th\": 11,\n    \"12th\": 12,\n}\n\ndef spans_8_and_9(grades):\n    if not isinstance(grades, str):\n        return False\n    for part in grades.replace(\"–\", \"-\").split(\";\"):\n        part = part.strip()\n        if \"-\" in part:\n            start, end = [x.strip() for x in part.split(\"-\", 1)]\n            if start in grade_map and end in grade_map and grade_map[start] <= 8 <= grade_map[end] and grade_map[start] <= 9 <= grade_map[end]:\n                return True\n    return False\n\nmatches = (\n    df[(df[\"properties.WARD\"] == \"Ward 5\") & (df[\"properties.GRADES\"].apply(spans_8_and_9))]\n    [\"properties.NAME\"]\n    .tolist()\n)\nanswer = matches[0] if len(matches) == 1 else matches\n",
+      "answer": "Sojourner Truth PCS"
+    }
+  ],
+  "ideal_query": [
+    {
+      "node_id": "1",
+      "dataset_id": "street-sweeping-schedule-2022",
+      "source": "datagov/street-sweeping-schedule-2022/files/rows.txt",
+      "intent": "For Wards 2 and 5, how many scheduled street-cleaning events were listed in 2022?",
+      "sql": "SELECT json_group_object('Ward ' || CAST(ward AS VARCHAR), cnt) AS answer\nFROM (\n  SELECT TRY_CAST(\"WARD\" AS INTEGER) AS ward, COUNT(*) AS cnt\n  FROM t\n  WHERE TRY_CAST(\"WARD\" AS INTEGER) IN (2, 5)\n  GROUP BY ward\n)",
+      "answer": {
+        "Ward 2": 72,
+        "Ward 5": 80
+      }
+    },
+    {
+      "node_id": "2",
+      "dataset_id": "street-sweeping-schedule-2023",
+      "source": "datagov/street-sweeping-schedule-2023/files/rows.txt",
+      "intent": "For Wards 2 and 5, how many scheduled street-cleaning events were listed in 2023?",
+      "sql": "SELECT json_group_object('Ward ' || CAST(ward AS VARCHAR), cnt) AS answer\nFROM (\n  SELECT TRY_CAST(\"WARD\" AS INTEGER) AS ward, COUNT(*) AS cnt\n  FROM t\n  WHERE TRY_CAST(\"WARD\" AS INTEGER) IN (2, 5)\n  GROUP BY ward\n)",
+      "answer": {
+        "Ward 2": 54,
+        "Ward 5": 83
+      }
+    },
+    {
+      "node_id": "3",
+      "dataset_id": "street-sweeping-schedule-2024",
+      "source": "datagov/street-sweeping-schedule-2024/files/rows.txt",
+      "intent": "For Wards 2 and 5, how many scheduled street-cleaning events were listed in 2024?",
+      "sql": "SELECT json_group_object('Ward ' || CAST(ward AS VARCHAR), cnt) AS answer\nFROM (\n  SELECT TRY_CAST(\"WARD\" AS INTEGER) AS ward, COUNT(*) AS cnt\n  FROM t\n  WHERE TRY_CAST(\"WARD\" AS INTEGER) IN (2, 5)\n  GROUP BY ward\n)",
+      "answer": {
+        "Ward 2": 54,
+        "Ward 5": 87
+      }
+    },
+    {
+      "node_id": "4",
+      "dataset_id": "dc-charter-schools",
+      "source": "datagov/dc-charter-schools/files/data.txt",
+      "intent": "Which charter school in <hop 1 answer> spans grades 8 and 9?",
+      "sql": "WITH props AS (\n  SELECT\n    feature.properties.\"NAME\" AS name,\n    feature.properties.WARD AS ward,\n    feature.properties.GRADES AS grades\n  FROM t, UNNEST(features) AS u(feature)\n), parts AS (\n  SELECT\n    name,\n    ward,\n    trim(part) AS part\n  FROM props,\n       UNNEST(string_split(replace(grades, '–', '-'), ';')) AS p(part)\n  WHERE ward = 'Ward 5'\n), spans AS (\n  SELECT\n    name,\n    split_part(part, '-', 1) AS start_grade,\n    split_part(part, '-', 2) AS end_grade\n  FROM parts\n  WHERE strpos(part, '-') > 0\n), grade_values AS (\n  SELECT *\n  FROM (VALUES\n    ('PK3', -2), ('PK4', -1), ('KG', 0), ('1st', 1), ('2nd', 2), ('3rd', 3),\n    ('4th', 4), ('5th', 5), ('6th', 6), ('7th', 7), ('8th', 8), ('9th', 9),\n    ('10th', 10), ('11th', 11), ('12th', 12)\n  ) AS g(label, value)\n)\nSELECT name AS answer\nFROM spans\nJOIN grade_values start_g ON spans.start_grade = start_g.label\nJOIN grade_values end_g ON spans.end_grade = end_g.label\nWHERE start_g.value <= 8 AND 8 <= end_g.value\n  AND start_g.value <= 9 AND 9 <= end_g.value",
+      "answer": "Sojourner Truth PCS"
+    }
   ]
 }

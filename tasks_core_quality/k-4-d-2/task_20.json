@@ -4,7 +4,7 @@
   "nodes": {
     "1": {
       "source": "datagov/budget-2018-budget-ordinance-appropriations/files/rows.txt",
-      "fact": "In the 2018 Chicago Budget Ordinance totals by department, CFD ($642,620,615) and CDOT ($459,129,158) are the only departments with total appropriations between $400 million and $700 million.",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/budget-2018-budget-ordinance-appropriations/files/rows.txt'\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\ndf[\"2018 ORDINANCE (AMOUNT $)\"] = pd.to_numeric(df[\"2018 ORDINANCE (AMOUNT $)\"], errors=\"coerce\")\nresult = (\n    df.groupby(\"DEPARTMENT DESCRIPTION\", dropna=False)[\"2018 ORDINANCE (AMOUNT $)\"]\n      .sum()\n      .reset_index(name=\"total\")\n)\nresult = result[\n    result[\"total\"].between(400000000, 700000000, inclusive=\"both\")\n].sort_values(\"DEPARTMENT DESCRIPTION\")\nanswer = {str(row[\"DEPARTMENT DESCRIPTION\"]): int(row[\"total\"]) for _, row in result.iterrows()}\n",
       "subquestion": "Which Chicago city departments had total `2018 ORDINANCE (AMOUNT $)` between 400000000 and 700000000?",
       "answer": {
         "CFD": 642620615,
@@ -13,7 +13,7 @@
     },
     "2": {
       "source": "datagov/budget-2019-budget-ordinance-appropriations/files/rows.txt",
-      "fact": "In the 2019 Chicago Budget Ordinance totals by department, CFD ($652,282,316) and DFSS ($633,571,744) are the only departments with total appropriations between $600 million and $700 million.",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/budget-2019-budget-ordinance-appropriations/files/rows.txt'\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\ndf[\"2019 ORDINANCE (AMOUNT $)\"] = pd.to_numeric(df[\"2019 ORDINANCE (AMOUNT $)\"], errors=\"coerce\")\nresult = (\n    df.groupby(\"DEPARTMENT DESCRIPTION\", dropna=False)[\"2019 ORDINANCE (AMOUNT $)\"]\n      .sum()\n      .reset_index(name=\"total\")\n)\nresult = result[\n    result[\"total\"].between(600000000, 700000000, inclusive=\"both\")\n].sort_values(\"DEPARTMENT DESCRIPTION\")\nanswer = {str(row[\"DEPARTMENT DESCRIPTION\"]): int(row[\"total\"]) for _, row in result.iterrows()}\n",
       "subquestion": "Which Chicago city departments had total `2019 ORDINANCE (AMOUNT $)` between 600000000 and 700000000?",
       "answer": {
         "CFD": 652282316,
@@ -40,7 +40,7 @@
     },
     "6": {
       "source": "datagov/pittsburgh-international-airport-scheduled-passenger-traffic/files/pittsburgh-international-traffic-report-march-2019.txt",
-      "fact": "In the March 2019 Pittsburgh International scheduled traffic report, Atlanta (ATL) has 44,912 total seats, the highest of any destination (next highest is Chicago O'Hare with 35,699).",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/pittsburgh-international-airport-scheduled-passenger-traffic/files/pittsburgh-international-traffic-report-march-2019.txt'\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\ndf[\"Seats March 2019\"] = pd.to_numeric(df[\"Seats March 2019\"], errors=\"coerce\")\nresult = (\n    df.groupby(\"Destination Code\", dropna=True)[\"Seats March 2019\"]\n      .sum()\n      .reset_index(name=\"total_seats\")\n      .sort_values([\"total_seats\", \"Destination Code\"], ascending=[False, True])\n      .reset_index(drop=True)\n)\nanswer = str(int(result.loc[0, \"total_seats\"]))\n",
       "subquestion": "For <hop 3 answer>, how many total seats did the top destination have in March 2019?",
       "answer": "44912"
     }

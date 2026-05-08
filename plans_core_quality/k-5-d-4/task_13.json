@@ -88,5 +88,113 @@
       ],
       "answer": 71
     }
+  ],
+  "ideal_code": [
+    {
+      "node_id": "3",
+      "dataset_id": "school-district-office-locations-current-d848f",
+      "source": "datagov/school-district-office-locations-current-d848f/files/nces::school-district-office-locations-current-1.txt",
+      "intent": "In the school district office listings, entries with CITY='<hop 1 answer>' and NMCNTY='<hop 2 answer>' share what two-digit state FIPS code (STFIP)?",
+      "code": "import json\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/school-district-office-locations-current-d848f/files/nces::school-district-office-locations-current-1.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\npayload = json.loads(obj[\"Body\"].read())\n\nmatches = sorted(\n    {\n        str(props.get(\"STFIP\")).strip().removesuffix(\".0\").zfill(2)\n        for feature in payload[\"features\"]\n        for props in [feature.get(\"properties\", {})]\n        if props.get(\"CITY\") == \"Mountain View\" and props.get(\"NMCNTY\") == \"Santa Clara County\"\n    }\n)\n\nassert len(matches) == 1\nanswer = matches[0]\n",
+      "answer": "06"
+    },
+    {
+      "node_id": "4",
+      "dataset_id": "public-school-locations-current-23297",
+      "source": "datagov/public-school-locations-current-23297/files/data-oyCYxF.txt",
+      "intent": "For STFIP='06', what are the public school counts by county, and which three counties have the highest counts?",
+      "code": "import io\nimport json\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/public-school-locations-current-23297/files/data-oyCYxF.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\npayload = json.loads(obj[\"Body\"].read())\ndf = pd.json_normalize(payload[\"features\"])\ndf.columns = [col.replace(\"properties.\", \"\") for col in df.columns]\n\ncounty_counts = (\n    df.loc[df[\"STFIP\"] == \"06\", [\"NMCNTY\"]]\n    .value_counts()\n    .rename(\"public_school_count\")\n    .reset_index()\n    .sort_values([\"public_school_count\", \"NMCNTY\"], ascending=[False, True])\n    .reset_index(drop=True)\n)\n\ntop3 = county_counts.head(3)\nanswer = top3[\"NMCNTY\"].tolist()",
+      "answer": [
+        "Los Angeles County",
+        "San Diego County",
+        "Orange County"
+      ]
+    },
+    {
+      "node_id": "5",
+      "dataset_id": "private-school-locations-current-f7d96",
+      "source": "datagov/private-school-locations-current-f7d96/files/data-FGgJBu.txt",
+      "intent": "For STFIP='06', what are the private school counts for each county, and which three counties have the highest counts?",
+      "code": "import io\nimport json\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/private-school-locations-current-f7d96/files/data-FGgJBu.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\npayload = json.loads(obj[\"Body\"].read())\ndf = pd.json_normalize(payload[\"features\"])\ndf.columns = [col.replace(\"properties.\", \"\") for col in df.columns]\n\ncounty_counts = (\n    df.loc[df[\"STFIP\"] == \"06\", [\"CNTY\", \"NMCNTY\"]]\n    .value_counts()\n    .rename(\"private_school_count\")\n    .reset_index()\n    .sort_values([\"private_school_count\", \"NMCNTY\"], ascending=[False, True])\n    .reset_index(drop=True)\n)\n\ntop3 = county_counts.head(3)\nanswer = top3[\"NMCNTY\"].tolist()",
+      "answer": [
+        "Los Angeles County",
+        "Orange County",
+        "San Diego County"
+      ]
+    },
+    {
+      "node_id": "6",
+      "dataset_id": "school-district-office-locations-2022-23",
+      "source": "datagov/school-district-office-locations-2022-23/files/data-8V0eVK.txt",
+      "intent": "For STFIP='06', what are the school district office counts for each county, and which three counties have the highest counts?",
+      "code": "import io\nimport json\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/school-district-office-locations-2022-23/files/data-8V0eVK.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\npayload = json.loads(obj[\"Body\"].read())\ndf = pd.json_normalize(payload[\"features\"])\ndf.columns = [col.replace(\"properties.\", \"\") for col in df.columns]\n\ncounty_counts = (\n    df.loc[df[\"STFIP\"] == \"06\", [\"CNTY\", \"NMCNTY\"]]\n    .value_counts()\n    .rename(\"district_office_count\")\n    .reset_index()\n    .sort_values([\"district_office_count\", \"NMCNTY\"], ascending=[False, True])\n    .reset_index(drop=True)\n)\n\ntop3 = county_counts.head(3)\nanswer = top3[\"NMCNTY\"].tolist()",
+      "answer": [
+        "Los Angeles County",
+        "San Diego County",
+        "San Bernardino County"
+      ]
+    },
+    {
+      "node_id": "7",
+      "dataset_id": "postsecondary-school-locations-2022-23",
+      "source": "datagov/postsecondary-school-locations-2022-23/files/data-sh56Ar.txt",
+      "intent": "For STFIP='06', what are the postsecondary institution counts for each county in the intersection of the top-three public-school counties, top-three private-school counties, and top-three school-district-office counties?",
+      "code": "import io\nimport json\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/postsecondary-school-locations-2022-23/files/data-sh56Ar.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\npayload = json.loads(obj[\"Body\"].read())\ndf = pd.json_normalize(payload[\"features\"])\ndf.columns = [col.replace(\"properties.\", \"\") for col in df.columns]\n\ncounty_counts = (\n    df.loc[df[\"STFIP\"] == \"06\", [\"CNTY\", \"NMCNTY\"]]\n    .value_counts()\n    .rename(\"postsecondary_count\")\n    .reset_index()\n    .sort_values([\"postsecondary_count\", \"NMCNTY\"], ascending=[False, True])\n    .reset_index(drop=True)\n)\n\nintersection_counties = set([\n    \"Los Angeles County\",\n    \"San Diego County\",\n    \"Orange County\"\n]) & set([\n    \"Los Angeles County\",\n    \"Orange County\",\n    \"San Diego County\"\n]) & set([\n    \"Los Angeles County\",\n    \"San Diego County\",\n    \"San Bernardino County\"\n])\n\nintersection_counts = (\n    county_counts.loc[county_counts[\"NMCNTY\"].isin(intersection_counties)]\n    .sort_values([\"postsecondary_count\", \"NMCNTY\"], ascending=[True, True])\n    .reset_index(drop=True)\n)\n\nanswer = intersection_counts.loc[0, \"postsecondary_count\"]",
+      "answer": 71
+    }
+  ],
+  "ideal_query": [
+    {
+      "node_id": "3",
+      "dataset_id": "school-district-office-locations-current-d848f",
+      "source": "datagov/school-district-office-locations-current-d848f/files/nces::school-district-office-locations-current-1.txt",
+      "intent": "In the school district office listings, entries with CITY='<hop 1 answer>' and NMCNTY='<hop 2 answer>' share what two-digit state FIPS code (STFIP)?",
+      "sql": "SELECT MIN(lpad(regexp_replace(CAST(f.properties.STFIP AS VARCHAR), '\\.0$', ''), 2, '0')) AS answer\nFROM t, UNNEST(features) AS u(f)\nWHERE f.properties.CITY = 'Mountain View'\n  AND f.properties.NMCNTY = 'Santa Clara County' ",
+      "answer": "06"
+    },
+    {
+      "node_id": "4",
+      "dataset_id": "public-school-locations-current-23297",
+      "source": "datagov/public-school-locations-current-23297/files/data-oyCYxF.txt",
+      "intent": "For STFIP='06', what are the public school counts by county, and which three counties have the highest counts?",
+      "sql": "SELECT f.properties.NMCNTY AS answer\nFROM t, UNNEST(features) AS u(f)\nWHERE f.properties.STFIP = '06'\nGROUP BY f.properties.NMCNTY\nORDER BY COUNT(*) DESC, f.properties.NMCNTY ASC\nLIMIT 3",
+      "answer": [
+        "Los Angeles County",
+        "San Diego County",
+        "Orange County"
+      ]
+    },
+    {
+      "node_id": "5",
+      "dataset_id": "private-school-locations-current-f7d96",
+      "source": "datagov/private-school-locations-current-f7d96/files/data-FGgJBu.txt",
+      "intent": "For STFIP='06', what are the private school counts for each county, and which three counties have the highest counts?",
+      "sql": "SELECT f.properties.NMCNTY AS answer\nFROM t, UNNEST(features) AS u(f)\nWHERE f.properties.STFIP = '06'\nGROUP BY f.properties.NMCNTY\nORDER BY COUNT(*) DESC, f.properties.NMCNTY ASC\nLIMIT 3",
+      "answer": [
+        "Los Angeles County",
+        "Orange County",
+        "San Diego County"
+      ]
+    },
+    {
+      "node_id": "6",
+      "dataset_id": "school-district-office-locations-2022-23",
+      "source": "datagov/school-district-office-locations-2022-23/files/data-8V0eVK.txt",
+      "intent": "For STFIP='06', what are the school district office counts for each county, and which three counties have the highest counts?",
+      "sql": "SELECT f.properties.NMCNTY AS answer\nFROM t, UNNEST(features) AS u(f)\nWHERE f.properties.STFIP = '06'\nGROUP BY f.properties.NMCNTY\nORDER BY COUNT(*) DESC, f.properties.NMCNTY ASC\nLIMIT 3",
+      "answer": [
+        "Los Angeles County",
+        "San Diego County",
+        "San Bernardino County"
+      ]
+    },
+    {
+      "node_id": "7",
+      "dataset_id": "postsecondary-school-locations-2022-23",
+      "source": "datagov/postsecondary-school-locations-2022-23/files/data-sh56Ar.txt",
+      "intent": "For STFIP='06', what are the postsecondary institution counts for each county in the intersection of the top-three public-school counties, top-three private-school counties, and top-three school-district-office counties?",
+      "sql": "SELECT COUNT(*) AS answer\nFROM t, UNNEST(features) AS u(f)\nWHERE f.properties.STFIP = '06'\n  AND f.properties.NMCNTY IN ('Los Angeles County', 'San Diego County')\nGROUP BY f.properties.NMCNTY\nORDER BY COUNT(*) ASC, f.properties.NMCNTY ASC\nLIMIT 1",
+      "answer": 71
+    }
   ]
 }

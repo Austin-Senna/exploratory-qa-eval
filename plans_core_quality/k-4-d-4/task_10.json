@@ -96,5 +96,261 @@
       ],
       "answer": "Houston"
     }
+  ],
+  "ideal_code": [
+    {
+      "node_id": "1",
+      "dataset_id": "texas-state-expenditures-by-county-2018",
+      "source": "datagov/texas-state-expenditures-by-county-2018/files/rows.txt",
+      "intent": "What were the FY2018 capital outlay expenditure totals by Texas county?",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\nsource = \"datagov/texas-state-expenditures-by-county-2018/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\nmask = ((df[\"Fiscal Year\"] == 2018) & df[\"County\"].notna() & (df[\"County\"].astype(str).str.strip() != \"\") & df[\"Major Spending Category\"].astype(str).str.contains(\"CAPITAL OUTLAY\", na=False))\nanswer = (df.loc[mask].groupby(\"County\")[\"Amount\"].sum().sort_values(ascending=False).round(2).to_dict())",
+      "answer": {
+        "HARRIS": 1303630847.3,
+        "DALLAS": 838316444.65,
+        "TRAVIS": 427160745.36,
+        "MONTGOMERY": 424383088.05,
+        "BEXAR": 269462082.97,
+        "TARRANT": 195326742.86,
+        "DENTON": 186170844.17,
+        "HAYS": 180311763.03,
+        "NUECES": 180007685.62,
+        "EL PASO": 123694754.23
+      }
+    },
+    {
+      "node_id": "2",
+      "dataset_id": "texas-state-expenditures-by-county-2019",
+      "source": "datagov/texas-state-expenditures-by-county-2019/files/rows.txt",
+      "intent": "What were the FY2019 capital outlay expenditure totals by Texas county?",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\nsource = \"datagov/texas-state-expenditures-by-county-2019/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\nmask = ((df[\"Fiscal Year\"] == 2019) & df[\"County\"].notna() & (df[\"County\"].astype(str).str.strip() != \"\") & df[\"Major Spending Category\"].astype(str).str.contains(\"CAPITAL OUTLAY\", na=False))\nanswer = (df.loc[mask].groupby(\"County\")[\"Amount\"].sum().sort_values(ascending=False).round(2).to_dict())",
+      "answer": {
+        "HARRIS": 1391779835.06,
+        "DALLAS": 827510409.8,
+        "TRAVIS": 614936080.37,
+        "MONTGOMERY": 416744287.28,
+        "BEXAR": 302940592.72,
+        "DENTON": 260841655.76,
+        "NUECES": 243549894.71,
+        "TARRANT": 180443982.39,
+        "WILLIAMSON": 162099329.96,
+        "HAYS": 154023926.62
+      }
+    },
+    {
+      "node_id": "3",
+      "dataset_id": "texas-state-expenditures-by-county-2020",
+      "source": "datagov/texas-state-expenditures-by-county-2020/files/rows.txt",
+      "intent": "What were the FY2020 capital outlay expenditure totals by Texas county?",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\nsource = \"datagov/texas-state-expenditures-by-county-2020/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\nmask = ((df[\"Fiscal Year\"] == 2020) & df[\"County\"].notna() & (df[\"County\"].astype(str).str.strip() != \"\") & df[\"Major Spending Category\"].astype(str).str.contains(\"CAPITAL OUTLAY\", na=False))\nanswer = (df.loc[mask].groupby(\"County\")[\"Amount\"].sum().sort_values(ascending=False).round(2).to_dict())",
+      "answer": {
+        "HARRIS": 1663151150.96,
+        "DALLAS": 1324261419.12,
+        "TRAVIS": 821945717.49,
+        "MONTGOMERY": 612813968.49,
+        "BEXAR": 494340352.72,
+        "DENTON": 355805325.9,
+        "NUECES": 350680573.97,
+        "HAYS": 251859833.02,
+        "TARRANT": 189569631.26,
+        "MCLENNAN": 171511743.04
+      }
+    },
+    {
+      "node_id": "4",
+      "dataset_id": "texas-state-expenditures-by-county-2021",
+      "source": "datagov/texas-state-expenditures-by-county-2021/files/rows.txt",
+      "intent": "What were the FY2021 capital outlay expenditure totals by Texas county?",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\nsource = \"datagov/texas-state-expenditures-by-county-2021/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\nmask = ((df[\"Fiscal Year\"] == 2021) & df[\"County\"].notna() & (df[\"County\"].astype(str).str.strip() != \"\") & df[\"Major Spending Category\"].astype(str).str.contains(\"CAPITAL OUTLAY\", na=False))\nanswer = (df.loc[mask].groupby(\"County\")[\"Amount\"].sum().sort_values(ascending=False).round(2).to_dict())",
+      "answer": {
+        "HARRIS": 1741663003.68,
+        "DALLAS": 1171406639.17,
+        "TRAVIS": 774601022.23,
+        "MONTGOMERY": 705433711.03,
+        "BEXAR": 596386366.99,
+        "DENTON": 412077419.13,
+        "HAYS": 242238383.67,
+        "TARRANT": 228788736.63,
+        "NUECES": 165289397.9,
+        "EL PASO": 144869614.83
+      }
+    },
+    {
+      "node_id": "5",
+      "dataset_id": "texas-department-of-criminal-justice-releases-fy-2019",
+      "source": "datagov/texas-department-of-criminal-justice-releases-fy-2019/files/rows.txt",
+      "intent": "For the counties from <hop 1 answer>, how many TDCJ release records were associated with each county in FY2019?",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\nsource = \"datagov/texas-department-of-criminal-justice-releases-fy-2019/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\ncapital_outlay_top_counties = [\"HARRIS\", \"DALLAS\", \"BEXAR\", \"TRAVIS\", \"MONTGOMERY\"]\ncounty_upper = df[\"County\"].astype(str).str.upper()\nanswer = (df.loc[county_upper.isin(capital_outlay_top_counties)].assign(County=county_upper[county_upper.isin(capital_outlay_top_counties)]).groupby(\"County\").size().sort_values(ascending=False).to_dict())",
+      "answer": {
+        "HARRIS": 9029,
+        "DALLAS": 5355,
+        "BEXAR": 4545,
+        "TRAVIS": 1857,
+        "MONTGOMERY": 1315
+      }
+    },
+    {
+      "node_id": "6",
+      "dataset_id": "texas-department-of-criminal-justice-releases-fy-2020",
+      "source": "datagov/texas-department-of-criminal-justice-releases-fy-2020/files/rows.txt",
+      "intent": "For the counties from <hop 1 answer>, how many TDCJ release records were associated with each county in FY2020?",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\nsource = \"datagov/texas-department-of-criminal-justice-releases-fy-2020/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\ncapital_outlay_top_counties = [\"HARRIS\", \"DALLAS\", \"BEXAR\", \"TRAVIS\", \"MONTGOMERY\"]\ncounty_upper = df[\"County\"].astype(str).str.upper()\nmask = county_upper.isin(capital_outlay_top_counties)\nanswer = (df.loc[mask].assign(County=county_upper[mask]).groupby(\"County\").size().sort_values(ascending=False).to_dict())",
+      "answer": {
+        "HARRIS": 7059,
+        "DALLAS": 4540,
+        "BEXAR": 3917,
+        "TRAVIS": 1596,
+        "MONTGOMERY": 1250
+      }
+    },
+    {
+      "node_id": "7",
+      "dataset_id": "fy-2020-disability-compensation-recipients-by-county",
+      "source": "datagov/fy-2020-disability-compensation-recipients-by-county/files/rows.txt",
+      "intent": "For the counties from <hop 2 answer>, what were their 2020 totals of disability compensation recipients in Texas?",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\nsource = \"datagov/fy-2020-disability-compensation-recipients-by-county/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\nrelease_top_two_counties = [\"Harris\", \"Dallas\"]\nmask = (df[\"State\"] == \"Texas\") & df[\"County Name\"].isin(release_top_two_counties)\nanswer = (df.loc[mask, [\"County Name\", \"Total: Disability Compensation Recipients\"]].set_index(\"County Name\")[\"Total: Disability Compensation Recipients\"].to_dict())",
+      "answer": {
+        "Harris": 49804,
+        "Dallas": 26317
+      }
+    },
+    {
+      "node_id": "8",
+      "dataset_id": "fy-2023-disability-compensation-recipients-by-county",
+      "source": "datagov/fy-2023-disability-compensation-recipients-by-county/files/rows.txt",
+      "intent": "For the counties from <hop 2 answer>, what were their 2023 totals of disability compensation recipients in Texas?",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\nsource = \"datagov/fy-2023-disability-compensation-recipients-by-county/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\nrelease_top_two_counties = [\"Harris\", \"Dallas\"]\nmask = (df[\"State\"] == \"Texas\") & df[\"County Name\"].isin(release_top_two_counties)\nanswer = (df.loc[mask, [\"County Name\", \"Total: Disability Compensation Recipients\"]].set_index(\"County Name\")[\"Total: Disability Compensation Recipients\"].to_dict())",
+      "answer": {
+        "Harris": 54266,
+        "Dallas": 25704
+      }
+    }
+  ],
+  "ideal_query": [
+    {
+      "node_id": "1",
+      "dataset_id": "texas-state-expenditures-by-county-2018",
+      "source": "datagov/texas-state-expenditures-by-county-2018/files/rows.txt",
+      "intent": "What were the FY2018 capital outlay expenditure totals by Texas county?",
+      "answer": {
+        "HARRIS": 1303630847.3,
+        "DALLAS": 838316444.65,
+        "TRAVIS": 427160745.36,
+        "MONTGOMERY": 424383088.05,
+        "BEXAR": 269462082.97,
+        "TARRANT": 195326742.86,
+        "DENTON": 186170844.17,
+        "HAYS": 180311763.03,
+        "NUECES": 180007685.62,
+        "EL PASO": 123694754.23
+      },
+      "sql": "SELECT to_json(map(list(key), list(value))) AS answer\nFROM (\nSELECT county AS key, round(total, 2) AS value\nFROM (\n  SELECT trim(regexp_replace(CAST(\"County\" AS VARCHAR), '\\s+', ' ', 'g')) AS county, SUM(try_cast(\"Amount\" AS DOUBLE)) AS total\n  FROM t\n  WHERE \"Fiscal Year\" = 2018\n    AND \"County\" IS NOT NULL\n    AND trim(regexp_replace(CAST(\"County\" AS VARCHAR), '\\s+', ' ', 'g')) <> ''\n    AND contains(CAST(\"Major Spending Category\" AS VARCHAR), 'CAPITAL OUTLAY')\n  GROUP BY county\n) totals\nORDER BY total DESC\nLIMIT 10\n) q"
+    },
+    {
+      "node_id": "2",
+      "dataset_id": "texas-state-expenditures-by-county-2019",
+      "source": "datagov/texas-state-expenditures-by-county-2019/files/rows.txt",
+      "intent": "What were the FY2019 capital outlay expenditure totals by Texas county?",
+      "answer": {
+        "HARRIS": 1391779835.06,
+        "DALLAS": 827510409.8,
+        "TRAVIS": 614936080.37,
+        "MONTGOMERY": 416744287.28,
+        "BEXAR": 302940592.72,
+        "DENTON": 260841655.76,
+        "NUECES": 243549894.71,
+        "TARRANT": 180443982.39,
+        "WILLIAMSON": 162099329.96,
+        "HAYS": 154023926.62
+      },
+      "sql": "SELECT to_json(map(list(key), list(value))) AS answer\nFROM (\nSELECT county AS key, round(total, 2) AS value\nFROM (\n  SELECT trim(regexp_replace(CAST(\"County\" AS VARCHAR), '\\s+', ' ', 'g')) AS county, SUM(try_cast(\"Amount\" AS DOUBLE)) AS total\n  FROM t\n  WHERE \"Fiscal Year\" = 2019\n    AND \"County\" IS NOT NULL\n    AND trim(regexp_replace(CAST(\"County\" AS VARCHAR), '\\s+', ' ', 'g')) <> ''\n    AND contains(CAST(\"Major Spending Category\" AS VARCHAR), 'CAPITAL OUTLAY')\n  GROUP BY county\n) totals\nORDER BY total DESC\nLIMIT 10\n) q"
+    },
+    {
+      "node_id": "3",
+      "dataset_id": "texas-state-expenditures-by-county-2020",
+      "source": "datagov/texas-state-expenditures-by-county-2020/files/rows.txt",
+      "intent": "What were the FY2020 capital outlay expenditure totals by Texas county?",
+      "answer": {
+        "HARRIS": 1663151150.96,
+        "DALLAS": 1324261419.12,
+        "TRAVIS": 821945717.49,
+        "MONTGOMERY": 612813968.49,
+        "BEXAR": 494340352.72,
+        "DENTON": 355805325.9,
+        "NUECES": 350680573.97,
+        "HAYS": 251859833.02,
+        "TARRANT": 189569631.26,
+        "MCLENNAN": 171511743.04
+      },
+      "sql": "SELECT to_json(map(list(key), list(value))) AS answer\nFROM (\nSELECT county AS key, round(total, 2) AS value\nFROM (\n  SELECT trim(regexp_replace(CAST(\"County\" AS VARCHAR), '\\s+', ' ', 'g')) AS county, SUM(try_cast(\"Amount\" AS DOUBLE)) AS total\n  FROM t\n  WHERE \"Fiscal Year\" = 2020\n    AND \"County\" IS NOT NULL\n    AND trim(regexp_replace(CAST(\"County\" AS VARCHAR), '\\s+', ' ', 'g')) <> ''\n    AND contains(CAST(\"Major Spending Category\" AS VARCHAR), 'CAPITAL OUTLAY')\n  GROUP BY county\n) totals\nORDER BY total DESC\nLIMIT 10\n) q"
+    },
+    {
+      "node_id": "4",
+      "dataset_id": "texas-state-expenditures-by-county-2021",
+      "source": "datagov/texas-state-expenditures-by-county-2021/files/rows.txt",
+      "intent": "What were the FY2021 capital outlay expenditure totals by Texas county?",
+      "answer": {
+        "HARRIS": 1741663003.68,
+        "DALLAS": 1171406639.17,
+        "TRAVIS": 774601022.23,
+        "MONTGOMERY": 705433711.03,
+        "BEXAR": 596386366.99,
+        "DENTON": 412077419.13,
+        "HAYS": 242238383.67,
+        "TARRANT": 228788736.63,
+        "NUECES": 165289397.9,
+        "EL PASO": 144869614.83
+      },
+      "sql": "SELECT to_json(map(list(key), list(value))) AS answer\nFROM (\nSELECT county AS key, round(total, 2) AS value\nFROM (\n  SELECT trim(regexp_replace(CAST(\"County\" AS VARCHAR), '\\s+', ' ', 'g')) AS county, SUM(try_cast(\"Amount\" AS DOUBLE)) AS total\n  FROM t\n  WHERE \"Fiscal Year\" = 2021\n    AND \"County\" IS NOT NULL\n    AND trim(regexp_replace(CAST(\"County\" AS VARCHAR), '\\s+', ' ', 'g')) <> ''\n    AND contains(CAST(\"Major Spending Category\" AS VARCHAR), 'CAPITAL OUTLAY')\n  GROUP BY county\n) totals\nORDER BY total DESC\nLIMIT 10\n) q"
+    },
+    {
+      "node_id": "5",
+      "dataset_id": "texas-department-of-criminal-justice-releases-fy-2019",
+      "source": "datagov/texas-department-of-criminal-justice-releases-fy-2019/files/rows.txt",
+      "intent": "For the counties from <hop 1 answer>, how many TDCJ release records were associated with each county in FY2019?",
+      "answer": {
+        "HARRIS": 9029,
+        "DALLAS": 5355,
+        "BEXAR": 4545,
+        "TRAVIS": 1857,
+        "MONTGOMERY": 1315
+      },
+      "sql": "SELECT to_json(map(list(key), list(value))) AS answer\nFROM (\nWITH candidates(county, ord) AS (VALUES ('HARRIS', 1), ('DALLAS', 2), ('BEXAR', 3), ('TRAVIS', 4), ('MONTGOMERY', 5)),\ncounts AS (\n  SELECT upper(trim(regexp_replace(CAST(\"County\" AS VARCHAR), '\\s+', ' ', 'g'))) AS county, COUNT(*) AS cnt\n  FROM t\n  GROUP BY county\n)\nSELECT c.county AS key, COALESCE(counts.cnt, 0) AS value\nFROM candidates c\nLEFT JOIN counts ON counts.county = c.county\nWHERE COALESCE(counts.cnt, 0) > 0\nORDER BY value DESC, c.ord\n) q"
+    },
+    {
+      "node_id": "6",
+      "dataset_id": "texas-department-of-criminal-justice-releases-fy-2020",
+      "source": "datagov/texas-department-of-criminal-justice-releases-fy-2020/files/rows.txt",
+      "intent": "For the counties from <hop 1 answer>, how many TDCJ release records were associated with each county in FY2020?",
+      "answer": {
+        "HARRIS": 7059,
+        "DALLAS": 4540,
+        "BEXAR": 3917,
+        "TRAVIS": 1596,
+        "MONTGOMERY": 1250
+      },
+      "sql": "SELECT to_json(map(list(key), list(value))) AS answer\nFROM (\nWITH candidates(county, ord) AS (VALUES ('HARRIS', 1), ('DALLAS', 2), ('BEXAR', 3), ('TRAVIS', 4), ('MONTGOMERY', 5)),\ncounts AS (\n  SELECT upper(trim(regexp_replace(CAST(\"County\" AS VARCHAR), '\\s+', ' ', 'g'))) AS county, COUNT(*) AS cnt\n  FROM t\n  GROUP BY county\n)\nSELECT c.county AS key, COALESCE(counts.cnt, 0) AS value\nFROM candidates c\nLEFT JOIN counts ON counts.county = c.county\nWHERE COALESCE(counts.cnt, 0) > 0\nORDER BY value DESC, c.ord\n) q"
+    },
+    {
+      "node_id": "7",
+      "dataset_id": "fy-2020-disability-compensation-recipients-by-county",
+      "source": "datagov/fy-2020-disability-compensation-recipients-by-county/files/rows.txt",
+      "intent": "For the counties from <hop 2 answer>, what were their 2020 totals of disability compensation recipients in Texas?",
+      "answer": {
+        "Harris": 49804,
+        "Dallas": 26317
+      },
+      "sql": "SELECT to_json(map(list(key), list(value))) AS answer\nFROM (\nSELECT \"County Name\" AS key, try_cast(\"Total: Disability Compensation Recipients\" AS BIGINT) AS value\nFROM t\nWHERE \"State\" = 'Texas'\n  AND \"County Name\" IN ('Harris', 'Dallas')\nORDER BY \"County Name\" DESC\n) q"
+    },
+    {
+      "node_id": "8",
+      "dataset_id": "fy-2023-disability-compensation-recipients-by-county",
+      "source": "datagov/fy-2023-disability-compensation-recipients-by-county/files/rows.txt",
+      "intent": "For the counties from <hop 2 answer>, what were their 2023 totals of disability compensation recipients in Texas?",
+      "answer": {
+        "Harris": 54266,
+        "Dallas": 25704
+      },
+      "sql": "SELECT to_json(map(list(key), list(value))) AS answer\nFROM (\nSELECT \"County Name\" AS key, try_cast(\"Total: Disability Compensation Recipients\" AS BIGINT) AS value\nFROM t\nWHERE \"State\" = 'Texas'\n  AND \"County Name\" IN ('Harris', 'Dallas')\nORDER BY \"County Name\" DESC\n) q"
+    }
   ]
 }

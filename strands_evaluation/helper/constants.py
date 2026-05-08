@@ -47,6 +47,7 @@ MODEL_REGISTRY: Dict[str, Tuple[str, str]] = {
     "openai/gpt-5.2":              ("openai", "gpt-5.2"),
     "openai/gpt-5-nano":           ("openai", "gpt-5-nano"),
     "openai/gpt-5-mini":           ("openai", "gpt-5-mini"),
+    "openai/gpt-5.4":              ("openai", "gpt-5.4"),
     "openai/gpt-5.4-nano":         ("openai", "gpt-5.4-nano"),
 
     # Anthropic direct API

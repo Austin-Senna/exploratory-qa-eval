@@ -96,5 +96,111 @@
       ],
       "answer": "Body mass index (BMI)"
     }
+  ],
+  "ideal_code": [
+    {
+      "node_id": "1",
+      "dataset_id": "california-hospital-ratings-for-transcatheter-aortic-valve-replacement-tavr-procedures",
+      "source": "datagov/california-hospital-ratings-for-transcatheter-aortic-valve-replacement-tavr-procedures/files/2022-tavr-hospital-performance-ratings.txt",
+      "intent": "Which California hospitals had at least 250 TAVR cases and an Average mortality rating in 2022?",
+      "code": "import io\nimport re\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/california-hospital-ratings-for-transcatheter-aortic-valve-replacement-tavr-procedures/files/2022-tavr-hospital-performance-ratings.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\n\n\ndef normalize_text(value):\n    value = str(value).replace(\"\\n\", \" \").replace(\"\\x96\", \"-\").replace(\"\\x97\", \"-\").replace(\"–\", \"-\").replace(\"—\", \"-\").strip()\n    value = re.sub(r\"\\s+\", \" \", value)\n    return \"\" if value.lower() == \"nan\" else value\n\n\ndef normalize_name(value):\n    value = normalize_text(value)\n    return value.replace(\"Cedars - Sinai Medical Center\", \"Cedars-Sinai Medical Center\")\n\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\ndf.columns = [normalize_text(column) for column in df.columns]\nfor column in df.columns:\n    if df[column].dtype == object:\n        df[column] = df[column].map(normalize_text)\n\ndf[\"Hospital\"] = df[\"Hospital\"].map(normalize_name)\ndf[\"Total Hospital TAVR Cases\"] = pd.to_numeric(df[\"Total Hospital TAVR Cases\"], errors=\"coerce\")\n\nmortality = df[df[\"Performance Measure\"].eq(\"TAVR In-hospital/30-day Mortality\")].copy()\nanswer = sorted(\n    mortality.loc[\n        mortality[\"Total Hospital TAVR Cases\"].ge(250)\n        & mortality[\"Performance Rating\"].eq(\"Average\"),\n        \"Hospital\"\n    ].tolist()\n)",
+      "answer": [
+        "Cedars-Sinai Medical Center",
+        "Kaiser Foundation Hospital - San Francisco",
+        "Mercy General Hospital",
+        "Scripps Memorial Hospital - La Jolla",
+        "Stanford Health Care"
+      ]
+    },
+    {
+      "node_id": "2",
+      "dataset_id": "effects-of-covid-19-on-hospital-utilization-trends-636d2",
+      "source": "datagov/effects-of-covid-19-on-hospital-utilization-trends-636d2/files/hospital-utilization-trends.txt",
+      "intent": "Which hospitals had at least 35,000 ambulatory surgery encounters in 2019?",
+      "code": "import io\nimport re\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/effects-of-covid-19-on-hospital-utilization-trends-636d2/files/hospital-utilization-trends.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\n\n\ndef normalize_text(value):\n    value = str(value).replace(\"\\n\", \" \").replace(\"\\x96\", \"-\").replace(\"\\x97\", \"-\").replace(\"–\", \"-\").replace(\"—\", \"-\").strip()\n    value = re.sub(r\"\\s+\", \" \", value)\n    return \"\" if value.lower() == \"nan\" else value\n\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\ndf.columns = [normalize_text(column) for column in df.columns]\nfor column in df.columns:\n    if df[column].dtype == object:\n        df[column] = df[column].map(normalize_text)\n\ndf[\"Count\"] = pd.to_numeric(df[\"Count\"], errors=\"coerce\")\ndf[\"year\"] = df[\"Date\"].str[-2:].map(lambda value: 2000 + int(value) if str(value).isdigit() else None)\n\nranked = (\n    df.groupby([\"Facility Name\", \"Setting\", \"year\"], dropna=False)[\"Count\"]\n    .sum()\n    .reset_index()\n)\n\nanswer = sorted(\n    ranked.loc[\n        ranked[\"Setting\"].eq(\"Ambulatory Surgery\")\n        & ranked[\"year\"].eq(2019)\n        & ranked[\"Count\"].ge(35000),\n        \"Facility Name\"\n    ].tolist()\n)",
+      "answer": [
+        "Stanford Health Care",
+        "UC San Diego Health Hillcrest - Hillcrest Medical Center",
+        "UCSF Medical Center"
+      ]
+    },
+    {
+      "node_id": "3",
+      "dataset_id": "hospital-encounters-for-homeless-patients-79a6f",
+      "source": "datagov/hospital-encounters-for-homeless-patients-79a6f/files/2019-2020-homeless-hospital-encounters-age-race-sex-expected-payer-by-facility.txt",
+      "intent": "For the hospital from <hop 1 answer>, which county had the highest total of homeless inpatient encounters broken down by age?",
+      "code": "import io\nimport re\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/hospital-encounters-for-homeless-patients-79a6f/files/2019-2020-homeless-hospital-encounters-age-race-sex-expected-payer-by-facility.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\n\n\ndef normalize_text(value):\n    value = str(value).replace(\"\\n\", \" \").replace(\"\\x96\", \"-\").replace(\"\\x97\", \"-\").replace(\"–\", \"-\").replace(\"—\", \"-\").strip()\n    value = re.sub(r\"\\s+\", \" \", value)\n    return \"\" if value.lower() == \"nan\" else value\n\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\ndf.columns = [normalize_text(column) for column in df.columns]\nfor column in df.columns:\n    if df[column].dtype == object:\n        df[column] = df[column].map(normalize_text)\n\ndf[\"Encounters\"] = pd.to_numeric(df[\"Encounters\"], errors=\"coerce\")\n\ncounty_totals = (\n    df[\n        df[\"FacilityName\"].eq(\"Stanford Health Care\")\n        & df[\"EncounterType\"].eq(\"Inpatient Hospitalizations\")\n        & df[\"HomelessIndicator\"].eq(\"Homeless\")\n        & df[\"Demographic\"].eq(\"Age\")\n    ]\n    .groupby(\"HospitalCounty\")[\"Encounters\"]\n    .sum()\n    .sort_values(ascending=False)\n)\n\nanswer = county_totals.index[0] + \" County\"",
+      "answer": "Santa Clara County"
+    },
+    {
+      "node_id": "5",
+      "dataset_id": "places-local-data-for-better-health-place-data-2021-release-06a9b",
+      "source": "datagov/places-local-data-for-better-health-place-data-2021-release-06a9b/files/rows.txt",
+      "intent": "For the city from <hop 3 answer>, which three health-outcome measures had the highest crude prevalence values in 2021?",
+      "code": "import io\nimport csv\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/places-local-data-for-better-health-place-data-2021-release-06a9b/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\n\nclient = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED))\nobj = client.get_object(Bucket=bucket, Key=source)\nreader = csv.DictReader(io.TextIOWrapper(obj[\"Body\"], encoding=\"utf-8\"))\nrows = []\nfor row in reader:\n    if row[\"StateAbbr\"].strip() != \"CA\" or row[\"LocationName\"].strip() != \"San Jose\":\n        continue\n    if row[\"Data_Value_Type\"].strip() != \"Crude prevalence\" or row[\"Category\"].strip() != \"Health Outcomes\":\n        continue\n    value = row[\"Data_Value\"].strip()\n    if value:\n        rows.append((row[\"Short_Question_Text\"].strip(), float(value)))\n\nrows.sort(key=lambda item: (-item[1], item[0]))\nanswer = [measure for measure, _ in rows[:3]]",
+      "answer": [
+        "High Cholesterol",
+        "High Blood Pressure",
+        "Obesity"
+      ]
+    },
+    {
+      "node_id": "6",
+      "dataset_id": "places-local-data-for-better-health-place-data-2022-release",
+      "source": "datagov/places-local-data-for-better-health-place-data-2022-release/files/rows.txt",
+      "intent": "For the city from <hop 3 answer>, which health-outcome measures had crude prevalence values of at least 15 but below 23 in 2022?",
+      "code": "import io\nimport csv\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/places-local-data-for-better-health-place-data-2022-release/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\n\nclient = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED))\nobj = client.get_object(Bucket=bucket, Key=source)\nreader = csv.DictReader(io.TextIOWrapper(obj[\"Body\"], encoding=\"utf-8\"))\nanswer = []\nfor row in reader:\n    if row[\"StateAbbr\"].strip() != \"CA\" or row[\"LocationName\"].strip() != \"San Jose\":\n        continue\n    if row[\"Data_Value_Type\"].strip() != \"Crude prevalence\" or row[\"Category\"].strip() != \"Health Outcomes\":\n        continue\n    value = row[\"Data_Value\"].strip()\n    if not value:\n        continue\n    value = float(value)\n    if 15 <= value < 23:\n        answer.append((row[\"Short_Question_Text\"].strip(), value))\n\nanswer = [measure for measure, _ in sorted(answer, key=lambda item: (-item[1], item[0]))]",
+      "answer": [
+        "Obesity",
+        "Arthritis"
+      ]
+    }
+  ],
+  "ideal_query": [
+    {
+      "node_id": "1",
+      "dataset_id": "california-hospital-ratings-for-transcatheter-aortic-valve-replacement-tavr-procedures",
+      "source": "datagov/california-hospital-ratings-for-transcatheter-aortic-valve-replacement-tavr-procedures/files/2022-tavr-hospital-performance-ratings.txt",
+      "intent": "Which California hospitals had at least 250 TAVR cases and an Average mortality rating in 2022?",
+      "answer": "Cannot execute SQL: query_file cannot read this CSV source (DuckDB CSV dialect detection failed)."
+    },
+    {
+      "node_id": "2",
+      "dataset_id": "effects-of-covid-19-on-hospital-utilization-trends-636d2",
+      "source": "datagov/effects-of-covid-19-on-hospital-utilization-trends-636d2/files/hospital-utilization-trends.txt",
+      "intent": "Which hospitals had at least 35,000 ambulatory surgery encounters in 2019?",
+      "answer": "Cannot execute SQL: query_file cannot read this CSV source (DuckDB internal range-read error)."
+    },
+    {
+      "node_id": "3",
+      "dataset_id": "hospital-encounters-for-homeless-patients-79a6f",
+      "source": "datagov/hospital-encounters-for-homeless-patients-79a6f/files/2019-2020-homeless-hospital-encounters-age-race-sex-expected-payer-by-facility.txt",
+      "intent": "For the hospital from <hop 1 answer>, which county had the highest total of homeless inpatient encounters broken down by age?",
+      "sql": "SELECT CONCAT(\"HospitalCounty\", ' County') AS answer\nFROM t\nWHERE \"FacilityName\" = 'Stanford Health Care'\n  AND \"EncounterType\" = 'Inpatient Hospitalizations'\n  AND \"HomelessIndicator\" = 'Homeless'\n  AND \"Demographic\" = 'Age'\nGROUP BY \"HospitalCounty\"\nORDER BY SUM(TRY_CAST(\"Encounters\" AS DOUBLE)) DESC, \"HospitalCounty\" ASC\nLIMIT 1",
+      "answer": "Santa Clara County"
+    },
+    {
+      "node_id": "5",
+      "dataset_id": "places-local-data-for-better-health-place-data-2021-release-06a9b",
+      "source": "datagov/places-local-data-for-better-health-place-data-2021-release-06a9b/files/rows.txt",
+      "intent": "For the city from <hop 3 answer>, which three health-outcome measures had the highest crude prevalence values in 2021?",
+      "sql": "SELECT json_group_array(\"Short_Question_Text\") AS answer\nFROM (\n  SELECT \"Short_Question_Text\", TRY_CAST(\"Data_Value\" AS DOUBLE) AS value\n  FROM t\n  WHERE \"StateAbbr\" = 'CA'\n    AND \"LocationName\" = 'San Jose'\n    AND \"Data_Value_Type\" = 'Crude prevalence'\n    AND \"Category\" = 'Health Outcomes'\n    AND TRIM(COALESCE(CAST(\"Data_Value\" AS VARCHAR), '')) != ''\n  ORDER BY value DESC, \"Short_Question_Text\" ASC\n  LIMIT 3\n)",
+      "answer": [
+        "High Cholesterol",
+        "High Blood Pressure",
+        "Obesity"
+      ]
+    },
+    {
+      "node_id": "6",
+      "dataset_id": "places-local-data-for-better-health-place-data-2022-release",
+      "source": "datagov/places-local-data-for-better-health-place-data-2022-release/files/rows.txt",
+      "intent": "For the city from <hop 3 answer>, which health-outcome measures had crude prevalence values of at least 15 but below 23 in 2022?",
+      "sql": "SELECT json_group_array(\"Short_Question_Text\") AS answer\nFROM (\n  SELECT \"Short_Question_Text\", TRY_CAST(\"Data_Value\" AS DOUBLE) AS value\n  FROM t\n  WHERE \"StateAbbr\" = 'CA'\n    AND \"LocationName\" = 'San Jose'\n    AND \"Data_Value_Type\" = 'Crude prevalence'\n    AND \"Category\" = 'Health Outcomes'\n    AND TRY_CAST(\"Data_Value\" AS DOUBLE) >= 15\n    AND TRY_CAST(\"Data_Value\" AS DOUBLE) < 23\n  ORDER BY value DESC, \"Short_Question_Text\" ASC\n)",
+      "answer": [
+        "Obesity",
+        "Arthritis"
+      ]
+    }
   ]
 }

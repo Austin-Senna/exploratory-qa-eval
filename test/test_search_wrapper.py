@@ -18,9 +18,16 @@ from strands_evaluation.tools.external.ideal.search_wrapper import (
 
 
 class TestSearchWrapperPayload(unittest.TestCase):
+    def setUp(self) -> None:
+        self._reset_caches()
+
     def tearDown(self) -> None:
+        self._reset_caches()
+
+    def _reset_caches(self) -> None:
         search_wrapper._DESC_CACHE_LOADED = False
         search_wrapper._DESC_BY_URI = {}
+        search_wrapper._DESC_ROW_BY_URI = {}
         search_wrapper._SNIPPET_CACHE_LOADED = False
         search_wrapper._SNIPPET_BY_URI = {}
         search_wrapper._SCHEMAS_CACHE_LOADED = False

@@ -443,6 +443,102 @@ class TestModeWrapper(unittest.TestCase):
                     task_context={"task_id": "tasks_mini/k-1-d-1/task_1.json"},
                 )
 
+    def test_ideal_computation_mode_replaces_query_and_execute_tools(self):
+        from strands import tool
+
+        @tool
+        def read_file(dataset_id: str = "", file_path: str = "") -> dict:
+            return {}
+
+        @tool
+        def query_file(dataset_id: str = "", file_path: str = "", sql: str = "") -> dict:
+            return {}
+
+        @tool
+        def execute_code(code: str) -> dict:
+            return {}
+
+        @tool
+        def peek_file(dataset_id: str = "", file_path: str = "") -> dict:
+            return {}
+
+        with TemporaryDirectory() as tmpdir:
+            plans_root = Path(tmpdir) / "plans_mini"
+            self._write_valid_plan(plans_root)
+            set_plans_root(plans_root)
+
+            cfg = RunConfig(
+                search_tool_mode="preloaded",
+                search_results_mode="naive",
+                agent_management_mode="naive",
+                computation_tool_mode="ideal",
+            )
+            bundle = build_mode_bundle(
+                cfg,
+                data_tools=[peek_file, read_file, query_file, execute_code],
+                task_context={"task_id": "tasks_mini/k-1-d-1/task_1.json"},
+            )
+
+        tool_names = [tool_obj.tool_spec["name"] for tool_obj in bundle.tools]
+        self.assertIn("peek_file", tool_names)
+        self.assertIn("read_file", tool_names)
+        self.assertIn("query_ideal", tool_names)
+        self.assertIn("execute_ideal", tool_names)
+        self.assertNotIn("query_file", tool_names)
+        self.assertNotIn("execute_code", tool_names)
+        self.assertEqual(bundle.modes["computation_tool"], "ideal")
+
+    def test_prompt_blocks_query_and_execute_for_non_tabular_non_json_sources(self):
+        cfg = RunConfig(
+            search_tool_mode="preloaded",
+            search_results_mode="naive",
+            agent_management_mode="naive",
+            computation_tool_mode="standard",
+        )
+        bundle = build_mode_bundle(
+            cfg,
+            data_tools=[],
+            task_context={"task_id": "tasks_mini/k-1-d-1/task_1.json"},
+        )
+
+        self.assertIn("## COMPUTATION FILE FAMILY RULE", bundle.system_prompt)
+        self.assertIn("Do not use `query_file` or `execute_code`", bundle.system_prompt)
+        self.assertIn("non-tabular or non-JSON", bundle.system_prompt)
+        self.assertNotIn("query_ideal", bundle.system_prompt)
+        self.assertNotIn("execute_ideal", bundle.system_prompt)
+
+    def test_ideal_prompt_blocks_ideal_compute_tools_for_non_tabular_non_json_sources(self):
+        from strands import tool
+
+        @tool
+        def query_file(dataset_id: str = "", file_path: str = "", sql: str = "") -> dict:
+            return {}
+
+        @tool
+        def execute_code(code: str) -> dict:
+            return {}
+
+        with TemporaryDirectory() as tmpdir:
+            plans_root = Path(tmpdir) / "plans_mini"
+            self._write_valid_plan(plans_root)
+            set_plans_root(plans_root)
+
+            cfg = RunConfig(
+                search_tool_mode="preloaded",
+                search_results_mode="naive",
+                agent_management_mode="naive",
+                computation_tool_mode="ideal",
+            )
+            bundle = build_mode_bundle(
+                cfg,
+                data_tools=[query_file, execute_code],
+                task_context={"task_id": "tasks_mini/k-1-d-1/task_1.json"},
+            )
+
+        self.assertIn("## COMPUTATION FILE FAMILY RULE", bundle.system_prompt)
+        self.assertIn("Do not use `query_file`, `execute_code`, `query_ideal`, or `execute_ideal`", bundle.system_prompt)
+        self.assertIn("non-tabular or non-JSON", bundle.system_prompt)
+
 
 class TestSanaLevel(unittest.TestCase):
     """SANA Agent 0 (labeling) and Agent 1 (enriched peek_file).

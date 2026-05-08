@@ -69,6 +69,8 @@ class EvalResultsCsvTests(unittest.TestCase):
                     "cost_usd": 0.25,
                     "tool_calls_total": 3,
                     "api_tool_calls": 2,
+                    "execute_ideal_agent_repair_calls": 1,
+                    "query_ideal_agent_repair_calls": 2,
                     "success": True,
                     "error": "",
                     "reasoning": "should not appear in csv",
@@ -109,10 +111,14 @@ class EvalResultsCsvTests(unittest.TestCase):
                     "cost_usd",
                     "tool_calls_total",
                     "api_tool_calls",
+                    "execute_ideal_agent_repair_calls",
+                    "query_ideal_agent_repair_calls",
                     "success",
                     "error",
                 },
             )
+            self.assertEqual(row["execute_ideal_agent_repair_calls"], "1")
+            self.assertEqual(row["query_ideal_agent_repair_calls"], "2")
             self.assertEqual(row["required_dataset_count"], "2")
             self.assertEqual(row["sources_used_count"], "2")
             self.assertNotIn("reasoning", row)
@@ -143,6 +149,8 @@ class EvalResultsCsvTests(unittest.TestCase):
                         "cost_usd",
                         "tool_calls_total",
                         "api_tool_calls",
+                        "execute_ideal_agent_repair_calls",
+                        "query_ideal_agent_repair_calls",
                         "success",
                         "error",
                     ],
@@ -167,6 +175,8 @@ class EvalResultsCsvTests(unittest.TestCase):
                         "cost_usd": "0.25",
                         "tool_calls_total": "3",
                         "api_tool_calls": "2",
+                        "execute_ideal_agent_repair_calls": "4",
+                        "query_ideal_agent_repair_calls": "5",
                         "success": "True",
                         "error": "",
                     }
@@ -181,6 +191,8 @@ class EvalResultsCsvTests(unittest.TestCase):
             row = rows[0]
             self.assertEqual(row["required_dataset_count"], "2")
             self.assertEqual(row["sources_used_count"], "1")
+            self.assertEqual(row["execute_ideal_agent_repair_calls"], "4")
+            self.assertEqual(row["query_ideal_agent_repair_calls"], "5")
             self.assertNotIn("reasoning", row)
             self.assertNotIn("required_datasets", row)
             self.assertNotIn("sources_used", row)

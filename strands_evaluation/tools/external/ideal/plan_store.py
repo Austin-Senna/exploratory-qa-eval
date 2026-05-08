@@ -19,12 +19,25 @@ _TASK_CONTEXT: Dict[str, Any] = {}
 
 
 @dataclass(frozen=True)
+class IdealComputationRecord:
+    tool: str
+    node_id: str
+    dataset_id: str
+    source: str
+    intent: str
+    payload: str
+    answer: Any
+
+
+@dataclass(frozen=True)
 class IdealTaskPlan:
     task_id: str
     plan_path: Path
     dataset_sequence: List[str]
     source_sequence: List[str]
     reasoning_chain_text: str
+    ideal_query: List[IdealComputationRecord]
+    ideal_code: List[IdealComputationRecord]
 
 
 def set_plans_root(path: str | Path) -> None:
@@ -163,6 +176,90 @@ def _validate_reasoning_text(raw: Any, *, plan_path: Path) -> str:
     )
 
 
+def _dataset_id_from_source(source: str) -> str:
+    value = str(source or "").strip()
+    if value.startswith("s3://"):
+        remainder = value[len("s3://") :]
+        _bucket, _sep, value = remainder.partition("/")
+    value = value.lstrip("/")
+    parts = value.split("/")
+    if len(parts) >= 2 and parts[0] in {"datagov", "wikipedia"}:
+        return parts[1]
+    return parts[0] if parts else value
+
+
+def _source_for_dataset(dataset_id: str, source_sequence: List[str]) -> str:
+    for source in source_sequence:
+        if _dataset_id_from_source(source) == dataset_id:
+            return source
+    return ""
+
+
+def _validate_computation_records(
+    raw: Any,
+    *,
+    key: str,
+    tool: str,
+    payload_key: str,
+    source_sequence: List[str],
+    plan_path: Path,
+) -> List[IdealComputationRecord]:
+    if raw is None:
+        return []
+    if not isinstance(raw, list):
+        raise ValueError(f"Invalid plan at '{plan_path}': {key} must be a list when present.")
+
+    out: List[IdealComputationRecord] = []
+    for i, item in enumerate(raw):
+        label = f"{key}[{i}]"
+        if not isinstance(item, dict):
+            raise ValueError(f"Invalid plan at '{plan_path}': {label} must be an object.")
+
+        node_id = str(item.get("node_id") or item.get("node") or "").strip()
+        if not node_id:
+            raise ValueError(f"Invalid plan at '{plan_path}': {label}.node_id is required.")
+
+        dataset_id = str(item.get("dataset_id") or "").strip()
+        source = str(item.get("source") or item.get("s3_uri") or item.get("uri") or "").strip()
+        if not dataset_id and source:
+            dataset_id = _dataset_id_from_source(source)
+        if dataset_id and not source:
+            source = _source_for_dataset(dataset_id, source_sequence)
+        if not dataset_id:
+            raise ValueError(
+                f"Invalid plan at '{plan_path}': {label} requires dataset_id or source."
+            )
+        if not source:
+            raise ValueError(
+                f"Invalid plan at '{plan_path}': {label} could not map dataset_id '{dataset_id}' to a source."
+            )
+
+        intent = str(item.get("intent") or item.get("subquestion") or "").strip()
+        if not intent:
+            raise ValueError(f"Invalid plan at '{plan_path}': {label}.intent is required.")
+
+        payload = str(item.get(payload_key) or "").strip()
+        if not payload:
+            raise ValueError(f"Invalid plan at '{plan_path}': {label}.{payload_key} is required.")
+
+        if "answer" not in item:
+            raise ValueError(f"Invalid plan at '{plan_path}': {label}.answer is required.")
+
+        out.append(
+            IdealComputationRecord(
+                tool=tool,
+                node_id=node_id,
+                dataset_id=dataset_id,
+                source=source,
+                intent=intent,
+                payload=payload,
+                answer=item["answer"],
+            )
+        )
+
+    return out
+
+
 def load_plan_for_task(task_id: str) -> IdealTaskPlan:
     plan_path = plan_path_for_task(task_id)
     if not plan_path.exists():
@@ -190,6 +287,22 @@ def load_plan_for_task(task_id: str) -> IdealTaskPlan:
         payload.get("reasoning_chain_text"),
         plan_path=plan_path,
     )
+    ideal_query = _validate_computation_records(
+        payload.get("ideal_query"),
+        key="ideal_query",
+        tool="query",
+        payload_key="sql",
+        source_sequence=source_sequence,
+        plan_path=plan_path,
+    )
+    ideal_code = _validate_computation_records(
+        payload.get("ideal_code"),
+        key="ideal_code",
+        tool="code",
+        payload_key="code",
+        source_sequence=source_sequence,
+        plan_path=plan_path,
+    )
 
     return IdealTaskPlan(
         task_id=str(task_id),
@@ -197,6 +310,8 @@ def load_plan_for_task(task_id: str) -> IdealTaskPlan:
         dataset_sequence=dataset_sequence,
         source_sequence=source_sequence,
         reasoning_chain_text=reasoning_chain_text,
+        ideal_query=ideal_query,
+        ideal_code=ideal_code,
     )
 
 
@@ -207,6 +322,7 @@ def load_plan_for_context(task_context: Optional[Dict[str, Any]] = None) -> Idea
 
 
 __all__ = [
+    "IdealComputationRecord",
     "IdealTaskPlan",
     "set_plans_root",
     "plans_root",

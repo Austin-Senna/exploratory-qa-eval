@@ -13,6 +13,7 @@ from typing import Callable, Optional, Sequence
 _SEARCH_MODE_CHOICES = ("naive", "preloaded", "standard", "ideal")
 _MANAGEMENT_MODE_CHOICES = ("naive", "standard", "ideal")
 _RESULT_MODE_CHOICES = ("naive", "ideal")
+_COMPUTATION_MODE_CHOICES = ("standard", "ideal")
 _REASONING_EFFORT_CHOICES = ("none", "minimal", "low", "medium", "high", "xhigh")
 _DEFAULT_TASK_SET = "tasks_core_quality"
 _DEFAULT_SMOKE_TASK_DIR = "k-5-d-4"
@@ -38,6 +39,7 @@ def _build_parser() -> argparse.ArgumentParser:
     common.add_argument("--search", choices=_SEARCH_MODE_CHOICES, default=None)
     common.add_argument("--results", choices=_RESULT_MODE_CHOICES, default=None)
     common.add_argument("--plan", choices=_MANAGEMENT_MODE_CHOICES, default=None)
+    common.add_argument("--compute", choices=_COMPUTATION_MODE_CHOICES, default=None)
     common.add_argument("--k", type=int, default=None)
     common.add_argument("--model", default="bedrock/claude-sonnet-4.5")
     common.add_argument(
@@ -205,6 +207,8 @@ def _build_run_mode_command(args: argparse.Namespace, cwd: Path) -> tuple[list[s
 
     if args.k is not None:
         command.extend(["--k", str(args.k)])
+    if args.compute is not None:
+        command.extend(["--computation_tool", args.compute])
     if args.reasoning_effort is not None:
         command.extend(["--reasoning-effort", args.reasoning_effort])
     if args.openai_prompt_cache_key is not None:

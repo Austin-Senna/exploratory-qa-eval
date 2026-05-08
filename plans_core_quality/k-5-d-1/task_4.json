@@ -22,5 +22,73 @@
     "Node 3 depends on node 2: In 2022 use-of-force for bureau PSB, the top district of occurrence is 3D.",
     "Node 4 depends on node 3: In 2022 dispatch records for Bethesda and district 3D, the count is 4.",
     "Final answer: 4"
+  ],
+  "ideal_code": [
+    {
+      "node_id": "1",
+      "dataset_id": "police-dispatched-incidents",
+      "source": "datagov/police-dispatched-incidents/files/rows.txt",
+      "intent": "In 2022 police dispatch incidents for Bethesda, which police district recorded the most incidents?",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/police-dispatched-incidents/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\ndf[\"Start Time\"] = pd.to_datetime(df[\"Start Time\"], format=\"%m/%d/%Y %I:%M:%S %p\", errors=\"coerce\")\nresult = (\n    df[\n        df[\"Start Time\"].dt.year.eq(2022)\n        & df[\"City\"].eq(\"BETHESDA\")\n    ]\n    .groupby(\"Police District Number\", dropna=False)\n    .size()\n    .reset_index(name=\"incident_count\")\n    .sort_values([\"incident_count\", \"Police District Number\"], ascending=[False, True])\n    .reset_index(drop=True)\n)\nanswer = result.loc[0, \"Police District Number\"]",
+      "answer": "2D"
+    },
+    {
+      "node_id": "2",
+      "dataset_id": "police-arrests",
+      "source": "datagov/police-arrests/files/rows.txt",
+      "intent": "Within police district <hop 1 answer> in 2022, which bureau made the most arrests?",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/police-arrests/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\ndf[\"Event Date/Time\"] = pd.to_datetime(df[\"Event Date/Time\"], format=\"%m/%d/%Y %I:%M:%S %p\", errors=\"coerce\")\nresult = (\n    df[\n        df[\"Event Date/Time\"].dt.year.eq(2022)\n        & df[\"Assigned Division\"].eq(\"2D\")\n    ]\n    .groupby(\"Assigned Bureau\", dropna=False)\n    .size()\n    .reset_index(name=\"arrest_count\")\n    .sort_values([\"arrest_count\", \"Assigned Bureau\"], ascending=[False, True])\n    .reset_index(drop=True)\n)\nanswer = result.loc[0, \"Assigned Bureau\"]",
+      "answer": "PSB"
+    },
+    {
+      "node_id": "3",
+      "dataset_id": "pol-use-of-force",
+      "source": "datagov/pol-use-of-force/files/rows.txt",
+      "intent": "In 2022, for bureau <hop 2 answer>, which district saw the most incidents involving officers using force?",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/pol-use-of-force/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\ndf[\"Incident Date\"] = pd.to_datetime(df[\"Incident Date\"], format=\"%m/%d/%Y %I:%M:%S %p\", errors=\"coerce\")\nresult = (\n    df[\n        df[\"Incident Date\"].dt.year.eq(2022)\n        & df[\"Bureau of officer's assignment\"].eq(\"PSB\")\n    ]\n    .groupby(\"District of occurrence\", dropna=False)\n    .size()\n    .reset_index(name=\"incident_count\")\n    .sort_values([\"incident_count\", \"District of occurrence\"], ascending=[False, True])\n    .reset_index(drop=True)\n)\nanswer = result.loc[0, \"District of occurrence\"]",
+      "answer": "3D"
+    },
+    {
+      "node_id": "4",
+      "dataset_id": "police-dispatched-incidents",
+      "source": "datagov/police-dispatched-incidents/files/rows.txt",
+      "intent": "How many total police dispatch incidents occurred in Bethesda within district <hop 3 answer> in 2022?",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/police-dispatched-incidents/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\ndf[\"Start Time\"] = pd.to_datetime(df[\"Start Time\"], format=\"%m/%d/%Y %I:%M:%S %p\", errors=\"coerce\")\nresult = df[\n    df[\"Start Time\"].dt.year.eq(2022)\n    & df[\"City\"].eq(\"BETHESDA\")\n    & df[\"Police District Number\"].eq(\"3D\")\n]\nanswer = len(result)",
+      "answer": "4"
+    }
+  ],
+  "ideal_query": [
+    {
+      "node_id": "1",
+      "dataset_id": "police-dispatched-incidents",
+      "source": "datagov/police-dispatched-incidents/files/rows.txt",
+      "intent": "In 2022 police dispatch incidents for Bethesda, which police district recorded the most incidents?",
+      "sql": "SELECT \"Police District Number\" AS answer\nFROM t\nWHERE EXTRACT(year FROM COALESCE(TRY_CAST(\"Start Time\" AS TIMESTAMP), TRY_STRPTIME(CAST(\"Start Time\" AS VARCHAR), '%m/%d/%Y %I:%M:%S %p'))) = 2022\n  AND \"City\" = 'BETHESDA'\nGROUP BY \"Police District Number\"\nORDER BY COUNT(*) DESC, \"Police District Number\" ASC NULLS LAST\nLIMIT 1",
+      "answer": "2D"
+    },
+    {
+      "node_id": "2",
+      "dataset_id": "police-arrests",
+      "source": "datagov/police-arrests/files/rows.txt",
+      "intent": "Within police district <hop 1 answer> in 2022, which bureau made the most arrests?",
+      "sql": "SELECT \"Assigned Bureau\" AS answer\nFROM t\nWHERE EXTRACT(year FROM COALESCE(TRY_CAST(\"Event Date/Time\" AS TIMESTAMP), TRY_STRPTIME(CAST(\"Event Date/Time\" AS VARCHAR), '%m/%d/%Y %I:%M:%S %p'))) = 2022\n  AND \"Assigned Division\" = '2D'\nGROUP BY \"Assigned Bureau\"\nORDER BY COUNT(*) DESC, \"Assigned Bureau\" ASC NULLS LAST\nLIMIT 1",
+      "answer": "PSB"
+    },
+    {
+      "node_id": "3",
+      "dataset_id": "pol-use-of-force",
+      "source": "datagov/pol-use-of-force/files/rows.txt",
+      "intent": "In 2022, for bureau <hop 2 answer>, which district saw the most incidents involving officers using force?",
+      "sql": "SELECT \"District of occurrence\" AS answer\nFROM t\nWHERE EXTRACT(year FROM COALESCE(TRY_CAST(\"Incident Date\" AS TIMESTAMP), TRY_STRPTIME(CAST(\"Incident Date\" AS VARCHAR), '%m/%d/%Y %I:%M:%S %p'))) = 2022\n  AND \"Bureau of officer's assignment\" = 'PSB'\nGROUP BY \"District of occurrence\"\nORDER BY COUNT(*) DESC, \"District of occurrence\" ASC NULLS LAST\nLIMIT 1",
+      "answer": "3D"
+    },
+    {
+      "node_id": "4",
+      "dataset_id": "police-dispatched-incidents",
+      "source": "datagov/police-dispatched-incidents/files/rows.txt",
+      "intent": "How many total police dispatch incidents occurred in Bethesda within district <hop 3 answer> in 2022?",
+      "sql": "SELECT COUNT(*) AS answer\nFROM t\nWHERE EXTRACT(year FROM COALESCE(TRY_CAST(\"Start Time\" AS TIMESTAMP), TRY_STRPTIME(CAST(\"Start Time\" AS VARCHAR), '%m/%d/%Y %I:%M:%S %p'))) = 2022\n  AND \"City\" = 'BETHESDA'\n  AND \"Police District Number\" = '3D' ",
+      "answer": "4"
+    }
   ]
 }

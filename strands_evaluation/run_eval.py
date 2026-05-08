@@ -261,6 +261,8 @@ def _normalize_main_csv_row(row: dict) -> dict:
         "cost_usd": row.get("cost_usd", 0.0),
         "tool_calls_total": row.get("tool_calls_total", 0),
         "api_tool_calls": row.get("api_tool_calls", 0),
+        "execute_ideal_agent_repair_calls": row.get("execute_ideal_agent_repair_calls", 0),
+        "query_ideal_agent_repair_calls": row.get("query_ideal_agent_repair_calls", 0),
         "success": row.get("success", False),
         "error": row.get("error", ""),
     }
@@ -275,6 +277,7 @@ def _write_main_csv(csv_path: str, results: list, tasks_by_id: dict) -> None:
         "input_tokens", "cached_input_tokens", "uncached_input_tokens",
         "output_tokens", "total_tokens", "cost_usd",
         "tool_calls_total", "api_tool_calls",
+        "execute_ideal_agent_repair_calls", "query_ideal_agent_repair_calls",
         "success", "error",
     ]
     existing_rows: dict = {}
@@ -311,6 +314,8 @@ def _write_main_csv(csv_path: str, results: list, tasks_by_id: dict) -> None:
             "cost_usd": r.get("cost_usd", 0.0),
             "tool_calls_total": r.get("tool_calls_total", 0),
             "api_tool_calls": r.get("api_tool_calls", 0),
+            "execute_ideal_agent_repair_calls": r.get("execute_ideal_agent_repair_calls", 0),
+            "query_ideal_agent_repair_calls": r.get("query_ideal_agent_repair_calls", 0),
             "success": r.get("success", False),
             "error": r.get("error", ""),
         }

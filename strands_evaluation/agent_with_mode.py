@@ -68,6 +68,7 @@ from strands_evaluation.tools.agent_tools_v2 import (
     get_sandbox_info,
     grep_file,
     list_files,
+    parse_xml_records,
     peek_file,
     peek_multiple,
     query_file,
@@ -124,6 +125,7 @@ except ImportError:
 
 _MODES = {"naive", "standard", "ideal", "preloaded"}
 _RESULT_MODES = {"naive", "ideal"}
+_COMPUTATION_MODES = {"standard", "ideal"}
 
 
 @dataclass
@@ -149,6 +151,15 @@ def _normalize_result_mode(value: Optional[str], default: str, label: str) -> st
     if mode not in _RESULT_MODES:
         raise ValueError(
             f"Unsupported {label} mode '{value}'. Expected one of: {', '.join(sorted(_RESULT_MODES))}"
+        )
+    return mode
+
+
+def _normalize_computation_mode(value: Optional[str], default: str = "standard") -> str:
+    mode = (value or default).strip().lower()
+    if mode not in _COMPUTATION_MODES:
+        raise ValueError(
+            f"Unsupported computation_tool mode '{value}'. Expected one of: {', '.join(sorted(_COMPUTATION_MODES))}"
         )
     return mode
 
@@ -254,8 +265,9 @@ def build_mode_bundle(
     search_tool_mode = _normalize_mode(run_config.search_tool_mode, "standard", "search_tool")
     search_results_mode = _normalize_result_mode(run_config.search_results_mode, "naive", "search_results")
     agent_management_mode = _normalize_mode(run_config.agent_management_mode, "standard", "agent_management")
+    computation_tool_mode = _normalize_computation_mode(run_config.computation_tool_mode)
 
-    if search_tool_mode == "ideal" or agent_management_mode == "ideal":
+    if search_tool_mode == "ideal" or agent_management_mode == "ideal" or computation_tool_mode == "ideal":
         set_ideal_plan_task_context(task_context or {})
 
     raw_search_tools = build_search(
@@ -274,8 +286,20 @@ def build_mode_bundle(
         task_context=task_context,
     )
     system_prompt = inject_debug_prompt(system_prompt, run_config.debug_mode)
+    system_prompt = _inject_computation_file_family_prompt(
+        system_prompt,
+        computation_tool_mode=computation_tool_mode,
+    )
 
-    tools = list(search_tools) + list(management_tools) + list(data_tools)
+    data_tool_list = _apply_computation_tool_mode(
+        data_tools,
+        computation_tool_mode=computation_tool_mode,
+        task_context=task_context,
+    )
+    if computation_tool_mode == "ideal":
+        system_prompt = _inject_ideal_computation_prompt(system_prompt)
+
+    tools = list(search_tools) + list(management_tools) + list(data_tool_list)
     return ModeBundle(
         tools=tools,
         system_prompt=system_prompt,
@@ -286,9 +310,65 @@ def build_mode_bundle(
             "search_tool": search_tool_mode,
             "search_results": search_results_mode,
             "agent_management": agent_management_mode,
+            "computation_tool": computation_tool_mode,
         },
         task_trailer=task_trailer,
     )
+
+
+def _apply_computation_tool_mode(
+    data_tools: Sequence[Any],
+    *,
+    computation_tool_mode: str,
+    task_context: Optional[Dict[str, Any]],
+) -> List[Any]:
+    if computation_tool_mode != "ideal":
+        return list(data_tools)
+
+    from strands_evaluation.tools.external.ideal import computation_ideal
+
+    computation_ideal.set_task_context(task_context or {})
+    out: List[Any] = []
+    for tool_obj in data_tools:
+        tool_name = getattr(tool_obj, "tool_name", None)
+        if tool_name is None and hasattr(tool_obj, "tool_spec"):
+            tool_name = tool_obj.tool_spec.get("name")
+        if tool_name == "query_file":
+            if not any(getattr(t, "tool_name", None) == "query_ideal" for t in out):
+                out.append(computation_ideal.query_ideal)
+            continue
+        if tool_name == "execute_code":
+            if not any(getattr(t, "tool_name", None) == "execute_ideal" for t in out):
+                out.append(computation_ideal.execute_ideal)
+            continue
+        out.append(tool_obj)
+    return out
+
+
+def _inject_ideal_computation_prompt(system_prompt: str) -> str:
+    section = (
+        "\n\n## IDEAL COMPUTATION TOOLS\n"
+        "- `query_file` and `execute_code` are replaced in this run.\n"
+        "- Use `query_ideal(..., intent=...)` for SQL-style computation and `execute_ideal(code, intent)` for Python computation.\n"
+        "- Always write a concise intent describing the computation you are trying to perform.\n"
+    )
+    return system_prompt.rstrip() + section
+
+
+def _inject_computation_file_family_prompt(system_prompt: str, *, computation_tool_mode: str) -> str:
+    if computation_tool_mode == "ideal":
+        blocked_tools = "`query_file`, `execute_code`, `query_ideal`, or `execute_ideal`"
+    else:
+        blocked_tools = "`query_file` or `execute_code`"
+    section = (
+        "\n\n## COMPUTATION FILE FAMILY RULE\n"
+        f"- Do not use {blocked_tools} when the target source is non-tabular or non-JSON.\n"
+        "- Eligible computation sources are tabular or JSON-like files only: CSV/TSV/delimited tables, JSON, JSONL/NDJSON, or GeoJSON feature collections.\n"
+        "- For XML/KML, use `parse_xml_records` for structured records/counts, or `peek_file`, `grep_file`, and `read_file` for inspection/search.\n"
+        "- For Wikipedia/content.txt, prose/plain text, HTML, PDFs, binary files, or other non-tabular sources, use `read_file`, `grep_file`, or `peek_file` and extract the fact directly.\n"
+        "- Do not download a non-tabular/non-JSON source just to parse it with Python.\n"
+    )
+    return system_prompt.rstrip() + section
 
 
 # Shared callback tracking and plugin classes are defined in
@@ -429,6 +509,7 @@ class DataLakeAgent:
                 self.run_config.search_tool_mode,
                 self.run_config.search_results_mode,
                 self.run_config.agent_management_mode,
+                self.run_config.computation_tool_mode,
             ]
         )
 
@@ -439,7 +520,7 @@ class DataLakeAgent:
         # Core data-manipulation tools shared across all conditions
         _data_tools = [
             list_files, peek_file, peek_multiple, read_file, grep_file,
-            query_file, download, execute_code, get_sandbox_info, cleanup_sandbox,
+            parse_xml_records, query_file, download, execute_code, get_sandbox_info, cleanup_sandbox,
             submit_answer,
         ]
 
@@ -785,6 +866,9 @@ def _run_task_worker(
     mode_search_tool = (run_config.search_tool_mode or "").strip().lower() or None
     if mode_search_tool is None:
         mode_search_tool = "naive"
+    mode_computation_tool = (run_config.computation_tool_mode or "").strip().lower() or None
+    if mode_computation_tool is None:
+        mode_computation_tool = "standard"
 
     if mode_search_tool == "standard" and _CONDITION_A_TOOLS_AVAILABLE:
         try:
@@ -868,6 +952,11 @@ def _run_task_worker(
 
         # Per-tool breakdown (for tools CSV) — List[Dict], pickle-safe
         result_dict["tool_counts"]      = result.get_tool_counts()
+
+        if mode_computation_tool == "ideal":
+            from strands_evaluation.tools.external.ideal import computation_ideal as _ci
+
+            result_dict.update(_ci.get_stats())
 
         # Compute accuracy metrics if ground truth available
         if task.get("answer"):

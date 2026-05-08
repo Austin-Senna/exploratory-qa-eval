@@ -71,5 +71,69 @@
       ],
       "answer": "44912"
     }
+  ],
+  "ideal_code": [
+    {
+      "node_id": "1",
+      "dataset_id": "budget-2018-budget-ordinance-appropriations",
+      "source": "datagov/budget-2018-budget-ordinance-appropriations/files/rows.txt",
+      "intent": "Which Chicago city departments had total `2018 ORDINANCE (AMOUNT $)` between 400000000 and 700000000?",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/budget-2018-budget-ordinance-appropriations/files/rows.txt'\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\ndf[\"2018 ORDINANCE (AMOUNT $)\"] = pd.to_numeric(df[\"2018 ORDINANCE (AMOUNT $)\"], errors=\"coerce\")\nresult = (\n    df.groupby(\"DEPARTMENT DESCRIPTION\", dropna=False)[\"2018 ORDINANCE (AMOUNT $)\"]\n      .sum()\n      .reset_index(name=\"total\")\n)\nresult = result[\n    result[\"total\"].between(400000000, 700000000, inclusive=\"both\")\n].sort_values(\"DEPARTMENT DESCRIPTION\")\nanswer = {str(row[\"DEPARTMENT DESCRIPTION\"]): int(row[\"total\"]) for _, row in result.iterrows()}\n",
+      "answer": {
+        "CFD": 642620615,
+        "CDOT": 459129158
+      }
+    },
+    {
+      "node_id": "2",
+      "dataset_id": "budget-2019-budget-ordinance-appropriations",
+      "source": "datagov/budget-2019-budget-ordinance-appropriations/files/rows.txt",
+      "intent": "Which Chicago city departments had total `2019 ORDINANCE (AMOUNT $)` between 600000000 and 700000000?",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/budget-2019-budget-ordinance-appropriations/files/rows.txt'\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\ndf[\"2019 ORDINANCE (AMOUNT $)\"] = pd.to_numeric(df[\"2019 ORDINANCE (AMOUNT $)\"], errors=\"coerce\")\nresult = (\n    df.groupby(\"DEPARTMENT DESCRIPTION\", dropna=False)[\"2019 ORDINANCE (AMOUNT $)\"]\n      .sum()\n      .reset_index(name=\"total\")\n)\nresult = result[\n    result[\"total\"].between(600000000, 700000000, inclusive=\"both\")\n].sort_values(\"DEPARTMENT DESCRIPTION\")\nanswer = {str(row[\"DEPARTMENT DESCRIPTION\"]): int(row[\"total\"]) for _, row in result.iterrows()}\n",
+      "answer": {
+        "CFD": 652282316,
+        "DFSS": 633571744
+      }
+    },
+    {
+      "node_id": "6",
+      "dataset_id": "pittsburgh-international-airport-scheduled-passenger-traffic",
+      "source": "datagov/pittsburgh-international-airport-scheduled-passenger-traffic/files/pittsburgh-international-traffic-report-march-2019.txt",
+      "intent": "For <hop 3 answer>, how many total seats did the top destination have in March 2019?",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/pittsburgh-international-airport-scheduled-passenger-traffic/files/pittsburgh-international-traffic-report-march-2019.txt'\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\ndf[\"Seats March 2019\"] = pd.to_numeric(df[\"Seats March 2019\"], errors=\"coerce\")\nresult = (\n    df.groupby(\"Destination Code\", dropna=True)[\"Seats March 2019\"]\n      .sum()\n      .reset_index(name=\"total_seats\")\n      .sort_values([\"total_seats\", \"Destination Code\"], ascending=[False, True])\n      .reset_index(drop=True)\n)\nanswer = str(int(result.loc[0, \"total_seats\"]))\n",
+      "answer": "44912"
+    }
+  ],
+  "ideal_query": [
+    {
+      "node_id": "1",
+      "dataset_id": "budget-2018-budget-ordinance-appropriations",
+      "source": "datagov/budget-2018-budget-ordinance-appropriations/files/rows.txt",
+      "intent": "Which Chicago city departments had total `2018 ORDINANCE (AMOUNT $)` between 400000000 and 700000000?",
+      "sql": "SELECT map(list(dept), list(total)) AS answer\nFROM (\n  SELECT \"DEPARTMENT DESCRIPTION\" AS dept, CAST(SUM(TRY_CAST(\"2018 ORDINANCE (AMOUNT $)\" AS DOUBLE)) AS BIGINT) AS total\n  FROM t\n  GROUP BY \"DEPARTMENT DESCRIPTION\"\n  HAVING total BETWEEN 400000000 AND 700000000\n  ORDER BY dept\n)",
+      "answer": {
+        "CFD": 642620615,
+        "CDOT": 459129158
+      }
+    },
+    {
+      "node_id": "2",
+      "dataset_id": "budget-2019-budget-ordinance-appropriations",
+      "source": "datagov/budget-2019-budget-ordinance-appropriations/files/rows.txt",
+      "intent": "Which Chicago city departments had total `2019 ORDINANCE (AMOUNT $)` between 600000000 and 700000000?",
+      "sql": "SELECT map(list(dept), list(total)) AS answer\nFROM (\n  SELECT \"DEPARTMENT DESCRIPTION\" AS dept, CAST(SUM(TRY_CAST(\"2019 ORDINANCE (AMOUNT $)\" AS DOUBLE)) AS BIGINT) AS total\n  FROM t\n  GROUP BY \"DEPARTMENT DESCRIPTION\"\n  HAVING total BETWEEN 600000000 AND 700000000\n  ORDER BY dept\n)",
+      "answer": {
+        "CFD": 652282316,
+        "DFSS": 633571744
+      }
+    },
+    {
+      "node_id": "6",
+      "dataset_id": "pittsburgh-international-airport-scheduled-passenger-traffic",
+      "source": "datagov/pittsburgh-international-airport-scheduled-passenger-traffic/files/pittsburgh-international-traffic-report-march-2019.txt",
+      "intent": "For <hop 3 answer>, how many total seats did the top destination have in March 2019?",
+      "sql": "SELECT CAST(SUM(TRY_CAST(\"Seats March 2019\" AS DOUBLE)) AS BIGINT) AS answer\nFROM t\nGROUP BY \"Destination Code\"\nORDER BY answer DESC, \"Destination Code\" ASC\nLIMIT 1",
+      "answer": "44912"
+    }
   ]
 }

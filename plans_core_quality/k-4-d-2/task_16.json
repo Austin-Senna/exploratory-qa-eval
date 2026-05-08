@@ -71,5 +71,125 @@
       ],
       "answer": "Georgetown University"
     }
+  ],
+  "ideal_code": [
+    {
+      "node_id": "1",
+      "dataset_id": "crime-incidents-in-2019",
+      "source": "datagov/crime-incidents-in-2019/files/data.txt",
+      "intent": "In the 2019 DC crime incidents dataset, what were the violent-crime counts for each ward? Use OFFENSE in {HOMICIDE, ASSAULT W/DANGEROUS WEAPON, ROBBERY, SEX ABUSE}, group by WARD, and count records.",
+      "code": "import io\nimport json\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/crime-incidents-in-2019/files/data.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndata = json.load(io.BytesIO(obj[\"Body\"].read()))\ndf = pd.json_normalize(data[\"features\"])\ndf.columns = [col.split(\".\")[-1] for col in df.columns]\nviolent_offenses = [\"HOMICIDE\", \"ASSAULT W/DANGEROUS WEAPON\", \"ROBBERY\", \"SEX ABUSE\"]\ncounts = df[df[\"OFFENSE\"].isin(violent_offenses)].groupby(\"WARD\").size().sort_index()\nanswer = {str(k): int(v) for k, v in counts.items()}\n",
+      "answer": {
+        "1": 603,
+        "2": 452,
+        "3": 89,
+        "4": 260,
+        "5": 685,
+        "6": 417,
+        "7": 905,
+        "8": 765
+      }
+    },
+    {
+      "node_id": "2",
+      "dataset_id": "crime-incidents-in-2020",
+      "source": "datagov/crime-incidents-in-2020/files/data.txt",
+      "intent": "In the 2020 DC crime incidents dataset, what were the violent-crime counts for each ward? Use OFFENSE in {HOMICIDE, ASSAULT W/DANGEROUS WEAPON, ROBBERY, SEX ABUSE}, group by WARD, and count records.",
+      "code": "import io\nimport json\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/crime-incidents-in-2020/files/data.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndata = json.load(io.BytesIO(obj[\"Body\"].read()))\ndf = pd.json_normalize(data[\"features\"])\ndf.columns = [col.split(\".\")[-1] for col in df.columns]\nviolent_offenses = [\"HOMICIDE\", \"ASSAULT W/DANGEROUS WEAPON\", \"ROBBERY\", \"SEX ABUSE\"]\ncounts = df[df[\"OFFENSE\"].isin(violent_offenses)].groupby(\"WARD\").size().sort_index()\nanswer = {str(k): int(v) for k, v in counts.items()}\n",
+      "answer": {
+        "1": 435,
+        "2": 289,
+        "3": 68,
+        "4": 286,
+        "5": 680,
+        "6": 395,
+        "7": 945,
+        "8": 907
+      }
+    },
+    {
+      "node_id": "3",
+      "dataset_id": "311-city-service-requests-in-2019",
+      "source": "datagov/311-city-service-requests-in-2019/files/data.txt",
+      "intent": "In the 2019 DC 311 city service requests dataset, how many service requests were recorded for each ward? Normalize WARD values to ward numbers 1 through 8, then group by ward and count records.",
+      "code": "import io\nimport json\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/311-city-service-requests-in-2019/files/data.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndata = json.load(io.BytesIO(obj[\"Body\"].read()))\ndf = pd.json_normalize(data[\"features\"])\ndf.columns = [col.split(\".\")[-1] for col in df.columns]\nward_series = df[\"WARD\"].astype(str).str.strip()\nward_series = ward_series.str.replace(r\"^Ward\\s+\", \"\", regex=True)\nvalid_wards = [str(i) for i in range(1, 9)]\ncounts = ward_series[ward_series.isin(valid_wards)].value_counts().sort_index()\nanswer = {str(k): int(v) for k, v in counts.items()}\n",
+      "answer": {
+        "1": 39631,
+        "2": 57766,
+        "3": 32841,
+        "4": 45109,
+        "5": 49383,
+        "6": 62290,
+        "7": 42326,
+        "8": 35025
+      }
+    },
+    {
+      "node_id": "4",
+      "dataset_id": "311-city-service-requests-in-2020",
+      "source": "datagov/311-city-service-requests-in-2020/files/data.txt",
+      "intent": "In the 2020 DC 311 city service requests dataset, how many service requests were recorded for each ward? Normalize WARD values to ward numbers 1 through 8, then group by ward and count records.",
+      "code": "import io\nimport json\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/311-city-service-requests-in-2020/files/data.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndata = json.load(io.BytesIO(obj[\"Body\"].read()))\ndf = pd.json_normalize(data[\"features\"])\ndf.columns = [col.split(\".\")[-1] for col in df.columns]\nward_series = df[\"WARD\"].astype(str).str.strip()\nward_series = ward_series.str.replace(r\"^Ward\\s+\", \"\", regex=True)\nvalid_wards = [str(i) for i in range(1, 9)]\ncounts = ward_series[ward_series.isin(valid_wards)].value_counts().sort_index()\nanswer = {str(k): int(v) for k, v in counts.items()}\n",
+      "answer": {
+        "1": 31617,
+        "2": 30400,
+        "3": 28823,
+        "4": 45816,
+        "5": 45583,
+        "6": 48481,
+        "7": 36113,
+        "8": 37124
+      }
+    }
+  ],
+  "ideal_query": [
+    {
+      "node_id": "1",
+      "dataset_id": "crime-incidents-in-2019",
+      "source": "datagov/crime-incidents-in-2019/files/data.txt",
+      "intent": "In the 2019 DC crime incidents dataset, what were the violent-crime counts for each ward? Use OFFENSE in {HOMICIDE, ASSAULT W/DANGEROUS WEAPON, ROBBERY, SEX ABUSE}, group by WARD, and count records.",
+      "sql": "SELECT json_group_object(ward, n) AS answer\nFROM (\n  SELECT CAST(u.feature.properties.WARD AS VARCHAR) AS ward, count(*) AS n\n  FROM t, UNNEST(features) AS u(feature)\n  WHERE u.feature.properties.OFFENSE IN ('HOMICIDE', 'ASSAULT W/DANGEROUS WEAPON', 'ROBBERY', 'SEX ABUSE')\n  GROUP BY CAST(u.feature.properties.WARD AS VARCHAR)\n  ORDER BY ward\n)",
+      "answer": {
+        "1": 603,
+        "2": 452,
+        "3": 89,
+        "4": 260,
+        "5": 685,
+        "6": 417,
+        "7": 905,
+        "8": 765
+      }
+    },
+    {
+      "node_id": "2",
+      "dataset_id": "crime-incidents-in-2020",
+      "source": "datagov/crime-incidents-in-2020/files/data.txt",
+      "intent": "In the 2020 DC crime incidents dataset, what were the violent-crime counts for each ward? Use OFFENSE in {HOMICIDE, ASSAULT W/DANGEROUS WEAPON, ROBBERY, SEX ABUSE}, group by WARD, and count records.",
+      "sql": "SELECT json_group_object(ward, n) AS answer\nFROM (\n  SELECT CAST(u.feature.properties.WARD AS VARCHAR) AS ward, count(*) AS n\n  FROM t, UNNEST(features) AS u(feature)\n  WHERE u.feature.properties.OFFENSE IN ('HOMICIDE', 'ASSAULT W/DANGEROUS WEAPON', 'ROBBERY', 'SEX ABUSE')\n  GROUP BY CAST(u.feature.properties.WARD AS VARCHAR)\n  ORDER BY ward\n)",
+      "answer": {
+        "1": 435,
+        "2": 289,
+        "3": 68,
+        "4": 286,
+        "5": 680,
+        "6": 395,
+        "7": 945,
+        "8": 907
+      }
+    },
+    {
+      "node_id": "3",
+      "dataset_id": "311-city-service-requests-in-2019",
+      "source": "datagov/311-city-service-requests-in-2019/files/data.txt",
+      "intent": "In the 2019 DC 311 city service requests dataset, how many service requests were recorded for each ward? Normalize WARD values to ward numbers 1 through 8, then group by ward and count records.",
+      "answer": "Cannot execute SQL: query_file runs out of memory while unnesting and grouping this large JSON source."
+    },
+    {
+      "node_id": "4",
+      "dataset_id": "311-city-service-requests-in-2020",
+      "source": "datagov/311-city-service-requests-in-2020/files/data.txt",
+      "intent": "In the 2020 DC 311 city service requests dataset, how many service requests were recorded for each ward? Normalize WARD values to ward numbers 1 through 8, then group by ward and count records.",
+      "answer": "Cannot execute SQL: query_file runs out of memory while unnesting and grouping this large JSON source."
+    }
   ]
 }

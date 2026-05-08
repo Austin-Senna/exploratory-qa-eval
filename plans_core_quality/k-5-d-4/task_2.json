@@ -106,5 +106,213 @@
       ],
       "answer": 12.3
     }
+  ],
+  "ideal_code": [
+    {
+      "node_id": "1",
+      "dataset_id": "500-cities-city-level-data-gis-friendly-format-2016-release",
+      "source": "datagov/500-cities-city-level-data-gis-friendly-format-2016-release/files/rows.txt",
+      "intent": "Which Texas cities had diabetes prevalence above 12% in the CDC 500 Cities 2016 release?",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\nsource = \"datagov/500-cities-city-level-data-gis-friendly-format-2016-release/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\nresult = (\n    df.loc[\n        (df[\"StateAbbr\"] == \"TX\")\n        & (pd.to_numeric(df[\"DIABETES_CrudePrev\"], errors=\"coerce\") > 12),\n        [\"PlaceName\", \"DIABETES_CrudePrev\"]\n    ]\n    .sort_values([\"DIABETES_CrudePrev\", \"PlaceName\"], ascending=[False, True])\n    .reset_index(drop=True)\n)\nanswer = result[\"PlaceName\"].tolist()",
+      "answer": [
+        "Brownsville",
+        "Pharr",
+        "El Paso",
+        "Laredo",
+        "McAllen",
+        "Mission",
+        "Beaumont",
+        "San Antonio",
+        "Corpus Christi",
+        "Edinburg"
+      ]
+    },
+    {
+      "node_id": "2",
+      "dataset_id": "500-cities-city-level-data-gis-friendly-format-2017-release",
+      "source": "datagov/500-cities-city-level-data-gis-friendly-format-2017-release/files/rows.txt",
+      "intent": "Which Texas cities had diabetes prevalence above 12% in the CDC 500 Cities 2017 release?",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\nsource = \"datagov/500-cities-city-level-data-gis-friendly-format-2017-release/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\nresult = (\n    df.loc[\n        (df[\"StateAbbr\"] == \"TX\")\n        & (pd.to_numeric(df[\"DIABETES_CrudePrev\"], errors=\"coerce\") > 12),\n        [\"PlaceName\", \"DIABETES_CrudePrev\"]\n    ]\n    .sort_values([\"DIABETES_CrudePrev\", \"PlaceName\"], ascending=[False, True])\n    .reset_index(drop=True)\n)\nanswer = result[\"PlaceName\"].tolist()",
+      "answer": [
+        "Pharr",
+        "Brownsville",
+        "Laredo",
+        "McAllen",
+        "Mission",
+        "El Paso",
+        "Beaumont",
+        "Corpus Christi",
+        "Houston",
+        "Baytown",
+        "Edinburg",
+        "San Antonio"
+      ]
+    },
+    {
+      "node_id": "3",
+      "dataset_id": "500-cities-city-level-data-gis-friendly-format-2018-release",
+      "source": "datagov/500-cities-city-level-data-gis-friendly-format-2018-release/files/rows.txt",
+      "intent": "Which Texas cities had diabetes prevalence above 12% in the CDC 500 Cities 2018 release?",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\nsource = \"datagov/500-cities-city-level-data-gis-friendly-format-2018-release/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\nresult = (\n    df.loc[\n        (df[\"StateAbbr\"] == \"TX\")\n        & (pd.to_numeric(df[\"DIABETES_CrudePrev\"], errors=\"coerce\") > 12),\n        [\"PlaceName\", \"DIABETES_CrudePrev\"]\n    ]\n    .sort_values([\"DIABETES_CrudePrev\", \"PlaceName\"], ascending=[False, True])\n    .reset_index(drop=True)\n)\nanswer = result[\"PlaceName\"].tolist()",
+      "answer": [
+        "Brownsville",
+        "Laredo",
+        "Corpus Christi",
+        "El Paso",
+        "Pharr",
+        "Beaumont",
+        "McAllen",
+        "San Antonio",
+        "Mission",
+        "Longview",
+        "Houston",
+        "Tyler"
+      ]
+    },
+    {
+      "node_id": "4",
+      "dataset_id": "500-cities-city-level-data-gis-friendly-format-2019-release",
+      "source": "datagov/500-cities-city-level-data-gis-friendly-format-2019-release/files/rows.txt",
+      "intent": "Which Texas cities had diabetes prevalence above 12% in the CDC 500 Cities 2019 release?",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\nsource = \"datagov/500-cities-city-level-data-gis-friendly-format-2019-release/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\nresult = (\n    df.loc[\n        (df[\"StateAbbr\"] == \"TX\")\n        & (pd.to_numeric(df[\"DIABETES_CrudePrev\"], errors=\"coerce\") > 12),\n        [\"PlaceName\", \"DIABETES_CrudePrev\"]\n    ]\n    .sort_values([\"DIABETES_CrudePrev\", \"PlaceName\"], ascending=[False, True])\n    .reset_index(drop=True)\n)\nanswer = result[\"PlaceName\"].tolist()",
+      "answer": [
+        "Brownsville",
+        "Pharr",
+        "Laredo",
+        "McAllen",
+        "Mission",
+        "El Paso",
+        "Beaumont",
+        "Corpus Christi",
+        "Edinburg",
+        "San Antonio",
+        "Longview",
+        "Tyler",
+        "Waco"
+      ]
+    },
+    {
+      "node_id": "5",
+      "dataset_id": "2020-census-redistricting-data-all-texas-places",
+      "source": "datagov/2020-census-redistricting-data-all-texas-places/files/rows.txt",
+      "intent": "Which cities from <hop 1 answer> had population under 100,000 in the 2020 Census?",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\nsource = \"datagov/2020-census-redistricting-data-all-texas-places/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\ncities = [\n    \"Beaumont\",\n    \"Brownsville\",\n    \"Corpus Christi\",\n    \"El Paso\",\n    \"Laredo\",\n    \"McAllen\",\n    \"Mission\",\n    \"Pharr\",\n    \"San Antonio\",\n]\n\nsubset = (\n    df.loc[df[\"BASENAME\"].isin(cities), [\"BASENAME\", \"NAME\", \"POP100\"]]\n    .assign(POP100=pd.to_numeric(df.loc[df[\"BASENAME\"].isin(cities), \"POP100\"], errors=\"coerce\"))\n    .sort_values([\"POP100\", \"BASENAME\"], ascending=[True, True])\n    .reset_index(drop=True)\n)\n\nresult = subset.loc[subset[\"POP100\"] < 100000, [\"BASENAME\", \"POP100\"]].reset_index(drop=True)\nanswer = result[\"BASENAME\"].tolist()",
+      "answer": [
+        "Pharr",
+        "Mission"
+      ]
+    },
+    {
+      "node_id": "9",
+      "dataset_id": "aps-1-1-texas-adult-populations-at-risk-by-county-region-fy2013-fy2022",
+      "source": "datagov/aps-1-1-texas-adult-populations-at-risk-by-county-region-fy2013-fy2022/files/rows.txt",
+      "intent": "What percentage of the population was aged 65 and older in 2022 in <hop 4 answer>?",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\nsource = \"datagov/aps-1-1-texas-adult-populations-at-risk-by-county-region-fy2013-fy2022/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\nresult = (\n    df.loc[\n        (df[\"County\"] == \"Hidalgo\")\n        & (pd.to_numeric(df[\"Fiscal Year\"], errors=\"coerce\") == 2022),\n        [\"County\", \"Fiscal Year\", \"65 and older: % of Population\"]\n    ]\n    .reset_index(drop=True)\n)\nanswer = result.iloc[0][\"65 and older: % of Population\"]",
+      "answer": 12.3
+    }
+  ],
+  "ideal_query": [
+    {
+      "node_id": "1",
+      "dataset_id": "500-cities-city-level-data-gis-friendly-format-2016-release",
+      "source": "datagov/500-cities-city-level-data-gis-friendly-format-2016-release/files/rows.txt",
+      "intent": "Which Texas cities had diabetes prevalence above 12% in the CDC 500 Cities 2016 release?",
+      "sql": "SELECT \"PlaceName\" AS answer\nFROM t\nWHERE \"StateAbbr\" = 'TX'\n  AND TRY_CAST(\"DIABETES_CrudePrev\" AS DOUBLE) > 12\nORDER BY TRY_CAST(\"DIABETES_CrudePrev\" AS DOUBLE) DESC, \"PlaceName\" ASC",
+      "answer": [
+        "Brownsville",
+        "Pharr",
+        "El Paso",
+        "Laredo",
+        "McAllen",
+        "Mission",
+        "Beaumont",
+        "San Antonio",
+        "Corpus Christi",
+        "Edinburg"
+      ]
+    },
+    {
+      "node_id": "2",
+      "dataset_id": "500-cities-city-level-data-gis-friendly-format-2017-release",
+      "source": "datagov/500-cities-city-level-data-gis-friendly-format-2017-release/files/rows.txt",
+      "intent": "Which Texas cities had diabetes prevalence above 12% in the CDC 500 Cities 2017 release?",
+      "sql": "SELECT \"PlaceName\" AS answer\nFROM t\nWHERE \"StateAbbr\" = 'TX'\n  AND TRY_CAST(\"DIABETES_CrudePrev\" AS DOUBLE) > 12\nORDER BY TRY_CAST(\"DIABETES_CrudePrev\" AS DOUBLE) DESC, \"PlaceName\" ASC",
+      "answer": [
+        "Pharr",
+        "Brownsville",
+        "Laredo",
+        "McAllen",
+        "Mission",
+        "El Paso",
+        "Beaumont",
+        "Corpus Christi",
+        "Houston",
+        "Baytown",
+        "Edinburg",
+        "San Antonio"
+      ]
+    },
+    {
+      "node_id": "3",
+      "dataset_id": "500-cities-city-level-data-gis-friendly-format-2018-release",
+      "source": "datagov/500-cities-city-level-data-gis-friendly-format-2018-release/files/rows.txt",
+      "intent": "Which Texas cities had diabetes prevalence above 12% in the CDC 500 Cities 2018 release?",
+      "sql": "SELECT \"PlaceName\" AS answer\nFROM t\nWHERE \"StateAbbr\" = 'TX'\n  AND TRY_CAST(\"DIABETES_CrudePrev\" AS DOUBLE) > 12\nORDER BY TRY_CAST(\"DIABETES_CrudePrev\" AS DOUBLE) DESC, \"PlaceName\" ASC",
+      "answer": [
+        "Brownsville",
+        "Laredo",
+        "Corpus Christi",
+        "El Paso",
+        "Pharr",
+        "Beaumont",
+        "McAllen",
+        "San Antonio",
+        "Mission",
+        "Longview",
+        "Houston",
+        "Tyler"
+      ]
+    },
+    {
+      "node_id": "4",
+      "dataset_id": "500-cities-city-level-data-gis-friendly-format-2019-release",
+      "source": "datagov/500-cities-city-level-data-gis-friendly-format-2019-release/files/rows.txt",
+      "intent": "Which Texas cities had diabetes prevalence above 12% in the CDC 500 Cities 2019 release?",
+      "sql": "SELECT \"PlaceName\" AS answer\nFROM t\nWHERE \"StateAbbr\" = 'TX'\n  AND TRY_CAST(\"DIABETES_CrudePrev\" AS DOUBLE) > 12\nORDER BY TRY_CAST(\"DIABETES_CrudePrev\" AS DOUBLE) DESC, \"PlaceName\" ASC",
+      "answer": [
+        "Brownsville",
+        "Pharr",
+        "Laredo",
+        "McAllen",
+        "Mission",
+        "El Paso",
+        "Beaumont",
+        "Corpus Christi",
+        "Edinburg",
+        "San Antonio",
+        "Longview",
+        "Tyler",
+        "Waco"
+      ]
+    },
+    {
+      "node_id": "5",
+      "dataset_id": "2020-census-redistricting-data-all-texas-places",
+      "source": "datagov/2020-census-redistricting-data-all-texas-places/files/rows.txt",
+      "intent": "Which cities from <hop 1 answer> had population under 100,000 in the 2020 Census?",
+      "sql": "SELECT \"BASENAME\" AS answer\nFROM t\nWHERE \"BASENAME\" IN ('Beaumont', 'Brownsville', 'Corpus Christi', 'El Paso', 'Laredo', 'McAllen', 'Mission', 'Pharr', 'San Antonio')\n  AND TRY_CAST(\"POP100\" AS INTEGER) < 100000\nORDER BY TRY_CAST(\"POP100\" AS INTEGER) ASC, \"BASENAME\" ASC",
+      "answer": [
+        "Pharr",
+        "Mission"
+      ]
+    },
+    {
+      "node_id": "9",
+      "dataset_id": "aps-1-1-texas-adult-populations-at-risk-by-county-region-fy2013-fy2022",
+      "source": "datagov/aps-1-1-texas-adult-populations-at-risk-by-county-region-fy2013-fy2022/files/rows.txt",
+      "intent": "What percentage of the population was aged 65 and older in 2022 in <hop 4 answer>?",
+      "sql": "SELECT TRY_CAST(\"65 and older: % of Population\" AS DOUBLE) AS answer\nFROM t\nWHERE \"County\" = 'Hidalgo'\n  AND TRY_CAST(\"Fiscal Year\" AS INTEGER) = 2022\nLIMIT 1",
+      "answer": 12.3
+    }
   ]
 }

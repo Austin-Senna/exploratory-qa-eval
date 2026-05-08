@@ -53,5 +53,57 @@
       ],
       "answer": "1702"
     }
+  ],
+  "ideal_code": [
+    {
+      "node_id": "2",
+      "dataset_id": "crime-incidents-in-2019",
+      "source": "datagov/crime-incidents-in-2019/files/data.txt",
+      "intent": "In 2019 Washington, D.C. crime-incidents data, within Ward <node_1 answer>, which offense is most common?",
+      "code": "import json\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/crime-incidents-in-2019/files/data.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ngeo = json.loads(obj[\"Body\"].read().decode(\"utf-8\", errors=\"replace\"))\n\ndf = pd.DataFrame([feat.get(\"properties\", {}) for feat in geo.get(\"features\", [])])\nnode_1_answer = '1'\n\n\nward_value = str(node_1_answer).strip()\nfiltered = df[df[\"WARD\"].astype(str).str.strip().eq(ward_value)]\ncounts = filtered[\"OFFENSE\"].astype(str).str.strip().value_counts()\nanswer = str(counts.index[0])\n",
+      "answer": "THEFT/OTHER"
+    },
+    {
+      "node_id": "3",
+      "dataset_id": "crime-incidents-in-2020",
+      "source": "datagov/crime-incidents-in-2020/files/data.txt",
+      "intent": "In 2020 Washington, D.C. crime-incidents data, how many incidents with offense <node_2 answer> occurred in Ward <node_1 answer>?",
+      "code": "import json\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/crime-incidents-in-2020/files/data.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ngeo = json.loads(obj[\"Body\"].read().decode(\"utf-8\", errors=\"replace\"))\n\ndf = pd.DataFrame([feat.get(\"properties\", {}) for feat in geo.get(\"features\", [])])\nnode_1_answer = '1'\nnode_2_answer = 'THEFT/OTHER'\n\n\nward_value = str(node_1_answer).strip()\noffense_value = str(node_2_answer).strip()\nfiltered = df[\n    df[\"WARD\"].astype(str).str.strip().eq(ward_value)\n    & df[\"OFFENSE\"].astype(str).str.strip().eq(offense_value)\n]\nanswer = str(int(len(filtered)))\n",
+      "answer": "1587"
+    },
+    {
+      "node_id": "4",
+      "dataset_id": "crime-incidents-in-2021",
+      "source": "datagov/crime-incidents-in-2021/files/data.txt",
+      "intent": "In 2021 Washington, D.C. crime-incidents data, how many incidents with offense <node_2 answer> occurred in Ward <node_1 answer>?",
+      "code": "import json\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/crime-incidents-in-2021/files/data.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ngeo = json.loads(obj[\"Body\"].read().decode(\"utf-8\", errors=\"replace\"))\n\ndf = pd.DataFrame([feat.get(\"properties\", {}) for feat in geo.get(\"features\", [])])\nnode_1_answer = '1'\nnode_2_answer = 'THEFT/OTHER'\n\n\nward_value = str(node_1_answer).strip()\noffense_value = str(node_2_answer).strip()\nfiltered = df[\n    df[\"WARD\"].astype(str).str.strip().eq(ward_value)\n    & df[\"OFFENSE\"].astype(str).str.strip().eq(offense_value)\n]\nanswer = str(int(len(filtered)))\n",
+      "answer": "1702"
+    }
+  ],
+  "ideal_query": [
+    {
+      "node_id": "2",
+      "dataset_id": "crime-incidents-in-2019",
+      "source": "datagov/crime-incidents-in-2019/files/data.txt",
+      "intent": "In 2019 Washington, D.C. crime-incidents data, within Ward <node_1 answer>, which offense is most common?",
+      "sql": "SELECT TRIM(feature.properties.OFFENSE) AS answer\nFROM t, UNNEST(features) AS u(feature)\nWHERE TRIM(CAST(feature.properties.WARD AS VARCHAR)) = '1'\nGROUP BY answer\nORDER BY COUNT(*) DESC\nLIMIT 1",
+      "answer": "THEFT/OTHER"
+    },
+    {
+      "node_id": "3",
+      "dataset_id": "crime-incidents-in-2020",
+      "source": "datagov/crime-incidents-in-2020/files/data.txt",
+      "intent": "In 2020 Washington, D.C. crime-incidents data, how many incidents with offense <node_2 answer> occurred in Ward <node_1 answer>?",
+      "sql": "SELECT CAST(COUNT(*) AS VARCHAR) AS answer\nFROM t, UNNEST(features) AS u(feature)\nWHERE TRIM(CAST(feature.properties.WARD AS VARCHAR)) = '1'\n  AND TRIM(feature.properties.OFFENSE) = 'THEFT/OTHER'",
+      "answer": "1587"
+    },
+    {
+      "node_id": "4",
+      "dataset_id": "crime-incidents-in-2021",
+      "source": "datagov/crime-incidents-in-2021/files/data.txt",
+      "intent": "In 2021 Washington, D.C. crime-incidents data, how many incidents with offense <node_2 answer> occurred in Ward <node_1 answer>?",
+      "sql": "SELECT CAST(COUNT(*) AS VARCHAR) AS answer\nFROM t, UNNEST(features) AS u(feature)\nWHERE TRIM(CAST(feature.properties.WARD AS VARCHAR)) = '1'\n  AND TRIM(feature.properties.OFFENSE) = 'THEFT/OTHER'",
+      "answer": "1702"
+    }
   ]
 }

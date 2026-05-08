@@ -63,5 +63,57 @@
       ],
       "answer": "45.68"
     }
+  ],
+  "ideal_code": [
+    {
+      "node_id": "2",
+      "dataset_id": "pittsburgh-international-airport-scheduled-passenger-traffic",
+      "source": "datagov/pittsburgh-international-airport-scheduled-passenger-traffic/files/pittsburgh-international-traffic-report-march-2019.txt",
+      "intent": "For <hop 1 answer>, which destination had the most scheduled seats in March 2019?",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/pittsburgh-international-airport-scheduled-passenger-traffic/files/pittsburgh-international-traffic-report-march-2019.txt'\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\ndf[\"Seats March 2019\"] = pd.to_numeric(df[\"Seats March 2019\"], errors=\"coerce\")\nresult = (\n    df.groupby([\"Destination\", \"Destination Code\"], dropna=True)[\"Seats March 2019\"]\n      .sum()\n      .reset_index(name=\"total_seats\")\n      .sort_values([\"total_seats\", \"Destination Code\"], ascending=[False, True])\n      .reset_index(drop=True)\n)\nanswer = f'{str(result.loc[0, \"Destination\"]).strip()} ({str(result.loc[0, \"Destination Code\"]).strip()})'\n",
+      "answer": "Atlanta (ATL)"
+    },
+    {
+      "node_id": "3",
+      "dataset_id": "airports-5e97a",
+      "source": "datagov/airports-5e97a/files/rows.txt",
+      "intent": "In the airports dataset, what city and state correspond to <hop 2 answer>?",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/airports-5e97a/files/rows.txt'\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\nnode_2_answer = \"Atlanta (ATL)\"\ncode = str(node_2_answer).split(\"(\")[-1].replace(\")\", \"\").strip().upper()\nrow = df[df[\"Loc_Id\"].astype(str).str.strip().str.upper().eq(code)].iloc[0]\ncity = str(row[\"City\"]).strip().title()\nstate = str(row[\"State_Post\"]).strip().upper()\nanswer = f\"{city}, {state}\"\n",
+      "answer": "Atlanta, GA"
+    },
+    {
+      "node_id": "4",
+      "dataset_id": "boundaries-us-zip-codes",
+      "source": "datagov/boundaries-us-zip-codes/files/rows.txt",
+      "intent": "In the ZIP code boundaries dataset, what is the largest land area in square miles among ZIP codes in <hop 3 answer>?",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/boundaries-us-zip-codes/files/rows.txt'\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\nnode_3_answer = \"Atlanta, GA\"\ncity, state = [part.strip().upper() for part in node_3_answer.split(\",\", 1)]\ndf[\"SQMI\"] = pd.to_numeric(df[\"SQMI\"], errors=\"coerce\")\nfiltered = df[\n    df[\"CITY\"].astype(str).str.strip().str.upper().eq(city)\n    & df[\"STATE\"].astype(str).str.strip().str.upper().eq(state)\n].copy()\nanswer = str(float(filtered[\"SQMI\"].max()))\n",
+      "answer": "45.68"
+    }
+  ],
+  "ideal_query": [
+    {
+      "node_id": "2",
+      "dataset_id": "pittsburgh-international-airport-scheduled-passenger-traffic",
+      "source": "datagov/pittsburgh-international-airport-scheduled-passenger-traffic/files/pittsburgh-international-traffic-report-march-2019.txt",
+      "intent": "For <hop 1 answer>, which destination had the most scheduled seats in March 2019?",
+      "sql": "SELECT \"Destination\" || ' (' || \"Destination Code\" || ')' AS answer\nFROM t\nGROUP BY \"Destination\", \"Destination Code\"\nORDER BY SUM(TRY_CAST(\"Seats March 2019\" AS DOUBLE)) DESC, \"Destination Code\" ASC\nLIMIT 1",
+      "answer": "Atlanta (ATL)"
+    },
+    {
+      "node_id": "3",
+      "dataset_id": "airports-5e97a",
+      "source": "datagov/airports-5e97a/files/rows.txt",
+      "intent": "In the airports dataset, what city and state correspond to <hop 2 answer>?",
+      "sql": "SELECT upper(substr(trim(\"City\"), 1, 1)) || lower(substr(trim(\"City\"), 2)) || ', ' || upper(trim(\"State_Post\")) AS answer\nFROM t\nWHERE upper(trim(\"Loc_Id\")) = 'ATL'\nLIMIT 1",
+      "answer": "Atlanta, GA"
+    },
+    {
+      "node_id": "4",
+      "dataset_id": "boundaries-us-zip-codes",
+      "source": "datagov/boundaries-us-zip-codes/files/rows.txt",
+      "intent": "In the ZIP code boundaries dataset, what is the largest land area in square miles among ZIP codes in <hop 3 answer>?",
+      "sql": "SELECT CAST(MAX(TRY_CAST(\"SQMI\" AS DOUBLE)) AS DOUBLE) AS answer\nFROM t\nWHERE upper(trim(\"CITY\")) = 'ATLANTA' AND upper(trim(\"STATE\")) = 'GA' ",
+      "answer": "45.68"
+    }
   ]
 }

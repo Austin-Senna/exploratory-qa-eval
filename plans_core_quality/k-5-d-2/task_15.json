@@ -68,5 +68,85 @@
       "question": "In the airports dataset, what city corresponds to ATL?",
       "answer": "Atlanta"
     }
+  ],
+  "ideal_code": [
+    {
+      "node_id": "1",
+      "dataset_id": "budget-2018-budget-ordinance-appropriations",
+      "source": "datagov/budget-2018-budget-ordinance-appropriations/files/rows.txt",
+      "intent": "Which Chicago city departments had total 2018 ordinance appropriations between $400 million and $700 million?",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/budget-2018-budget-ordinance-appropriations/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\ntotals = df.groupby(\"DEPARTMENT DESCRIPTION\", as_index=True)[\"2018 ORDINANCE (AMOUNT $)\"].sum().sort_values(ascending=False)\nanswer = totals[(totals >= 400000000) & (totals <= 700000000)].index.tolist()",
+      "answer": [
+        "CFD",
+        "CDOT"
+      ]
+    },
+    {
+      "node_id": "2",
+      "dataset_id": "budget-2019-budget-ordinance-appropriations",
+      "source": "datagov/budget-2019-budget-ordinance-appropriations/files/rows.txt",
+      "intent": "Which Chicago city departments had total 2019 ordinance appropriations between $600 million and $700 million?",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/budget-2019-budget-ordinance-appropriations/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\ntotals = df.groupby(\"DEPARTMENT DESCRIPTION\", as_index=True)[\"2019 ORDINANCE (AMOUNT $)\"].sum().sort_values(ascending=False)\nanswer = totals[(totals >= 600000000) & (totals <= 700000000)].index.tolist()",
+      "answer": [
+        "CFD",
+        "DFSS"
+      ]
+    },
+    {
+      "node_id": "6",
+      "dataset_id": "pittsburgh-international-airport-scheduled-passenger-traffic",
+      "source": "datagov/pittsburgh-international-airport-scheduled-passenger-traffic/files/pittsburgh-international-traffic-report-march-2019.txt",
+      "intent": "For <hop 3 answer>, which destination airport code had the most scheduled seats in March 2019?",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/pittsburgh-international-airport-scheduled-passenger-traffic/files/pittsburgh-international-traffic-report-march-2019.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\ntotals = df.groupby(\"Destination Code\", as_index=True)[\"Seats March 2019\"].sum().sort_values(ascending=False)\nanswer = totals.index[0]",
+      "answer": "ATL"
+    },
+    {
+      "node_id": "7",
+      "dataset_id": "airports-5e97a",
+      "source": "datagov/airports-5e97a/files/rows.txt",
+      "intent": "In the airports dataset, what city corresponds to <hop 4 answer>?",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/airports-5e97a/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\ncity = df.loc[df[\"Loc_Id\"] == \"ATL\", \"City\"].iloc[0]\nanswer = str(city).title()",
+      "answer": "Atlanta"
+    }
+  ],
+  "ideal_query": [
+    {
+      "node_id": "1",
+      "dataset_id": "budget-2018-budget-ordinance-appropriations",
+      "source": "datagov/budget-2018-budget-ordinance-appropriations/files/rows.txt",
+      "intent": "Which Chicago city departments had total 2018 ordinance appropriations between $400 million and $700 million?",
+      "sql": "SELECT json_group_array(\"DEPARTMENT DESCRIPTION\") AS answer\nFROM (\n  SELECT \"DEPARTMENT DESCRIPTION\", SUM(TRY_CAST(\"2018 ORDINANCE (AMOUNT $)\" AS DOUBLE)) AS total\n  FROM t\n  GROUP BY \"DEPARTMENT DESCRIPTION\"\n  HAVING total >= 400000000 AND total <= 700000000\n  ORDER BY total DESC\n)",
+      "answer": [
+        "CFD",
+        "CDOT"
+      ]
+    },
+    {
+      "node_id": "2",
+      "dataset_id": "budget-2019-budget-ordinance-appropriations",
+      "source": "datagov/budget-2019-budget-ordinance-appropriations/files/rows.txt",
+      "intent": "Which Chicago city departments had total 2019 ordinance appropriations between $600 million and $700 million?",
+      "sql": "SELECT json_group_array(\"DEPARTMENT DESCRIPTION\") AS answer\nFROM (\n  SELECT \"DEPARTMENT DESCRIPTION\", SUM(TRY_CAST(\"2019 ORDINANCE (AMOUNT $)\" AS DOUBLE)) AS total\n  FROM t\n  GROUP BY \"DEPARTMENT DESCRIPTION\"\n  HAVING total >= 600000000 AND total <= 700000000\n  ORDER BY total DESC\n)",
+      "answer": [
+        "CFD",
+        "DFSS"
+      ]
+    },
+    {
+      "node_id": "6",
+      "dataset_id": "pittsburgh-international-airport-scheduled-passenger-traffic",
+      "source": "datagov/pittsburgh-international-airport-scheduled-passenger-traffic/files/pittsburgh-international-traffic-report-march-2019.txt",
+      "intent": "For <hop 3 answer>, which destination airport code had the most scheduled seats in March 2019?",
+      "sql": "SELECT \"Destination Code\" AS answer\nFROM t\nGROUP BY \"Destination Code\"\nORDER BY SUM(TRY_CAST(\"Seats March 2019\" AS DOUBLE)) DESC, \"Destination Code\" ASC\nLIMIT 1",
+      "answer": "ATL"
+    },
+    {
+      "node_id": "7",
+      "dataset_id": "airports-5e97a",
+      "source": "datagov/airports-5e97a/files/rows.txt",
+      "intent": "In the airports dataset, what city corresponds to <hop 4 answer>?",
+      "sql": "SELECT CONCAT(upper(substr(lower(\"City\"), 1, 1)), substr(lower(\"City\"), 2)) AS answer\nFROM t\nWHERE \"Loc_Id\" = 'ATL'\nLIMIT 1",
+      "answer": "Atlanta"
+    }
   ]
 }

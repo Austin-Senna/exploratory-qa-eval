@@ -101,6 +101,16 @@ def _write_record(record: dict) -> None:
         f.write(json.dumps(record, ensure_ascii=False) + "\n")
 
 
+def write_trace_record(record: dict) -> None:
+    """Append an auxiliary trace record using the active task trace context."""
+    payload = {
+        "task_id": _current_task_id,
+        "timestamp_ms": int(time.time() * 1000),
+    }
+    payload.update(record)
+    _write_record(payload)
+
+
 # ---------------------------------------------------------------------------
 # TracePlugin
 # ---------------------------------------------------------------------------

@@ -96,5 +96,53 @@
       ],
       "answer": 1735
     }
+  ],
+  "ideal_code": [
+    {
+      "node_id": "1",
+      "dataset_id": "311-city-service-requests-in-2019",
+      "source": "datagov/311-city-service-requests-in-2019/files/data.txt",
+      "intent": "For 2019, how many 311 service requests were recorded in Ward 7 and Ward 8?",
+      "code": "import io\nimport json\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\nsource = \"datagov/311-city-service-requests-in-2019/files/data.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndata = json.load(io.TextIOWrapper(obj[\"Body\"], encoding=\"utf-8\"))\ndf = pd.json_normalize(data[\"features\"])\nward_col = \"properties.WARD\"\nresult = (\n    df[df[ward_col].isin([\"7\", \"8\", 7, 8])]\n    .groupby(ward_col)\n    .size()\n    .reset_index(name=\"request_count\")\n)\nresult[ward_col] = result[ward_col].astype(str)\nresult = result.sort_values(\"request_count\", ascending=False).reset_index(drop=True)\nanswer = [f\"Ward {row[ward_col]} ({row['request_count']:,})\" for _, row in result.iterrows()]",
+      "answer": [
+        "Ward 7 (42,226)",
+        "Ward 8 (34,959)"
+      ]
+    },
+    {
+      "node_id": "2",
+      "dataset_id": "311-city-service-requests-in-2020",
+      "source": "datagov/311-city-service-requests-in-2020/files/data.txt",
+      "intent": "For 2020, how many 311 service requests were recorded in Ward 7 and Ward 8?",
+      "code": "import io\nimport json\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\nsource = \"datagov/311-city-service-requests-in-2020/files/data.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndata = json.load(io.TextIOWrapper(obj[\"Body\"], encoding=\"utf-8\"))\ndf = pd.json_normalize(data[\"features\"])\nward_col = \"properties.WARD\"\nresult = (\n    df[df[ward_col].isin([\"7\", \"8\", 7, 8])]\n    .groupby(ward_col)\n    .size()\n    .reset_index(name=\"request_count\")\n)\nresult[ward_col] = result[ward_col].astype(str)\nresult = result.sort_values(\"request_count\", ascending=False).reset_index(drop=True)\nanswer = [f\"Ward {row[ward_col]} ({row['request_count']:,})\" for _, row in result.iterrows()]",
+      "answer": [
+        "Ward 8 (37,124)",
+        "Ward 7 (36,113)"
+      ]
+    }
+  ],
+  "ideal_query": [
+    {
+      "node_id": "1",
+      "dataset_id": "311-city-service-requests-in-2019",
+      "source": "datagov/311-city-service-requests-in-2019/files/data.txt",
+      "intent": "For 2019, how many 311 service requests were recorded in Ward 7 and Ward 8?",
+      "sql": "SELECT json_group_array(label) AS answer\nFROM (\n  SELECT CONCAT('Ward ', CAST(ward AS VARCHAR), ' (', printf('%,d', request_count), ')') AS label, request_count\n  FROM (\n    SELECT CAST(feat.properties.WARD AS VARCHAR) AS ward, COUNT(*) AS request_count\n    FROM t, UNNEST(features) AS u(feat)\n    WHERE CAST(feat.properties.WARD AS VARCHAR) IN ('7','8')\n    GROUP BY ward\n  )\n  ORDER BY request_count DESC\n)",
+      "answer": [
+        "Ward 7 (42,226)",
+        "Ward 8 (34,959)"
+      ]
+    },
+    {
+      "node_id": "2",
+      "dataset_id": "311-city-service-requests-in-2020",
+      "source": "datagov/311-city-service-requests-in-2020/files/data.txt",
+      "intent": "For 2020, how many 311 service requests were recorded in Ward 7 and Ward 8?",
+      "sql": "SELECT json_group_array(label) AS answer\nFROM (\n  SELECT CONCAT('Ward ', CAST(ward AS VARCHAR), ' (', printf('%,d', request_count), ')') AS label, request_count\n  FROM (\n    SELECT CAST(feat.properties.WARD AS VARCHAR) AS ward, COUNT(*) AS request_count\n    FROM t, UNNEST(features) AS u(feat)\n    WHERE CAST(feat.properties.WARD AS VARCHAR) IN ('7','8')\n    GROUP BY ward\n  )\n  ORDER BY request_count DESC\n)",
+      "answer": [
+        "Ward 8 (37,124)",
+        "Ward 7 (36,113)"
+      ]
+    }
   ]
 }

@@ -36,5 +36,103 @@
     "Node 7: Filter rows where `STATE` equals `CA` and `CITY` equals the city from <hop 4 answer>, then count matching schools.",
     "Hop result: round(667 / 579) = 1.",
     "Final answer: 1"
+  ],
+  "ideal_code": [
+    {
+      "node_id": "1",
+      "dataset_id": "crime-data-from-2010-to-2019",
+      "source": "datagov/crime-data-from-2010-to-2019/files/rows.txt",
+      "intent": "From 2010 to 2019, which year has the most Los Angeles incidents with simple assault incidents",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/crime-data-from-2010-to-2019/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\nfiltered = df[df[\"Crm Cd Desc\"] == \"BATTERY - SIMPLE ASSAULT\"].copy()\nfiltered[\"year\"] = pd.to_datetime(\n    filtered[\"DATE OCC\"],\n    format=\"%m/%d/%Y %I:%M:%S %p\",\n    errors=\"coerce\",\n).dt.year\n\nanswer = int(filtered.groupby(\"year\").size().idxmax())\nprint(answer)",
+      "answer": "2016"
+    },
+    {
+      "node_id": "2",
+      "dataset_id": "arrest-data-from-2010-to-2019",
+      "source": "datagov/arrest-data-from-2010-to-2019/files/rows.txt",
+      "intent": "In <node_1 answer> Los Angeles arrest records, which area has the most arrests in the charge group 'Driving Under Influence'?",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/arrest-data-from-2010-to-2019/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\nfiltered = df[df[\"Charge Group Description\"] == \"Driving Under Influence\"].copy()\nfiltered[\"year\"] = pd.to_datetime(filtered[\"Arrest Date\"], format=\"%m/%d/%Y\", errors=\"coerce\").dt.year\nfiltered = filtered[filtered[\"year\"] == 2016]\n\nanswer = filtered.groupby(\"Area Name\").size().idxmax()\nprint(answer)",
+      "answer": "Van Nuys"
+    },
+    {
+      "node_id": "3",
+      "dataset_id": "lapd-ripa-ab-953-stop-incident-details-from-7-1-2018-to-present",
+      "source": "datagov/lapd-ripa-ab-953-stop-incident-details-from-7-1-2018-to-present/files/rows.txt",
+      "intent": "Using LAPD stop-incident records collected under California's RIPA program, what numeric Area ID corresponds to area name <node_2 answer>?",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/lapd-ripa-ab-953-stop-incident-details-from-7-1-2018-to-present/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\nfiltered = df[df[\"Area Name\"] == \"Van Nuys\"]\nanswer = int(filtered[\"Area ID\"].mode().iloc[0])\nprint(answer)",
+      "answer": "9"
+    },
+    {
+      "node_id": "4",
+      "dataset_id": "crime-data-from-2010-to-2019",
+      "source": "datagov/crime-data-from-2010-to-2019/files/rows.txt",
+      "intent": "In Los Angeles crime records, what crime code corresponds to 'simple assault incident'?",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/crime-data-from-2010-to-2019/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\nfiltered = df[df[\"Crm Cd Desc\"] == \"BATTERY - SIMPLE ASSAULT\"]\nanswer = int(filtered[\"Crm Cd\"].mode().iloc[0])\nprint(answer)",
+      "answer": "624"
+    },
+    {
+      "node_id": "5",
+      "dataset_id": "crime-data-from-2020-to-present",
+      "source": "datagov/crime-data-from-2020-to-present/files/rows.txt",
+      "intent": "Using the 2020 to present Los Angeles crime records, in 2020 how many incidents with crime code <node_4 answer> occurred in Area ID <node_3 answer>?",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/crime-data-from-2020-to-present/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\ndf[\"year\"] = pd.to_datetime(\n    df[\"DATE OCC\"],\n    format=\"%m/%d/%Y %I:%M:%S %p\",\n    errors=\"coerce\",\n).dt.year\nfiltered = df[(df[\"year\"] == 2020) & (df[\"AREA\"] == 9) & (df[\"Crm Cd\"] == 624)]\n\nanswer = int(len(filtered))\nprint(answer)",
+      "answer": "667"
+    },
+    {
+      "node_id": "7",
+      "dataset_id": "public-school-locations-current-23297",
+      "source": "datagov/public-school-locations-current-23297/files/data-oyCYxF.txt",
+      "intent": "In the public school locations data, within city <node_6 answer>, how many public schools are listed?",
+      "code": "import io\nimport json\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/public-school-locations-current-23297/files/data-oyCYxF.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndata = json.loads(obj[\"Body\"].read().decode(\"utf-8\"))\ndf = pd.json_normalize(data[\"features\"])\ndf.columns = [col.replace(\"properties.\", \"\") for col in df.columns]\n\nfiltered = df[(df[\"STATE\"] == \"CA\") & (df[\"CITY\"] == \"Los Angeles\")]\nanswer = int(len(filtered))\nprint(answer)",
+      "answer": "579"
+    }
+  ],
+  "ideal_query": [
+    {
+      "node_id": "1",
+      "dataset_id": "crime-data-from-2010-to-2019",
+      "source": "datagov/crime-data-from-2010-to-2019/files/rows.txt",
+      "intent": "From 2010 to 2019, which year has the most Los Angeles incidents with simple assault incidents",
+      "answer": "Cannot execute SQL: file is too big (505 MB >= 500 MB limit)."
+    },
+    {
+      "node_id": "2",
+      "dataset_id": "arrest-data-from-2010-to-2019",
+      "source": "datagov/arrest-data-from-2010-to-2019/files/rows.txt",
+      "intent": "In <node_1 answer> Los Angeles arrest records, which area has the most arrests in the charge group 'Driving Under Influence'?",
+      "sql": "SELECT \"Area Name\" AS answer\nFROM t\nWHERE EXTRACT(year FROM TRY_CAST(\"Arrest Date\" AS DATE)) = 2016\n  AND \"Charge Group Description\" = 'Driving Under Influence'\nGROUP BY \"Area Name\"\nORDER BY count(*) DESC\nLIMIT 1",
+      "answer": "Van Nuys"
+    },
+    {
+      "node_id": "3",
+      "dataset_id": "lapd-ripa-ab-953-stop-incident-details-from-7-1-2018-to-present",
+      "source": "datagov/lapd-ripa-ab-953-stop-incident-details-from-7-1-2018-to-present/files/rows.txt",
+      "intent": "Using LAPD stop-incident records collected under California's RIPA program, what numeric Area ID corresponds to area name <node_2 answer>?",
+      "sql": "SELECT CAST(\"Area ID\" AS INTEGER) AS answer\nFROM t\nWHERE \"Area Name\" = 'Van Nuys'\nGROUP BY \"Area ID\"\nORDER BY count(*) DESC\nLIMIT 1",
+      "answer": "9"
+    },
+    {
+      "node_id": "4",
+      "dataset_id": "crime-data-from-2010-to-2019",
+      "source": "datagov/crime-data-from-2010-to-2019/files/rows.txt",
+      "intent": "In Los Angeles crime records, what crime code corresponds to 'simple assault incident'?",
+      "answer": "Cannot execute SQL: file is too big (505 MB >= 500 MB limit)."
+    },
+    {
+      "node_id": "5",
+      "dataset_id": "crime-data-from-2020-to-present",
+      "source": "datagov/crime-data-from-2020-to-present/files/rows.txt",
+      "intent": "Using the 2020 to present Los Angeles crime records, in 2020 how many incidents with crime code <node_4 answer> occurred in Area ID <node_3 answer>?",
+      "sql": "SELECT count(*) AS answer\nFROM t\nWHERE EXTRACT(year FROM TRY_CAST(\"DATE OCC\" AS DATE)) = 2020\n  AND AREA = 9\n  AND \"Crm Cd\" = 624",
+      "answer": "667"
+    },
+    {
+      "node_id": "7",
+      "dataset_id": "public-school-locations-current-23297",
+      "source": "datagov/public-school-locations-current-23297/files/data-oyCYxF.txt",
+      "intent": "In the public school locations data, within city <node_6 answer>, how many public schools are listed?",
+      "sql": "SELECT count(*) AS answer\nFROM t, UNNEST(features) AS u(feature)\nWHERE u.feature.properties.STATE = 'CA'\n  AND u.feature.properties.CITY = 'Los Angeles'",
+      "answer": "579"
+    }
   ]
 }
