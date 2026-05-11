@@ -54,7 +54,7 @@ class SetupRunTests(unittest.TestCase):
                         "ideal",
                         "--results",
                         "ideal",
-                        "--plan",
+                        "--plans",
                         "ideal",
                         "--k",
                         "5",
@@ -78,8 +78,6 @@ class SetupRunTests(unittest.TestCase):
             self.assertEqual(command[1:3], ["-m", "strands_evaluation.run_mode_eval"])
             self.assertIn("--search_tool", command)
             self.assertIn("ideal", command)
-            self.assertEqual(command[command.index("--plan") + 1], "ideal")
-            self.assertNotIn("--agent_management", command)
             self.assertEqual(command[command.index("--model-name") + 1], "openai/gpt-5.2")
             self.assertEqual(command[command.index("--db-path") + 1], "lance_data")
             self.assertEqual(command[command.index("--task-dir") + 1], "tasks_core_quality/k-5-d-4")
@@ -108,7 +106,7 @@ class SetupRunTests(unittest.TestCase):
                         "ideal",
                         "--results",
                         "ideal",
-                        "--plan",
+                        "--plans",
                         "ideal",
                         "--k",
                         "5",
@@ -141,7 +139,7 @@ class SetupRunTests(unittest.TestCase):
                     "ideal",
                     "--results",
                     "ideal",
-                    "--plan",
+                    "--plans",
                     "ideal",
                     "--model",
                     "openai/gpt-5.2",
@@ -174,7 +172,7 @@ class SetupRunTests(unittest.TestCase):
                     "ideal",
                     "--results",
                     "ideal",
-                    "--plan",
+                    "--plans",
                     "ideal",
                     "--model",
                     "gpt-5.4-nano",
@@ -200,7 +198,7 @@ class SetupRunTests(unittest.TestCase):
                     "ideal",
                     "--results",
                     "ideal",
-                    "--plan",
+                    "--plans",
                     "ideal",
                     "--model",
                     "gpt-5-nano",
@@ -226,7 +224,7 @@ class SetupRunTests(unittest.TestCase):
                     "ideal",
                     "--results",
                     "ideal",
-                    "--plan",
+                    "--plans",
                     "ideal",
                     "--model",
                     "gpt-5.4-nano",
@@ -252,7 +250,7 @@ class SetupRunTests(unittest.TestCase):
                     "ideal",
                     "--results",
                     "ideal",
-                    "--plan",
+                    "--plans",
                     "ideal",
                     "--compute",
                     "standard",
@@ -280,7 +278,7 @@ class SetupRunTests(unittest.TestCase):
                     "preloaded",
                     "--results",
                     "naive",
-                    "--plan",
+                    "--plans",
                     "ideal",
                     "--model",
                     "bedrock/claude-haiku-4.5",
@@ -293,7 +291,31 @@ class SetupRunTests(unittest.TestCase):
 
             self.assertEqual(command, fake_runner.command)
             self.assertEqual(command[command.index("--search_tool") + 1], "preloaded")
-            self.assertEqual(command[command.index("--plan") + 1], "ideal")
+            self.assertEqual(command[command.index("--plans") + 1], "ideal")
+
+    def test_legacy_plan_alias_still_maps_to_plans_axis(self):
+        with TemporaryDirectory() as tmpdir:
+            repo_root = Path(tmpdir)
+            self._write_smoke_fixture(repo_root)
+
+            command = setup_run.run(
+                [
+                    "smoke",
+                    "--search",
+                    "ideal",
+                    "--results",
+                    "ideal",
+                    "--plan",
+                    "ideal",
+                    "--db",
+                    "lance_data",
+                ],
+                runner=_FakeRunner(),
+                cwd=repo_root,
+            )
+
+            self.assertEqual(command[command.index("--plans") + 1], "ideal")
+            self.assertNotIn("--skills", command)
 
     def test_smoke_passes_search_free_and_lessguide_aliases(self):
         with TemporaryDirectory() as tmpdir:
@@ -308,7 +330,7 @@ class SetupRunTests(unittest.TestCase):
                     "ideal",
                     "--results",
                     "ideal",
-                    "--plan",
+                    "--plans",
                     "standard",
                     "--search-free",
                     "--search_lessguide",
@@ -322,10 +344,11 @@ class SetupRunTests(unittest.TestCase):
             self.assertIn("--search-free", command)
             self.assertIn("--search-lessguide", command)
 
-    def test_smoke_passes_skills_flag_when_explicit(self):
+    def test_smoke_passes_skills_flag_only_when_enabled(self):
         with TemporaryDirectory() as tmpdir:
             repo_root = Path(tmpdir)
             self._write_smoke_fixture(repo_root)
+            fake_runner = _FakeRunner()
 
             command = setup_run.run(
                 [
@@ -334,14 +357,14 @@ class SetupRunTests(unittest.TestCase):
                     "ideal",
                     "--results",
                     "ideal",
-                    "--plan",
+                    "--plans",
                     "standard",
                     "--skills",
                     "on",
                     "--db",
                     "lance_data",
                 ],
-                runner=_FakeRunner(),
+                runner=fake_runner,
                 cwd=repo_root,
             )
 
@@ -350,7 +373,6 @@ class SetupRunTests(unittest.TestCase):
         with TemporaryDirectory() as tmpdir:
             repo_root = Path(tmpdir)
             self._write_smoke_fixture(repo_root)
-
             command = setup_run.run(
                 [
                     "smoke",
@@ -358,7 +380,7 @@ class SetupRunTests(unittest.TestCase):
                     "ideal",
                     "--results",
                     "ideal",
-                    "--plan",
+                    "--plans",
                     "standard",
                     "--skills",
                     "off",
@@ -371,11 +393,9 @@ class SetupRunTests(unittest.TestCase):
 
             self.assertEqual(command[command.index("--skills") + 1], "off")
 
-    def test_smoke_omits_skills_when_default_off(self):
         with TemporaryDirectory() as tmpdir:
             repo_root = Path(tmpdir)
             self._write_smoke_fixture(repo_root)
-
             command = setup_run.run(
                 [
                     "smoke",
@@ -383,7 +403,7 @@ class SetupRunTests(unittest.TestCase):
                     "ideal",
                     "--results",
                     "ideal",
-                    "--plan",
+                    "--plans",
                     "standard",
                     "--db",
                     "lance_data",
@@ -394,29 +414,33 @@ class SetupRunTests(unittest.TestCase):
 
             self.assertNotIn("--skills", command)
 
-    def test_deprecated_agent_management_alias_maps_to_plan(self):
+    def test_smoke_rejects_skills_on_with_naive_plans(self):
         with TemporaryDirectory() as tmpdir:
             repo_root = Path(tmpdir)
             self._write_smoke_fixture(repo_root)
+            stderr = io.StringIO()
 
-            command = setup_run.run(
-                [
-                    "smoke",
-                    "--search",
-                    "ideal",
-                    "--results",
-                    "ideal",
-                    "--agent-management",
-                    "ideal",
-                    "--db",
-                    "lance_data",
-                ],
-                runner=_FakeRunner(),
-                cwd=repo_root,
-            )
+            with self.assertRaises(SystemExit) as captured, contextlib.redirect_stderr(stderr):
+                setup_run.run(
+                    [
+                        "smoke",
+                        "--search",
+                        "ideal",
+                        "--results",
+                        "ideal",
+                        "--plans",
+                        "naive",
+                        "--skills",
+                        "on",
+                        "--db",
+                        "lance_data",
+                    ],
+                    runner=_FakeRunner(),
+                    cwd=repo_root,
+                )
 
-            self.assertEqual(command[command.index("--plan") + 1], "ideal")
-            self.assertNotIn("--agent_management", command)
+            self.assertEqual(captured.exception.code, 2)
+            self.assertIn("--skills on requires --plans standard or --plans ideal", stderr.getvalue())
 
     def test_smoke_passes_ideal_compute_axis(self):
         with TemporaryDirectory() as tmpdir:
@@ -431,7 +455,7 @@ class SetupRunTests(unittest.TestCase):
                     "preloaded",
                     "--results",
                     "ideal",
-                    "--plan",
+                    "--plans",
                     "standard",
                     "--compute",
                     "ideal",
@@ -458,7 +482,7 @@ class SetupRunTests(unittest.TestCase):
                         "ideal",
                         "--results",
                         "ideal",
-                        "--plan",
+                        "--plans",
                         "ideal",
                     ],
                     runner=_FakeRunner(),

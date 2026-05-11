@@ -3,15 +3,14 @@
 Generate all paper figures using matplotlib/seaborn.
 
 Figures produced:
-  fig1_em_comparison.pdf     — EM rate by condition × model (grouped bar)
-  fig2_discovery_metrics.pdf — D_ret(F1) vs D_acc(F1) by condition
-  fig3_failure_breakdown.pdf — 100% stacked bar: EM × D_acc attribution per condition
-  fig3b_failure_by_model.pdf — Heatmap: EM × D_acc attribution per condition × model
+  fig2a_recall_em_combined.pdf — D_ret recall, D_acc recall, and EM
+  fig3c_failure_deciles.pdf — EM × D_acc decile attribution
+  fig3d_failure_deciles_dret.pdf — EM × D_ret decile attribution
   fig4_backend_provenance.pdf — Condition A: first-hit backend pie chart
   fig5_query_drift.pdf        — Condition B: Jaccard similarity distribution
   fig6_cost_vs_em.pdf         — Cost-accuracy frontier scatter
   fig7_latency_dist.pdf       — Tool call latency CDF by backend
-  fig8_tool_precision_recall.pdf — Per-search-tool avg precision & recall (grouped bar)
+  fig8_search_tool_precision_recall_f1.pdf — Per-search-tool avg precision, recall, and F1
 
 Usage:
     python analysis/generate_figures.py [--results-dir results] [--sidecar-dir results/sidecar]
@@ -24,29 +23,6 @@ from collections import defaultdict
 from pathlib import Path
 
 
-_FAILURE_COLORS = {
-    "em1_dacc_ge_0_8": "#1A9850",
-    "em1_dacc_0_5_to_0_8": "#66BD63",
-    "em1_dacc_0_2_to_0_5": "#A6D96A",
-    "em1_dacc_lt_0_2": "#D9EF8B",
-    "em0_dacc_ge_0_8": "#D73027",
-    "em0_dacc_0_5_to_0_8": "#F46D43",
-    "em0_dacc_0_2_to_0_5": "#FDAE61",
-    "em0_dacc_lt_0_2": "#FEE08B",
-}
-
-_FAILURE_LABEL_TEXT = {
-    "em1_dacc_ge_0_8": "EM=1, 0.8<=D_acc<=1.0",
-    "em1_dacc_0_5_to_0_8": "EM=1, 0.5<=D_acc<0.8",
-    "em1_dacc_0_2_to_0_5": "EM=1, 0.2<=D_acc<0.5",
-    "em1_dacc_lt_0_2": "EM=1, D_acc<0.2",
-    "em0_dacc_ge_0_8": "EM=0, 0.8<=D_acc<=1.0",
-    "em0_dacc_0_5_to_0_8": "EM=0, 0.5<=D_acc<0.8",
-    "em0_dacc_0_2_to_0_5": "EM=0, 0.2<=D_acc<0.5",
-    "em0_dacc_lt_0_2": "EM=0, D_acc<0.2",
-}
-
-
 def _import_plot_libs():
     try:
         import matplotlib
@@ -57,22 +33,6 @@ def _import_plot_libs():
     except ImportError:
         print("matplotlib/seaborn not installed. Install with: pip install matplotlib seaborn")
         sys.exit(1)
-
-
-def _present_failure_labels(grouped_counts: dict[str, dict[str, int]], label_order: list[str]) -> list[str]:
-    """Return observed labels in the configured order, with unknown labels appended."""
-    observed = {
-        label
-        for counts in grouped_counts.values()
-        for label, value in counts.items()
-        if value
-    }
-    ordered = [label for label in label_order if label in observed]
-    return ordered + sorted(observed - set(label_order))
-
-
-def _failure_label_text(label: str) -> str:
-    return _FAILURE_LABEL_TEXT.get(label, label)
 
 
 def _short_model_label(model_name: str) -> str:
@@ -138,12 +98,6 @@ def _cm_sort_key(cond: str, model: str) -> tuple:
     return _condition_sort_key(cond) + (_pretty_model(model),)
 
 
-def _f1_score(precision: float, recall: float) -> float:
-    if (precision + recall) <= 0:
-        return 0.0
-    return 2 * precision * recall / (precision + recall)
-
-
 def _has_trace_dirs(root: Path) -> bool:
     return root.exists() and any(root.iterdir())
 
@@ -181,14 +135,23 @@ def main() -> None:
     traces_root = Path(args.traces_dir)
     traces_available = _has_trace_dirs(traces_root)
     # Remove stale legacy outputs that are no longer generated.
-    for stale in output_dir.glob("fig2c*.pdf"):
-        stale.unlink(missing_ok=True)
+    stale_patterns = [
+        "fig1_em_comparison.pdf",
+        "fig2_discovery_metrics.pdf",
+        "fig2b*.pdf",
+        "fig2c*.pdf",
+        "fig3_failure_breakdown.pdf",
+        "fig8_search_tool_precision_recall.pdf",
+    ]
+    for pattern in stale_patterns:
+        for stale in output_dir.glob(pattern):
+            stale.unlink(missing_ok=True)
 
     from analysis.compute_em import load_results, compute_stats, _count_search_calls
     from analysis.discovery_metrics import (
         load_traces, load_task_gold_ids, compute_discovery_metrics, compute_tools_discovery, make_task_stem_key
     )
-    from analysis.failure_attribution import _LABEL_ORDER, classify_failure
+    from analysis.failure_attribution import classify_failure
     from analysis.failure_attribution_deciles import (
         _LABEL_ORDER as _DECILE_LABEL_ORDER,
         classify_failure_decile,
@@ -200,37 +163,7 @@ def main() -> None:
     em_table = compute_stats(records)
 
     # -----------------------------------------------------------------------
-    # Fig 1: EM by condition × model
-    # -----------------------------------------------------------------------
-    if em_table:
-        fig, ax = plt.subplots(figsize=(9, 5))
-        conditions = sorted(set(k[0] for k in em_table), key=_condition_sort_key)
-        models = sorted(set(k[1] for k in em_table))
-        x = range(len(models))
-        width = 0.8 / max(len(conditions), 1)
-
-        for i, cond in enumerate(conditions):
-            ems = [em_table.get((cond, m), {}).get("em") or 0.0 for m in models]
-            offset = (i - len(conditions) / 2 + 0.5) * width
-            bars = ax.bar([xi + offset for xi in x], [e * 100 for e in ems],
-                          width=width * 0.9, label=_pretty_condition(cond))
-            for bar, val in zip(bars, ems):
-                if val:
-                    ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 0.5,
-                            f"{val*100:.1f}", ha="center", va="bottom", fontsize=8)
-
-        ax.set_xticks(list(x))
-        ax.set_xticklabels([_pretty_model(m) for m in models], rotation=20, ha="right")
-        ax.set_ylabel("Exact Match (%)")
-        ax.set_title("Exact Match by Condition × Model")
-        ax.legend(loc="upper left", bbox_to_anchor=(1.02, 1), fontsize=8)
-        fig.tight_layout(rect=(0, 0, 0.82, 1))
-        fig.savefig(output_dir / "fig1_em_comparison.pdf")
-        plt.close(fig)
-        print(f"Saved fig1_em_comparison.pdf")
-
-    # -----------------------------------------------------------------------
-    # Fig 2: D_ret(F1) vs D_acc(F1) by condition × model (grouped bar)
+    # Discovery aggregates used by Fig 2a / 2b.
     # -----------------------------------------------------------------------
     task_gold = load_task_gold_ids(args.tasks_dir)
 
@@ -256,53 +189,6 @@ def main() -> None:
     if discovery_by_cm:
         conditions = sorted(set(k[0] for k in discovery_by_cm), key=_condition_sort_key)
         models = sorted(set(k[1] for k in discovery_by_cm))
-
-        # Create grouped bar chart for D_ret(F1) and D_acc(F1)
-        x = range(len(models))
-        width = 0.35 / max(len(conditions), 1)
-        fig, ax = plt.subplots(figsize=(12, 6))
-
-        for i, cond in enumerate(conditions):
-            d_ret_recalls = []
-            d_acc_recalls = []
-            for m in models:
-                agg = discovery_by_cm.get((cond, m), {})
-                d_ret_recalls.append(float(agg.get("D_ret", 0) or 0))
-                d_acc_recalls.append(float(agg.get("D_acc_recall", agg.get("D_acc", 0)) or 0))
-
-            offset_base = (i - len(conditions) / 2 + 0.5) * width * 2
-            bars_ret = ax.bar(
-                [xi + offset_base - width / 2 for xi in x],
-                d_ret_recalls,
-                width=width * 0.9,
-                label=f"{_pretty_condition(cond)} D_ret recall",
-                alpha=0.8,
-            )
-            bars_acc = ax.bar(
-                [xi + offset_base + width / 2 for xi in x],
-                d_acc_recalls,
-                width=width * 0.9,
-                label=f"{_pretty_condition(cond)} D_acc recall",
-                alpha=0.8,
-                hatch="//",
-            )
-
-            for bar in list(bars_ret) + list(bars_acc):
-                h = bar.get_height()
-                if h > 0:
-                    ax.text(bar.get_x() + bar.get_width() / 2, h + 0.01,
-                            f"{h:.2f}", ha="center", va="bottom", fontsize=7, rotation=45)
-
-        ax.set_xticks(list(x))
-        ax.set_xticklabels([_short_model_label(m) for m in models], rotation=20, ha="right")
-        ax.set_ylim(0, 1.15)
-        ax.set_ylabel("Recall (gold coverage)")
-        ax.set_title("Discovery Recall (D_ret & D_acc) by Condition × Model")
-        ax.legend(loc="upper right", fontsize=8, ncol=2)
-        fig.tight_layout()
-        fig.savefig(output_dir / "fig2_discovery_metrics.pdf")
-        plt.close(fig)
-        print("Saved fig2_discovery_metrics.pdf")
 
         # -------------------------------------------------------------------
         # Fig 2a: Combined D_ret recall + D_acc recall + EM per condition × model
@@ -343,92 +229,6 @@ def main() -> None:
             fig.savefig(output_dir / "fig2a_recall_em_combined.pdf")
             plt.close(fig)
             print("Saved fig2a_recall_em_combined.pdf")
-
-        # -------------------------------------------------------------------
-        # Fig 2b: D_ret and D_acc precision/recall/F1 by condition — per model
-        # -------------------------------------------------------------------
-        for model in models:
-            model_conditions = [c for c in conditions if (c, model) in discovery_by_cm]
-            if not model_conditions:
-                continue
-
-            x = range(len(model_conditions))
-            width = 0.24
-            fig, axes = plt.subplots(
-                2, 1, figsize=(max(8, len(model_conditions) * 1.25), 7.2), sharex=True, sharey=True
-            )
-
-            d_ret_precisions = []
-            d_ret_recalls = []
-            d_ret_f1s = []
-            d_acc_precisions = []
-            d_acc_recalls = []
-            d_acc_f1s = []
-            for cond in model_conditions:
-                agg = discovery_by_cm[(cond, model)]
-                d_ret_precision = float(agg.get("D_ret_precision", 0) or 0)
-                d_ret_recall = float(agg.get("D_ret", 0) or 0)
-                d_ret_f1 = agg.get("D_ret_f1")
-                if d_ret_f1 is None:
-                    d_ret_f1 = _f1_score(d_ret_precision, d_ret_recall)
-                d_acc_precision = float(agg.get("D_acc_precision", 0) or 0)
-                d_acc_recall = float(agg.get("D_acc_recall", agg.get("D_acc", 0)) or 0)
-                d_acc_f1 = agg.get("D_acc_f1")
-                if d_acc_f1 is None:
-                    d_acc_f1 = _f1_score(d_acc_precision, d_acc_recall)
-
-                d_ret_precisions.append(d_ret_precision)
-                d_ret_recalls.append(d_ret_recall)
-                d_ret_f1s.append(d_ret_f1)
-                d_acc_precisions.append(d_acc_precision)
-                d_acc_recalls.append(d_acc_recall)
-                d_acc_f1s.append(d_acc_f1)
-
-            panel_specs = [
-                ("D_ret (Search Results)", d_ret_precisions, d_ret_recalls, d_ret_f1s),
-                ("D_acc (Read Tools)", d_acc_precisions, d_acc_recalls, d_acc_f1s),
-            ]
-
-            for ax, (panel_title, precisions, recalls, f1s) in zip(axes, panel_specs):
-                bars_p = ax.bar(
-                    [xi - width for xi in x], precisions, width=width, label="Precision", alpha=0.85, color="steelblue"
-                )
-                bars_r = ax.bar(
-                    [xi for xi in x], recalls, width=width, label="Recall", alpha=0.85, color="coral"
-                )
-                bars_f = ax.bar(
-                    [xi + width for xi in x], f1s, width=width, label="F1", alpha=0.85, color="seagreen"
-                )
-
-                for bar in list(bars_p) + list(bars_r) + list(bars_f):
-                    h = bar.get_height()
-                    if h > 0:
-                        ax.text(
-                            bar.get_x() + bar.get_width() / 2,
-                            h + 0.01,
-                            f"{h:.2f}",
-                            ha="center",
-                            va="bottom",
-                            fontsize=7,
-                        )
-
-                ax.set_ylim(0, 1.15)
-                ax.set_ylabel("Score")
-                ax.set_title(panel_title, fontsize=10)
-                ax.legend(loc="upper right", fontsize=8, ncol=3)
-
-            model_label = _short_model_label(model)
-            axes[-1].set_xticks(list(x))
-            axes[-1].set_xticklabels([_pretty_condition(c) for c in model_conditions], rotation=20, ha="right")
-            fig.suptitle(
-                f"Discovery Metrics (Precision / Recall / F1) by Condition — {model_label}",
-                y=0.99,
-            )
-            fig.tight_layout()
-            fname = f"fig2b_{_safe_slug(model_label)}_discovery_metrics.pdf"
-            fig.savefig(output_dir / fname)
-            plt.close(fig)
-            print(f"Saved {fname}")
 
     # -----------------------------------------------------------------------
     # Fig 3: EM × D_acc attribution by condition (100% stacked)
@@ -488,43 +288,6 @@ def main() -> None:
             dret_label = classify_failure_decile(r, m.get("d_ret", 0))
             dret_decile_by_cond[cond][dret_label] += 1
             dret_decile_by_cm[cm_label][dret_label] += 1
-
-        failure_labels = _present_failure_labels(
-            failure_by_cm or failure_by_cond,
-            list(_LABEL_ORDER),
-        )
-
-        conds = sorted(failure_by_cond)
-
-        if conds:
-            fig, ax = plt.subplots(figsize=(7, 5))
-            bottoms = [0] * len(conds)
-            totals_by_cond = {
-                cond: sum(failure_by_cond[cond].values())
-                for cond in conds
-            }
-            for cat in failure_labels:
-                vals = [
-                    100 * failure_by_cond[c].get(cat, 0) / totals_by_cond[c]
-                    if totals_by_cond[c] else 0.0
-                    for c in conds
-                ]
-                ax.bar(
-                    conds,
-                    vals,
-                    bottom=bottoms,
-                    label=_failure_label_text(cat),
-                    color=_FAILURE_COLORS.get(cat, "#CB181D"),
-                )
-                bottoms = [bottoms[i] + vals[i] for i in range(len(conds))]
-            ax.set_ylabel("Tasks (%)")
-            ax.set_ylim(0, 100)
-            ax.set_title("EM × D_acc Attribution by Condition")
-            ax.legend(loc="upper left", bbox_to_anchor=(1.02, 1), fontsize=8)
-            fig.tight_layout()
-            fig.savefig(output_dir / "fig3_failure_breakdown.pdf")
-            plt.close(fig)
-            print("Saved fig3_failure_breakdown.pdf")
 
         # -----------------------------------------------------------------------
         # Fig 3c / 3d helpers
@@ -659,10 +422,9 @@ def main() -> None:
         print("Saved fig7_latency_dist.pdf")
 
     # -----------------------------------------------------------------------
-    # Fig 8: Search-tool precision & recall by condition × model
-    # Single combined chart: x-axis = condition/model, two bars (P, R) per group
+    # Fig 8: Search-tool precision, recall, and F1
     # -----------------------------------------------------------------------
-    cm_tool_metrics: dict = {}  # cm_label -> {"precision": float, "recall": float}
+    tool_metrics: dict = defaultdict(lambda: {"weight": 0.0, "precision": 0.0, "recall": 0.0, "f1": 0.0})
     if traces_available:
         for condition_dir in sorted(traces_root.iterdir()):
             if not condition_dir.is_dir():
@@ -681,54 +443,55 @@ def main() -> None:
                 search_tool_names = [t for t in tools_disc if t.startswith("search")]
                 if not search_tool_names:
                     search_tool_names = list(tools_disc.keys())
-                ps = [tools_disc[t].get("avg_precision", 0) for t in search_tool_names]
-                rs = [tools_disc[t].get("avg_recall", 0) for t in search_tool_names]
-                cm_tool_metrics[_pretty_cm(cond_name, model_dir.name)] = {
-                    "precision": sum(ps) / len(ps) if ps else 0.0,
-                    "recall": sum(rs) / len(rs) if rs else 0.0,
-                }
+                for tool_name in search_tool_names:
+                    stats = tools_disc[tool_name]
+                    weight = float(stats.get("n_tasks", 0) or stats.get("calls", 0) or 1)
+                    bucket = tool_metrics[tool_name]
+                    bucket["weight"] += weight
+                    bucket["precision"] += float(stats.get("avg_precision", 0) or 0) * weight
+                    bucket["recall"] += float(stats.get("avg_recall", 0) or 0) * weight
+                    bucket["f1"] += float(stats.get("avg_f1", 0) or 0) * weight
 
-    if cm_tool_metrics:
-        # Sort by parsing the pretty label "model/base/variant" → use cm tuples
-        def _label_sort_key(label: str) -> tuple:
-            parts = label.split("/")
-            model = parts[0]
-            base = parts[1] if len(parts) > 1 else ""
-            variant = parts[2] if len(parts) > 2 else ""
-            family = ""
-            k = 0
-            if variant and "_k" in variant:
-                family, _, ksuf = variant.rpartition("_k")
-                try:
-                    k = int(re.match(r"\d+", ksuf).group())
-                except (ValueError, AttributeError):
-                    k = 0
-            elif variant:
-                family = variant
-            return (base, family, k, model)
-        labels = sorted(cm_tool_metrics.keys(), key=_label_sort_key)
-        precisions = [cm_tool_metrics[l]["precision"] for l in labels]
-        recalls = [cm_tool_metrics[l]["recall"] for l in labels]
-        x = range(len(labels))
-        width = 0.4
-        fig, ax = plt.subplots(figsize=(max(8, len(labels) * 1.0), 5))
-        bars_p = ax.bar([xi - width / 2 for xi in x], precisions, width, label="Avg Precision", color="steelblue")
-        bars_r = ax.bar([xi + width / 2 for xi in x], recalls, width, label="Avg Recall", color="coral")
-        for bar in list(bars_p) + list(bars_r):
-            h = bar.get_height()
-            if h > 0:
-                ax.text(bar.get_x() + bar.get_width() / 2, h + 0.01,
-                        f"{h:.2f}", ha="center", va="bottom", fontsize=7)
-        ax.set_xticks(list(x))
-        ax.set_xticklabels(labels, rotation=25, ha="right", fontsize=8)
+    if tool_metrics:
+        labels = sorted(tool_metrics)
+        rows = []
+        for tool_name in labels:
+            weight = tool_metrics[tool_name]["weight"]
+            rows.append(
+                {
+                    "tool": tool_name,
+                    "precision": tool_metrics[tool_name]["precision"] / weight if weight else 0.0,
+                    "recall": tool_metrics[tool_name]["recall"] / weight if weight else 0.0,
+                    "f1": tool_metrics[tool_name]["f1"] / weight if weight else 0.0,
+                }
+            )
+        x = list(range(len(rows)))
+        fields = [
+            ("precision", "Avg Precision", "steelblue"),
+            ("recall", "Avg Recall", "coral"),
+            ("f1", "Avg F1", "mediumseagreen"),
+        ]
+        width = 0.8 / len(fields)
+        fig, ax = plt.subplots(figsize=(max(8, len(rows) * 1.2), 5))
+        for idx, (field, label, color) in enumerate(fields):
+            values = [row[field] for row in rows]
+            offset = (idx - len(fields) / 2 + 0.5) * width
+            bars = ax.bar([xi + offset for xi in x], values, width * 0.9, label=label, color=color)
+            for bar in bars:
+                h = bar.get_height()
+                if h > 0:
+                    ax.text(bar.get_x() + bar.get_width() / 2, h + 0.01,
+                            f"{h:.2f}", ha="center", va="bottom", fontsize=7)
+        ax.set_xticks(x)
+        ax.set_xticklabels([row["tool"] for row in rows], rotation=25, ha="right", fontsize=8)
         ax.set_ylim(0, 1.1)
-        ax.set_ylabel("Score")
-        ax.set_title("Search Tool Precision & Recall by Condition × Model")
+        ax.set_ylabel("Average Score")
+        ax.set_title("Search Tool Precision, Recall, and F1")
         ax.legend(loc="upper right")
         fig.tight_layout()
-        fig.savefig(output_dir / "fig8_search_tool_precision_recall.pdf")
+        fig.savefig(output_dir / "fig8_search_tool_precision_recall_f1.pdf")
         plt.close(fig)
-        print("Saved fig8_search_tool_precision_recall.pdf")
+        print("Saved fig8_search_tool_precision_recall_f1.pdf")
 
     # -----------------------------------------------------------------------
     # Fig 9: Avg search calls per condition × model

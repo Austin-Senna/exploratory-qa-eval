@@ -40,14 +40,26 @@ def _build_parser() -> argparse.ArgumentParser:
     common.add_argument("--search", choices=_SEARCH_MODE_CHOICES, default=None)
     common.add_argument("--results", choices=_RESULT_MODE_CHOICES, default=None)
     common.add_argument(
-        "--plan",
+        "--plans",
         "--agent-management",
         "--agent_management",
-        dest="plan",
+        dest="agent_management",
         choices=_MANAGEMENT_MODE_CHOICES,
         default=None,
+        help="Plan-management axis: naive, standard, or ideal.",
     )
-    common.add_argument("--skills", choices=_SKILLS_CHOICES, default=None)
+    common.add_argument(
+        "--plan",
+        dest="agent_management",
+        choices=_MANAGEMENT_MODE_CHOICES,
+        help=argparse.SUPPRESS,
+    )
+    common.add_argument(
+        "--skills",
+        choices=_SKILLS_CHOICES,
+        default=None,
+        help="Enable or disable the Strands AgentSkills planning/discovery skills plugin.",
+    )
     common.add_argument("--compute", choices=_COMPUTATION_MODE_CHOICES, default=None)
     common.add_argument("--k", type=int, default=None)
     common.add_argument("--model", default="bedrock/claude-sonnet-4.5")
@@ -181,7 +193,11 @@ def _display_command(command: Sequence[str]) -> str:
     return shlex.join(printable)
 
 
-_LEGACY_AXIS_DEFAULTS = {"search": "standard", "results": "naive", "plan": "standard"}
+_LEGACY_AXIS_DEFAULTS = {
+    "search": "standard",
+    "results": "naive",
+    "agent_management": "standard",
+}
 
 
 def _resolve_axes(args: argparse.Namespace) -> None:
@@ -191,8 +207,14 @@ def _resolve_axes(args: argparse.Namespace) -> None:
             setattr(args, axis, fallback)
 
 
+def _validate_axis_combination(args: argparse.Namespace) -> None:
+    if args.skills == "on" and args.agent_management == "naive":
+        raise ValueError("--skills on requires --plans standard or --plans ideal.")
+
+
 def _build_run_mode_command(args: argparse.Namespace, cwd: Path) -> tuple[list[str], dict[str, str]]:
     _resolve_axes(args)
+    _validate_axis_combination(args)
     model_name = _normalize_model_name(args.model)
     db_arg = _validate_db_arg(args.db, cwd)
 
@@ -204,8 +226,8 @@ def _build_run_mode_command(args: argparse.Namespace, cwd: Path) -> tuple[list[s
         args.search,
         "--search_results",
         args.results,
-        "--plan",
-        args.plan,
+        "--plans",
+        args.agent_management,
         "--model-name",
         model_name,
         "--condition",

@@ -59,7 +59,7 @@ def invoke_with_watchdog(
     finally:
         timer.cancel()
 
-    if triggered and getattr(response, "stop_reason", None) == "cancelled":
+    if triggered:
         return InvocationOutcome(response=response, timed_out=True, timeout_reason=reason)
 
     return InvocationOutcome(response=response, timed_out=False, timeout_reason=None)

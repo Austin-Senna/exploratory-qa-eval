@@ -14,23 +14,23 @@ from strands_evaluation.config import RunConfig
 
 SANA_SUMMARIZATION_PROMPT = """
 You are summarizing a tool-using data-analysis conversation produced by an agent
-that emits a numbered plan, structured CoT records, and periodic sprint records.
+that emits a numbered plan, structured cot tool records, and periodic sprint records.
 
 PRESERVE EXACTLY (verbatim, do not paraphrase or omit):
 - The original user question.
-- The plan emitted by `plan_ideal` or `plan_agent` — preserve every numbered
+- The plan emitted by `plan` or `plan_ideal` — preserve every numbered
   bullet exactly as the tool produced it.
 - The most recent `## CURRENT SPRINT` section — keep its fields exactly as
   emitted.
 
 RENDER PROGRESS:
-- The agent emits `current_step:` lines as it works through the plan.
+- The agent emits cot tool records with a `current_step` field as it works through the plan.
 - Render the preserved plan as a checklist:
-  - Mark every plan step that comes BEFORE the most recent `current_step:`
+  - Mark every plan step that comes BEFORE the most recent `current_step`
     value as ✓ done. (Linear-progress inference: previous steps are complete.)
-  - Mark the most recent `current_step:` value as ▸ in progress.
+  - Mark the most recent `current_step` value as ▸ in progress.
   - Leave remaining plan steps unchecked (☐ pending).
-- Cross-check with `sufficient_to_call_step_complete: true` — if the agent
+- Cross-check whether `sufficient_to_call_step_complete` is true — if the agent
   explicitly claimed a step done, mark it ✓ even if its position would
   otherwise leave it unchecked.
 

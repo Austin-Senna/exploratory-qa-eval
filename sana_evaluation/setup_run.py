@@ -32,10 +32,14 @@ _MODEL_ALIASES = {
     "gpt-5.4-nano": "openai/gpt-5.4-nano",
 }
 _DB_HINTS = ("lance_data",)
-_SANA_AXIS_DEFAULTS = {"search": "preloaded", "results": "ideal", "plan": "standard"}
+_SANA_AXIS_DEFAULTS = {
+    "search": "preloaded",
+    "results": "ideal",
+    "agent_management": "standard",
+}
 _SHORTCUT_AXIS_DEFAULTS = {
-    "preloaded": {"search": "preloaded", "results": "ideal", "plan": "standard"},
-    "ideal": {"search": "ideal", "results": "ideal", "plan": "standard"},
+    "preloaded": {"search": "preloaded", "results": "ideal", "agent_management": "standard"},
+    "ideal": {"search": "ideal", "results": "ideal", "agent_management": "standard"},
 }
 
 
@@ -49,14 +53,26 @@ def _build_parser() -> argparse.ArgumentParser:
     common.add_argument("--search", choices=_SEARCH_MODE_CHOICES, default=None)
     common.add_argument("--results", choices=_RESULT_MODE_CHOICES, default=None)
     common.add_argument(
-        "--plan",
+        "--plans",
         "--agent-management",
         "--agent_management",
-        dest="plan",
+        dest="agent_management",
         choices=_MANAGEMENT_MODE_CHOICES,
         default=None,
+        help="Plan-management axis: naive, standard, or ideal.",
     )
-    common.add_argument("--skills", choices=_SKILLS_CHOICES, default=None)
+    common.add_argument(
+        "--plan",
+        dest="agent_management",
+        choices=_MANAGEMENT_MODE_CHOICES,
+        help=argparse.SUPPRESS,
+    )
+    common.add_argument(
+        "--skills",
+        choices=_SKILLS_CHOICES,
+        default=None,
+        help="Enable or disable the Strands AgentSkills planning/discovery skills plugin.",
+    )
     common.add_argument("--compute", choices=_COMPUTATION_MODE_CHOICES, default=None)
     common.add_argument(
         "--mode",
@@ -64,8 +80,8 @@ def _build_parser() -> argparse.ArgumentParser:
         default=None,
         help=(
             "Shortcut for common SANA axis bundles. preloaded => search preloaded, "
-            "results ideal, plan standard. ideal => search ideal, results ideal, "
-            "plan standard. Explicit --search/--results/--plan values override it."
+            "results ideal, plans standard. ideal => search ideal, results ideal, "
+            "plans standard. Explicit --search/--results/--plans values override it."
         ),
     )
     common.add_argument(
@@ -107,6 +123,20 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     common.add_argument("--k", type=int, default=None)
     common.add_argument("--search-calls", type=int, default=None)
+    common.add_argument(
+        "--search-free",
+        "--search_free",
+        dest="search_free",
+        action="store_true",
+        help="Make active search tools cost zero against the global max-tool-calls limit.",
+    )
+    common.add_argument(
+        "--search-lessguide",
+        "--search_lessguide",
+        dest="search_lessguide",
+        action="store_true",
+        help="Hide search_ideal plan-exhaustion guidance fields from tool payloads.",
+    )
     common.add_argument("--model", default="bedrock/claude-sonnet-4.5")
     common.add_argument(
         "--reasoning-effort",
@@ -236,8 +266,14 @@ def _resolve_axes(args: argparse.Namespace) -> None:
             setattr(args, axis, fallback)
 
 
+def _validate_axis_combination(args: argparse.Namespace) -> None:
+    if args.skills == "on" and args.agent_management == "naive":
+        raise ValueError("--skills on requires --plans standard or --plans ideal.")
+
+
 def _build_sana_command(args: argparse.Namespace, cwd: Path) -> tuple[list[str], dict[str, str]]:
     _resolve_axes(args)
+    _validate_axis_combination(args)
     model_name = _normalize_model_name(args.model)
     db_arg = _validate_db_arg(args.db, cwd)
 
@@ -249,8 +285,8 @@ def _build_sana_command(args: argparse.Namespace, cwd: Path) -> tuple[list[str],
         args.search,
         "--search_results",
         args.results,
-        "--plan",
-        args.plan,
+        "--plans",
+        args.agent_management,
         "--model-name",
         model_name,
         "--condition",
@@ -267,6 +303,10 @@ def _build_sana_command(args: argparse.Namespace, cwd: Path) -> tuple[list[str],
         command.extend(["--computation_tool", args.compute])
     if args.skills is not None:
         command.extend(["--skills", args.skills])
+    if args.search_free:
+        command.append("--search-free")
+    if args.search_lessguide:
+        command.append("--search-lessguide")
     if args.reasoning_effort is not None:
         command.extend(["--reasoning-effort", args.reasoning_effort])
     if args.openai_prompt_cache_key is not None:

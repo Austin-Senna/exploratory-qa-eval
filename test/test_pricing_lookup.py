@@ -1,6 +1,7 @@
 """Unit tests for model pricing lookup behavior."""
 
 import unittest
+from types import SimpleNamespace
 
 from strands_evaluation.helper.result import AgentResult
 
@@ -16,6 +17,13 @@ class _DummyMetrics:
         self.cycle_count = 0
         self.cycle_durations = []
         self.tool_metrics = {}
+
+
+class _DummyToolMetric:
+    def __init__(self, call_count: int) -> None:
+        self.call_count = call_count
+        self.success_count = call_count
+        self.total_time = float(call_count)
 
 
 def _build_result(
@@ -97,6 +105,35 @@ class PricingLookupTests(unittest.TestCase):
             cost = result.cost_usd
         self.assertEqual(cost, 0.0)
         self.assertTrue(any("No pricing configured for model_name=unknown/provider-model" in m for m in captured.output))
+
+    def test_api_tool_calls_include_current_data_search_and_ideal_tools(self) -> None:
+        result = AgentResult(
+            answer="",
+            model="",
+            metrics=SimpleNamespace(
+                accumulated_usage={},
+                cycle_count=0,
+                cycle_durations=[],
+                tool_metrics={
+                    "peek_file": _DummyToolMetric(1),
+                    "peek_multiple": _DummyToolMetric(2),
+                    "read_file": _DummyToolMetric(3),
+                    "grep_file": _DummyToolMetric(4),
+                    "query_file": _DummyToolMetric(5),
+                    "search_value": _DummyToolMetric(6),
+                    "search_schema": _DummyToolMetric(7),
+                    "search_reranked": _DummyToolMetric(8),
+                    "search_ideal": _DummyToolMetric(9),
+                    "execute_ideal": _DummyToolMetric(10),
+                    "plan": _DummyToolMetric(100),
+                    "plan_ideal": _DummyToolMetric(100),
+                    "skills": _DummyToolMetric(100),
+                    "submit_answer": _DummyToolMetric(100),
+                },
+            ),
+        )
+
+        self.assertEqual(result.get_api_tool_calls(), 55)
 
 
 if __name__ == "__main__":

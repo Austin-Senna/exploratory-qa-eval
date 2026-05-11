@@ -86,7 +86,7 @@ class TestTurnWasteAnalysis(unittest.TestCase):
             )
 
             self._write_log(
-                logs_root / model_dir / inspection_variant / "k-1-d-1" / "task_1.log",
+                logs_root / model_dir / inspection_variant / "tasks_mini" / "k-1-d-1" / "task_1.log",
                 [
                     "--- Turn 1 (elapsed: 0.0s) ---",
                     'Executing: skills({"skill_name": "plan-ideal"})',
@@ -107,7 +107,7 @@ class TestTurnWasteAnalysis(unittest.TestCase):
                 ],
             )
             self._write_log(
-                logs_root / model_dir / search_variant / "k-1-d-1" / "task_2.log",
+                logs_root / model_dir / search_variant / "tasks_mini" / "k-1-d-1" / "task_2.log",
                 [
                     "--- Turn 1 (elapsed: 0.0s) ---",
                     'Executing: skills({"skill_name": "plan-ideal"})',

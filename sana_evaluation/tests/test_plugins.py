@@ -8,11 +8,13 @@ from types import SimpleNamespace
 from typing import Any, Dict, List, Optional
 
 from sana_evaluation.plugins import (
-    CoTPostRecordPlugin,
+    CoTSteerHandler,
     SprintSteerHandler,
     StateOfTaskDashboardPlugin,
 )
-from sana_evaluation.tools.sprint_tool import clear_sprint_state, sprint
+from sana_evaluation.tools.cot_tool import cot
+from sana_evaluation.tools.sprint_tool import sprint
+from strands_evaluation.instrumentation.agent_plugins import ToolLimitSteeringHandler
 from strands.vended_plugins.steering import Guide, Proceed
 
 
@@ -29,39 +31,93 @@ class _StubAfterToolEvent:
 
 
 # ---------------------------------------------------------------------------
-# CoTPostRecordPlugin
+# CoTSteerHandler + cot tool
 # ---------------------------------------------------------------------------
 
 
-def test_cot_post_record_appends_to_data_tool_result() -> None:
-    plugin = CoTPostRecordPlugin()
-    result = {"toolUseId": "x", "status": "success", "content": [{"text": "rows..."}]}
-    event = _StubAfterToolEvent(tool_use={"name": "peek_file"}, result=result)
-    plugin.on_after_tool(event)
-    appended = event.result["content"][-1]["text"]
-    assert "current_step" in appended
-    assert "sufficient_to_call_step_complete" in appended
+def _cot_context() -> SimpleNamespace:
+    return SimpleNamespace(agent=SimpleNamespace(system_prompt="BASE PROMPT"))
 
 
-def test_cot_post_record_skips_administrative_tools() -> None:
-    plugin = CoTPostRecordPlugin()
-    for tool in ("plan", "plan_ideal", "skills", "submit_answer"):
-        result = {"toolUseId": "x", "status": "success", "content": [{"text": "ok"}]}
-        event = _StubAfterToolEvent(tool_use={"name": tool}, result=result)
-        plugin.on_after_tool(event)
-        assert len(event.result["content"]) == 1, f"{tool} should not get a reminder"
-
-
-def test_cot_post_record_skips_on_exception() -> None:
-    plugin = CoTPostRecordPlugin()
-    result = {"toolUseId": "x", "status": "error", "content": [{"text": "boom"}]}
-    event = _StubAfterToolEvent(
-        tool_use={"name": "peek_file"},
-        result=result,
-        exception=RuntimeError("kaboom"),
+def _record_pre_tool(intended_tool: str = "peek_file") -> str:
+    return cot(
+        kind="pre_tool",
+        intended_tool=intended_tool,
+        current_step="inspect source schema",
+        intent="peek file structure",
+        confidence="medium",
+        tool_context=_cot_context(),
     )
-    plugin.on_after_tool(event)
-    assert len(event.result["content"]) == 1
+
+
+def _record_post_tool(completed_tool: str = "peek_file") -> str:
+    return cot(
+        kind="post_tool",
+        completed_tool=completed_tool,
+        current_step="inspect source schema",
+        tool_result_summary="peek returned columns",
+        next_step="query the relevant count",
+        sufficient_to_call_step_complete=False,
+        remaining_gap_if_not_complete="need aggregate count",
+        tool_context=_cot_context(),
+    )
+
+
+def test_cot_steer_blocks_first_data_tool_until_pre_record() -> None:
+    h = CoTSteerHandler()
+
+    action = _run_steer(h, {"name": "peek_file", "input": {"dataset_id": "schools"}})
+
+    assert isinstance(action, Guide)
+    assert "cot" in action.reason
+    assert "pre_tool" in action.reason
+    assert "peek_file" in action.reason
+    assert isinstance(_run_steer(h, {"name": "cot", "input": {"kind": "pre_tool"}}), Proceed)
+
+
+def test_cot_pre_record_rejects_wrong_intended_tool() -> None:
+    h = CoTSteerHandler()
+    _run_steer(h, {"name": "peek_file", "input": {"dataset_id": "schools"}})
+
+    result = _record_pre_tool("query_file")
+
+    assert result.startswith("CoT not recorded:")
+    assert "pending intended tool is peek_file" in result
+
+
+def test_cot_gate_requires_post_record_after_data_result_before_more_data_or_submit() -> None:
+    h = CoTSteerHandler()
+    _run_steer(h, {"name": "peek_file", "input": {"dataset_id": "schools"}})
+    assert _record_pre_tool("peek_file") == "CoT recorded."
+    assert isinstance(
+        _run_steer(h, {"name": "peek_file", "input": {"dataset_id": "schools"}}),
+        Proceed,
+    )
+    h.on_after_tool(_StubAfterToolEvent(tool_use={"name": "peek_file", "input": {"dataset_id": "schools"}}))
+
+    next_data = _run_steer(h, {"name": "query_file", "input": {"dataset_id": "schools"}})
+    submit = _run_steer(h, {"name": "submit_answer", "input": {"answer": "42"}})
+
+    assert isinstance(next_data, Guide)
+    assert isinstance(submit, Guide)
+    assert "post_tool" in next_data.reason
+    assert "post_tool" in submit.reason
+    assert _record_post_tool("peek_file") == "CoT recorded."
+    new_tool = _run_steer(h, {"name": "query_file", "input": {"dataset_id": "schools"}})
+    assert isinstance(new_tool, Guide)
+    assert "pre_tool" in new_tool.reason
+
+
+def test_cot_post_record_rejects_wrong_completed_tool() -> None:
+    h = CoTSteerHandler()
+    _run_steer(h, {"name": "peek_file", "input": {"dataset_id": "schools"}})
+    assert _record_pre_tool("peek_file") == "CoT recorded."
+    h.on_after_tool(_StubAfterToolEvent(tool_use={"name": "peek_file", "input": {"dataset_id": "schools"}}))
+
+    result = _record_post_tool("query_file")
+
+    assert result.startswith("CoT not recorded:")
+    assert "pending completed tool is peek_file" in result
 
 
 # ---------------------------------------------------------------------------
@@ -109,6 +165,32 @@ def test_sprint_steer_skill_calls_dont_count_toward_sprint() -> None:
         h.on_after_tool(_StubAfterToolEvent(tool_use={"name": "skills"}))
     action = _run_steer(h, {"name": "peek_file"})
     assert isinstance(action, Proceed)
+
+
+def test_sprint_steer_cot_calls_dont_count_toward_sprint() -> None:
+    h = SprintSteerHandler(macro_reflection_k=1)
+    h.on_after_tool(_StubAfterToolEvent(tool_use={"name": "cot"}))
+
+    action = _run_steer(h, {"name": "peek_file"})
+
+    assert isinstance(action, Proceed)
+
+
+def test_tool_limit_allows_excluded_cot_after_counted_limit() -> None:
+    h = ToolLimitSteeringHandler(
+        max_tool_calls=1,
+        timeout_seconds=999,
+        excluded_tools=("cot",),
+    )
+    h.on_agent_initialized(SimpleNamespace())
+    h.on_after_tool(_StubAfterToolEvent(tool_use={"name": "peek_file"}))
+
+    cot_action = _run_steer(h, {"name": "cot", "input": {"kind": "post_tool"}})
+    data_action = _run_steer(h, {"name": "query_file", "input": {"dataset_id": "schools"}})
+
+    assert isinstance(cot_action, Proceed)
+    assert isinstance(data_action, Guide)
+    assert "Tool limit reached" in data_action.reason
 
 
 def test_sprint_tool_call_records_reflection_into_handler() -> None:
@@ -424,7 +506,7 @@ def test_commitment_outside_related_sources_still_requires_switch_contract() -> 
     assert "libraries" in action.reason
 
 
-def test_commitment_reflection_can_extend_current_source() -> None:
+def test_commitment_reflection_records_without_extending_current_source() -> None:
     h = SprintSteerHandler(
         macro_reflection_k=5,
         sprint_mode="commitment",
@@ -445,7 +527,7 @@ def test_commitment_reflection_can_extend_current_source() -> None:
         tool_context=_sprint_context(),
     )
     assert h.source_session is not None
-    assert h.source_session.max_source_calls == 3
+    assert h.source_session.max_source_calls == 1
     assert h.source_session.calls_used == 1
 
 

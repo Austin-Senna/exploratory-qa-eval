@@ -39,9 +39,9 @@ Implemented by `build_results(...)` through `strands_evaluation/tools/external/i
   - `search_results=ideal` returns the richer file-oriented payload with `dataset_snippet`
 - Fixed `k` is enforced here when `RunConfig.search_k` is set, including source-driven `search_ideal`, where `top_k` controls how many sequential planned sources are returned per call
 
-### `plan=ideal`
+### `agent_management=ideal`
 
-Implemented by `build_plan(...)` in `strands_evaluation/agent_with_mode.py`.
+Implemented by `build_management(...)` in `strands_evaluation/agent_with_mode.py`.
 
 - Prompt:
   - composed from:
@@ -50,11 +50,11 @@ Implemented by `build_plan(...)` in `strands_evaluation/agent_with_mode.py`.
       - `prompts/search_naive.txt`
       - `prompts/search_standard.txt`
       - `prompts/search_ideal.txt`
-- Planning tools:
+- Management tools:
   - `plan_ideal`
-- AgentSkills:
-  - enabled only when `--skills on`
-  - uses:
+- Skills:
+  - disabled by default; enabled only with `--skills on`
+  - when enabled, uses:
     - `plan-ideal`
     - one discovery skill chosen by `search_tool`:
       - `discover-data-naive`
@@ -149,8 +149,7 @@ The three axes are:
 
 - `search_tool`
 - `search_results`
-- `plan`
-- `skills`
+- `agent_management`
 
 `run_mode_eval.py` builds output paths like:
 
@@ -189,7 +188,7 @@ The `base_condition` is still carried in config for behavior selection and compa
 - Special case:
   - when `search_tool=ideal`, it returns only `dataset_id`
 
-### `plan=standard`
+### `agent_management=standard`
 
 - Prompt:
   - composed from:
@@ -198,11 +197,11 @@ The `base_condition` is still carried in config for behavior selection and compa
       - `prompts/search_naive.txt`
       - `prompts/search_standard.txt`
       - `prompts/search_ideal.txt`
-- Planning tools:
+- Management tools:
   - `plan`
-- AgentSkills:
-  - enabled only when `--skills on`
-  - uses:
+- Skills:
+  - disabled by default; enabled only with `--skills on`
+  - when enabled, uses:
     - `plan-agent`
     - one discovery skill chosen by `search_tool`:
       - `discover-data-naive`
@@ -212,7 +211,7 @@ The `base_condition` is still carried in config for behavior selection and compa
 - Stagnation plugin:
   - enabled
 
-### `plan=naive`
+### `agent_management=naive`
 
 - Prompt:
   - composed from:
@@ -221,9 +220,9 @@ The `base_condition` is still carried in config for behavior selection and compa
       - `prompts/search_naive.txt`
       - `prompts/search_standard.txt`
       - `prompts/search_ideal.txt`
-- Planning tools:
+- Management tools:
   - none
-- AgentSkills:
+- Skills:
   - disabled
 - Stagnation plugin:
   - disabled
@@ -294,8 +293,8 @@ Implemented in `strands_evaluation/agent.py`.
 - Data tools:
   - standard file/query/download/execute/submit tool set
 - Skills:
-  - enabled
-  - uses:
+  - disabled by default; enabled only with `RunConfig.plan_skills_enabled=True`
+  - when enabled, uses:
     - `plan-agent`
     - `discover-data-naive`
     - `query-data`
@@ -341,7 +340,7 @@ Across both legacy and mode-based agents:
 - `search_ideal` controls ideal retrieval order through `source_sequence`
 - `plan_ideal` controls ideal planning context through `reasoning_chain_text`
 - `dataset_sequence` remains the plan-order context for reasoning-chain authoring
-- `plan-ideal` skill encourages the agent to turn the reasoning chain into a better execution plan
+- `plan-ideal` skill encourages the agent to turn the reasoning chain into a better execution plan when `--skills on` is enabled
 
 ### Legacy conditions
 
@@ -353,5 +352,6 @@ Across both legacy and mode-based agents:
 
 - `search_tool` controls which search tools exist
 - `search_results` controls how much result content is exposed
-- `plan` controls prompt source, planning tools, gold reasoning injection, and stagnation handling
-- `skills` controls whether AgentSkills are attached for managed plan modes
+- `agent_management` controls prompt source and planning tools
+- `--skills {on|off}` controls whether the Strands AgentSkills planning/discovery plugin is attached; it defaults to off
+- managed `agent_management` modes still enable stagnation handling independently of the skills plugin

@@ -35,7 +35,7 @@ def _write_smoke_fixture(repo_root: Path) -> None:
     (target / "task_2.json").write_text("{}")
 
 
-def test_sana_setup_uses_plan_axis_and_skills_toggle() -> None:
+def test_sana_setup_uses_plans_axis_and_skills_toggle() -> None:
     with TemporaryDirectory() as tmpdir:
         repo_root = Path(tmpdir)
         _write_smoke_fixture(repo_root)
@@ -48,7 +48,7 @@ def test_sana_setup_uses_plan_axis_and_skills_toggle() -> None:
                 "ideal",
                 "--results",
                 "ideal",
-                "--plan",
+                "--plans",
                 "ideal",
                 "--skills",
                 "on",
@@ -60,12 +60,35 @@ def test_sana_setup_uses_plan_axis_and_skills_toggle() -> None:
         )
 
     assert command == fake_runner.command
-    assert command[command.index("--plan") + 1] == "ideal"
+    assert command[command.index("--plans") + 1] == "ideal"
     assert command[command.index("--skills") + 1] == "on"
-    assert "--agent_management" not in command
 
 
-def test_sana_setup_defaults_skills_off_without_passing_flag() -> None:
+def test_sana_setup_defaults_skills_off() -> None:
+    with TemporaryDirectory() as tmpdir:
+        repo_root = Path(tmpdir)
+        _write_smoke_fixture(repo_root)
+
+        command = setup_run.run(
+            [
+                "smoke",
+                "--search",
+                "ideal",
+                "--results",
+                "ideal",
+                "--plans",
+                "standard",
+                "--db",
+                "lance_data",
+            ],
+            runner=_FakeRunner(),
+            cwd=repo_root,
+        )
+
+    assert "--skills" not in command
+
+
+def test_sana_setup_legacy_plan_alias_maps_to_plans_axis() -> None:
     with TemporaryDirectory() as tmpdir:
         repo_root = Path(tmpdir)
         _write_smoke_fixture(repo_root)
@@ -78,7 +101,7 @@ def test_sana_setup_defaults_skills_off_without_passing_flag() -> None:
                 "--results",
                 "ideal",
                 "--plan",
-                "standard",
+                "ideal",
                 "--db",
                 "lance_data",
             ],
@@ -86,10 +109,11 @@ def test_sana_setup_defaults_skills_off_without_passing_flag() -> None:
             cwd=repo_root,
         )
 
+    assert command[command.index("--plans") + 1] == "ideal"
     assert "--skills" not in command
 
 
-def test_sana_setup_accepts_deprecated_agent_management_alias() -> None:
+def test_sana_setup_passes_explicit_skills_off() -> None:
     with TemporaryDirectory() as tmpdir:
         repo_root = Path(tmpdir)
         _write_smoke_fixture(repo_root)
@@ -101,8 +125,8 @@ def test_sana_setup_accepts_deprecated_agent_management_alias() -> None:
                 "ideal",
                 "--results",
                 "ideal",
-                "--agent-management",
-                "ideal",
+                "--plans",
+                "standard",
                 "--skills",
                 "off",
                 "--db",
@@ -112,5 +136,60 @@ def test_sana_setup_accepts_deprecated_agent_management_alias() -> None:
             cwd=repo_root,
         )
 
-    assert command[command.index("--plan") + 1] == "ideal"
     assert command[command.index("--skills") + 1] == "off"
+
+
+def test_sana_setup_passes_search_free_and_lessguide_aliases() -> None:
+    with TemporaryDirectory() as tmpdir:
+        repo_root = Path(tmpdir)
+        _write_smoke_fixture(repo_root)
+
+        command = setup_run.run(
+            [
+                "smoke",
+                "--search",
+                "ideal",
+                "--results",
+                "ideal",
+                "--plans",
+                "standard",
+                "--search-free",
+                "--search_lessguide",
+                "--db",
+                "lance_data",
+            ],
+            runner=_FakeRunner(),
+            cwd=repo_root,
+        )
+
+    assert "--search-free" in command
+    assert "--search-lessguide" in command
+
+
+def test_sana_setup_rejects_skills_on_with_naive_plans() -> None:
+    with TemporaryDirectory() as tmpdir:
+        repo_root = Path(tmpdir)
+        _write_smoke_fixture(repo_root)
+
+        try:
+            setup_run.run(
+                [
+                    "smoke",
+                    "--search",
+                    "ideal",
+                    "--results",
+                    "ideal",
+                    "--plans",
+                    "naive",
+                    "--skills",
+                    "on",
+                    "--db",
+                    "lance_data",
+                ],
+                runner=_FakeRunner(),
+                cwd=repo_root,
+            )
+        except SystemExit as exc:
+            assert exc.code == 2
+        else:
+            raise AssertionError("Expected SystemExit for --skills on with --plans naive")

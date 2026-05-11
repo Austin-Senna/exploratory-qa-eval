@@ -169,7 +169,9 @@ def compute_efficiency_metrics(
     query_count = len(queries_issued)
 
     # Query efficiency: how close to optimal
-    if optimal_query_count > 0:
+    if query_count == 0:
+        query_efficiency = 1.0 if optimal_query_count <= 0 else 0.0
+    elif optimal_query_count > 0:
         query_efficiency = min(1.0, optimal_query_count / query_count)
     else:
         query_efficiency = 1.0
@@ -300,4 +302,3 @@ def compute_semantic_similarity(prediction: str, ground_truth: str) -> float:
     except ImportError:
         logger.warning("sentence-transformers not installed. Using F1 instead.")
         return compute_f1_score(prediction, ground_truth)
-

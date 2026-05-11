@@ -86,7 +86,7 @@ class CategoryStagnationHandler(SteeringHandler):
                 reason=(
                     f"Note: you have used '{current_category}' tools {display_count} times in a row. "
                     "If you are making steady progress, continue as planned — just retry the tool call you were about to make. "
-                    "If you feel stuck, the `plan` tool is available to help you reassess. It does not cost towards your total plan call."
+                    "If you feel stuck, use the active planning tool to reassess. It does not count toward the tool-call limit."
                 )
             )
 

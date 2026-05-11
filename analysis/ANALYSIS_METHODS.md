@@ -3,6 +3,73 @@
 Single reference for understanding the post-eval analysis pipeline.
 All scripts read from `results/` (eval CSVs / agent JSONL) and/or `results/traces/` (per-call traces).
 
+## Mode analysis commands
+
+Run these from the repo root. Use the venv Python because the analysis scripts use the repo dependency/runtime versions.
+
+### Normal mode analysis
+
+Use this for raw `agent_results.jsonl` mode outputs, such as runs produced by `strands_evaluation/setup_run.py full` under `results/modes/...`.
+
+```bash
+.venv/bin/python analysis/run_mode_analysis.py \
+  --results-dir results/modes \
+  --traces-dir results/traces/modes \
+  --logs-dir logs \
+  --tasks-dir tasks_core_quality \
+  --output-dir analysis_results_mode
+```
+
+To skip figure generation while checking the tables:
+
+```bash
+.venv/bin/python analysis/run_mode_analysis.py \
+  --results-dir results/modes \
+  --traces-dir results/traces/modes \
+  --logs-dir logs \
+  --tasks-dir tasks_core_quality \
+  --output-dir analysis_results_mode \
+  --no-figures
+```
+
+### Semantic mode analysis
+
+Use this after semantic auditing has produced a mirrored semantic tree. For the EC2-style tree used by the current semantic runner:
+
+```bash
+.venv/bin/python analysis/run_mode_analysis_semantic.py \
+  --results-dir results-ec2_semantic/modes \
+  --base-results-dir results-ec2/modes \
+  --turn-waste-grouped-dir results-ec2_semantic_turn_waste_grouped/modes \
+  --traces-dir results-ec2/traces/modes \
+  --tasks-dir tasks_core_quality \
+  --output-dir analysis_results_mode_semantic
+```
+
+If you only have the semantic audit outputs and have not run turn-waste grouping yet:
+
+```bash
+.venv/bin/python analysis/run_mode_analysis_semantic.py \
+  --results-dir results-ec2_semantic/modes \
+  --base-results-dir results-ec2/modes \
+  --traces-dir results-ec2/traces/modes \
+  --tasks-dir tasks_core_quality \
+  --output-dir analysis_results_mode_semantic \
+  --no-turn-waste
+```
+
+For local non-EC2 semantic outputs, use the same shape with `results_semantic/modes`, `results/modes`, and `results/traces/modes`:
+
+```bash
+.venv/bin/python analysis/run_mode_analysis_semantic.py \
+  --results-dir results_semantic/modes \
+  --base-results-dir results/modes \
+  --traces-dir results/traces/modes \
+  --tasks-dir tasks_core_quality \
+  --output-dir analysis_results_mode_semantic \
+  --no-turn-waste
+```
+
 ### Trace file format
 
 Per-call traces are written by `TracePlugin` to `results/traces/{condition}/{model}/{task_id}.jsonl`.

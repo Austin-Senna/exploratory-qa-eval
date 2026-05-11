@@ -1321,7 +1321,7 @@ def cleanup_sandbox() -> Dict[str, Any]:
     Returns:
         Dict with cleanup status
     """
-    global _SANDBOX_DIR
+    global _SANDBOX_DIR, _SANDBOX_OVERRIDE
 
     if _SANDBOX_DIR is None or not _SANDBOX_DIR.exists():
         return {'status': 'no_sandbox', 'deleted_files': 0}

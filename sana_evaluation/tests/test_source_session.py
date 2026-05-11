@@ -111,6 +111,45 @@ def test_ideal_computation_tools_participate_in_source_sessions() -> None:
     assert execute_source == "schools"
 
 
+def test_parse_xml_records_participates_in_source_sessions() -> None:
+    assert "parse_xml_records" in SOURCE_SESSION_TOOLS
+    source = source_from_tool_use(
+        {"name": "parse_xml_records", "input": {"dataset_id": "schools"}}
+    )
+    assert source == "schools"
+
+
+def test_parse_xml_records_source_from_s3_uri() -> None:
+    source = source_from_tool_use(
+        {
+            "name": "parse_xml_records",
+            "input": {
+                "s3_uri": (
+                    "datagov/bridge-conditions-nys-department-of-transportation/"
+                    "files/rows.kml"
+                )
+            },
+        }
+    )
+    assert source == "bridge-conditions-nys-department-of-transportation"
+
+
+def test_execute_ideal_prefers_explicit_source_over_fallback() -> None:
+    source = source_from_tool_use(
+        {"name": "execute_ideal", "input": {"dataset_id": "schools"}},
+        fallback_source="libraries",
+    )
+    assert source == "schools"
+
+
+def test_execute_ideal_falls_back_to_active_source_when_source_omitted() -> None:
+    source = source_from_tool_use(
+        {"name": "execute_ideal", "input": {"code": "print('x')", "intent": "demo"}},
+        fallback_source="schools",
+    )
+    assert source == "schools"
+
+
 def test_session_counts_and_budget_exhaustion() -> None:
     state = SourceSessionState(
         current_source="schools",

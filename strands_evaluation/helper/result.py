@@ -7,19 +7,32 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from strands_evaluation.helper.constants import MODEL_PRICING
 
-# Baseline API tools
 _API_TOOL_NAMES = {
+    # Legacy search/data tools
     "search",
+    "search_prefix",
     "search_keyword",
     "list_files",
+    "download",
+    # v2 data-inspection and query tools
     "peek_file",
+    "peek_multiple",
+    "read_file",
+    "grep_file",
     "parse_xml_records",
     "query_file",
+    # Mode search tools
+    "search_value",
+    "search_schema",
+    "search_reranked",
+    "search_sparse",
+    "search_hybrid",
+    "search_graph",
+    "search_ideal",
+    # Ideal compute tools
     "query_ideal",
-    "download",
+    "execute_ideal",
 }
-# Condition A (augmented search backends — sparse/hybrid/graph)
-_CONDITION_A_TOOL_NAMES = {"search_sparse", "search_hybrid", "search_graph"}
 
 logger = logging.getLogger(__name__)
 

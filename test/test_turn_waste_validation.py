@@ -113,7 +113,7 @@ class TestTurnWasteValidation(unittest.TestCase):
             )
 
             self._write_log(
-                logs_root / model_dir / variant / "k-6-d-4" / "task_1.log",
+                logs_root / model_dir / variant / "tasks_mini" / "k-6-d-4" / "task_1.log",
                 [
                     "--- Turn 1 (elapsed: 0.0s) ---",
                     'Executing: search_ideal({"query": "Texas prison releases"})',
@@ -147,4 +147,3 @@ class TestTurnWasteValidation(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

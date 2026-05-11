@@ -8,7 +8,8 @@ from strands_evaluation.instrumentation.trace_plugin import _normalize_dataset_i
 
 logger = logging.getLogger(__name__)
 
-_PROMPTS_DIR = Path("prompts")
+_REPO_ROOT = Path(__file__).resolve().parents[2]
+_PROMPTS_DIR = _REPO_ROOT / "prompts"
 _MODES = {"naive", "standard", "ideal", "preloaded"}
 _DEBUG_MODES = {"decision_notes"}
 
@@ -52,44 +53,52 @@ def load_prompt_text(path: str | Path) -> str:
     return prompt_path.read_text()
 
 
-def _remove_markdown_section(text: str, heading: str) -> str:
-    marker = f"\n## {heading}\n"
-    start = text.find(marker)
-    if start < 0:
-        if text.startswith(f"## {heading}\n"):
-            start = 0
-        else:
-            return text
-    search_start = start + (0 if start == 0 else 1)
-    next_heading = text.find("\n## ", search_start + len(f"## {heading}\n"))
-    end = len(text) if next_heading < 0 else next_heading
-    prefix = text[:start].rstrip()
-    suffix = text[end:].lstrip("\n")
-    if prefix and suffix:
-        return f"{prefix}\n\n{suffix}"
-    return prefix or suffix
-
-
 def _compose_search_overlay_prompt(
     base_prompt_path: str | Path,
     search_tool_mode: Optional[str],
-    *,
-    include_skills: bool = True,
 ) -> str:
     mode = _normalize_mode(search_tool_mode, "naive", "search_tool")
     base_prompt = load_prompt_text(base_prompt_path).rstrip()
-    if not include_skills:
-        base_prompt = _remove_markdown_section(base_prompt, "SKILLS")
     overlay = load_prompt_text(_PROMPTS_DIR / f"search_{mode}.txt").strip()
     return f"{base_prompt}\n\n{overlay}"
 
 
+def _remove_prompt_section(prompt: str, heading: str) -> str:
+    lines = prompt.splitlines()
+    out: List[str] = []
+    i = 0
+    while i < len(lines):
+        if lines[i].strip() == heading:
+            i += 1
+            while i < len(lines) and not lines[i].startswith("## "):
+                i += 1
+            while out and out[-1] == "":
+                out.pop()
+            out.append("")
+            continue
+        out.append(lines[i])
+        i += 1
+    return "\n".join(out).strip()
+
+
+def _remove_skill_references(prompt: str) -> str:
+    prompt = _remove_prompt_section(prompt, "## SKILLS")
+    lines = [
+        line
+        for line in prompt.splitlines()
+        if "Skill loading" not in line
+    ]
+    return "\n".join(lines).strip()
+
+
 def compose_managed_prompt(search_tool_mode: Optional[str], *, include_skills: bool = True) -> str:
-    return _compose_search_overlay_prompt(
+    prompt = _compose_search_overlay_prompt(
         _PROMPTS_DIR / "managed.txt",
         search_tool_mode,
-        include_skills=include_skills,
     )
+    if not include_skills:
+        prompt = _remove_skill_references(prompt)
+    return prompt
 
 
 def compose_baseline_prompt(search_tool_mode: Optional[str]) -> str:
@@ -119,9 +128,9 @@ def compose_preloaded_block(source_sequence: List[str]) -> str:
     return "\n".join(lines)
 
 
-def planning_skill_path(plan_mode: Optional[str]) -> str:
-    active_plan_mode = _normalize_mode(plan_mode, "standard", "plan")
-    return _PLAN_IDEAL_SKILL if active_plan_mode == "ideal" else _PLAN_AGENT_SKILL
+def planning_skill_path(agent_management_mode: Optional[str]) -> str:
+    management_mode = _normalize_mode(agent_management_mode, "standard", "agent_management")
+    return _PLAN_IDEAL_SKILL if management_mode == "ideal" else _PLAN_AGENT_SKILL
 
 
 def discover_skill_path(search_tool_mode: Optional[str]) -> str:
@@ -133,16 +142,16 @@ def discover_skill_path(search_tool_mode: Optional[str]) -> str:
 
 def skill_paths_for_modes(
     search_tool_mode: Optional[str],
-    plan_mode: Optional[str],
+    agent_management_mode: Optional[str],
 ) -> List[str]:
     mode = _normalize_mode(search_tool_mode, "naive", "search_tool")
     if mode == "preloaded":
         return [
-            planning_skill_path(plan_mode),
+            planning_skill_path(agent_management_mode),
             _QUERY_DATA_SKILL,
         ]
     return [
-        planning_skill_path(plan_mode),
+        planning_skill_path(agent_management_mode),
         discover_skill_path(mode),
         _QUERY_DATA_SKILL,
     ]

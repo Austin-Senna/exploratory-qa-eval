@@ -15,6 +15,12 @@ import sana_evaluation.helper.peek_profile as peek_profile
 from strands_evaluation.tools.external.ideal import search_wrapper
 
 
+def test_default_profiles_path_points_to_packaged_data_file() -> None:
+    assert peek_profile._PROFILES_PATH.name == "datagov_tables_profiles.jsonl"
+    assert peek_profile._PROFILES_PATH.parent.name == "data"
+    assert peek_profile._PROFILES_PATH.exists()
+
+
 class DatasetProfilesTests(unittest.TestCase):
     def setUp(self) -> None:
         self._tmp = TemporaryDirectory()

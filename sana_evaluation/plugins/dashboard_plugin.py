@@ -26,6 +26,7 @@ from strands.plugins import hook
 _PLAN_MARKER_RE = re.compile(r"\d+[\).]\s+")
 
 _ADMIN_TOOLS = {
+    "cot",
     "plan",
     "plan_ideal",
     "skills",

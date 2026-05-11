@@ -21,6 +21,7 @@ _READ_TOOLS = {
     "parse_xml_records",
     "query_file",
     "query_ideal",
+    "execute_ideal",
 }
 _AUXILIARY_TRACE_EVENTS = {"ideal_subagent_cost"}
 

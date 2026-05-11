@@ -1,17 +1,17 @@
 from sana_evaluation.flags import SanaFlags
-from sana_evaluation.run_sana_eval import _variant_condition_label
+from sana_evaluation.run_sana_eval import _validate_axis_combination, _variant_condition_label
 
 
 def test_variant_label_includes_cadence_sprint_mode() -> None:
     label = _variant_condition_label(
         search_tool="preloaded",
         search_results="ideal",
-        plan="standard",
+        agent_management="standard",
         k=None,
         search_calls=None,
         sana_flags=SanaFlags(sprint=True, sprint_mode="cadence", macro_reflection_k=5),
     )
-    assert label == "sana_sprint_k5_sp_ri_pd_skills_off"
+    assert label == "sana_sprint_k5_sp_ri_pd"
     assert "mrk" not in label
 
 
@@ -19,7 +19,7 @@ def test_variant_label_includes_commitment_sprint_mode() -> None:
     label = _variant_condition_label(
         search_tool="preloaded",
         search_results="ideal",
-        plan="standard",
+        agent_management="standard",
         k=None,
         search_calls=None,
         sana_flags=SanaFlags(
@@ -28,7 +28,7 @@ def test_variant_label_includes_commitment_sprint_mode() -> None:
             commitment_budget_calls=4,
         ),
     )
-    assert label == "sana_sprint_commitment_cb4_sp_ri_pd_skills_off"
+    assert label == "sana_sprint_commitment_cb4_sp_ri_pd"
     assert "mrk" not in label
 
 
@@ -36,64 +36,71 @@ def test_variant_label_uses_readable_feature_names() -> None:
     label = _variant_condition_label(
         search_tool="preloaded",
         search_results="ideal",
-        plan="standard",
+        agent_management="standard",
         k=None,
         search_calls=None,
         sana_flags=SanaFlags(cot=True, results=True),
     )
-    assert label == "sana_cot_results_sp_ri_pd_skills_off"
+    assert label == "sana_cot_results_sp_ri_pd"
     assert "ra" not in label
-
-
-def test_variant_label_includes_delegation_caps() -> None:
-    label = _variant_condition_label(
-        search_tool="preloaded",
-        search_results="ideal",
-        plan="standard",
-        k=None,
-        search_calls=None,
-        sana_flags=SanaFlags(
-            delegation=True,
-            max_search_subagent_calls=4,
-            max_inspect_subagent_calls=9,
-        ),
-    )
-    assert label == "sana_delegation_search4_inspect9_sp_ri_pd_skills_off"
 
 
 def test_variant_label_keeps_axis_suffix_for_non_sana_runs() -> None:
     label = _variant_condition_label(
         search_tool="preloaded",
         search_results="ideal",
-        plan="standard",
+        agent_management="standard",
         k=None,
         search_calls=None,
         sana_flags=SanaFlags(),
     )
-    assert label == "sp_ri_pd_skills_off"
+    assert label == "sp_ri_pd"
 
 
 def test_variant_label_appends_ideal_computation_axis() -> None:
     label = _variant_condition_label(
         search_tool="preloaded",
         search_results="ideal",
-        plan="standard",
+        agent_management="standard",
         computation_tool="ideal",
         k=None,
         search_calls=None,
         sana_flags=SanaFlags(),
     )
-    assert label == "sp_ri_pd_ci_skills_off"
+    assert label == "sp_ri_pd_ci"
 
 
-def test_variant_label_appends_skills_on() -> None:
+def test_variant_label_appends_plan_skills_when_enabled() -> None:
     label = _variant_condition_label(
         search_tool="preloaded",
         search_results="ideal",
-        plan="standard",
-        skills_enabled=True,
+        agent_management="standard",
+        plan_skills_enabled=True,
         k=None,
         search_calls=None,
         sana_flags=SanaFlags(),
     )
     assert label == "sp_ri_pd_skills_on"
+
+
+def test_variant_label_appends_search_free_and_lessguide_when_enabled() -> None:
+    label = _variant_condition_label(
+        search_tool="ideal",
+        search_results="ideal",
+        agent_management="standard",
+        search_free=True,
+        search_lessguide=True,
+        k=None,
+        search_calls=None,
+        sana_flags=SanaFlags(),
+    )
+    assert label == "si_ri_pd_free_lessguide"
+
+
+def test_skills_on_rejects_naive_plans_axis() -> None:
+    try:
+        _validate_axis_combination(agent_management="naive", skills="on")
+    except ValueError as exc:
+        assert "--skills on requires --plans standard or --plans ideal" in str(exc)
+    else:
+        raise AssertionError("Expected ValueError for --skills on with naive plans")

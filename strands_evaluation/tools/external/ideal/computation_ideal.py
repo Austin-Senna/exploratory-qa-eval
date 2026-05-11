@@ -209,6 +209,9 @@ def _execute_answer_payload(record: IdealComputationRecord) -> Dict[str, Any]:
     return {
         "output": str(record.answer),
         "success": True,
+        "dataset_id": record.dataset_id,
+        "file_path": _file_path_for_record(record),
+        "s3_uri": _s3_uri_for_record(record),
     }
 
 
@@ -230,7 +233,6 @@ def _plan_records_for_prompt(plan: IdealTaskPlan, records: Iterable[IdealComputa
                 "source": record.source,
                 "intent": record.intent,
                 "payload": record.payload,
-                "answer": record.answer,
                 "blocked": bool(getattr(record, "blocked", False)),
             }
         )
@@ -625,7 +627,7 @@ def query_ideal(
         dataset_id=dataset_id,
         file_path=file_path,
         s3_uri=s3_uri,
-        fallback_all=not (dataset_id or file_path or s3_uri),
+        fallback_all=True,
     )
     runnable_records = [
         record for record in candidate_records if not getattr(record, "blocked", False)

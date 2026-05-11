@@ -17,6 +17,7 @@ from strands_evaluation.config import AgentConfig, RunConfig
 from sana_evaluation.helper.conversation import build_sana_conversation_manager
 from sana_evaluation.flags import SanaFlags
 from sana_evaluation.plugins import (
+    CoTSteerHandler,
     SprintSteerHandler,
     StateOfTaskDashboardPlugin,
 )
@@ -41,9 +42,13 @@ class SanaDataLakeAgent(DataLakeAgent):
         flags = getattr(self.run_config, "sana_flags", None)
         self.sana_flags: SanaFlags = flags if isinstance(flags, SanaFlags) else SanaFlags()
 
-        active_plan_mode = (self.run_config.plan_mode or "").strip().lower() or "naive"
+        active_plan_mode = (
+            self.run_config.agent_management_mode
+            or self.run_config.plan_mode
+            or ""
+        ).strip().lower() or "naive"
         try:
-            self.sana_flags.validate(plan_mode=active_plan_mode)
+            self.sana_flags.validate(agent_management=active_plan_mode)
         except ValueError as exc:
             raise ValueError(f"SanaFlags validation failed: {exc}") from exc
 
@@ -62,7 +67,8 @@ class SanaDataLakeAgent(DataLakeAgent):
         self,
         *,
         search_tool_mode: Optional[str],
-        plan_mode: Optional[str],
+        agent_management_mode: Optional[str] = None,
+        plan_mode: Optional[str] = None,
     ) -> None:
         if self.sana_flags.delegation:
             from sana_evaluation.instrumentation import delegation_subagent_costs
@@ -76,7 +82,8 @@ class SanaDataLakeAgent(DataLakeAgent):
         self,
         *,
         search_tool_mode: Optional[str],
-        plan_mode: Optional[str],
+        agent_management_mode: Optional[str] = None,
+        plan_mode: Optional[str] = None,
     ) -> str:
         flags = self.sana_flags
         if not flags.any_active():
@@ -98,13 +105,17 @@ class SanaDataLakeAgent(DataLakeAgent):
         self,
         *,
         search_tool_mode: Optional[str],
-        plan_mode: Optional[str],
+        agent_management_mode: Optional[str] = None,
+        plan_mode: Optional[str] = None,
     ) -> List[Any]:
         flags = self.sana_flags
         if not flags.any_active():
             return []
 
         plugins: List[Any] = []
+
+        if flags.cot:
+            plugins.append(CoTSteerHandler())
 
         sprint_plugin: Optional[SprintSteerHandler] = None
         if flags.sprint:
@@ -133,7 +144,8 @@ class SanaDataLakeAgent(DataLakeAgent):
         self,
         *,
         search_tool_mode: Optional[str],
-        plan_mode: Optional[str],
+        agent_management_mode: Optional[str] = None,
+        plan_mode: Optional[str] = None,
     ) -> Optional[Any]:
         if not self.sana_flags.any_active():
             return None
@@ -144,7 +156,8 @@ class SanaDataLakeAgent(DataLakeAgent):
         tools: List[Any],
         *,
         search_tool_mode: Optional[str],
-        plan_mode: Optional[str],
+        agent_management_mode: Optional[str] = None,
+        plan_mode: Optional[str] = None,
         task_context: Optional[dict[str, Any]] = None,
     ) -> List[Any]:
         decorated = list(tools)
@@ -187,6 +200,11 @@ class SanaDataLakeAgent(DataLakeAgent):
 
             if not any(getattr(t, "tool_name", None) == "sprint" for t in decorated):
                 decorated.append(sprint)
+        if self.sana_flags.cot:
+            from sana_evaluation.tools.cot_tool import cot
+
+            if not any(getattr(t, "tool_name", None) == "cot" for t in decorated):
+                decorated.append(cot)
         return decorated
 
     def _decorate_plugins(
@@ -194,7 +212,8 @@ class SanaDataLakeAgent(DataLakeAgent):
         plugins: List[Any],
         *,
         search_tool_mode: Optional[str],
-        plan_mode: Optional[str],
+        agent_management_mode: Optional[str] = None,
+        plan_mode: Optional[str] = None,
     ) -> List[Any]:
         if not self.sana_flags.delegation:
             return plugins
@@ -208,14 +227,17 @@ class SanaDataLakeAgent(DataLakeAgent):
         self,
         *,
         search_tool_mode: Optional[str],
-        plan_mode: Optional[str],
+        agent_management_mode: Optional[str] = None,
+        plan_mode: Optional[str] = None,
     ) -> Sequence[str]:
         excluded = list(
             super()._tool_limit_excluded_tools(
                 search_tool_mode=search_tool_mode,
-                plan_mode=plan_mode,
+                agent_management_mode=agent_management_mode or plan_mode,
             )
         )
+        if self.sana_flags.cot:
+            excluded.append("cot")
         if self.sana_flags.sprint:
             excluded.append("sprint")
         return tuple(excluded)

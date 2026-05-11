@@ -22,7 +22,7 @@ import traceback
 import uuid
 import xml.etree.ElementTree as ET
 from collections import Counter, deque
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 import duckdb
 from dotenv import load_dotenv
@@ -84,6 +84,15 @@ def _s3_head(s3, key: str) -> int:
     """Return file size in bytes via HeadObject."""
     meta = s3.head_object(Bucket=BUCKET, Key=key)
     return meta.get("ContentLength", 0)
+
+
+def _s3_peek_text(s3, key: str, size_bytes: int) -> Tuple[str, int]:
+    """Return UTF-8 preview text plus sampled byte count for a possibly empty object."""
+    if size_bytes <= 0:
+        return "", 0
+    end = min(_PEEK_BYTES - 1, size_bytes - 1)
+    raw = _s3_range_get(s3, key, 0, end)
+    return raw.decode("utf-8", errors="replace"), len(raw)
 
 
 def _duckdb_connection() -> duckdb.DuckDBPyConnection:
@@ -580,13 +589,11 @@ def peek_file(
     except Exception as e:
         return {"error": f"HeadObject failed: {e}"}
 
-    end = min(_PEEK_BYTES - 1, size_bytes - 1)
     try:
-        raw = _s3_range_get(s3, key, 0, end)
+        text, sampled_bytes = _s3_peek_text(s3, key, size_bytes)
     except Exception as e:
         return {"error": f"Range-GET failed: {e}"}
 
-    text = raw.decode("utf-8", errors="replace")
     family = detect_family(text)
 
     lines = [ln for ln in text.splitlines() if ln.strip()]
@@ -603,9 +610,9 @@ def peek_file(
     }
 
     # Estimate row count from sampled bytes
-    if size_bytes > 0 and end > 0:
+    if size_bytes > 0 and sampled_bytes > 0:
         lines_in_sample = len(lines)
-        bytes_per_line = (end + 1) / max(lines_in_sample, 1)
+        bytes_per_line = sampled_bytes / max(lines_in_sample, 1)
         result["row_count_estimate"] = int(size_bytes / bytes_per_line) if bytes_per_line > 0 else None
     else:
         result["row_count_estimate"] = len(lines)
@@ -1059,9 +1066,7 @@ def _parse_xml_records_impl(
 
     try:
         size = _s3_head(s3, key)
-        end = min(_PEEK_BYTES - 1, size - 1)
-        raw = _s3_range_get(s3, key, 0, end)
-        text = raw.decode("utf-8", errors="replace")
+        text, _sampled_bytes = _s3_peek_text(s3, key, size)
         family = detect_family(text)
     except Exception as e:
         return {"error": f"Could not inspect XML/KML file: {e}"}
@@ -1236,9 +1241,7 @@ def _query_file_impl(
         s3 = _get_s3_client()
         key = ref["key"]
         size = _s3_head(s3, key)
-        end = min(_PEEK_BYTES - 1, size - 1)
-        raw = _s3_range_get(s3, key, 0, end)
-        text = raw.decode("utf-8", errors="replace")
+        text, _sampled_bytes = _s3_peek_text(s3, key, size)
         family = detect_family(text)
     except Exception as e:
         return {"error": f"Could not detect file family: {e}"}

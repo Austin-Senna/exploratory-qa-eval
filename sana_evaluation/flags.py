@@ -21,7 +21,7 @@ class SanaFlags:
     """Feature flags controlling which SANA primitives are active for a run.
 
     All flags default to off. One dependency rule is enforced by `validate()`:
-      - `sprint` requires `plan` to be `standard` or `ideal`
+      - `sprint` requires plan management to be `standard` or `ideal`
 
     The state-of-task readout is bundled into `sprint`'s reflection.
     `potential_answer` and `answer_confidence` are also part of every k-turn
@@ -39,18 +39,25 @@ class SanaFlags:
     max_search_subagent_calls: int = 3
     max_inspect_subagent_calls: int = 8
 
-    def validate(self, *, plan_mode: str) -> None:
+    def validate(
+        self,
+        *,
+        agent_management: str | None = None,
+        plan_mode: str | None = None,
+    ) -> None:
+        management_mode = agent_management if agent_management is not None else plan_mode
+        management_mode = management_mode or "naive"
         if self.sprint and self.delegation:
             raise ValueError("SANA features sprint and delegation are mutually exclusive.")
-        if self.sprint and plan_mode not in {"standard", "ideal"}:
+        if self.sprint and management_mode not in {"standard", "ideal"}:
             raise ValueError(
                 "SANA flag sprint requires plan ∈ {standard, ideal}; "
-                f"got plan={plan_mode!r}."
+                f"got plan={management_mode!r}."
             )
-        if self.delegation and plan_mode not in {"standard", "ideal"}:
+        if self.delegation and management_mode not in {"standard", "ideal"}:
             raise ValueError(
                 "SANA flag delegation requires plan ∈ {standard, ideal}; "
-                f"got plan={plan_mode!r}."
+                f"got plan={management_mode!r}."
             )
         if self.sprint_mode not in _VALID_SPRINT_MODES:
             raise ValueError(

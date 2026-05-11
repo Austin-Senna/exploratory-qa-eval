@@ -5,6 +5,12 @@ Text utilities extracted from agent_runner.py.
 import re
 from typing import Any
 
+_STANDALONE_NUMBER_RE = re.compile(r"^[-+]?\d[\d,]*(?:\.\d+)?\.?$")
+_ANSWER_IS_NUMBER_RE = re.compile(
+    r"^(?:the\s+)?(?:final\s+)?answer\s+is\s+([-+]?\d[\d,]*(?:\.\d+)?\.?)$",
+    re.IGNORECASE,
+)
+
 
 def _clean_answer(answer: Any) -> str:
     """Extract a concise answer from bracketed or verbose responses."""
@@ -32,6 +38,9 @@ def _clean_answer(answer: Any) -> str:
     text = re.sub(
         r"^(final answer|answer)\s*[:\-]\s*", "", text, flags=re.IGNORECASE
     )
+    text = re.sub(
+        r"^(?:the\s+)?(?:final\s+)?answer\s+is\s+", "", text, flags=re.IGNORECASE
+    )
 
     # Strip surrounding quotes
     if (text.startswith('"') and text.endswith('"')) or (
@@ -39,11 +48,13 @@ def _clean_answer(answer: Any) -> str:
     ):
         text = text[1:-1].strip()
 
-    # If exactly one number appears, return just that number
-    numbers = re.findall(r"[-+]?\d[\d,]*\.?\d*", text)
-    numbers = [n.replace(",", "").rstrip(".") for n in numbers if re.search(r"\d", n)]
-    if len(numbers) == 1:
-        return numbers[0]
+    # Normalize only clearly numeric answers. Do not strip numbers embedded in
+    # entity names or dates such as "District 9" or "May 2024".
+    if _STANDALONE_NUMBER_RE.fullmatch(text):
+        return text.replace(",", "").rstrip(".")
+    numeric_phrase = _ANSWER_IS_NUMBER_RE.fullmatch(text)
+    if numeric_phrase:
+        return numeric_phrase.group(1).replace(",", "").rstrip(".")
 
     return text
 

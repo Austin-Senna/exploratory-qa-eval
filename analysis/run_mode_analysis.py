@@ -1,6 +1,11 @@
 #!/usr/bin/env python3
 """
-Mode-variant analysis runner.
+Legacy mode-variant analysis runner.
+
+This runner is retained for raw mode outputs that have not gone through the
+semantic audit pipeline. Current mode analysis should use
+analysis/run_mode_analysis_semantic.py, which consumes audited eval_results.csv
+columns such as semantic_match, semantic_bucket, and log_error_bucket.
 
 Reads the multi-axis ablation output layout produced by run_mode_eval:
 
@@ -9,7 +14,7 @@ Reads the multi-axis ablation output layout produced by run_mode_eval:
 
 Where {variant} encodes the three axes:
   search_{s}_results_{r}_plan{p}  (each letter in {n, d, i} = naive/standard/ideal)
-  optional _k{N} and _sc{N} suffixes.
+  optional _k{N}, _sc{N}, and _skills_{on|off} suffixes.
 
 Output files (default: analysis_results_mode/):
   em_f1.json
@@ -103,14 +108,22 @@ def _split_cm_key(key: str) -> Tuple[str, str]:
     return "unknown", key
 
 
+def _parse_model_filters(model_filter: Optional[str]) -> Optional[List[str]]:
+    if not model_filter:
+        return None
+    filters = [part.strip().lower() for part in model_filter.split(",") if part.strip()]
+    return filters or None
+
+
 def _parse_variant(variant: str) -> Dict[str, Optional[object]]:
     """search_i_results_i_plani_k5_sc20 -> structured axes."""
     out: Dict[str, Optional[object]] = {
         "variant": variant,
         "search_tool": None,
         "search_results": None,
-        "plan": None,
-        "skills": None,
+        "agent_management": None,
+        "computation_tool": "standard",
+        "plan_skills": None,
         "k": None,
         "sc": None,
     }
@@ -121,9 +134,11 @@ def _parse_variant(variant: str) -> Dict[str, Optional[object]]:
         elif token == "results" and idx + 1 < len(parts):
             out["search_results"] = _LETTER_TO_MODE.get(parts[idx + 1])
         elif token.startswith("plan") and len(token) > 4:
-            out["plan"] = _LETTER_TO_MODE.get(token[4:])
+            out["agent_management"] = _LETTER_TO_MODE.get(token[4:])
+        elif token.startswith("compute") and len(token) > 7:
+            out["computation_tool"] = _LETTER_TO_MODE.get(token[7:])
         elif token == "skills" and idx + 1 < len(parts):
-            out["skills"] = parts[idx + 1]
+            out["plan_skills"] = parts[idx + 1]
         elif token.startswith("k") and token[1:].isdigit():
             out["k"] = int(token[1:])
         elif token.startswith("sc") and token[2:].isdigit():
@@ -139,10 +154,27 @@ def _task_stem(task_id: str) -> str:
 def relative_task_path(task_id: str) -> Path:
     task_path = Path(str(task_id))
     parts = list(task_path.parts)
+    relative = Path(*parts) if parts else task_path
+    return relative.with_suffix(".log")
+
+
+def legacy_relative_task_path(task_id: str) -> Path:
+    task_path = Path(str(task_id))
+    parts = list(task_path.parts)
     if parts and parts[0].startswith("tasks"):
         parts = parts[1:]
     relative = Path(*parts) if parts else task_path
     return relative.with_suffix(".log")
+
+
+def resolve_log_path(logs_root: Path, model: str, variant: str, task_id: str) -> Path:
+    primary = logs_root / "modes" / model / variant / relative_task_path(task_id)
+    if primary.exists():
+        return primary
+    legacy = logs_root / "modes" / model / variant / legacy_relative_task_path(task_id)
+    if legacy.exists():
+        return legacy
+    return primary
 
 
 def latest_marker(text: str, markers: List[str]) -> Tuple[int, str]:
@@ -291,6 +323,11 @@ def _read_log_tail(path: Path, tail_lines: int = 30) -> str:
 
 
 def run_semantic_outcomes(by_key_records: Dict[str, List[dict]], logs_dir: str, tail_lines: int = 30) -> dict:
+    """Legacy semantic/error bucketing from heuristic answer matching and log tails.
+
+    The semantic-first runner uses audited eval_results.csv columns instead.
+    Keep this only for older raw agent_results.jsonl runs.
+    """
     logs_root = Path(logs_dir)
     out: dict = {}
 
@@ -305,7 +342,7 @@ def run_semantic_outcomes(by_key_records: Dict[str, List[dict]], logs_dir: str, 
             lexical_exact_match = float(r.get("exact_match", 0) or 0)
             semantic_match, _ = semantic_record(expected, predicted, lexical_exact_match)
 
-            log_path = logs_root / "modes" / model / variant / relative_task_path(task_id)
+            log_path = resolve_log_path(logs_root, model, variant, task_id)
             tail_text = _read_log_tail(log_path, tail_lines=tail_lines)
 
             submitted = latest_marker(tail_text, SUBMIT_MARKERS)[0] >= 0
@@ -463,8 +500,9 @@ def build_summary(
             "variant": variant,
             "search_tool": axes["search_tool"],
             "search_results": axes["search_results"],
-            "plan": axes["plan"],
-            "skills": axes["skills"],
+            "agent_management": axes["agent_management"],
+            "computation_tool": axes["computation_tool"],
+            "plan_skills": axes["plan_skills"],
             "k": axes["k"],
             "sc": axes["sc"],
         }
@@ -581,8 +619,9 @@ def build_variant_summary(summary_rows: List[dict]) -> List[dict]:
                 "variant": variant,
                 "search_tool": axes["search_tool"],
                 "search_results": axes["search_results"],
-                "plan": axes["plan"],
-                "skills": axes["skills"],
+                "agent_management": axes["agent_management"],
+                "computation_tool": axes["computation_tool"],
+                "plan_skills": axes["plan_skills"],
                 "k": axes["k"],
                 "sc": axes["sc"],
                 "n_total": total_n,
@@ -627,8 +666,9 @@ def write_per_task_retrieval_csv(discovery: dict, output_csv: Path) -> int:
         "variant",
         "search_tool",
         "search_results",
-        "plan",
-        "skills",
+        "agent_management",
+        "computation_tool",
+        "plan_skills",
         "k",
         "task_id",
         "search_calls_count",
@@ -657,8 +697,9 @@ def write_per_task_retrieval_csv(discovery: dict, output_csv: Path) -> int:
                     "variant": variant,
                     "search_tool": axes["search_tool"],
                     "search_results": axes["search_results"],
-                    "plan": axes["plan"],
-                    "skills": axes["skills"],
+                    "agent_management": axes["agent_management"],
+                    "computation_tool": axes["computation_tool"],
+                    "plan_skills": axes["plan_skills"],
                     "k": axes["k"],
                     "task_id": m.get("task_id", ""),
                     "search_calls_count": int(m.get("num_search_calls", 0) or 0),
@@ -756,6 +797,11 @@ def generate_mode_figures(
     output_dir: Path,
     model_filter: Optional[str] = None,
 ) -> None:
+    """Legacy figure adapter for the pre-semantic mode runner.
+
+    It symlinks mode outputs into the older flat layout expected by
+    generate_figures.py. The semantic runner has native figure generation.
+    """
     results_root = Path(results_dir)
     traces_root = Path(traces_dir)
 
@@ -824,9 +870,8 @@ def main() -> None:
         logs_dir=args.logs_dir,
     )
 
-    model_filters = (
-        [s.strip().lower() for s in args.model_filter.split(",")] if args.model_filter else None
-    )
+    model_filters = _parse_model_filters(args.model_filter)
+    normalized_model_filter = ",".join(model_filters) if model_filters else None
 
     def _keep_model(name: str) -> bool:
         if not model_filters:
@@ -942,7 +987,7 @@ def main() -> None:
         print("\nGenerating figures...")
         try:
             generate_mode_figures(
-                args.results_dir, args.traces_dir, args.tasks_dir, out_dir, args.model_filter
+                args.results_dir, args.traces_dir, args.tasks_dir, out_dir, normalized_model_filter
             )
             print(f"Figures written to {out_dir / 'figures'}")
         except subprocess.CalledProcessError as exc:

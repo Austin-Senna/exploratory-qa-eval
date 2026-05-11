@@ -23,7 +23,7 @@ from typing import Any, Dict, Optional, Tuple
 logger = logging.getLogger(__name__)
 
 
-_PROFILES_PATH = Path(__file__).parent / "data" / "datagov_tables_profiles.jsonl"
+_PROFILES_PATH = Path(__file__).parents[1] / "data" / "datagov_tables_profiles.jsonl"
 
 _PROFILE_BY_URI: Dict[str, Dict[str, Any]] = {}
 _PROFILE_BY_SLUG_FILENAME: Dict[Tuple[str, str], Dict[str, Any]] = {}

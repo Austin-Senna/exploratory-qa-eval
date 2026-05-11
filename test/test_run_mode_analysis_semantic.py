@@ -7,16 +7,233 @@ from tempfile import TemporaryDirectory
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from analysis.run_mode_analysis_semantic import _parse_variant, run_analysis
+from analysis.run_mode_analysis import (
+    _parse_model_filters as parse_legacy_model_filters,
+    _parse_variant as parse_legacy_variant,
+    build_summary as build_legacy_summary,
+    build_variant_summary as build_legacy_variant_summary,
+)
+from analysis.run_mode_analysis_semantic import (
+    _compact_variant_label,
+    _normalize_eval_row,
+    _parse_model_filters,
+    _parse_variant,
+    _plot_error_vs_semantic_variant,
+    build_search_depth_curves,
+    build_summary,
+    build_variant_summary,
+    run_analysis,
+)
 
 
 class TestRunModeAnalysisSemantic(unittest.TestCase):
-    def test_parse_variant_exposes_plan_and_skills_axes(self):
-        axes = _parse_variant("search_p_results_i_pland_computei_skills_on")
-        self.assertEqual(axes["plan"], "standard")
-        self.assertEqual(axes["skills"], "on")
-        self.assertNotIn("agent_management", axes)
-        self.assertNotIn("plan_skills", axes)
+    def test_normalize_eval_row_preserves_fractional_semantic_match(self):
+        row = {
+            "task_id": "tasks_mini/k-1-d-1/task_1.json",
+            "exact_match": "0.0",
+            "semantic_match": "0.75",
+            "semantic_reason": "partial credit",
+            "semantic_bucket": "semantic_incorrect",
+            "log_error_bucket": "",
+            "log_error_evidence": "",
+        }
+
+        normalized = _normalize_eval_row(row, "openai_gpt-5.2-xhigh", "search_i_results_i_plani_k5", Path("eval_results.csv"))
+
+        self.assertEqual(normalized["_semantic_match"], 0.75)
+
+    def test_parse_model_filters_ignores_blank_tokens(self):
+        self.assertEqual(_parse_model_filters("gpt-5.2,"), ["gpt-5.2"])
+        self.assertEqual(parse_legacy_model_filters("gpt-5.2,"), ["gpt-5.2"])
+        self.assertIsNone(_parse_model_filters(" , "))
+        self.assertIsNone(parse_legacy_model_filters(" , "))
+
+    def test_search_depth_curve_averages_fractional_semantic_match(self):
+        variant = "search_i_results_i_plani_k5"
+        key = f"openai_gpt-5.2-xhigh/{variant}"
+        by_key_records = {
+            key: [
+                {"task_stem": "k-1-d-1/task_1", "_semantic_match": 0.25},
+                {"task_stem": "k-1-d-1/task_2", "_semantic_match": 0.75},
+            ]
+        }
+        task_metrics_by_key = {
+            key: {
+                "k-1-d-1/task_1": {"num_search_calls": 1},
+                "k-1-d-1/task_2": {"num_search_calls": 1},
+            }
+        }
+
+        by_variant, by_condition_model = build_search_depth_curves(by_key_records, task_metrics_by_key)
+
+        self.assertEqual(by_variant[variant]["1"]["mean_semantic_match"], 0.5)
+        self.assertEqual(by_condition_model[key]["1"]["mean_semantic_match"], 0.5)
+
+    def test_variant_parsers_include_computation_mode(self):
+        standard_variant = "search_i_results_i_plani_k5_skills_off"
+        ideal_variant = "search_i_results_i_plani_computei_k5_skills_off"
+
+        self.assertEqual(_parse_variant(standard_variant)["computation_tool"], "standard")
+        self.assertEqual(_parse_variant(ideal_variant)["computation_tool"], "ideal")
+        self.assertEqual(parse_legacy_variant(standard_variant)["computation_tool"], "standard")
+        self.assertEqual(parse_legacy_variant(ideal_variant)["computation_tool"], "ideal")
+
+        self.assertIn("C:Ideal", _compact_variant_label(ideal_variant))
+
+    def test_summary_rows_surface_computation_mode(self):
+        variant = "search_i_results_i_plani_computei_k5_skills_off"
+        key = f"openai_gpt-5.2-xhigh/{variant}"
+        records = [
+            {
+                "_semantic_match": 1.0,
+                "_runtime_seconds": 1.0,
+                "_input_tokens": 1,
+                "_output_tokens": 1,
+                "_total_tokens": 2,
+                "_cost_usd": 0.0,
+                "_ideal_subagent_cost_usd": 0.0,
+                "_total_cost_with_ideal_subagents_usd": 0.0,
+                "_tool_calls_total": 1,
+                "_api_tool_calls": 1,
+                "semantic_bucket": "semantic_correct",
+                "log_error_bucket_display": "no_error",
+            }
+        ]
+
+        semantic_summary = build_summary(
+            {key: records},
+            discovery={},
+            efficiency={},
+            tool_errors={},
+            base_by_key_records={},
+        )
+        semantic_variant_summary = build_variant_summary(semantic_summary)
+        legacy_summary = build_legacy_summary(
+            em={key: {"n": 1}},
+            discovery={},
+            failure={},
+            efficiency={},
+        )
+        legacy_variant_summary = build_legacy_variant_summary(legacy_summary)
+
+        self.assertEqual(semantic_summary[0]["computation_tool"], "ideal")
+        self.assertEqual(semantic_variant_summary[0]["computation_tool"], "ideal")
+        self.assertEqual(legacy_summary[0]["computation_tool"], "ideal")
+        self.assertEqual(legacy_variant_summary[0]["computation_tool"], "ideal")
+
+    def test_build_summary_preserves_zero_peek_file_error_rate(self):
+        variant = "search_i_results_i_plani_k5"
+        key = f"openai_gpt-5.2-xhigh/{variant}"
+        by_key_records = {
+            key: [
+                {
+                    "_semantic_match": 1.0,
+                    "_runtime_seconds": 1.0,
+                    "_input_tokens": 1,
+                    "_output_tokens": 1,
+                    "_total_tokens": 2,
+                    "_cost_usd": 0.0,
+                    "_ideal_subagent_cost_usd": 0.0,
+                    "_total_cost_with_ideal_subagents_usd": 0.0,
+                    "_tool_calls_total": 1,
+                    "_api_tool_calls": 1,
+                    "semantic_bucket": "semantic_correct",
+                    "log_error_bucket_display": "no_error",
+                }
+            ]
+        }
+        tool_errors = {
+            key: {
+                "peek_file": {"error_rate": 0.0},
+                "peek_multiple": {"error_rate": 0.5},
+                "peek_files": {"error_rate": 0.25},
+            }
+        }
+
+        summary_rows = build_summary(
+            by_key_records,
+            discovery={},
+            efficiency={},
+            tool_errors=tool_errors,
+            base_by_key_records={},
+        )
+
+        self.assertEqual(summary_rows[0]["peek_file_error_rate"], 0.0)
+
+    def test_error_vs_semantic_plot_uses_fractional_semantic_match(self):
+        class FakeBar:
+            def __init__(self, x_position: float):
+                self.x_position = x_position
+
+            def get_x(self):
+                return self.x_position
+
+            def get_width(self):
+                return 0.34
+
+        class FakeAx:
+            def __init__(self):
+                self.bar_values = []
+
+            def bar(self, x_positions, values, **_kwargs):
+                self.bar_values.append(list(values))
+                return [FakeBar(x_position) for x_position in x_positions]
+
+            def text(self, *_args, **_kwargs):
+                return None
+
+            def set_xticks(self, *_args, **_kwargs):
+                return None
+
+            def set_xticklabels(self, *_args, **_kwargs):
+                return None
+
+            def set_ylabel(self, *_args, **_kwargs):
+                return None
+
+            def set_ylim(self, *_args, **_kwargs):
+                return None
+
+            def set_title(self, *_args, **_kwargs):
+                return None
+
+            def grid(self, *_args, **_kwargs):
+                return None
+
+            def legend(self, *_args, **_kwargs):
+                return None
+
+        class FakeFigure:
+            def tight_layout(self, *_args, **_kwargs):
+                return None
+
+            def savefig(self, *_args, **_kwargs):
+                return None
+
+        class FakePlt:
+            def __init__(self):
+                self.ax = FakeAx()
+
+            def subplots(self, *_args, **_kwargs):
+                return FakeFigure(), self.ax
+
+            def close(self, *_args, **_kwargs):
+                return None
+
+        fake_plt = FakePlt()
+        rows = [
+            {
+                "variant": "search_i_results_i_plani_k5",
+                "n_total": 1,
+                "semantic_match": 0.25,
+                "semantic_correct_rate": 1.0,
+                "no_error_rate": 0.5,
+            }
+        ]
+
+        _plot_error_vs_semantic_variant(fake_plt, rows, Path("unused.pdf"))
+
+        self.assertEqual(fake_plt.ax.bar_values[0], [25.0])
 
     def _write_eval_results(self, path: Path, rows: list[dict]) -> None:
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -607,11 +824,14 @@ class TestRunModeAnalysisSemantic(unittest.TestCase):
 
             tools_discovery = outputs["tools_discovery"][f"openai_gpt-5.2-xhigh/{variant_a}"]
             self.assertIn("search_ideal", tools_discovery)
-            self.assertNotIn("avg_recall", tools_discovery["search_ideal"])
+            self.assertIn("avg_recall", tools_discovery["search_ideal"])
+            self.assertIn("avg_f1", tools_discovery["search_ideal"])
             folder_stats = next(iter(tools_discovery["search_ideal"]["per_folder"].values()))
-            self.assertNotIn("avg_recall", folder_stats)
+            self.assertIn("avg_recall", folder_stats)
+            self.assertIn("avg_f1", folder_stats)
             task_stats = next(iter(folder_stats["per_task"].values()))
-            self.assertNotIn("recall", task_stats)
+            self.assertIn("recall", task_stats)
+            self.assertIn("f1", task_stats)
 
             self.assertIn("tool_errors", outputs)
             tool_errors = outputs["tool_errors"][f"openai_gpt-5.2-xhigh/{variant_a}"]
@@ -1046,13 +1266,9 @@ class TestRunModeAnalysisSemantic(unittest.TestCase):
                 "fig03_semantic_x_error_variant.pdf",
                 "fig04_error_vs_semantic_variant.pdf",
                 "fig05_turn_waste_groups_variant.pdf",
-                "fig1_semantic_comparison.pdf",
                 "fig2a_recall_semantic_combined.pdf",
-                "fig2_discovery_metrics.pdf",
-                "fig2b_gpt_5_2_xhigh_discovery_metrics.pdf",
-                "fig3_failure_breakdown.pdf",
                 "fig6_cost_vs_semantic.pdf",
-                "fig8_search_tool_precision.pdf",
+                "fig8_search_tool_precision_recall_f1.pdf",
                 "fig9_search_calls.pdf",
                 "fig10_search_depth_curve.pdf",
                 "fig10b_gpt_5_2_xhigh_search_depth.pdf",

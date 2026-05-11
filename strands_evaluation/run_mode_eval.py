@@ -4,7 +4,7 @@
 This runner extends search-ablation controls with four orthogonal axes:
   - search_tool quality
   - search_results richness
-  - plan style
+  - agent_management style
   - computation_tool behavior
 """
 
@@ -39,7 +39,7 @@ _MODE_LETTERS = {
 _LEGACY_AXIS_DEFAULTS = {
     "search_tool": "standard",
     "search_results": "naive",
-    "plan": "standard",
+    "agent_management": "standard",
     "computation_tool": "standard",
 }
 
@@ -48,18 +48,18 @@ def _variant_condition_label(
     *,
     search_tool: str,
     search_results: str,
-    plan: str,
+    agent_management: str,
     computation_tool: str = "standard",
     k: Optional[int] = None,
     search_calls: Optional[int] = None,
     search_free: bool = False,
     search_lessguide: bool = False,
-    skills_enabled: bool = False,
+    plan_skills_enabled: bool = False,
 ) -> str:
     parts = [
         f"search_{_MODE_LETTERS[search_tool]}",
         f"results_{_MODE_LETTERS[search_results]}",
-        f"plan{_MODE_LETTERS[plan]}",
+        f"plan{_MODE_LETTERS[agent_management]}",
     ]
     if computation_tool != "standard":
         parts.append(f"compute{_MODE_LETTERS[computation_tool]}")
@@ -71,7 +71,7 @@ def _variant_condition_label(
         parts.append("free")
     if search_lessguide:
         parts.append("lessguide")
-    parts.append("skills_on" if skills_enabled else "skills_off")
+    parts.append("skills_on" if plan_skills_enabled else "skills_off")
     return "_".join(parts)
 
 
@@ -86,16 +86,21 @@ def _resolve_mode_axes(
     *,
     search_tool: Optional[str],
     search_results: Optional[str],
-    plan: Optional[str],
+    agent_management: Optional[str],
     computation_tool: Optional[str] = None,
 ) -> tuple[str, str, str, str]:
     defaults = _LEGACY_AXIS_DEFAULTS
     return (
         search_tool or defaults["search_tool"],
         search_results or defaults["search_results"],
-        plan or defaults["plan"],
+        agent_management or defaults["agent_management"],
         computation_tool or defaults["computation_tool"],
     )
+
+
+def _validate_axis_combination(*, agent_management: str, skills: str) -> None:
+    if skills == "on" and agent_management == "naive":
+        raise ValueError("--skills on requires --plans standard or --plans ideal.")
 
 
 def _collect_task_files(args) -> list[str]:
@@ -330,25 +335,25 @@ def main() -> None:
         help="Search result richness axis.",
     )
     parser.add_argument(
-        "--plan",
+        "--plans",
         "--agent-management",
         "--agent_management",
-        dest="plan",
+        dest="agent_management",
         choices=["naive", "standard", "ideal"],
         default=None,
-        help="Plan axis. Deprecated aliases: --agent-management, --agent_management.",
-    )
-    parser.add_argument(
-        "--skills",
-        choices=["on", "off"],
-        default="off",
-        help="Enable or disable AgentSkills for managed plan modes.",
+        help="Plan-management axis.",
     )
     parser.add_argument(
         "--computation_tool",
         choices=["standard", "ideal"],
         default=None,
         help="Computation tool axis.",
+    )
+    parser.add_argument(
+        "--skills",
+        choices=["on", "off"],
+        default="off",
+        help="Enable or disable the Strands AgentSkills planning/discovery skills plugin.",
     )
 
     # Execution
@@ -377,24 +382,27 @@ def main() -> None:
         openai_prompt_cache_retention=args.openai_prompt_cache_retention,
         extra_model_kwargs=extra_model_kwargs,
     )
-    search_tool_mode, search_results_mode, plan_mode, computation_tool_mode = _resolve_mode_axes(
+    search_tool_mode, search_results_mode, agent_management_mode, computation_tool_mode = _resolve_mode_axes(
         search_tool=args.search_tool,
         search_results=args.search_results,
-        plan=args.plan,
+        agent_management=args.agent_management,
         computation_tool=args.computation_tool,
     )
-    skills_enabled = args.skills == "on"
+    try:
+        _validate_axis_combination(agent_management=agent_management_mode, skills=args.skills)
+    except ValueError as exc:
+        parser.error(str(exc))
     safe_model_name = base_eval._display_name(agent_config)
     variant_condition = _variant_condition_label(
         search_tool=search_tool_mode,
         search_results=search_results_mode,
-        plan=plan_mode,
+        agent_management=agent_management_mode,
         computation_tool=computation_tool_mode,
         k=args.k,
         search_calls=args.search_calls,
         search_free=args.search_free,
         search_lessguide=args.search_lessguide,
-        skills_enabled=skills_enabled,
+        plan_skills_enabled=args.skills == "on",
     )
     variant_condition = _with_debug_suffix(variant_condition, args.debug_mode)
     condition_label = f"modes/{safe_model_name}/{variant_condition}"
@@ -420,9 +428,9 @@ def main() -> None:
         search_db_path=args.db_path,
         search_tool_mode=search_tool_mode,
         search_results_mode=search_results_mode,
-        plan_mode=plan_mode,
-        skills_enabled=skills_enabled,
+        agent_management_mode=agent_management_mode,
         computation_tool_mode=computation_tool_mode,
+        plan_skills_enabled=args.skills == "on",
         search_free=args.search_free,
         search_lessguide=args.search_lessguide,
         condition_config=ConditionConfig(
@@ -434,14 +442,14 @@ def main() -> None:
     )
 
     logger.info(
-        "Ablation variant: %s (base=%s, st=%s, sr=%s, plan=%s, skills=%s, ct=%s, k=%s, search_calls=%s, search_free=%s, search_lessguide=%s, db_path=%s)",
+        "Ablation variant: %s (base=%s, st=%s, sr=%s, am=%s, ct=%s, plan_skills=%s, k=%s, search_calls=%s, search_free=%s, search_lessguide=%s, db_path=%s)",
         condition_label,
         args.condition,
         search_tool_mode,
         search_results_mode,
-        plan_mode,
-        args.skills,
+        agent_management_mode,
         computation_tool_mode,
+        args.skills,
         args.k,
         args.search_calls,
         args.search_free,

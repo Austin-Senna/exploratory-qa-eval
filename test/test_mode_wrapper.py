@@ -4,7 +4,11 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from strands_evaluation.config import RunConfig
-from strands_evaluation.agent_with_mode import build_mode_bundle, _tool_limit_exclusions_for_run
+from strands_evaluation.agent_with_mode import (
+    DataLakeAgent,
+    build_mode_bundle,
+    _tool_limit_exclusions_for_run,
+)
 from strands_evaluation.helper.prompting import (
     compose_baseline_prompt,
     compose_managed_prompt,
@@ -48,12 +52,12 @@ class TestModeWrapper(unittest.TestCase):
         cfg = RunConfig(
             search_tool_mode="naive",
             search_results_mode="naive",
-            plan_mode="naive",
+            agent_management_mode="naive",
         )
         bundle = build_mode_bundle(cfg, data_tools=[])
         self.assertEqual(bundle.modes["search_tool"], "naive")
         self.assertEqual(bundle.modes["search_results"], "naive")
-        self.assertEqual(bundle.modes["plan"], "naive")
+        self.assertEqual(bundle.modes["agent_management"], "naive")
         self.assertFalse(bundle.enable_skills)
         self.assertFalse(bundle.enable_stagnation)
         self.assertIn("search_value", bundle.search_tool_names)
@@ -62,7 +66,7 @@ class TestModeWrapper(unittest.TestCase):
         cfg = RunConfig(
             search_tool_mode="standard",
             search_results_mode="naive",
-            plan_mode="naive",
+            agent_management_mode="naive",
         )
         bundle = build_mode_bundle(cfg, data_tools=[])
         self.assertIn("search_reranked", bundle.search_tool_names)
@@ -147,7 +151,7 @@ class TestModeWrapper(unittest.TestCase):
             cfg = RunConfig(
                 search_tool_mode="ideal",
                 search_results_mode="ideal",
-                plan_mode="ideal",
+                agent_management_mode="ideal",
             )
             bundle = build_mode_bundle(
                 cfg,
@@ -161,31 +165,33 @@ class TestModeWrapper(unittest.TestCase):
             self.assertFalse(bundle.enable_skills)
             self.assertTrue(bundle.enable_stagnation)
 
-    def test_skills_flag_enables_skills_for_managed_modes(self):
+    def test_plan_skills_flag_enables_skills_for_managed_modes(self):
         cfg = RunConfig(
             search_tool_mode="standard",
             search_results_mode="naive",
-            plan_mode="standard",
-            skills_enabled=True,
+            agent_management_mode="standard",
+            plan_skills_enabled=True,
         )
         bundle = build_mode_bundle(cfg, data_tools=[])
         tool_names = [tool_obj.tool_spec["name"] for tool_obj in bundle.tools]
         self.assertIn("plan", tool_names)
         self.assertTrue(bundle.enable_skills)
         self.assertTrue(bundle.enable_stagnation)
-        self.assertEqual(bundle.modes["skills"], "on")
-        self.assertIn("skills(", bundle.system_prompt)
+        self.assertEqual(bundle.modes["plan_skills"], "on")
 
-    def test_skills_off_removes_skills_prompt_guidance(self):
+    def test_managed_prompt_omits_skills_when_plugin_disabled(self):
         cfg = RunConfig(
             search_tool_mode="standard",
             search_results_mode="naive",
-            plan_mode="standard",
+            agent_management_mode="standard",
+            plan_skills_enabled=False,
         )
         bundle = build_mode_bundle(cfg, data_tools=[])
 
+        self.assertFalse(bundle.enable_skills)
+        self.assertNotIn("## SKILLS", bundle.system_prompt)
         self.assertNotIn("skills(", bundle.system_prompt)
-        self.assertNotIn("summarize_context", bundle.system_prompt)
+        self.assertNotIn("Skill loading", bundle.system_prompt)
 
     def test_ideal_management_stores_task_context_for_plan_loading(self):
         with TemporaryDirectory() as tmpdir:
@@ -196,7 +202,7 @@ class TestModeWrapper(unittest.TestCase):
             cfg = RunConfig(
                 search_tool_mode="ideal",
                 search_results_mode="ideal",
-                plan_mode="ideal",
+                agent_management_mode="ideal",
             )
             build_mode_bundle(
                 cfg,
@@ -220,7 +226,7 @@ class TestModeWrapper(unittest.TestCase):
             cfg = RunConfig(
                 search_tool_mode="ideal",
                 search_results_mode="ideal",
-                plan_mode="ideal",
+                agent_management_mode="ideal",
             )
             bundle = build_mode_bundle(
                 cfg,
@@ -241,7 +247,7 @@ class TestModeWrapper(unittest.TestCase):
         cfg = RunConfig(
             search_tool_mode="standard",
             search_results_mode="naive",
-            plan_mode="standard",
+            agent_management_mode="standard",
         )
         bundle = build_mode_bundle(cfg, data_tools=[])
         self.assertIn("search_reranked", bundle.system_prompt)
@@ -260,7 +266,7 @@ class TestModeWrapper(unittest.TestCase):
             cfg = RunConfig(
                 search_tool_mode="ideal",
                 search_results_mode="ideal",
-                plan_mode="standard",
+                agent_management_mode="standard",
             )
             bundle = build_mode_bundle(
                 cfg,
@@ -275,7 +281,7 @@ class TestModeWrapper(unittest.TestCase):
         cfg = RunConfig(
             search_tool_mode="standard",
             search_results_mode="naive",
-            plan_mode="naive",
+            agent_management_mode="naive",
         )
         bundle = build_mode_bundle(cfg, data_tools=[])
         self.assertIn("search_reranked", bundle.system_prompt)
@@ -294,7 +300,7 @@ class TestModeWrapper(unittest.TestCase):
             cfg = RunConfig(
                 search_tool_mode="ideal",
                 search_results_mode="ideal",
-                plan_mode="naive",
+                agent_management_mode="naive",
             )
             bundle = build_mode_bundle(
                 cfg,
@@ -309,7 +315,7 @@ class TestModeWrapper(unittest.TestCase):
         cfg = RunConfig(
             search_tool_mode="standard",
             search_results_mode="naive",
-            plan_mode="naive",
+            agent_management_mode="naive",
             debug_mode="decision_notes",
         )
         bundle = build_mode_bundle(cfg, data_tools=[])
@@ -322,21 +328,33 @@ class TestModeWrapper(unittest.TestCase):
     def test_search_free_adds_active_search_tools_to_tool_limit_exclusions(self):
         self.assertEqual(
             _tool_limit_exclusions_for_run(
-                base_excluded=("skills", "plan"),
+                base_excluded=("skills", "plan", "plan_ideal"),
                 search_free=True,
                 search_tool_names=("search_ideal", "search_schema"),
             ),
-            ("skills", "plan", "search_ideal", "search_schema"),
+            ("skills", "plan", "plan_ideal", "search_ideal", "search_schema"),
         )
 
     def test_tool_limit_exclusions_leave_search_tools_counted_by_default(self):
         self.assertEqual(
             _tool_limit_exclusions_for_run(
-                base_excluded=("skills", "plan"),
+                base_excluded=("skills", "plan", "plan_ideal"),
                 search_free=False,
                 search_tool_names=("search_ideal",),
             ),
-            ("skills", "plan"),
+            ("skills", "plan", "plan_ideal"),
+        )
+
+    def test_default_tool_limit_exclusions_include_both_plan_tools(self):
+        self.assertEqual(
+            tuple(
+                DataLakeAgent._tool_limit_excluded_tools(
+                    None,
+                    search_tool_mode="ideal",
+                    agent_management_mode="ideal",
+                )
+            ),
+            ("skills", "plan", "plan_ideal"),
         )
 
     def test_inject_debug_prompt_noops_when_disabled(self):
@@ -358,7 +376,7 @@ class TestModeWrapper(unittest.TestCase):
             cfg = RunConfig(
                 search_tool_mode="ideal",
                 search_results_mode="ideal",
-                plan_mode="ideal",
+                agent_management_mode="ideal",
             )
             with self.assertRaises(FileNotFoundError):
                 build_mode_bundle(
@@ -385,7 +403,7 @@ class TestModeWrapper(unittest.TestCase):
             cfg = RunConfig(
                 search_tool_mode="ideal",
                 search_results_mode="ideal",
-                plan_mode="ideal",
+                agent_management_mode="ideal",
             )
             with self.assertRaises(ValueError):
                 build_mode_bundle(
@@ -403,7 +421,7 @@ class TestModeWrapper(unittest.TestCase):
             cfg = RunConfig(
                 search_tool_mode="preloaded",
                 search_results_mode="ideal",
-                plan_mode="standard",
+                agent_management_mode="standard",
             )
             bundle = build_mode_bundle(
                 cfg,
@@ -430,7 +448,7 @@ class TestModeWrapper(unittest.TestCase):
             cfg = RunConfig(
                 search_tool_mode="preloaded",
                 search_results_mode="naive",
-                plan_mode="naive",
+                agent_management_mode="naive",
             )
             with self.assertRaises(FileNotFoundError):
                 build_mode_bundle(
@@ -458,7 +476,7 @@ class TestModeWrapper(unittest.TestCase):
             cfg = RunConfig(
                 search_tool_mode="preloaded",
                 search_results_mode="naive",
-                plan_mode="standard",
+                agent_management_mode="standard",
             )
             with self.assertRaises(ValueError):
                 build_mode_bundle(
@@ -494,7 +512,7 @@ class TestModeWrapper(unittest.TestCase):
             cfg = RunConfig(
                 search_tool_mode="preloaded",
                 search_results_mode="naive",
-                plan_mode="naive",
+                agent_management_mode="naive",
                 computation_tool_mode="ideal",
             )
             bundle = build_mode_bundle(
@@ -516,7 +534,7 @@ class TestModeWrapper(unittest.TestCase):
         cfg = RunConfig(
             search_tool_mode="preloaded",
             search_results_mode="naive",
-            plan_mode="naive",
+            agent_management_mode="naive",
             computation_tool_mode="standard",
         )
         bundle = build_mode_bundle(
@@ -550,7 +568,7 @@ class TestModeWrapper(unittest.TestCase):
             cfg = RunConfig(
                 search_tool_mode="preloaded",
                 search_results_mode="naive",
-                plan_mode="naive",
+                agent_management_mode="naive",
                 computation_tool_mode="ideal",
             )
             bundle = build_mode_bundle(
@@ -562,75 +580,6 @@ class TestModeWrapper(unittest.TestCase):
         self.assertIn("## COMPUTATION FILE FAMILY RULE", bundle.system_prompt)
         self.assertIn("Do not use `query_file`, `execute_code`, `query_ideal`, or `execute_ideal`", bundle.system_prompt)
         self.assertIn("non-tabular or non-JSON", bundle.system_prompt)
-
-
-class TestSanaSeparation(unittest.TestCase):
-    """Baseline mode bundles stay SANA-clean; SANA profile wiring lives in sana_evaluation."""
-
-    def test_mode_bundle_does_not_inject_sana_profile_prompt(self):
-        cfg = RunConfig(
-            search_tool_mode="naive",
-            search_results_mode="naive",
-            plan_mode="naive",
-        )
-        bundle = build_mode_bundle(cfg, data_tools=[])
-        self.assertNotIn("DATASET PROFILE", bundle.system_prompt)
-
-
-class TestPeekFileEnrichment(unittest.TestCase):
-    """Direct tests of the peek_file enrichment path (no agent build)."""
-
-    def setUp(self) -> None:
-        import sana_evaluation.helper.peek_profile as profile_loader
-
-        self._tmp = TemporaryDirectory()
-        self._profiles_path = Path(self._tmp.name) / "profiles.jsonl"
-        self._profile_loader = profile_loader
-        self._orig_state = {
-            "path": profile_loader._PROFILES_PATH,
-            "loaded": profile_loader._PROFILES_LOADED,
-            "by_uri": profile_loader._PROFILE_BY_URI,
-            "by_slug_filename": profile_loader._PROFILE_BY_SLUG_FILENAME,
-        }
-        profile_loader._PROFILES_PATH = self._profiles_path
-        profile_loader._PROFILES_LOADED = False
-        profile_loader._PROFILE_BY_URI = {}
-        profile_loader._PROFILE_BY_SLUG_FILENAME = {}
-
-    def tearDown(self) -> None:
-        self._profile_loader._PROFILES_PATH = self._orig_state["path"]
-        self._profile_loader._PROFILES_LOADED = self._orig_state["loaded"]
-        self._profile_loader._PROFILE_BY_URI = self._orig_state["by_uri"]
-        self._profile_loader._PROFILE_BY_SLUG_FILENAME = self._orig_state["by_slug_filename"]
-        self._tmp.cleanup()
-
-    def test_profile_lookup_returns_none_when_uri_not_cached(self):
-        from sana_evaluation.helper.peek_profile import load_dataset_profile
-
-        profile = load_dataset_profile("s3://nonexistent-bucket/not-a-dataset/files/foo.txt")
-        self.assertIsNone(profile)
-
-    def test_profile_lookup_returns_dict_when_uri_is_cached(self):
-        from sana_evaluation.helper.peek_profile import load_dataset_profile
-
-        uri = "s3://lakeqa-yc4103-datalake/datagov/example/files/rows.txt"
-        self._profiles_path.write_text(
-            json.dumps(
-                {
-                    "s3_uri": uri,
-                    "slug": "example",
-                    "filename": "rows",
-                    "row_count": 2,
-                    "llm_description": "Example rows.",
-                }
-            )
-            + "\n"
-        )
-
-        profile = load_dataset_profile(uri)
-        self.assertIsNotNone(profile, "expected cached profile for known URI")
-        self.assertEqual(profile.get("row_count"), 2)
-        self.assertEqual(profile.get("llm_description"), "Example rows.")
 
 
 if __name__ == "__main__":

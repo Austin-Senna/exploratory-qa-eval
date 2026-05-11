@@ -116,8 +116,8 @@ This section tests the narrow claim that planning scaffolding recovers or does n
 
 Two conditions, both with preloaded sources:
 
-- **Oracle-Sources (no planning)** — `search=preloaded, plan=naive`. Agent has gold sources, no `plan()` tool, no skills plugin.
-- **Oracle-Sources + Planning** — `search=preloaded, plan=standard`. Same preloaded sources, plus the managed stack (`plan()`, optional skills, category-stagnation handler).
+- **Oracle-Sources (no planning)** — `search=preloaded, plans=naive`. Agent has gold sources, no `plan()` tool, and no skills plugin.
+- **Oracle-Sources + Planning** — `search=preloaded, plans=standard`. Same preloaded sources, plus `plan()` and category-stagnation handling. Add `--skills on` only when intentionally testing the skills plugin.
 
 Interpretation:
 

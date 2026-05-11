@@ -31,7 +31,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from analysis.discovery_metrics import load_task_gold_ids, make_task_stem_key
 
 
-_LETTER_TO_MODE = {"n": "naive", "d": "standard", "i": "ideal", "p": "preloaded"}
+_LETTER_TO_MODE = {"n": "naive", "d": "standard", "i": "ideal"}
 _FIRST_HIT_CUTOFFS = (1, 3, 5)
 _TOOL_ORDER = ["search_ideal", "search_reranked", "search_value", "search_prefix", "search_schema"]
 _TOOL_COLORS = {
@@ -78,8 +78,8 @@ def _parse_variant(variant: str) -> Dict[str, Optional[object]]:
         "variant": variant,
         "search_tool": None,
         "search_results": None,
-        "plan": None,
-        "skills": None,
+        "agent_management": None,
+        "plan_skills": None,
         "k": None,
         "sc": None,
     }
@@ -90,9 +90,9 @@ def _parse_variant(variant: str) -> Dict[str, Optional[object]]:
         elif token == "results" and idx + 1 < len(parts):
             out["search_results"] = _LETTER_TO_MODE.get(parts[idx + 1])
         elif token.startswith("plan") and len(token) > 4:
-            out["plan"] = _LETTER_TO_MODE.get(token[4:])
+            out["agent_management"] = _LETTER_TO_MODE.get(token[4:])
         elif token == "skills" and idx + 1 < len(parts):
-            out["skills"] = parts[idx + 1]
+            out["plan_skills"] = parts[idx + 1]
         elif token.startswith("k") and token[1:].isdigit():
             out["k"] = int(token[1:])
         elif token.startswith("sc") and token[2:].isdigit():
@@ -105,7 +105,7 @@ def _variant_sort_key(variant: str) -> tuple:
     mode_priority = {"ideal": 0, "standard": 1, "naive": 2, None: 3}
     return (
         mode_priority.get(axes.get("search_tool"), 4),
-        mode_priority.get(axes.get("plan"), 4),
+        mode_priority.get(axes.get("agent_management"), 4),
         mode_priority.get(axes.get("search_results"), 4),
         axes.get("k") if axes.get("k") is not None else 10**9,
         axes.get("sc") if axes.get("sc") is not None else 10**9,
@@ -589,8 +589,8 @@ def run_analysis(
             "variant": variant,
             "search_tool": axes["search_tool"],
             "search_results": axes["search_results"],
-            "plan": axes["plan"],
-            "skills": axes["skills"],
+            "agent_management": axes["agent_management"],
+            "plan_skills": axes["plan_skills"],
             "k": axes["k"],
             "sc": axes["sc"],
             "search_call_tool": search_call_tool,
@@ -625,8 +625,8 @@ def run_analysis(
                 "variant": variant,
                 "search_tool": axes["search_tool"],
                 "search_results": axes["search_results"],
-                "plan": axes["plan"],
-                "skills": axes["skills"],
+                "agent_management": axes["agent_management"],
+                "plan_skills": axes["plan_skills"],
                 "k": axes["k"],
                 "sc": axes["sc"],
                 "search_call_tool": search_call_tool,
@@ -668,8 +668,8 @@ def run_analysis(
         "variant",
         "search_tool",
         "search_results",
-        "plan",
-        "skills",
+        "agent_management",
+        "plan_skills",
         "k",
         "sc",
         "search_call_tool",
@@ -694,8 +694,8 @@ def run_analysis(
         "variant",
         "search_tool",
         "search_results",
-        "plan",
-        "skills",
+        "agent_management",
+        "plan_skills",
         "k",
         "sc",
         "search_call_tool",

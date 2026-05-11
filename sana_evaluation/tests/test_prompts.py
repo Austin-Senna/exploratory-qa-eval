@@ -17,17 +17,21 @@ _SEARCH_MODES = ["naive", "preloaded", "standard", "ideal"]
 @pytest.mark.parametrize("search_tool", _SEARCH_MODES)
 def test_cot_block_non_empty(search_tool: str) -> None:
     text = cot_block(search_tool)
-    assert "STRUCTURED TOOL-USE RECORDS" in text
-    assert "confidence:" in text
-    assert "sufficient_to_call_step_complete" not in text
-    assert "After each tool result" not in text
-    assert "data/search tools only" in text
-    assert "intent:" in text
+    assert "STRUCTURED TOOL-USE GATE" in text
+    assert "cot" in text
+    assert "pre_tool" in text
+    assert "post_tool" in text
+    assert "intended_tool" in text
+    assert "completed_tool" in text
+    assert "sufficient_to_call_step_complete" in text
+    assert "Do not write free-text CoT records" in text
     for tool_name in ("skills", "plan", "plan_ideal", "sprint", "submit_answer"):
         assert tool_name in text
+    assert "intent:" not in text
+    assert "confidence:" not in text
+    assert "current_step:" not in text
     assert "why_this_tool" not in text
     assert "what_success_looks_like" not in text
-    assert "Never write the tool request" in text
     assert "to=functions" not in text
     # Block must not mention "SANA" — that vocabulary leaks framework-internal naming
     # to the agent and was empirically confusing.
@@ -72,6 +76,7 @@ def test_sprint_block_describes_commitment_contract(search_tool: str) -> None:
     assert "success_condition" not in text
     assert "next_action" in text
     assert "voluntary" in text.lower()
+    assert "observation-only" in text.lower()
     assert "State of Task" in text
     assert "current_plan_step" in text
     assert "tool_calls_left" in text

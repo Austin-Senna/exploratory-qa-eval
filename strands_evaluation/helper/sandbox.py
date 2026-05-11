@@ -19,7 +19,4 @@ def _create_isolated_sandbox(task_id: str) -> Path:
 def _cleanup_isolated_sandbox(sandbox_path: Path) -> None:
     """Clean up an isolated sandbox directory."""
     if sandbox_path and sandbox_path.exists():
-        try:
-            shutil.rmtree(sandbox_path)
-        except Exception:
-            pass
+        shutil.rmtree(sandbox_path)

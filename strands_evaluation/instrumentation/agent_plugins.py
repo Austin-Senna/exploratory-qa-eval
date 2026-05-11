@@ -264,8 +264,11 @@ class ToolLimitSteeringHandler(SteeringHandler):
         if get_submitted_answer() is not None:
             return Proceed(reason="answer already submitted; no further steering")
 
-        if tool_use.get("name") == "submit_answer":
+        tool_name = tool_use.get("name")
+        if tool_name == "submit_answer":
             return Proceed(reason="submit_answer is always allowed")
+        if tool_name in self._excluded_tools:
+            return Proceed(reason="excluded administrative tool")
 
         reason = self._current_limit_reason()
         if reason is None:

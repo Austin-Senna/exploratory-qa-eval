@@ -216,7 +216,13 @@ def validate_audit_row(row: dict, log_path: Path | None) -> dict:
 
 def row_log_path(logs_root: Path, model_variant: str, mode_variant: str, task_id: str) -> Path:
     task_path = Path(task_id)
-    return logs_root / model_variant / mode_variant / task_path.parent.name / f"{task_path.stem}.log"
+    primary = logs_root / model_variant / mode_variant / task_path.with_suffix(".log")
+    if primary.exists():
+        return primary
+    legacy = logs_root / model_variant / mode_variant / task_path.parent.name / f"{task_path.stem}.log"
+    if legacy.exists():
+        return legacy
+    return primary
 
 
 def validate_turn_waste_root(

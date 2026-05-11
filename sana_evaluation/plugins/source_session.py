@@ -13,6 +13,7 @@ SOURCE_SESSION_TOOLS = {
     "peek_multiple",
     "read_file",
     "grep_file",
+    "parse_xml_records",
     "query_file",
     "query_ideal",
     "download",
@@ -91,7 +92,7 @@ def source_from_tool_use(
 
     tool_input = (tool_use or {}).get("input", {}) or {}
 
-    if tool_name in {"execute_code", "execute_ideal"}:
+    if tool_name == "execute_code":
         return fallback_source
 
     source = _clean_source(tool_input.get("dataset_id"))
@@ -110,7 +111,13 @@ def source_from_tool_use(
     if source:
         return source
 
-    return _source_from_files(tool_input.get("files") or tool_input.get("entries"))
+    source = _source_from_files(tool_input.get("files") or tool_input.get("entries"))
+    if source:
+        return source
+
+    if tool_name == "execute_ideal":
+        return fallback_source
+    return None
 
 
 @dataclass
