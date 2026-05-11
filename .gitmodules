@@ -4,3 +4,6 @@
 [submodule "sana_framework_paper"]
 	path = sana_framework_paper
 	url = https://github.com/Austin-Senna/sana_framework_paper.git
+[submodule "tabular-momo-paper"]
+	path = tabular-momo-paper
+	url = https://github.com/Austin-Senna/tabular-momo-paper.git

@@ -20,6 +20,9 @@ from sana_evaluation.tools.delegation_common import (
 )
 
 
+_PARTIAL_OR_SUCCESS_STATUS = {"success", "partial"}
+
+
 _INSPECT_TOOL_NAMES = {
     "peek_file",
     "peek_multiple",
@@ -133,28 +136,55 @@ def _format_inspect_prompt(
         "Every file tool call must include `s3_uri`, or both `dataset_id` and `file_path`.\n"
         f"Budget: {contract.budget_calls} tool calls, plus one grace call if needed, "
         "before returning a result.\n"
+        "When you call `return_inspect_result` with status=success or status=partial, "
+        "you MUST fill `answer_fragments` with the derived value(s) for "
+        "`required_outputs` and list short pointers to the files/queries you used in "
+        "`evidence`, e.g. "
+        '`answer_fragments=[{"output": "<required output>", "value": <value>, '
+        '"source_s3_uri": "s3://..."}]` and `evidence=["peek_file(s3://...)"]`. '
+        "Empty results with a success status will be treated as a contract failure.\n"
     )
 
 
-def _build_inspect_return_tool(result_state: Dict[str, Any]):
+def _build_inspect_return_tool(
+    result_state: Dict[str, Any],
+    captured_evidence_getter: Optional[Any] = None,
+):
     @tool(context=True)
     def return_inspect_result(
         status: str,
         tool_context: ToolContext,
         answer_fragments: Optional[List[Dict[str, Any]]] = None,
         missing_outputs: Optional[List[str]] = None,
-        evidence: Optional[List[str]] = None,
+        evidence: Optional[List[Any]] = None,
         executor_summary: str = "",
         retry_recommended: bool = False,
         failure_reason: str = "",
     ) -> str:
-        """Return compact extraction results for an inspection contract. Call exactly once."""
+        """Return compact extraction results for an inspection contract. Call EXACTLY once.
 
+        When status is "success" or "partial":
+          - `answer_fragments` MUST list the derived values for the contract's
+            `required_outputs`, e.g.
+              [{"output": "2020 deaths", "value": 91799,
+                "source_s3_uri": "s3://..."}]
+          - `evidence` MUST list short pointers to the files/queries you used,
+            e.g. ["peek_file(s3://...rows.txt)"].
+        Use status="failed" only if no required output could be derived.
+        """
+
+        resolved_evidence = list(evidence or [])
+        if (
+            not resolved_evidence
+            and status in _PARTIAL_OR_SUCCESS_STATUS
+            and callable(captured_evidence_getter)
+        ):
+            resolved_evidence = list(captured_evidence_getter() or [])
         result_state["payload"] = {
             "status": status,
             "answer_fragments": answer_fragments or [],
             "missing_outputs": missing_outputs or [],
-            "evidence": evidence or [],
+            "evidence": resolved_evidence,
             "executor_summary": executor_summary,
             "retry_recommended": bool(retry_recommended),
             "failure_reason": failure_reason,

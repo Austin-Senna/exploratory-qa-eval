@@ -616,3 +616,246 @@ def test_search_return_tool_defaults_missing_candidates() -> None:
     assert result == "Search contract result recorded."
     assert result_state["payload"]["candidates"] == []
     assert context.agent.cancelled is True
+
+
+def test_search_return_tool_autofills_candidates_on_success() -> None:
+    captured = [
+        {
+            "dataset_id": "vsrr-provisional-drug-overdose-death-counts",
+            "s3_uri": "s3://bucket/datagov/vsrr/files/rows.txt",
+        }
+    ]
+    result_state = {}
+    tool = _build_search_return_tool(result_state, lambda: captured)
+    context = _FakeToolContext()
+
+    tool._tool_func(
+        status="success",
+        search_summary="Found via search_ideal.",
+        tool_context=context,
+    )
+
+    assert result_state["payload"]["candidates"] == captured
+    # ensure the captured list is copied, not aliased
+    assert result_state["payload"]["candidates"] is not captured
+
+
+def test_search_return_tool_preserves_explicit_candidates() -> None:
+    captured = [{"dataset_id": "fallback", "s3_uri": "s3://bucket/fallback"}]
+    explicit = [{"dataset_id": "chosen", "s3_uri": "s3://bucket/chosen"}]
+    result_state = {}
+    tool = _build_search_return_tool(result_state, lambda: captured)
+    context = _FakeToolContext()
+
+    tool._tool_func(
+        status="success",
+        search_summary="Worker explicitly picked.",
+        candidates=explicit,
+        tool_context=context,
+    )
+
+    assert result_state["payload"]["candidates"] == explicit
+
+
+def test_search_return_tool_does_not_autofill_on_failure() -> None:
+    captured = [{"dataset_id": "ignored", "s3_uri": "s3://bucket/ignored"}]
+    result_state = {}
+    tool = _build_search_return_tool(result_state, lambda: captured)
+    context = _FakeToolContext()
+
+    tool._tool_func(
+        status="failed",
+        search_summary="No match.",
+        tool_context=context,
+    )
+
+    assert result_state["payload"]["candidates"] == []
+
+
+def test_inspect_return_tool_autofills_evidence_on_partial() -> None:
+    captured = [
+        {"tool": "peek_file", "s3_uri": "s3://bucket/datagov/vsrr/files/rows.txt"}
+    ]
+    result_state = {}
+    tool = _build_inspect_return_tool(result_state, lambda: captured)
+    context = _FakeToolContext()
+
+    tool._tool_func(
+        status="partial",
+        answer_fragments=[{"output": "2020 deaths", "value": 91799}],
+        missing_outputs=["2021 deaths"],
+        executor_summary="2020 was present; 2021 not in file.",
+        tool_context=context,
+    )
+
+    assert result_state["payload"]["evidence"] == captured
+
+
+def test_inspect_return_tool_preserves_explicit_evidence() -> None:
+    captured = [{"tool": "peek_file", "s3_uri": "s3://bucket/fallback"}]
+    explicit = ["query_file(s3://bucket/chosen)"]
+    result_state = {}
+    tool = _build_inspect_return_tool(result_state, lambda: captured)
+    context = _FakeToolContext()
+
+    tool._tool_func(
+        status="success",
+        answer_fragments=[{"output": "x", "value": 1}],
+        evidence=explicit,
+        tool_context=context,
+    )
+
+    assert result_state["payload"]["evidence"] == explicit
+
+
+def test_inspect_return_tool_does_not_autofill_on_failure() -> None:
+    captured = [{"tool": "peek_file", "s3_uri": "s3://bucket/x"}]
+    result_state = {}
+    tool = _build_inspect_return_tool(result_state, lambda: captured)
+    context = _FakeToolContext()
+
+    tool._tool_func(
+        status="failed",
+        failure_reason="Could not read.",
+        tool_context=context,
+    )
+
+    assert result_state["payload"]["evidence"] == []
+
+
+def _fake_after_tool_event(name: str, tool_input: dict, result_json: object) -> object:
+    """Build a minimal stand-in for AfterToolCallEvent for capture-plugin tests."""
+
+    event = MagicMock()
+    event.tool_use = {"name": name, "input": tool_input}
+    event.result = {
+        "status": "success",
+        "content": [{"text": json.dumps(result_json)}],
+        "toolUseId": "call_test",
+    }
+    return event
+
+
+def test_result_capture_search_aggregates_search_ideal_picks() -> None:
+    from sana_evaluation.tools.delegation_common import _SubagentResultCapture
+
+    capture = _SubagentResultCapture(kind="search", return_tool_name="return_search_result")
+    capture.on_after_tool(
+        _fake_after_tool_event(
+            "search_ideal",
+            {"query": "overdose deaths by state"},
+            {
+                "results": [
+                    {
+                        "dataset_id": "vsrr-provisional-drug-overdose-death-counts",
+                        "s3_uri": "s3://bucket/datagov/vsrr/files/rows.txt",
+                        "llm_desc": "annual state-level overdose deaths",
+                    }
+                ],
+                "count": 1,
+            },
+        )
+    )
+    capture.on_after_tool(
+        _fake_after_tool_event(
+            "search_ideal",
+            {"query": "another"},
+            {
+                "results": [
+                    {
+                        "dataset_id": "vsrr-provisional-drug-overdose-death-counts",
+                        "s3_uri": "s3://bucket/datagov/vsrr/files/rows.txt",
+                    }
+                ],
+                "count": 1,
+            },
+        )
+    )
+
+    candidates = capture.captured_candidates()
+    assert len(candidates) == 1, "duplicates should be deduped by s3_uri"
+    assert candidates[0]["dataset_id"] == "vsrr-provisional-drug-overdose-death-counts"
+    assert candidates[0]["s3_uri"] == "s3://bucket/datagov/vsrr/files/rows.txt"
+    assert candidates[0]["summary"] == "annual state-level overdose deaths"
+
+
+def test_result_capture_search_ignores_non_search_tools_and_errors() -> None:
+    from sana_evaluation.tools.delegation_common import _SubagentResultCapture
+
+    capture = _SubagentResultCapture(kind="search", return_tool_name="return_search_result")
+    capture.on_after_tool(
+        _fake_after_tool_event(
+            "peek_file",
+            {"s3_uri": "s3://bucket/x"},
+            {"preview_text": "..."},
+        )
+    )
+    # Errored search result should not contribute
+    error_event = _fake_after_tool_event(
+        "search_ideal",
+        {"query": "x"},
+        {"error": "Dataset not found"},
+    )
+    capture.on_after_tool(error_event)
+    # Empty results list should also not contribute
+    capture.on_after_tool(
+        _fake_after_tool_event(
+            "search_ideal",
+            {"query": "y"},
+            {"results": [], "count": 0},
+        )
+    )
+
+    assert capture.captured_candidates() == []
+
+
+def test_result_capture_inspect_aggregates_file_refs() -> None:
+    from sana_evaluation.tools.delegation_common import _SubagentResultCapture
+
+    capture = _SubagentResultCapture(kind="inspect", return_tool_name="return_inspect_result")
+    capture.on_after_tool(
+        _fake_after_tool_event(
+            "peek_file",
+            {"s3_uri": "s3://bucket/datagov/vsrr/files/rows.txt"},
+            {"preview_text": "State,Year,..."},
+        )
+    )
+    capture.on_after_tool(
+        _fake_after_tool_event(
+            "query_file",
+            {"dataset_id": "vsrr", "file_path": "files/rows.txt", "sql": "select 1"},
+            {"rows": [{"x": 1}]},
+        )
+    )
+
+    evidence = capture.captured_evidence()
+    assert len(evidence) == 2
+    assert evidence[0]["tool"] == "peek_file"
+    assert evidence[0]["s3_uri"] == "s3://bucket/datagov/vsrr/files/rows.txt"
+    assert evidence[1]["tool"] == "query_file"
+    assert evidence[1]["dataset_id"] == "vsrr"
+    assert evidence[1]["file_path"] == "files/rows.txt"
+
+
+def test_result_capture_inspect_handles_batch_tools() -> None:
+    from sana_evaluation.tools.delegation_common import _SubagentResultCapture
+
+    capture = _SubagentResultCapture(kind="inspect", return_tool_name="return_inspect_result")
+    capture.on_after_tool(
+        _fake_after_tool_event(
+            "peek_multiple",
+            {
+                "files": [
+                    {"s3_uri": "s3://bucket/a"},
+                    {"dataset_id": "b", "file_path": "files/b.csv"},
+                ]
+            },
+            {"results": ["...", "..."]},
+        )
+    )
+
+    evidence = capture.captured_evidence()
+    assert len(evidence) == 2
+    assert evidence[0]["s3_uri"] == "s3://bucket/a"
+    assert evidence[1]["dataset_id"] == "b"
+    assert evidence[1]["file_path"] == "files/b.csv"

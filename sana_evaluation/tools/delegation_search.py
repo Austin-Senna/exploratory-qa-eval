@@ -18,6 +18,9 @@ from sana_evaluation.tools.delegation_common import (
 )
 
 
+_PARTIAL_OR_SUCCESS_STATUS = {"success", "partial"}
+
+
 _SEARCH_TOOL_NAMES = {
     "search_value",
     "search_schema",
@@ -90,10 +93,18 @@ def _format_search_prompt(
         f"Known context:\n{contract.known_context or '(none)'}\n"
         f"Budget: {contract.budget_calls} tool calls, plus one grace call if needed, "
         "before returning a result.\n"
+        "When you call `return_search_result` with status=success or status=partial, "
+        "you MUST fill `candidates` with the dataset(s) you found, e.g. "
+        '`candidates=[{"dataset_id": "<id from search result>", '
+        '"s3_uri": "<s3 uri from search result>", "summary": "<short note>"}]`. '
+        "Empty candidates with a success status will be treated as a contract failure.\n"
     )
 
 
-def _build_search_return_tool(result_state: Dict[str, Any]):
+def _build_search_return_tool(
+    result_state: Dict[str, Any],
+    captured_candidates_getter: Optional[Any] = None,
+):
     @tool(context=True)
     def return_search_result(
         status: str,
@@ -104,11 +115,27 @@ def _build_search_return_tool(result_state: Dict[str, Any]):
         retry_recommended: bool = False,
         failure_reason: str = "",
     ) -> str:
-        """Return compact dataset candidates for a search contract. Call exactly once."""
+        """Return compact dataset candidates for a search contract. Call EXACTLY once.
 
+        When status is "success" or "partial", `candidates` MUST list every dataset
+        you intend to forward. Each entry should be an object like:
+          {"dataset_id": "vsrr-provisional-drug-overdose-death-counts",
+           "s3_uri": "s3://lakeqa-yc4103-datalake/datagov/.../rows.txt",
+           "summary": "annual state-level overdose deaths"}
+        Copy `dataset_id` and `s3_uri` verbatim from your search tool results.
+        Use status="failed" only if NO candidate was found.
+        """
+
+        resolved_candidates = list(candidates or [])
+        if (
+            not resolved_candidates
+            and status in _PARTIAL_OR_SUCCESS_STATUS
+            and callable(captured_candidates_getter)
+        ):
+            resolved_candidates = list(captured_candidates_getter() or [])
         result_state["payload"] = {
             "status": status,
-            "candidates": candidates or [],
+            "candidates": resolved_candidates,
             "search_summary": search_summary,
             "missing_or_uncertain_coverage": missing_or_uncertain_coverage or [],
             "retry_recommended": bool(retry_recommended),

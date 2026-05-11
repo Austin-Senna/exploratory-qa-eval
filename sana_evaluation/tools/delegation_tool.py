@@ -20,6 +20,7 @@ from sana_evaluation.tools.delegation_common import (
     _FileReferenceGuard,
     _SUBAGENT_GRACE_TOOL_CALLS,
     _SubagentBudgetSteer,
+    _SubagentResultCapture,
     _SubagentToolLedger,
     _contract_failure,
     _preloaded_source_sequence,
@@ -143,7 +144,11 @@ class DelegationRuntime:
         extra_plugins: Optional[List[Any]] = None,
     ) -> Dict[str, Any]:
         result_state: Dict[str, Any] = {}
-        return_tool = build_return_tool(result_state)
+        capture = _SubagentResultCapture(kind=kind, return_tool_name=return_tool_name)
+        captured_getter = (
+            capture.captured_candidates if kind == "search" else capture.captured_evidence
+        )
+        return_tool = build_return_tool(result_state, captured_getter)
         ledger = _SubagentToolLedger(return_tool_name)
         max_calls = int(getattr(contract, "budget_calls", 1) or 1)
         plugins: List[Any] = [
@@ -155,6 +160,7 @@ class DelegationRuntime:
                 grace_tool_calls=_SUBAGENT_GRACE_TOOL_CALLS,
             ),
             ledger,
+            capture,
             LoggingPlugin(),
         ]
         if extra_plugins:

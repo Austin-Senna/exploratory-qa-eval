@@ -239,6 +239,193 @@ class _SubagentToolLedger(Plugin):
         self.tools_used.append(tool_name)
 
 
+_SEARCH_RESULT_TOOL_NAMES = {
+    "search_value",
+    "search_schema",
+    "search_reranked",
+    "search_prefix",
+    "search_ideal",
+    "search",
+    "search_keyword",
+}
+
+
+def _result_payloads(result: Any) -> List[Any]:
+    """Parse JSON payloads from a strands ToolResult content list."""
+
+    if not isinstance(result, dict):
+        return []
+    payloads: List[Any] = []
+    content = result.get("content")
+    if isinstance(content, list):
+        for block in content:
+            if not isinstance(block, dict):
+                continue
+            if "json" in block and block["json"] is not None:
+                payloads.append(block["json"])
+                continue
+            text = block.get("text")
+            if isinstance(text, str) and text:
+                try:
+                    payloads.append(json.loads(text))
+                except (json.JSONDecodeError, TypeError):
+                    continue
+    return payloads
+
+
+def _result_is_error(result: Any) -> bool:
+    """Return True when a strands ToolResult signals an error or logical failure."""
+
+    if not isinstance(result, dict):
+        return False
+    raw_status = result.get("status")
+    if isinstance(raw_status, str) and raw_status.strip().lower() == "error":
+        return True
+    for payload in _result_payloads(result):
+        if isinstance(payload, dict) and (
+            "error" in payload or payload.get("success") is False
+        ):
+            return True
+    return False
+
+
+def _candidate_records_from_payload(payload: Any) -> List[Dict[str, str]]:
+    """Return [{'dataset_id': ..., 's3_uri': ...}] entries inside a search payload."""
+
+    records: List[Dict[str, str]] = []
+    if not isinstance(payload, dict):
+        return records
+    results = payload.get("results")
+    if not isinstance(results, list):
+        return records
+    for entry in results:
+        if not isinstance(entry, dict):
+            continue
+        s3_uri = _clean_str(entry.get("s3_uri") or entry.get("uri"))
+        dataset_id = _clean_str(entry.get("dataset_id"))
+        if not s3_uri and not dataset_id:
+            continue
+        record: Dict[str, str] = {}
+        if dataset_id:
+            record["dataset_id"] = dataset_id
+        if s3_uri:
+            record["s3_uri"] = s3_uri
+        summary = _clean_str(entry.get("llm_desc") or entry.get("description") or entry.get("summary"))
+        if summary:
+            record["summary"] = summary
+        records.append(record)
+    return records
+
+
+def _file_reference_from_tool_use(tool_use: Dict[str, Any]) -> Optional[Dict[str, str]]:
+    """Return a short reference describing a single-file tool call's target."""
+
+    tool_input = (tool_use or {}).get("input") or {}
+    if not isinstance(tool_input, dict):
+        return None
+    s3_uri = _clean_str(tool_input.get("s3_uri") or tool_input.get("uri"))
+    dataset_id = _clean_str(tool_input.get("dataset_id"))
+    file_path = _clean_str(tool_input.get("file_path") or tool_input.get("path"))
+    if not s3_uri and not (dataset_id and file_path):
+        return None
+    ref: Dict[str, str] = {}
+    if dataset_id:
+        ref["dataset_id"] = dataset_id
+    if file_path:
+        ref["file_path"] = file_path
+    if s3_uri:
+        ref["s3_uri"] = s3_uri
+    return ref
+
+
+def _file_references_from_batch_tool_use(tool_use: Dict[str, Any]) -> List[Dict[str, str]]:
+    """Return file references for batch tool calls (peek_multiple/download)."""
+
+    tool_input = (tool_use or {}).get("input") or {}
+    if not isinstance(tool_input, dict):
+        return []
+    entries = tool_input.get("files")
+    if entries is None:
+        entries = tool_input.get("entries")
+    if isinstance(entries, dict):
+        entries = [entries]
+    if not isinstance(entries, list):
+        return []
+    refs: List[Dict[str, str]] = []
+    for entry in entries:
+        if isinstance(entry, str):
+            s3_uri = _clean_str(entry)
+            if s3_uri:
+                refs.append({"s3_uri": s3_uri})
+            continue
+        if not isinstance(entry, dict):
+            continue
+        ref = _file_reference_from_tool_use({"input": entry})
+        if ref:
+            refs.append(ref)
+    return refs
+
+
+class _SubagentResultCapture(Plugin):
+    """Accumulates fallback contract-return values from tool outputs."""
+
+    name = "sana-delegation-result-capture"
+
+    def __init__(self, kind: str, return_tool_name: str) -> None:
+        super().__init__()
+        self.kind = kind
+        self.return_tool_name = return_tool_name
+        self._candidates: List[Dict[str, str]] = []
+        self._seen_uris: set[str] = set()
+        self._evidence: List[Dict[str, str]] = []
+        self._seen_evidence_keys: set[str] = set()
+
+    def captured_candidates(self) -> List[Dict[str, str]]:
+        return [dict(record) for record in self._candidates]
+
+    def captured_evidence(self) -> List[Dict[str, str]]:
+        return [dict(record) for record in self._evidence]
+
+    def _record_candidate(self, record: Dict[str, str]) -> None:
+        key = record.get("s3_uri") or record.get("dataset_id") or ""
+        if not key or key in self._seen_uris:
+            return
+        self._seen_uris.add(key)
+        self._candidates.append(record)
+
+    def _record_evidence(self, tool_name: str, ref: Dict[str, str]) -> None:
+        key = f"{tool_name}::{ref.get('s3_uri') or ref.get('dataset_id', '')}::{ref.get('file_path', '')}"
+        if key in self._seen_evidence_keys:
+            return
+        self._seen_evidence_keys.add(key)
+        entry = {"tool": tool_name, **ref}
+        self._evidence.append(entry)
+
+    @hook
+    def on_after_tool(self, event: AfterToolCallEvent) -> None:
+        tool_use = getattr(event, "tool_use", {}) or {}
+        tool_name = tool_use.get("name", "")
+        if not tool_name or tool_name == self.return_tool_name:
+            return
+        result = getattr(event, "result", None)
+        if _result_is_error(result):
+            return
+
+        if self.kind == "search" and tool_name in _SEARCH_RESULT_TOOL_NAMES:
+            for payload in _result_payloads(result):
+                for record in _candidate_records_from_payload(payload):
+                    self._record_candidate(record)
+
+        if self.kind == "inspect":
+            if tool_name in _SINGLE_FILE_REFERENCE_TOOLS:
+                ref = _file_reference_from_tool_use(tool_use)
+                if ref:
+                    self._record_evidence(tool_name, ref)
+            elif tool_name in _BATCH_FILE_REFERENCE_TOOLS:
+                for ref in _file_references_from_batch_tool_use(tool_use):
+                    self._record_evidence(tool_name, ref)
+
+
 class _SubagentBudgetSteer(SteeringHandler):
     name = "sana-delegation-budget-steer"
 
@@ -392,12 +579,24 @@ def _subagent_system_prompt(kind: str, return_tool_name: str) -> str:
             "contract. You may use search and peek/profile tools only. Do not "
             "perform the final computation."
         )
+        return_requirement = (
+            "When status is `success` or `partial`, you MUST populate `candidates` "
+            "with every dataset you intend to forward. Each entry needs `dataset_id` "
+            "and `s3_uri`; copy them verbatim from your search tool results. Use "
+            "status `failed` only if no dataset matched."
+        )
     else:
         role = (
             "You are a bounded tabular-inspection worker. Inspect only the explicit "
             "dataset ids in the contract, handle schema/query/parsing issues locally, "
             "and return compact extracted evidence. For text-based sources, use "
             "`grep_file` or `read_file` to inspect content."
+        )
+        return_requirement = (
+            "When status is `success` or `partial`, you MUST populate "
+            "`answer_fragments` with the derived values for `required_outputs` and "
+            "list the files/queries you used in `evidence`. Use status `failed` only "
+            "if no required output could be derived."
         )
     return (
         role
@@ -407,6 +606,7 @@ def _subagent_system_prompt(kind: str, return_tool_name: str) -> str:
         + return_tool_name
         + "` exactly once before finishing. Return compact summaries only; do not "
         "include raw row dumps, long schemas, or full tracebacks."
+        + "\n" + return_requirement
     )
 
 
@@ -414,6 +614,7 @@ __all__ = [
     "DelegationRuntimeProtocol",
     "_FileReferenceGuard",
     "_SubagentBudgetSteer",
+    "_SubagentResultCapture",
     "_SubagentToolLedger",
     "_SUBAGENT_GRACE_TOOL_CALLS",
     "_clean_list",
