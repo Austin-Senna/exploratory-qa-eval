@@ -1,0 +1,85 @@
+{
+  "question": "Between 2010 and 2019, what year has the highest number of burglaries from vehicles in Los Angeles? In that year, determine which area had the most narcotic drug laws arrests, how many vehicle burglaries occurred in that specific area in 2020? Only report the number of vehicle burglaries. Your response should be in the format [Answer].",
+  "answer": "1220",
+  "nodes": {
+    "1": {
+      "source": "datagov/crime-data-from-2010-to-2019/files/rows.txt",
+      "fact": "Filter to rows where Crm Cd Desc = 'BURGLARY FROM VEHICLE' and group by DATE OCC year; the year with the most incidents is 2016 (43,831; no tie observed). This identifies the peak year within the specified range.",
+      "subquestion": "From 2010 to 2019, which year has the most Los Angeles incidents with crime description \"BURGLARY FROM VEHICLE\"?",
+      "answer": "2016"
+    },
+    "2": {
+      "source": "datagov/arrest-data-from-2010-to-2019/files/rows.txt",
+      "fact": "Filter to Arrest Date year = <node_1 answer> and Charge Group Description = \"Narcotic Drug Laws\". Group by Area Name and count arrests; Central has the highest count (1,514; no tie observed within scope).",
+      "subquestion": "In <node_1 answer> Los Angeles arrest records, which area has the most arrests in the charge group \"Narcotic Drug Laws\"?",
+      "answer": "Central"
+    },
+    "3": {
+      "source": "datagov/lapd-ripa-ab-953-stop-incident-details-from-7-1-2018-to-present/files/rows.txt",
+      "fact": "Filter to rows where Area Name = Central; the corresponding Area ID is 1 (values appear as 1/01 in this file). This maps the area name to its numeric ID.",
+      "subquestion": "Using LAPD stop-incident records collected under California's RIPA program, what numeric Area ID corresponds to area name <node_2 answer> (answer as an integer)?",
+      "answer": "1"
+    },
+    "4": {
+      "source": "datagov/crime-data-from-2010-to-2019/files/rows.txt",
+      "fact": "Filter to rows where Crm Cd Desc = 'BURGLARY FROM VEHICLE'; the corresponding crime code is 330 (unique mapping in this file). This maps the description to its code.",
+      "subquestion": "In Los Angeles crime records, what crime code corresponds to the crime description \"BURGLARY FROM VEHICLE\"? Answer with the crime code only.",
+      "answer": "330"
+    },
+    "5": {
+      "source": "datagov/crime-data-from-2020-to-present/files/rows.txt",
+      "fact": "Filter to year 2020 (from DATE OCC), Area = <node_3 answer>, and Crm Cd = <node_4 answer>. The incident count is 1220.",
+      "subquestion": "Using the 2020 to present Los Angeles crime records, in 2020 how many incidents with crime code <node_4 answer> occurred in Area ID <node_3 answer>?",
+      "answer": "1220"
+    }
+  },
+  "reasoning_chain": [
+    "Node 1: In 2010 to 2019 LA crime records, the year with the most BURGLARY FROM VEHICLE incidents -> 2016.",
+    "Node 2 depends on node 1: In 2016 arrests, the area with the most Narcotic Drug Laws arrests -> Central.",
+    "Node 3 depends on node 2: In LAPD RIPA stop-incident records, Central corresponds to Area ID 1.",
+    "Node 4: In Los Angeles crime records, BURGLARY FROM VEHICLE corresponds to crime code 330.",
+    "Node 5 depends on nodes 3-4: In 2020 crime records for Area ID 1, incident count where Crm Cd = 330 -> 1220.",
+    "Final answer: 1220"
+  ],
+  "datasets_used": [
+    "arrest-data-from-2010-to-2019",
+    "crime-data-from-2010-to-2019",
+    "crime-data-from-2020-to-present",
+    "lapd-ripa-ab-953-stop-incident-details-from-7-1-2018-to-present"
+  ],
+  "reasoning_hops": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1
+      ],
+      "reasoning": "Node 1: In 2010 to 2019 LA crime records, the year with the most BURGLARY FROM VEHICLE incidents -> 2016.",
+      "answer": "2016"
+    },
+    {
+      "hop": 2,
+      "node_ids": [
+        2
+      ],
+      "reasoning": "Node 2 depends on node 1: In 2016 arrests, the area with the most Narcotic Drug Laws arrests -> Central.",
+      "answer": "Central"
+    },
+    {
+      "hop": 3,
+      "node_ids": [
+        3,
+        4
+      ],
+      "reasoning": "Node 3 depends on node 2: In LAPD RIPA stop-incident records, Central corresponds to Area ID 1. Node 4: In Los Angeles crime records, BURGLARY FROM VEHICLE corresponds to crime code 330.",
+      "answer": "Area ID 1; crime code 330"
+    },
+    {
+      "hop": 4,
+      "node_ids": [
+        5
+      ],
+      "reasoning": "Node 5 depends on nodes 3-4: In 2020 crime records for Area ID 1, incident count where Crm Cd = 330 -> 1220.",
+      "answer": "1220"
+    }
+  ]
+}

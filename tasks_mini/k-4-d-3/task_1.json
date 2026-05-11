@@ -1,92 +1,127 @@
 {
-  "question": "In which Virginia county is the NASA facility of a system developed? This system was used in the 2007 USGS topographic survey of the national monument honoring a U.S. president born in Virginia who also held a general officer rank and appears on current U.S. currency. Your response should be in the format [Answer].",
-  "answer": "Accomack County",
+  "question": "Can you find me the NYC elementary school in District 15 that ranked in the top 2 by performance category score over each school year from 2010-13. For the neighborhood this elementary school is located in, which park is this neighborhood bounded by? Report the size of this park in arce. Your response should be in the format [Answer].",
+  "answer": "526",
+  "practical_motivation": "A historian researching consistently top-performing Brooklyn schools wants to understand the cultural landmarks near the best school's neighborhood.",
   "nodes": {
     "1": {
-      "source": "wikipedia/List_of_presidents_of_the_United_States_by_home_state/content.txt",
-      "fact": "Eight U.S. presidents were born in Virginia: George Washington, Thomas Jefferson, James Madison, James Monroe, William Henry Harrison, John Tyler, Zachary Taylor, and Woodrow Wilson.",
-      "subquestion": "Which U.S. presidents were born in Virginia?",
+      "source": "datagov/2010-2011-school-progress-report/files/rows.txt",
+      "fact": "In 2010-11, the top 2 District 15 elementary schools by performance category score were: PS 321 William Penn (17.2) and PS 107 John W Kimball (15.8).",
+      "subquestion": "Which NYC elementary schools in District 15 ranked in the top 2 by performance category score in 2010-11?",
+      "depends_on": [],
       "answer": [
-        "George Washington",
-        "Thomas Jefferson",
-        "James Madison",
-        "James Monroe",
-        "William Henry Harrison",
-        "John Tyler",
-        "Zachary Taylor",
-        "Woodrow Wilson"
+        "PS 321 William Penn",
+        "PS 107 John W Kimball"
       ]
     },
     "2": {
-      "source": "wikipedia/List_of_presidents_of_the_United_States_by_military_rank/content.txt",
-      "fact": "Presidents who held a general officer rank include George Washington, Ulysses S. Grant, Dwight D. Eisenhower, Andrew Jackson, William H. Harrison, Zachary Taylor, James A. Garfield, William Howard Taft, Franklin Pierce, Chester A. Arthur, Andrew Johnson, Rutherford B. Hayes, and Benjamin Harrison.",
-      "subquestion": "Which U.S. presidents held a general officer rank?",
+      "source": "datagov/2011-2012-school-progress-report-all-schools/files/rows.txt",
+      "fact": "In 2011-12, the top 2 District 15 elementary schools by performance category score were: PS 321 William Penn (19.4) and PS 10 Magnet School of Math, Science, and Design Technology (18.1).",
+      "subquestion": "Which NYC elementary schools in District 15 ranked in the top 2 by performance category score in 2011-12?",
+      "depends_on": [],
       "answer": [
-        "George Washington",
-        "Ulysses S. Grant",
-        "Dwight D. Eisenhower",
-        "Andrew Jackson",
-        "William Henry Harrison",
-        "Zachary Taylor",
-        "James A. Garfield",
-        "William Howard Taft",
-        "Franklin Pierce",
-        "Chester A. Arthur",
-        "Andrew Johnson",
-        "Rutherford B. Hayes",
-        "Benjamin Harrison"
+        "PS 321 William Penn",
+        "PS 10 Magnet School"
       ]
     },
     "3": {
-      "source": "wikipedia/United_States_dollar/content.txt",
-      "fact": "Current U.S. currency portraits include George Washington, Thomas Jefferson, Abraham Lincoln, Andrew Jackson, Ulysses S. Grant, Franklin D. Roosevelt, and John F. Kennedy.",
-      "subquestion": "Which U.S. presidents appear on current U.S. currency?",
+      "source": "datagov/2012-2013-citywide-progress-report/files/rows.txt",
+      "fact": "In 2012-13, the top 2 District 15 elementary schools by performance category score were: PS 321 William Penn (21.7) and PS 10 Magnet School of Math, Science, and Design Technology (19.3).",
+      "subquestion": "Which NYC elementary schools in District 15 ranked in the top 2 by performance category score in 2012-13?",
+      "depends_on": [],
       "answer": [
-        "George Washington",
-        "Thomas Jefferson",
-        "Abraham Lincoln",
-        "Andrew Jackson",
-        "Ulysses S. Grant",
-        "Franklin D. Roosevelt",
-        "John F. Kennedy"
+        "PS 321 William Penn",
+        "PS 10 Magnet School"
       ]
     },
     "4": {
-      "source": "wikipedia/George_Washington_Birthplace_National_Monument/content.txt",
-      "fact": "The George Washington Birthplace National Monument is a national monument in Westmoreland County, Virginia, commemorating the birthplace of George Washington, who was born there on February 22, 1732.",
-      "subquestion": "Which national monument commemorates the birthplace of <intersection of node_1, node_2, node_3>?",
-      "answer": "George Washington Birthplace National Monument"
+      "source": "datagov/2013-2014-school-locations/files/rows.txt",
+      "fact": "PS 321 William Penn (DBN 15K321) is located at 180 7th Avenue in the Park Slope neighborhood of Brooklyn, NY 11215.",
+      "subquestion": "What is the zip code where is <intersection of node_1, node_2, node_3: PS 321 William Penn> located?",
+      "depends_on": [
+        "intersection_of_1_2_3"
+      ],
+      "answer": "11215"
     },
     "5": {
-      "source": "datagov/eaarl-topography-george-washington-birthplace-national-monument/v1/files/USGS.cc604b53-f943-4516-a7a2-7d6e3d12beef.xml",
-      "fact": "In 2007, USGS published Open File Report 1179 containing bare earth elevation data for George Washington Birthplace National Monument, collected using the NASA EAARL (Experimental Advanced Airborne Research Lidar) system. The EAARL was developed by NASA at Wallops Flight Facility in Virginia.",
-      "subquestion": "At which NASA facility was the EAARL system used in the 2007 USGS survey of <node_4 answer> developed?",
-      "answer": "Wallops Flight Facility"
+      "source": "wikipedia/Park_Slope/content.txt",
+      "fact": "The neighborhood is named for its location on the western slope of Prospect Park.",
+      "subquestion": "Which park is the neighborhood corresponding to the zip code in <node_4 answer> bounded by?",
+      "depends_on": [
+        "node_4"
+      ],
+      "answer": "Prospect Park"
     },
     "6": {
-      "source": "wikipedia/Wallops_Island/content.txt",
-      "fact": "Wallops Island is an island in Accomack County, Virginia, and the island is used primarily for the Wallops Flight Facility.",
-      "subquestion": "In which Virginia county is <node_5 answer> located?",
-      "answer": "Accomack County"
+      "source": "wikipedia/Prospect_Park_(Brooklyn)/content.txt",
+      "fact": "Prospect Park is a 526-acre (2.13 km2) urban park in the New York City borough of Brooklyn.",
+      "subquestion": "What is the size of the park in <node_5 answer>? Answer in acre",
+      "depends_on": [
+        "node_5"
+      ],
+      "answer": "526"
     }
   },
   "reasoning_chain": [
-    "Node 1: Find presidents born in Virginia \u2192 {Washington, Jefferson, Madison, Monroe, W.H. Harrison, Tyler, Taylor, Wilson}",
-    "Node 2: Find presidents who held general officer rank \u2192 {Washington, Grant, Eisenhower, Jackson, W.H. Harrison, Taylor, Garfield, W.H. Taft, Pierce, Arthur, Andrew Johnson, Hayes, B. Harrison}",
-    "Node 3: Find presidents on current US currency \u2192 {Washington, Jefferson, Lincoln, Jackson, Grant, F.D. Roosevelt, J.F. Kennedy}",
-    "Intersection of <node_1>, <node_2>, <node_3>: Only president in all three sets \u2192 George Washington",
-    "Node 4 depends on intersection: Find national monument for Washington's birthplace \u2192 George Washington Birthplace National Monument",
-    "Node 5 depends on node 4: Find NASA facility where EAARL system was developed \u2192 Wallops Flight Facility",
-    "Node 6 depends on node 5: Find Virginia county where Wallops is located \u2192 Accomack County",
-    "Final answer: Accomack County"
+    "HOP 1 (d=3 superlative - nodes 1,2,3 all independent):",
+    "  Node 1: Progress report 2010-11, top 2 District 15 → {PS 321, PS 107}",
+    "  Node 2: Progress report 2011-12, top 2 District 15 → {PS 321, PS 10}",
+    "  Node 3: Progress report 2012-13, top 2 District 15 → {PS 321, PS 10}",
+    "  Intersection(1,2,3) → PS 321 William Penn (only school in top 2 all 3 years)",
+    "  Note: PS 107 not in top 2 in 2011-12 or 2012-13; PS 10 not in top 2 in 2010-11",
+    "",
+    "HOP 2 (chain - nodes 4 depend on hop 1 result):",
+    "  Node 4: School locations → PS 321 is in zip code 11215",
+    "HOP 3 (chain - nodes 5 depend on hop 2 result):",
+    "  Node 5: Park Slope, Brooklyn contains zip code 11215",
+    "  Node 5: Wikipedia Park Slope → Bordered by Prospect Park",
+    "",
+    "HOP 4 (chain - node 6 depends on node 5):",
+    "  Node 6: Wikipedia Prospect Park → 526-acre",
+    "",
+    "Final answer: 526"
   ],
-  "verdict": "pass",
   "datasets_used": [
-    "George_Washington_Birthplace_National_Monument",
-    "List_of_presidents_of_the_United_States_by_home_state",
-    "List_of_presidents_of_the_United_States_by_military_rank",
-    "United_States_dollar",
-    "Wallops_Island",
-    "eaarl-topography-george-washington-birthplace-national-monument"
+    "2010-2011-school-progress-report",
+    "2011-2012-school-progress-report-all-schools",
+    "2012-2013-citywide-progress-report",
+    "2013-2014-school-locations",
+    "Park_Slope",
+    "Prospect_Park_(Brooklyn)"
+  ],
+  "reasoning_hops": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1,
+        2,
+        3
+      ],
+      "reasoning": "Node 1: Progress report 2010-11, top 2 District 15 -> {PS 321, PS 107}. Node 2: Progress report 2011-12, top 2 District 15 -> {PS 321, PS 10}. Node 3: Progress report 2012-13, top 2 District 15 -> {PS 321, PS 10}. Intersection(1,2,3) -> PS 321 William Penn.",
+      "answer": "PS 321 William Penn"
+    },
+    {
+      "hop": 2,
+      "node_ids": [
+        4
+      ],
+      "reasoning": "Node 4 depends on hop 1: school location for PS 321 -> ZIP code 11215.",
+      "answer": "11215"
+    },
+    {
+      "hop": 3,
+      "node_ids": [
+        5
+      ],
+      "reasoning": "Node 5 depends on hop 2: ZIP 11215 corresponds to Park Slope, and Park Slope is bordered by Prospect Park.",
+      "answer": "Prospect Park"
+    },
+    {
+      "hop": 4,
+      "node_ids": [
+        6
+      ],
+      "reasoning": "Node 6 depends on node 5: Prospect Park area -> 526 acres.",
+      "answer": "526"
+    }
   ]
 }

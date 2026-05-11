@@ -1,122 +1,152 @@
 {
-  "question": "Can you find the Manhattan neighborhood where the only NYC elementary school in District 3 that ranked in the top 3 by performance category score in all four consecutive years from 2006-2010. There is a museum that is a notable structure in that neighborhood and is adjacent to the Central Park, in what year is that museum built?. Your response should be in the format [Answer].",
-  "answer": "1869",
-  "practical_motivation": "A family researching the best elementary schools in Manhattan's Upper West Side wants to understand the cultural institutions in the neighborhood, particularly the famous museum that has educated generations of students.",
+  "question": "Which Washington county had the lowest 2020 census population among those counties that (1) had Low-Income student enrollment percentage between 32-40% in every school year from 2018-19 through 2021-22, (2) had district-average Math proficiency above 40% in the 2021-22 school year, and (3) were not the most populous county in Washington? Only report the county name in the format of `X County`. Your response should be in the format [Answer].",
+  "answer": "Whitman County",
   "nodes": {
     "1": {
-      "source": "datagov/2006-2007-school-progress-report/v1/files/rows.csv",
-      "fact": "In 2006-07, the top 3 District 3 elementary schools by performance category score were: PS 009 Sarah Anderson (0.786), PS 199 Jessie Isador Straus (0.706), and PS 180 Hugo Newman (0.657).",
-      "subquestion": "Which NYC elementary schools in District 3 ranked in the top 3 by performance category score in 2006-07?",
-      "depends_on": [],
+      "source": "datagov/report-card-enrollment-2018-19-school-year/files/rows.txt",
+      "fact": "According to the Washington Report Card Enrollment data for 2018-19, aggregating district-level 'All Grades' data by county and calculating Low-Income percentage (Low-Income / All Students * 100), the following counties had Low-Income percentage between 32-40%: Island (39.4%), King (34.7%), Kitsap (39.2%), San Juan (37.8%), Snohomish (39.6%), and Whitman (37.6%).",
+      "subquestion": "Which Washington counties had Low-Income student enrollment percentage between 32-40% in every school year from 2018-19 through 2021-22? (Filter: OrganizationLevel=District; GradeLevel=All Grades; group by County; Low-Income% = Low-Income / All Students * 100; keep 32-40%.)",
       "answer": [
-        "PS 009 Sarah Anderson",
-        "PS 199 Jessie Isador Straus",
-        "PS 180 Hugo Newman"
+        "Island",
+        "King",
+        "Kitsap",
+        "San Juan",
+        "Snohomish",
+        "Whitman"
       ]
     },
     "2": {
-      "source": "datagov/2007-2008-school-progress-report/v1/files/rows.csv",
-      "fact": "In 2007-08, the top 3 District 3 elementary schools by performance category score were: PS 009 Sarah Anderson (20.2), PS 166 Richard Rodgers School (16.6), and PS 087 William Sherman (16.0).",
-      "subquestion": "Which NYC elementary schools in District 3 ranked in the top 3 by performance category score in 2007-08?",
-      "depends_on": [],
+      "source": "datagov/report-card-enrollment-2019-20-school-year/files/rows.txt",
+      "fact": "According to the Washington Report Card Enrollment data for 2019-20, aggregating district-level 'All Grades' data by county, the following counties had Low-Income percentage between 32-40%: Island (38.7%), King (34.2%), Kitsap (38.3%), San Juan (37.6%), Snohomish (39.3%), and Whitman (37.7%).",
+      "subquestion": "Which Washington counties had Low-Income student enrollment percentage between 32-40% in every school year from 2018-19 through 2021-22? (Filter: OrganizationLevel=District; GradeLevel=All Grades; group by County; Low-Income% = Low-Income / All Students * 100; keep 32-40%.)",
       "answer": [
-        "PS 009 Sarah Anderson",
-        "PS 166 Richard Rodgers School",
-        "PS 087 William Sherman"
+        "Island",
+        "King",
+        "Kitsap",
+        "San Juan",
+        "Snohomish",
+        "Whitman"
       ]
     },
     "3": {
-      "source": "datagov/2008-2009-school-progress-report/v1/files/rows.csv",
-      "fact": "In 2008-09, the top 3 District 3 elementary schools by performance category score were: PS 009 Sarah Anderson (23.5), PS 163 Alfred E. Smith (19.9), and PS 087 William Sherman (17.8).",
-      "subquestion": "Which NYC elementary schools in District 3 ranked in the top 3 by performance category score in 2008-09?",
-      "depends_on": [],
+      "source": "datagov/report-card-enrollment-2020-21-school-year/files/rows.txt",
+      "fact": "According to the Washington Report Card Enrollment data for 2020-21, aggregating district-level 'All Grades' data by county, the following counties had Low-Income percentage between 32-40%: Island (36.4%), King (34.1%), Kitsap (35.1%), San Juan (34.6%), Snohomish (38.3%), Thurston (39.4%), and Whitman (34.7%).",
+      "subquestion": "Which Washington counties had Low-Income student enrollment percentage between 32-40% in every school year from 2018-19 through 2021-22? (Filter: OrganizationLevel=District; GradeLevel=All Grades; group by County; Low-Income% = Low-Income / All Students * 100; keep 32-40%.)",
       "answer": [
-        "PS 009 Sarah Anderson",
-        "PS 163 Alfred E. Smith",
-        "PS 087 William Sherman"
+        "Island",
+        "King",
+        "Kitsap",
+        "San Juan",
+        "Snohomish",
+        "Thurston",
+        "Whitman"
       ]
     },
     "4": {
-      "source": "datagov/2009-2010-school-progress-report/v1/files/rows.csv",
-      "fact": "In 2009-10, the top 3 District 3 elementary schools by performance category score were: PS 009 Sarah Anderson (15.4), PS 199 Jessie Isador Straus (10.7), and PS 163 Alfred E. Smith (9.0).",
-      "subquestion": "Which NYC elementary schools in District 3 ranked in the top 3 by performance category score in 2009-10?",
-      "depends_on": [],
+      "source": "datagov/report-card-enrollment-2021-22-school-year/files/rows.txt",
+      "fact": "According to the Washington Report Card Enrollment data for 2021-22, aggregating district-level 'All Grades' data by county, the following counties had Low-Income percentage between 32-40%: King (35.9%), Kitsap (38.0%), San Juan (38.2%), and Whitman (39.3%). Note: Island had 40.3% and Snohomish had 41.8%, both exceeding the 40% threshold.",
+      "subquestion": "Which Washington counties had Low-Income student enrollment percentage between 32-40% in every school year from 2018-19 through 2021-22? (Filter: OrganizationLevel=District; GradeLevel=All Grades; group by County; Low-Income% = Low-Income / All Students * 100; keep 32-40%.)",
       "answer": [
-        "PS 009 Sarah Anderson",
-        "PS 199 Jessie Isador Straus",
-        "PS 163 Alfred E. Smith"
+        "King",
+        "Kitsap",
+        "San Juan",
+        "Whitman"
       ]
     },
     "5": {
-      "source": "datagov/2013-2014-school-locations/v1/files/rows.csv",
-      "fact": "PS 009 Sarah Anderson is located at 100 West 84th Street in the Upper West Side NTA (MN12) of Manhattan.",
-      "subquestion": "In which neighborhood is <intersection of node_1, node_2, node_3, node_4: PS 009 Sarah Anderson> located?",
-      "depends_on": [
-        "intersection_of_1_2_3_4"
-      ],
-      "answer": "Upper West Side"
+      "source": "datagov/report-card-assessment-data-2021-22-school-year/files/rows.txt",
+      "fact": "According to the Washington Report Card Assessment data for 2021-22, averaging district-level PercentMetStandard for Math (All Students, All Grades) by county: King had 43.5%, Kitsap had 44.4%, San Juan had 35.2%, and Whitman had 41.4%. Counties with district-average Math proficiency above 40% among hop 1 result: King, Kitsap, Whitman.",
+      "subquestion": "Among {King, Kitsap, San Juan, Whitman} (from hop 1), which counties had district-average Math proficiency above 40% in 2021-22? (Filter: OrganizationLevel=District; StudentGroup=All Students; GradeLevel=All Grades; TestSubject=Math; compute unweighted mean of PercentMetStandard by County; keep >40%.)",
+      "answer": [
+        "King",
+        "Kitsap",
+        "Whitman"
+      ]
     },
     "6": {
-      "source": "wikipedia/Upper_West_Side/content.txt",
-      "fact": "The Upper West Side is considered one of Manhattan's cultural and intellectual hubs, with the American Museum of Natural History located near its center, and Lincoln Center for the Performing Arts at its south end.",
-      "subquestion": "What are some notable structures that is a museum in <node_5 answer: Upper West Side>?",
-      "depends_on": [
-        "node_5"
-      ],
+      "source": "wikipedia/King_County,_Washington/content.txt",
+      "fact": "According to the Wikipedia article for King County, Washington, 'The population was 2,269,675 in the 2020 census, making it the most populous county in Washington.'",
+      "subquestion": "Among {King, Kitsap, San Juan, Whitman} (from hop 1), which counties are NOT the most populous in Washington?",
       "answer": [
-        "American Museum of Natural History",
-        "Lincoln Center for the Performing Arts"
+        "Kitsap",
+        "San Juan",
+        "Whitman"
       ]
     },
     "7": {
-      "source": "wikipedia/Central_Park/content.txt",
-      "fact": "Manhattan Square on the west side was reserved for the American Museum of Natural History, while a corresponding area on the East Side became the Metropolitan Museum of Art. Both museums are major cultural institutions adjacent to Central Park.",
-      "subquestion": "Which museums are located adjacent to Central Park?",
-      "depends_on": [
-        "node_5"
-      ],
-      "answer": [
-        "American Museum of Natural History",
-        "Metropolitan Museum of Art"
-      ]
+      "source": "wikipedia/Kitsap_County,_Washington/content.txt",
+      "fact": "According to the Wikipedia article for Kitsap County, Washington, 'As of the 2020 census, its population was 275,611.'",
+      "subquestion": "Among {Kitsap, Whitman} (from hop 2), which county had the lower 2020 census population?",
+      "answer": "Kitsap had population 275,611"
     },
     "8": {
-      "source": "wikipedia/American_Museum_of_Natural_History/content.txt",
-      "fact": "The American Museum of Natural History (AMNH) is a natural history museum on the Upper West Side of Manhattan in New York City. Located in Theodore Roosevelt Park, across the street from Central Park, the museum complex comprises 21 interconnected buildings. The legislation creating the museum was signed by Governor John Thompson Hoffman on April 6, 1869.",
-      "subquestion": "In what year was <intersection of node_6, node_7: American Museum of Natural History> established?",
-      "depends_on": [
-        "intersection_of_6_7"
-      ],
-      "answer": "1869"
+      "source": "wikipedia/Whitman_County,_Washington/content.txt",
+      "fact": "According to the Wikipedia article for Whitman County, Washington, 'As of the 2020 census, the population was 47,973.' Also, 'The county seat is Colfax.'",
+      "subquestion": "Among {Kitsap, Whitman} (from hop 2), which county had the lower 2020 census population?",
+      "answer": "Whitman had population 47,973 (lower than Kitsap's 275,611), county seat is Colfax"
     }
   },
   "reasoning_chain": [
-    "HOP 1 (d=4 superlative - nodes 1,2,3,4 all independent, all data.gov from different years):",
-    "  Node 1: Progress report 2006-07 \u2192 {PS 009, PS 199, PS 180}",
-    "  Node 2: Progress report 2007-08 \u2192 {PS 009, PS 166, PS 087}",
-    "  Node 3: Progress report 2008-09 \u2192 {PS 009, PS 163, PS 087}",
-    "  Node 4: Progress report 2009-10 \u2192 {PS 009, PS 199, PS 163}",
-    "  Intersection(1,2,3,4) \u2192 PS 009 Sarah Anderson (only school in top 3 all 4 years)",
+    "HOP 1 (d=4, Washington Report Card Enrollment 2018-22 - nodes 1-4):",
+    "  Node 1: 2018-19 Low-Income 32-40% -> {Island, King, Kitsap, San Juan, Snohomish, Whitman}",
+    "  Node 2: 2019-20 Low-Income 32-40% -> {Island, King, Kitsap, San Juan, Snohomish, Whitman}",
+    "  Node 3: 2020-21 Low-Income 32-40% -> {Island, King, Kitsap, San Juan, Snohomish, Thurston, Whitman}",
+    "  Node 4: 2021-22 Low-Income 32-40% -> {King, Kitsap, San Juan, Whitman}",
+    "  Intersection: {King, Kitsap, San Juan, Whitman}",
     "",
-    "HOP 2 (d=2 - nodes 6,7 depend on node 5, mix of data.gov and Wikipedia):",
-    "  Node 5: School locations (data.gov) \u2192 PS 009 is in Upper West Side",
-    "  Node 6: Upper West Side Wikipedia \u2192 museums in neighborhood \u2192 {AMNH, Lincoln Center}",
-    "  Node 7: Central Park Wikipedia \u2192 museums adjacent to park \u2192 {AMNH, Metropolitan Museum of Art}",
-    "  Intersection(6,7) \u2192 American Museum of Natural History (only museum in both Upper West Side AND adjacent to Central Park)",
+    "HOP 2 (d=2, Assessment data + King Wikipedia - nodes 5-6):",
+    "  Node 5 (Assessment 2021-22): Math proficiency >40% -> {King, Kitsap, Whitman} (eliminates San Juan at 35.2%)",
+    "  Node 6 (King Wikipedia): King is most populous -> NOT most populous = {Kitsap, San Juan, Whitman}",
+    "  Intersection: {Kitsap, Whitman}",
     "",
-    "HOP 3 (d=1 - depends on hop 2 result, Wikipedia):",
-    "  Node 8: AMNH Wikipedia \u2192 established in 1869",
+    "HOP 3 (d=2, Wikipedia county articles - nodes 7-8):",
+    "  Node 7 (Kitsap Wikipedia): 2020 population = 275,611",
+    "  Node 8 (Whitman Wikipedia): 2020 population = 47,973; county seat is Colfax",
+    "  Comparison: 47,973 < 275,611 -> Whitman has lower population",
+    "  Result: Whitman County, county seat = Colfax",
     "",
-    "Final answer: 1869"
+    "Final answer: Whitman County"
   ],
+  "verdict": "pass",
   "datasets_used": [
-    "2006-2007-school-progress-report",
-    "2007-2008-school-progress-report",
-    "2008-2009-school-progress-report",
-    "2009-2010-school-progress-report",
-    "2013-2014-school-locations",
-    "American_Museum_of_Natural_History",
-    "Central_Park",
-    "Upper_West_Side"
+    "King_County,_Washington",
+    "Kitsap_County,_Washington",
+    "Whitman_County,_Washington",
+    "report-card-assessment-data-2021-22-school-year",
+    "report-card-enrollment-2018-19-school-year",
+    "report-card-enrollment-2019-20-school-year",
+    "report-card-enrollment-2020-21-school-year",
+    "report-card-enrollment-2021-22-school-year"
+  ],
+  "reasoning_hops": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "reasoning": "Node 1: 2018-19 Low-Income 32-40% -> {Island, King, Kitsap, San Juan, Snohomish, Whitman} Node 2: 2019-20 Low-Income 32-40% -> {Island, King, Kitsap, San Juan, Snohomish, Whitman} Node 3: 2020-21 Low-Income 32-40% -> {Island, King, Kitsap, San Juan, Snohomish, Thurston, Whitman} Node 4: 2021-22 Low-Income 32-40% -> {King, Kitsap, San Juan, Whitman} Intersection: {King, Kitsap, San Juan, Whitman}",
+      "answer": "{King, Kitsap, San Juan, Whitman}"
+    },
+    {
+      "hop": 2,
+      "node_ids": [
+        5,
+        6
+      ],
+      "reasoning": "Node 5 (Assessment 2021-22): Math proficiency >40% -> {King, Kitsap, Whitman} (eliminates San Juan at 35.2%) Node 6 (King Wikipedia): King is most populous -> NOT most populous = {Kitsap, San Juan, Whitman} Intersection: {Kitsap, Whitman}",
+      "answer": "{Kitsap, Whitman}"
+    },
+    {
+      "hop": 3,
+      "node_ids": [
+        7,
+        8
+      ],
+      "reasoning": "Node 7 (Kitsap Wikipedia): 2020 population = 275,611 Node 8 (Whitman Wikipedia): 2020 population = 47,973; county seat is Colfax Comparison: 47,973 < 275,611 -> Whitman has lower population Result: Whitman County, county seat = Colfax",
+      "answer": "Whitman County"
+    }
   ]
 }

@@ -1,141 +1,146 @@
 {
-  "question": "Across 2019-2021, identify the Texas counties that consistently rank in the top five for capital outlay spending and also rank in the statewide top five for prisoner releases from the Department of Criminal Justice in each of those years. Among that set, the county with the highest average intake counts from the Department of Criminal Justice over 2019-2021 has what county seat? Return the city name only. Your response should be in the format [Answer].",
-  "answer": "Houston",
+  "question": "Can you find out the Manhattan neighborhood containing a top 7 high school from 2007-2010 by overall score. Then, find out which NYC structure was built with what this neighborhood is named after and was designed by Stanford White. Report in what year is this structure designed. Your response should be in the format [Answer].",
+  "answer": "1891",
   "nodes": {
     "1": {
-      "source": "datagov/texas-state-expenditures-by-county-2019/v1/files/rows.csv",
-      "fact": "According to Texas state expenditure data for fiscal year 2019, the top 5 counties by Capital Outlay spending were: HARRIS ($222,408,956.01), TRAVIS ($130,659,552.92), DALLAS ($87,456,413.40), HARDIN ($44,254,637.81), and BEXAR ($32,102,175.63).",
-      "subquestion": "In this fiscal year, which Texas counties were in the top 5 for Capital Outlay spending? (Filter for this node: Major Spending Category == 'Capital Outlay'; group by County; sum Amount; normalize County to uppercase; rank desc; take top 5.)",
+      "source": "datagov/2007-2008-school-progress-report/files/rows.txt",
+      "fact": "In 2007-08, the top 7 NYC high schools by overall score were: Brooklyn International HS (106.5), Gregorio Luperon HS (100.4), HS for Contemporary Arts (99.1), Bedford Academy HS (98.7), Manhattan Bridges HS (97.8), Marble Hill HS for International Studies (97.5), New World HS (97.0).",
+      "subquestion": "Which NYC high schools were in the top 7 by overall score in 2007-08?",
       "answer": [
-        "Harris",
-        "Travis",
-        "Dallas",
-        "Hardin",
-        "Bexar"
+        "Brooklyn International High School",
+        "Gregorio Luperon High School",
+        "High School for Contemporary Arts",
+        "Bedford Academy High School",
+        "Manhattan Bridges High School",
+        "Marble Hill High School for International Studies",
+        "New World High School"
       ]
     },
     "2": {
-      "source": "datagov/texas-state-expenditures-by-county-2020/v1/files/rows.csv",
-      "fact": "According to Texas state expenditure data for fiscal year 2020, the top 5 counties by Capital Outlay spending were: TRAVIS ($279,580,855.70), HARRIS ($182,107,791.26), DALLAS ($124,333,498.09), BEXAR ($96,531,261.46), and GRAYSON ($29,683,297.03).",
-      "subquestion": "In this fiscal year, which Texas counties were in the top 5 for Capital Outlay spending? (Filter for this node: Major Spending Category == 'Capital Outlay'; group by County; sum Amount; normalize County to uppercase; rank desc; take top 5.)",
+      "source": "datagov/2008-2009-school-progress-report/files/rows.txt",
+      "fact": "In 2008-09, the top 7 NYC high schools by overall score were: HS of Hospitality Management (105.3), Bedford Academy HS (103.3), Williamsburg Prep (102.3), South Bronx Prep (101.7), Marble Hill HS (101.3), HS for Violin and Dance (98.9), Essex Street Academy (95.1).",
+      "subquestion": "Which NYC high schools were in the top 7 by overall score in 2008-09?",
       "answer": [
-        "Travis",
-        "Harris",
-        "Dallas",
-        "Bexar",
-        "Grayson"
+        "High School of Hospitality Management",
+        "Bedford Academy High School",
+        "Williamsburg Preparatory School",
+        "South Bronx Preparatory",
+        "Marble Hill High School for International Studies",
+        "High School for Violin and Dance",
+        "Essex Street Academy"
       ]
     },
     "3": {
-      "source": "datagov/texas-state-expenditures-by-county-2021/v1/files/rows.csv",
-      "fact": "According to Texas state expenditure data for fiscal year 2021, the top 5 counties by Capital Outlay spending were: HARRIS ($339,910,977.18), TRAVIS ($171,854,028.76), DALLAS ($131,046,497.37), BEXAR ($104,956,196.72), and GUADALUPE ($49,356,346.09).",
-      "subquestion": "In this fiscal year, which Texas counties were in the top 5 for Capital Outlay spending? (Filter for this node: Major Spending Category == 'Capital Outlay'; group by County; sum Amount; normalize County to uppercase; rank desc; take top 5.)",
+      "source": "datagov/2009-2010-school-progress-report/files/rows.txt",
+      "fact": "In 2009-10, the top 7 NYC high schools by overall score were: Theatre Arts Production Company School (106.3), Brooklyn International HS (103.0), Williamsburg Prep (101.7), Marble Hill HS (100.5), Williamsburg Architecture (100.2), Manhattan Village Academy (96.6), HS for Violin and Dance (95.8).",
+      "subquestion": "Which NYC high schools were in the top 7 by overall score in 2009-10?",
       "answer": [
-        "Harris",
-        "Travis",
-        "Dallas",
-        "Bexar",
-        "Guadalupe"
+        "Theatre Arts Production Company School",
+        "Brooklyn International High School",
+        "Williamsburg Preparatory School",
+        "Marble Hill High School for International Studies",
+        "Williamsburg High School for Architecture and Design",
+        "Manhattan Village Academy",
+        "High School for Violin and Dance"
       ]
     },
     "4": {
-      "source": "datagov/texas-department-of-criminal-justice-releases-fy-2019/v1/files/rows.csv",
-      "fact": "According to Texas Department of Criminal Justice release data for fiscal year 2019, the overall top 5 counties by releases were Harris (9,029), Dallas (5,355), Tarrant (4,769), Bexar (4,545), and Hidalgo (1,861). Among the hop 1 counties, Harris, Dallas, and Bexar were in that top 5.",
-      "subquestion": "In this fiscal year, among the counties from hop 1, which were in the overall top 5 for releases from the Department of Criminal Justice? (Filter for this node: count rows by County; normalize County to uppercase; rank desc; take top 5 overall; then keep counties in hop 1 list.)",
-      "answer": [
-        "Harris",
-        "Dallas",
-        "Bexar"
-      ]
+      "source": "wikipedia/Marble_Hill,_Manhattan/content.txt",
+      "fact": "The Marble Hill neighborhood gained its current name in 1891 from the Tuckahoe marble deposits discovered underneath it. Marble Hill High School for International Studies is located in this neighborhood.",
+      "subquestion": "What is the neighborhood containing <intersection of node_1, node_2, node_3> named after?",
+      "answer": "Tuckahoe marble"
     },
     "5": {
-      "source": "datagov/texas-department-of-criminal-justice-releases-fy-2020/v1/files/rows.csv",
-      "fact": "According to Texas Department of Criminal Justice release data for fiscal year 2020, the overall top 5 counties by releases were Harris (7,059), Dallas (4,540), Tarrant (4,450), Bexar (3,917), and Travis (1,596). Among the hop 1 counties, Harris, Dallas, Bexar, and Travis were in that top 5.",
-      "subquestion": "In this fiscal year, among the counties from hop 1, which were in the overall top 5 for releases from the Department of Criminal Justice? (Filter for this node: count rows by County; normalize County to uppercase; rank desc; take top 5 overall; then keep counties in hop 1 list.)",
+      "source": "wikipedia/Tuckahoe_marble/content.txt",
+      "fact": "NYC structures built with Tuckahoe marble include the Washington Square Arch (1891), Federal Hall National Memorial (1842), Brooklyn Borough Hall (1849), St. Patrick's Cathedral (1858-78), Tweed Courthouse (1861-72), Grace Episcopal Church (1846), and Marble Collegiate Church (1854).",
+      "subquestion": "Which NYC structures were built with <node_4 answer>?",
       "answer": [
-        "Harris",
-        "Dallas",
-        "Bexar",
-        "Travis"
+        "Washington Square Arch",
+        "Federal Hall National Memorial",
+        "Brooklyn Borough Hall",
+        "St. Patrick's Cathedral",
+        "Tweed Courthouse",
+        "Grace Episcopal Church",
+        "Marble Collegiate Church"
       ]
     },
     "6": {
-      "source": "datagov/texas-department-of-criminal-justice-releases-fy-2021/v1/files/rows.csv",
-      "fact": "According to Texas Department of Criminal Justice release data for fiscal year 2021, the overall top 5 counties by releases were Harris (5,210), Dallas (3,565), Tarrant (3,252), Bexar (3,236), and Hidalgo (1,147). Among the hop 1 counties, Harris, Dallas, and Bexar were in that top 5.",
-      "subquestion": "In this fiscal year, among the counties from hop 1, which were in the overall top 5 for releases from the Department of Criminal Justice? (Filter for this node: count rows by County; normalize County to uppercase; rank desc; take top 5 overall; then keep counties in hop 1 list.)",
+      "source": "wikipedia/Stanford_White/content.txt",
+      "fact": "Stanford White designed several NYC structures including the Washington Square Arch (1891), the second Madison Square Garden (1890, demolished), the Cable Building (1893), the Villard Houses (1884), the Gould Memorial Library (1900), and Judson Memorial Church (1892).",
+      "subquestion": "Which NYC structures were designed by Stanford White?",
       "answer": [
-        "Harris",
-        "Dallas",
-        "Bexar"
+        "Washington Square Arch",
+        "Madison Square Garden (second)",
+        "Cable Building",
+        "Villard Houses",
+        "Gould Memorial Library",
+        "Judson Memorial Church"
       ]
     },
     "7": {
-      "source": "datagov/texas-department-of-criminal-justice-receives-fy-2019/v1/files/rows.csv",
-      "fact": "According to Texas Department of Criminal Justice intake data for fiscal year 2019, among the hop 2 counties: Harris had 7,874 intakes, Dallas had 4,660, and Bexar had 4,457.",
-      "subquestion": "In this fiscal year, what were the intake counts from the Department of Criminal Justice for the counties from hop 2? (Filter for this node: County in hop 2 list; normalize County to uppercase; count rows by County.)",
-      "answer": {
-        "Harris": 7874,
-        "Dallas": 4660,
-        "Bexar": 4457
-      }
-    },
-    "8": {
-      "source": "datagov/texas-department-of-criminal-justice-receives-fy-2020/v1/files/rows.csv",
-      "fact": "According to Texas Department of Criminal Justice intake data for fiscal year 2020, among the hop 2 counties: Harris had 3,840 intakes, Dallas had 2,519, and Bexar had 2,420.",
-      "subquestion": "In this fiscal year, what were the intake counts from the Department of Criminal Justice for the counties from hop 2? (Filter for this node: County in hop 2 list; normalize County to uppercase; count rows by County.)",
-      "answer": {
-        "Harris": 3840,
-        "Dallas": 2519,
-        "Bexar": 2420
-      }
-    },
-    "9": {
-      "source": "datagov/texas-department-of-criminal-justice-receives-fy-2021/v1/files/rows.csv",
-      "fact": "According to Texas Department of Criminal Justice intake data for fiscal year 2021, among the hop 2 counties: Harris had 4,652 intakes, Dallas had 3,520, and Bexar had 2,822.",
-      "subquestion": "In this fiscal year, what were the intake counts from the Department of Criminal Justice for the counties from hop 2? (Filter for this node: County in hop 2 list; normalize County to uppercase; count rows by County.)",
-      "answer": {
-        "Harris": 4652,
-        "Dallas": 3520,
-        "Bexar": 2822
-      }
-    },
-    "10": {
-      "source": "wikipedia/Harris_County,_Texas/content.txt",
-      "fact": "Harris County is the most populous county in Texas and the third-most populous in the United States. The county seat is Houston, which is also the largest city in Texas and the fourth-largest city in the United States.",
-      "subquestion": "What city is the county seat of the county from hop 3?",
-      "answer": "Houston"
+      "source": "wikipedia/Washington_Square_Arch/content.txt",
+      "fact": "Designed by architect Stanford White in 1891, it commemorates the centennial of George Washington's 1789 inauguration as President of the United States, and forms the southern terminus of Fifth Avenue.",
+      "subquestion": "In what year is <intersection of node_5, node_6> designed?",
+      "answer": "1891"
     }
   },
   "reasoning_chain": [
-    "HOP 1 (d=3): Find Texas counties in the top 5 for Capital Outlay spending in fiscal years 2019, 2020, and 2021",
-    "  Node 1 (2019): Top 5 = {Harris, Travis, Dallas, Hardin, Bexar}",
-    "  Node 2 (2020): Top 5 = {Travis, Harris, Dallas, Bexar, Grayson}",
-    "  Node 3 (2021): Top 5 = {Harris, Travis, Dallas, Bexar, Guadalupe}",
-    "  Intersection: {Harris, Travis, Dallas, Bexar}",
-    "HOP 2 (d=3): Among those counties, find which were in the overall top 5 for releases from the Department of Criminal Justice in 2019, 2020, and 2021",
-    "  Node 4 (2019): Hop 1 counties in top 5 releases = {Harris, Dallas, Bexar}",
-    "  Node 5 (2020): Hop 1 counties in top 5 releases = {Harris, Dallas, Bexar, Travis}",
-    "  Node 6 (2021): Hop 1 counties in top 5 releases = {Harris, Dallas, Bexar}",
-    "  Intersection: {Harris, Dallas, Bexar}",
-    "HOP 3 (d=3): For those counties, gather intake counts from the Department of Criminal Justice for 2019-2021 and compute averages",
-    "  Node 7 (2019): Harris=7874, Dallas=4660, Bexar=4457",
-    "  Node 8 (2020): Harris=3840, Dallas=2519, Bexar=2420",
-    "  Node 9 (2021): Harris=4652, Dallas=3520, Bexar=2822",
-    "  Averages: Harris=5455.3 > Dallas=3566.3 > Bexar=3233.0 -> Result: Harris County",
-    "HOP 4 (d=1): Find county seat of the hop 3 county -> Houston",
-    "Final answer: Houston"
+    "Node 1: Find top 7 NYC high schools by overall score in 2007-08 → includes Marble Hill",
+    "Node 2: Find top 7 NYC high schools by overall score in 2008-09 → includes Marble Hill",
+    "Node 3: Find top 7 NYC high schools by overall score in 2009-10 → includes Marble Hill",
+    "Intersection of <node_1>, <node_2>, <node_3>: Only school in top 7 all three years → Marble Hill HS",
+    "Node 4 depends on intersection: Find type of marble Marble Hill is named after → Tuckahoe marble",
+    "Node 5 depends on node 4: Find NYC structures built with Tuckahoe marble → {Washington Square Arch, Federal Hall, etc.}",
+    "Node 6: Find NYC structures designed by Stanford White → {Washington Square Arch, Madison Square Garden, etc.}",
+    "Intersection of <node_5>, <node_6>: Only structure in both sets → Washington Square Arch",
+    "Node 7 depends on intersection: Find who donated $4,500 to Washington Square Arch → Ignacy Jan Paderewski",
+    "Final answer: Ignacy Jan Paderewski"
   ],
   "verdict": "pass",
   "datasets_used": [
-    "Harris_County,_Texas",
-    "texas-department-of-criminal-justice-receives-fy-2019",
-    "texas-department-of-criminal-justice-receives-fy-2020",
-    "texas-department-of-criminal-justice-receives-fy-2021",
-    "texas-department-of-criminal-justice-releases-fy-2019",
-    "texas-department-of-criminal-justice-releases-fy-2020",
-    "texas-department-of-criminal-justice-releases-fy-2021",
-    "texas-state-expenditures-by-county-2019",
-    "texas-state-expenditures-by-county-2020",
-    "texas-state-expenditures-by-county-2021"
+    "2007-2008-school-progress-report",
+    "2008-2009-school-progress-report",
+    "2009-2010-school-progress-report",
+    "Marble_Hill,_Manhattan",
+    "Stanford_White",
+    "Tuckahoe_marble",
+    "Washington_Square_Arch"
+  ],
+  "reasoning_hops": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1,
+        2,
+        3
+      ],
+      "reasoning": "Node 1: Find top 7 NYC high schools by overall score in 2007-08 → includes Marble Hill Node 2: Find top 7 NYC high schools by overall score in 2008-09 → includes Marble Hill Node 3: Find top 7 NYC high schools by overall score in 2009-10 → includes Marble Hill Intersection of <node_1>, <node_2>, <node_3>: Only school in top 7 all three years → Marble Hill HS",
+      "answer": "Marble Hill HS"
+    },
+    {
+      "hop": 2,
+      "node_ids": [
+        4
+      ],
+      "reasoning": "Node 4 depends on intersection: Find type of marble Marble Hill is named after → Tuckahoe marble",
+      "answer": "Tuckahoe marble"
+    },
+    {
+      "hop": 3,
+      "node_ids": [
+        5,
+        6
+      ],
+      "reasoning": "Node 5 depends on node 4: Find NYC structures built with Tuckahoe marble → {Washington Square Arch, Federal Hall, etc.} Node 6: Find NYC structures designed by Stanford White → {Washington Square Arch, Madison Square Garden, etc.} Intersection of <node_5>, <node_6>: Only structure in both sets → Washington Square Arch",
+      "answer": "Washington Square Arch"
+    },
+    {
+      "hop": 4,
+      "node_ids": [
+        7
+      ],
+      "reasoning": "Node 7 depends on intersection: Find who donated $4,500 to Washington Square Arch → Ignacy Jan Paderewski",
+      "answer": "1891"
+    }
   ]
 }

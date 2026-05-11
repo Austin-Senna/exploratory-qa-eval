@@ -1,70 +1,140 @@
 {
-  "question": "I want to study the demographic in NYC. Can you find me the zip code of the NYC high school that was in the top 3 by overall progress score in the school year 2011-13 and had an A grade in the 2010-11 progress. Report the percentage of White people contributing to the racial makeup of the neighborhood whose primary ZIP code is the same as that high school based on data in 2010 census?. Your response should be in the format [Answer].",
-  "answer": "1.3",
+  "question": "Among Sulzer Regional Library, Edgewater, and Lincoln Belmont, which branch stayed in the top 5 for total visitors and top 3 for total reserved public-computer time slots (each at most 60 minutes) in each year from 2019 to 2021? Then, which neighborhood is Conrad Sulzer Regional Library located in? Return the neighborhood name only. Your response should be in the format [Answer].",
+  "answer": "Lincoln Square",
   "nodes": {
     "1": {
-      "source": "datagov/2011-2012-high-school-progress-report/v1/files/rows.csv",
-      "fact": "In 2011-12, the top 3 high schools by overall score were: It Takes a Village Academy (98.7), Academy for Careers in Television and Film (96.6), Manhattan Village Academy (96.6).",
-      "subquestion": "Which NYC high schools were in the top 3 by overall score in 2011-12?",
+      "source": "datagov/libraries-2019-visitors-by-location/files/rows.txt",
+      "fact": "import csv\nfrom collections import defaultdict\n\nwith open('datagov/libraries-2019-visitors-by-location/files/rows.txt', 'r', encoding='utf-8', newline='') as f:\n    rows = list(csv.DictReader(f))\n\ntotals = defaultdict(float)\nfor r in rows:\n    if not (r.get('ADDRESS') or '').strip():\n        continue\n    branch = (r.get('LOCATION') or '').strip()\n    if not branch:\n        continue\n    try:\n        ytd = float((r.get('YTD') or '').replace(',', '').strip())\n    except (TypeError, ValueError):\n        continue\n    totals[branch] += ytd\n\nranked = sorted(totals.items(), key=lambda x: (-x[1], x[0]))[:5]\nresult = [name for name, _ in ranked]",
+      "subquestion": "In 2019, which Chicago library branches were in the top 5 by total visitors?",
       "answer": [
-        "It Takes a Village Academy",
-        "Academy for Careers in Television and Film",
-        "Manhattan Village Academy"
+        "Harold Washtington Library Center",
+        "Sulzer Regional Library",
+        "Chinatown",
+        "Woodson Regional Library",
+        "Edgewater"
       ]
     },
     "2": {
-      "source": "datagov/2012-2013-high-school-progress-report/v1/files/rows.csv",
-      "fact": "In 2012-13, the top 3 high schools by overall score were: It Takes a Village Academy (105.9), Academy for Careers in Television and Film (100.9), Brooklyn International High School (100.5).",
-      "subquestion": "Which NYC high schools were in the top 3 by overall score in 2012-13?",
+      "source": "datagov/libraries-2020-visitors-by-location/files/rows.txt",
+      "fact": "import csv\nfrom collections import defaultdict\n\nwith open('datagov/libraries-2020-visitors-by-location/files/rows.txt', 'r', encoding='utf-8', newline='') as f:\n    rows = list(csv.DictReader(f))\n\ntotals = defaultdict(float)\nfor r in rows:\n    if not (r.get('ADDRESS') or '').strip():\n        continue\n    branch = (r.get('BRANCH') or '').strip()\n    if not branch:\n        continue\n    try:\n        ytd = float((r.get('YTD') or '').replace(',', '').strip())\n    except (TypeError, ValueError):\n        continue\n    totals[branch] += ytd\n\nranked = sorted(totals.items(), key=lambda x: (-x[1], x[0]))[:5]\nresult = [name for name, _ in ranked]",
+      "subquestion": "In 2020, which Chicago library branches were in the top 5 by total visitors?",
       "answer": [
-        "It Takes a Village Academy",
-        "Academy for Careers in Television and Film",
-        "Brooklyn International High School"
+        "Harold Washtington Library Center",
+        "Sulzer Regional Library",
+        "Edgewater",
+        "Woodson Regional Library",
+        "Rogers Park"
       ]
     },
     "3": {
-      "source": "datagov/2013-2014-doe-high-school-performance-directory/v1/files/rows.csv",
-      "fact": "In 2010-11, 109 NYC high schools had an A grade in Progress Report, including It Takes a Village Academy, Manhattan Village Academy, and Brooklyn International High School. Academy for Careers in Television and Film had N/A (no data) for 2010-11.",
-      "subquestion": "Which schools from <intersection of node_1, node_2> had an A grade in the 2010-11 Progress Report?",
+      "source": "datagov/libraries-2021-visitors-by-location/files/rows.txt",
+      "fact": "import csv\nfrom collections import defaultdict\n\nwith open('datagov/libraries-2021-visitors-by-location/files/rows.txt', 'r', encoding='utf-8', newline='') as f:\n    rows = list(csv.DictReader(f))\n\ntotals = defaultdict(float)\nfor r in rows:\n    if not (r.get('ADDRESS') or '').strip():\n        continue\n    branch = (r.get('BRANCH') or '').strip()\n    if not branch:\n        continue\n    try:\n        ytd = float((r.get('YTD') or '').replace(',', '').strip())\n    except (TypeError, ValueError):\n        continue\n    totals[branch] += ytd\n\nranked = sorted(totals.items(), key=lambda x: (-x[1], x[0]))[:5]\nresult = [name for name, _ in ranked]",
+      "subquestion": "In 2021, which Chicago library branches were in the top 5 by total visitors?",
       "answer": [
-        "It Takes a Village Academy"
+        "Harold Washtington Library Center",
+        "Sulzer Regional Library",
+        "Edgewater",
+        "Chinatown",
+        "Logan Square"
       ]
     },
     "4": {
-      "source": "datagov/2012-2013-school-locations/v1/files/rows.csv",
-      "fact": "It Takes a Village Academy (DBN 18K563) is located at 5800 Tilden Avenue, Brooklyn, NY with ZIP code 11236.",
-      "subquestion": "What is the ZIP code of <node_3 answer>?",
-      "answer": "11203"
+      "source": "datagov/libraries-2019-computer-sessions-by-location/files/rows.txt",
+      "fact": "import csv\nfrom collections import defaultdict\n\nwith open('datagov/libraries-2019-computer-sessions-by-location/files/rows.txt', 'r', encoding='utf-8', newline='') as f:\n    rows = list(csv.DictReader(f))\n\ntotals = defaultdict(float)\nfor r in rows:\n    if not (r.get('ADDRESS') or '').strip():\n        continue\n    branch = (r.get('LOCATION') or '').strip()\n    if not branch:\n        continue\n    try:\n        ytd = float((r.get('YTD') or '').replace(',', '').strip())\n    except (TypeError, ValueError):\n        continue\n    totals[branch] += ytd\n\nranked = sorted(totals.items(), key=lambda x: (-x[1], x[0]))[:3]\nresult = [name for name, _ in ranked]",
+      "subquestion": "In 2019, which Chicago library branches were in the top 3 by total reserved public-computer time slots (each at most 60 minutes)?",
+      "answer": [
+        "HAROLD WASHINGTON LIBRARY CENTER",
+        "Woodson Regional Library",
+        "Sulzer Regional Library"
+      ]
     },
     "5": {
-      "source": "wikipedia/East_Flatbush,_Brooklyn/content.txt",
-      "fact": "The racial makeup of the neighborhood was 1.3% (1,816) White, 88.7% (120,231) African American, 0.3% (366) Native American, 1.1% (1,480) Asian, 0% (45) Pacific Islander, 0.4% (523) from other races, and 1.6% (2,140) from two or more races based on 2010 census.",
-      "subquestion": "What percentage does White people contribute to the racial makeup of the neighborhood whose primary ZIP code is <node_4 answer> based on data in 2010 census?",
-      "answer": "1.3"
+      "source": "datagov/libraries-2020-computer-sessions-by-location/files/rows.txt",
+      "fact": "import csv\nfrom collections import defaultdict\n\nwith open('datagov/libraries-2020-computer-sessions-by-location/files/rows.txt', 'r', encoding='utf-8', newline='') as f:\n    rows = list(csv.DictReader(f))\n\ntotals = defaultdict(float)\nfor r in rows:\n    if not (r.get('ADDRESS') or '').strip():\n        continue\n    branch = (r.get('BRANCH') or '').strip()\n    if not branch:\n        continue\n    try:\n        ytd = float((r.get('YTD') or '').replace(',', '').strip())\n    except (TypeError, ValueError):\n        continue\n    totals[branch] += ytd\n\nranked = sorted(totals.items(), key=lambda x: (-x[1], x[0]))[:3]\nresult = [name for name, _ in ranked]",
+      "subquestion": "In 2020, which Chicago library branches were in the top 3 by total reserved public-computer time slots (each at most 60 minutes)?",
+      "answer": [
+        "Harold Washington Library Center",
+        "Woodson Regional Library",
+        "Sulzer Regional Library"
+      ]
+    },
+    "6": {
+      "source": "datagov/libraries-2021-computer-sessions-by-location/files/rows.txt",
+      "fact": "import csv\nfrom collections import defaultdict\n\nwith open('datagov/libraries-2021-computer-sessions-by-location/files/rows.txt', 'r', encoding='utf-8', newline='') as f:\n    rows = list(csv.DictReader(f))\n\ntotals = defaultdict(float)\nfor r in rows:\n    if not (r.get('ADDRESS') or '').strip():\n        continue\n    branch = (r.get('BRANCH') or '').strip()\n    if not branch:\n        continue\n    try:\n        ytd = float((r.get('YTD') or '').replace(',', '').strip())\n    except (TypeError, ValueError):\n        continue\n    totals[branch] += ytd\n\nranked = sorted(totals.items(), key=lambda x: (-x[1], x[0]))[:3]\nresult = [name for name, _ in ranked]",
+      "subquestion": "In 2021, which Chicago library branches were in the top 3 by total reserved public-computer time slots (each at most 60 minutes)?",
+      "answer": [
+        "Harold Washington Library Center",
+        "Woodson Regional Library",
+        "Sulzer Regional Library"
+      ]
+    },
+    "7": {
+      "source": "wikipedia/Conrad_Sulzer_Regional_Library/content.txt",
+      "fact": "According to the Wikipedia article for Conrad Sulzer Regional Library, the library is located in the Lincoln Square neighborhood at 4455 N. Lincoln Avenue.",
+      "subquestion": "Which neighborhood is Conrad Sulzer Regional Library located in?",
+      "answer": "Lincoln Square"
     }
   },
   "reasoning_chain": [
-    "HOP 1 (d=2, NYC high school top-3 overall score - nodes 1-2):",
-    "  Node 1 (2011-12): Top 3 -> {It Takes a Village Academy, Academy for Careers in Television and Film, Manhattan Village Academy}",
-    "  Node 2 (2012-13): Top 3 -> {It Takes a Village Academy, Academy for Careers in Television and Film, Brooklyn International High School}",
-    "  Intersection(1,2) -> {It Takes a Village Academy, Academy for Careers in Television and Film}",
+    "HOP 1 (d=3, visitors 2019-2021 - nodes 1-3):",
+    "  Question: In each year, which branches were in the top 5 by total visitors?",
+    "  Node 1: 2019 top 5 -> {Harold Washtington Library Center, Sulzer Regional Library, Chinatown, Woodson Regional Library, Edgewater}",
+    "  Node 2: 2020 top 5 -> {Harold Washtington Library Center, Sulzer Regional Library, Edgewater, Woodson Regional Library, Rogers Park}",
+    "  Node 3: 2021 top 5 -> {Harold Washtington Library Center, Sulzer Regional Library, Edgewater, Chinatown, Logan Square}",
+    "  Answer: Intersection of node_1, node_2, and node_3 -> {Edgewater, Harold Washtington Library Center, Sulzer Regional Library}",
     "",
-    "HOP 2 (d=1, school grades - node 3 depends on hop 1):",
-    "  Node 3: From the intersection, the school with an A grade in 2010-11 -> It Takes a Village Academy",
+    "HOP 2 (d=3, computer sessions 2019-2021 - nodes 4-6):",
+    "  Question: In each year, which branches were in the top 3 by total reserved public-computer time slots (each at most 60 minutes)?",
+    "  Node 4: 2019 top 3 -> {HAROLD WASHINGTON LIBRARY CENTER, Woodson Regional Library, Sulzer Regional Library}",
+    "  Node 5: 2020 top 3 -> {Harold Washington Library Center, Woodson Regional Library, Sulzer Regional Library}",
+    "  Node 6: 2021 top 3 -> {Harold Washington Library Center, Woodson Regional Library, Sulzer Regional Library}",
+    "  Answer: Intersection with hop 1 -> {Sulzer Regional Library}",
     "",
-    "HOP 3 (d=1, school locations - node 4 depends on node 3):",
-    "  Node 4: ZIP code of It Takes a Village Academy -> 11203",
+    "HOP 3 (d=1, Wikipedia Conrad Sulzer Regional Library - node 7):",
+    "  Question: Which Chicago neighborhood is Conrad Sulzer Regional Library located in?",
+    "  Node 7: Conrad Sulzer Regional Library is located in the Lincoln Square neighborhood",
+    "  Answer: Lincoln Square",
     "",
-    "HOP 4 (d=1, neighborhood demographics - node 5 depends on node 4):",
-    "  Node 5: White population share for the neighborhood with primary ZIP 11203 -> 1.3%",
-    "",
-    "Final answer: 1.3"
+    "Final answer: Lincoln Square"
   ],
+  "verdict": "pass",
   "datasets_used": [
-    "2011-2012-high-school-progress-report",
-    "2012-2013-high-school-progress-report",
-    "2012-2013-school-locations",
-    "2013-2014-doe-high-school-performance-directory",
-    "East_Flatbush,_Brooklyn"
+    "libraries-2019-visitors-by-location",
+    "libraries-2020-visitors-by-location",
+    "libraries-2021-visitors-by-location",
+    "libraries-2019-computer-sessions-by-location",
+    "libraries-2020-computer-sessions-by-location",
+    "libraries-2021-computer-sessions-by-location",
+    "Conrad_Sulzer_Regional_Library"
+  ],
+  "reasoning_hops": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1,
+        2,
+        3
+      ],
+      "reasoning": "Question: In each year, which branches were in the top 5 by total visitors? Node 1: 2019 top 5 -> {Harold Washtington Library Center, Sulzer Regional Library, Chinatown, Woodson Regional Library, Edgewater} Node 2: 2020 top 5 -> {Harold Washtington Library Center, Sulzer Regional Library, Edgewater, Woodson Regional Library, Rogers Park} Node 3: 2021 top 5 -> {Harold Washtington Library Center, Sulzer Regional Library, Edgewater, Chinatown, Logan Square} Answer: Intersection of node_1, node_2, and node_3 -> {Edgewater, Harold Washtington Library Center, Sulzer Regional Library}",
+      "answer": "{Edgewater, Harold Washtington Library Center, Sulzer Regional Library}"
+    },
+    {
+      "hop": 2,
+      "node_ids": [
+        4,
+        5,
+        6
+      ],
+      "reasoning": "Question: In each year, which branches were in the top 3 by total reserved public-computer time slots (each at most 60 minutes)? Node 4: 2019 top 3 -> {HAROLD WASHINGTON LIBRARY CENTER, Woodson Regional Library, Sulzer Regional Library} Node 5: 2020 top 3 -> {Harold Washington Library Center, Woodson Regional Library, Sulzer Regional Library} Node 6: 2021 top 3 -> {Harold Washington Library Center, Woodson Regional Library, Sulzer Regional Library} Answer: Intersection with hop 1 -> {Sulzer Regional Library}",
+      "answer": "{Sulzer Regional Library}"
+    },
+    {
+      "hop": 3,
+      "node_ids": [
+        7
+      ],
+      "reasoning": "Question: Which Chicago neighborhood is Conrad Sulzer Regional Library located in? Node 7: Conrad Sulzer Regional Library is located in the Lincoln Square neighborhood Answer: Lincoln Square",
+      "answer": "Lincoln Square"
+    }
   ]
 }

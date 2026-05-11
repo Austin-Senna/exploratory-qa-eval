@@ -1,20 +1,30 @@
 {
-  "question": "Which year has the highest total number of individuals receiving regular unemployment insurance benefits starting from 2001? Your response should be in the format [Answer].",
-  "answer": "2020",
-  "practical_motivation": "A labor market analyst wants to pinpoint the peak year of unemployment insurance beneficiaries to contextualize economic disruptions.",
+  "question": "For each year from 2016 through 2023, compute a growth-amplified overdose burden score as annual drug overdose deaths across all U.S. states multiplied by (1 + year-over-year growth rate). Which year has the highest score? Your response should be in the format [Answer].",
+  "answer": "2021",
+  "practical_motivation": "A public health analyst wants to identify the year with both high overdose burden and sharp acceleration, not just the highest raw total.",
   "nodes": {
     "1": {
-      "source": "datagov/unemployment-insurance-beneficiaries-and-benefit-amounts-paid-beginning-2001/files/rows.txt",
-      "fact": "In this dataset, summing Beneficiaries across all records by Year, 2020 has the highest total beneficiaries at 11,355,300.",
-      "subquestion": "Which year has the highest total number of individuals receiving regular unemployment insurance benefits starting from 2001? (Group by Year; sum Beneficiaries; choose the maximum.)",
-      "answer": "2020"
+      "source": "datagov/vsrr-provisional-drug-overdose-death-counts/files/rows.txt",
+      "fact": "In the VSRR provisional drug overdose death counts dataset, filtering to Indicator = 'Number of Drug Overdose Deaths', Period = '12 month-ending', Month = 'December', excluding State = 'US', and summing Data Value by year for 2015-2023 shows the highest total is in 2022.",
+      "subquestion": "For each year from 2016 through 2023, compute a growth-amplified overdose burden score: annual drug overdose deaths across all U.S. states multiplied by (1 + year-over-year growth rate).",
+      "answer": "2021"
     }
   },
   "reasoning_chain": [
-    "Node 1: Sum Beneficiaries by Year and select the maximum total; the peak year is 2020.",
-    "Final answer: 2020"
+    "Node 1: Sum the December rolling 12-month overdose death totals across all U.S. states for each year, compute year-over-year growth in that total, then score each year from 2016-2023 as total x (1 + max(growth, 0)). The highest growth-amplified score occurs in 2021.",
+    "Final answer: 2021"
   ],
   "datasets_used": [
-    "unemployment-insurance-beneficiaries-and-benefit-amounts-paid-beginning-2001"
+    "vsrr-provisional-drug-overdose-death-counts"
+  ],
+  "reasoning_hops": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1
+      ],
+      "reasoning": "Node 1: Sum the December rolling 12-month overdose death totals across all U.S. states for each year, compute year-over-year growth in that total, then score each year from 2016-2023 as total x (1 + max(growth, 0)). The highest growth-amplified score occurs in 2021. Final answer: 2021",
+      "answer": "node 1: 2021"
+    }
   ]
 }

@@ -1,102 +1,127 @@
 {
-  "question": "Across 2021-2023, which Missouri state agency stayed in the top five for professional services spending and also had the highest average employee count? What city is its headquarters in? Return the city name only. Your response should be in the format [Answer].",
-  "answer": "Jefferson City",
+  "question": "Consider Harris, Travis, Dallas, and Bexar counties. Determine which of these consistently ranked in the statewide top five for releases from the Department of Criminal Justice from 2019 to 2021. Among those, compute the average annual intake counts from the Department of Criminal Justice over 2019-2021 and identify the county with the highest average. What is that county's seat? Return the city name only. Your response should be in the format [Answer].",
+  "answer": "Houston",
   "nodes": {
     "1": {
-      "source": "datagov/2021-state-expenditures/v1/files/rows.csv",
-      "fact": "According to Missouri state expenditure data for fiscal year 2021, the top 5 agencies by Professional Services spending were: SOCIAL SERVICES ($218,760,336.88), CORRECTIONS ($168,860,817.63), PUBLIC SAFETY ($99,478,227.23), TRANSPORTATION ($77,432,677.01), and ELEMENTARY AND SECONDARY EDUCATION ($60,049,132.30).",
-      "subquestion": "Which Missouri state agencies were in the top 5 for professional services spending every year from 2021 to 2023? (Filter for this node: Category Description == 'PROFESSIONAL SERVICES'; group by Agency Name; sum Payments Total; rank desc; take top 5.)",
+      "source": "datagov/texas-department-of-criminal-justice-releases-fy-2019/files/rows.txt",
+      "fact": "According to Texas Department of Criminal Justice release data for fiscal year 2019, the overall top 5 counties by releases were Harris (9,029), Dallas (5,355), Tarrant (4,769), Bexar (4,545), and Hidalgo (1,861). Among Harris, Travis, Dallas, and Bexar, the ones in the top 5 were Harris, Dallas, and Bexar.",
+      "subquestion": "In 2019, among Harris, Travis, Dallas, and Bexar counties, which were in the overall top 5 for releases from the Department of Criminal Justice? (Filter for this node: count rows by County; normalize County to uppercase; rank desc; take top 5 overall; then keep counties in the given list.)",
       "answer": [
-        "SOCIAL SERVICES",
-        "CORRECTIONS",
-        "PUBLIC SAFETY",
-        "TRANSPORTATION",
-        "ELEMENTARY AND SECONDARY EDUCATION"
+        "Harris",
+        "Dallas",
+        "Bexar"
       ]
     },
     "2": {
-      "source": "datagov/2022-state-expenditures/v1/files/rows.csv",
-      "fact": "According to Missouri state expenditure data for fiscal year 2022, the top 5 agencies by Professional Services spending were: SOCIAL SERVICES ($231,054,160.78), CORRECTIONS ($187,409,956.85), TRANSPORTATION ($96,697,827.49), PUBLIC SAFETY ($78,309,603.84), and ELEMENTARY AND SECONDARY EDUCATION ($76,114,201.40).",
-      "subquestion": "Which Missouri state agencies were in the top 5 for professional services spending every year from 2021 to 2023? (Filter for this node: Category Description == 'PROFESSIONAL SERVICES'; group by Agency Name; sum Payments Total; rank desc; take top 5.)",
+      "source": "datagov/texas-department-of-criminal-justice-releases-fy-2020/files/rows.txt",
+      "fact": "According to Texas Department of Criminal Justice release data for fiscal year 2020, the overall top 5 counties by releases were Harris (7,059), Dallas (4,540), Tarrant (4,450), Bexar (3,917), and Travis (1,596). Among Harris, Travis, Dallas, and Bexar, all four were in the top 5.",
+      "subquestion": "In 2020, among Harris, Travis, Dallas, and Bexar counties, which were in the overall top 5 for releases from the Department of Criminal Justice? (Filter for this node: count rows by County; normalize County to uppercase; rank desc; take top 5 overall; then keep counties in the given list.)",
       "answer": [
-        "SOCIAL SERVICES",
-        "CORRECTIONS",
-        "TRANSPORTATION",
-        "PUBLIC SAFETY",
-        "ELEMENTARY AND SECONDARY EDUCATION"
+        "Harris",
+        "Dallas",
+        "Bexar",
+        "Travis"
       ]
     },
     "3": {
-      "source": "datagov/2023-state-expenditures/v1/files/rows.csv",
-      "fact": "According to Missouri state expenditure data for fiscal year 2023, the top 5 agencies by Professional Services spending were: CORRECTIONS ($255,301,312.93), SOCIAL SERVICES ($244,670,948.01), TRANSPORTATION ($135,596,241.67), OFFICE OF ADMINISTRATION ($114,422,442.83), and MENTAL HEALTH ($100,958,164.21).",
-      "subquestion": "Which Missouri state agencies were in the top 5 for professional services spending every year from 2021 to 2023? (Filter for this node: Category Description == 'PROFESSIONAL SERVICES'; group by Agency Name; sum Payments Total; rank desc; take top 5.)",
+      "source": "datagov/texas-department-of-criminal-justice-releases-fy-2021/files/rows.txt",
+      "fact": "According to Texas Department of Criminal Justice release data for fiscal year 2021, the overall top 5 counties by releases were Harris (5,210), Dallas (3,565), Tarrant (3,252), Bexar (3,236), and Hidalgo (1,147). Among Harris, Travis, Dallas, and Bexar, the ones in the top 5 were Harris, Dallas, and Bexar.",
+      "subquestion": "In 2021, among Harris, Travis, Dallas, and Bexar counties, which were in the overall top 5 for releases from the Department of Criminal Justice? (Filter for this node: count rows by County; normalize County to uppercase; rank desc; take top 5 overall; then keep counties in the given list.)",
       "answer": [
-        "CORRECTIONS",
-        "SOCIAL SERVICES",
-        "TRANSPORTATION",
-        "OFFICE OF ADMINISTRATION",
-        "MENTAL HEALTH"
+        "Harris",
+        "Dallas",
+        "Bexar"
       ]
     },
     "4": {
-      "source": "datagov/2021-state-employee-pay/v1/files/rows.csv",
-      "fact": "According to Missouri state employee pay data for calendar year 2021, among the agencies that were in the top 5 for professional services spending in 2021, 2022, and 2023 (CORRECTIONS, SOCIAL SERVICES, TRANSPORTATION), CORRECTIONS had 12,530 employees, SOCIAL SERVICES had 8,362 employees, and TRANSPORTATION had 7,170 employees.",
-      "subquestion": "Among the agencies in the hop 1 intersection {CORRECTIONS, SOCIAL SERVICES, TRANSPORTATION}, which had the highest average employee count across 2021-2023? (Filter for this node: Agency Name in {CORRECTIONS, SOCIAL SERVICES, TRANSPORTATION}; count rows by Agency Name.)",
+      "source": "datagov/texas-department-of-criminal-justice-receives-fy-2019/files/rows.txt",
+      "fact": "According to Texas Department of Criminal Justice intake data for fiscal year 2019, among the hop 1 counties: Harris had 7,874 intakes, Dallas had 4,660, and Bexar had 4,457.",
+      "subquestion": "In 2019, what were the intake counts from the Department of Criminal Justice for the counties from hop 1? (Filter for this node: County in hop 1 list; normalize County to uppercase; count rows by County.)",
       "answer": {
-        "CORRECTIONS": 12530,
-        "SOCIAL SERVICES": 8362,
-        "TRANSPORTATION": 7170
+        "Harris": 7874,
+        "Dallas": 4660,
+        "Bexar": 4457
       }
     },
     "5": {
-      "source": "datagov/2022-state-employee-pay/v1/files/rows.csv",
-      "fact": "According to Missouri state employee pay data for calendar year 2022, CORRECTIONS had 12,380 employees, SOCIAL SERVICES had 8,723 employees, and TRANSPORTATION had 6,917 employees.",
-      "subquestion": "Among the agencies in the hop 1 intersection {CORRECTIONS, SOCIAL SERVICES, TRANSPORTATION}, which had the highest average employee count across 2021-2023? (Filter for this node: Agency Name in {CORRECTIONS, SOCIAL SERVICES, TRANSPORTATION}; count rows by Agency Name.)",
+      "source": "datagov/texas-department-of-criminal-justice-receives-fy-2020/files/rows.txt",
+      "fact": "According to Texas Department of Criminal Justice intake data for fiscal year 2020, among the hop 1 counties: Harris had 3,840 intakes, Dallas had 2,519, and Bexar had 2,420.",
+      "subquestion": "In 2020, what were the intake counts from the Department of Criminal Justice for the counties from hop 1? (Filter for this node: County in hop 1 list; normalize County to uppercase; count rows by County.)",
       "answer": {
-        "CORRECTIONS": 12380,
-        "SOCIAL SERVICES": 8723,
-        "TRANSPORTATION": 6917
+        "Harris": 3840,
+        "Dallas": 2519,
+        "Bexar": 2420
       }
     },
     "6": {
-      "source": "datagov/2023-state-employee-pay/v1/files/rows.csv",
-      "fact": "According to Missouri state employee pay data for calendar year 2023, CORRECTIONS had 13,107 employees, SOCIAL SERVICES had 8,932 employees, and TRANSPORTATION had 6,956 employees. Computing averages: CORRECTIONS avg = 12,672, SOCIAL SERVICES avg = 8,672, TRANSPORTATION avg = 7,014. CORRECTIONS has the highest average.",
-      "subquestion": "Among the agencies in the hop 1 intersection {CORRECTIONS, SOCIAL SERVICES, TRANSPORTATION}, which had the highest average employee count across 2021-2023? (Filter for this node: Agency Name in {CORRECTIONS, SOCIAL SERVICES, TRANSPORTATION}; count rows by Agency Name.)",
-      "answer": "CORRECTIONS"
+      "source": "datagov/texas-department-of-criminal-justice-receives-fy-2021/files/rows.txt",
+      "fact": "According to Texas Department of Criminal Justice intake data for fiscal year 2021, among the hop 1 counties: Harris had 4,652 intakes, Dallas had 3,520, and Bexar had 2,822.",
+      "subquestion": "In 2021, what were the intake counts from the Department of Criminal Justice for the counties from hop 1? (Filter for this node: County in hop 1 list; normalize County to uppercase; count rows by County.)",
+      "answer": {
+        "Harris": 4652,
+        "Dallas": 3520,
+        "Bexar": 2822
+      }
     },
     "7": {
-      "source": "wikipedia/Missouri_Department_of_Corrections/content.txt",
-      "fact": "The Missouri Department of Corrections has its headquarters in Missouri's capital of Jefferson City.",
-      "subquestion": "What city is the headquarters of the agency with the highest average employee count located in?",
-      "answer": "Jefferson City"
+      "source": "wikipedia/Harris_County,_Texas/content.txt",
+      "fact": "Harris County is the most populous county in Texas and the third-most populous in the United States. The county seat is Houston, which is also the largest city in Texas and the fourth-largest city in the United States.",
+      "subquestion": "What city is the county seat of the county from hop 2?",
+      "answer": "Houston"
     }
   },
   "reasoning_chain": [
-    "HOP 1 (d=3, professional services spending 2021-2023 - nodes 1-3):",
-    "  Node 1 (2021): Top 5 = {SOCIAL SERVICES, CORRECTIONS, PUBLIC SAFETY, TRANSPORTATION, ELEMENTARY AND SECONDARY EDUCATION}",
-    "  Node 2 (2022): Top 5 = {SOCIAL SERVICES, CORRECTIONS, TRANSPORTATION, PUBLIC SAFETY, ELEMENTARY AND SECONDARY EDUCATION}",
-    "  Node 3 (2023): Top 5 = {CORRECTIONS, SOCIAL SERVICES, TRANSPORTATION, OFFICE OF ADMINISTRATION, MENTAL HEALTH}",
-    "  Intersection: {CORRECTIONS, SOCIAL SERVICES, TRANSPORTATION}",
-    "",
-    "HOP 2 (d=3, employee counts 2021-2023 - nodes 4-6):",
-    "  Node 4 (2021): CORRECTIONS=12,530; SOCIAL SERVICES=8,362; TRANSPORTATION=7,170",
-    "  Node 5 (2022): CORRECTIONS=12,380; SOCIAL SERVICES=8,723; TRANSPORTATION=6,917",
-    "  Node 6 (2023): CORRECTIONS=13,107; SOCIAL SERVICES=8,932; TRANSPORTATION=6,956",
-    "  Averages: CORRECTIONS=12,672 > SOCIAL SERVICES=8,672 > TRANSPORTATION=7,014",
-    "  Result: Missouri Department of Corrections",
-    "",
-    "HOP 3 (d=1, Missouri Department of Corrections - node 7):",
-    "  Node 7: Headquarters city -> Jefferson City",
-    "  Final answer: Jefferson City"
+    "HOP 1 (d=3): From Harris, Travis, Dallas, and Bexar, keep the counties that are in the statewide top 5 for releases in 2019-2021",
+    "  Node 1 (2019): {Harris, Dallas, Bexar}",
+    "  Node 2 (2020): {Harris, Dallas, Bexar, Travis}",
+    "  Node 3 (2021): {Harris, Dallas, Bexar}",
+    "  Intersection: {Harris, Dallas, Bexar}",
+    "HOP 2 (d=3): For those counties, gather intake counts from the Department of Criminal Justice for 2019-2021 and compute averages",
+    "  Node 4 (2019): Harris=7874, Dallas=4660, Bexar=4457",
+    "  Node 5 (2020): Harris=3840, Dallas=2519, Bexar=2420",
+    "  Node 6 (2021): Harris=4652, Dallas=3520, Bexar=2822",
+    "  Averages: Harris=5455.3 > Dallas=3566.3 > Bexar=3233.0 -> Result: Harris County",
+    "HOP 3 (d=1): Find county seat of the hop 2 county -> Houston",
+    "Final answer: Houston"
   ],
   "verdict": "pass",
   "datasets_used": [
-    "2021-state-expenditures",
-    "2022-state-expenditures",
-    "2023-state-expenditures",
-    "2021-state-employee-pay",
-    "2022-state-employee-pay",
-    "2023-state-employee-pay",
-    "Missouri_Department_of_Corrections"
+    "Harris_County,_Texas",
+    "texas-department-of-criminal-justice-receives-fy-2019",
+    "texas-department-of-criminal-justice-receives-fy-2020",
+    "texas-department-of-criminal-justice-receives-fy-2021",
+    "texas-department-of-criminal-justice-releases-fy-2019",
+    "texas-department-of-criminal-justice-releases-fy-2020",
+    "texas-department-of-criminal-justice-releases-fy-2021"
+  ],
+  "reasoning_hops": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1,
+        2,
+        3
+      ],
+      "reasoning": "Node 1 (2019): {Harris, Dallas, Bexar} Node 2 (2020): {Harris, Dallas, Bexar, Travis} Node 3 (2021): {Harris, Dallas, Bexar} Intersection: {Harris, Dallas, Bexar}",
+      "answer": "{Harris, Dallas, Bexar}"
+    },
+    {
+      "hop": 2,
+      "node_ids": [
+        4,
+        5,
+        6
+      ],
+      "reasoning": "Node 4 (2019): Harris=7874, Dallas=4660, Bexar=4457 Node 5 (2020): Harris=3840, Dallas=2519, Bexar=2420 Node 6 (2021): Harris=4652, Dallas=3520, Bexar=2822 Averages: Harris=5455.3 > Dallas=3566.3 > Bexar=3233.0 -> Result: Harris County",
+      "answer": "Harris County"
+    },
+    {
+      "hop": 3,
+      "node_ids": [
+        7
+      ],
+      "reasoning": "Node 7: County seat of Harris County -> Houston",
+      "answer": "Houston"
+    }
   ]
 }

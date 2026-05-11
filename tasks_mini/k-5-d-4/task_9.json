@@ -1,120 +1,163 @@
 {
-  "question": "Find the city the Southwest district of the Missouri Department of Transportation is based in and a highway that was born in the city. Between that highway's two terminus cities, which one had higher binge drinking rates in 2016 and 2018? For that city, identify the department with the second-highest overtime costs from 2014 to 2017 and state its founding year. Please return the year only. Your response should be in the format [Answer].",
-  "answer": "1858",
+  "question": "Identify the Texas county that had the most consistent annual number of state prison releases from 2019 to 2022 (lowest coefficient of variation among the top five by average releases). Its county seat has a five-time NBA champion team based in it. Which New York City borough is home to the team that this champion defeated in its first NBA Finals appearance? Your response should be in the format [Answer].",
+  "answer": "Manhattan",
   "nodes": {
     "1": {
-      "source": "wikipedia/Missouri_Department_of_Transportation/content.txt",
-      "fact": "According to the Wikipedia article for Missouri Department of Transportation, 'MoDOT operates seven districts throughout the state: Northwest, based in St. Joseph; Northeast, based in Hannibal; Kansas City, based in Lee's Summit; Central, based in Jefferson City; St. Louis, based in Chesterfield; Southwest, based in Springfield; and Southeast, based in Sikeston.'",
-      "subquestion": "In which city is the Southwest district of the Missouri Department of Transportation based?",
-      "answer": "Springfield"
+      "source": "datagov/texas-department-of-criminal-justice-releases-fy-2019/files/rows.txt",
+      "fact": "In the FY 2019 TDCJ Releases dataset, release counts for the counties in the top five by average releases across FY2019-FY2022 (Harris, Dallas, Tarrant, Bexar, Hidalgo) were: Harris 9,029; Dallas 5,355; Tarrant 4,769; Bexar 4,545; Hidalgo 1,861.",
+      "subquestion": "For FY2019, what were release counts for the counties that rank in the top five by average releases across FY2019-FY2022? (Filter for this node: count rows by County in the FY2019 file; normalize County to uppercase; keep counties in the hop 1 average top five set.)",
+      "answer": {
+        "Harris": 9029,
+        "Dallas": 5355,
+        "Tarrant": 4769,
+        "Bexar": 4545,
+        "Hidalgo": 1861
+      }
     },
     "2": {
-      "source": "wikipedia/Springfield,_Missouri/content.txt",
-      "fact": "According to the Wikipedia article for Springfield, Missouri, 'Springfield's nicknames include \"Queen City of the Ozarks\" and \"The Birthplace of Route 66\"...Officially recognized as the birthplace of Route 66, it was in Springfield on April 30, 1926, that officials first proposed the name of the new Chicago-to-Los Angeles highway.'",
-      "subquestion": "What are the terminus cities of the highway that was born in <node_1 answer>?",
-      "answer": [
-        "Chicago",
-        "Los Angeles"
-      ]
+      "source": "datagov/texas-department-of-criminal-justice-releases-fy-2020/files/rows.txt",
+      "fact": "In the FY 2020 TDCJ Releases dataset, release counts for the counties in the top five by average releases across FY2019-FY2022 (Harris, Dallas, Tarrant, Bexar, Hidalgo) were: Harris 7,059; Dallas 4,540; Tarrant 4,450; Bexar 3,917; Hidalgo 1,572.",
+      "subquestion": "For FY2020, what were release counts for the counties that rank in the top five by average releases across FY2019-FY2022? (Filter for this node: count rows by County in the FY2020 file; normalize County to uppercase; keep counties in the hop 1 average top five set.)",
+      "answer": {
+        "Harris": 7059,
+        "Dallas": 4540,
+        "Tarrant": 4450,
+        "Bexar": 3917,
+        "Hidalgo": 1572
+      }
     },
     "3": {
-      "source": "datagov/500-cities-local-data-for-better-health-2016-release/files/rows.txt",
-      "fact": "In the 500-Cities 2016 health data release, the binge drinking prevalence (city-level, crude) was: Chicago 20.1% and Los Angeles 15.9%. Chicago had higher binge drinking prevalence.",
-      "subquestion": "Which terminus city (from <node_2 answer>) had higher average binge drinking prevalence across the 2016 and 2018 500-Cities health releases? (Filter for this node: Short_Question_Text == 'Binge Drinking'; GeographicLevel == 'City'; Data_Value_Type == 'Crude prevalence'; CityName in {Chicago, Los Angeles}; use Data_Value.)",
+      "source": "datagov/texas-department-of-criminal-justice-releases-fy-2021/files/rows.txt",
+      "fact": "In the FY 2021 TDCJ Releases dataset, release counts for the counties in the top five by average releases across FY2019-FY2022 (Harris, Dallas, Tarrant, Bexar, Hidalgo) were: Harris 5,210; Dallas 3,565; Tarrant 3,252; Bexar 3,236; Hidalgo 1,147.",
+      "subquestion": "For FY2021, what were release counts for the counties that rank in the top five by average releases across FY2019-FY2022? (Filter for this node: count rows by County in the FY2021 file; normalize County to uppercase; keep counties in the hop 1 average top five set.)",
       "answer": {
-        "Chicago": 20.1,
-        "Los Angeles": 15.9
+        "Harris": 5210,
+        "Dallas": 3565,
+        "Tarrant": 3252,
+        "Bexar": 3236,
+        "Hidalgo": 1147
       }
     },
     "4": {
-      "source": "datagov/500-cities-local-data-for-better-health-2018-release/files/rows.txt",
-      "fact": "In the 500-Cities 2018 health data release, the binge drinking prevalence (city-level, crude) was: Chicago 21.5% and Los Angeles 16.7%. Chicago had higher binge drinking prevalence.",
-      "subquestion": "Which terminus city (from <node_2 answer>) had higher average binge drinking prevalence across the 2016 and 2018 500-Cities health releases? (Filter for this node: Short_Question_Text == 'Binge Drinking'; GeographicLevel == 'City'; Data_Value_Type == 'Crude prevalence'; CityName in {Chicago, Los Angeles}; use Data_Value.)",
+      "source": "datagov/texas-department-of-criminal-justice-releases-fy-2022/files/rows.txt",
+      "fact": "In the FY 2022 TDCJ Releases dataset, release counts for the counties in the top five by average releases across FY2019-FY2022 (Harris, Dallas, Tarrant, Bexar, Hidalgo) were: Harris 4,988; Dallas 3,557; Tarrant 3,231; Bexar 2,918; Hidalgo 1,015.",
+      "subquestion": "For FY2022, what were release counts for the counties that rank in the top five by average releases across FY2019-FY2022? (Filter for this node: count rows by County in the FY2022 file; normalize County to uppercase; keep counties in the hop 1 average top five set.)",
       "answer": {
-        "Chicago": 21.5,
-        "Los Angeles": 16.7
+        "Harris": 4988,
+        "Dallas": 3557,
+        "Tarrant": 3231,
+        "Bexar": 2918,
+        "Hidalgo": 1015
       }
     },
     "5": {
-      "source": "datagov/employee-overtime-and-supplemental-earnings-2014/files/rows.txt",
-      "fact": "In the 2014 Chicago Employee Overtime data, the top departments by total overtime were: Police ($101,460,132.24), Fire ($63,941,565.36), Water Management ($23,507,061.70), Streets and Sanitation ($15,393,693.24), and Aviation ($13,147,383.40). Fire had the 2nd highest.",
-      "subquestion": "Which city department had the 2nd highest total overtime from 2014-2017 in the city identified from the binge drinking comparison? (Filter for this node: group by DEPARTMENT NAME; sum TOTAL; rank by total; keep top departments.)",
-      "answer": {
-        "Police": 101460132.24,
-        "Fire": 63941565.36,
-        "Water Management": 23507061.7
-      }
+      "source": "wikipedia/Bexar_County,_Texas/content.txt",
+      "fact": "According to the Wikipedia article for Bexar County, Texas, 'Its county seat is San Antonio.'",
+      "subquestion": "What is the county seat of <county from aggregation of nodes 1-4: Bexar County>? (Lookup: find the county seat statement in the Bexar County, Texas article.)",
+      "answer": "San Antonio"
     },
     "6": {
-      "source": "datagov/employee-overtime-and-supplemental-earnings-2015/files/rows.txt",
-      "fact": "In the 2015 Chicago Employee Overtime data, the top departments by total overtime were: Police ($116,144,553.32), Fire ($43,847,384.30), Water Management ($19,954,056.68), Streets and Sanitation ($16,582,331.52). Fire had the 2nd highest.",
-      "subquestion": "Which city department had the 2nd highest total overtime from 2014-2017 in the city identified from the binge drinking comparison? (Filter for this node: group by DEPARTMENT NAME; sum TOTAL; rank by total; keep top departments.)",
-      "answer": {
-        "Police": 116144553.32,
-        "Fire": 43847384.3,
-        "Water Management": 19954056.68
-      }
+      "source": "wikipedia/San_Antonio/content.txt",
+      "fact": "According to the Wikipedia article for San Antonio, 'San Antonio is also home to the five-time NBA champion San Antonio Spurs.'",
+      "subquestion": "What five-time NBA champion team is based in <city from node 5: San Antonio>? (Lookup: find the sentence naming the five-time NBA champion team in the San Antonio article.)",
+      "answer": "San Antonio Spurs"
     },
     "7": {
-      "source": "datagov/employee-overtime-and-supplemental-earnings-2016/files/rows.txt",
-      "fact": "In the 2016 Chicago Employee Overtime data, the top departments by total overtime were: Police ($143,032,724.45), Fire ($50,604,010.67), Water Management ($21,335,912.52), Streets and Sanitation ($13,836,742.94). Fire had the 2nd highest.",
-      "subquestion": "Which city department had the 2nd highest total overtime from 2014-2017 in the city identified from the binge drinking comparison? (Filter for this node: group by DEPARTMENT NAME; sum TOTAL; rank by total; keep top departments.)",
-      "answer": {
-        "Police": 143032724.45,
-        "Fire": 50604010.67,
-        "Water Management": 21335912.52
-      }
+      "source": "wikipedia/San_Antonio_Spurs/content.txt",
+      "fact": "According to the Wikipedia article for San Antonio Spurs. For their first championship in 1999, the article states they 'defeated the New York Knicks' in the NBA Finals.",
+      "subquestion": "Which team did <team from node 6: San Antonio Spurs> defeat in their first NBA Finals championship? (Lookup: Spurs article; first championship opponent.)",
+      "answer": "New York Knicks"
     },
     "8": {
-      "source": "datagov/employee-overtime-and-supplemental-earnings-2017/files/rows.txt",
-      "fact": "In the 2017 Chicago Employee Overtime data, the top departments by total overtime were: Police ($156,732,988), Fire ($49,571,354), Water Management ($20,049,910), Aviation ($14,884,756). Fire had the 2nd highest. Fire was consistently 2nd across all 4 years (2014-2017).",
-      "subquestion": "Which city department had the 2nd highest total overtime from 2014-2017 in the city identified from the binge drinking comparison? (Filter for this node: group by DEPARTMENT NAME; sum TOTAL; rank by total; keep top departments.)",
-      "answer": {
-        "Police": 156732988,
-        "Fire": 49571354,
-        "Water Management": 20049910
-      }
-    },
-    "9": {
-      "source": "wikipedia/Chicago_Fire_Department/content.txt",
-      "fact": "According to the Wikipedia article for Chicago Fire Department, 'The volunteer fire department was disestablished on August 2, 1858, when the city council passed the ordinance organizing the paid City of Chicago Fire Department.' The department was founded in 1858.",
-      "subquestion": "In what year was the department identified in the overtime comparison founded?",
-      "answer": "1858"
+      "source": "wikipedia/New_York_Knicks/content.txt",
+      "fact": "According to the Wikipedia article for New York Knicks, 'The New York Knickerbockers, commonly known as the New York Knicks, are an American professional basketball team based in the New York City borough of Manhattan.'",
+      "subquestion": "In which New York City borough is <team from node 7: New York Knicks> based? (Lookup: Knicks article; borough of Manhattan.)",
+      "answer": "Manhattan"
     }
   },
   "reasoning_chain": [
-    "HOP 1 (d=1, Wikipedia Missouri_Department_of_Transportation - node 1):",
-    "  Node 1: MoDOT Southwest district is based in Springfield",
+    "HOP 1 (d=4, Texas TDCJ Releases FY 2019-2022 - nodes 1-4):",
+    "  Node 1: FY 2019 releases for top-five-average counties -> Harris (9029), Dallas (5355), Tarrant (4769), Bexar (4545), Hidalgo (1861)",
+    "  Node 2: FY 2020 releases for top-five-average counties -> Harris (7059), Dallas (4540), Tarrant (4450), Bexar (3917), Hidalgo (1572)",
+    "  Node 3: FY 2021 releases for top-five-average counties -> Harris (5210), Dallas (3565), Tarrant (3252), Bexar (3236), Hidalgo (1147)",
+    "  Node 4: FY 2022 releases for top-five-average counties -> Harris (4988), Dallas (3557), Tarrant (3231), Bexar (2918), Hidalgo (1015)",
+    "  Aggregation: Among top 5 by average, compute coefficient of variation (CV = std/mean) for consistency:",
+    "    Harris: avg=6571.50, CV=0.2482",
+    "    Dallas: avg=4254.25, CV=0.1765",
+    "    Tarrant: avg=3925.50, CV=0.1766",
+    "    Bexar: avg=3654.00, CV=0.1720 <- LOWEST CV = most consistent",
+    "    Hidalgo: avg=1398.75, CV=0.2409",
+    "  Result: Bexar County has lowest CV (most consistent releases) among top 5",
     "",
-    "HOP 2 (d=1, Wikipedia Springfield,_Missouri - node 2):",
-    "  Node 2: Route 66 was the Chicago-to-Los Angeles highway",
+    "HOP 2 (d=1, Wikipedia Bexar_County,_Texas - node 5):",
+    "  Node 5: County seat of Bexar County -> San Antonio",
     "",
-    "HOP 3 (d=2, 500-Cities Health Data 2016 and 2018 - nodes 3-4):",
-    "  Node 3: 2016 binge drinking - Chicago 20.1%, LA 15.9% -> Chicago higher",
-    "  Node 4: 2018 binge drinking - Chicago 21.5%, LA 16.7% -> Chicago higher",
-    "  Result: Chicago",
+    "HOP 3 (d=1, Wikipedia San_Antonio - node 6):",
+    "  Node 6: Five-time NBA champion team based in San Antonio -> San Antonio Spurs",
     "",
-    "HOP 4 (d=4, Chicago Employee Overtime 2014-2017 - nodes 5-8):",
-    "  Node 5: 2014 overtime -> Police #1, Fire #2",
-    "  Node 6: 2015 overtime -> Police #1, Fire #2",
-    "  Node 7: 2016 overtime -> Police #1, Fire #2",
-    "  Node 8: 2017 overtime -> Police #1, Fire #2",
-    "  Result: Fire",
+    "HOP 4 (d=1, Wikipedia San_Antonio_Spurs - node 7):",
+    "  Node 7: Team Spurs defeated in first Finals (1999) -> New York Knicks",
     "",
-    "HOP 5 (d=1, Wikipedia Chicago_Fire_Department - node 9):",
-    "  Node 9: Chicago Fire Department founded in 1858",
-    "  Final answer: 1858"
+    "HOP 5 (d=1, Wikipedia New_York_Knicks - node 8):",
+    "  Node 8: Knicks are based in Manhattan",
+    "",
+    "Final answer: Manhattan"
   ],
   "verdict": "pass",
   "datasets_used": [
-    "Missouri_Department_of_Transportation",
-    "Springfield,_Missouri",
-    "500-cities-local-data-for-better-health-2016-release",
-    "500-cities-local-data-for-better-health-2018-release",
-    "employee-overtime-and-supplemental-earnings-2014",
-    "employee-overtime-and-supplemental-earnings-2015",
-    "employee-overtime-and-supplemental-earnings-2016",
-    "employee-overtime-and-supplemental-earnings-2017",
-    "Chicago_Fire_Department"
+    "texas-department-of-criminal-justice-releases-fy-2019",
+    "texas-department-of-criminal-justice-releases-fy-2020",
+    "texas-department-of-criminal-justice-releases-fy-2021",
+    "texas-department-of-criminal-justice-releases-fy-2022",
+    "Bexar_County,_Texas",
+    "San_Antonio",
+    "San_Antonio_Spurs",
+    "New_York_Knicks",
+    "Manhattan"
+  ],
+  "reasoning_hops": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "reasoning": "Node 1: FY 2019 releases for top-five-average counties -> Harris (9029), Dallas (5355), Tarrant (4769), Bexar (4545), Hidalgo (1861) Node 2: FY 2020 releases for top-five-average counties -> Harris (7059), Dallas (4540), Tarrant (4450), Bexar (3917), Hidalgo (1572) Node 3: FY 2021 releases for top-five-average counties -> Harris (5210), Dallas (3565), Tarrant (3252), Bexar (3236), Hidalgo (1147) Node 4: FY 2022 releases for top-five-average counties -> Harris (4988), Dallas (3557), Tarrant (3231), Bexar (2918), Hidalgo (1015) Aggregation: Among top 5 by average, compute coefficient of variation (CV = std/mean) for consistency: Harris: avg=6571.50, CV=0.2482 Dallas: avg=4254.25, CV=0.1765 Tarrant: avg=3925.50, CV=0.1766 Bexar: avg=3654.00, CV=0.1720 <- LOWEST CV = most consistent Hidalgo: avg=1398.75, CV=0.2409 Result: Bexar County has lowest CV (most consistent releases) among top 5",
+      "answer": "Bexar County has lowest CV (most consistent releases) among top 5"
+    },
+    {
+      "hop": 2,
+      "node_ids": [
+        5
+      ],
+      "reasoning": "Node 5: County seat of Bexar County -> San Antonio",
+      "answer": "San Antonio"
+    },
+    {
+      "hop": 3,
+      "node_ids": [
+        6
+      ],
+      "reasoning": "Node 6: Five-time NBA champion team based in San Antonio -> San Antonio Spurs",
+      "answer": "San Antonio Spurs"
+    },
+    {
+      "hop": 4,
+      "node_ids": [
+        7
+      ],
+      "reasoning": "Node 7: Team Spurs defeated in first Finals (1999) -> New York Knicks",
+      "answer": "New York Knicks"
+    },
+    {
+      "hop": 5,
+      "node_ids": [
+        8
+      ],
+      "reasoning": "Node 8: Knicks are based in Manhattan",
+      "answer": "Manhattan"
+    }
   ]
 }

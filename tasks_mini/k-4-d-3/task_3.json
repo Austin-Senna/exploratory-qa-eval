@@ -1,111 +1,128 @@
 {
-  "original_question": "Syracuse, the 'Salt City' that developed around the brine springs at the southern end of Onondaga Lake and served as a major stop along the Erie Canal, is the county seat of a Central New York county that bears the name of one of the original Five Nations of the Iroquois Confederacy. This county has faced significant challenges with poverty and public assistance caseloads in recent decades. In what year was Syracuse incorporated as a city?",
-  "question": "I am analyzing a specific New York State county which supports a significant population, reporting between 29,000 and 75,000 households on SNAP, 350 to 600 children in foster care, and 5,000 to 18,000 adults in mental health programs. Operationally, it manages a Temporary Assistance caseload of 4,000 to 6,000 using a staff of 600 to 1,000, while processing between 200 and 400 new case openings per month. What year was its county seat incorporated as a city? Please return the year only. Your response should be in the format [Answer].",
-  "answer": "1847",
-  "practical_motivation": "A social worker studying public assistance patterns across New York counties wants to understand more about Syracuse's history as a major urban center in Central New York, including when it achieved city status and how that relates to its current role as a regional hub for social services.",
+  "question": "In which Virginia county is the NASA facility of a system developed? This system was used in the 2007 USGS topographic survey of the national monument honoring a U.S. president born in Virginia who also held a general officer rank and appears on current U.S. currency. Your response should be in the format [Answer].",
+  "answer": "Accomack County",
   "nodes": {
     "1": {
-      "source": "datagov/supplemental-nutrition-assistance-program-snap-caseloads-and-expenditures-beginning-2002/v1/files/rows.csv",
-      "fact": "In February 2023, Suffolk County had 72,365 SNAP households, Monroe had 61,553, Westchester had 44,921, Onondaga had 36,557, and Nassau had 29,762. Five counties had SNAP households between 29,000 and 75,000.",
-      "subquestion": "Which NY counties had SNAP households between 29,000 and 75,000 in February 2023?",
+      "source": "wikipedia/List_of_presidents_of_the_United_States_by_home_state/content.txt",
+      "fact": "Eight U.S. presidents were born in Virginia: George Washington, Thomas Jefferson, James Madison, James Monroe, William Henry Harrison, John Tyler, Zachary Taylor, and Woodrow Wilson.",
+      "subquestion": "Which U.S. presidents were born in Virginia?",
       "answer": [
-        "Suffolk County",
-        "Monroe County",
-        "Westchester County",
-        "Onondaga County",
-        "Nassau County"
+        "George Washington",
+        "Thomas Jefferson",
+        "James Madison",
+        "James Monroe",
+        "William Henry Harrison",
+        "John Tyler",
+        "Zachary Taylor",
+        "Woodrow Wilson"
       ]
     },
     "2": {
-      "source": "datagov/children-in-foster-care-annually-beginning-1994/v1/files/rows.csv",
-      "fact": "In 2023, Erie County had 593 children in foster care, Onondaga had 579, Suffolk had 453, Oneida had 417, and Monroe had 406. Five counties had between 350 and 600 children in care.",
-      "subquestion": "Which NY counties had between 350 and 600 children in foster care in 2023?",
+      "source": "wikipedia/List_of_presidents_of_the_United_States_by_military_rank/content.txt",
+      "fact": "Presidents who held a general officer rank include George Washington, Ulysses S. Grant, Dwight D. Eisenhower, Andrew Jackson, William H. Harrison, Zachary Taylor, James A. Garfield, William Howard Taft, Franklin Pierce, Chester A. Arthur, Andrew Johnson, Rutherford B. Hayes, and Benjamin Harrison.",
+      "subquestion": "Which U.S. presidents held a general officer rank?",
       "answer": [
-        "Erie County",
-        "Onondaga County",
-        "Suffolk County",
-        "Oneida County",
-        "Monroe County"
+        "George Washington",
+        "Ulysses S. Grant",
+        "Dwight D. Eisenhower",
+        "Andrew Jackson",
+        "William Henry Harrison",
+        "Zachary Taylor",
+        "James A. Garfield",
+        "William Howard Taft",
+        "Franklin Pierce",
+        "Chester A. Arthur",
+        "Andrew Johnson",
+        "Rutherford B. Hayes",
+        "Benjamin Harrison"
       ]
     },
     "3": {
-      "source": "datagov/county-mental-health-profiles-phase-2-beginning-2014/v1/files/rows.csv",
-      "fact": "In 2015, Monroe County had 17,215 adult Medicaid recipients receiving OMH Licensed Clinic Treatment, Erie had 12,919, Westchester had 8,440, Suffolk had 7,590, Nassau had 7,138, and Onondaga had 5,393. Six counties had between 5,000 and 18,000 recipients.",
-      "subquestion": "Which NY counties had between 5,000 and 18,000 adult mental health clinic recipients for the OMH Licensed Clinic Treatment control group in 2015?",
+      "source": "wikipedia/United_States_dollar/content.txt",
+      "fact": "Current U.S. currency portraits include George Washington, Thomas Jefferson, Abraham Lincoln, Andrew Jackson, Ulysses S. Grant, Franklin D. Roosevelt, and John F. Kennedy.",
+      "subquestion": "Which U.S. presidents appear on current U.S. currency?",
       "answer": [
-        "Monroe County",
-        "Erie County",
-        "Westchester County",
-        "Suffolk County",
-        "Nassau County",
-        "Onondaga County"
+        "George Washington",
+        "Thomas Jefferson",
+        "Abraham Lincoln",
+        "Andrew Jackson",
+        "Ulysses S. Grant",
+        "Franklin D. Roosevelt",
+        "John F. Kennedy"
       ]
     },
     "4": {
-      "source": "datagov/public-assistance-pa-caseloads-and-expenditures-beginning-2002/v1/files/rows.csv",
-      "fact": "In February 2023, Monroe County had 6,940 total Temporary Assistance cases, Suffolk had 5,258, and Onondaga had 4,662. Only Suffolk and Onondaga had TA cases between 4,000 and 6,000.",
-      "subquestion": "Which of <intersection of nodes 1-3> had Temporary Assistance cases between 4,000 and 6,000 in February 2023?",
-      "answer": [
-        "Suffolk County",
-        "Onondaga County"
-      ]
+      "source": "wikipedia/George_Washington_Birthplace_National_Monument/content.txt",
+      "fact": "The George Washington Birthplace National Monument is a national monument in Westmoreland County, Virginia, commemorating the birthplace of George Washington, who was born there on February 22, 1732.",
+      "subquestion": "Which national monument commemorates the birthplace of <intersection of node_1, node_2, node_3>?",
+      "answer": "George Washington Birthplace National Monument"
     },
     "5": {
-      "source": "datagov/local-social-services-district-ssd-staff-counts-by-function-beginning-state-fiscal-ye-2004/v1/files/rows.csv",
-      "fact": "In 2017, Suffolk County had 1,499 total social services staff (Total Staffing), Monroe had 894, and Onondaga had 651. Only Monroe and Onondaga had staff counts between 600 and 1,000.",
-      "subquestion": "Which of <intersection of nodes 1-3> had social services staff between 600 and 1,000 in 2017?",
-      "answer": [
-        "Monroe County",
-        "Onondaga County"
-      ]
+      "source": "datagov/eaarl-topography-george-washington-birthplace-national-monument/files/USGS.cc604b53-f943-4516-a7a2-7d6e3d12beef.txt",
+      "fact": "In 2007, USGS published Open File Report 1179 containing bare earth elevation data for George Washington Birthplace National Monument, collected using the NASA EAARL (Experimental Advanced Airborne Research Lidar) system. The EAARL was developed by NASA at Wallops Flight Facility in Virginia.",
+      "subquestion": "At which NASA facility was the EAARL system used in the 2007 USGS survey of <node_4 answer> developed?",
+      "answer": "Wallops Flight Facility"
     },
     "6": {
-      "source": "datagov/public-assistance-cases-opened-by-month-beginning-2006/v1/files/rows.csv",
-      "fact": "In March 2021, Suffolk County had 640 Public Assistance case openings, Monroe had 314, and Onondaga had 273. Only Monroe and Onondaga had case openings between 200 and 400.",
-      "subquestion": "Which of <intersection of nodes 1-3> had Public Assistance case openings between 200 and 400 in March 2021?",
-      "answer": [
-        "Monroe County",
-        "Onondaga County"
-      ]
-    },
-    "7": {
-      "source": "wikipedia/Onondaga_County,_New_York/content.txt",
-      "fact": "Onondaga County's county seat is Syracuse. The county name derives from the Onondaga tribe, one of the original Five Nations of the Haudenosaunee (Iroquois Confederacy). The word Onondaga means 'People of the Hills'.",
-      "subquestion": "What is the county seat of <intersection of nodes 4-6>?",
-      "answer": "Syracuse"
-    },
-    "8": {
-      "source": "wikipedia/Onondaga_County,_New_York/content.txt",
-      "fact": "The city of Syracuse, New York was incorporated as a village in 1825 and as a city in 1847. The city developed at the southern end of Onondaga Lake around salt springs.",
-      "subquestion": "In what year was <node_7 answer> incorporated as a city?",
-      "answer": "1847"
+      "source": "wikipedia/Wallops_Island/content.txt",
+      "fact": "Wallops Island is an island in Accomack County, Virginia, and the island is used primarily for the Wallops Flight Facility.",
+      "subquestion": "In which Virginia county is <node_5 answer> located?",
+      "answer": "Accomack County"
     }
   },
   "reasoning_chain": [
-    "Node 1 (SNAP Caseloads): Find NY counties with SNAP households 29K-75K \u2192 {Suffolk, Monroe, Westchester, Onondaga, Nassau}",
-    "Node 2 (Foster Care): Find NY counties with 350-600 children in care \u2192 {Erie, Onondaga, Suffolk, Oneida, Monroe}",
-    "Node 3 (Mental Health): Find NY counties with 5K-18K adult MH recipients \u2192 {Monroe, Erie, Westchester, Suffolk, Nassau, Onondaga}",
-    "Intersection of nodes 1-3: {Suffolk, Monroe, Onondaga} - Westchester excluded (foster care 271), Nassau excluded (foster care 125), Erie/Oneida excluded (SNAP out of range)",
-    "Nodes 1-3 form Hop 1 (d=3): Three independent criteria intersect to identify three counties",
-    "Node 4 (PA Caseloads): From {Suffolk, Monroe, Onondaga}, filter to TA cases 4K-6K \u2192 {Suffolk, Onondaga} (Monroe 6,940 excluded)",
-    "Node 5 (SSD Staff): From {Suffolk, Monroe, Onondaga}, filter to staff 600-1000 \u2192 {Monroe, Onondaga} (Suffolk 1,499 excluded)",
-    "Node 6 (PA Cases Opened): From {Suffolk, Monroe, Onondaga}, filter to openings 200-400 \u2192 {Monroe, Onondaga} (Suffolk 640 excluded)",
-    "Intersection of nodes 4-6: {Suffolk, Onondaga} \u2229 {Monroe, Onondaga} \u2229 {Monroe, Onondaga} = {Onondaga}",
-    "Nodes 4-6 form Hop 2 (d=3): Three criteria ALL applied to same input {Suffolk, Monroe, Onondaga}, results intersected",
-    "Node 7 (Wikipedia): Find county seat of Onondaga County \u2192 Syracuse",
-    "Node 7 forms Hop 3 (d=1): Single Wikipedia lookup for county seat",
-    "Node 8 (Wikipedia): Find when Syracuse was incorporated as a city \u2192 1847",
-    "Node 8 forms Hop 4 (d=1): Single Wikipedia lookup for final answer",
-    "Final answer: 1847"
+    "Node 1: Find presidents born in Virginia → {Washington, Jefferson, Madison, Monroe, W.H. Harrison, Tyler, Taylor, Wilson}",
+    "Node 2: Find presidents who held general officer rank → {Washington, Grant, Eisenhower, Jackson, W.H. Harrison, Taylor, Garfield, W.H. Taft, Pierce, Arthur, Andrew Johnson, Hayes, B. Harrison}",
+    "Node 3: Find presidents on current US currency → {Washington, Jefferson, Lincoln, Jackson, Grant, F.D. Roosevelt, J.F. Kennedy}",
+    "Intersection of <node_1>, <node_2>, <node_3>: Only president in all three sets → George Washington",
+    "Node 4 depends on intersection: Find national monument for Washington's birthplace → George Washington Birthplace National Monument",
+    "Node 5 depends on node 4: Find NASA facility where EAARL system was developed → Wallops Flight Facility",
+    "Node 6 depends on node 5: Find Virginia county where Wallops is located → Accomack County",
+    "Final answer: Accomack County"
   ],
   "verdict": "pass",
   "datasets_used": [
-    "Onondaga_County,_New_York",
-    "children-in-foster-care-annually-beginning-1994",
-    "county-mental-health-profiles-phase-2-beginning-2014",
-    "local-social-services-district-ssd-staff-counts-by-function-beginning-state-fiscal-ye-2004",
-    "public-assistance-cases-opened-by-month-beginning-2006",
-    "public-assistance-pa-caseloads-and-expenditures-beginning-2002",
-    "supplemental-nutrition-assistance-program-snap-caseloads-and-expenditures-beginning-2002"
+    "George_Washington_Birthplace_National_Monument",
+    "List_of_presidents_of_the_United_States_by_home_state",
+    "List_of_presidents_of_the_United_States_by_military_rank",
+    "United_States_dollar",
+    "Wallops_Island",
+    "eaarl-topography-george-washington-birthplace-national-monument"
+  ],
+  "reasoning_hops": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1,
+        2,
+        3
+      ],
+      "reasoning": "Node 1: Find presidents born in Virginia → {Washington, Jefferson, Madison, Monroe, W.H. Harrison, Tyler, Taylor, Wilson} Node 2: Find presidents who held general officer rank → {Washington, Grant, Eisenhower, Jackson, W.H. Harrison, Taylor, Garfield, W.H. Taft, Pierce, Arthur, Andrew Johnson, Hayes, B. Harrison} Node 3: Find presidents on current US currency → {Washington, Jefferson, Lincoln, Jackson, Grant, F.D. Roosevelt, J.F. Kennedy} Intersection of <node_1>, <node_2>, <node_3>: Only president in all three sets → George Washington",
+      "answer": "George Washington"
+    },
+    {
+      "hop": 2,
+      "node_ids": [
+        4
+      ],
+      "reasoning": "Node 4 depends on intersection: Find national monument for Washington's birthplace → George Washington Birthplace National Monument",
+      "answer": "George Washington Birthplace National Monument"
+    },
+    {
+      "hop": 3,
+      "node_ids": [
+        5
+      ],
+      "reasoning": "Node 5 depends on node 4: Find NASA facility where EAARL system was developed → Wallops Flight Facility",
+      "answer": "Wallops Flight Facility"
+    },
+    {
+      "hop": 4,
+      "node_ids": [
+        6
+      ],
+      "reasoning": "Node 6 depends on node 5: Find Virginia county where Wallops is located → Accomack County",
+      "answer": "Accomack County"
+    }
   ]
 }

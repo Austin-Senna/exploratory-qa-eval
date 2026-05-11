@@ -1,143 +1,206 @@
 {
-  "question": "On what date did the agricultural college first open to students, given that this college was ultimately located in a town that beat the county seat (in a site selection competition) of the Washington county that had the lowest 2020 census population among those Washington counties that (1) were NOT the most populous in the state, (2) had district-average Math proficiency above 40% in the 2021-22 school year, AND (3) had Low-Income student enrollment percentage between 32-40% in every school year from 2018-19 through 2021-22? Report in the format MM/DD/YYYY. Your response should be in the format [Answer].",
-  "answer": "01/13/1892",
+  "question": "What percentage of the population in the county containing the city that borders both of the Texas cities with above 12% diabetes rates between 2016 and 2019 was aged 65 or older in 2022? (These cities had populations under 100,000 in 2020.). Your response should be in the format [Answer].",
+  "answer": "12.3",
   "nodes": {
     "1": {
-      "source": "datagov/report-card-enrollment-2018-19-school-year/files/rows.txt",
-      "fact": "According to the Washington Report Card Enrollment data for 2018-19, aggregating district-level 'All Grades' data by county and calculating Low-Income percentage (Low-Income / All Students * 100), the following counties had Low-Income percentage between 32-40%: Island (39.4%), King (34.7%), Kitsap (39.2%), San Juan (37.8%), Snohomish (39.6%), and Whitman (37.6%).",
-      "subquestion": "Which Washington counties had Low-Income student enrollment percentage between 32-40% in every school year from 2018-19 through 2021-22? (Filter: OrganizationLevel=District; GradeLevel=All Grades; group by County; Low-Income% = Low-Income / All Students * 100; keep 32-40%.)",
+      "source": "datagov/500-cities-city-level-data-gis-friendly-format-2016-release/files/rows.txt",
+      "fact": "In the CDC 500 Cities 2016 release, 10 Texas cities had diabetes prevalence above 12%: Beaumont, Brownsville, Corpus Christi, Edinburg, El Paso, Laredo, McAllen, Mission, Pharr, and San Antonio.",
+      "subquestion": "Which Texas cities had diabetes prevalence above 12% in the CDC 500 Cities 2016 release?",
       "answer": [
-        "Island",
-        "King",
-        "Kitsap",
-        "San Juan",
-        "Snohomish",
-        "Whitman"
+        "Beaumont",
+        "Brownsville",
+        "Corpus Christi",
+        "Edinburg",
+        "El Paso",
+        "Laredo",
+        "McAllen",
+        "Mission",
+        "Pharr",
+        "San Antonio"
       ]
     },
     "2": {
-      "source": "datagov/report-card-enrollment-2019-20-school-year/files/rows.txt",
-      "fact": "According to the Washington Report Card Enrollment data for 2019-20, aggregating district-level 'All Grades' data by county, the following counties had Low-Income percentage between 32-40%: Island (38.7%), King (34.2%), Kitsap (38.3%), San Juan (37.6%), Snohomish (39.3%), and Whitman (37.7%).",
-      "subquestion": "Which Washington counties had Low-Income student enrollment percentage between 32-40% in every school year from 2018-19 through 2021-22? (Filter: OrganizationLevel=District; GradeLevel=All Grades; group by County; Low-Income% = Low-Income / All Students * 100; keep 32-40%.)",
+      "source": "datagov/500-cities-city-level-data-gis-friendly-format-2017-release/files/rows.txt",
+      "fact": "In the CDC 500 Cities 2017 release, 12 Texas cities had diabetes prevalence above 12%: Baytown, Beaumont, Brownsville, Corpus Christi, Edinburg, El Paso, Houston, Laredo, McAllen, Mission, Pharr, and San Antonio.",
+      "subquestion": "Which Texas cities had diabetes prevalence above 12% in the CDC 500 Cities 2017 release?",
       "answer": [
-        "Island",
-        "King",
-        "Kitsap",
-        "San Juan",
-        "Snohomish",
-        "Whitman"
+        "Baytown",
+        "Beaumont",
+        "Brownsville",
+        "Corpus Christi",
+        "Edinburg",
+        "El Paso",
+        "Houston",
+        "Laredo",
+        "McAllen",
+        "Mission",
+        "Pharr",
+        "San Antonio"
       ]
     },
     "3": {
-      "source": "datagov/report-card-enrollment-2020-21-school-year/files/rows.txt",
-      "fact": "According to the Washington Report Card Enrollment data for 2020-21, aggregating district-level 'All Grades' data by county, the following counties had Low-Income percentage between 32-40%: Island (36.4%), King (34.1%), Kitsap (35.1%), San Juan (34.6%), Snohomish (38.3%), Thurston (39.4%), and Whitman (34.7%).",
-      "subquestion": "Which Washington counties had Low-Income student enrollment percentage between 32-40% in every school year from 2018-19 through 2021-22? (Filter: OrganizationLevel=District; GradeLevel=All Grades; group by County; Low-Income% = Low-Income / All Students * 100; keep 32-40%.)",
+      "source": "datagov/500-cities-city-level-data-gis-friendly-format-2018-release/files/rows.txt",
+      "fact": "In the CDC 500 Cities 2018 release, 12 Texas cities had diabetes prevalence above 12%: Beaumont, Brownsville, Corpus Christi, El Paso, Houston, Laredo, Longview, McAllen, Mission, Pharr, San Antonio, and Tyler.",
+      "subquestion": "Which Texas cities had diabetes prevalence above 12% in the CDC 500 Cities 2018 release?",
       "answer": [
-        "Island",
-        "King",
-        "Kitsap",
-        "San Juan",
-        "Snohomish",
-        "Thurston",
-        "Whitman"
+        "Beaumont",
+        "Brownsville",
+        "Corpus Christi",
+        "El Paso",
+        "Houston",
+        "Laredo",
+        "Longview",
+        "McAllen",
+        "Mission",
+        "Pharr",
+        "San Antonio",
+        "Tyler"
       ]
     },
     "4": {
-      "source": "datagov/report-card-enrollment-2021-22-school-year/files/rows.txt",
-      "fact": "According to the Washington Report Card Enrollment data for 2021-22, aggregating district-level 'All Grades' data by county, the following counties had Low-Income percentage between 32-40%: King (35.9%), Kitsap (38.0%), San Juan (38.2%), and Whitman (39.3%). Note: Island had 40.3% and Snohomish had 41.8%, both exceeding the 40% threshold.",
-      "subquestion": "Which Washington counties had Low-Income student enrollment percentage between 32-40% in every school year from 2018-19 through 2021-22? (Filter: OrganizationLevel=District; GradeLevel=All Grades; group by County; Low-Income% = Low-Income / All Students * 100; keep 32-40%.)",
+      "source": "datagov/500-cities-city-level-data-gis-friendly-format-2019-release/files/rows.txt",
+      "fact": "In the CDC 500 Cities 2019 release, 13 Texas cities had diabetes prevalence above 12%: Beaumont, Brownsville, Corpus Christi, Edinburg, El Paso, Laredo, Longview, McAllen, Mission, Pharr, San Antonio, Tyler, and Waco.",
+      "subquestion": "Which Texas cities had diabetes prevalence above 12% in the CDC 500 Cities 2019 release?",
       "answer": [
-        "King",
-        "Kitsap",
-        "San Juan",
-        "Whitman"
+        "Beaumont",
+        "Brownsville",
+        "Corpus Christi",
+        "Edinburg",
+        "El Paso",
+        "Laredo",
+        "Longview",
+        "McAllen",
+        "Mission",
+        "Pharr",
+        "San Antonio",
+        "Tyler",
+        "Waco"
       ]
     },
     "5": {
-      "source": "datagov/report-card-assessment-data-2021-22-school-year/files/rows.txt",
-      "fact": "According to the Washington Report Card Assessment data for 2021-22, averaging district-level PercentMetStandard for Math (All Students, All Grades) by county: King had 43.5%, Kitsap had 44.4%, San Juan had 35.2%, and Whitman had 41.4%. Counties with district-average Math proficiency above 40% among hop 1 result: King, Kitsap, Whitman.",
-      "subquestion": "Among {King, Kitsap, San Juan, Whitman} (from hop 1), which counties had district-average Math proficiency above 40% in 2021-22? (Filter: OrganizationLevel=District; StudentGroup=All Students; GradeLevel=All Grades; TestSubject=Math; compute unweighted mean of PercentMetStandard by County; keep >40%.)",
+      "source": "datagov/2020-census-redistricting-data-all-texas-places/files/rows.txt",
+      "fact": "According to the 2020 Census Redistricting Data for All Texas Places, the following 2020 Census populations (POP100 field) are recorded for the 9 cities from the intersection: Beaumont (115,282), Brownsville (186,738), Corpus Christi (317,863), El Paso (678,815), Laredo (255,205), McAllen (142,210), Mission (85,778), Pharr (79,715), and San Antonio (1,434,625). Only Mission and Pharr have populations under 100,000.",
+      "subquestion": "Which cities from <intersection of nodes 1-4: Beaumont, Brownsville, Corpus Christi, El Paso, Laredo, McAllen, Mission, Pharr, San Antonio> had population under 100,000 in the 2020 Census?",
       "answer": [
-        "King",
-        "Kitsap",
-        "Whitman"
+        "Mission",
+        "Pharr"
       ]
     },
     "6": {
-      "source": "wikipedia/King_County,_Washington/content.txt",
-      "fact": "According to the Wikipedia article for King County, Washington, 'The population was 2,269,675 in the 2020 census, making it the most populous county in Washington.'",
-      "subquestion": "Among {King, Kitsap, San Juan, Whitman} (from hop 1), which counties are NOT the most populous in Washington?",
+      "source": "wikipedia/Pharr,_Texas/content.txt",
+      "fact": "According to the Wikipedia article for Pharr, Texas, the city 'borders McAllen to the west, Edinburg to the north, San Juan to the east, and Hidalgo to the southwest.'",
+      "subquestion": "Which cities border <city from node 5: Pharr>?",
       "answer": [
-        "Kitsap",
+        "McAllen",
+        "Edinburg",
         "San Juan",
-        "Whitman"
+        "Hidalgo"
       ]
     },
     "7": {
-      "source": "wikipedia/Kitsap_County,_Washington/content.txt",
-      "fact": "According to the Wikipedia article for Kitsap County, Washington, 'As of the 2020 census, its population was 275,611.'",
-      "subquestion": "Among {Kitsap, Whitman} (from hop 2), which county had the lower 2020 census population?",
-      "answer": "Kitsap had population 275,611"
+      "source": "wikipedia/Mission,_Texas/content.txt",
+      "fact": "According to the Wikipedia article for Mission, Texas, the city borders 'McAllen to the east, Palmhurst to the north, and Palmview to the west.'",
+      "subquestion": "Which cities border <city from node 5: Mission>?",
+      "answer": [
+        "McAllen",
+        "Palmhurst",
+        "Palmview"
+      ]
     },
     "8": {
-      "source": "wikipedia/Whitman_County,_Washington/content.txt",
-      "fact": "According to the Wikipedia article for Whitman County, Washington, 'As of the 2020 census, the population was 47,973.' Also, 'The county seat is Colfax.'",
-      "subquestion": "Among {Kitsap, Whitman} (from hop 2), which county had the lower 2020 census population?",
-      "answer": "Whitman had population 47,973 (lower than Kitsap's 275,611), county seat is Colfax"
+      "source": "wikipedia/McAllen,_Texas/content.txt",
+      "fact": "According to the Wikipedia article for McAllen, Texas: 'McAllen is a city in Hidalgo County in the Rio Grande Valley of the southern tip of the U.S. state of Texas.' McAllen is the most populous city in Hidalgo County, though the county seat is Edinburg.",
+      "subquestion": "Which Texas county is <intersection of nodes 6-7: McAllen> located in?",
+      "answer": "Hidalgo County"
     },
     "9": {
-      "source": "wikipedia/Colfax,_Washington/content.txt",
-      "fact": "According to the Wikipedia article for Colfax, Washington, 'In 1889-90, the town vied with several other finalists to become the site of a new state agricultural college, present-day Washington State University. The honor ultimately fell to nearby Pullman.'",
-      "subquestion": "What agricultural college did Colfax (from hop 3) compete to host, and which town won the site selection?",
-      "answer": "Washington State University, Pullman won the competition"
-    },
-    "10": {
-      "source": "wikipedia/Washington_State_University/content.txt",
-      "fact": "According to the Wikipedia article for Washington State University, 'the state's new land-grant college opened to 59 students in Pullman on January 13, 1892.'",
-      "subquestion": "On what date did Washington State University (from hop 4) first open to students?",
-      "answer": "January 13, 1892"
+      "source": "datagov/aps-1-1-texas-adult-populations-at-risk-by-county-region-fy2013-fy2022/files/rows.txt",
+      "fact": "According to the Texas Adult Populations at Risk by County data, in 2022, Hidalgo County had 12.3% of its population aged 65 and older.",
+      "subquestion": "What percentage of the population was aged 65 and older in 2022 in <county from node 8: Hidalgo County>?",
+      "answer": "12.3"
     }
   },
   "reasoning_chain": [
-    "HOP 1 (d=4, Washington Report Card Enrollment 2018-22 - nodes 1-4):",
-    "  Node 1: 2018-19 Low-Income 32-40% -> {Island, King, Kitsap, San Juan, Snohomish, Whitman}",
-    "  Node 2: 2019-20 Low-Income 32-40% -> {Island, King, Kitsap, San Juan, Snohomish, Whitman}",
-    "  Node 3: 2020-21 Low-Income 32-40% -> {Island, King, Kitsap, San Juan, Snohomish, Thurston, Whitman}",
-    "  Node 4: 2021-22 Low-Income 32-40% -> {King, Kitsap, San Juan, Whitman}",
-    "  Intersection: {King, Kitsap, San Juan, Whitman}",
+    "HOP 1 (d=4, CDC 500 Cities diabetes data 2016-2019 - nodes 1-4):",
+    "  Node 1: TX cities with diabetes > 12% in 2016 release -> 10 cities",
+    "  Node 2: TX cities with diabetes > 12% in 2017 release -> 12 cities",
+    "  Node 3: TX cities with diabetes > 12% in 2018 release -> 12 cities (Edinburg dropped, Longview/Tyler added)",
+    "  Node 4: TX cities with diabetes > 12% in 2019 release -> 13 cities (Edinburg returned, Waco added)",
+    "  Intersection of nodes 1-4: Cities meeting criterion all 4 years -> 9 cities (Beaumont, Brownsville, Corpus Christi, El Paso, Laredo, McAllen, Mission, Pharr, San Antonio)",
     "",
-    "HOP 2 (d=2, Assessment data + King Wikipedia - nodes 5-6):",
-    "  Node 5 (Assessment 2021-22): Math proficiency >40% -> {King, Kitsap, Whitman} (eliminates San Juan at 35.2%)",
-    "  Node 6 (King Wikipedia): King is most populous -> NOT most populous = {Kitsap, San Juan, Whitman}",
-    "  Intersection: {Kitsap, Whitman}",
+    "HOP 2 (d=1, 2020 Census Texas Places - node 5):",
+    "  Node 5: Filter 9-city intersection by 2020 Census pop < 100k -> Mission (85,778) and Pharr (79,715)",
+    "  Result: 2 cities remaining (Mission, Pharr)",
     "",
-    "HOP 3 (d=2, Wikipedia county articles - nodes 7-8):",
-    "  Node 7 (Kitsap Wikipedia): 2020 population = 275,611",
-    "  Node 8 (Whitman Wikipedia): 2020 population = 47,973; county seat is Colfax",
-    "  Comparison: 47,973 < 275,611 -> Whitman has lower population",
-    "  Result: Whitman County, county seat = Colfax",
+    "HOP 3 (d=2, Wikipedia adjacent cities - nodes 6-7):",
+    "  Node 6 (Wikipedia Pharr,_Texas): Cities bordering Pharr -> McAllen, Edinburg, San Juan, Hidalgo",
+    "  Node 7 (Wikipedia Mission,_Texas): Cities bordering Mission -> McAllen, Palmhurst, Palmview",
+    "  Intersection: City that borders BOTH Pharr and Mission -> McAllen",
     "",
-    "HOP 4 (d=1, Colfax Wikipedia - node 9):",
-    "  Node 9: Colfax competed for WSU location in 1889-90, lost to Pullman",
-    "  Result: Washington State University",
+    "HOP 4 (d=1, Wikipedia McAllen,_Texas - node 8):",
+    "  Node 8: McAllen is in Hidalgo County, Texas (most populous city in the county)",
     "",
-    "HOP 5 (d=1, WSU Wikipedia - node 10):",
-    "  Node 10: WSU opened to students on January 13, 1892",
-    "  Result: January 13, 1892",
+    "HOP 5 (d=1, data.gov Texas Adult Populations at Risk - node 9):",
+    "  Node 9: Hidalgo County had 12.3% of population aged 65 and older in 2022",
     "",
-    "Final answer: January 13, 1892"
+    "Final answer: 12.3 (percentage of Hidalgo County population aged 65+ in 2022)"
   ],
   "verdict": "pass",
   "datasets_used": [
-    "Colfax,_Washington",
-    "King_County,_Washington",
-    "Kitsap_County,_Washington",
-    "Washington_State_University",
-    "Whitman_County,_Washington",
-    "report-card-assessment-data-2021-22-school-year",
-    "report-card-enrollment-2018-19-school-year",
-    "report-card-enrollment-2019-20-school-year",
-    "report-card-enrollment-2020-21-school-year",
-    "report-card-enrollment-2021-22-school-year"
+    "2020-census-redistricting-data-all-texas-places",
+    "500-cities-city-level-data-gis-friendly-format-2016-release",
+    "500-cities-city-level-data-gis-friendly-format-2017-release",
+    "500-cities-city-level-data-gis-friendly-format-2018-release",
+    "500-cities-city-level-data-gis-friendly-format-2019-release",
+    "McAllen,_Texas",
+    "Mission,_Texas",
+    "Pharr,_Texas",
+    "aps-1-1-texas-adult-populations-at-risk-by-county-region-fy2013-fy2022"
+  ],
+  "reasoning_hops": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "reasoning": "Node 1: TX cities with diabetes > 12% in 2016 release -> 10 cities Node 2: TX cities with diabetes > 12% in 2017 release -> 12 cities Node 3: TX cities with diabetes > 12% in 2018 release -> 12 cities (Edinburg dropped, Longview/Tyler added) Node 4: TX cities with diabetes > 12% in 2019 release -> 13 cities (Edinburg returned, Waco added) Intersection of nodes 1-4: Cities meeting criterion all 4 years -> 9 cities (Beaumont, Brownsville, Corpus Christi, El Paso, Laredo, McAllen, Mission, Pharr, San Antonio)",
+      "answer": "9 cities (Beaumont, Brownsville, Corpus Christi, El Paso, Laredo, McAllen, Mission, Pharr, San Antonio)"
+    },
+    {
+      "hop": 2,
+      "node_ids": [
+        5
+      ],
+      "reasoning": "Node 5: Filter 9-city intersection by 2020 Census pop < 100k -> Mission (85,778) and Pharr (79,715) Result: 2 cities remaining (Mission, Pharr)",
+      "answer": "2 cities remaining (Mission, Pharr)"
+    },
+    {
+      "hop": 3,
+      "node_ids": [
+        6,
+        7
+      ],
+      "reasoning": "Node 6 (Wikipedia Pharr,_Texas): Cities bordering Pharr -> McAllen, Edinburg, San Juan, Hidalgo Node 7 (Wikipedia Mission,_Texas): Cities bordering Mission -> McAllen, Palmhurst, Palmview Intersection: City that borders BOTH Pharr and Mission -> McAllen",
+      "answer": "McAllen"
+    },
+    {
+      "hop": 4,
+      "node_ids": [
+        8
+      ],
+      "reasoning": "Node 8: McAllen is in Hidalgo County, Texas (most populous city in the county)",
+      "answer": "Hidalgo County"
+    },
+    {
+      "hop": 5,
+      "node_ids": [
+        9
+      ],
+      "reasoning": "Node 9: Hidalgo County had 12.3% of population aged 65 and older in 2022",
+      "answer": "12.3"
+    }
   ]
 }

@@ -1,131 +1,139 @@
 {
-  "question": "Which original Texas county is also in the top five for average capital outlay spending from 2018 to 2021? Among those counties, which one had the lowest average criminal releases across 2019 and 2020? Return the county name only. Your response should be in the format [Answer].",
-  "answer": "Bexar County",
+  "question": "Can you tell me the year this city was incorporated? This city is the county seat of the county with the highest number of veterans receiving disability compensation in 2023 within a state. The state it's in is a Mountain state that borders Mexico and is one of the Four Corners states. It also had between 4000 and 6000 veterans receiving pensions in 2020. Your response should be in the format [Answer].",
+  "answer": "1881",
+  "practical_motivation": "A demographer studying veteran populations across states with unique geographic characteristics wants to identify the most populous county in a state that meets multiple criteria, then learn when that county's seat was officially established as a city.",
   "nodes": {
     "1": {
-      "source": "wikipedia/List_of_counties_in_Texas/content.txt",
-      "fact": "The Republic of Texas created 23 original counties in 1836: Austin, Bastrop, Bexar, Brazoria, Colorado, Fayette, Goliad, Gonzales, Harris, Jackson, Jasper, Jefferson, Liberty, Matagorda, Milam, Nacogdoches, Red River, Refugio, Sabine, San Augustine, San Patricio, Shelby, and Victoria.",
-      "subquestion": "Which counties were among the original 23 counties of Texas?",
+      "source": "wikipedia/Mountain_states/content.txt",
+      "fact": "The Mountain states are considered to include: Arizona, Colorado, Idaho, Montana, Nevada, New Mexico, Utah and Wyoming.",
+      "subquestion": "Which US states are Mountain states?",
+      "depends_on": [],
       "answer": [
-        "Austin",
-        "Bastrop",
-        "Bexar",
-        "Brazoria",
+        "Arizona",
         "Colorado",
-        "Fayette",
-        "Goliad",
-        "Gonzales",
-        "Harris",
-        "Jackson",
-        "Jasper",
-        "Jefferson",
-        "Liberty",
-        "Matagorda",
-        "Milam",
-        "Nacogdoches",
-        "Red River",
-        "Refugio",
-        "Sabine",
-        "San Augustine",
-        "San Patricio",
-        "Shelby",
-        "Victoria"
+        "Idaho",
+        "Montana",
+        "Nevada",
+        "New Mexico",
+        "Utah",
+        "Wyoming"
       ]
     },
     "2": {
-      "source": "datagov/texas-state-expenditures-by-county-2018/files/rows.txt",
-      "fact": "In the 2018 Texas State Expenditures by County dataset, the top 5 counties by Capital Outlay total were: Harris ($1,303,630,847.30), Dallas ($838,316,444.65), Travis ($427,160,745.36), Montgomery ($424,383,088.05), and Bexar ($269,462,082.97).",
-      "subquestion": "Which Texas counties were in the top 5 by average Capital Outlay expenditures across 2018-2021? (Filter for this node: Fiscal Year == 2018; Major Spending Category contains 'CAPITAL OUTLAY' (including 'HIGHWAY CONSTRUCTION-CAPITAL OUTLAY'); non-empty County; sum Amount by County.)",
-      "answer": {
-        "Harris": 1303630847.3,
-        "Dallas": 838316444.65,
-        "Travis": 427160745.36,
-        "Montgomery": 424383088.05,
-        "Bexar": 269462082.97
-      }
+      "source": "wikipedia/Mexico–United_States_border/content.txt",
+      "fact": "Four American Sun Belt states border Mexico: California, Arizona, New Mexico and Texas.",
+      "subquestion": "Which US states border Mexico?",
+      "depends_on": [],
+      "answer": [
+        "California",
+        "Arizona",
+        "New Mexico",
+        "Texas"
+      ]
     },
     "3": {
-      "source": "datagov/texas-state-expenditures-by-county-2019/files/rows.txt",
-      "fact": "In the 2019 Texas State Expenditures by County dataset, the top 5 counties by Capital Outlay total were: Harris ($1,391,779,835.06), Dallas ($827,510,409.80), Travis ($614,936,080.37), Montgomery ($416,744,287.28), and Bexar ($302,940,592.72).",
-      "subquestion": "Which Texas counties were in the top 5 by average Capital Outlay expenditures across 2018-2021? (Filter for this node: Fiscal Year == 2019; Major Spending Category contains 'CAPITAL OUTLAY' (including 'HIGHWAY CONSTRUCTION-CAPITAL OUTLAY'); non-empty County; sum Amount by County.)",
-      "answer": {
-        "Harris": 1391779835.06,
-        "Dallas": 827510409.8,
-        "Travis": 614936080.37,
-        "Montgomery": 416744287.28,
-        "Bexar": 302940592.72
-      }
+      "source": "wikipedia/Four_Corners/content.txt",
+      "fact": "The Four Corners is a region of the Southwestern United States consisting of the southwestern corner of Colorado, southeastern corner of Utah, northeastern corner of Arizona, and northwestern corner of New Mexico.",
+      "subquestion": "Which US states share the Four Corners region?",
+      "depends_on": [],
+      "answer": [
+        "Arizona",
+        "Colorado",
+        "New Mexico",
+        "Utah"
+      ]
     },
     "4": {
-      "source": "datagov/texas-state-expenditures-by-county-2020/files/rows.txt",
-      "fact": "In the 2020 Texas State Expenditures by County dataset, the top 5 counties by Capital Outlay total were: Harris ($1,663,151,150.96), Dallas ($1,324,261,419.12), Travis ($821,945,717.49), Montgomery ($612,813,968.49), and Bexar ($494,340,352.72).",
-      "subquestion": "Which Texas counties were in the top 5 by average Capital Outlay expenditures across 2018-2021? (Filter for this node: Fiscal Year == 2020; Major Spending Category contains 'CAPITAL OUTLAY' (including 'HIGHWAY CONSTRUCTION-CAPITAL OUTLAY'); non-empty County; sum Amount by County.)",
-      "answer": {
-        "Harris": 1663151150.96,
-        "Dallas": 1324261419.12,
-        "Travis": 821945717.49,
-        "Montgomery": 612813968.49,
-        "Bexar": 494340352.72
-      }
+      "source": "datagov/fy-2020-pension-recipients-by-state/files/rows.txt",
+      "fact": "In FY 2020, states with between 4,000 and 6,000 VA pension recipients included Arizona (4,968), Alabama (5,798), Louisiana (4,609), Tennessee (5,812), Missouri (5,191), Oregon (4,095), South Carolina (4,089), and Virginia (4,508). New Mexico had only 1,880 recipients, Colorado had 3,153, and Utah had 1,295.",
+      "subquestion": "Which US states had between 4,000 and 6,000 VA pension recipients in fiscal year 2020?",
+      "depends_on": [],
+      "answer": [
+        "Arizona",
+        "Alabama",
+        "Louisiana",
+        "Tennessee",
+        "Missouri",
+        "Oregon",
+        "South Carolina",
+        "Virginia",
+        "Washington",
+        "Puerto Rico"
+      ]
     },
     "5": {
-      "source": "datagov/texas-state-expenditures-by-county-2021/files/rows.txt",
-      "fact": "In the 2021 Texas State Expenditures by County dataset, the top 5 counties by Capital Outlay total were: Harris ($1,741,663,003.68), Dallas ($1,171,406,639.17), Travis ($774,601,022.23), Montgomery ($705,433,711.03), and Bexar ($596,386,366.99).",
-      "subquestion": "Which Texas counties were in the top 5 by average Capital Outlay expenditures across 2018-2021? (Filter for this node: Fiscal Year == 2021; Major Spending Category contains 'CAPITAL OUTLAY' (including 'HIGHWAY CONSTRUCTION-CAPITAL OUTLAY'); non-empty County; sum Amount by County.)",
-      "answer": {
-        "Harris": 1741663003.68,
-        "Dallas": 1171406639.17,
-        "Travis": 774601022.23,
-        "Montgomery": 705433711.03,
-        "Bexar": 596386366.99
-      }
+      "source": "datagov/fy-2023-disability-compensation-recipients-by-county/files/rows.txt",
+      "fact": "In FY 2023, Maricopa County, Arizona had 69,974 VA disability compensation recipients, the most of any county in Arizona. Pima County was second with 25,745, and Pinal County was third with 10,403.",
+      "subquestion": "Which county in <intersection of node_1, node_2, node_3, node_4: Arizona> has the most VA disability compensation recipients in FY 2023?",
+      "depends_on": [
+        "intersection_of_1_2_3_4"
+      ],
+      "answer": "Maricopa County"
     },
     "6": {
-      "source": "datagov/texas-department-of-criminal-justice-releases-fy-2019/files/rows.txt",
-      "fact": "In the 2019 Texas Department of Criminal Justice releases dataset, Harris County had 9,029 releases and Bexar County had 4,545 releases.",
-      "subquestion": "For the counties in <intersection of node_1 and aggregation of nodes 2-5>, what were the Texas Department of Criminal Justice release counts in 2019 and 2020? (Filter for this node: County in {Harris, Bexar}; count rows by County.)",
-      "answer": {
-        "Harris": 9029,
-        "Bexar": 4545
-      }
-    },
-    "7": {
-      "source": "datagov/texas-department-of-criminal-justice-releases-fy-2020/files/rows.txt",
-      "fact": "In the 2020 Texas Department of Criminal Justice releases dataset, Harris County had 7,059 releases and Bexar County had 3,917 releases.",
-      "subquestion": "For the counties in <intersection of node_1 and aggregation of nodes 2-5>, what were the Texas Department of Criminal Justice release counts in 2019 and 2020? (Filter for this node: County in {Harris, Bexar}; count rows by County.)",
-      "answer": {
-        "Harris": 7059,
-        "Bexar": 3917
-      }
+      "source": "wikipedia/Phoenix,_Arizona/content.txt",
+      "fact": "Phoenix is the county seat of Maricopa County. The Territorial Legislature passed the Phoenix Charter Bill, incorporating Phoenix and providing a mayor-council government; Governor John C. Fremont signed the bill on February 25, 1881, officially incorporating Phoenix as a city.",
+      "subquestion": "In what year was the county seat of <node_5 answer: Maricopa County> incorporated as a city?",
+      "depends_on": [
+        "node_5"
+      ],
+      "answer": "1881"
     }
   },
   "reasoning_chain": [
-    "HOP 1 (d=1, Wikipedia List_of_counties_in_Texas - node 1):",
-    "  Node 1: Original 23 counties include Bexar and Harris among others",
+    "HOP 1 (d=4 intersection - nodes 1,2,3,4 all independent, mix of Wikipedia and data.gov):",
+    "  Node 1 (Wikipedia): Mountain states → {AZ, CO, ID, MT, NV, NM, UT, WY}",
+    "  Node 2 (Wikipedia): States bordering Mexico → {CA, AZ, NM, TX}",
+    "  Node 3 (Wikipedia): Four Corners states → {AZ, CO, NM, UT}",
+    "  Node 4 (data.gov): FY 2020 pension recipients 4,000-6,000 → {AZ, AL, LA, TN, MO, OR, SC, VA}",
+    "  Intersection(1,2,3,4):",
+    "    Mountain ∩ Border Mexico = {AZ, NM}",
+    "    (Mountain ∩ Border Mexico) ∩ Four Corners = {AZ, NM}",
+    "    All ∩ Pension range = {AZ} (NM has only 1,880, excluded from 4,000-6,000 range)",
     "",
-    "HOP 2 (d=4, Texas Capital Outlay expenditures by county 2018-2021 - nodes 2-5):",
-    "  Node 2: 2018 top 5 -> Harris, Dallas, Travis, Montgomery, Bexar",
-    "  Node 3: 2019 top 5 -> Harris, Dallas, Travis, Montgomery, Bexar",
-    "  Node 4: 2020 top 5 -> Harris, Dallas, Travis, Montgomery, Bexar",
-    "  Node 5: 2021 top 5 -> Harris, Dallas, Travis, Montgomery, Bexar",
-    "  Result: {Harris, Dallas, Travis, Montgomery, Bexar}",
-    "  Intersection with original 23 -> {Harris, Bexar}",
+    "HOP 2 (d=1 chain - node 5 depends on hop 1 result):",
+    "  Node 5 (data.gov): Arizona counties by disability compensation → Maricopa County (69,974 recipients, highest)",
     "",
-    "HOP 3 (d=2, TDCJ releases FY2019-FY2020 - nodes 6-7):",
-    "  Node 6: 2019 releases -> Harris 9,029; Bexar 4,545",
-    "  Node 7: 2020 releases -> Harris 7,059; Bexar 3,917",
-    "  Average releases: Harris 8,044; Bexar 4,231",
-    "  Lowest average releases: Bexar County",
-    "  Final answer: Bexar County"
+    "HOP 3 (d=1 chain - node 6 depends on node 5):",
+    "  Node 6 (Wikipedia): Maricopa County seat is Phoenix → incorporated 1881",
+    "",
+    "Final answer: 1881"
   ],
-  "verdict": "pass",
   "datasets_used": [
-    "List_of_counties_in_Texas",
-    "texas-state-expenditures-by-county-2018",
-    "texas-state-expenditures-by-county-2019",
-    "texas-state-expenditures-by-county-2020",
-    "texas-state-expenditures-by-county-2021",
-    "texas-department-of-criminal-justice-releases-fy-2019",
-    "texas-department-of-criminal-justice-releases-fy-2020"
+    "Four_Corners",
+    "Mexico–United_States_border",
+    "Mountain_states",
+    "Phoenix,_Arizona",
+    "fy-2020-pension-recipients-by-state",
+    "fy-2023-disability-compensation-recipients-by-county"
+  ],
+  "reasoning_hops": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "reasoning": "Node 1 (Wikipedia): Mountain states → {AZ, CO, ID, MT, NV, NM, UT, WY} Node 2 (Wikipedia): States bordering Mexico → {CA, AZ, NM, TX} Node 3 (Wikipedia): Four Corners states → {AZ, CO, NM, UT} Node 4 (data.gov): FY 2020 pension recipients 4,000-6,000 → {AZ, AL, LA, TN, MO, OR, SC, VA} Intersection(1,2,3,4): Mountain ∩ Border Mexico = {AZ, NM} (Mountain ∩ Border Mexico) ∩ Four Corners = {AZ, NM} All ∩ Pension range = {AZ} (NM has only 1,880, excluded from 4,000-6,000 range)",
+      "answer": "node 1: Arizona, Colorado, Idaho, ...; node 2: California, Arizona, New Mexico, Texas; node 3: Arizona, Colorado, New Mexico, Utah; node 4: Arizona, Alabama, Louisiana, ..."
+    },
+    {
+      "hop": 2,
+      "node_ids": [
+        5
+      ],
+      "reasoning": "Node 5 (data.gov): Arizona counties by disability compensation → Maricopa County (69,974 recipients, highest)",
+      "answer": "Maricopa County"
+    },
+    {
+      "hop": 3,
+      "node_ids": [
+        6
+      ],
+      "reasoning": "Node 6 (Wikipedia): Maricopa County seat is Phoenix → incorporated 1881",
+      "answer": "1881"
+    }
   ]
 }

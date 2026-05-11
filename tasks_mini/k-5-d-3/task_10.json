@@ -1,113 +1,202 @@
 {
-  "question": "Consider Harris, Travis, Dallas, and Bexar counties. Determine which of these consistently ranked in the statewide top five for offender releases from the Department of Criminal Justice from 2019 to 2021. Among those, compute the average annual intake counts from the Department of Criminal Justice over 2019-2021 and identify the county with the highest average. Its county seat has been home to a National Basketball Association franchise since 1971. Who founded that franchise? Return the name only. Your response should be in the format [Answer].",
-  "answer": "Robert Breitbard",
+  "question": "First, identify the Washington, DC ward that consistently ranked in the top four for building permits from 2022 to 2024 and had one of the highest crime rates. Among the top candidates, identify the ward that had the most frequent street sweeping schedule. In that specific ward, find the charter school whose serving spans grades 8 and 9, and is named after a famous person. Where was that person born? Please return the place name only. Your response should be in the format [Answer].",
+  "answer": "Swartekill, New York",
   "nodes": {
     "1": {
-      "source": "datagov/texas-department-of-criminal-justice-releases-fy-2019/v1/files/rows.csv",
-      "fact": "According to Texas Department of Criminal Justice release data for fiscal year 2019, the overall top 5 counties by releases were Harris (9,029), Dallas (5,355), Tarrant (4,769), Bexar (4,545), and Hidalgo (1,861). Among Harris, Travis, Dallas, and Bexar, the ones in the top 5 were Harris, Dallas, and Bexar.",
-      "subquestion": "In 2019, among Harris, Travis, Dallas, and Bexar counties, which were in the overall top 5 for releases from the Department of Criminal Justice? (Filter for this node: count rows by County; normalize County to uppercase; rank desc; take top 5 overall; then keep counties in the given list.)",
-      "answer": [
-        "Harris",
-        "Dallas",
-        "Bexar"
-      ]
+      "source": "datagov/building-permits-in-2022/files/data.txt",
+      "fact": "In the 2022 Building Permits dataset for Washington, DC, the top 4 wards by number of permits were: Ward 6 (8,371), Ward 2 (8,286), Ward 4 (6,971), and Ward 5 (6,580).",
+      "subquestion": "Which Washington, DC wards were in the top 4 by number of building permits across 2022-2024? (Filter for this node: 2022 file; WARD not null; count permits by WARD; rank desc; take top 4.)",
+      "answer": {
+        "Ward 6": 8371,
+        "Ward 2": 8286,
+        "Ward 4": 6971,
+        "Ward 5": 6580
+      }
     },
     "2": {
-      "source": "datagov/texas-department-of-criminal-justice-releases-fy-2020/v1/files/rows.csv",
-      "fact": "According to Texas Department of Criminal Justice release data for fiscal year 2020, the overall top 5 counties by releases were Harris (7,059), Dallas (4,540), Tarrant (4,450), Bexar (3,917), and Travis (1,596). Among Harris, Travis, Dallas, and Bexar, all four were in the top 5.",
-      "subquestion": "In 2020, among Harris, Travis, Dallas, and Bexar counties, which were in the overall top 5 for releases from the Department of Criminal Justice? (Filter for this node: count rows by County; normalize County to uppercase; rank desc; take top 5 overall; then keep counties in the given list.)",
-      "answer": [
-        "Harris",
-        "Dallas",
-        "Bexar",
-        "Travis"
-      ]
+      "source": "datagov/building-permits-in-2023/files/data.txt",
+      "fact": "In the 2023 Building Permits dataset for Washington, DC, the top 4 wards by number of permits were: Ward 2 (8,392), Ward 6 (6,845), Ward 4 (6,525), and Ward 5 (6,072).",
+      "subquestion": "Which Washington, DC wards were in the top 4 by number of building permits across 2022-2024? (Filter for this node: 2023 file; WARD not null; count permits by WARD; rank desc; take top 4.)",
+      "answer": {
+        "Ward 2": 8392,
+        "Ward 6": 6845,
+        "Ward 4": 6525,
+        "Ward 5": 6072
+      }
     },
     "3": {
-      "source": "datagov/texas-department-of-criminal-justice-releases-fy-2021/v1/files/rows.csv",
-      "fact": "According to Texas Department of Criminal Justice release data for fiscal year 2021, the overall top 5 counties by releases were Harris (5,210), Dallas (3,565), Tarrant (3,252), Bexar (3,236), and Hidalgo (1,147). Among Harris, Travis, Dallas, and Bexar, the ones in the top 5 were Harris, Dallas, and Bexar.",
-      "subquestion": "In 2021, among Harris, Travis, Dallas, and Bexar counties, which were in the overall top 5 for releases from the Department of Criminal Justice? (Filter for this node: count rows by County; normalize County to uppercase; rank desc; take top 5 overall; then keep counties in the given list.)",
-      "answer": [
-        "Harris",
-        "Dallas",
-        "Bexar"
-      ]
+      "source": "datagov/building-permits-in-2024/files/data.txt",
+      "fact": "In the 2024 Building Permits dataset for Washington, DC, the top 4 wards by number of permits were: Ward 2 (7,897), Ward 4 (6,856), Ward 6 (6,658), and Ward 5 (6,213).",
+      "subquestion": "Which Washington, DC wards were in the top 4 by number of building permits across 2022-2024? (Filter for this node: 2024 file; WARD not null; count permits by WARD; rank desc; take top 4.)",
+      "answer": {
+        "Ward 2": 7897,
+        "Ward 4": 6856,
+        "Ward 6": 6658,
+        "Ward 5": 6213
+      }
     },
     "4": {
-      "source": "datagov/texas-department-of-criminal-justice-receives-fy-2019/v1/files/rows.csv",
-      "fact": "According to Texas Department of Criminal Justice intake data for fiscal year 2019, among the hop 1 counties: Harris had 7,874 intakes, Dallas had 4,660, and Bexar had 4,457.",
-      "subquestion": "In 2019, what were the intake counts from the Department of Criminal Justice for the counties from hop 1? (Filter for this node: County in hop 1 list; normalize County to uppercase; count rows by County.)",
+      "source": "datagov/crime-incidents-in-2022/files/data.txt",
+      "fact": "In the 2022 Crime Incidents dataset, incident counts for the wards from hop 1 were: Ward 2 (4,794), Ward 5 (4,497), Ward 6 (3,685), and Ward 4 (2,547).",
+      "subquestion": "Among the wards (from hop 1), which two had the highest average crime-incident counts across 2022-2024? (Filter for this node: 2022 file; WARD in {2,4,5,6}; count incidents by WARD.)",
       "answer": {
-        "Harris": 7874,
-        "Dallas": 4660,
-        "Bexar": 4457
+        "Ward 2": 4794,
+        "Ward 4": 2547,
+        "Ward 5": 4497,
+        "Ward 6": 3685
       }
     },
     "5": {
-      "source": "datagov/texas-department-of-criminal-justice-receives-fy-2020/v1/files/rows.csv",
-      "fact": "According to Texas Department of Criminal Justice intake data for fiscal year 2020, among the hop 1 counties: Harris had 3,840 intakes, Dallas had 2,519, and Bexar had 2,420.",
-      "subquestion": "In 2020, what were the intake counts from the Department of Criminal Justice for the counties from hop 1? (Filter for this node: County in hop 1 list; normalize County to uppercase; count rows by County.)",
+      "source": "datagov/crime-incidents-in-2023/files/data.txt",
+      "fact": "In the 2023 Crime Incidents dataset, incident counts for the wards from hop 1 were: Ward 2 (5,469), Ward 5 (5,629), Ward 6 (4,281), and Ward 4 (3,135).",
+      "subquestion": "Among the wards (from hop 1), which two had the highest average crime-incident counts across 2022-2024? (Filter for this node: 2023 file; WARD in {2,4,5,6}; count incidents by WARD.)",
       "answer": {
-        "Harris": 3840,
-        "Dallas": 2519,
-        "Bexar": 2420
+        "Ward 2": 5469,
+        "Ward 4": 3135,
+        "Ward 5": 5629,
+        "Ward 6": 4281
       }
     },
     "6": {
-      "source": "datagov/texas-department-of-criminal-justice-receives-fy-2021/v1/files/rows.csv",
-      "fact": "According to Texas Department of Criminal Justice intake data for fiscal year 2021, among the hop 1 counties: Harris had 4,652 intakes, Dallas had 3,520, and Bexar had 2,822.",
-      "subquestion": "In 2021, what were the intake counts from the Department of Criminal Justice for the counties from hop 1? (Filter for this node: County in hop 1 list; normalize County to uppercase; count rows by County.)",
+      "source": "datagov/crime-incidents-in-2024/files/data.txt",
+      "fact": "In the 2024 Crime Incidents dataset, incident counts for the wards from hop 1 were: Ward 2 (4,420), Ward 5 (4,585), Ward 6 (3,549), and Ward 4 (2,595).",
+      "subquestion": "Among the wards (from hop 1), which two had the highest average crime-incident counts across 2022-2024? (Filter for this node: 2024 file; WARD in {2,4,5,6}; count incidents by WARD.)",
       "answer": {
-        "Harris": 4652,
-        "Dallas": 3520,
-        "Bexar": 2822
+        "Ward 2": 4420,
+        "Ward 4": 2595,
+        "Ward 5": 4585,
+        "Ward 6": 3549
       }
     },
     "7": {
-      "source": "wikipedia/Harris_County,_Texas/content.txt",
-      "fact": "Harris County is the most populous county in Texas and the third-most populous in the United States. The county seat is Houston, which is also the largest city in Texas and the fourth-largest city in the United States.",
-      "subquestion": "What city is the county seat of the county from hop 2?",
-      "answer": "Houston"
+      "source": "datagov/street-sweeping-schedule-2022/files/data.txt",
+      "fact": "In the 2022 Street Sweeping Schedule dataset, Ward 2 has 72 entries and Ward 5 has 80 entries.",
+      "subquestion": "Among the wards (from hop 2), which ward had the higher average number of street-sweeping schedule entries across 2022-2024? (Filter for this node: 2022 file; WARD in {2,5}; count rows by WARD.)",
+      "answer": {
+        "Ward 2": 72,
+        "Ward 5": 80
+      }
     },
     "8": {
-      "source": "wikipedia/Houston/content.txt",
-      "fact": "The Houston Rockets are a National Basketball Association franchise based in the city since 1971.",
-      "subquestion": "Which National Basketball Association franchise is based in the city from hop 3 and has been there since 1971?",
-      "answer": "Houston Rockets"
+      "source": "datagov/street-sweeping-schedule-2023/files/data.txt",
+      "fact": "In the 2023 Street Sweeping Schedule dataset, Ward 2 has 54 entries and Ward 5 has 83 entries.",
+      "subquestion": "Among the wards (from hop 2), which ward had the higher average number of street-sweeping schedule entries across 2022-2024? (Filter for this node: 2023 file; WARD in {2,5}; count rows by WARD.)",
+      "answer": {
+        "Ward 2": 54,
+        "Ward 5": 83
+      }
     },
     "9": {
-      "source": "wikipedia/Houston_Rockets/content.txt",
-      "fact": "The Rockets were founded in 1967 in San Diego by Robert Breitbard.",
-      "subquestion": "Who founded the Houston Rockets?",
-      "answer": "Robert Breitbard"
+      "source": "datagov/street-sweeping-schedule-2024/files/data.txt",
+      "fact": "In the 2024 Street Sweeping Schedule dataset, Ward 2 has 54 entries and Ward 5 has 87 entries.",
+      "subquestion": "Among the wards (from hop 2), which ward had the higher average number of street-sweeping schedule entries across 2022-2024? (Filter for this node: 2024 file; WARD in {2,5}; count rows by WARD.)",
+      "answer": {
+        "Ward 2": 54,
+        "Ward 5": 87
+      }
+    },
+    "10": {
+      "source": "datagov/dc-charter-schools/files/data.txt",
+      "fact": "In the DC Charter Schools dataset, the only Ward 5 school with GRADES = '6th-9th' is Sojourner Truth PCS.",
+      "subquestion": "Which charter school in the ward (from hop 3) spans grade 8 and grade 9? (Filter for this node: WARD == 5; GRADES include 8 and 9 in the range.)",
+      "answer": "Sojourner Truth PCS"
+    },
+    "11": {
+      "source": "wikipedia/Sojourner_Truth/content.txt",
+      "fact": "Sojourner Truth was born into slavery in Swartekill, New York.",
+      "subquestion": "The charter school identified (from hop 4) includes the name 'Sojourner Truth'. According to her biography, where was she born?",
+      "answer": "Swartekill, New York"
     }
   },
   "reasoning_chain": [
-    "HOP 1 (d=3): From Harris, Travis, Dallas, and Bexar, keep the counties that are in the statewide top 5 for releases in 2019-2021",
-    "  Node 1 (2019): {Harris, Dallas, Bexar}",
-    "  Node 2 (2020): {Harris, Dallas, Bexar, Travis}",
-    "  Node 3 (2021): {Harris, Dallas, Bexar}",
-    "  Intersection: {Harris, Dallas, Bexar}",
-    "HOP 2 (d=3): For those counties, gather intake counts from the Department of Criminal Justice for 2019-2021 and compute averages",
-    "  Node 4 (2019): Harris=7874, Dallas=4660, Bexar=4457",
-    "  Node 5 (2020): Harris=3840, Dallas=2519, Bexar=2420",
-    "  Node 6 (2021): Harris=4652, Dallas=3520, Bexar=2822",
-    "  Averages: Harris=5455.3 > Dallas=3566.3 > Bexar=3233.0 -> Result: Harris County",
-    "HOP 3 (d=1): Find county seat of the hop 2 county -> Houston",
-    "HOP 4 (d=1): Find the NBA franchise based in that city since 1971 -> Houston Rockets",
-    "HOP 5 (d=1): Find who founded the Rockets -> Robert Breitbard",
-    "Final answer: Robert Breitbard"
+    "HOP 1 (d=3, building permits 2022-2024 - nodes 1-3):",
+    "  Node 1: 2022 top 4 wards by permits -> {Ward 6 (8,371), Ward 2 (8,286), Ward 4 (6,971), Ward 5 (6,580)}",
+    "  Node 2: 2023 top 4 wards by permits -> {Ward 2 (8,392), Ward 6 (6,845), Ward 4 (6,525), Ward 5 (6,072)}",
+    "  Node 3: 2024 top 4 wards by permits -> {Ward 2 (7,897), Ward 4 (6,856), Ward 6 (6,658), Ward 5 (6,213)}",
+    "  Intersection(1,2,3) -> {Ward 2, Ward 4, Ward 5, Ward 6}",
+    "",
+    "HOP 2 (d=3, crime incidents 2022-2024 - nodes 4-6):",
+    "  Node 4: 2022 incidents -> Ward 2 4,794; Ward 5 4,497; Ward 6 3,685; Ward 4 2,547",
+    "  Node 5: 2023 incidents -> Ward 2 5,469; Ward 5 5,629; Ward 6 4,281; Ward 4 3,135",
+    "  Node 6: 2024 incidents -> Ward 2 4,420; Ward 5 4,585; Ward 6 3,549; Ward 4 2,595",
+    "  Average incidents (2022-2024): Ward 5 4,903.7; Ward 2 4,894.3; Ward 6 3,838.3; Ward 4 2,759.0",
+    "  Result: {Ward 5, Ward 2}",
+    "",
+    "HOP 3 (d=3, street sweeping schedule 2022-2024 - nodes 7-9):",
+    "  Node 7: 2022 schedule rows -> Ward 2 72; Ward 5 80",
+    "  Node 8: 2023 schedule rows -> Ward 2 54; Ward 5 83",
+    "  Node 9: 2024 schedule rows -> Ward 2 54; Ward 5 87",
+    "  Average schedule rows (2022-2024): Ward 5 83.3 > Ward 2 60.0",
+    "  Result: Ward 5",
+    "",
+    "HOP 4 (d=1, DC charter schools - node 10):",
+    "  Node 10: Ward 5 charter school with spanning grade 8 and grade 9 -> Sojourner Truth PCS",
+    "",
+    "HOP 5 (d=1, Wikipedia Sojourner Truth - node 11):",
+    "  Node 11: Sojourner Truth born in Swartekill, New York",
+    "",
+    "Final answer: Swartekill, New York"
   ],
   "verdict": "pass",
   "datasets_used": [
-    "Harris_County,_Texas",
-    "Houston",
-    "Houston_Rockets",
-    "texas-department-of-criminal-justice-receives-fy-2019",
-    "texas-department-of-criminal-justice-receives-fy-2020",
-    "texas-department-of-criminal-justice-receives-fy-2021",
-    "texas-department-of-criminal-justice-releases-fy-2019",
-    "texas-department-of-criminal-justice-releases-fy-2020",
-    "texas-department-of-criminal-justice-releases-fy-2021"
+    "building-permits-in-2022",
+    "building-permits-in-2023",
+    "building-permits-in-2024",
+    "crime-incidents-in-2022",
+    "crime-incidents-in-2023",
+    "crime-incidents-in-2024",
+    "street-sweeping-schedule-2022",
+    "street-sweeping-schedule-2023",
+    "street-sweeping-schedule-2024",
+    "dc-charter-schools",
+    "Sojourner_Truth"
+  ],
+  "reasoning_hops": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1,
+        2,
+        3
+      ],
+      "reasoning": "Node 1: 2022 top 4 wards by permits -> {Ward 6 (8,371), Ward 2 (8,286), Ward 4 (6,971), Ward 5 (6,580)} Node 2: 2023 top 4 wards by permits -> {Ward 2 (8,392), Ward 6 (6,845), Ward 4 (6,525), Ward 5 (6,072)} Node 3: 2024 top 4 wards by permits -> {Ward 2 (7,897), Ward 4 (6,856), Ward 6 (6,658), Ward 5 (6,213)} Intersection(1,2,3) -> {Ward 2, Ward 4, Ward 5, Ward 6}",
+      "answer": "{Ward 2, Ward 4, Ward 5, Ward 6}"
+    },
+    {
+      "hop": 2,
+      "node_ids": [
+        4,
+        5,
+        6
+      ],
+      "reasoning": "Node 4: 2022 incidents -> Ward 2 4,794; Ward 5 4,497; Ward 6 3,685; Ward 4 2,547 Node 5: 2023 incidents -> Ward 2 5,469; Ward 5 5,629; Ward 6 4,281; Ward 4 3,135 Node 6: 2024 incidents -> Ward 2 4,420; Ward 5 4,585; Ward 6 3,549; Ward 4 2,595 Average incidents (2022-2024): Ward 5 4,903.7; Ward 2 4,894.3; Ward 6 3,838.3; Ward 4 2,759.0 Result: {Ward 5, Ward 2}",
+      "answer": "{Ward 5, Ward 2}"
+    },
+    {
+      "hop": 3,
+      "node_ids": [
+        7,
+        8,
+        9
+      ],
+      "reasoning": "Node 7: 2022 schedule rows -> Ward 2 72; Ward 5 80 Node 8: 2023 schedule rows -> Ward 2 54; Ward 5 83 Node 9: 2024 schedule rows -> Ward 2 54; Ward 5 87 Average schedule rows (2022-2024): Ward 5 83.3 > Ward 2 60.0 Result: Ward 5",
+      "answer": "Ward 5"
+    },
+    {
+      "hop": 4,
+      "node_ids": [
+        10
+      ],
+      "reasoning": "Node 10: Ward 5 charter school with spanning grade 8 and grade 9 -> Sojourner Truth PCS",
+      "answer": "Sojourner Truth PCS"
+    },
+    {
+      "hop": 5,
+      "node_ids": [
+        11
+      ],
+      "reasoning": "Node 11: Sojourner Truth born in Swartekill, New York",
+      "answer": "Swartekill, New York"
+    }
   ]
 }

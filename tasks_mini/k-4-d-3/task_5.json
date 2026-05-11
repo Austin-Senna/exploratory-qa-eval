@@ -1,172 +1,109 @@
 {
-  "question": "Find the Iowa counties met the following criteria in 2019: unemployment above 2.9%, biofuel distribution above 12%, and personal income above $4 billion. Compare the 2020 census populations of their county seats and report the population of the county seat for the most populous county? Only return the population number. Your response should be in the format [Answer].",
-  "answer": "172943",
-  "practical_motivation": "An economic development researcher studying Iowa's most economically robust counties wants to understand the demographic characteristics of counties that combine low unemployment, strong renewable energy adoption, and high personal income. By identifying counties meeting these economic benchmarks, the researcher can examine the population trajectory of the county with the more populous county seat to understand urbanization patterns in economically thriving Iowa counties.",
+  "question": "Among the United States Park Police, United States Capitol Police, and U.S. Secret Service Uniform Division, which had the highest average number of January moving violations from 2019 to 2021? That agency is operated by which federal agency, and that agency sits within which U.S. department? Who is the head of that department? Return the name only. Your response should be in the format [Answer].",
+  "answer": "Doug Burgum",
   "nodes": {
     "1": {
-      "source": "datagov/iowa-local-area-unemployment-statistics/v1/files/rows.csv",
-      "fact": "In December 2019, 23 Iowa counties had unemployment rates above 2.9%, including Black Hawk County (3.2%) and Scott County (3.3%). Among Iowa counties with personal income above $4B and biofuel distribution above 12%, only Black Hawk and Scott had unemployment above 2.9% (Dallas had 1.9%, Polk had 2.6%, Pottawattamie had 2.4%, Woodbury had 2.7%).",
-      "subquestion": "Which Iowa counties had December 2019 unemployment rate above 2.9%?",
-      "answer": [
-        "Allamakee County",
-        "Appanoose County",
-        "Benton County",
-        "Black Hawk County",
-        "Butler County",
-        "Chickasaw County",
-        "Clayton County",
-        "Clinton County",
-        "Crawford County",
-        "Des Moines County",
-        "Dickinson County",
-        "Fayette County",
-        "Floyd County",
-        "Jackson County",
-        "Jones County",
-        "Keokuk County",
-        "Lee County",
-        "Louisa County",
-        "Madison County",
-        "Marshall County",
-        "Scott County",
-        "Tama County",
-        "Wapello County"
-      ]
+      "source": "datagov/moving-violations-issued-in-january-2019/files/data.txt",
+      "fact": "According to the January 2019 DC moving violations dataset, for these agencies (UNITED STATES PARK POLICE, UNITED STATES CAPITOL POLICE, US. SECRET SERVICE UNIFORM DIVISION), the moving-violation counts were: UNITED STATES PARK POLICE (103), UNITED STATES CAPITOL POLICE (176), US. SECRET SERVICE UNIFORM DIVISION (145).",
+      "subquestion": "Among the United States Park Police, United States Capitol Police, and U.S. Secret Service Uniform Division, which had the highest average number of January moving violations from 2019-2021? (Filter for this node: ISSUING_AGENCY_NAME in {UNITED STATES PARK POLICE, UNITED STATES CAPITOL POLICE, US. SECRET SERVICE UNIFORM DIVISION}; count rows by ISSUING_AGENCY_NAME.)",
+      "answer": {
+        "UNITED STATES PARK POLICE": 103,
+        "UNITED STATES CAPITOL POLICE": 176,
+        "US. SECRET SERVICE UNIFORM DIVISION": 145
+      }
     },
     "2": {
-      "source": "datagov/iowa-motor-fuel-sales-by-county-and-year/v1/files/rows.csv",
-      "fact": "In 2019, 47 Iowa counties had biofuel distribution above 12%, including Black Hawk County (13.69%) and Scott County (16.77%). Dallas (12.98%), Polk (13.53%), Pottawattamie (22.67%), and Woodbury (16.61%) also exceeded 12%, but Dubuque (10.99%), Johnson (9.42%), Linn (11.7%), and Story (11.63%) did not.",
-      "subquestion": "Which Iowa counties had biofuel distribution above 12% in 2019?",
-      "answer": [
-        "Adair County",
-        "Allamakee County",
-        "Audubon County",
-        "Benton County",
-        "Black Hawk County",
-        "Bremer County",
-        "Calhoun County",
-        "Cedar County",
-        "Cerro Gordo County",
-        "Chickasaw County",
-        "Clarke County",
-        "Clayton County",
-        "Clinton County",
-        "Dallas County",
-        "Floyd County",
-        "Franklin County",
-        "Fremont County",
-        "Greene County",
-        "Grundy County",
-        "Guthrie County",
-        "Hamilton County",
-        "Hancock County",
-        "Hardin County",
-        "Harrison County",
-        "Henry County",
-        "Howard County",
-        "Iowa County",
-        "Jackson County",
-        "Jasper County",
-        "Lucas County",
-        "Marion County",
-        "Mitchell County",
-        "Monona County",
-        "Muscatine County",
-        "Osceola County",
-        "Polk County",
-        "Pottawattamie County",
-        "Poweshiek County",
-        "Ringgold County",
-        "Sac County",
-        "Scott County",
-        "Wapello County",
-        "Wayne County",
-        "Webster County",
-        "Winneshiek County",
-        "Woodbury County",
-        "Worth County"
-      ]
+      "source": "datagov/moving-violations-issued-in-january-2020/files/data.txt",
+      "fact": "According to the January 2020 DC moving violations dataset, for these agencies (UNITED STATES PARK POLICE, UNITED STATES CAPITOL POLICE, US. SECRET SERVICE UNIFORM DIVISION), the moving-violation counts were: UNITED STATES PARK POLICE (204), UNITED STATES CAPITOL POLICE (139), US. SECRET SERVICE UNIFORM DIVISION (118).",
+      "subquestion": "Among the United States Park Police, United States Capitol Police, and U.S. Secret Service Uniform Division, which had the highest average number of January moving violations from 2019-2021? (Filter for this node: ISSUING_AGENCY_NAME in {UNITED STATES PARK POLICE, UNITED STATES CAPITOL POLICE, US. SECRET SERVICE UNIFORM DIVISION}; count rows by ISSUING_AGENCY_NAME.)",
+      "answer": {
+        "UNITED STATES PARK POLICE": 204,
+        "UNITED STATES CAPITOL POLICE": 139,
+        "US. SECRET SERVICE UNIFORM DIVISION": 118
+      }
     },
     "3": {
-      "source": "datagov/annual-personal-income-for-state-of-iowa-by-county/v1/files/rows.csv",
-      "fact": "In 2019, Black Hawk County had $5.924 billion in personal income and Scott County had $9.367 billion. Other counties exceeding $4 billion included Dallas ($6.519B), Dubuque ($4.901B), Johnson ($8.206B), Linn ($12.08B), Polk ($26.3B), Pottawattamie ($4.206B), Story ($4.221B), and Woodbury ($4.605B).",
-      "subquestion": "Which Iowa counties had personal income above $4 billion in 2019?",
-      "answer": [
-        "Black Hawk County",
-        "Scott County",
-        "Dallas County",
-        "Dubuque County",
-        "Johnson County",
-        "Linn County",
-        "Polk County",
-        "Pottawattamie County",
-        "Story County",
-        "Woodbury County"
-      ]
+      "source": "datagov/moving-violations-issued-in-january-2021/files/data.txt",
+      "fact": "According to the January 2021 DC moving violations dataset, for these agencies (UNITED STATES PARK POLICE, UNITED STATES CAPITOL POLICE, US. SECRET SERVICE UNIFORM DIVISION), the moving-violation counts were: UNITED STATES PARK POLICE (71), UNITED STATES CAPITOL POLICE (30), US. SECRET SERVICE UNIFORM DIVISION (32). Averages across 2019-2021: UNITED STATES PARK POLICE (126.0), UNITED STATES CAPITOL POLICE (115.0), US. SECRET SERVICE UNIFORM DIVISION (98.33). UNITED STATES PARK POLICE has the highest average.",
+      "subquestion": "Among the United States Park Police, United States Capitol Police, and U.S. Secret Service Uniform Division, which had the highest average number of January moving violations from 2019-2021? (Filter for this node: ISSUING_AGENCY_NAME in {UNITED STATES PARK POLICE, UNITED STATES CAPITOL POLICE, US. SECRET SERVICE UNIFORM DIVISION}; count rows by ISSUING_AGENCY_NAME.)",
+      "answer": "UNITED STATES PARK POLICE"
     },
     "4": {
-      "source": "wikipedia/Black_Hawk_County,_Iowa/content.txt",
-      "fact": "Black Hawk County's county seat is Waterloo. The county was formed on February 17, 1853, from sections of Buchanan County.",
-      "subquestion": "What is the county seat of Black Hawk County (from <intersection of nodes 1-3>)?",
-      "answer": "Waterloo"
+      "source": "wikipedia/United_States_Park_Police/content.txt",
+      "fact": "The United States Park Police is an operation of the National Park Service.",
+      "subquestion": "Which federal agency operates the United States Park Police (from hop 1)?",
+      "answer": "National Park Service"
     },
     "5": {
-      "source": "wikipedia/Scott_County,_Iowa/content.txt",
-      "fact": "Scott County's county seat is Davenport. The county was established by the Wisconsin territorial legislature in 1837.",
-      "subquestion": "What is the county seat of Scott County (from <intersection of nodes 1-3>)?",
-      "answer": "Davenport"
+      "source": "wikipedia/National_Park_Service/content.txt",
+      "fact": "The National Park Service is an agency within the United States Department of the Interior.",
+      "subquestion": "The agency (from hop 2) is within which U.S. department?",
+      "answer": "United States Department of the Interior"
     },
     "6": {
-      "source": "wikipedia/Waterloo,_Iowa/content.txt",
-      "fact": "Waterloo is a city in and the county seat of Black Hawk County, Iowa. It had a population of 67,314 at the 2020 census, making it the eighth-most populous city in Iowa.",
-      "subquestion": "What was the 2020 census population of Waterloo (the county seat of <node_4 source county>)?",
-      "answer": "67314"
-    },
-    "7": {
-      "source": "wikipedia/Davenport,_Iowa/content.txt",
-      "fact": "Davenport is a city in Scott County, Iowa, and its county seat. It had a population of 101,724 as of the 2020 census, making it Iowa's third-most populous city.",
-      "subquestion": "What was the 2020 census population of Davenport (the county seat of <node_5 source county>)?",
-      "answer": "101724"
-    },
-    "8": {
-      "source": "datagov/county-population-in-iowa-by-year/v1/files/rows.csv",
-      "fact": "Scott County had a population of 172,943 in July 2019.",
-      "subquestion": "What was the July 2019 population of Scott County (the county whose seat <comparative of nodes 6-7: Davenport with 101,724 > Waterloo with 67,314>)?",
-      "answer": "172943"
+      "source": "wikipedia/United_States_Department_of_the_Interior/content.txt",
+      "fact": "The department is headed by the secretary of the interior, who reports directly to the president of the United States and is a member of the president's Cabinet. The current interior secretary is Doug Burgum.",
+      "subquestion": "Who is the head of the department (from hop 3)?",
+      "answer": "Doug Burgum"
     }
   },
   "reasoning_chain": [
-    "HOP 1 (d=3, data.gov intersection - nodes 1-3 all independent):",
-    "  Node 1: Iowa unemployment Dec 2019, counties with >2.9% \u2192 {Black Hawk (3.2%), Scott (3.3%), Clinton, Clayton, Floyd, ...}",
-    "  Node 2: Iowa biofuel distribution 2019, counties with >12% \u2192 {Black Hawk (13.69%), Scott (16.77%), Dallas, Polk, Pottawattamie, Woodbury, ...}",
-    "  Node 3: Iowa personal income 2019, counties with >$4B \u2192 {Black Hawk ($5.924B), Scott ($9.367B), Dallas, Dubuque, Johnson, Linn, Polk, Pottawattamie, Story, Woodbury}",
-    "  Intersection(1,2,3) \u2192 {Black Hawk, Scott}",
-    "  Note: Dallas, Polk, Pottawattamie, Woodbury excluded by Node 1 (unemployment <=2.9%); Dubuque, Johnson, Linn, Story excluded by Node 2 (biofuel <12%)",
-    "",
-    "HOP 2 (d=2, Wikipedia - nodes 4-5 BOTH depend on Hop 1 intersection):",
-    "  Node 4: Black Hawk County Wikipedia \u2192 county seat is Waterloo",
-    "  Node 5: Scott County Wikipedia \u2192 county seat is Davenport",
-    "  Result: {Waterloo, Davenport} - the county seats of the two qualifying counties",
-    "",
-    "HOP 3 (d=2, Wikipedia comparative - nodes 6-7 BOTH depend on Hop 2 results):",
-    "  Node 6: Waterloo Wikipedia \u2192 2020 population = 67,314",
-    "  Node 7: Davenport Wikipedia \u2192 2020 population = 101,724",
-    "  Comparative: 101,724 > 67,314 \u2192 Davenport has higher population \u2192 Scott County wins",
-    "",
-    "HOP 4 (d=1, data.gov - node 8 depends on Hop 3 comparative result):",
-    "  Node 8: Iowa county population data \u2192 Scott County July 2019 = 172,943",
-    "",
-    "Final answer: 172943"
+    "HOP 1 (d=3): Compare January moving-violation counts for the three agencies in 2019-2021",
+    "  Node 1: 2019 moving violations",
+    "  Node 2: 2020 moving violations",
+    "  Node 3: 2021 moving violations; average is highest for UNITED STATES PARK POLICE",
+    "  Result: UNITED STATES PARK POLICE",
+    "HOP 2 (d=1): Identify the federal agency that operates the United States Park Police",
+    "  Node 4: Operated by the National Park Service",
+    "HOP 3 (d=1): Identify the U.S. department that contains the National Park Service",
+    "  Node 5: National Park Service is within the United States Department of the Interior",
+    "HOP 4 (d=1): Identify the head of the United States Department of the Interior",
+    "  Node 6: The current interior secretary is Doug Burgum",
+    "Final answer: Doug Burgum"
   ],
   "verdict": "pass",
   "datasets_used": [
-    "Black_Hawk_County,_Iowa",
-    "Davenport,_Iowa",
-    "Scott_County,_Iowa",
-    "Waterloo,_Iowa",
-    "annual-personal-income-for-state-of-iowa-by-county",
-    "county-population-in-iowa-by-year",
-    "iowa-local-area-unemployment-statistics",
-    "iowa-motor-fuel-sales-by-county-and-year"
+    "National_Park_Service",
+    "United_States_Department_of_the_Interior",
+    "United_States_Park_Police",
+    "moving-violations-issued-in-january-2019",
+    "moving-violations-issued-in-january-2020",
+    "moving-violations-issued-in-january-2021"
+  ],
+  "reasoning_hops": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1,
+        2,
+        3
+      ],
+      "reasoning": "Node 1: 2019 moving violations Node 2: 2020 moving violations Node 3: 2021 moving violations; average is highest for UNITED STATES PARK POLICE Result: UNITED STATES PARK POLICE",
+      "answer": "UNITED STATES PARK POLICE"
+    },
+    {
+      "hop": 2,
+      "node_ids": [
+        4
+      ],
+      "reasoning": "Node 4: Operated by the National Park Service",
+      "answer": "National Park Service"
+    },
+    {
+      "hop": 3,
+      "node_ids": [
+        5
+      ],
+      "reasoning": "Node 5: National Park Service is within the United States Department of the Interior",
+      "answer": "United States Department of the Interior"
+    },
+    {
+      "hop": 4,
+      "node_ids": [
+        6
+      ],
+      "reasoning": "Node 6: The current interior secretary is Doug Burgum",
+      "answer": "Doug Burgum"
+    }
   ]
 }

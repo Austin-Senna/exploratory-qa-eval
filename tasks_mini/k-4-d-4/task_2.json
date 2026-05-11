@@ -1,190 +1,155 @@
 {
-  "question": "Consider the engineering firm founded after 1914 that has no current NY State construction manager projects, yet consistently ranked in the top 20 Washington State contractors by contract count annually from 2017 to 2020. In what year was the Native American interpreter born who helped negotiate the land cession that led to the founding of the city where that firm is based? Please return the year only. Your response should be in the format [Answer].",
-  "answer": "1825",
+  "question": "In Chicago elementary schools that are public school, find which school (1) received the top performance rating in 2011-12, (2) showed above-average growth in the 2012–13, and (3) classified as moderately organized under the My Voice, My School measure, and (4) showed above-average or far-above-average student growth in 2017–2018, based on progress report cards. This school is also located in a community area with a per capita income above $50K. In what year was the MLB team founded that plays in the stadium located within that same community area? Please return the year only. Your response should be in the format [Answer].",
+  "answer": "1876",
   "nodes": {
     "1": {
-      "source": "datagov/agency-contracts-fiscal-year-2017/files/rows.txt",
-      "fact": "In fiscal year 2017, the top 20 Washington State contractors by contract count included: ARAMARK UNIFORM SERVICES (328), McGranahan Architects (290), Schreiber Starling Whitehead Architects (259), McKinstry Essention (216), Liberty Business Forms (207), PBS Engineering (157), WSP USA (142), HDR Engineering, Inc. (136, rank #8), Schacht/Aslani Architects (134), KMB architects (131), Phoenix Protective Corp (123), MSGS Architects (121), KolorKraze (115), Jacobs Engineering Group, Inc. (102, rank #14), HNTB Corporation (96, rank #15), S.M. Stemper Architects (89), Pioneer Human Services (87), Imagesource Inc (87), Osborn Architects (83), Golden Pacific Embossing (81).",
-      "subquestion": "Which contractors ranked in the top 20 by contract count in Washington State agency contracts in fiscal year 2017?",
-      "answer": [
-        "ARAMARK UNIFORM SERVICES, INC.",
-        "McGranahan Architects",
-        "Schreiber Starling Whitehead Architects",
-        "McKinstry Essention, LLC",
-        "Liberty Business Forms",
-        "PBS Engineering+Environmental - Seattle",
-        "WSP USA, Inc.",
-        "HDR Engineering, Inc.",
-        "Schacht/Aslani Architects",
-        "KMB architects",
-        "Phoenix Protective Corp.",
-        "MSGS Architects",
-        "KolorKraze",
-        "Jacobs Engineering Group, Inc.",
-        "HNTB Corporation",
-        "S. M. Stemper Architects, PLLC",
-        "Pioneer Human Services",
-        "Imagesource Inc",
-        "Osborn Architects, Inc., PS",
-        "Golden Pacific Embossing"
-      ]
+      "source": "datagov/chicago-public-schools-progress-report-cards-2011-2012/files/rows.txt",
+      "fact": "In the 2011-2012 CPS Progress Report Cards, there are 127 elementary schools with CPS Performance Policy Level \"Level 1\"; among them are Cleveland (609857), Hawthorne (609974), Poe (610132), Reinberg (610145), and 123 others.",
+      "subquestion": "Which elementary schools had CPS Performance Policy Level \"Level 1\" in the 2011-2012 CPS Progress Report Cards?",
+      "answer": {
+        "Cleveland": "609857",
+        "Hawthorne": "609974",
+        "Poe": "610132",
+        "Reinberg": "610145",
+        "and 123 others": "..."
+      }
     },
     "2": {
-      "source": "datagov/agency-contracts-fiscal-year-2018/files/rows.txt",
-      "fact": "In fiscal year 2018, the top 20 Washington State contractors by contract count included: A-1 Performance Inc (147), Jacobs Engineering Group, Inc. (137, rank #2), WSP USA Inc (119), Imagesource Inc (117), HDR Engineering, Inc. (102, rank #5), HNTB Corporation (98, rank #6), GENUINE PARTS CO (96), Sharp Electronics (81), A-1 Performance INC (78), Correctional Industries-DOC (75), Pioneer Human Services (74), Puget Sound Executive Srvces (72), Client Network Services (68), DOC Correctional Industries (68), Ricoh Usa Inc (66), Parametrix (65), Phoenix Protective Corp (62), ESD Financial Office (61), Northwest Envirometrics (60), DES (59).",
-      "subquestion": "Which contractors ranked in the top 20 by contract count in Washington State agency contracts in fiscal year 2018?",
-      "answer": [
-        "A-1 Performance Inc",
-        "Jacobs Engineering Group, Inc.",
-        "WSP USA Inc.",
-        "Imagesource Inc",
-        "HDR Engineering, Inc.",
-        "HNTB Corporation",
-        "GENUINE PARTS CO",
-        "Sharp Electronics Corporation",
-        "A-1 Performance INC",
-        "Correctional Industries-DOC",
-        "Pioneer Human Services",
-        "Puget Sound Executive Srvces Inc",
-        "Client Network Services Inc",
-        "DOC Correctional Industries",
-        "Ricoh Usa Inc",
-        "Parametrix, Inc.",
-        "Phoenix Protective Corp.",
-        "ESD Financial Office",
-        "Northwest Envirometrics Inc",
-        "DES"
-      ]
+      "source": "datagov/chicago-public-schools-elementary-school-progress-report-card-2012-2013/files/rows.txt",
+      "fact": "In the 2012-2013 CPS elementary progress report card, there are 230 schools with Growth Overall Level \"Above Average\"; among them are Cleveland (609857), Hawthorne (609974), Poe (610132), Reinberg (610145), and 226 others.",
+      "subquestion": "Which schools in the 2012-2013 CPS elementary progress report card have Growth Overall Level \"Above Average\"?",
+      "answer": {
+        "Cleveland": "609857",
+        "Hawthorne": "609974",
+        "Poe": "610132",
+        "Reinberg": "610145",
+        "and 226 others": "..."
+      }
     },
     "3": {
-      "source": "datagov/agency-contracts-fiscal-year-2019/files/rows.txt",
-      "fact": "In fiscal year 2019, the top 20 Washington State contractors by contract count included: Sharp Electronics (374), DOC Correctional Industries (316), WSP USA Inc (196), A-1 Performance Inc (165), Parametrix (111), Imagesource Inc (100), Northwest Envirometrics (96), Regence Blueshield (95), Shi International Corp (84), Capital Business Machines (76), DES (75), Phoenix Protective Corp (75), Jacobs Engineering Group, Inc. (73, rank #13), Client Network Services (70), HDR Engineering, Inc. (67, rank #15), Talgo Inc (61), MISC CUSTOMER (60), OTB Solutions Group (51), HNTB Corporation (50, rank #19), Service Alternatives Inc (49).",
-      "subquestion": "Which contractors ranked in the top 20 by contract count in Washington State agency contracts in fiscal year 2019?",
-      "answer": [
-        "Sharp Electronics Corporation",
-        "DOC Correctional Industries",
-        "WSP USA Inc.",
-        "A-1 Performance Inc",
-        "Parametrix, Inc.",
-        "Imagesource Inc",
-        "Northwest Envirometrics Inc",
-        "Regence Blueshield",
-        "Shi International Corp",
-        "Capital Business Machines Inc",
-        "DES",
-        "Phoenix Protective Corp.",
-        "Jacobs Engineering Group, Inc.",
-        "Client Network Services Llc",
-        "HDR Engineering, Inc.",
-        "Talgo, Inc.",
-        "MISC CUSTOMER",
-        "OTB Solutions Group Llc",
-        "HNTB Corporation",
-        "Service Alternatives Inc."
-      ]
+      "source": "datagov/chicago-public-schools-elementary-school-progress-report-2013-2014/files/rows.txt",
+      "fact": "In the 2013-2014 CPS elementary progress report, there are 42 schools with My Voice, My School Overall Rating \"MODERATELY ORGANIZED\"; among them are Cleveland (609857), Hawthorne (609974), Poe (610132), Reinberg (610145), and 38 others.",
+      "subquestion": "Which schools in the 2013-2014 CPS elementary progress report have My Voice, My School Overall Rating \"MODERATELY ORGANIZED\"?",
+      "answer": {
+        "Cleveland": "609857",
+        "Hawthorne": "609974",
+        "Poe": "610132",
+        "Reinberg": "610145",
+        "and 38 others": "..."
+      }
     },
     "4": {
-      "source": "datagov/agency-contracts-fiscal-year-2020/files/rows.txt",
-      "fact": "In fiscal year 2020, the top 20 Washington State contractors by contract count included: JP Morgan Chase Bank NA (1055), WSP USA Inc (366), University of Washington (355), WA State DSHS (305), HDR Engineering, Inc. (248, rank #5), Parametrix (245), Washington State University (236), Shi International Corp (233), Department of Transportation (226), HNTB Corporation (172, rank #10), King County (154), Regence Blueshield (152), South Puget Sound Comm College (146), Jacobs Engineering Group, Inc. (144, rank #14), WA State Univ (142), Department of Children Youth and Families (127), Moda Health Plan (126), Lacey City (125), WSDOT (124), Department of Health (114).",
-      "subquestion": "Which contractors ranked in the top 20 by contract count in Washington State agency contracts in fiscal year 2020?",
-      "answer": [
-        "JP Morgan Chase Bank NA",
-        "WSP USA Inc.",
-        "University of Washington",
-        "WA State DSHS",
-        "HDR Engineering, Inc.",
-        "Parametrix, Inc.",
-        "Washington State University",
-        "Shi International Corp",
-        "Department of Transportation",
-        "HNTB Corporation",
-        "King County",
-        "Regence Blueshield",
-        "South Puget Sound Comm College",
-        "Jacobs Engineering Group, Inc.",
-        "WA State Univ",
-        "Department of Children, Youth, and Families",
-        "Moda Health Plan Inc",
-        "Lacey  City of",
-        "WSDOT",
-        "Department of Health"
-      ]
+      "source": "datagov/chicago-public-schools-school-progress-reports-sy1718/files/rows.txt",
+      "fact": "In school year 2017-18, there are 299 Chicago Public Schools with Student_Growth_Rating \"ABOVE AVERAGE\" or \"FAR ABOVE AVERAGE\"; among them are Cleveland (609857), Hawthorne (609974), Poe (610132), Reinberg (610145), and 295 others.",
+      "subquestion": "Which Chicago Public Schools had Student_Growth_Rating \"ABOVE AVERAGE\" or \"FAR ABOVE AVERAGE\" in school year 2017-18?",
+      "answer": {
+        "Cleveland": "609857",
+        "Hawthorne": "609974",
+        "Poe": "610132",
+        "Reinberg": "610145",
+        "and 295 others": "..."
+      }
     },
     "5": {
-      "source": "wikipedia/HDR,_Inc./content.txt",
-      "fact": "HDR, Inc. is an American design and engineering company based in Omaha, Nebraska. In 1917, the Henningson Engineering Company started as a civil engineering firm in Omaha, where HDR's headquarters remain.",
-      "subquestion": "For HDR Engineering (one of the contractors in the intersection of nodes 1-4), where is it based and in what year did the company start?",
-      "answer": "Omaha, Nebraska; 1917"
+      "source": "datagov/chicago-public-schools-school-locations-sy1516/files/rows.txt",
+      "fact": "In CPS School Locations SY2015-16, the four schools are in these community areas: Cleveland (609857) in Irving Park, Hawthorne (609974) in Lake View, Poe (610132) in Pullman, and Reinberg (610145) in Portage Park.",
+      "subquestion": "In which community areas are the schools that meet all four progress-report criteria located, according to CPS School Locations SY2015-16?",
+      "answer": {
+        "Cleveland": "Irving Park",
+        "Hawthorne": "Lake View",
+        "Poe": "Pullman",
+        "Reinberg": "Portage Park"
+      }
     },
     "6": {
-      "source": "wikipedia/Jacobs_Solutions/content.txt",
-      "fact": "Jacobs Engineering was founded in 1947, by Joseph J. Jacobs.",
-      "subquestion": "For Jacobs Engineering Group (from the intersection of nodes 1-4), in what year was it founded?",
-      "answer": "1947"
+      "source": "datagov/census-data-selected-socioeconomic-indicators-in-chicago-2008-2012/files/rows.txt",
+      "fact": "According to the Chicago Census Data (2008-2012), the per capita income for the community areas containing the four schools are: Irving Park $27,249, Lake View $60,058, Portage Park $24,336, and Pullman $20,588. Only Lake View is above $50,000.",
+      "subquestion": "Which of those community areas has per capita income above $50,000?",
+      "answer": {
+        "Lake View": "$60,058"
+      }
     },
     "7": {
-      "source": "wikipedia/HNTB/content.txt",
-      "fact": "HNTB Corporation is an American architectural and infrastructure design firm. Founded in 1914 in Kansas City, Missouri, HNTB began with the partnership made by Ernest Emmanuel Howard with the firm Waddell & Harrington, founded in 1907.",
-      "subquestion": "For HNTB Corporation (from the intersection of nodes 1-4), in what year was it founded?",
-      "answer": "1914"
+      "source": "wikipedia/Wrigley_Field/content.txt",
+      "fact": "Wrigley Field is a ballpark on the North Side of Chicago and is the home ballpark of Major League Baseball's Chicago Cubs. It is in the North Side community area of Lakeview in Chicago.",
+      "subquestion": "Which MLB team plays at the MLB stadium in the Lakeview community area (<node_6 answer>)?",
+      "answer": "Chicago Cubs"
     },
     "8": {
-      "source": "datagov/active-construction-projects/files/rows.txt",
-      "fact": "As of the March 2023 NY State active construction projects snapshot, Jacobs Project Management Co. served as Construction Manager on 3 projects (Central New York Psychiatric Center Rehab Bldg 39, City College of New York CCNY-Compton Goethals & Baskerville Hall, and Queens College Razran Hall Energy). Neither HDR Engineering nor HNTB Corporation appear as Construction Manager on any of the 77 active construction projects.",
-      "subquestion": "Of the three engineering contractors in the intersection (Jacobs Engineering Group, HNTB Corporation, HDR Engineering), which have zero NY State construction manager projects?",
-      "answer": [
-        "HDR Engineering, Inc.",
-        "HNTB Corporation"
-      ]
-    },
-    "9": {
-      "source": "wikipedia/Omaha,_Nebraska/content.txt",
-      "fact": "Omaha's pioneer period began in 1854, when the city was founded along the Missouri River. Logan Fontenelle, an interpreter for the Omaha Tribe, was important during the United States negotiations with Omaha leaders in 1853-1854 about ceding land to the United States prior to settlement.",
-      "subquestion": "In the city where the company identified by intersecting the founded-after-1914 companies (from nodes 5-7) with the zero-CM-projects companies (from node 8) is based, which Native American interpreter helped negotiate the 1853-1854 land cession that led to the city's founding?",
-      "answer": "Logan Fontenelle"
-    },
-    "10": {
-      "source": "wikipedia/Logan_Fontenelle/content.txt",
-      "fact": "Logan Fontenelle (May 6, 1825 \u2013 July 16, 1855), also known as Shon-ga-ska (White Horse), was a trader of Omaha and French ancestry, who served for years as an interpreter to the US Indian agent at the Bellevue Agency in Nebraska. He was especially important during the United States negotiations with Omaha leaders in 1853\u20131854 about ceding land to the United States prior to settlement.",
-      "subquestion": "In what year was <node_9 answer> born?",
-      "answer": "1825"
+      "source": "wikipedia/Chicago_Cubs/content.txt",
+      "fact": "The Chicago Cubs article includes the category \"Baseball teams established in 1876\" (and \"1876 establishments in Illinois\"), indicating the team was established in 1876.",
+      "subquestion": "In what year was that MLB team (<node_7 answer>) established?",
+      "answer": "1876"
     }
   },
   "reasoning_chain": [
-    "HOP 1 (d=4, data.gov agency contracts - nodes 1-4):",
-    "  Node 1: Top 20 contractors by contract count in WA State FY 2017 -> includes HDR, Jacobs, HNTB",
-    "  Node 2: Top 20 contractors by contract count in WA State FY 2018 -> includes HDR, Jacobs, HNTB",
-    "  Node 3: Top 20 contractors by contract count in WA State FY 2019 -> includes HDR, Jacobs, HNTB",
-    "  Node 4: Top 20 contractors by contract count in WA State FY 2020 -> includes HDR, Jacobs, HNTB",
-    "  Intersection of nodes 1-4: Contractors in top 20 all four years -> {Jacobs Engineering Group, HNTB Corporation, HDR Engineering}",
+    "HOP 1 (d=4, data.gov CPS progress reports - nodes 1-4):",
+    "  Node 1: 2011-2012 CPS Progress Report Cards, elementary schools with CPS Performance Policy Level \"Level 1\" -> 127 schools",
+    "  Node 2: 2012-2013 CPS elementary progress report card, Growth Overall Level \"Above Average\" -> 230 schools",
+    "  Node 3: 2013-2014 CPS elementary progress report, My Voice, My School Overall Rating \"MODERATELY ORGANIZED\" -> 42 schools",
+    "  Node 4: 2017-2018 CPS progress reports, Student_Growth_Rating \"ABOVE AVERAGE\" or \"FAR ABOVE AVERAGE\" -> 299 schools",
+    "  Intersection of nodes 1-4: {Cleveland, Hawthorne, Poe, Reinberg} (4 schools)",
     "",
-    "HOP 2 (d=4, company founding/NY projects - nodes 5-8):",
-    "  Node 5: HDR is based in Omaha and started in 1917",
-    "  Node 6: Jacobs Engineering was founded in 1947",
-    "  Node 7: HNTB Corporation was founded in 1914",
-    "  From nodes 5-7: Founded after 1914 -> {HDR (1917), Jacobs (1947)}",
-    "  Node 8: Zero NY State construction manager projects -> {HDR, HNTB}",
-    "  Intersection -> {HDR Engineering}",
+    "HOP 2 (d=2, data.gov School Locations + Census - nodes 5-6):",
+    "  Node 5 (School Locations SY2015-16): Community areas for the 4 schools -> Irving Park, Lake View, Pullman, Portage Park",
+    "  Node 6 (Census Data): Per capita income > $50,000 -> Lake View only",
+    "  Result: Hawthorne is the only school in a community area with per capita income > $50,000 (Lake View)",
     "",
-    "HOP 3 (d=1, Wikipedia Omaha - node 9):",
-    "  Node 9: Omaha land-cession negotiations identify interpreter Logan Fontenelle",
+    "HOP 3 (d=1, Wikipedia Wrigley Field - node 7):",
+    "  Node 7: Wrigley Field is in the Lakeview community area and is the home ballpark of the Chicago Cubs",
     "",
-    "HOP 4 (d=1, Wikipedia Logan Fontenelle - node 10):",
-    "  Node 10: Logan Fontenelle was born in 1825",
+    "HOP 4 (d=1, Wikipedia Chicago Cubs - node 8):",
+    "  Node 8: The Chicago Cubs were established in 1876",
     "",
-    "Final answer: 1825"
+    "Final answer: 1876"
   ],
   "verdict": "pass",
   "datasets_used": [
-    "HDR,_Inc.",
-    "HNTB",
-    "Jacobs_Solutions",
-    "Logan_Fontenelle",
-    "Omaha,_Nebraska",
-    "active-construction-projects",
-    "agency-contracts-fiscal-year-2017",
-    "agency-contracts-fiscal-year-2018",
-    "agency-contracts-fiscal-year-2019",
-    "agency-contracts-fiscal-year-2020"
+    "Chicago_Cubs",
+    "Wrigley_Field",
+    "census-data-selected-socioeconomic-indicators-in-chicago-2008-2012",
+    "chicago-public-schools-elementary-school-progress-report-2013-2014",
+    "chicago-public-schools-elementary-school-progress-report-card-2012-2013",
+    "chicago-public-schools-progress-report-cards-2011-2012",
+    "chicago-public-schools-school-locations-sy1516",
+    "chicago-public-schools-school-progress-reports-sy1718"
+  ],
+  "reasoning_hops": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "reasoning": "Node 1: 2011-2012 CPS Progress Report Cards, elementary schools with CPS Performance Policy Level \"Level 1\" -> 127 schools Node 2: 2012-2013 CPS elementary progress report card, Growth Overall Level \"Above Average\" -> 230 schools Node 3: 2013-2014 CPS elementary progress report, My Voice, My School Overall Rating \"MODERATELY ORGANIZED\" -> 42 schools Node 4: 2017-2018 CPS progress reports, Student_Growth_Rating \"ABOVE AVERAGE\" or \"FAR ABOVE AVERAGE\" -> 299 schools Intersection of nodes 1-4: {Cleveland, Hawthorne, Poe, Reinberg} (4 schools)",
+      "answer": "299 schools"
+    },
+    {
+      "hop": 2,
+      "node_ids": [
+        5,
+        6
+      ],
+      "reasoning": "Node 5 (School Locations SY2015-16): Community areas for the 4 schools -> Irving Park, Lake View, Pullman, Portage Park Node 6 (Census Data): Per capita income > $50,000 -> Lake View only Result: Hawthorne is the only school in a community area with per capita income > $50,000 (Lake View)",
+      "answer": "Hawthorne is the only school in a community area with per capita income > $50,000 (Lake View)"
+    },
+    {
+      "hop": 3,
+      "node_ids": [
+        7
+      ],
+      "reasoning": "Node 7: Wrigley Field is in the Lakeview community area and is the home ballpark of the Chicago Cubs",
+      "answer": "Chicago Cubs"
+    },
+    {
+      "hop": 4,
+      "node_ids": [
+        8
+      ],
+      "reasoning": "Node 8: The Chicago Cubs were established in 1876",
+      "answer": "1876"
+    }
   ]
 }

@@ -1,77 +1,115 @@
 {
-  "question": "Among the Missouri Department of Corrections, the Missouri Department of Social Services, and the Missouri Department of Transportation, which had the highest average employee count from 2021 through 2023? In that agency's headquarters city, a historically Black university was founded. Who founded that university? Return the name only. Your response should be in the format [Answer].",
-  "answer": "James Milton Turner",
+  "question": "Among Washington, DC wards 2 and 5, identify which ward had the more frequent street sweeping schedule from 2022 to 2024. In that ward, find the charter school whose serving spans grades 8 and 9, and is named after a famous person. What county is that person's birthplace located in? Please return the county only, i.e. `XX County`. Your response should be in the format [Answer].",
+  "answer": "Ulster County",
   "nodes": {
     "1": {
-      "source": "datagov/2021-state-employee-pay/v1/files/rows.csv",
-      "fact": "According to Missouri state employee pay data for calendar year 2021, CORRECTIONS had 12,530 employees, SOCIAL SERVICES had 8,362 employees, and TRANSPORTATION had 7,170 employees.",
-      "subquestion": "Among CORRECTIONS, SOCIAL SERVICES, and TRANSPORTATION, which had the highest average employee count across 2021-2023? (Filter for this node: Agency Name in {CORRECTIONS, SOCIAL SERVICES, TRANSPORTATION}; count rows by Agency Name.)",
+      "source": "datagov/street-sweeping-schedule-2022/files/data.txt",
+      "fact": "In the 2022 Street Sweeping Schedule dataset, Ward 2 has 72 entries and Ward 5 has 80 entries.",
+      "subquestion": "Among the wards 2 and 5, which ward had the higher average number of street-sweeping schedule entries across 2022-2024? (Filter for this node: 2022 file; WARD in {2,5}; count rows by WARD.)",
       "answer": {
-        "CORRECTIONS": 12530,
-        "SOCIAL SERVICES": 8362,
-        "TRANSPORTATION": 7170
+        "Ward 2": 72,
+        "Ward 5": 80
       }
     },
     "2": {
-      "source": "datagov/2022-state-employee-pay/v1/files/rows.csv",
-      "fact": "According to Missouri state employee pay data for calendar year 2022, CORRECTIONS had 12,380 employees, SOCIAL SERVICES had 8,723 employees, and TRANSPORTATION had 6,917 employees.",
-      "subquestion": "Among CORRECTIONS, SOCIAL SERVICES, and TRANSPORTATION, which had the highest average employee count across 2021-2023? (Filter for this node: Agency Name in {CORRECTIONS, SOCIAL SERVICES, TRANSPORTATION}; count rows by Agency Name.)",
+      "source": "datagov/street-sweeping-schedule-2023/files/data.txt",
+      "fact": "In the 2023 Street Sweeping Schedule dataset, Ward 2 has 54 entries and Ward 5 has 83 entries.",
+      "subquestion": "Among the wards 2 and 5, which ward had the higher average number of street-sweeping schedule entries across 2022-2024? (Filter for this node: 2023 file; WARD in {2,5}; count rows by WARD.)",
       "answer": {
-        "CORRECTIONS": 12380,
-        "SOCIAL SERVICES": 8723,
-        "TRANSPORTATION": 6917
+        "Ward 2": 54,
+        "Ward 5": 83
       }
     },
     "3": {
-      "source": "datagov/2023-state-employee-pay/v1/files/rows.csv",
-      "fact": "According to Missouri state employee pay data for calendar year 2023, CORRECTIONS had 13,107 employees, SOCIAL SERVICES had 8,932 employees, and TRANSPORTATION had 6,956 employees. Computing averages: CORRECTIONS avg = 12,672, SOCIAL SERVICES avg = 8,672, TRANSPORTATION avg = 7,014. CORRECTIONS has the highest average.",
-      "subquestion": "Among CORRECTIONS, SOCIAL SERVICES, and TRANSPORTATION, which had the highest average employee count across 2021-2023? (Filter for this node: Agency Name in {CORRECTIONS, SOCIAL SERVICES, TRANSPORTATION}; count rows by Agency Name.)",
-      "answer": "CORRECTIONS"
+      "source": "datagov/street-sweeping-schedule-2024/files/data.txt",
+      "fact": "In the 2024 Street Sweeping Schedule dataset, Ward 2 has 54 entries and Ward 5 has 87 entries.",
+      "subquestion": "Among the wards 2 and 5, which ward had the higher average number of street-sweeping schedule entries across 2022-2024? (Filter for this node: 2024 file; WARD in {2,5}; count rows by WARD.)",
+      "answer": {
+        "Ward 2": 54,
+        "Ward 5": 87
+      }
     },
     "4": {
-      "source": "wikipedia/Missouri_Department_of_Corrections/content.txt",
-      "fact": "The Missouri Department of Corrections has its headquarters in Missouri's capital of Jefferson City.",
-      "subquestion": "What city is the headquarters of the agency with the highest average employee count located in?",
-      "answer": "Jefferson City"
+      "source": "datagov/dc-charter-schools/files/data.txt",
+      "fact": "In the DC Charter Schools dataset, the only Ward 5 school with GRADES = '6th-9th' is Sojourner Truth PCS.",
+      "subquestion": "Which charter school in the ward (from hop 1) spans grade 8 and grade 9? (Filter for this node: WARD == 5; GRADES include 8 and 9 in the range.)",
+      "answer": "Sojourner Truth PCS"
     },
     "5": {
-      "source": "wikipedia/Jefferson_City,_Missouri/content.txt",
-      "fact": "Jefferson City is home to Lincoln University, a public historically Black university founded in 1866.",
-      "subquestion": "What is the historically Black university located in Jefferson City?",
-      "answer": "Lincoln University"
+      "source": "wikipedia/Sojourner_Truth/content.txt",
+      "fact": "Sojourner Truth was born into slavery in Swartekill, New York.",
+      "subquestion": "The charter school identified (from hop 2) includes the name 'Sojourner Truth'. According to her biography, where was she born?",
+      "answer": "Swartekill, New York"
     },
     "6": {
-      "source": "wikipedia/Lincoln_University_(Missouri)/content.txt",
-      "fact": "Lincoln University was founded in 1866. The 62nd Colored Infantry regiment raised $6,300 to set up a Black school, headed by a white abolitionist officer, Richard Foster, and founded by James Milton Turner.",
-      "subquestion": "Who founded Lincoln University?",
-      "answer": "James Milton Turner"
+      "source": "wikipedia/Rifton,_New_York/content.txt",
+      "fact": "Rifton is a hamlet (and census-designated place) in Ulster County, New York, and Swartekill was one of the hamlets encompassed in Rifton's former village.",
+      "subquestion": "Swartekill, New York (from hop 3) is described in the Rifton, New York article; what county is Rifton in?",
+      "answer": "Ulster County, New York"
     }
   },
   "reasoning_chain": [
-    "HOP 1 (d=3, employee counts 2021-2023 - nodes 1-3):",
-    "  Node 1 (2021): CORRECTIONS=12,530; SOCIAL SERVICES=8,362; TRANSPORTATION=7,170",
-    "  Node 2 (2022): CORRECTIONS=12,380; SOCIAL SERVICES=8,723; TRANSPORTATION=6,917",
-    "  Node 3 (2023): CORRECTIONS=13,107; SOCIAL SERVICES=8,932; TRANSPORTATION=6,956",
-    "  Averages: CORRECTIONS=12,672 > SOCIAL SERVICES=8,672 > TRANSPORTATION=7,014",
-    "  Result: Missouri Department of Corrections",
+    "HOP 1 (d=3, street sweeping schedule 2022-2024 - nodes 1-3):",
+    "  Node 1: 2022 schedule rows -> Ward 2 72; Ward 5 80",
+    "  Node 2: 2023 schedule rows -> Ward 2 54; Ward 5 83",
+    "  Node 3: 2024 schedule rows -> Ward 2 54; Ward 5 87",
+    "  Average schedule rows (2022-2024): Ward 5 83.3 > Ward 2 60.0",
+    "  Result: Ward 5",
     "",
-    "HOP 2 (d=1, Missouri Department of Corrections - node 4):",
-    "  Node 4: Headquarters city -> Jefferson City",
+    "HOP 2 (d=1, DC charter schools - node 4):",
+    "  Node 4: Ward 5 charter school spanning grade 8 and grade 9 -> Sojourner Truth PCS",
     "",
-    "HOP 3 (d=1, Jefferson City - node 5):",
-    "  Node 5: Lincoln University is the historically Black university in Jefferson City",
+    "HOP 3 (d=1, Wikipedia Sojourner Truth - node 5):",
+    "  Node 5: Sojourner Truth born in Swartekill, New York",
     "",
-    "HOP 4 (d=1, Lincoln University - node 6):",
-    "  Node 6: Founded by James Milton Turner",
-    "  Final answer: James Milton Turner"
+    "HOP 4 (d=1, Wikipedia Rifton, New York - node 6):",
+    "  Node 6: Rifton (which includes the former Swartekill hamlet) is in Ulster County, New York",
+    "",
+    "Final answer: Ulster County"
   ],
   "verdict": "pass",
   "datasets_used": [
-    "2021-state-employee-pay",
-    "2022-state-employee-pay",
-    "2023-state-employee-pay",
-    "Missouri_Department_of_Corrections",
-    "Jefferson_City,_Missouri",
-    "Lincoln_University_(Missouri)"
+    "street-sweeping-schedule-2022",
+    "street-sweeping-schedule-2023",
+    "street-sweeping-schedule-2024",
+    "dc-charter-schools",
+    "Sojourner_Truth",
+    "Rifton,_New_York"
+  ],
+  "reasoning_hops": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1,
+        2,
+        3
+      ],
+      "reasoning": "Node 1: 2022 schedule rows -> Ward 2 72; Ward 5 80 Node 2: 2023 schedule rows -> Ward 2 54; Ward 5 83 Node 3: 2024 schedule rows -> Ward 2 54; Ward 5 87 Average schedule rows (2022-2024): Ward 5 83.3 > Ward 2 60.0 Result: Ward 5",
+      "answer": "Ward 5"
+    },
+    {
+      "hop": 2,
+      "node_ids": [
+        4
+      ],
+      "reasoning": "Node 4: Ward 5 charter school spanning grade 8 and grade 9 -> Sojourner Truth PCS",
+      "answer": "Sojourner Truth PCS"
+    },
+    {
+      "hop": 3,
+      "node_ids": [
+        5
+      ],
+      "reasoning": "Node 5: Sojourner Truth born in Swartekill, New York",
+      "answer": "Swartekill, New York"
+    },
+    {
+      "hop": 4,
+      "node_ids": [
+        6
+      ],
+      "reasoning": "Node 6: Rifton (which includes the former Swartekill hamlet) is in Ulster County, New York",
+      "answer": "Ulster County"
+    }
   ]
 }

@@ -1,0 +1,77 @@
+{
+  "question": "In the year where the 34th annual Los Angeles Marathon was held, find the geo area where the Los Angeles Police Department has reported the most Homicide arrests, then identify the most common crime code in that area of the same year, and report the number of incidents of that crime code occurred in the same area in 2021. Your response should be in the format [Answer].",
+  "answer": "1740",
+  "nodes": {
+    "1": {
+      "source": "wikipedia/2019_Los_Angeles_Marathon/content.txt",
+      "fact": "The 2019 Los Angeles Marathon, the 34th annual edition, was held on March 24, 2019.",
+      "subquestion": "What year did the 34th annual Los Angeles Marathon take place?",
+      "answer": "2019"
+    },
+    "2": {
+      "source": "datagov/arrest-data-from-2010-to-2019/files/rows.txt",
+      "fact": "In 2019, the area with the most Homicide arrests is 77th Street (22 arrests).",
+      "subquestion": "In <node_1 answer> arrest data, which area has the most Homicide arrests?",
+      "answer": "77th Street"
+    },
+    "3": {
+      "source": "datagov/crime-data-from-2010-to-2019/files/rows.txt",
+      "fact": "In 2019 crime data for 77th Street, the most common crime description is VEHICLE - STOLEN (1333 incidents).",
+      "subquestion": "In <node_1 answer> crime data, within area <node_2 answer>, which crime description is most common?",
+      "answer": "VEHICLE - STOLEN"
+    },
+    "4": {
+      "source": "datagov/crime-data-from-2020-to-present/files/rows.txt",
+      "fact": "In 2021 crime data, 77th Street has 1740 incidents with crime description VEHICLE - STOLEN.",
+      "subquestion": "In 2021 crime data, how many incidents of <node_3 answer> occurred in area <node_2 answer>?",
+      "answer": "1740"
+    }
+  },
+  "reasoning_chain": [
+    "Node 1: The 34th annual Los Angeles Marathon held on March 24 took place in 2019.",
+    "Node 2 depends on node 1: In 2019 arrest data, the area with the most Homicide arrests is 77th Street.",
+    "Node 3 depends on node 2: In 2019 crime data for 77th Street, the most common description is VEHICLE - STOLEN.",
+    "Node 4 depends on node 3: In 2021 crime data for 77th Street, VEHICLE - STOLEN incidents = 1740.",
+    "Final answer: 1740"
+  ],
+  "datasets_used": [
+    "2019_Los_Angeles_Marathon",
+    "arrest-data-from-2010-to-2019",
+    "crime-data-from-2010-to-2019",
+    "crime-data-from-2020-to-present"
+  ],
+  "reasoning_hops": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1
+      ],
+      "reasoning": "Node 1: The 34th annual Los Angeles Marathon held on March 24 took place in 2019.",
+      "answer": "2019"
+    },
+    {
+      "hop": 2,
+      "node_ids": [
+        2
+      ],
+      "reasoning": "Node 2 depends on node 1: In 2019 arrest data, the area with the most Homicide arrests is 77th Street.",
+      "answer": "77th Street"
+    },
+    {
+      "hop": 3,
+      "node_ids": [
+        3
+      ],
+      "reasoning": "Node 3 depends on node 2: In 2019 crime data for 77th Street, the most common description is VEHICLE - STOLEN.",
+      "answer": "VEHICLE - STOLEN"
+    },
+    {
+      "hop": 4,
+      "node_ids": [
+        4
+      ],
+      "reasoning": "Node 4 depends on node 3: In 2021 crime data for 77th Street, VEHICLE - STOLEN incidents = 1740.",
+      "answer": "1740"
+    }
+  ]
+}

@@ -1,112 +1,194 @@
 {
-  "question": "Across 2021-2023, which Missouri state agency stayed in the top five for professional services spending and also had the highest average employee count? In its headquarters city, what historically Black university is located? Return the university name only. Your response should be in the format [Answer].",
-  "answer": "Lincoln University",
+  "question": "Identify the Chicago city department that consistently ranked in the top five for ordinance appropriations (with non-zero budget) and also had the highest average salary budget recommendations from 2019 to 2021. Who was the first head of that department? Return the person's name only. Your response should be in the format [Answer].",
+  "answer": "O. W. Wilson",
   "nodes": {
     "1": {
-      "source": "datagov/2021-state-expenditures/v1/files/rows.csv",
-      "fact": "According to Missouri state expenditure data for fiscal year 2021, the top 5 agencies by Professional Services spending were: SOCIAL SERVICES ($218,760,336.88), CORRECTIONS ($168,860,817.63), PUBLIC SAFETY ($99,478,227.23), TRANSPORTATION ($77,432,677.01), and ELEMENTARY AND SECONDARY EDUCATION ($60,049,132.30).",
-      "subquestion": "Which Missouri state agencies were in the top 5 for professional services spending every year from 2021 to 2023? (Filter for this node: Category Description == 'PROFESSIONAL SERVICES'; group by Agency Name; sum Payments Total; rank desc; take top 5.)",
+      "source": "datagov/budget-2019-budget-ordinance-appropriations/files/rows.txt",
+      "fact": "According to the 2019 Chicago Budget Ordinance Appropriations dataset, the top 5 departments by total ordinance amount were: 99 FINANCE GENERAL ($4,947,717,643.00), 57 CPD ($1,656,002,057.00), 85 AVIATION ($911,289,787.00), 59 CFD ($652,282,316.00), and 50 DFSS ($633,571,744.00).",
+      "subquestion": "Which department numbers were in the top 5 by total ordinance appropriation in each year 2019-2021? (Filter for this node: group by DEPARTMENT NUMBER; sum 2019 ORDINANCE (AMOUNT $); rank desc; take top 5.)",
       "answer": [
-        "SOCIAL SERVICES",
-        "CORRECTIONS",
-        "PUBLIC SAFETY",
-        "TRANSPORTATION",
-        "ELEMENTARY AND SECONDARY EDUCATION"
+        99,
+        57,
+        85,
+        59,
+        50
       ]
     },
     "2": {
-      "source": "datagov/2022-state-expenditures/v1/files/rows.csv",
-      "fact": "According to Missouri state expenditure data for fiscal year 2022, the top 5 agencies by Professional Services spending were: SOCIAL SERVICES ($231,054,160.78), CORRECTIONS ($187,409,956.85), TRANSPORTATION ($96,697,827.49), PUBLIC SAFETY ($78,309,603.84), and ELEMENTARY AND SECONDARY EDUCATION ($76,114,201.40).",
-      "subquestion": "Which Missouri state agencies were in the top 5 for professional services spending every year from 2021 to 2023? (Filter for this node: Category Description == 'PROFESSIONAL SERVICES'; group by Agency Name; sum Payments Total; rank desc; take top 5.)",
+      "source": "datagov/budget-2020-budget-ordinance-appropriations/files/rows.txt",
+      "fact": "According to the 2020 Chicago Budget Ordinance Appropriations dataset, the top 5 departments by total ordinance amount were: 99 FINANCE GENERAL ($5,914,554,145.00), 57 CPD ($1,762,078,349.00), 85 AVIATION ($871,219,092.00), 50 DFSS ($686,392,402.00), and 59 CFD ($674,228,297.00).",
+      "subquestion": "Which department numbers were in the top 5 by total ordinance appropriation in each year 2019-2021? (Filter for this node: group by DEPARTMENT NUMBER; sum 2020 ORDINANCE (AMOUNT $); rank desc; take top 5.)",
       "answer": [
-        "SOCIAL SERVICES",
-        "CORRECTIONS",
-        "TRANSPORTATION",
-        "PUBLIC SAFETY",
-        "ELEMENTARY AND SECONDARY EDUCATION"
+        99,
+        57,
+        85,
+        50,
+        59
       ]
     },
     "3": {
-      "source": "datagov/2023-state-expenditures/v1/files/rows.csv",
-      "fact": "According to Missouri state expenditure data for fiscal year 2023, the top 5 agencies by Professional Services spending were: CORRECTIONS ($255,301,312.93), SOCIAL SERVICES ($244,670,948.01), TRANSPORTATION ($135,596,241.67), OFFICE OF ADMINISTRATION ($114,422,442.83), and MENTAL HEALTH ($100,958,164.21).",
-      "subquestion": "Which Missouri state agencies were in the top 5 for professional services spending every year from 2021 to 2023? (Filter for this node: Category Description == 'PROFESSIONAL SERVICES'; group by Agency Name; sum Payments Total; rank desc; take top 5.)",
+      "source": "datagov/budget-2021-budget-ordinance-appropriations/files/rows.txt",
+      "fact": "According to the 2021 Chicago Budget Ordinance Appropriations dataset, the top 5 departments by total ordinance amount were: 99 FINANCE GENERAL ($5,681,317,598.00), 57 CPD ($1,698,735,503.00), 85 CDA ($1,141,154,450.00), 50 DFSS ($780,489,814.00), and 84 CDOT ($770,356,074.00).",
+      "subquestion": "Which department numbers were in the top 5 by total ordinance appropriation in each year 2019-2021? (Filter for this node: group by DEPARTMENT NUMBER; sum 2021 ORDINANCE (AMOUNT $); rank desc; take top 5.)",
       "answer": [
-        "CORRECTIONS",
-        "SOCIAL SERVICES",
-        "TRANSPORTATION",
-        "OFFICE OF ADMINISTRATION",
-        "MENTAL HEALTH"
+        99,
+        57,
+        85,
+        50,
+        84
       ]
     },
     "4": {
-      "source": "datagov/2021-state-employee-pay/v1/files/rows.csv",
-      "fact": "According to Missouri state employee pay data for calendar year 2021, among the agencies that were in the top 5 for professional services spending in 2021, 2022, and 2023 (CORRECTIONS, SOCIAL SERVICES, TRANSPORTATION), CORRECTIONS had 12,530 employees, SOCIAL SERVICES had 8,362 employees, and TRANSPORTATION had 7,170 employees.",
-      "subquestion": "Among the agencies in the hop 1 intersection {CORRECTIONS, SOCIAL SERVICES, TRANSPORTATION}, which had the highest average employee count across 2021-2023? (Filter for this node: Agency Name in {CORRECTIONS, SOCIAL SERVICES, TRANSPORTATION}; count rows by Agency Name.)",
+      "source": "datagov/budget-2019-budget-ordinance-positions-and-salaries/files/rows.txt",
+      "fact": "According to the 2019 Chicago Budget Ordinance Positions and Salaries dataset, total budgeted amounts for the hop 1 department numbers were: 57 ($1,293,487,079.00), 85 ($144,020,555.00), 50 ($42,342,535.00), and 99 ($0.00; no rows for that department code).",
+      "subquestion": "For the department numbers (from hop 1), what were the total budgeted amounts in the Budget Ordinance Positions and Salaries dataset for each year 2019-2021? (Filter for this node: DEPARTMENT CODE in hop 1 intersection {99, 57, 85, 50}; sum TOTAL BUDGETED AMOUNT by DEPARTMENT CODE.)",
       "answer": {
-        "CORRECTIONS": 12530,
-        "SOCIAL SERVICES": 8362,
-        "TRANSPORTATION": 7170
+        "50": 42342535.0,
+        "57": 1293487079.0,
+        "85": 144020555.0,
+        "99": 0.0
       }
     },
     "5": {
-      "source": "datagov/2022-state-employee-pay/v1/files/rows.csv",
-      "fact": "According to Missouri state employee pay data for calendar year 2022, CORRECTIONS had 12,380 employees, SOCIAL SERVICES had 8,723 employees, and TRANSPORTATION had 6,917 employees.",
-      "subquestion": "Among the agencies in the hop 1 intersection {CORRECTIONS, SOCIAL SERVICES, TRANSPORTATION}, which had the highest average employee count across 2021-2023? (Filter for this node: Agency Name in {CORRECTIONS, SOCIAL SERVICES, TRANSPORTATION}; count rows by Agency Name.)",
+      "source": "datagov/budget-2020-budget-ordinance-positions-and-salaries/files/rows.txt",
+      "fact": "According to the 2020 Chicago Budget Ordinance Positions and Salaries dataset, total budgeted amounts for the hop 1 department numbers were: 57 ($1,308,621,421.00), 85 ($159,362,510.00), 50 ($42,996,687.00), and 99 ($0.00; no rows for that department code).",
+      "subquestion": "For the department numbers (from hop 1), what were the total budgeted amounts in the Budget Ordinance Positions and Salaries dataset for each year 2019-2021? (Filter for this node: DEPARTMENT CODE in hop 1 intersection {99, 57, 85, 50}; sum TOTAL BUDGETED AMOUNT by DEPARTMENT CODE.)",
       "answer": {
-        "CORRECTIONS": 12380,
-        "SOCIAL SERVICES": 8723,
-        "TRANSPORTATION": 6917
+        "50": 42996687.0,
+        "57": 1308621421.0,
+        "85": 159362510.0,
+        "99": 0.0
       }
     },
     "6": {
-      "source": "datagov/2023-state-employee-pay/v1/files/rows.csv",
-      "fact": "According to Missouri state employee pay data for calendar year 2023, CORRECTIONS had 13,107 employees, SOCIAL SERVICES had 8,932 employees, and TRANSPORTATION had 6,956 employees. Computing averages: CORRECTIONS avg = 12,672, SOCIAL SERVICES avg = 8,672, TRANSPORTATION avg = 7,014. CORRECTIONS has the highest average.",
-      "subquestion": "Among the agencies in the hop 1 intersection {CORRECTIONS, SOCIAL SERVICES, TRANSPORTATION}, which had the highest average employee count across 2021-2023? (Filter for this node: Agency Name in {CORRECTIONS, SOCIAL SERVICES, TRANSPORTATION}; count rows by Agency Name.)",
-      "answer": "CORRECTIONS"
+      "source": "datagov/budget-2021-budget-ordinance-positions-and-salaries/files/rows.txt",
+      "fact": "According to the 2021 Chicago Budget Ordinance Positions and Salaries dataset, total budgeted amounts for the hop 1 department numbers were: 57 ($1,277,019,448.00), 85 ($158,941,618.00), 50 ($43,046,519.00), and 99 ($0.00; no rows for that department code).",
+      "subquestion": "For the department numbers (from hop 1), what were the total budgeted amounts in the Budget Ordinance Positions and Salaries dataset for each year 2019-2021? (Filter for this node: DEPARTMENT CODE in hop 1 intersection {99, 57, 85, 50}; sum TOTAL BUDGETED AMOUNT by DEPARTMENT CODE.)",
+      "answer": {
+        "50": 43046519.0,
+        "57": 1277019448.0,
+        "85": 158941618.0,
+        "99": 0.0
+      }
     },
     "7": {
-      "source": "wikipedia/Missouri_Department_of_Corrections/content.txt",
-      "fact": "The Missouri Department of Corrections has its headquarters in Missouri's capital of Jefferson City.",
-      "subquestion": "What city is the headquarters of the agency with the highest average employee count located in?",
-      "answer": "Jefferson City"
+      "source": "datagov/budget-2019-budget-recommendations-positions-and-salaries/files/rows.txt",
+      "fact": "According to the 2019 Chicago Budget Recommendations Positions and Salaries dataset, total budgeted amounts for the hop 2 department codes were: 57 (Chicago Police Department) $1,293,460,481.00; 85 (Chicago Department of Aviation) $144,015,863.00; 50 (Department of Family and Support Services) $42,342,535.00.",
+      "subquestion": "For the department codes (from hop 2), what were the total budgeted amounts in the Budget Recommendations Positions and Salaries dataset for each year 2019-2021? (Filter for this node: DEPARTMENT CODE in hop 2 list {57, 85, 50}; sum TOTAL BUDGETED AMOUNT by DEPARTMENT CODE.)",
+      "answer": {
+        "50": 42342535.0,
+        "57": 1293460481.0,
+        "85": 144015863.0
+      }
     },
     "8": {
-      "source": "wikipedia/Jefferson_City,_Missouri/content.txt",
-      "fact": "Jefferson City is home to Lincoln University, a public historically Black university founded in 1866.",
-      "subquestion": "What is the historically Black university located in Jefferson City?",
-      "answer": "Lincoln University"
+      "source": "datagov/budget-2020-budget-recommendations-positions-and-salaries/files/rows.txt",
+      "fact": "According to the 2020 Chicago Budget Recommendations Positions and Salaries dataset, total budgeted amounts for the hop 2 department codes were: 57 (Chicago Police Department) $1,308,615,601.00; 85 (Chicago Department of Aviation) $159,389,114.00; 50 (Department of Family and Support Services) $42,996,687.00.",
+      "subquestion": "For the department codes (from hop 2), what were the total budgeted amounts in the Budget Recommendations Positions and Salaries dataset for each year 2019-2021? (Filter for this node: DEPARTMENT CODE in hop 2 list {57, 85, 50}; sum TOTAL BUDGETED AMOUNT by DEPARTMENT CODE.)",
+      "answer": {
+        "50": 42996687.0,
+        "57": 1308615601.0,
+        "85": 159389114.0
+      }
+    },
+    "9": {
+      "source": "datagov/budget-2021-budget-recommendations-positions-and-salaries/files/rows.txt",
+      "fact": "According to the 2021 Chicago Budget Recommendations Positions and Salaries dataset, total budgeted amounts for the hop 2 department codes were: 57 (Chicago Police Department) $1,277,090,115.00; 85 (Chicago Department of Aviation) $158,946,654.00; 50 (Department of Family and Support Services) $43,048,415.00.",
+      "subquestion": "For the department codes (from hop 2), what were the total budgeted amounts in the Budget Recommendations Positions and Salaries dataset for each year 2019-2021? (Filter for this node: DEPARTMENT CODE in hop 2 list {57, 85, 50}; sum TOTAL BUDGETED AMOUNT by DEPARTMENT CODE.)",
+      "answer": {
+        "50": 43048415.0,
+        "57": 1277090115.0,
+        "85": 158946654.0
+      }
+    },
+    "10": {
+      "source": "wikipedia/Chicago_Police_Department/content.txt",
+      "fact": "Criminologist O. W. Wilson was brought on as Superintendent of Police, and served until 1967 when he retired. This position, in its current iteration, has existed as the head of the Chicago Police Department since 1960.",
+      "subquestion": "Who was brought on as Superintendent of Police when the position (current iteration) was established as head of the department (from hop 3)?",
+      "answer": "O. W. Wilson"
     }
   },
   "reasoning_chain": [
-    "HOP 1 (d=3, professional services spending 2021-2023 - nodes 1-3):",
-    "  Node 1 (2021): Top 5 = {SOCIAL SERVICES, CORRECTIONS, PUBLIC SAFETY, TRANSPORTATION, ELEMENTARY AND SECONDARY EDUCATION}",
-    "  Node 2 (2022): Top 5 = {SOCIAL SERVICES, CORRECTIONS, TRANSPORTATION, PUBLIC SAFETY, ELEMENTARY AND SECONDARY EDUCATION}",
-    "  Node 3 (2023): Top 5 = {CORRECTIONS, SOCIAL SERVICES, TRANSPORTATION, OFFICE OF ADMINISTRATION, MENTAL HEALTH}",
-    "  Intersection: {CORRECTIONS, SOCIAL SERVICES, TRANSPORTATION}",
+    "HOP 1 (d=3, Chicago budget ordinance appropriations 2019-2021 - nodes 1-3):",
+    "  Question: Which department numbers were in the top 5 by total ordinance appropriation in each year 2019-2021?",
+    "  Node 1: 2019 top 5 -> {99 FINANCE GENERAL, 57 CPD, 85 AVIATION, 59 CFD, 50 DFSS}",
+    "  Node 2: 2020 top 5 -> {99 FINANCE GENERAL, 57 CPD, 85 AVIATION, 50 DFSS, 59 CFD}",
+    "  Node 3: 2021 top 5 -> {99 FINANCE GENERAL, 57 CPD, 85 CDA, 50 DFSS, 84 CDOT}",
+    "  Answer: Intersection across 2019-2021 -> {99, 57, 85, 50}",
     "",
-    "HOP 2 (d=3, employee counts 2021-2023 - nodes 4-6):",
-    "  Node 4 (2021): CORRECTIONS=12,530; SOCIAL SERVICES=8,362; TRANSPORTATION=7,170",
-    "  Node 5 (2022): CORRECTIONS=12,380; SOCIAL SERVICES=8,723; TRANSPORTATION=6,917",
-    "  Node 6 (2023): CORRECTIONS=13,107; SOCIAL SERVICES=8,932; TRANSPORTATION=6,956",
-    "  Averages: CORRECTIONS=12,672 > SOCIAL SERVICES=8,672 > TRANSPORTATION=7,014",
-    "  Result: Missouri Department of Corrections",
+    "HOP 2 (d=3, Chicago budget ordinance positions and salaries 2019-2021 - nodes 4-6):",
+    "  Question: For the department numbers (from hop 1), what were the total budgeted amounts in the Budget Ordinance Positions and Salaries dataset for each year 2019-2021?",
+    "  Node 4: 2019 totals -> 57 $1,293,487,079.00; 85 $144,020,555.00; 50 $42,342,535.00; 99 $0.00",
+    "  Node 5: 2020 totals -> 57 $1,308,621,421.00; 85 $159,362,510.00; 50 $42,996,687.00; 99 $0.00",
+    "  Node 6: 2021 totals -> 57 $1,277,019,448.00; 85 $158,941,618.00; 50 $43,046,519.00; 99 $0.00",
+    "  Answer: Nonzero across all three years -> {57, 85, 50}",
     "",
-    "HOP 3 (d=1, Missouri Department of Corrections - node 7):",
-    "  Node 7: Headquarters city -> Jefferson City",
+    "HOP 3 (d=3, Chicago budget recommendations positions and salaries 2019-2021 - nodes 7-9):",
+    "  Question: For the department codes (from hop 2), what were the total budgeted amounts in the Budget Recommendations Positions and Salaries dataset for each year 2019-2021?",
+    "  Node 7: 2019 totals -> 57 Chicago Police Department $1,293,460,481.00; 85 Chicago Department of Aviation $144,015,863.00; 50 Department of Family and Support Services $42,342,535.00",
+    "  Node 8: 2020 totals -> 57 Chicago Police Department $1,308,615,601.00; 85 Chicago Department of Aviation $159,389,114.00; 50 Department of Family and Support Services $42,996,687.00",
+    "  Node 9: 2021 totals -> 57 Chicago Police Department $1,277,090,115.00; 85 Chicago Department of Aviation $158,946,654.00; 50 Department of Family and Support Services $43,048,415.00",
+    "  Average totals 2019-2021 -> 57 $1,293,055,399.00; 85 $154,117,210.33; 50 $42,795,879.00",
+    "  Answer: Chicago Police Department",
     "",
-    "HOP 4 (d=1, Jefferson City - node 8):",
-    "  Node 8: Lincoln University is the historically Black university in Jefferson City",
-    "  Final answer: Lincoln University"
+    "HOP 4 (d=1, Wikipedia Chicago Police Department - node 10):",
+    "  Question: Who was brought on as Superintendent of Police when the position (current iteration) was established as head of the department (from hop 3)?",
+    "  Node 10: Criminologist O. W. Wilson was brought on as Superintendent of Police; this position has existed as the head since 1960",
+    "  Answer: O. W. Wilson",
+    "",
+    "Final answer: O. W. Wilson"
   ],
   "verdict": "pass",
   "datasets_used": [
-    "2021-state-expenditures",
-    "2022-state-expenditures",
-    "2023-state-expenditures",
-    "2021-state-employee-pay",
-    "2022-state-employee-pay",
-    "2023-state-employee-pay",
-    "Missouri_Department_of_Corrections",
-    "Jefferson_City,_Missouri"
+    "Chicago_Police_Department",
+    "budget-2019-budget-ordinance-appropriations",
+    "budget-2019-budget-ordinance-positions-and-salaries",
+    "budget-2019-budget-recommendations-positions-and-salaries",
+    "budget-2020-budget-ordinance-appropriations",
+    "budget-2020-budget-ordinance-positions-and-salaries",
+    "budget-2020-budget-recommendations-positions-and-salaries",
+    "budget-2021-budget-ordinance-appropriations",
+    "budget-2021-budget-ordinance-positions-and-salaries",
+    "budget-2021-budget-recommendations-positions-and-salaries"
+  ],
+  "reasoning_hops": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1,
+        2,
+        3
+      ],
+      "reasoning": "Question: Which department numbers were in the top 5 by total ordinance appropriation in each year 2019-2021? Node 1: 2019 top 5 -> {99 FINANCE GENERAL, 57 CPD, 85 AVIATION, 59 CFD, 50 DFSS} Node 2: 2020 top 5 -> {99 FINANCE GENERAL, 57 CPD, 85 AVIATION, 50 DFSS, 59 CFD} Node 3: 2021 top 5 -> {99 FINANCE GENERAL, 57 CPD, 85 CDA, 50 DFSS, 84 CDOT} Answer: Intersection across 2019-2021 -> {99, 57, 85, 50}",
+      "answer": "{99, 57, 85, 50}"
+    },
+    {
+      "hop": 2,
+      "node_ids": [
+        4,
+        5,
+        6
+      ],
+      "reasoning": "Question: For the department numbers (from hop 1), what were the total budgeted amounts in the Budget Ordinance Positions and Salaries dataset for each year 2019-2021? Node 4: 2019 totals -> 57 $1,293,487,079.00; 85 $144,020,555.00; 50 $42,342,535.00; 99 $0.00 Node 5: 2020 totals -> 57 $1,308,621,421.00; 85 $159,362,510.00; 50 $42,996,687.00; 99 $0.00 Node 6: 2021 totals -> 57 $1,277,019,448.00; 85 $158,941,618.00; 50 $43,046,519.00; 99 $0.00 Answer: Nonzero across all three years -> {57, 85, 50}",
+      "answer": "{57, 85, 50}"
+    },
+    {
+      "hop": 3,
+      "node_ids": [
+        7,
+        8,
+        9
+      ],
+      "reasoning": "Question: For the department codes (from hop 2), what were the total budgeted amounts in the Budget Recommendations Positions and Salaries dataset for each year 2019-2021? Node 7: 2019 totals -> 57 Chicago Police Department $1,293,460,481.00; 85 Chicago Department of Aviation $144,015,863.00; 50 Department of Family and Support Services $42,342,535.00 Node 8: 2020 totals -> 57 Chicago Police Department $1,308,615,601.00; 85 Chicago Department of Aviation $159,389,114.00; 50 Department of Family and Support Services $42,996,687.00 Node 9: 2021 totals -> 57 Chicago Police Department $1,277,090,115.00; 85 Chicago Department of Aviation $158,946,654.00; 50 Department of Family and Support Services $43,048,415.00 Average totals 2019-2021 -> 57 $1,293,055,399.00; 85 $154,117,210.33; 50 $42,795,879.00 Answer: Chicago Police Department",
+      "answer": "57 $1,293,055,399.00; 85 $154,117,210.33; 50 $42,795,879.00"
+    },
+    {
+      "hop": 4,
+      "node_ids": [
+        10
+      ],
+      "reasoning": "Question: Who was brought on as Superintendent of Police when the position (current iteration) was established as head of the department (from hop 3)? Node 10: Criminologist O. W. Wilson was brought on as Superintendent of Police; this position has existed as the head since 1960 Answer: O. W. Wilson",
+      "answer": "O. W. Wilson"
+    }
   ]
 }

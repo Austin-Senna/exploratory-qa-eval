@@ -90,5 +90,42 @@
     "2009-2010-school-progress-report",
     "2013-2014-school-locations",
     "John_Wayne_Elementary_School"
+  ],
+  "reasoning_hops": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "reasoning": "Node 1: Top 5 elementary schools by environment score in 2006-07 (tie-break by SCHOOL name Z-A) -> {PS 034 OLIVER H PERRY, EARTH SCHOOL, PS 212 MIDTOWN WEST, PS 205 ALEXANDER GRAHAM BELL, PS 120 CARLOS TAPIA}. Node 2: Top 5 elementary schools by environment score in 2007-08 (tie-break by SCHOOL name Z-A) -> {P.S. 380 JOHN WAYNE ELEMENTARY, P.S. 172 BEACON SCHOOL OF EXCELLENCE, P.S. 120 CARLOS TAPIA, EXCELLENCE CHARTER SCHOOL OF BEDFORD STUYVESANT, P.S. 164 CAESAR RODNEY}. Node 3: Top 5 elementary schools by environment score in 2008-09 (tie-break by SCHOOL name Z-A) -> {P.S. X307 - EAMES PLACE, P.S. 380 JOHN WAYNE ELEMENTARY, P.S. 254, P.S. 172 BEACON SCHOOL OF EXCELLENCE, P.S. 157 BENJAMIN FRANKLIN}. Node 4: Top 5 elementary schools by environment score in 2009-10 (tie-break by SCHOOL name Z-A) -> {P.S. 380 John Wayne Elementary, P.S. 172 Beacon School of Excellence, Achievement First East New York School, Bronx Charter School for Excellence, P.S. 254}.",
+      "answer": "Top-5 yearly elementary-school sets for 2006-07 through 2009-10"
+    },
+    {
+      "hop": 2,
+      "node_ids": [
+        5
+      ],
+      "reasoning": "Node 5: schools appearing in the top-5 lists in at least three of the four years -> {P.S. 380 John Wayne Elementary, P.S. 172 Beacon School of Excellence}.",
+      "answer": "{P.S. 380 John Wayne Elementary, P.S. 172 Beacon School of Excellence}"
+    },
+    {
+      "hop": 3,
+      "node_ids": [
+        6
+      ],
+      "reasoning": "Node 6 depends on node 5: select the school in Bedford NTA -> P.S. 380 John Wayne Elementary.",
+      "answer": "P.S. 380 John Wayne Elementary"
+    },
+    {
+      "hop": 4,
+      "node_ids": [
+        7
+      ],
+      "reasoning": "Node 7 depends on the selected school: John Wayne Elementary School Day is October 28, which in MM/DD format is 10/28.",
+      "answer": "10/28"
+    }
   ]
 }
