@@ -37,7 +37,7 @@ The paper runs two conditions, both using the `preloaded` source mode:
 | Condition | Preloaded URIs | Planning toolkit |
 |---|---|---|
 | **Oracle-Sources** | ✅ | ❌ (basic prompting) |
-| **Oracle-Sources + Planning** | ✅ | ✅ (plan tool, skills plugin, summarize_context, loop nudge) |
+| **Oracle-Sources + Planning** | ✅ | ✅ (plan tool and loop nudge; skills plugin only with `--skills on`) |
 
 **Oracle-Sources** isolates downstream reasoning capability. **Oracle-Sources + Planning** tests whether planning scaffolding recovers failures from the first condition or whether those failures are intrinsic to tabular reasoning.
 
@@ -189,7 +189,7 @@ agent uses peek_file / query_file / execute_code / submit_answer
 - **Unit:** `skill_paths_for_modes(search_tool_mode="preloaded", ...)` returns paths containing `plan-*` and `query-data` but never a `discover-data-*` entry.
 - **Unit:** `TracePlugin` `submit_answer` branch writes a record with `tool="submit_answer"` and `answer_text` populated.
 - **Unit:** `failure_attribution.classify_task` returns the correct label on fixture traces covering each of the four categories.
-- **Integration:** 5-task Haiku smoke run with `--search_tool preloaded --agent_management naive` confirms the agent never invokes a search tool (none exist), opens the preloaded URIs via `peek_file`/`query_file`, and produces a `submit_answer` record in the trace.
+- **Integration:** 5-task Haiku smoke run with `--search_tool preloaded --plans naive` confirms the agent never invokes a search tool (none exist), opens the preloaded URIs via `peek_file`/`query_file`, and produces a `submit_answer` record in the trace.
 
 ## 8. Validation and execution
 

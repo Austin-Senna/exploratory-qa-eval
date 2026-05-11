@@ -227,6 +227,7 @@ def _parse_variant(variant: str) -> Dict[str, Optional[object]]:
         "search_tool": None,
         "search_results": None,
         "agent_management": None,
+        "computation_tool": "standard",
         "plan_skills": None,
         "k": None,
         "sc": None,
@@ -239,6 +240,8 @@ def _parse_variant(variant: str) -> Dict[str, Optional[object]]:
             out["search_results"] = _LETTER_TO_MODE.get(parts[idx + 1])
         elif token.startswith("plan") and len(token) > 4:
             out["agent_management"] = _LETTER_TO_MODE.get(token[4:])
+        elif token.startswith("compute") and len(token) > 7:
+            out["computation_tool"] = _LETTER_TO_MODE.get(token[7:])
         elif token == "skills" and idx + 1 < len(parts):
             out["plan_skills"] = parts[idx + 1]
         elif token.startswith("k") and token[1:].isdigit():
@@ -253,6 +256,7 @@ def _parse_variant_mode_codes(variant: str) -> Dict[str, Optional[str]]:
         "search": None,
         "results": None,
         "plan": None,
+        "compute": None,
         "skills": None,
         "k": None,
         "sc": None,
@@ -265,6 +269,8 @@ def _parse_variant_mode_codes(variant: str) -> Dict[str, Optional[str]]:
             out["results"] = parts[idx + 1]
         elif token.startswith("plan") and len(token) > 4:
             out["plan"] = token[4:]
+        elif token.startswith("compute") and len(token) > 7:
+            out["compute"] = token[7:]
         elif token == "skills" and idx + 1 < len(parts):
             out["skills"] = parts[idx + 1]
         elif token.startswith("k") and token[1:].isdigit():
@@ -287,6 +293,8 @@ def _compact_variant_label(variant: str, *, multiline: bool = False) -> str:
         parts.append(f"R:{_mode_display(_LETTER_TO_MODE.get(codes['results']))}")
     if codes.get("plan"):
         parts.append(f"P:{_mode_display(_LETTER_TO_MODE.get(codes['plan']))}")
+    if codes.get("compute") and _LETTER_TO_MODE.get(codes["compute"]) != "standard":
+        parts.append(f"C:{_mode_display(_LETTER_TO_MODE.get(codes['compute']))}")
     if codes.get("k") and codes.get("k") != "5":
         parts.append(f"k={codes['k']}")
     if codes.get("sc"):
@@ -314,6 +322,7 @@ def _variant_sort_key(variant: str) -> tuple:
         ideal_group,
         _MODE_PRIORITY.get(search_tool, 4),
         _MODE_PRIORITY.get(agent_management, 4),
+        _MODE_PRIORITY.get(axes.get("computation_tool"), 4),
         _MODE_PRIORITY.get(axes.get("search_results"), 4),
         axes.get("k") if axes.get("k") is not None else 10**9,
         axes.get("sc") if axes.get("sc") is not None else 10**9,
@@ -488,6 +497,7 @@ def _normalize_eval_row(row: dict, model: str, variant: str, csv_path: Path) -> 
     normalized["search_tool"] = axes["search_tool"]
     normalized["search_results"] = axes["search_results"]
     normalized["agent_management"] = axes["agent_management"]
+    normalized["computation_tool"] = axes["computation_tool"]
     normalized["plan_skills"] = axes["plan_skills"]
     normalized["k"] = axes["k"]
     normalized["sc"] = axes["sc"]
@@ -983,6 +993,7 @@ def _init_binned_outcome_row(model: str, variant: str, bin_labels: List[str]) ->
         "search_tool": axes["search_tool"],
         "search_results": axes["search_results"],
         "agent_management": axes["agent_management"],
+        "computation_tool": axes["computation_tool"],
         "plan_skills": axes["plan_skills"],
         "k": axes["k"],
         "sc": axes["sc"],
@@ -1063,6 +1074,7 @@ def build_summary(
             "search_tool": axes["search_tool"],
             "search_results": axes["search_results"],
             "agent_management": axes["agent_management"],
+            "computation_tool": axes["computation_tool"],
             "plan_skills": axes["plan_skills"],
             "k": axes["k"],
             "sc": axes["sc"],
@@ -1200,6 +1212,7 @@ def build_variant_summary(summary_rows: List[dict]) -> List[dict]:
             "search_tool": axes["search_tool"],
             "search_results": axes["search_results"],
             "agent_management": axes["agent_management"],
+            "computation_tool": axes["computation_tool"],
             "plan_skills": axes["plan_skills"],
             "k": axes["k"],
             "sc": axes["sc"],
@@ -1555,6 +1568,7 @@ def build_per_task_rows(
                 "search_tool": axes["search_tool"],
                 "search_results": axes["search_results"],
                 "agent_management": axes["agent_management"],
+                "computation_tool": axes["computation_tool"],
                 "plan_skills": axes["plan_skills"],
                 "k": axes["k"],
                 "sc": axes["sc"],
@@ -1584,6 +1598,7 @@ def build_per_task_rows(
         "search_tool",
         "search_results",
         "agent_management",
+        "computation_tool",
         "plan_skills",
         "k",
         "sc",
@@ -1601,6 +1616,15 @@ def build_per_task_rows(
 def build_per_task_retrieval_rows(task_metrics_by_key: Dict[str, Dict[str, dict]]) -> Tuple[List[dict], List[str]]:
     fieldnames = [
         "condition_model",
+        "model",
+        "variant",
+        "search_tool",
+        "search_results",
+        "agent_management",
+        "computation_tool",
+        "plan_skills",
+        "k",
+        "sc",
         "task_id",
         "search_calls_count",
         "gold_datasets_needed_count",
@@ -1613,6 +1637,8 @@ def build_per_task_retrieval_rows(task_metrics_by_key: Dict[str, Dict[str, dict]
     ]
     rows: List[dict] = []
     for key in sorted(task_metrics_by_key.keys(), key=_condition_model_sort_key):
+        model, variant = _split_cm_key(key)
+        axes = _parse_variant(variant)
         for task_metric in sorted(task_metrics_by_key[key].values(), key=lambda item: str(item.get("task_id", ""))):
             gold_ids_count = len(task_metric.get("gold_ids", []))
             retrieved_unique_count = len(task_metric.get("retrieved_dataset_ids", []))
@@ -1621,6 +1647,15 @@ def build_per_task_retrieval_rows(task_metrics_by_key: Dict[str, Dict[str, dict]
             rows.append(
                 {
                     "condition_model": key,
+                    "model": model,
+                    "variant": variant,
+                    "search_tool": axes["search_tool"],
+                    "search_results": axes["search_results"],
+                    "agent_management": axes["agent_management"],
+                    "computation_tool": axes["computation_tool"],
+                    "plan_skills": axes["plan_skills"],
+                    "k": axes["k"],
+                    "sc": axes["sc"],
                     "task_id": task_metric.get("task_id", ""),
                     "search_calls_count": int(task_metric.get("num_search_calls", 0) or 0),
                     "gold_datasets_needed_count": gold_ids_count,

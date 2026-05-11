@@ -52,10 +52,9 @@ Implemented by `build_management(...)` in `strands_evaluation/agent_with_mode.py
       - `prompts/search_ideal.txt`
 - Management tools:
   - `plan_ideal`
-  - `summarize_context`
 - Skills:
-  - enabled
-  - uses:
+  - disabled by default; enabled only with `--skills on`
+  - when enabled, uses:
     - `plan-ideal`
     - one discovery skill chosen by `search_tool`:
       - `discover-data-naive`
@@ -200,10 +199,9 @@ The `base_condition` is still carried in config for behavior selection and compa
       - `prompts/search_ideal.txt`
 - Management tools:
   - `plan`
-  - `summarize_context`
 - Skills:
-  - enabled
-  - uses:
+  - disabled by default; enabled only with `--skills on`
+  - when enabled, uses:
     - `plan-agent`
     - one discovery skill chosen by `search_tool`:
       - `discover-data-naive`
@@ -292,12 +290,11 @@ Implemented in `strands_evaluation/agent.py`.
     - `prompts/search_naive.txt`
 - Management tools:
   - `plan`
-  - `summarize_context`
 - Data tools:
   - standard file/query/download/execute/submit tool set
 - Skills:
-  - enabled
-  - uses:
+  - disabled by default; enabled only with `RunConfig.plan_skills_enabled=True`
+  - when enabled, uses:
     - `plan-agent`
     - `discover-data-naive`
     - `query-data`
@@ -343,7 +340,7 @@ Across both legacy and mode-based agents:
 - `search_ideal` controls ideal retrieval order through `source_sequence`
 - `plan_ideal` controls ideal planning context through `reasoning_chain_text`
 - `dataset_sequence` remains the plan-order context for reasoning-chain authoring
-- `plan-ideal` skill encourages the agent to turn the reasoning chain into a better execution plan
+- `plan-ideal` skill encourages the agent to turn the reasoning chain into a better execution plan when `--skills on` is enabled
 
 ### Legacy conditions
 
@@ -355,4 +352,6 @@ Across both legacy and mode-based agents:
 
 - `search_tool` controls which search tools exist
 - `search_results` controls how much result content is exposed
-- `agent_management` controls prompt source, planning tools, skills, and stagnation handling
+- `agent_management` controls prompt source and planning tools
+- `--skills {on|off}` controls whether the Strands AgentSkills planning/discovery plugin is attached; it defaults to off
+- managed `agent_management` modes still enable stagnation handling independently of the skills plugin

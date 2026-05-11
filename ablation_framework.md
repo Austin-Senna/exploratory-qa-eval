@@ -3,14 +3,19 @@
 ## What this adds
 The ablation system now runs **three independent axes** instead of one condition-only switch:
 
-- `search_tool`: `naive | standard | ideal`
-- `search_results`: `naive | standard | ideal`
+- `search_tool`: `naive | preloaded | standard | ideal`
+- `search_results`: `naive | ideal`
 - `agent_management`: `naive | standard | ideal`
+
+The Strands AgentSkills planning/discovery plugin is a separate opt-in switch:
+
+- `--skills {on|off}` / `RunConfig.plan_skills_enabled` (default: off)
 
 These are configured in `RunConfig` via:
 - `search_tool_mode`
 - `search_results_mode`
 - `agent_management_mode`
+- `plan_skills_enabled`
 
 ## `strands_evaluation/run_mode_eval.py`
 This is the new entrypoint for ablation runs.
@@ -18,15 +23,17 @@ This is the new entrypoint for ablation runs.
 ### CLI behavior
 It keeps the normal eval/search args (`--k`, `--search-calls`, `--task-dir`, `--all-tasks`, model args, etc.) and adds:
 
-- `--search_tool {naive|standard|ideal}`
-- `--search_results {naive|standard|ideal}`
-- `--agent_management {naive|standard|ideal}`
+- `--search_tool {naive|preloaded|standard|ideal}`
+- `--search_results {naive|ideal}`
+- `--plans {naive|standard|ideal}` (also accepted as `--agent_management`)
+- `--skills {on|off}`
 
 ### Variant labeling and outputs
 Variant label is built as:
 
-- `search_{n|d|i}_results_{n|d|i}_plan{n|d|i}`
+- `search_{n|p|d|i}_results_{n|i}_plan{n|d|i}`
 - optional suffixes: `_k{N}` and `_sc{N}`
+- skills suffix: `_skills_{on|off}`
 
 Output layout:
 
@@ -50,9 +57,11 @@ It builds a `ModeBundle` containing:
 - normalized mode values
 
 ### Mode normalization
-Each axis is normalized and validated to one of:
+Search/tool management axes are normalized and validated against their own supported modes:
 
-- `naive`, `standard`, `ideal`
+- `search_tool`: `naive`, `preloaded`, `standard`, `ideal`
+- `search_results`: `naive`, `ideal`
+- `agent_management`: `naive`, `standard`, `ideal`
 
 ### Search tool mapping (`search_tool`)
 - `naive`:
@@ -74,13 +83,15 @@ Each axis is normalized and validated to one of:
   - no skills/stagnation helper
 - `standard`:
   - loads condition B prompt (`prompts/condition_b.txt` fallback to base prompt)
-  - adds `[plan, summarize_context]`
-  - enables skills + stagnation plugin path
+  - adds `[plan]`
+  - enables stagnation handling
+  - attaches skills only when `--skills on`
 - `ideal`:
   - loads condition B prompt
   - injects the gold reasoning chain into the system prompt via `inject_reasoning_chain_prompt(...)` (under a `## GOLD REASONING CHAIN` section)
-  - adds `[plan_ideal, summarize_context]`
-  - enables skills and stagnation (same plugin stack as `standard`)
+  - adds `[plan_ideal]`
+  - enables stagnation handling
+  - attaches skills only when `--skills on`
 
 ---
 

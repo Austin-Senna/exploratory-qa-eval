@@ -22,7 +22,7 @@ CLI:
 
 ```bash
 python -m sana_evaluation.run_sana_eval \
-  --search-tool preloaded --search-results ideal --agent-management standard \
+  --search_tool preloaded --search_results ideal --plans standard \
   --sana-feature sprint --sana-feature cot --sana-feature results \
   --sprint-mode commitment --commitment-budget-calls 3 \
   --task-set tasks_mini --model gpt-5.4-nano

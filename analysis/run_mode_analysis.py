@@ -122,6 +122,7 @@ def _parse_variant(variant: str) -> Dict[str, Optional[object]]:
         "search_tool": None,
         "search_results": None,
         "agent_management": None,
+        "computation_tool": "standard",
         "plan_skills": None,
         "k": None,
         "sc": None,
@@ -134,6 +135,8 @@ def _parse_variant(variant: str) -> Dict[str, Optional[object]]:
             out["search_results"] = _LETTER_TO_MODE.get(parts[idx + 1])
         elif token.startswith("plan") and len(token) > 4:
             out["agent_management"] = _LETTER_TO_MODE.get(token[4:])
+        elif token.startswith("compute") and len(token) > 7:
+            out["computation_tool"] = _LETTER_TO_MODE.get(token[7:])
         elif token == "skills" and idx + 1 < len(parts):
             out["plan_skills"] = parts[idx + 1]
         elif token.startswith("k") and token[1:].isdigit():
@@ -498,6 +501,7 @@ def build_summary(
             "search_tool": axes["search_tool"],
             "search_results": axes["search_results"],
             "agent_management": axes["agent_management"],
+            "computation_tool": axes["computation_tool"],
             "plan_skills": axes["plan_skills"],
             "k": axes["k"],
             "sc": axes["sc"],
@@ -616,6 +620,7 @@ def build_variant_summary(summary_rows: List[dict]) -> List[dict]:
                 "search_tool": axes["search_tool"],
                 "search_results": axes["search_results"],
                 "agent_management": axes["agent_management"],
+                "computation_tool": axes["computation_tool"],
                 "plan_skills": axes["plan_skills"],
                 "k": axes["k"],
                 "sc": axes["sc"],
@@ -662,6 +667,7 @@ def write_per_task_retrieval_csv(discovery: dict, output_csv: Path) -> int:
         "search_tool",
         "search_results",
         "agent_management",
+        "computation_tool",
         "plan_skills",
         "k",
         "task_id",
@@ -692,6 +698,7 @@ def write_per_task_retrieval_csv(discovery: dict, output_csv: Path) -> int:
                     "search_tool": axes["search_tool"],
                     "search_results": axes["search_results"],
                     "agent_management": axes["agent_management"],
+                    "computation_tool": axes["computation_tool"],
                     "plan_skills": axes["plan_skills"],
                     "k": axes["k"],
                     "task_id": m.get("task_id", ""),
