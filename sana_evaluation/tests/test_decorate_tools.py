@@ -90,13 +90,36 @@ class DecorateToolsTests(unittest.TestCase):
         )
         self.assertIn("sprint", excluded)
 
-    def test_cot_on_does_not_add_post_tool_plugin(self) -> None:
+    def test_cot_on_adds_cot_tool(self) -> None:
         agent = _make_agent(cot=True)
+        baseline_peek = MagicMock()
+        baseline_peek.tool_name = "peek_file"
+        decorated = agent._decorate_tools(
+            [baseline_peek],
+            search_tool_mode="preloaded",
+            agent_management_mode="standard",
+        )
+        self.assertIn("cot", [getattr(t, "tool_name", None) for t in decorated])
+
+    def test_cot_on_wires_steering_plugin_before_sprint(self) -> None:
+        agent = _make_agent(cot=True, sprint=True)
         plugins = agent._extra_plugins(
             search_tool_mode="preloaded",
             agent_management_mode="standard",
         )
-        self.assertNotIn("sana-cot-post-record", [plugin.name for plugin in plugins])
+        names = [plugin.name for plugin in plugins]
+        self.assertIn("sana-cot-steer", names)
+        self.assertIn("sana-sprint-steer", names)
+        self.assertLess(names.index("sana-cot-steer"), names.index("sana-sprint-steer"))
+        self.assertNotIn("sana-cot-post-record", names)
+
+    def test_cot_on_excludes_cot_from_tool_limit(self) -> None:
+        agent = _make_agent(cot=True)
+        excluded = agent._tool_limit_excluded_tools(
+            search_tool_mode="preloaded",
+            agent_management_mode="standard",
+        )
+        self.assertIn("cot", excluded)
 
 
 if __name__ == "__main__":

@@ -19,10 +19,12 @@ def test_builder_returns_summarizing_conversation_manager() -> None:
 
 def test_summarization_prompt_preserves_plan_and_records() -> None:
     """The prompt must explicitly preserve the plan and current sprint."""
+    assert "`plan`" in SANA_SUMMARIZATION_PROMPT
     assert "plan_ideal" in SANA_SUMMARIZATION_PROMPT
-    assert "plan_agent" in SANA_SUMMARIZATION_PROMPT
-    assert "current_step" in SANA_SUMMARIZATION_PROMPT
-    assert "sufficient_to_call_step_complete: true" in SANA_SUMMARIZATION_PROMPT
+    assert "plan_agent" not in SANA_SUMMARIZATION_PROMPT
+    assert "cot tool records" in SANA_SUMMARIZATION_PROMPT
+    assert "`current_step`" in SANA_SUMMARIZATION_PROMPT
+    assert "`sufficient_to_call_step_complete` is true" in SANA_SUMMARIZATION_PROMPT
     assert "CURRENT SPRINT" in SANA_SUMMARIZATION_PROMPT
     assert "Current sprint" in SANA_SUMMARIZATION_PROMPT
 

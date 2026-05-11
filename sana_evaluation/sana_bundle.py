@@ -17,6 +17,7 @@ from strands_evaluation.config import AgentConfig, RunConfig
 from sana_evaluation.helper.conversation import build_sana_conversation_manager
 from sana_evaluation.flags import SanaFlags
 from sana_evaluation.plugins import (
+    CoTSteerHandler,
     SprintSteerHandler,
     StateOfTaskDashboardPlugin,
 )
@@ -99,6 +100,9 @@ class SanaDataLakeAgent(DataLakeAgent):
 
         plugins: List[Any] = []
 
+        if flags.cot:
+            plugins.append(CoTSteerHandler())
+
         sprint_plugin: Optional[SprintSteerHandler] = None
         if flags.sprint:
             sprint_plugin = SprintSteerHandler(
@@ -157,6 +161,11 @@ class SanaDataLakeAgent(DataLakeAgent):
 
             if not any(getattr(t, "tool_name", None) == "sprint" for t in decorated):
                 decorated.append(sprint)
+        if self.sana_flags.cot:
+            from sana_evaluation.tools.cot_tool import cot
+
+            if not any(getattr(t, "tool_name", None) == "cot" for t in decorated):
+                decorated.append(cot)
         return decorated
 
     def _tool_limit_excluded_tools(
@@ -171,6 +180,8 @@ class SanaDataLakeAgent(DataLakeAgent):
                 agent_management_mode=agent_management_mode,
             )
         )
+        if self.sana_flags.cot:
+            excluded.append("cot")
         if self.sana_flags.sprint:
             excluded.append("sprint")
         return tuple(excluded)

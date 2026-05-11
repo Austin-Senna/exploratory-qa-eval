@@ -1,4 +1,4 @@
-"""CoT primitive — lightweight pre-tool intent records."""
+"""CoT primitive — runtime-enforced structured tool-use records."""
 
 from __future__ import annotations
 
@@ -6,21 +6,21 @@ from __future__ import annotations
 def cot_block(search_tool: str) -> str:
     """Return the CoT primitive prompt block.
 
-    Adds a small pre-tool intent record. The `confidence` field is read by
-    `StateOfTaskDashboardPlugin` (when sprint is on) to populate the
-    reflection-time state-of-task readout.
+    Describes the cot control tool. Runtime plugins enforce the actual record
+    cadence; the prompt is a compact guide, not the source of truth.
     """
     return (
-        "\n\n## STRUCTURED TOOL-USE RECORDS\n"
-        "- Use this tiny record for data/search tools only.\n"
-        "- Do not emit this record before administrative/control tools: skills, plan, plan_ideal, sprint, submit_answer.\n"
-        "- Keep it to two short lines. Do not dump reasoning.\n"
-        "- Never write the tool request, tool arguments, tool result, or output markers as text.\n"
-        "\n"
-        "Before each data/search tool call, emit exactly these two fields:\n"
-        "intent: <one short sentence>\n"
-        "confidence: <low|medium|high>\n"
-        "Then make the actual tool call through the tool-calling channel.\n"
+        "\n\n## STRUCTURED TOOL-USE GATE\n"
+        "- The runtime may pause data/search/source tool calls and require the `cot` tool.\n"
+        "- When asked for `pre_tool`, call `cot` with `kind`, `intended_tool`, "
+        "`current_step`, `intent`, and `confidence`.\n"
+        "- When asked for `post_tool`, call `cot` with `kind`, `completed_tool`, "
+        "`current_step`, `tool_result_summary`, `next_step`, "
+        "`sufficient_to_call_step_complete`, and `remaining_gap_if_not_complete`.\n"
+        "- Do not write free-text CoT records. Use the `cot` tool only.\n"
+        "- Do not call `cot` before administrative/control tools: skills, plan, "
+        "plan_ideal, or sprint. If the runtime asks for `post_tool` before "
+        "submit_answer, call `cot` first.\n"
     )
 
 

@@ -18,6 +18,7 @@ logger = logging.getLogger(__name__)
 _SPRINT_TOOL = "sprint"
 
 _EXCLUDED_TOOLS = {
+    "cot",
     _SPRINT_TOOL,
     "plan",
     "plan_ideal",
