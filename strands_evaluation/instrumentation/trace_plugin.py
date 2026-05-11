@@ -9,7 +9,7 @@ import json
 import os
 import time
 from pathlib import Path
-from typing import List
+from typing import Any, List
 
 from strands import Plugin
 from strands.hooks import AfterToolCallEvent, BeforeToolCallEvent
@@ -101,6 +101,11 @@ def _write_record(record: dict) -> None:
         f.write(json.dumps(record, ensure_ascii=False) + "\n")
 
 
+def _tool_use_key(tool_use: dict[str, Any]) -> str:
+    """Return a stable key for pairing before/after tool hook state."""
+    return str(tool_use.get("toolUseId") or "__legacy_single_tool__")
+
+
 def write_trace_record(record: dict) -> None:
     """Append an auxiliary trace record using the active task trace context."""
     payload = {
@@ -126,15 +131,23 @@ class TracePlugin(Plugin):
         self._t0: float = 0.0
         self._pending_query: str = ""
         self._pending_tool: str = ""
+        self._pending_searches: dict[str, tuple[float, str, str]] = {}
 
     @hook
     def on_before_tool(self, event: BeforeToolCallEvent) -> None:
         tool_name = event.tool_use.get("name", "")
         if tool_name not in _SEARCH_TOOLS:
             return
-        self._t0 = time.time()
-        self._pending_query = event.tool_use.get("input", {}).get("query", "")
+        started_at = time.time()
+        pending_query = event.tool_use.get("input", {}).get("query", "")
+        self._t0 = started_at
+        self._pending_query = pending_query
         self._pending_tool = tool_name
+        self._pending_searches[_tool_use_key(event.tool_use)] = (
+            started_at,
+            pending_query,
+            tool_name,
+        )
 
     @hook
     def on_after_tool(self, event: AfterToolCallEvent) -> None:
@@ -143,7 +156,11 @@ class TracePlugin(Plugin):
 
         if tool_name in _SEARCH_TOOLS:
             _turn_counter += 1
-            latency_ms = int((time.time() - self._t0) * 1000)
+            started_at, pending_query, _ = self._pending_searches.pop(
+                _tool_use_key(event.tool_use),
+                (self._t0, self._pending_query, self._pending_tool),
+            )
+            latency_ms = int((time.time() - started_at) * 1000)
 
             # Extract result text
             content = event.result.get("content", [])
@@ -168,10 +185,22 @@ class TracePlugin(Plugin):
                 "task_id": _current_task_id,
                 "turn": _turn_counter,
                 "tool": tool_name,
-                "query": self._pending_query,
+                "query": pending_query,
                 "latency_ms": latency_ms,
                 "result_dataset_ids": result_ids,
                 "gold_dataset_ids_in_results": gold_in_results,
                 "gold_rank": gold_rank,
+                "timestamp_ms": int(time.time() * 1000),
+            })
+            return
+
+        if tool_name == "submit_answer":
+            tool_input = event.tool_use.get("input", {})
+            _write_record({
+                "task_id": _current_task_id,
+                "tool": "submit_answer",
+                "answer_text": tool_input.get("answer", ""),
+                "reasoning": tool_input.get("reasoning", ""),
+                "status": event.result.get("status", "success"),
                 "timestamp_ms": int(time.time() * 1000),
             })
