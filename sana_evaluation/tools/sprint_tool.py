@@ -67,6 +67,46 @@ def _coerce_positive_int(value: Any, *, default: Optional[int] = None) -> Option
     return out
 
 
+def _source_parts(source: Any) -> set[str]:
+    if not isinstance(source, str):
+        return set()
+    value = source.strip()
+    if not value:
+        return set()
+    if value.startswith("multi:"):
+        return {part.strip() for part in value[len("multi:") :].split(",") if part.strip()}
+    return {value}
+
+
+def _record_source_package(record: Dict[str, Any]) -> set[str]:
+    package = _source_parts(record.get("current_source"))
+    related = record.get("related_sources") or []
+    if isinstance(related, list):
+        for source in related:
+            package.update(_source_parts(str(source).strip()))
+    return package
+
+
+def _record_covers_pending_source(state: SprintState, record: Dict[str, Any]) -> bool:
+    pending_parts = _source_parts(state.pending_source)
+    if not pending_parts:
+        return True
+    return pending_parts.issubset(_record_source_package(record))
+
+
+def _record_matches_active_source_session(state: SprintState, record: Dict[str, Any]) -> bool:
+    session = state.source_session
+    if session is None:
+        return False
+    source = str(record.get("current_source") or "").strip()
+    if not source:
+        return False
+    try:
+        return bool(session.contains_source(source))
+    except Exception:
+        return False
+
+
 def _validate_record(state: SprintState, record: Dict[str, Any]) -> List[str]:
     errors: List[str] = []
     kind = str(record.get("kind") or "").strip()
@@ -97,6 +137,8 @@ def _validate_record(state: SprintState, record: Dict[str, Any]) -> List[str]:
         if not isinstance(record.get("short_forward_plan"), list):
             errors.append("short_forward_plan must be a list")
     elif kind == "commitment_contract":
+        if state.pending_kind != "commitment_contract":
+            errors.append("commitment_contract requires a pending commitment_contract")
         missing = _missing(
             record,
             ["current_source", "commitment_goal", "max_source_calls", "plan_step"],
@@ -107,6 +149,11 @@ def _validate_record(state: SprintState, record: Dict[str, Any]) -> List[str]:
             errors.append("max_source_calls must be a positive integer")
         if "related_sources" in record and not isinstance(record.get("related_sources"), list):
             errors.append("related_sources must be a list")
+        if not _record_covers_pending_source(state, record):
+            errors.append(
+                "commitment_contract does not cover pending source "
+                f"{state.pending_source}"
+            )
         if state.pending_requires_evidence:
             evidence_missing = _missing(record, ["evidence_gained", "remaining_gap"])
             if evidence_missing:
@@ -115,6 +162,8 @@ def _validate_record(state: SprintState, record: Dict[str, Any]) -> List[str]:
                     + ", ".join(evidence_missing)
                 )
     else:
+        if state.source_session is None:
+            errors.append("commitment_reflection requires an active source session")
         missing = _missing(
             record,
             [
@@ -135,6 +184,8 @@ def _validate_record(state: SprintState, record: Dict[str, Any]) -> List[str]:
             errors.append("calls_used must be a non-negative integer")
         if _coerce_nonnegative_int(record.get("revised_budget")) is None:
             errors.append("revised_budget must be a non-negative integer")
+        if state.source_session is not None and not _record_matches_active_source_session(state, record):
+            errors.append("commitment_reflection current_source must be in the active source package")
     return errors
 
 
@@ -176,19 +227,8 @@ def _apply_record(state: SprintState, record: Dict[str, Any]) -> None:
         state.pending_switch_source = None
         return
 
-    if kind != "commitment_reflection" or state.source_session is None:
+    if kind == "commitment_reflection":
         return
-
-    calls_used = _coerce_nonnegative_int(record.get("calls_used"), default=0) or 0
-    state.source_session.calls_used = calls_used
-    next_action = str(record.get("next_action") or "")
-    if next_action == "continue_source":
-        additional = _coerce_nonnegative_int(record.get("revised_budget"), default=0) or 0
-        state.source_session.max_source_calls = calls_used + additional
-    elif next_action in {"switch_source", "submit"}:
-        state.source_session = None
-    state.pending_source = None
-    state.pending_switch_source = None
 
 
 def _format_sprint_section(record: Dict[str, Any]) -> str:

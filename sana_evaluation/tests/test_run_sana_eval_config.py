@@ -1,5 +1,5 @@
 from sana_evaluation.flags import SanaFlags
-from sana_evaluation.run_sana_eval import _variant_condition_label
+from sana_evaluation.run_sana_eval import _validate_axis_combination, _variant_condition_label
 
 
 def test_variant_label_includes_cadence_sprint_mode() -> None:
@@ -68,3 +68,39 @@ def test_variant_label_appends_ideal_computation_axis() -> None:
         sana_flags=SanaFlags(),
     )
     assert label == "sp_ri_pd_ci"
+
+
+def test_variant_label_appends_plan_skills_when_enabled() -> None:
+    label = _variant_condition_label(
+        search_tool="preloaded",
+        search_results="ideal",
+        agent_management="standard",
+        plan_skills_enabled=True,
+        k=None,
+        search_calls=None,
+        sana_flags=SanaFlags(),
+    )
+    assert label == "sp_ri_pd_skills_on"
+
+
+def test_variant_label_appends_search_free_and_lessguide_when_enabled() -> None:
+    label = _variant_condition_label(
+        search_tool="ideal",
+        search_results="ideal",
+        agent_management="standard",
+        search_free=True,
+        search_lessguide=True,
+        k=None,
+        search_calls=None,
+        sana_flags=SanaFlags(),
+    )
+    assert label == "si_ri_pd_free_lessguide"
+
+
+def test_skills_on_rejects_naive_plans_axis() -> None:
+    try:
+        _validate_axis_combination(agent_management="naive", skills="on")
+    except ValueError as exc:
+        assert "--skills on requires --plans standard or --plans ideal" in str(exc)
+    else:
+        raise AssertionError("Expected ValueError for --skills on with naive plans")

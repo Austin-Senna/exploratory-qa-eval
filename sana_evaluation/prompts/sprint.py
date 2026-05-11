@@ -69,9 +69,10 @@ def _commitment_block() -> str:
         "- If one plan step naturally spans sibling datasets, include "
         "`related_sources`; calls to those sources share the same source budget and "
         "do not require a source-switch contract.\n"
-        "- Source-session reflections are voluntary. You may call "
+        "- Source-session reflections are voluntary and observation-only. You may call "
         "`sprint(kind='commitment_reflection')` to record what you learned, but the "
-        "runtime does not require a separate reflection before switching or renewing.\n"
+        "runtime does not require a separate reflection before switching or renewing, "
+        "and this note does not change the active source budget.\n"
         "- On source-budget renewal, the new contract must also include "
         "`evidence_gained` and `remaining_gap` so extra calls are justified.\n"
         "- While a source commitment contract is pending, source/data tools are blocked "
@@ -98,7 +99,7 @@ def _commitment_block() -> str:
         "- `current_source`, `calls_used`, `commitment_goal`, `evidence_gained`, "
         "`remaining_gap`\n"
         "- `next_action`: `continue_source`, `switch_source`, or `submit`\n"
-        "- `revised_budget`: additional calls if continuing, otherwise 0\n"
+        "- `revised_budget`: suggested additional calls if continuing, otherwise 0\n"
     )
 
 

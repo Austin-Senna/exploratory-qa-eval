@@ -54,6 +54,9 @@ def _variant_condition_label(
     computation_tool: str = "standard",
     k: Optional[int] = None,
     search_calls: Optional[int] = None,
+    search_free: bool = False,
+    search_lessguide: bool = False,
+    plan_skills_enabled: bool = False,
 ) -> str:
     axis_tokens = [
         f"s{_MODE_LETTERS[search_tool]}",
@@ -67,6 +70,12 @@ def _variant_condition_label(
         run_tokens.append(f"k{k}")
     if search_calls is not None:
         run_tokens.append(f"sc{search_calls}")
+    if search_free:
+        run_tokens.append("free")
+    if search_lessguide:
+        run_tokens.append("lessguide")
+    if plan_skills_enabled:
+        run_tokens.append("skills_on")
     sana_tokens = []
     if sana_flags.cot:
         sana_tokens.append("cot")
@@ -102,6 +111,11 @@ def _resolve_mode_axes(
         agent_management or _AXIS_DEFAULTS["agent_management"],
         computation_tool or _AXIS_DEFAULTS["computation_tool"],
     )
+
+
+def _validate_axis_combination(*, agent_management: str, skills: str) -> None:
+    if skills == "on" and agent_management == "naive":
+        raise ValueError("--skills on requires --plans standard or --plans ideal.")
 
 
 def _collect_task_files(args) -> list[str]:
@@ -257,6 +271,20 @@ def main() -> None:
         choices=["naive", "description"],
         default="naive",
     )
+    parser.add_argument(
+        "--search-free",
+        "--search_free",
+        dest="search_free",
+        action="store_true",
+        help="Make active search tools cost zero against the global max-tool-calls limit.",
+    )
+    parser.add_argument(
+        "--search-lessguide",
+        "--search_lessguide",
+        dest="search_lessguide",
+        action="store_true",
+        help="Hide search_ideal plan-exhaustion guidance fields from tool payloads.",
+    )
 
     # Ablation axes (existing baseline)
     parser.add_argument(
@@ -270,7 +298,10 @@ def main() -> None:
         default=None,
     )
     parser.add_argument(
+        "--plans",
+        "--agent-management",
         "--agent_management",
+        dest="agent_management",
         choices=["naive", "standard", "ideal"],
         default=None,
     )
@@ -278,6 +309,12 @@ def main() -> None:
         "--computation_tool",
         choices=["standard", "ideal"],
         default=None,
+    )
+    parser.add_argument(
+        "--skills",
+        choices=["on", "off"],
+        default="off",
+        help="Enable or disable the Strands AgentSkills planning/discovery skills plugin.",
     )
 
     # SANA feature flags
@@ -352,6 +389,10 @@ def main() -> None:
         agent_management=args.agent_management,
         computation_tool=args.computation_tool,
     )
+    try:
+        _validate_axis_combination(agent_management=agent_management_mode, skills=args.skills)
+    except ValueError as exc:
+        parser.error(str(exc))
 
     try:
         sana_flags = SanaFlags.from_feature_names(
@@ -372,6 +413,9 @@ def main() -> None:
         computation_tool=computation_tool_mode,
         k=args.k,
         search_calls=args.search_calls,
+        search_free=args.search_free,
+        search_lessguide=args.search_lessguide,
+        plan_skills_enabled=args.skills == "on",
         sana_flags=sana_flags,
     )
     variant_condition = _with_debug_suffix(variant_condition, args.debug_mode)
@@ -400,6 +444,9 @@ def main() -> None:
         search_results_mode=search_results_mode,
         agent_management_mode=agent_management_mode,
         computation_tool_mode=computation_tool_mode,
+        plan_skills_enabled=args.skills == "on",
+        search_free=args.search_free,
+        search_lessguide=args.search_lessguide,
         sana_flags=sana_flags,
         condition_config=ConditionConfig(
             condition=condition_label,
@@ -410,12 +457,13 @@ def main() -> None:
     )
 
     logger.info(
-        "SANA variant: %s (st=%s sr=%s am=%s ct=%s sana_features=%s sprint_k=%d)",
+        "SANA variant: %s (st=%s sr=%s am=%s ct=%s plan_skills=%s sana_features=%s sprint_k=%d)",
         condition_label,
         search_tool_mode,
         search_results_mode,
         agent_management_mode,
         computation_tool_mode,
+        args.skills,
         sana_flags.active_features() or ["none"],
         sana_flags.macro_reflection_k,
     )
