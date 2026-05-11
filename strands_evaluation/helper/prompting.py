@@ -63,11 +63,42 @@ def _compose_search_overlay_prompt(
     return f"{base_prompt}\n\n{overlay}"
 
 
-def compose_managed_prompt(search_tool_mode: Optional[str]) -> str:
-    return _compose_search_overlay_prompt(
+def _remove_prompt_section(prompt: str, heading: str) -> str:
+    lines = prompt.splitlines()
+    out: List[str] = []
+    i = 0
+    while i < len(lines):
+        if lines[i].strip() == heading:
+            i += 1
+            while i < len(lines) and not lines[i].startswith("## "):
+                i += 1
+            while out and out[-1] == "":
+                out.pop()
+            out.append("")
+            continue
+        out.append(lines[i])
+        i += 1
+    return "\n".join(out).strip()
+
+
+def _remove_skill_references(prompt: str) -> str:
+    prompt = _remove_prompt_section(prompt, "## SKILLS")
+    lines = [
+        line
+        for line in prompt.splitlines()
+        if "Skill loading" not in line
+    ]
+    return "\n".join(lines).strip()
+
+
+def compose_managed_prompt(search_tool_mode: Optional[str], *, include_skills: bool = True) -> str:
+    prompt = _compose_search_overlay_prompt(
         _PROMPTS_DIR / "managed.txt",
         search_tool_mode,
     )
+    if not include_skills:
+        prompt = _remove_skill_references(prompt)
+    return prompt
 
 
 def compose_baseline_prompt(search_tool_mode: Optional[str]) -> str:

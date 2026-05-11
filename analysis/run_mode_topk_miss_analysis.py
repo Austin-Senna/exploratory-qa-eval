@@ -79,6 +79,7 @@ def _parse_variant(variant: str) -> Dict[str, Optional[object]]:
         "search_tool": None,
         "search_results": None,
         "agent_management": None,
+        "plan_skills": None,
         "k": None,
         "sc": None,
     }
@@ -90,6 +91,8 @@ def _parse_variant(variant: str) -> Dict[str, Optional[object]]:
             out["search_results"] = _LETTER_TO_MODE.get(parts[idx + 1])
         elif token.startswith("plan") and len(token) > 4:
             out["agent_management"] = _LETTER_TO_MODE.get(token[4:])
+        elif token == "skills" and idx + 1 < len(parts):
+            out["plan_skills"] = parts[idx + 1]
         elif token.startswith("k") and token[1:].isdigit():
             out["k"] = int(token[1:])
         elif token.startswith("sc") and token[2:].isdigit():
@@ -587,6 +590,7 @@ def run_analysis(
             "search_tool": axes["search_tool"],
             "search_results": axes["search_results"],
             "agent_management": axes["agent_management"],
+            "plan_skills": axes["plan_skills"],
             "k": axes["k"],
             "sc": axes["sc"],
             "search_call_tool": search_call_tool,
@@ -622,6 +626,7 @@ def run_analysis(
                 "search_tool": axes["search_tool"],
                 "search_results": axes["search_results"],
                 "agent_management": axes["agent_management"],
+                "plan_skills": axes["plan_skills"],
                 "k": axes["k"],
                 "sc": axes["sc"],
                 "search_call_tool": search_call_tool,
@@ -664,6 +669,7 @@ def run_analysis(
         "search_tool",
         "search_results",
         "agent_management",
+        "plan_skills",
         "k",
         "sc",
         "search_call_tool",
@@ -689,6 +695,7 @@ def run_analysis(
         "search_tool",
         "search_results",
         "agent_management",
+        "plan_skills",
         "k",
         "sc",
         "search_call_tool",

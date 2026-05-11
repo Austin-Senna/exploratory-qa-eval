@@ -127,6 +127,50 @@ class ReadTracePluginFailedReadsTests(unittest.TestCase):
         self.assertEqual(rows[0]["gold_dataset_ids_read"], [])
         self.assertEqual(rows[0]["status"], "error")
 
+    def test_successful_ideal_read_uses_result_source_when_input_has_no_source(self):
+        with TemporaryDirectory() as tmpdir:
+            self.trace_module.set_trace_context(
+                "tasks_mini/k-1-d-1/task_1.json",
+                ["school-directory"],
+                tmpdir,
+            )
+            plugin = self.read_trace_module.ReadTracePlugin()
+            tool_input = {"code": "print(7)", "intent": "compute answer"}
+
+            plugin.on_before_tool(_event("execute_ideal", tool_input, {"content": []}))
+            plugin.on_after_tool(
+                _event(
+                    "execute_ideal",
+                    tool_input,
+                    {
+                        "status": "success",
+                        "content": [
+                            {
+                                "text": json.dumps(
+                                    {
+                                        "success": True,
+                                        "output": "7",
+                                        "s3_uri": (
+                                            "s3://lakeqa-yc4103-datalake/datagov/"
+                                            "school-directory/files/rows.txt"
+                                        ),
+                                    }
+                                )
+                            }
+                        ],
+                    },
+                )
+            )
+
+            trace_path = Path(tmpdir) / "k-1-d-1" / "task_1.jsonl"
+            rows = [json.loads(line) for line in trace_path.read_text().splitlines()]
+
+        self.assertEqual(plugin.gold_datasets_read, {"school-directory"})
+        self.assertEqual(rows[0]["attempted_read_dataset_ids"], [])
+        self.assertEqual(rows[0]["read_dataset_ids"], ["school-directory"])
+        self.assertEqual(rows[0]["gold_dataset_ids_read"], ["school-directory"])
+        self.assertEqual(rows[0]["status"], "success")
+
 
 if __name__ == "__main__":
     unittest.main()

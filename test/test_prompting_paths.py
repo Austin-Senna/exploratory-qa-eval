@@ -18,6 +18,11 @@ class PromptPathTests(unittest.TestCase):
         self.assertIn("search_value", prompt)
         self.assertIn("search_schema", prompt)
 
+    def test_managed_prompt_does_not_advertise_missing_context_tool(self):
+        prompt = compose_managed_prompt("naive")
+
+        self.assertNotIn("summarize_context", prompt)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -57,6 +57,7 @@ class RunConfig:
     search_results_mode: Optional[str] = None
     agent_management_mode: Optional[str] = None
     computation_tool_mode: Optional[str] = None
+    plan_skills_enabled: bool = False
     search_free: bool = False
     search_lessguide: bool = False
 

@@ -65,6 +65,54 @@ def _extract_read_dataset_ids(tool_name: str, tool_input: dict) -> List[str]:
     return []
 
 
+def _unique_ids(values: List[str]) -> List[str]:
+    return list(dict.fromkeys(value for value in values if value))
+
+
+def _extract_dataset_ids_from_payload(payload: Any) -> List[str]:
+    """Return dataset ids from a parsed tool result payload."""
+    ids: List[str] = []
+    if isinstance(payload, list):
+        for item in payload:
+            ids.extend(_extract_dataset_ids_from_payload(item))
+        return _unique_ids(ids)
+
+    if not isinstance(payload, dict):
+        return []
+
+    dataset_id = _dataset_id_from_file_spec(payload)
+    if dataset_id:
+        ids.append(dataset_id)
+
+    results = payload.get("results")
+    if isinstance(results, list):
+        for item in results:
+            ids.extend(_extract_dataset_ids_from_payload(item))
+
+    return _unique_ids(ids)
+
+
+def _extract_result_dataset_ids(result: Any) -> List[str]:
+    """Return normalized dataset ids from successful tool result metadata."""
+    payloads: List[Any] = []
+    if isinstance(result, dict):
+        payloads.append(result)
+        content = result.get("content", [])
+        if isinstance(content, list):
+            for block in content:
+                if not isinstance(block, dict) or "text" not in block:
+                    continue
+                try:
+                    payloads.append(json.loads(block["text"]))
+                except (json.JSONDecodeError, TypeError):
+                    continue
+
+    ids: List[str] = []
+    for payload in payloads:
+        ids.extend(_extract_dataset_ids_from_payload(payload))
+    return _unique_ids(ids)
+
+
 def _result_status(result: dict) -> str:
     """Return success/error for metric purposes from a Strands tool result."""
     if not isinstance(result, dict):
@@ -134,7 +182,9 @@ class ReadTracePlugin(Plugin):
         tool_input = event.tool_use.get("input", {})
         attempted_read_ids = _extract_read_dataset_ids(tool_name, tool_input)
         status = _result_status(event.result)
-        read_ids = attempted_read_ids if status == "success" else []
+        read_ids = []
+        if status == "success":
+            read_ids = attempted_read_ids or _extract_result_dataset_ids(event.result)
         gold_set = set(_tp._current_gold_ids)
         gold_read = [rid for rid in read_ids if rid in gold_set]
 

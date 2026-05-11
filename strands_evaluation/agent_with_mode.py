@@ -208,6 +208,7 @@ def build_management(
     *,
     search_tool_mode: str,
     task_context: Optional[Dict[str, Any]],
+    plan_skills_enabled: bool = False,
 ) -> tuple[str, List[Any], bool, bool, str]:
     """Return stable system prompt, management tools, behavior toggles, and a task-specific trailer.
 
@@ -231,11 +232,14 @@ def build_management(
     if management_mode == "naive":
         return compose_baseline_prompt(search_tool_mode), [], False, False, task_trailer
 
-    prompt = compose_managed_prompt(search_tool_mode)
+    prompt = compose_managed_prompt(
+        search_tool_mode,
+        include_skills=bool(plan_skills_enabled),
+    )
     if management_mode == "standard":
-        return prompt, [plan], True, True, task_trailer
+        return prompt, [plan], bool(plan_skills_enabled), True, task_trailer
 
-    return prompt, [plan_ideal], True, True, task_trailer
+    return prompt, [plan_ideal], bool(plan_skills_enabled), True, task_trailer
 
 
 def build_results(
@@ -284,6 +288,7 @@ def build_mode_bundle(
         agent_management_mode,
         search_tool_mode=search_tool_mode,
         task_context=task_context,
+        plan_skills_enabled=bool(run_config.plan_skills_enabled),
     )
     system_prompt = inject_debug_prompt(system_prompt, run_config.debug_mode)
     system_prompt = _inject_computation_file_family_prompt(
@@ -311,6 +316,7 @@ def build_mode_bundle(
             "search_results": search_results_mode,
             "agent_management": agent_management_mode,
             "computation_tool": computation_tool_mode,
+            "plan_skills": "on" if run_config.plan_skills_enabled else "off",
         },
         task_trailer=task_trailer,
     )
@@ -496,7 +502,7 @@ class DataLakeAgent:
         agent_management_mode: Optional[str],
     ) -> Sequence[str]:
         """Return tool names excluded from the global tool-limit counter."""
-        return ("skills", "plan")
+        return ("skills", "plan", "plan_ideal")
 
     def _build_agent(
         self,
@@ -544,23 +550,27 @@ class DataLakeAgent:
                 mode_bundle.modes["agent_management"],
             )
             logger.info(
-                "Ablation modes active: search_tool=%s search_results=%s agent_management=%s",
+                "Ablation modes active: search_tool=%s search_results=%s agent_management=%s plan_skills=%s",
                 mode_bundle.modes["search_tool"],
                 mode_bundle.modes["search_results"],
                 mode_bundle.modes["agent_management"],
+                mode_bundle.modes["plan_skills"],
             )
         else:
             if condition == "b" and _CONDITION_B_TOOLS_AVAILABLE:
                 # Condition B (planning-rich): sparse search + prefix + plan tool + skills
                 raw_search_tools = [search_value_b, search_schema_b, search_prefix]
-                system_prompt = compose_managed_prompt("naive")
+                system_prompt = compose_managed_prompt(
+                    "naive",
+                    include_skills=bool(self.run_config.plan_skills_enabled),
+                )
                 search_tools = build_search_tools(
                     raw_search_tools,
                     fixed_k=self.run_config.search_k,
                     search_descriptions=self.run_config.search_descriptions,
                 )
                 tools = search_tools + [plan] + _data_tools
-                enable_skills = True
+                enable_skills = bool(self.run_config.plan_skills_enabled)
                 enable_stagnation = True
                 skill_paths = skill_paths_for_modes("naive", "standard")
 
@@ -662,10 +672,10 @@ class DataLakeAgent:
         ])
         if enable_skills:
             plugins.append(AgentSkills(skills=skill_paths))
-            if enable_stagnation and self.run_config.max_consecutive_category > 0:
-                plugins.append(
-                    CategoryStagnationHandler(self.run_config.max_consecutive_category)
-                )
+        if enable_stagnation and self.run_config.max_consecutive_category > 0:
+            plugins.append(
+                CategoryStagnationHandler(self.run_config.max_consecutive_category)
+            )
         read_tracer = ReadTracePlugin()
         plugins.append(read_tracer)
         plugins.append(TracePlugin(cond.trace_output_dir))

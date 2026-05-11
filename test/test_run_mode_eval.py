@@ -120,7 +120,7 @@ class RunModeEvalTests(unittest.TestCase):
             search_calls=2,
         )
 
-        self.assertEqual(label, "search_i_results_n_plann_k5_sc2")
+        self.assertEqual(label, "search_i_results_n_plann_k5_sc2_skills_off")
 
     def test_variant_condition_label_uses_preloaded_letter(self):
         label = run_mode_eval._variant_condition_label(
@@ -131,7 +131,7 @@ class RunModeEvalTests(unittest.TestCase):
             search_calls=None,
         )
 
-        self.assertEqual(label, "search_p_results_i_pland")
+        self.assertEqual(label, "search_p_results_i_pland_skills_off")
 
     def test_variant_condition_label_appends_search_flags(self):
         label = run_mode_eval._variant_condition_label(
@@ -144,7 +144,7 @@ class RunModeEvalTests(unittest.TestCase):
             search_lessguide=True,
         )
 
-        self.assertEqual(label, "search_i_results_i_pland_free_lessguide")
+        self.assertEqual(label, "search_i_results_i_pland_free_lessguide_skills_off")
 
     def test_variant_condition_label_appends_ideal_computation_axis(self):
         label = run_mode_eval._variant_condition_label(
@@ -154,7 +154,21 @@ class RunModeEvalTests(unittest.TestCase):
             computation_tool="ideal",
         )
 
-        self.assertEqual(label, "search_p_results_i_pland_computei")
+        self.assertEqual(label, "search_p_results_i_pland_computei_skills_off")
+
+    def test_variant_condition_label_appends_plan_skills_when_enabled(self):
+        label = run_mode_eval._variant_condition_label(
+            search_tool="preloaded",
+            search_results="ideal",
+            agent_management="standard",
+            plan_skills_enabled=True,
+        )
+
+        self.assertEqual(label, "search_p_results_i_pland_skills_on")
+
+    def test_skills_on_rejects_naive_plans_axis(self):
+        with self.assertRaisesRegex(ValueError, "--skills on requires --plans standard or --plans ideal"):
+            run_mode_eval._validate_axis_combination(agent_management="naive", skills="on")
 
     def test_mode_results_dir_does_not_append_model_twice(self):
         agent_config = types.SimpleNamespace(

@@ -138,6 +138,12 @@ class IdealComputationToolTests(unittest.TestCase):
 
         self.assertTrue(result["success"])
         self.assertEqual(result["output"], "7")
+        self.assertEqual(result["dataset_id"], "ds_a")
+        self.assertEqual(result["file_path"], "files/rows.txt")
+        self.assertEqual(
+            result["s3_uri"],
+            "s3://lakeqa-yc4103-datalake/datagov/ds_a/files/rows.txt",
+        )
         self.assertNotIn("ideal_oracle", result)
         self.assertNotIn("intent", result)
         self.assertNotIn("source", result)
@@ -178,6 +184,17 @@ class IdealComputationToolTests(unittest.TestCase):
         self.assertIn("semantic equivalence", captured["system_prompt"])
         self.assertIn("Submitted Python code", captured["prompt"])
         self.assertIn("Never select a record merely because its answer would be useful", captured["prompt"])
+        self.assertNotIn('"answer"', captured["prompt"])
+
+    def test_plan_records_prompt_does_not_include_authored_answers(self):
+        plan = load_plan_for_task("tasks_mini/k-1-d-1/task_1.json")
+
+        payload = json.loads(
+            computation_ideal._plan_records_for_prompt(plan, plan.ideal_code)
+        )
+
+        self.assertEqual(payload["records"][0]["payload"], "print(3 + 4)")
+        self.assertNotIn("answer", payload["records"][0])
 
     def test_semantic_record_match_traces_cost(self):
         plan = load_plan_for_task("tasks_mini/k-1-d-1/task_1.json")
@@ -281,7 +298,16 @@ class IdealComputationToolTests(unittest.TestCase):
             )
 
         self.assertEqual(captured["sources"], ["datagov/ds_b/files/b.csv"])
-        self.assertEqual(result, {"output": "11", "success": True})
+        self.assertEqual(
+            result,
+            {
+                "output": "11",
+                "success": True,
+                "dataset_id": "ds_b",
+                "file_path": "files/b.csv",
+                "s3_uri": "s3://lakeqa-yc4103-datalake/datagov/ds_b/files/b.csv",
+            },
+        )
 
     def test_execute_ideal_semantic_reject_falls_back_to_repair(self):
         with patch.object(
@@ -416,20 +442,17 @@ class IdealComputationToolTests(unittest.TestCase):
         self.assertNotIn("repairs", result)
         self.assertEqual(repair.call_count, 2)
 
-    def test_query_ideal_does_not_oracle_match_wrong_dataset(self):
+    def test_query_ideal_falls_back_to_all_records_for_wrong_dataset(self):
         with patch.object(
             computation_ideal,
             "_semantic_record_match",
-            return_value=None,
+            create=True,
+            side_effect=self._first_semantic_candidate,
         ) as semantic, patch.object(
             computation_ideal,
             "_repair_query",
-            return_value={"sql": "SELECT 0 AS n", "reason": "wrong source"},
-        ) as repair, patch.object(
-            computation_ideal,
-            "_base_query_file",
-            return_value={"success": True, "rows": [[0]], "columns": ["n"]},
-        ):
+            return_value={"sql": "", "reason": "should not repair"},
+        ) as repair:
             result = computation_ideal.query_ideal._tool_func(
                 dataset_id="other_ds",
                 file_path="files/rows.txt",
@@ -437,12 +460,17 @@ class IdealComputationToolTests(unittest.TestCase):
                 intent="count all rows",
             )
 
+        self.assertTrue(result["success"])
+        self.assertEqual(result["rows"], [[7]])
         self.assertNotIn("ideal_oracle", result)
         self.assertNotIn("repair_attempts", result)
         self.assertNotIn("repairs", result)
         semantic.assert_called_once()
-        self.assertEqual(list(semantic.call_args.kwargs["candidates"]), [])
-        repair.assert_called_once()
+        self.assertEqual(
+            [record.dataset_id for record in semantic.call_args.kwargs["candidates"]],
+            ["ds_a"],
+        )
+        repair.assert_not_called()
 
     def test_execute_ideal_returns_failure_after_repair_exhaustion(self):
         with patch.object(
@@ -643,6 +671,7 @@ class IdealComputationToolTests(unittest.TestCase):
         self.assertIn("Target dataset context", captured["prompt"])
         self.assertIn("Target dataset description", captured["prompt"])
         self.assertIn("enhanced_peek_file", captured["prompt"])
+        self.assertNotIn('"answer"', captured["prompt"])
 
     def test_query_repair_prompt_includes_enhanced_peek_context(self):
         captured: dict[str, str] = {}
@@ -680,6 +709,7 @@ class IdealComputationToolTests(unittest.TestCase):
         self.assertIn("Target dataset context", captured["prompt"])
         self.assertIn("Target query description", captured["prompt"])
         self.assertIn("enhanced_peek_file", captured["prompt"])
+        self.assertNotIn('"answer"', captured["prompt"])
 
     def test_ideal_computation_tools_log_results(self):
         plan = load_plan_for_task(_CORE_QUALITY_TASK_ID)

@@ -17,6 +17,16 @@ class TestCategoryStagnationHandler(unittest.TestCase):
         self.assertIn("used 'execute' tools 3 times in a row", action.reason)
         self.assertEqual(handler.consecutive_count, 0)
 
+    def test_stagnation_guide_uses_generic_planning_tool_name(self):
+        handler = CategoryStagnationHandler(max_consecutive_category=1)
+
+        asyncio.run(handler.steer_before_tool(agent=None, tool_use={"name": "execute_code"}))
+        action = asyncio.run(handler.steer_before_tool(agent=None, tool_use={"name": "query_ideal"}))
+
+        self.assertEqual(action.type, "guide")
+        self.assertIn("planning tool", action.reason)
+        self.assertNotIn("`plan` tool", action.reason)
+
     def test_submitted_answer_short_circuits_stagnation_steering(self):
         handler = CategoryStagnationHandler(max_consecutive_category=1)
 

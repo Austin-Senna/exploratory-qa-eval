@@ -4,7 +4,11 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from strands_evaluation.config import RunConfig
-from strands_evaluation.agent_with_mode import build_mode_bundle, _tool_limit_exclusions_for_run
+from strands_evaluation.agent_with_mode import (
+    DataLakeAgent,
+    build_mode_bundle,
+    _tool_limit_exclusions_for_run,
+)
 from strands_evaluation.helper.prompting import (
     compose_baseline_prompt,
     compose_managed_prompt,
@@ -157,10 +161,37 @@ class TestModeWrapper(unittest.TestCase):
             tool_names = [tool_obj.tool_spec["name"] for tool_obj in bundle.tools]
             self.assertIn("plan_ideal", tool_names)
             self.assertNotIn("plan", tool_names)
-            self.assertIn("summarize_context", tool_names)
             self.assertIn("search_ideal", bundle.search_tool_names)
-            self.assertTrue(bundle.enable_skills)
+            self.assertFalse(bundle.enable_skills)
             self.assertTrue(bundle.enable_stagnation)
+
+    def test_plan_skills_flag_enables_skills_for_managed_modes(self):
+        cfg = RunConfig(
+            search_tool_mode="standard",
+            search_results_mode="naive",
+            agent_management_mode="standard",
+            plan_skills_enabled=True,
+        )
+        bundle = build_mode_bundle(cfg, data_tools=[])
+        tool_names = [tool_obj.tool_spec["name"] for tool_obj in bundle.tools]
+        self.assertIn("plan", tool_names)
+        self.assertTrue(bundle.enable_skills)
+        self.assertTrue(bundle.enable_stagnation)
+        self.assertEqual(bundle.modes["plan_skills"], "on")
+
+    def test_managed_prompt_omits_skills_when_plugin_disabled(self):
+        cfg = RunConfig(
+            search_tool_mode="standard",
+            search_results_mode="naive",
+            agent_management_mode="standard",
+            plan_skills_enabled=False,
+        )
+        bundle = build_mode_bundle(cfg, data_tools=[])
+
+        self.assertFalse(bundle.enable_skills)
+        self.assertNotIn("## SKILLS", bundle.system_prompt)
+        self.assertNotIn("skills(", bundle.system_prompt)
+        self.assertNotIn("Skill loading", bundle.system_prompt)
 
     def test_ideal_management_stores_task_context_for_plan_loading(self):
         with TemporaryDirectory() as tmpdir:
@@ -297,21 +328,33 @@ class TestModeWrapper(unittest.TestCase):
     def test_search_free_adds_active_search_tools_to_tool_limit_exclusions(self):
         self.assertEqual(
             _tool_limit_exclusions_for_run(
-                base_excluded=("skills", "plan"),
+                base_excluded=("skills", "plan", "plan_ideal"),
                 search_free=True,
                 search_tool_names=("search_ideal", "search_schema"),
             ),
-            ("skills", "plan", "search_ideal", "search_schema"),
+            ("skills", "plan", "plan_ideal", "search_ideal", "search_schema"),
         )
 
     def test_tool_limit_exclusions_leave_search_tools_counted_by_default(self):
         self.assertEqual(
             _tool_limit_exclusions_for_run(
-                base_excluded=("skills", "plan"),
+                base_excluded=("skills", "plan", "plan_ideal"),
                 search_free=False,
                 search_tool_names=("search_ideal",),
             ),
-            ("skills", "plan"),
+            ("skills", "plan", "plan_ideal"),
+        )
+
+    def test_default_tool_limit_exclusions_include_both_plan_tools(self):
+        self.assertEqual(
+            tuple(
+                DataLakeAgent._tool_limit_excluded_tools(
+                    None,
+                    search_tool_mode="ideal",
+                    agent_management_mode="ideal",
+                )
+            ),
+            ("skills", "plan", "plan_ideal"),
         )
 
     def test_inject_debug_prompt_noops_when_disabled(self):
@@ -390,7 +433,6 @@ class TestModeWrapper(unittest.TestCase):
             self.assertEqual(bundle.search_tool_names, ())
             self.assertNotIn("search_ideal", tool_names)
             self.assertIn("plan", tool_names)
-            self.assertIn("summarize_context", tool_names)
             # The search_preloaded overlay references the "## PRELOADED DATASETS" heading as
             # documentation (in backticks), but the task-specific URI list only lives in the trailer.
             self.assertNotIn("dataset_id: ds_one | uri: datagov/ds_one/files/rows.txt", bundle.system_prompt)

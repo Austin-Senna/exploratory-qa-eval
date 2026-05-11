@@ -54,6 +54,7 @@ def _variant_condition_label(
     search_calls: Optional[int] = None,
     search_free: bool = False,
     search_lessguide: bool = False,
+    plan_skills_enabled: bool = False,
 ) -> str:
     parts = [
         f"search_{_MODE_LETTERS[search_tool]}",
@@ -70,6 +71,7 @@ def _variant_condition_label(
         parts.append("free")
     if search_lessguide:
         parts.append("lessguide")
+    parts.append("skills_on" if plan_skills_enabled else "skills_off")
     return "_".join(parts)
 
 
@@ -94,6 +96,11 @@ def _resolve_mode_axes(
         agent_management or defaults["agent_management"],
         computation_tool or defaults["computation_tool"],
     )
+
+
+def _validate_axis_combination(*, agent_management: str, skills: str) -> None:
+    if skills == "on" and agent_management == "naive":
+        raise ValueError("--skills on requires --plans standard or --plans ideal.")
 
 
 def _collect_task_files(args) -> list[str]:
@@ -328,16 +335,25 @@ def main() -> None:
         help="Search result richness axis.",
     )
     parser.add_argument(
+        "--plans",
+        "--agent-management",
         "--agent_management",
+        dest="agent_management",
         choices=["naive", "standard", "ideal"],
         default=None,
-        help="Agent management axis.",
+        help="Plan-management axis.",
     )
     parser.add_argument(
         "--computation_tool",
         choices=["standard", "ideal"],
         default=None,
         help="Computation tool axis.",
+    )
+    parser.add_argument(
+        "--skills",
+        choices=["on", "off"],
+        default="off",
+        help="Enable or disable the Strands AgentSkills planning/discovery skills plugin.",
     )
 
     # Execution
@@ -372,6 +388,10 @@ def main() -> None:
         agent_management=args.agent_management,
         computation_tool=args.computation_tool,
     )
+    try:
+        _validate_axis_combination(agent_management=agent_management_mode, skills=args.skills)
+    except ValueError as exc:
+        parser.error(str(exc))
     safe_model_name = base_eval._display_name(agent_config)
     variant_condition = _variant_condition_label(
         search_tool=search_tool_mode,
@@ -382,6 +402,7 @@ def main() -> None:
         search_calls=args.search_calls,
         search_free=args.search_free,
         search_lessguide=args.search_lessguide,
+        plan_skills_enabled=args.skills == "on",
     )
     variant_condition = _with_debug_suffix(variant_condition, args.debug_mode)
     condition_label = f"modes/{safe_model_name}/{variant_condition}"
@@ -409,6 +430,7 @@ def main() -> None:
         search_results_mode=search_results_mode,
         agent_management_mode=agent_management_mode,
         computation_tool_mode=computation_tool_mode,
+        plan_skills_enabled=args.skills == "on",
         search_free=args.search_free,
         search_lessguide=args.search_lessguide,
         condition_config=ConditionConfig(
@@ -420,13 +442,14 @@ def main() -> None:
     )
 
     logger.info(
-        "Ablation variant: %s (base=%s, st=%s, sr=%s, am=%s, ct=%s, k=%s, search_calls=%s, search_free=%s, search_lessguide=%s, db_path=%s)",
+        "Ablation variant: %s (base=%s, st=%s, sr=%s, am=%s, ct=%s, plan_skills=%s, k=%s, search_calls=%s, search_free=%s, search_lessguide=%s, db_path=%s)",
         condition_label,
         args.condition,
         search_tool_mode,
         search_results_mode,
         agent_management_mode,
         computation_tool_mode,
+        args.skills,
         args.k,
         args.search_calls,
         args.search_free,
