@@ -11,7 +11,9 @@ from analysis.run_mode_analysis import _parse_model_filters as parse_legacy_mode
 from analysis.run_mode_analysis_semantic import (
     _normalize_eval_row,
     _parse_model_filters,
+    _plot_error_vs_semantic_variant,
     build_search_depth_curves,
+    build_summary,
     run_analysis,
 )
 
@@ -58,6 +60,120 @@ class TestRunModeAnalysisSemantic(unittest.TestCase):
 
         self.assertEqual(by_variant[variant]["1"]["mean_semantic_match"], 0.5)
         self.assertEqual(by_condition_model[key]["1"]["mean_semantic_match"], 0.5)
+
+    def test_build_summary_preserves_zero_peek_file_error_rate(self):
+        variant = "search_i_results_i_plani_k5"
+        key = f"openai_gpt-5.2-xhigh/{variant}"
+        by_key_records = {
+            key: [
+                {
+                    "_semantic_match": 1.0,
+                    "_runtime_seconds": 1.0,
+                    "_input_tokens": 1,
+                    "_output_tokens": 1,
+                    "_total_tokens": 2,
+                    "_cost_usd": 0.0,
+                    "_ideal_subagent_cost_usd": 0.0,
+                    "_total_cost_with_ideal_subagents_usd": 0.0,
+                    "_tool_calls_total": 1,
+                    "_api_tool_calls": 1,
+                    "semantic_bucket": "semantic_correct",
+                    "log_error_bucket_display": "no_error",
+                }
+            ]
+        }
+        tool_errors = {
+            key: {
+                "peek_file": {"error_rate": 0.0},
+                "peek_multiple": {"error_rate": 0.5},
+                "peek_files": {"error_rate": 0.25},
+            }
+        }
+
+        summary_rows = build_summary(
+            by_key_records,
+            discovery={},
+            efficiency={},
+            tool_errors=tool_errors,
+            base_by_key_records={},
+        )
+
+        self.assertEqual(summary_rows[0]["peek_file_error_rate"], 0.0)
+
+    def test_error_vs_semantic_plot_uses_fractional_semantic_match(self):
+        class FakeBar:
+            def __init__(self, x_position: float):
+                self.x_position = x_position
+
+            def get_x(self):
+                return self.x_position
+
+            def get_width(self):
+                return 0.34
+
+        class FakeAx:
+            def __init__(self):
+                self.bar_values = []
+
+            def bar(self, x_positions, values, **_kwargs):
+                self.bar_values.append(list(values))
+                return [FakeBar(x_position) for x_position in x_positions]
+
+            def text(self, *_args, **_kwargs):
+                return None
+
+            def set_xticks(self, *_args, **_kwargs):
+                return None
+
+            def set_xticklabels(self, *_args, **_kwargs):
+                return None
+
+            def set_ylabel(self, *_args, **_kwargs):
+                return None
+
+            def set_ylim(self, *_args, **_kwargs):
+                return None
+
+            def set_title(self, *_args, **_kwargs):
+                return None
+
+            def grid(self, *_args, **_kwargs):
+                return None
+
+            def legend(self, *_args, **_kwargs):
+                return None
+
+        class FakeFigure:
+            def tight_layout(self, *_args, **_kwargs):
+                return None
+
+            def savefig(self, *_args, **_kwargs):
+                return None
+
+        class FakePlt:
+            def __init__(self):
+                self.ax = FakeAx()
+
+            def subplots(self, *_args, **_kwargs):
+                return FakeFigure(), self.ax
+
+            def close(self, *_args, **_kwargs):
+                return None
+
+        fake_plt = FakePlt()
+        rows = [
+            {
+                "variant": "search_i_results_i_plani_k5",
+                "n_total": 1,
+                "semantic_match": 0.25,
+                "semantic_correct_rate": 1.0,
+                "no_error_rate": 0.5,
+            }
+        ]
+
+        _plot_error_vs_semantic_variant(fake_plt, rows, Path("unused.pdf"))
+
+        self.assertEqual(fake_plt.ax.bar_values[0], [25.0])
 
     def _write_eval_results(self, path: Path, rows: list[dict]) -> None:
         path.parent.mkdir(parents=True, exist_ok=True)

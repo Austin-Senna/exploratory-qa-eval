@@ -1137,11 +1137,12 @@ def build_summary(
         if key in tool_errors:
             row["query_file_error_rate"] = tool_errors[key].get("query_file", {}).get("error_rate")
             row["execute_code_error_rate"] = tool_errors[key].get("execute_code", {}).get("error_rate")
-            row["peek_file_error_rate"] = (
-                tool_errors[key].get("peek_file", {}).get("error_rate")
-                or tool_errors[key].get("peek_multiple", {}).get("error_rate")
-                or tool_errors[key].get("peek_files", {}).get("error_rate")
-            )
+            row["peek_file_error_rate"] = None
+            for tool_name in ("peek_file", "peek_multiple", "peek_files"):
+                error_rate = tool_errors[key].get(tool_name, {}).get("error_rate")
+                if error_rate is not None:
+                    row["peek_file_error_rate"] = error_rate
+                    break
         else:
             row["query_file_error_rate"] = None
             row["execute_code_error_rate"] = None
@@ -2186,7 +2187,7 @@ def _plot_error_vs_semantic_variant(plt, variant_rows: List[dict], output_path: 
     fig, ax = plt.subplots(figsize=(max(11, len(variant_rows) * 1.45), 6))
     x_positions = list(range(len(variant_rows)))
     width = 0.34
-    semantic_vals = [float(row.get("semantic_correct_rate", 0.0) or 0.0) * 100.0 for row in variant_rows]
+    semantic_vals = [float(row.get("semantic_match", 0.0) or 0.0) * 100.0 for row in variant_rows]
     error_vals = [100.0 - (float(row.get("no_error_rate", 0.0) or 0.0) * 100.0) for row in variant_rows]
 
     semantic_bars = ax.bar([x - width / 2 for x in x_positions], semantic_vals, width=width, color=SEMANTIC_BUCKET_COLORS["semantic_correct"], label="Semantic Match")
