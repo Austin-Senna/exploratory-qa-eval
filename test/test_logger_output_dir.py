@@ -1,4 +1,5 @@
 import importlib.util
+import logging
 import types
 import unittest
 from pathlib import Path
@@ -19,7 +20,18 @@ def _load_logger_module():
 logger_module = _load_logger_module()
 
 
+def _close_handlers(name):
+    target = logging.getLogger(name)
+    for handler in list(target.handlers):
+        target.removeHandler(handler)
+        handler.close()
+
+
 class LoggerOutputDirTests(unittest.TestCase):
+    def tearDown(self):
+        _close_handlers("strands_evaluation")
+        _close_handlers("strands")
+
     def test_configure_worker_logging_uses_run_config_log_root(self):
         run_config = types.SimpleNamespace(logs_output_dir="custom_logs")
 
@@ -51,8 +63,55 @@ class LoggerOutputDirTests(unittest.TestCase):
             relative = Path(log_path).relative_to(tmpdir).as_posix()
             self.assertEqual(
                 relative,
-                "modes/openai_gpt-5.2-xhigh/search_i_results_d_plann_k5/k-1-d-1/task_1.log",
+                "modes/openai_gpt-5.2-xhigh/search_i_results_d_plann_k5/tasks_mini/k-1-d-1/task_1.log",
             )
+
+    def test_build_log_file_keeps_task_root_to_avoid_collisions(self):
+        with TemporaryDirectory() as tmpdir:
+            mini_log_path = logger_module._build_log_file(
+                tmpdir,
+                "baseline",
+                "openai/gpt-5.2-xhigh",
+                "tasks_mini/k-1-d-1/task_1.json",
+            )
+            core_log_path = logger_module._build_log_file(
+                tmpdir,
+                "baseline",
+                "openai/gpt-5.2-xhigh",
+                "tasks_core_quality/k-1-d-1/task_1.json",
+            )
+
+            self.assertNotEqual(mini_log_path, core_log_path)
+            self.assertEqual(
+                Path(mini_log_path).relative_to(tmpdir).as_posix(),
+                "baseline/openai-gpt-5.2-xhigh/tasks_mini/k-1-d-1/task_1.log",
+            )
+            self.assertEqual(
+                Path(core_log_path).relative_to(tmpdir).as_posix(),
+                "baseline/openai-gpt-5.2-xhigh/tasks_core_quality/k-1-d-1/task_1.log",
+            )
+
+    def test_reconfiguring_logging_closes_replaced_file_handlers(self):
+        with TemporaryDirectory() as tmpdir:
+            logger_module.configure_logging(
+                log_dir=tmpdir,
+                condition="baseline",
+                model="openai/gpt-5.2-xhigh",
+                task_id="tasks_mini/k-1-d-1/task_1.json",
+            )
+            first_handlers = list(logging.getLogger("strands_evaluation").handlers)
+            first_file_handler = next(
+                handler for handler in first_handlers if isinstance(handler, logging.FileHandler)
+            )
+
+            logger_module.configure_logging(
+                log_dir=tmpdir,
+                condition="baseline",
+                model="openai/gpt-5.2-xhigh",
+                task_id="tasks_mini/k-1-d-1/task_2.json",
+            )
+
+            self.assertTrue(first_file_handler.stream is None or first_file_handler.stream.closed)
 
 
 if __name__ == "__main__":

@@ -238,6 +238,17 @@ def _parse_log(log_path: Path) -> dict:
     return metrics
 
 
+def _row_log_path(logs_dir: Path, model_variant: str, mode_variant: str, task_id: str) -> Path:
+    task_path = Path(task_id)
+    primary = logs_dir / model_variant / mode_variant / task_path.with_suffix(".log")
+    if primary.exists():
+        return primary
+    legacy = logs_dir / model_variant / mode_variant / task_path.parent.name / f"{task_path.stem}.log"
+    if legacy.exists():
+        return legacy
+    return primary
+
+
 def _score_categories(metrics: dict) -> dict[str, int]:
     inspection_active = (
         metrics["inspect_calls"] >= 8
@@ -354,8 +365,7 @@ def _load_failed_rows(results_dir: Path, logs_dir: Path) -> list[dict]:
                 bucket = row.get("log_error_bucket", "")
                 if bucket not in TARGET_LOG_ERROR_BUCKETS:
                     continue
-                task_path = Path(str(row["task_id"]))
-                log_path = logs_dir / model_variant / variant / task_path.parent.name / f"{task_path.stem}.log"
+                log_path = _row_log_path(logs_dir, model_variant, variant, str(row["task_id"]))
                 if not log_path.exists():
                     continue
 

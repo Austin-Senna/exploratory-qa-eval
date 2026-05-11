@@ -86,7 +86,7 @@ class TestBuildTurnWasteGlobalReport(unittest.TestCase):
             )
 
             self._write_log(
-                logs_root / model_dir / variant / "k-4-d-4" / "task_8.log",
+                logs_root / model_dir / variant / "tasks_mini" / "k-4-d-4" / "task_8.log",
                 [
                     "--- Turn 26 (elapsed: 177.8s) ---",
                     'Executing: query_file({"dataset_id": "2008-state-expenditures", "file_path": "files/rows.txt", "sql": "SELECT COUNT(DISTINCT \\"Agency Name\\") AS n_agencies FROM t;"})',
@@ -108,7 +108,7 @@ class TestBuildTurnWasteGlobalReport(unittest.TestCase):
             self.assertIn("late verification after the decisive clue is already visible", report_text)
             self.assertIn("[task](../tasks_mini/k-4-d-4/task_8.json)", report_text)
             self.assertIn("[plan](../plans_mini/k-4-d-4/task_8.json)", report_text)
-            self.assertIn("[log](../logs-ec2/modes/openai_gpt-5.2-xhigh/search_i_results_i_plani_k5/k-4-d-4/task_8.log)", report_text)
+            self.assertIn("[log](../logs-ec2/modes/openai_gpt-5.2-xhigh/search_i_results_i_plani_k5/tasks_mini/k-4-d-4/task_8.log)", report_text)
             self.assertIn("Turn 26 starts repeated count-distinct checks", report_text)
             self.assertIn('Turn 26: Executing: query_file({"dataset_id": "2008-state-expenditures"', report_text)
             self.assertIn("Turn 31: Tool result: Tool call cancelled. Tool limit reached (30/30 calls used).", report_text)

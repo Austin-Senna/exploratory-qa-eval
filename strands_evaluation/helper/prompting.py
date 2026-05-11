@@ -8,7 +8,8 @@ from strands_evaluation.instrumentation.trace_plugin import _normalize_dataset_i
 
 logger = logging.getLogger(__name__)
 
-_PROMPTS_DIR = Path("prompts")
+_REPO_ROOT = Path(__file__).resolve().parents[2]
+_PROMPTS_DIR = _REPO_ROOT / "prompts"
 _MODES = {"naive", "standard", "ideal", "preloaded"}
 _DEBUG_MODES = {"decision_notes"}
 
