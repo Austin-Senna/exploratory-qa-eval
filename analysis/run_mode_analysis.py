@@ -103,6 +103,13 @@ def _split_cm_key(key: str) -> Tuple[str, str]:
     return "unknown", key
 
 
+def _parse_model_filters(model_filter: Optional[str]) -> Optional[List[str]]:
+    if not model_filter:
+        return None
+    filters = [part.strip().lower() for part in model_filter.split(",") if part.strip()]
+    return filters or None
+
+
 def _parse_variant(variant: str) -> Dict[str, Optional[object]]:
     """search_i_results_i_plani_k5_sc20 -> structured axes."""
     out: Dict[str, Optional[object]] = {
@@ -817,9 +824,8 @@ def main() -> None:
         logs_dir=args.logs_dir,
     )
 
-    model_filters = (
-        [s.strip().lower() for s in args.model_filter.split(",")] if args.model_filter else None
-    )
+    model_filters = _parse_model_filters(args.model_filter)
+    normalized_model_filter = ",".join(model_filters) if model_filters else None
 
     def _keep_model(name: str) -> bool:
         if not model_filters:
@@ -935,7 +941,7 @@ def main() -> None:
         print("\nGenerating figures...")
         try:
             generate_mode_figures(
-                args.results_dir, args.traces_dir, args.tasks_dir, out_dir, args.model_filter
+                args.results_dir, args.traces_dir, args.tasks_dir, out_dir, normalized_model_filter
             )
             print(f"Figures written to {out_dir / 'figures'}")
         except subprocess.CalledProcessError as exc:

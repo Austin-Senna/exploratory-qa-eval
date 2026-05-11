@@ -7,10 +7,58 @@ from tempfile import TemporaryDirectory
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from analysis.run_mode_analysis_semantic import run_analysis
+from analysis.run_mode_analysis import _parse_model_filters as parse_legacy_model_filters
+from analysis.run_mode_analysis_semantic import (
+    _normalize_eval_row,
+    _parse_model_filters,
+    build_search_depth_curves,
+    run_analysis,
+)
 
 
 class TestRunModeAnalysisSemantic(unittest.TestCase):
+    def test_normalize_eval_row_preserves_fractional_semantic_match(self):
+        row = {
+            "task_id": "tasks_mini/k-1-d-1/task_1.json",
+            "exact_match": "0.0",
+            "semantic_match": "0.75",
+            "semantic_reason": "partial credit",
+            "semantic_bucket": "semantic_incorrect",
+            "log_error_bucket": "",
+            "log_error_evidence": "",
+        }
+
+        normalized = _normalize_eval_row(row, "openai_gpt-5.2-xhigh", "search_i_results_i_plani_k5", Path("eval_results.csv"))
+
+        self.assertEqual(normalized["_semantic_match"], 0.75)
+
+    def test_parse_model_filters_ignores_blank_tokens(self):
+        self.assertEqual(_parse_model_filters("gpt-5.2,"), ["gpt-5.2"])
+        self.assertEqual(parse_legacy_model_filters("gpt-5.2,"), ["gpt-5.2"])
+        self.assertIsNone(_parse_model_filters(" , "))
+        self.assertIsNone(parse_legacy_model_filters(" , "))
+
+    def test_search_depth_curve_averages_fractional_semantic_match(self):
+        variant = "search_i_results_i_plani_k5"
+        key = f"openai_gpt-5.2-xhigh/{variant}"
+        by_key_records = {
+            key: [
+                {"task_stem": "k-1-d-1/task_1", "_semantic_match": 0.25},
+                {"task_stem": "k-1-d-1/task_2", "_semantic_match": 0.75},
+            ]
+        }
+        task_metrics_by_key = {
+            key: {
+                "k-1-d-1/task_1": {"num_search_calls": 1},
+                "k-1-d-1/task_2": {"num_search_calls": 1},
+            }
+        }
+
+        by_variant, by_condition_model = build_search_depth_curves(by_key_records, task_metrics_by_key)
+
+        self.assertEqual(by_variant[variant]["1"]["mean_semantic_match"], 0.5)
+        self.assertEqual(by_condition_model[key]["1"]["mean_semantic_match"], 0.5)
+
     def _write_eval_results(self, path: Path, rows: list[dict]) -> None:
         path.parent.mkdir(parents=True, exist_ok=True)
         fieldnames = [

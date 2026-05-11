@@ -222,6 +222,13 @@ def _split_cm_key(key: str) -> Tuple[str, str]:
     return "unknown", key
 
 
+def _parse_model_filters(model_filter: Optional[str]) -> Optional[List[str]]:
+    if not model_filter:
+        return None
+    filters = [token.strip().lower() for token in model_filter.split(",") if token.strip()]
+    return filters or None
+
+
 def _parse_variant(variant: str) -> Dict[str, Optional[object]]:
     out: Dict[str, Optional[object]] = {
         "variant": variant,
@@ -453,18 +460,22 @@ def _tool_count_value(row: dict, tool_name: str) -> float:
     return 0.0
 
 
+def _parse_semantic_match(value, csv_path: Path) -> float:
+    try:
+        semantic_match = float(value)
+    except (TypeError, ValueError):
+        raise ValueError(f"semantic_match must be numeric in {csv_path}, got {value!r}") from None
+    if not math.isfinite(semantic_match) or not 0.0 <= semantic_match <= 1.0:
+        raise ValueError(f"semantic_match must be between 0 and 1 in {csv_path}, got {value!r}")
+    return semantic_match
+
+
 def _normalize_eval_row(row: dict, model: str, variant: str, csv_path: Path) -> dict:
     semantic_bucket = str(row.get("semantic_bucket", "") or "").strip()
     if semantic_bucket not in SEMANTIC_BUCKETS:
         raise ValueError(f"Unexpected semantic_bucket in {csv_path}: {semantic_bucket!r}")
 
-    semantic_match = int(as_float(row.get("semantic_match")))
-    if semantic_match not in (0, 1):
-        raise ValueError(f"semantic_match must be 0 or 1 in {csv_path}, got {row.get('semantic_match')!r}")
-    if semantic_bucket == "semantic_correct" and semantic_match != 1:
-        raise ValueError(f"semantic_correct rows must set semantic_match=1 in {csv_path}")
-    if semantic_bucket != "semantic_correct" and semantic_match != 0:
-        raise ValueError(f"Non-correct semantic buckets must set semantic_match=0 in {csv_path}")
+    semantic_match = _parse_semantic_match(row.get("semantic_match"), csv_path)
 
     key = _cm_key(model, variant)
     axes = _parse_variant(variant)
@@ -857,8 +868,8 @@ def _build_semantic_curve(
     assign_bin_fn,
     selector_fn,
 ) -> Tuple[dict, dict]:
-    variant_acc: Dict[str, Dict[str, List[int]]] = defaultdict(lambda: defaultdict(list))
-    cm_acc: Dict[str, Dict[str, List[int]]] = defaultdict(lambda: defaultdict(list))
+    variant_acc: Dict[str, Dict[str, List[float]]] = defaultdict(lambda: defaultdict(list))
+    cm_acc: Dict[str, Dict[str, List[float]]] = defaultdict(lambda: defaultdict(list))
 
     for key in sorted(by_key_records.keys(), key=_condition_model_sort_key):
         model, variant = _split_cm_key(key)
@@ -868,11 +879,11 @@ def _build_semantic_curve(
             if selector_value is None:
                 continue
             bin_label = assign_bin_fn(selector_value)
-            semantic_match = int(record.get("_semantic_match", 0) or 0)
+            semantic_match = float(record.get("_semantic_match", 0) or 0)
             variant_acc[variant][bin_label].append(semantic_match)
             cm_acc[key][bin_label].append(semantic_match)
 
-    def finalize(acc: Dict[str, Dict[str, List[int]]]) -> dict:
+    def finalize(acc: Dict[str, Dict[str, List[float]]]) -> dict:
         out = {}
         for outer_key, bins in sorted(acc.items(), key=lambda item: _variant_sort_key(item[0]) if "/" not in item[0] else _condition_model_sort_key(item[0])):
             out[outer_key] = {}
@@ -2600,7 +2611,7 @@ def run_analysis(
     model_filter: Optional[str] = None,
     no_figures: bool = False,
 ) -> dict:
-    model_filters = [token.strip().lower() for token in model_filter.split(",")] if model_filter else None
+    model_filters = _parse_model_filters(model_filter)
 
     out_dir = Path(output_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
