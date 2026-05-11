@@ -648,11 +648,14 @@ class TestRunModeAnalysisSemantic(unittest.TestCase):
 
             tools_discovery = outputs["tools_discovery"][f"openai_gpt-5.2-xhigh/{variant_a}"]
             self.assertIn("search_ideal", tools_discovery)
-            self.assertNotIn("avg_recall", tools_discovery["search_ideal"])
+            self.assertIn("avg_recall", tools_discovery["search_ideal"])
+            self.assertIn("avg_f1", tools_discovery["search_ideal"])
             folder_stats = next(iter(tools_discovery["search_ideal"]["per_folder"].values()))
-            self.assertNotIn("avg_recall", folder_stats)
+            self.assertIn("avg_recall", folder_stats)
+            self.assertIn("avg_f1", folder_stats)
             task_stats = next(iter(folder_stats["per_task"].values()))
-            self.assertNotIn("recall", task_stats)
+            self.assertIn("recall", task_stats)
+            self.assertIn("f1", task_stats)
 
             self.assertIn("tool_errors", outputs)
             tool_errors = outputs["tool_errors"][f"openai_gpt-5.2-xhigh/{variant_a}"]
@@ -1087,13 +1090,9 @@ class TestRunModeAnalysisSemantic(unittest.TestCase):
                 "fig03_semantic_x_error_variant.pdf",
                 "fig04_error_vs_semantic_variant.pdf",
                 "fig05_turn_waste_groups_variant.pdf",
-                "fig1_semantic_comparison.pdf",
                 "fig2a_recall_semantic_combined.pdf",
-                "fig2_discovery_metrics.pdf",
-                "fig2b_gpt_5_2_xhigh_discovery_metrics.pdf",
-                "fig3_failure_breakdown.pdf",
                 "fig6_cost_vs_semantic.pdf",
-                "fig8_search_tool_precision.pdf",
+                "fig8_search_tool_precision_recall_f1.pdf",
                 "fig9_search_calls.pdf",
                 "fig10_search_depth_curve.pdf",
                 "fig10b_gpt_5_2_xhigh_search_depth.pdf",

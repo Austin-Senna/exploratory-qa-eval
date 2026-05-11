@@ -2,6 +2,10 @@
 """
 Semantic-first mode analysis runner.
 
+This is the current mode-analysis entrypoint. Compatibility code in this file
+is limited to loading adjacent raw/turn-waste result trees and preserving a few
+legacy output shapes for downstream notebooks.
+
 Reads semantic-audited eval_results.csv files from:
   results-ec2_semantic/modes/{model}/{variant}/eval_results.csv
 
@@ -113,18 +117,6 @@ FAILURE_PRIMARY_BUCKETS = [
     "error_unknown",
 ]
 
-FAILURE_PRIMARY_COLORS = {
-    "semantic_correct": "#2E8B57",
-    "semantic_incorrect": "#C07A2C",
-    "answer_unknown_blank": "#C44E52",
-    "error_turns_exhausted": "#9C1D35",
-    "error_tools_limit": "#E17C05",
-    "error_tokens_reached": "#7A3E9D",
-    "error_context_overflow": "#9467BD",
-    "error_event_loop": "#7F7F7F",
-    "error_unknown": "#BCBD22",
-}
-
 REQUIRED_FIELDS = [
     "exact_match",
     "semantic_match",
@@ -172,7 +164,7 @@ LOG_ERROR_BUCKET_DISPLAY = {
     "error_unknown": "Unknown",
 }
 
-_LETTER_TO_MODE = {"n": "naive", "d": "standard", "i": "ideal"}
+_LETTER_TO_MODE = {"n": "naive", "d": "standard", "i": "ideal", "p": "preloaded"}
 _MODE_PRIORITY = {"ideal": 0, "standard": 1, "naive": 2, None: 3}
 _UNIMPORTANT_TOOLS = {"get_sandbox_info", "submit_answer", "plan", "think"}
 _MODE_DISPLAY = {"ideal": "Ideal", "standard": "Std", "naive": "Naive", None: "?"}
@@ -235,6 +227,7 @@ def _parse_variant(variant: str) -> Dict[str, Optional[object]]:
         "search_tool": None,
         "search_results": None,
         "agent_management": None,
+        "plan_skills": None,
         "k": None,
         "sc": None,
     }
@@ -246,6 +239,8 @@ def _parse_variant(variant: str) -> Dict[str, Optional[object]]:
             out["search_results"] = _LETTER_TO_MODE.get(parts[idx + 1])
         elif token.startswith("plan") and len(token) > 4:
             out["agent_management"] = _LETTER_TO_MODE.get(token[4:])
+        elif token == "skills" and idx + 1 < len(parts):
+            out["plan_skills"] = parts[idx + 1]
         elif token.startswith("k") and token[1:].isdigit():
             out["k"] = int(token[1:])
         elif token.startswith("sc") and token[2:].isdigit():
@@ -258,6 +253,7 @@ def _parse_variant_mode_codes(variant: str) -> Dict[str, Optional[str]]:
         "search": None,
         "results": None,
         "plan": None,
+        "skills": None,
         "k": None,
         "sc": None,
     }
@@ -269,6 +265,8 @@ def _parse_variant_mode_codes(variant: str) -> Dict[str, Optional[str]]:
             out["results"] = parts[idx + 1]
         elif token.startswith("plan") and len(token) > 4:
             out["plan"] = token[4:]
+        elif token == "skills" and idx + 1 < len(parts):
+            out["skills"] = parts[idx + 1]
         elif token.startswith("k") and token[1:].isdigit():
             out["k"] = token[1:]
         elif token.startswith("sc") and token[2:].isdigit():
@@ -357,6 +355,7 @@ def _safe_slug(value: str) -> str:
 
 
 def _default_base_results_dir(results_dir: str) -> Optional[str]:
+    """Infer the adjacent raw result tree for audited semantic results."""
     candidate = str(results_dir).replace("_semantic", "", 1)
     if candidate != results_dir:
         return candidate
@@ -364,6 +363,7 @@ def _default_base_results_dir(results_dir: str) -> Optional[str]:
 
 
 def _default_turn_waste_grouped_dir(results_dir: str) -> Optional[str]:
+    """Infer the optional grouped turn-waste tree next to semantic results."""
     results_str = str(results_dir)
     candidate = results_str.replace("_semantic/modes", "_semantic_turn_waste_grouped/modes", 1)
     if candidate != results_str:
@@ -488,6 +488,7 @@ def _normalize_eval_row(row: dict, model: str, variant: str, csv_path: Path) -> 
     normalized["search_tool"] = axes["search_tool"]
     normalized["search_results"] = axes["search_results"]
     normalized["agent_management"] = axes["agent_management"]
+    normalized["plan_skills"] = axes["plan_skills"]
     normalized["k"] = axes["k"]
     normalized["sc"] = axes["sc"]
     normalized["task_stem"] = make_task_stem_key(task_id) if task_id else ""
@@ -733,6 +734,7 @@ def run_efficiency(by_key_records: Dict[str, List[dict]]) -> dict:
 
 
 def _strip_tool_recall_fields(tool_data: dict) -> dict:
+    """Trim per-tool discovery details while preserving precision/recall/F1."""
     cleaned = {}
     for tool_name, stats in tool_data.items():
         cleaned_stats = {
@@ -740,6 +742,7 @@ def _strip_tool_recall_fields(tool_data: dict) -> dict:
             "n_tasks": stats.get("n_tasks"),
             "tasks_with_hit": stats.get("tasks_with_hit"),
             "avg_precision": stats.get("avg_precision"),
+            "avg_recall": stats.get("avg_recall"),
             "avg_f1": stats.get("avg_f1"),
         }
         per_folder = {}
@@ -748,6 +751,7 @@ def _strip_tool_recall_fields(tool_data: dict) -> dict:
                 "n_tasks": folder_stats.get("n_tasks"),
                 "calls": folder_stats.get("calls"),
                 "avg_precision": folder_stats.get("avg_precision"),
+                "avg_recall": folder_stats.get("avg_recall"),
                 "avg_f1": folder_stats.get("avg_f1"),
                 "tasks_with_hit": folder_stats.get("tasks_with_hit"),
                 "per_task": {},
@@ -756,6 +760,7 @@ def _strip_tool_recall_fields(tool_data: dict) -> dict:
                 cleaned_folder["per_task"][task_id] = {
                     "calls": task_stats.get("calls"),
                     "precision": task_stats.get("precision"),
+                    "recall": task_stats.get("recall"),
                     "f1": task_stats.get("f1"),
                     "has_hit": task_stats.get("has_hit"),
                 }
@@ -978,6 +983,7 @@ def _init_binned_outcome_row(model: str, variant: str, bin_labels: List[str]) ->
         "search_tool": axes["search_tool"],
         "search_results": axes["search_results"],
         "agent_management": axes["agent_management"],
+        "plan_skills": axes["plan_skills"],
         "k": axes["k"],
         "sc": axes["sc"],
         "bins": {label: _empty_bucket_entry() for label in bin_labels},
@@ -1057,6 +1063,7 @@ def build_summary(
             "search_tool": axes["search_tool"],
             "search_results": axes["search_results"],
             "agent_management": axes["agent_management"],
+            "plan_skills": axes["plan_skills"],
             "k": axes["k"],
             "sc": axes["sc"],
             "n": n,
@@ -1192,6 +1199,7 @@ def build_variant_summary(summary_rows: List[dict]) -> List[dict]:
             "search_tool": axes["search_tool"],
             "search_results": axes["search_results"],
             "agent_management": axes["agent_management"],
+            "plan_skills": axes["plan_skills"],
             "k": axes["k"],
             "sc": axes["sc"],
             "n_total": total_n,
@@ -1546,6 +1554,7 @@ def build_per_task_rows(
                 "search_tool": axes["search_tool"],
                 "search_results": axes["search_results"],
                 "agent_management": axes["agent_management"],
+                "plan_skills": axes["plan_skills"],
                 "k": axes["k"],
                 "sc": axes["sc"],
                 "task_stem": record.get("task_stem", ""),
@@ -1574,6 +1583,7 @@ def build_per_task_rows(
         "search_tool",
         "search_results",
         "agent_management",
+        "plan_skills",
         "k",
         "sc",
         "task_stem",
@@ -1698,14 +1708,6 @@ def _display_log_error_bucket(bucket: str) -> str:
     return LOG_ERROR_BUCKET_DISPLAY.get(bucket, bucket)
 
 
-def _display_failure_bucket(bucket: str) -> str:
-    if bucket in SEMANTIC_BUCKET_DISPLAY:
-        return SEMANTIC_BUCKET_DISPLAY[bucket]
-    if bucket in LOG_ERROR_BUCKET_DISPLAY:
-        return LOG_ERROR_BUCKET_DISPLAY[bucket]
-    return bucket
-
-
 def _display_tool_name(tool_name: str) -> str:
     return {
         "execute_code": "execute",
@@ -1735,25 +1737,6 @@ def _annotate_pct_bars(ax, bars, values: List[float], *, min_value: float = 4.0,
             va="bottom",
             fontsize=8,
         )
-
-
-def _plot_single_metric_bars(plt, rows: List[dict], *, field: str, label_fn, title: str, output_path: Path) -> None:
-    if not rows:
-        return
-    labels = [label_fn(row) for row in rows]
-    values = [float(row.get(field) or 0.0) * 100.0 for row in rows]
-    fig_width = max(10, len(rows) * 1.2)
-    fig, ax = plt.subplots(figsize=(fig_width, 6))
-    bars = ax.bar(range(len(rows)), values, color="#2E8B57")
-    _annotate_pct_bars(ax, bars, values)
-    ax.set_xticks(range(len(rows)))
-    ax.set_xticklabels(labels, rotation=0, ha="center", fontsize=9)
-    ax.set_ylabel("Semantic Match (%)")
-    ax.set_ylim(0, 100)
-    ax.set_title(title)
-    fig.tight_layout()
-    fig.savefig(output_path)
-    plt.close(fig)
 
 
 def _plot_grouped_metrics_bars(
@@ -1810,99 +1793,6 @@ def _plot_discovery_semantic_combined(plt, summary_rows: List[dict], output_path
     )
 
 
-def _plot_discovery_panels_for_model(plt, rows: List[dict], model: str, output_path: Path) -> None:
-    if not rows:
-        return
-    ordered_rows = sorted(rows, key=lambda row: _variant_sort_key(str(row.get("variant", ""))))
-    labels = [_compact_variant_label(str(row.get("variant", "")), multiline=True) for row in ordered_rows]
-    fig, axes = plt.subplots(2, 1, figsize=(max(10, len(rows) * 1.2), 9), sharex=True)
-    top_ax, bottom_ax = axes
-
-    top_fields = [
-        ("D_ret_precision", "Precision", "#4C78A8"),
-        ("D_ret", "Recall", "#F58518"),
-        ("D_ret_f1", "F1", "#54A24B"),
-    ]
-    bottom_fields = [
-        ("D_acc_precision", "Precision", "#4C78A8"),
-        ("D_acc_recall", "Recall", "#F58518"),
-        ("D_acc_f1", "F1", "#54A24B"),
-    ]
-
-    def draw(ax, fields, title):
-        x_positions = list(range(len(ordered_rows)))
-        width = 0.8 / len(fields)
-        for idx, (field, label, color) in enumerate(fields):
-            values = [float(row.get(field) or 0.0) * 100.0 for row in ordered_rows]
-            offset = (idx - len(fields) / 2 + 0.5) * width
-            bars = ax.bar([x + offset for x in x_positions], values, width=width * 0.9, label=label, color=color)
-            _annotate_pct_bars(ax, bars, values)
-        ax.set_ylim(0, 100)
-        ax.set_ylabel("Rate (%)")
-        ax.set_title(title)
-        ax.legend(loc="upper left", fontsize=8)
-
-    draw(top_ax, top_fields, "D_ret Metrics")
-    draw(bottom_ax, bottom_fields, "D_acc Metrics")
-    bottom_ax.set_xticks(range(len(ordered_rows)))
-    bottom_ax.set_xticklabels(labels, rotation=0, ha="center", fontsize=9)
-    fig.suptitle(f"Discovery Metrics — {_pretty_model(model)}")
-    fig.tight_layout()
-    fig.savefig(output_path)
-    plt.close(fig)
-
-
-def _plot_primary_failure_breakdown(plt, variant_rows: List[dict], failure_by_key: dict, output_path: Path) -> None:
-    if not variant_rows:
-        return
-    variant_primary: Dict[str, Counter] = defaultdict(Counter)
-    variant_totals: Dict[str, int] = defaultdict(int)
-    for key, failure_row in failure_by_key.items():
-        _, variant = _split_cm_key(key)
-        for bucket in FAILURE_PRIMARY_BUCKETS:
-            variant_primary[variant][bucket] += int(failure_row.get("primary", {}).get(bucket, {}).get("n", 0) or 0)
-        variant_totals[variant] += int(failure_row.get("total", 0) or 0)
-
-    ordered_variants = [str(row.get("variant", "")) for row in variant_rows]
-    fig, ax = plt.subplots(figsize=(max(10, len(ordered_variants) * 1.25), 6))
-    x_positions = list(range(len(ordered_variants)))
-    bottoms = [0.0] * len(ordered_variants)
-    for bucket in FAILURE_PRIMARY_BUCKETS:
-        vals = [
-            100 * variant_primary[variant].get(bucket, 0) / variant_totals[variant] if variant_totals[variant] else 0.0
-            for variant in ordered_variants
-        ]
-        bars = ax.bar(
-            x_positions,
-            vals,
-            bottom=bottoms,
-            label=_display_failure_bucket(bucket),
-            color=FAILURE_PRIMARY_COLORS[bucket],
-        )
-        for bar, val, bottom in zip(bars, vals, bottoms):
-            if val < 6.0:
-                continue
-            ax.text(
-                bar.get_x() + bar.get_width() / 2,
-                bottom + val / 2,
-                f"{val:.0f}%",
-                ha="center",
-                va="center",
-                fontsize=8,
-                color=_label_text_color(FAILURE_PRIMARY_COLORS[bucket]),
-            )
-        bottoms = [bottoms[i] + vals[i] for i in range(len(vals))]
-    ax.set_xticks(x_positions)
-    ax.set_xticklabels([_compact_variant_label(variant, multiline=True) for variant in ordered_variants], fontsize=9)
-    ax.set_ylabel("Tasks (%)")
-    ax.set_ylim(0, 100)
-    ax.set_title("Primary Semantic Failure Attribution by Variant")
-    ax.legend(loc="upper left", bbox_to_anchor=(1.02, 1), fontsize=8)
-    fig.tight_layout(rect=(0, 0, 0.82, 1))
-    fig.savefig(output_path)
-    plt.close(fig)
-
-
 def _plot_cost_vs_semantic(plt, summary_rows: List[dict], output_path: Path) -> None:
     if not summary_rows:
         return
@@ -1930,26 +1820,55 @@ def _plot_cost_vs_semantic(plt, summary_rows: List[dict], output_path: Path) -> 
     plt.close(fig)
 
 
-def _plot_tool_precision(plt, tools_discovery: dict, output_path: Path) -> None:
-    rows = []
-    for key, tool_data in sorted(tools_discovery.items(), key=lambda item: _condition_model_sort_key(item[0])):
+def _plot_tool_precision_recall_f1(plt, tools_discovery: dict, output_path: Path) -> None:
+    tool_acc: Dict[str, dict] = defaultdict(lambda: {"weight": 0.0, "precision": 0.0, "recall": 0.0, "f1": 0.0})
+    for tool_data in tools_discovery.values():
         search_tool_names = [tool for tool in tool_data if tool.startswith("search")]
-        if not search_tool_names:
-            search_tool_names = list(tool_data.keys())
-        precisions = [float(tool_data[tool].get("avg_precision", 0.0) or 0.0) for tool in search_tool_names]
-        rows.append({"key": key, "precision": sum(precisions) / len(precisions) if precisions else 0.0})
+        for tool_name in search_tool_names:
+            stats = tool_data.get(tool_name, {})
+            weight = float(stats.get("n_tasks", 0) or stats.get("calls", 0) or 1)
+            bucket = tool_acc[tool_name]
+            bucket["weight"] += weight
+            bucket["precision"] += float(stats.get("avg_precision", 0.0) or 0.0) * weight
+            bucket["recall"] += float(stats.get("avg_recall", 0.0) or 0.0) * weight
+            bucket["f1"] += float(stats.get("avg_f1", 0.0) or 0.0) * weight
+
+    rows = []
+    for tool_name, totals in sorted(tool_acc.items()):
+        weight = float(totals.get("weight", 0.0) or 0.0)
+        if weight <= 0:
+            continue
+        rows.append(
+            {
+                "tool": tool_name,
+                "precision": totals["precision"] / weight,
+                "recall": totals["recall"] / weight,
+                "f1": totals["f1"] / weight,
+            }
+        )
     if not rows:
         return
-    fig, ax = plt.subplots(figsize=(max(10, len(rows) * 0.9), 5.5))
-    vals = [row["precision"] * 100.0 for row in rows]
-    bars = ax.bar(range(len(rows)), vals, color="#4C78A8")
-    _annotate_pct_bars(ax, bars, vals)
-    ax.set_xticks(range(len(rows)))
-    ax.set_xticklabels([_compact_variant_label(_split_cm_key(row["key"])[1], multiline=True) for row in rows], rotation=0, ha="center", fontsize=9)
-    ax.set_ylabel("Avg Precision (%)")
+    ordered_rows = sorted(rows, key=lambda row: str(row["tool"]))
+    x_positions = list(range(len(ordered_rows)))
+    fields = [
+        ("precision", "Precision", "#4C78A8"),
+        ("recall", "Recall", "#F58518"),
+        ("f1", "F1", "#54A24B"),
+    ]
+    width = 0.8 / len(fields)
+    fig, ax = plt.subplots(figsize=(max(10, len(ordered_rows) * 1.2), 5.5))
+    for idx, (field, label, color) in enumerate(fields):
+        values = [float(row.get(field, 0.0) or 0.0) * 100.0 for row in ordered_rows]
+        offset = (idx - len(fields) / 2 + 0.5) * width
+        bars = ax.bar([x + offset for x in x_positions], values, width=width * 0.9, label=label, color=color)
+        _annotate_pct_bars(ax, bars, values)
+    ax.set_xticks(x_positions)
+    ax.set_xticklabels([_display_tool_name(str(row["tool"])) for row in ordered_rows], rotation=20, ha="right", fontsize=9)
+    ax.set_ylabel("Average Score (%)")
     ax.set_ylim(0, 100)
-    ax.set_title("Search Tool Precision by Variant × Model")
-    fig.tight_layout()
+    ax.set_title("Search Tool Precision, Recall, and F1")
+    ax.legend(loc="upper left", bbox_to_anchor=(1.02, 1), fontsize=8)
+    fig.tight_layout(rect=(0, 0, 0.84, 1))
     fig.savefig(output_path)
     plt.close(fig)
 
@@ -2480,50 +2399,10 @@ def generate_figures(
         fig_dir / "fig05_turn_waste_groups_variant.pdf",
     )
 
-    _plot_single_metric_bars(
-        plt,
-        summary_rows,
-        field="semantic_match",
-        label_fn=lambda row: _compact_variant_label(str(row.get("variant", "")), multiline=True),
-        title="Semantic Match by Variant × Model",
-        output_path=fig_dir / "fig1_semantic_comparison.pdf",
-    )
-
     _plot_discovery_semantic_combined(
         plt,
         summary_rows,
         fig_dir / "fig2a_recall_semantic_combined.pdf",
-    )
-
-    _plot_grouped_metrics_bars(
-        plt,
-        variant_rows,
-        fields=[
-            ("D_ret", "D_ret", "#4C78A8"),
-            ("D_acc", "D_acc", "#F58518"),
-        ],
-        label_fn=lambda row: _compact_variant_label(str(row.get("variant", "")), multiline=True),
-        title="Discovery Coverage by Variant",
-        y_label="Rate (%)",
-        output_path=fig_dir / "fig2_discovery_metrics.pdf",
-    )
-
-    rows_by_model: Dict[str, List[dict]] = defaultdict(list)
-    for row in summary_rows:
-        rows_by_model[str(row.get("model", ""))].append(row)
-    for model, model_rows in sorted(rows_by_model.items()):
-        _plot_discovery_panels_for_model(
-            plt,
-            model_rows,
-            model,
-            fig_dir / f"fig2b_{_safe_slug(_pretty_model(model))}_discovery_metrics.pdf",
-        )
-
-    _plot_primary_failure_breakdown(
-        plt,
-        variant_rows,
-        failure,
-        fig_dir / "fig3_failure_breakdown.pdf",
     )
 
     _plot_cost_vs_semantic(
@@ -2532,10 +2411,10 @@ def generate_figures(
         fig_dir / "fig6_cost_vs_semantic.pdf",
     )
 
-    _plot_tool_precision(
+    _plot_tool_precision_recall_f1(
         plt,
         tools_discovery,
-        fig_dir / "fig8_search_tool_precision.pdf",
+        fig_dir / "fig8_search_tool_precision_recall_f1.pdf",
     )
 
     _plot_search_calls(
