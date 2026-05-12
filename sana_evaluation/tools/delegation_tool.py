@@ -10,6 +10,7 @@ from strands import Agent
 
 from strands_evaluation.config import AgentConfig, RunConfig
 from strands_evaluation.instrumentation.agent_plugins import LoggingPlugin
+from strands_evaluation.instrumentation.read_trace_plugin import ReadTracePlugin
 from strands_evaluation.instrumentation.trace_plugin import write_trace_record
 from strands_evaluation.llm.llm_factory import build_model
 
@@ -57,6 +58,7 @@ _PLANNER_TOOL_NAMES = {
     "plan_ideal",
     "submit_answer",
 }
+_PARTIAL_OR_SUCCESS_STATUS = {"success", "partial"}
 
 
 def tools_for_delegation_planner(
@@ -75,6 +77,29 @@ def tools_for_delegation_planner(
     return out
 
 
+def _enforce_nonempty_success_payload(kind: str, payload: Dict[str, Any]) -> None:
+    status = str(payload.get("status") or "").strip().lower()
+    if status not in _PARTIAL_OR_SUCCESS_STATUS:
+        return
+    if kind == "search" and not payload.get("candidates"):
+        reason = "Search contract returned success/partial without candidates."
+        payload["status"] = "failed"
+        payload["failure_reason"] = payload.get("failure_reason") or reason
+        payload.setdefault("missing_or_uncertain_coverage", [reason])
+        if not payload["missing_or_uncertain_coverage"]:
+            payload["missing_or_uncertain_coverage"] = [reason]
+        payload["retry_recommended"] = True
+        return
+    if kind == "inspect" and not payload.get("answer_fragments"):
+        reason = "Inspect contract returned success/partial without answer_fragments."
+        payload["status"] = "failed"
+        payload["failure_reason"] = payload.get("failure_reason") or reason
+        payload.setdefault("missing_outputs", ["answer_fragments"])
+        if not payload["missing_outputs"]:
+            payload["missing_outputs"] = ["answer_fragments"]
+        payload["retry_recommended"] = True
+
+
 @dataclass
 class DelegationRuntime:
     """Runtime state used by planner tools to spawn fresh bounded subagents."""
@@ -88,15 +113,7 @@ class DelegationRuntime:
 
     def run_search_contract(self, contract: SearchContract) -> Dict[str, Any]:
         tools = tools_for_search_subagent(self.base_tools)
-        source_hints: List[Dict[str, str]] = []
-        search_mode = (self.run_config.search_tool_mode or "").strip().lower()
-        if search_mode == "preloaded":
-            source_hints = _source_hints_from_sequence(
-                [],
-                _preloaded_source_sequence(self.task_context),
-                include_all=True,
-            )
-        prompt = _format_search_prompt(contract, source_hints=source_hints)
+        prompt = _format_search_prompt(contract)
         return self._run_agent_contract(
             kind="search",
             contract_id=contract.contract_id,
@@ -150,6 +167,7 @@ class DelegationRuntime:
         )
         return_tool = build_return_tool(result_state, captured_getter)
         ledger = _SubagentToolLedger(return_tool_name)
+        read_tracer = ReadTracePlugin()
         max_calls = int(getattr(contract, "budget_calls", 1) or 1)
         plugins: List[Any] = [
             _FileReferenceGuard(),
@@ -161,6 +179,7 @@ class DelegationRuntime:
             ),
             ledger,
             capture,
+            read_tracer,
             LoggingPlugin(),
         ]
         if extra_plugins:
@@ -212,8 +231,14 @@ class DelegationRuntime:
 
         payload.setdefault("contract_id", contract_id)
         payload["status"] = payload.get("status") if payload.get("status") in status_values else "failed"
+        _enforce_nonempty_success_payload(kind, payload)
         requested_budget_calls = int(getattr(contract, "requested_budget_calls", max_calls) or max_calls)
         model_name = self.agent_config.model_name or self.agent_config.model_id
+        gold_datasets_read = sorted(
+            str(dataset_id).strip()
+            for dataset_id in read_tracer.gold_datasets_read
+            if str(dataset_id).strip()
+        )
         cost_record = record_delegation_subagent_call(
             tool=f"{kind}_subagent",
             subagent_kind=kind,
@@ -228,6 +253,7 @@ class DelegationRuntime:
             hard_budget_calls=max_calls + _SUBAGENT_GRACE_TOOL_CALLS,
             tool_calls=ledger.tool_calls,
             tools_used=list(ledger.tools_used),
+            gold_datasets_read=gold_datasets_read,
         )
         usage = {
             "input_tokens": int(cost_record.get("input_tokens") or 0),
@@ -247,6 +273,7 @@ class DelegationRuntime:
             "requested_budget_calls": requested_budget_calls,
             "tool_calls": ledger.tool_calls,
             "tools_used": list(ledger.tools_used),
+            "gold_datasets_read": gold_datasets_read,
             **usage,
             "cost_usd": cost_usd,
         }
@@ -261,6 +288,7 @@ class DelegationRuntime:
                 "hard_budget_calls": max_calls + _SUBAGENT_GRACE_TOOL_CALLS,
                 "tool_calls": ledger.tool_calls,
                 "tools_used": list(ledger.tools_used),
+                "gold_datasets_read": gold_datasets_read,
                 **usage,
                 "cost_usd": cost_usd,
             }

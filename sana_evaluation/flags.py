@@ -49,6 +49,8 @@ class SanaFlags:
         management_mode = management_mode or "naive"
         if self.sprint and self.delegation:
             raise ValueError("SANA features sprint and delegation are mutually exclusive.")
+        if self.cot and self.delegation:
+            raise ValueError("SANA features cot and delegation are mutually exclusive.")
         if self.sprint and management_mode not in {"standard", "ideal"}:
             raise ValueError(
                 "SANA flag sprint requires plan ∈ {standard, ideal}; "

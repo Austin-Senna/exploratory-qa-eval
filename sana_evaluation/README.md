@@ -6,13 +6,14 @@ A SoK-aligned runtime-control framework layered on top of the `strands_evaluatio
 
 ## Feature flags
 
-Three opt-in flags, all default off. Validated by `SanaFlags.validate(agent_management=...)` at startup.
+Four opt-in flags, all default off. Validated by `SanaFlags.validate(agent_management=...)` at startup.
 
 | Flag      | What it does                                                                    | Dependencies                           |
 |-----------|---------------------------------------------------------------------------------|----------------------------------------|
 | `sprint`  | k-turn sprint reflection or source commitment control, submitted with a tool    | `agent_management ∈ {standard, ideal}` |
-| `cot`     | Structured pre/post tool-use records                                            | —                                      |
+| `cot`     | Structured pre/post tool-use records                                            | incompatible with `delegation`         |
 | `results` | `peek_file` returns a `profile` field (column stats, top rows, llm_description) | —                                      |
+| `delegation` | Planner-only parent agent with bounded search/inspect subagents             | `agent_management ∈ {standard, ideal}`; incompatible with `sprint`/`cot` |
 
 Two earlier flags have been folded into `sprint`:
 - The state-of-task readout (formerly `dashboard`) renders inside the reflection Guide reason.
@@ -37,10 +38,11 @@ python -m sana_evaluation.run_sana_eval \
 | Hook                    | What SANA does with it                                                                 |
 |-------------------------|----------------------------------------------------------------------------------------|
 | `_pre_build_setup`      | No-op (currently). Reserved for runtime toggles.                                       |
+| `_system_prompt_override` | Replaces the parent prompt with a lean planner prompt when `delegation=on`          |
 | `_extra_prompt_text`    | Appends `cot_block` / `sprint_block` per active flag                                   |
 | `_extra_plugins`        | Adds `CoTPostRecordPlugin`, `SprintSteerHandler`, `StateOfTaskDashboardPlugin`         |
 | `_conversation_manager` | Returns a `SummarizingConversationManager` with the SANA-tuned summarization prompt    |
-| `_decorate_tools`       | Swaps baseline `peek_file` when `results=on`, and adds `sprint` when `sprint=on`       |
+| `_decorate_tools`       | Swaps baseline `peek_file` when `results=on`, adds `sprint`, or prunes to delegation tools |
 
 `SanaBatchRunner` (in `sana_runner.py`) is just `BatchRunner` with `_AGENT_CLASS = SanaDataLakeAgent`.
 

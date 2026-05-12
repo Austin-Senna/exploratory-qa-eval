@@ -2,8 +2,12 @@
 
 from __future__ import annotations
 
+import asyncio
 import unittest
+from types import SimpleNamespace
 from unittest.mock import MagicMock
+
+from strands.vended_plugins.steering import Proceed
 
 from sana_evaluation.flags import SanaFlags
 from sana_evaluation.sana_bundle import SanaDataLakeAgent
@@ -193,6 +197,166 @@ class DecorateToolsTests(unittest.TestCase):
         )
 
         self.assertEqual([plugin.name for plugin in decorated], ["logging"])
+
+def test_build_agent_applies_delegation_plugin_filter(monkeypatch) -> None:
+    import strands_evaluation.agent_with_mode as agent_with_mode
+
+    created = {}
+
+    class _FakeStrandsAgent:
+        def __init__(self, *args, **kwargs):
+            created["plugins"] = kwargs["plugins"]
+            created["tools"] = kwargs["tools"]
+            created["system_prompt"] = kwargs["system_prompt"]
+            self.model = kwargs["model"]
+
+    monkeypatch.setattr(agent_with_mode, "Agent", _FakeStrandsAgent)
+    monkeypatch.setattr(
+        agent_with_mode,
+        "load_ideal_plan_for_context",
+        lambda task_context: SimpleNamespace(
+            reasoning_chain_text="",
+            source_sequence=["datagov/source-a/files/rows.txt"],
+        ),
+    )
+
+    rc = SanaRunConfig(
+        search_tool_mode="naive",
+        search_results_mode="naive",
+        agent_management_mode="standard",
+        plan_skills_enabled=True,
+        sana_flags=SanaFlags(delegation=True),
+    )
+    agent = SanaDataLakeAgent(AgentConfig(model_name="openai/gpt-5.4-nano"), rc)
+
+    agent._build_agent(MagicMock(), task_context={})
+
+    plugin_names = [getattr(plugin, "name", None) for plugin in created["plugins"]]
+    assert "agent_skills" not in plugin_names
+    assert "## SKILLS" not in created["system_prompt"]
+    assert "skills(" not in created["system_prompt"]
+    assert "search_subagent" in [getattr(tool, "tool_name", None) for tool in created["tools"]]
+
+
+def test_build_agent_uses_lean_delegation_prompt(monkeypatch) -> None:
+    import strands_evaluation.agent_with_mode as agent_with_mode
+
+    created = {}
+
+    class _FakeStrandsAgent:
+        def __init__(self, *args, **kwargs):
+            created["tools"] = kwargs["tools"]
+            created["system_prompt"] = kwargs["system_prompt"]
+            self.model = kwargs["model"]
+
+    monkeypatch.setattr(agent_with_mode, "Agent", _FakeStrandsAgent)
+    monkeypatch.setattr(
+        agent_with_mode,
+        "load_ideal_plan_for_context",
+        lambda task_context: SimpleNamespace(
+            reasoning_chain_text="",
+            source_sequence=["datagov/source-a/files/rows.txt"],
+        ),
+    )
+
+    rc = SanaRunConfig(
+        search_tool_mode="standard",
+        search_results_mode="ideal",
+        agent_management_mode="standard",
+        sana_flags=SanaFlags(delegation=True),
+    )
+    agent = SanaDataLakeAgent(AgentConfig(model_name="openai/gpt-5.4-nano"), rc)
+
+    agent._build_agent(MagicMock(), task_context={})
+
+    prompt = created["system_prompt"]
+    assert "## DELEGATION PLANNER" in prompt
+    assert "plan(" in prompt
+    assert "search_subagent" in prompt
+    assert "inspect_subagent" in prompt
+    assert "submit_answer" in prompt
+    for direct_tool in (
+        "list_files",
+        "peek_file",
+        "query_file",
+        "download",
+        "execute_code",
+        "get_sandbox_info",
+        "cleanup_sandbox",
+    ):
+        assert direct_tool not in prompt
+
+
+def test_build_agent_uses_inspect_only_delegation_prompt_for_preloaded(monkeypatch) -> None:
+    import strands_evaluation.agent_with_mode as agent_with_mode
+
+    created = {}
+
+    class _FakeStrandsAgent:
+        def __init__(self, *args, **kwargs):
+            created["tools"] = kwargs["tools"]
+            created["system_prompt"] = kwargs["system_prompt"]
+            self.model = kwargs["model"]
+
+    monkeypatch.setattr(agent_with_mode, "Agent", _FakeStrandsAgent)
+    monkeypatch.setattr(
+        agent_with_mode,
+        "load_ideal_plan_for_context",
+        lambda task_context: SimpleNamespace(
+            reasoning_chain_text="",
+            source_sequence=["datagov/source-a/files/rows.txt"],
+        ),
+    )
+
+    rc = SanaRunConfig(
+        search_tool_mode="preloaded",
+        search_results_mode="ideal",
+        agent_management_mode="standard",
+        sana_flags=SanaFlags(delegation=True),
+    )
+    agent = SanaDataLakeAgent(AgentConfig(model_name="openai/gpt-5.4-nano"), rc)
+
+    agent._build_agent(
+        MagicMock(),
+        task_context={
+            "task_id": "task_1",
+            "task_path": "tasks_core_quality/k-1-d-1/task_1.json",
+        },
+    )
+
+    prompt = created["system_prompt"]
+    tool_names = [getattr(tool, "tool_name", None) for tool in created["tools"]]
+    assert "search_subagent" not in prompt
+    assert "search_subagent" not in tool_names
+    assert "inspect_subagent" in prompt
+    assert "## PRELOADED DATASETS" in prompt
+
+
+def test_sprint_plugins_inherit_search_free_exclusions() -> None:
+    rc = SanaRunConfig(
+        search_tool_mode="ideal",
+        search_results_mode="ideal",
+        agent_management_mode="standard",
+        search_free=True,
+        max_tool_calls=3,
+        sana_flags=SanaFlags(sprint=True),
+    )
+    agent = SanaDataLakeAgent(AgentConfig(model_name="openai/gpt-5.4-nano"), rc)
+
+    plugins = agent._extra_plugins(
+        search_tool_mode="ideal",
+        agent_management_mode="standard",
+    )
+    sprint_plugin = next(plugin for plugin in plugins if plugin.name == "sana-sprint-steer")
+    sprint_plugin.on_after_tool(
+        SimpleNamespace(tool_use={"name": "search_ideal"}, result=None, cancel_message=None)
+    )
+
+    action = asyncio.run(
+        sprint_plugin.steer_before_tool(agent=None, tool_use={"name": "query_file"})
+    )
+
+    assert isinstance(action, Proceed)
 
 
 if __name__ == "__main__":

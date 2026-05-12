@@ -186,6 +186,30 @@ def test_delegation_subagent_cost_recorder_tracks_costs_and_trace(tmp_path) -> N
     assert events[0]["cost_usd"] == expected_cost
 
 
+def test_delegation_subagent_cost_recorder_tracks_gold_reads() -> None:
+    from sana_evaluation.instrumentation import delegation_subagent_costs
+
+    delegation_subagent_costs.reset_stats()
+
+    delegation_subagent_costs.record_subagent_call(
+        tool="inspect_subagent",
+        subagent_kind="inspect",
+        model_name="openai/gpt-5.4-nano",
+        agent_result=_FakeAgentResult(input_tokens=1, output_tokens=1),
+        gold_datasets_read=["schools", "libraries", "schools", ""],
+    )
+    delegation_subagent_costs.record_subagent_call(
+        tool="inspect_subagent",
+        subagent_kind="inspect",
+        model_name="openai/gpt-5.4-nano",
+        agent_result=_FakeAgentResult(input_tokens=1, output_tokens=1),
+        gold_datasets_read=["libraries", "parks"],
+    )
+
+    stats = delegation_subagent_costs.get_stats()
+    assert stats["delegation_gold_datasets_read"] == ["schools", "libraries", "parks"]
+
+
 def test_delegation_runtime_records_subagent_cost(monkeypatch) -> None:
     import sana_evaluation.tools.delegation_tool as delegation_tool
 
@@ -212,7 +236,12 @@ def test_delegation_runtime_records_subagent_cost(monkeypatch) -> None:
             return_tool._tool_func(
                 status="success",
                 search_summary="found source",
-                candidates=[],
+                candidates=[
+                    {
+                        "dataset_id": "schools",
+                        "s3_uri": "s3://bucket/datagov/schools/files/rows.csv",
+                    }
+                ],
                 tool_context=_FakeToolContext(),
             )
             return _FakeAgentResult(input_tokens=900, output_tokens=40, cached_input_tokens=300)
@@ -246,6 +275,193 @@ def test_delegation_runtime_records_subagent_cost(monkeypatch) -> None:
     assert recorded[0]["status"] == "success"
     assert recorded[0]["budget_calls"] == 3
     assert recorded[0]["success"] is True
+
+
+def test_delegation_runtime_records_subagent_gold_reads(monkeypatch) -> None:
+    import sana_evaluation.tools.delegation_tool as delegation_tool
+
+    recorded = []
+
+    def fake_record_subagent_call(**kwargs):
+        recorded.append(kwargs)
+        return {
+            "input_tokens": 1,
+            "cached_input_tokens": 0,
+            "uncached_input_tokens": 1,
+            "output_tokens": 1,
+            "total_tokens": 2,
+            "cost_usd": 0.0,
+        }
+
+    class _ReadAgent:
+        def __init__(self, *args, **kwargs):
+            self.plugins = kwargs["plugins"]
+            self.tools = kwargs["tools"]
+
+        def __call__(self, prompt: str):
+            _ = prompt
+            read_tracer = next(
+                plugin for plugin in self.plugins if getattr(plugin, "name", "") == "read-trace"
+            )
+            read_tracer.gold_datasets_read.add("gold-dataset")
+            return_tool = next(t for t in self.tools if getattr(t, "tool_name", "") == "return_inspect_result")
+            return_tool._tool_func(
+                status="success",
+                answer_fragments=[{"output": "count", "value": 1}],
+                evidence=["query_file(gold-dataset/files/rows.csv)"],
+                executor_summary="Found the count.",
+                tool_context=_FakeToolContext(),
+            )
+            return _FakeAgentResult(input_tokens=1, output_tokens=1)
+
+    monkeypatch.setattr(delegation_tool, "record_delegation_subagent_call", fake_record_subagent_call)
+    monkeypatch.setattr(delegation_tool, "Agent", _ReadAgent)
+    monkeypatch.setattr(delegation_tool, "build_model", lambda agent_config: object())
+
+    runtime = DelegationRuntime(
+        agent_config=AgentConfig(model_name="openai/gpt-5.4-nano"),
+        run_config=RunConfig(search_tool_mode="standard"),
+        task_context={},
+        base_tools=[],
+    )
+    payload = runtime.run_inspect_contract(
+        InspectContract(
+            contract_id="i1",
+            objective="count rows",
+            source_family_ids=["gold-dataset"],
+            required_outputs=["count"],
+            success_criteria="Return count.",
+            budget_calls=3,
+        )
+    )
+
+    assert payload["status"] == "success"
+    assert payload["subagent_stats"]["gold_datasets_read"] == ["gold-dataset"]
+    assert recorded[0]["gold_datasets_read"] == ["gold-dataset"]
+
+
+def test_run_results_merge_delegation_gold_reads_into_sources_used() -> None:
+    from strands_evaluation.agent_with_mode import _merge_sources_used
+
+    merged = _merge_sources_used(
+        ["planner-read"],
+        {"delegation_gold_datasets_read": ["worker-read", "planner-read", ""]},
+    )
+
+    assert merged == ["planner-read", "worker-read"]
+
+
+def test_delegation_runtime_downgrades_empty_success_search_contract(monkeypatch) -> None:
+    import sana_evaluation.tools.delegation_tool as delegation_tool
+
+    recorded = []
+
+    def fake_record_subagent_call(**kwargs):
+        recorded.append(kwargs)
+        return {
+            "input_tokens": 1,
+            "cached_input_tokens": 0,
+            "uncached_input_tokens": 1,
+            "output_tokens": 1,
+            "total_tokens": 2,
+            "cost_usd": 0.0,
+        }
+
+    class _EmptySearchAgent:
+        def __init__(self, *args, **kwargs):
+            self.tools = kwargs["tools"]
+
+        def __call__(self, prompt: str):
+            _ = prompt
+            return_tool = next(t for t in self.tools if getattr(t, "tool_name", "") == "return_search_result")
+            return_tool._tool_func(
+                status="success",
+                search_summary="I found nothing, but reported success.",
+                candidates=[],
+                tool_context=_FakeToolContext(),
+            )
+            return _FakeAgentResult(input_tokens=1, output_tokens=1)
+
+    monkeypatch.setattr(delegation_tool, "record_delegation_subagent_call", fake_record_subagent_call)
+    monkeypatch.setattr(delegation_tool, "Agent", _EmptySearchAgent)
+    monkeypatch.setattr(delegation_tool, "build_model", lambda agent_config: object())
+
+    runtime = DelegationRuntime(
+        agent_config=AgentConfig(model_name="openai/gpt-5.4-nano"),
+        run_config=RunConfig(search_tool_mode="standard"),
+        task_context={},
+        base_tools=[],
+    )
+    payload = runtime.run_search_contract(
+        SearchContract(
+            contract_id="s-empty",
+            search_goal="find school data",
+            required_source_traits=["schools"],
+            budget_calls=3,
+        )
+    )
+
+    assert payload["status"] == "failed"
+    assert "candidates" in payload["failure_reason"]
+    assert recorded[0]["success"] is False
+
+
+def test_delegation_runtime_downgrades_empty_success_inspect_contract(monkeypatch) -> None:
+    import sana_evaluation.tools.delegation_tool as delegation_tool
+
+    recorded = []
+
+    def fake_record_subagent_call(**kwargs):
+        recorded.append(kwargs)
+        return {
+            "input_tokens": 1,
+            "cached_input_tokens": 0,
+            "uncached_input_tokens": 1,
+            "output_tokens": 1,
+            "total_tokens": 2,
+            "cost_usd": 0.0,
+        }
+
+    class _EmptyInspectAgent:
+        def __init__(self, *args, **kwargs):
+            self.tools = kwargs["tools"]
+
+        def __call__(self, prompt: str):
+            _ = prompt
+            return_tool = next(t for t in self.tools if getattr(t, "tool_name", "") == "return_inspect_result")
+            return_tool._tool_func(
+                status="success",
+                answer_fragments=[],
+                evidence=["peek_file(source)"],
+                executor_summary="I found no fragments, but reported success.",
+                tool_context=_FakeToolContext(),
+            )
+            return _FakeAgentResult(input_tokens=1, output_tokens=1)
+
+    monkeypatch.setattr(delegation_tool, "record_delegation_subagent_call", fake_record_subagent_call)
+    monkeypatch.setattr(delegation_tool, "Agent", _EmptyInspectAgent)
+    monkeypatch.setattr(delegation_tool, "build_model", lambda agent_config: object())
+
+    runtime = DelegationRuntime(
+        agent_config=AgentConfig(model_name="openai/gpt-5.4-nano"),
+        run_config=RunConfig(search_tool_mode="standard"),
+        task_context={},
+        base_tools=[],
+    )
+    payload = runtime.run_inspect_contract(
+        InspectContract(
+            contract_id="i-empty",
+            objective="count rows",
+            source_family_ids=["schools"],
+            required_outputs=["count"],
+            success_criteria="Return count.",
+            budget_calls=3,
+        )
+    )
+
+    assert payload["status"] == "failed"
+    assert "answer_fragments" in payload["failure_reason"]
+    assert recorded[0]["success"] is False
 
 
 def test_search_subagent_clamps_budget_and_returns_candidates() -> None:
@@ -361,8 +577,6 @@ def test_inspect_subagent_tool_scope_excludes_planner_tools() -> None:
         "query_file",
         "download",
         "execute_code",
-        "get_sandbox_info",
-        "cleanup_sandbox",
     ]
 
 
@@ -392,14 +606,35 @@ def test_subagent_budget_steer_allows_one_grace_tool_call() -> None:
     assert isinstance(action, Proceed)
 
 
-def test_subagent_system_prompts_route_text_sources_without_listing() -> None:
+def test_subagent_system_prompts_include_tool_catalog() -> None:
     search_prompt = _subagent_system_prompt("search", "return_search_result")
     inspect_prompt = _subagent_system_prompt("inspect", "return_inspect_result")
 
-    assert "list" not in search_prompt.lower()
+    # Inspect catalog enumerates the tools per file family.
+    assert "peek_file" in inspect_prompt
+    assert "parse_xml_records" in inspect_prompt
+    assert "query_file" in inspect_prompt
+    assert "execute_code" in inspect_prompt
+    assert "ijson" in inspect_prompt
     assert "grep_file" in inspect_prompt
     assert "read_file" in inspect_prompt
-    assert "dataset_id alone" in inspect_prompt
+    assert "FeatureCollection" in inspect_prompt
+    assert "family=csv" in inspect_prompt
+    assert "family=xml" in inspect_prompt
+    assert "family=text" in inspect_prompt
+    assert "get_sandbox_info" not in inspect_prompt
+    assert "cleanup_sandbox" not in inspect_prompt
+
+    # Search catalog enumerates the search tools.
+    assert "search_ideal" in search_prompt
+    assert "search_value" in search_prompt
+    assert "search_schema" in search_prompt
+    assert "search_prefix" in search_prompt
+    assert "peek_file" in search_prompt
+
+    # Hard rule about bare dataset_id is still present.
+    assert "bare `dataset_id`" in inspect_prompt
+    assert "bare `dataset_id`" in search_prompt
 
 
 def test_source_hints_from_preloaded_sequence_include_s3_uris() -> None:
@@ -723,7 +958,13 @@ def test_inspect_return_tool_does_not_autofill_on_failure() -> None:
     assert result_state["payload"]["evidence"] == []
 
 
-def _fake_after_tool_event(name: str, tool_input: dict, result_json: object) -> object:
+def _fake_after_tool_event(
+    name: str,
+    tool_input: dict,
+    result_json: object,
+    *,
+    cancel_message: object = None,
+) -> object:
     """Build a minimal stand-in for AfterToolCallEvent for capture-plugin tests."""
 
     event = MagicMock()
@@ -733,6 +974,7 @@ def _fake_after_tool_event(name: str, tool_input: dict, result_json: object) -> 
         "content": [{"text": json.dumps(result_json)}],
         "toolUseId": "call_test",
     }
+    event.cancel_message = cancel_message
     return event
 
 
@@ -829,12 +1071,10 @@ def test_result_capture_inspect_aggregates_file_refs() -> None:
     )
 
     evidence = capture.captured_evidence()
-    assert len(evidence) == 2
-    assert evidence[0]["tool"] == "peek_file"
-    assert evidence[0]["s3_uri"] == "s3://bucket/datagov/vsrr/files/rows.txt"
-    assert evidence[1]["tool"] == "query_file"
-    assert evidence[1]["dataset_id"] == "vsrr"
-    assert evidence[1]["file_path"] == "files/rows.txt"
+    assert evidence == [
+        "peek_file(s3://bucket/datagov/vsrr/files/rows.txt)",
+        "query_file(vsrr/files/rows.txt)",
+    ]
 
 
 def test_result_capture_inspect_handles_batch_tools() -> None:
@@ -855,7 +1095,79 @@ def test_result_capture_inspect_handles_batch_tools() -> None:
     )
 
     evidence = capture.captured_evidence()
-    assert len(evidence) == 2
-    assert evidence[0]["s3_uri"] == "s3://bucket/a"
-    assert evidence[1]["dataset_id"] == "b"
-    assert evidence[1]["file_path"] == "files/b.csv"
+    assert evidence == [
+        "peek_multiple(s3://bucket/a)",
+        "peek_multiple(b/files/b.csv)",
+    ]
+
+
+def test_result_capture_inspect_captures_compute_tools() -> None:
+    from sana_evaluation.tools.delegation_common import _SubagentResultCapture
+
+    capture = _SubagentResultCapture(kind="inspect", return_tool_name="return_inspect_result")
+    capture.on_after_tool(
+        _fake_after_tool_event(
+            "execute_code",
+            {"code": "\n\nimport ijson\nfor feat in ijson.items(open(p,'rb'), 'features.item'):\n    pass\n"},
+            {"output": "ok"},
+        )
+    )
+    capture.on_after_tool(
+        _fake_after_tool_event(
+            "query_ideal",
+            {"sql": "SELECT County, COUNT(*) FROM t WHERE STATE='CA' GROUP BY County"},
+            {"rows": [{"County": "Los Angeles County"}]},
+        )
+    )
+    capture.on_after_tool(
+        _fake_after_tool_event(
+            "execute_ideal",
+            {"intent": "compute per-county counts", "code": "df = pd.read_csv(...)"},
+            {"output": "ok"},
+        )
+    )
+
+    evidence = capture.captured_evidence()
+    assert evidence == [
+        "execute_code(import ijson)",
+        "query_ideal(SELECT County, COUNT(*) FROM t WHERE STATE='CA' GROUP BY Cou)",
+        "execute_ideal(df = pd.read_csv(...))",
+    ]
+
+
+def test_subagent_ledger_skips_cancelled_calls() -> None:
+    from sana_evaluation.tools.delegation_common import _SubagentToolLedger
+
+    ledger = _SubagentToolLedger("return_inspect_result")
+    real = _fake_after_tool_event(
+        "peek_file",
+        {"s3_uri": "s3://bucket/x"},
+        {"preview_text": "..."},
+    )
+    cancelled = _fake_after_tool_event(
+        "peek_file",
+        {"s3_uri": "s3://bucket/y"},
+        {"text": "Tool call cancelled."},
+        cancel_message="The bounded contract budget is exhausted.",
+    )
+
+    ledger.on_after_tool(real)
+    ledger.on_after_tool(cancelled)
+
+    assert ledger.tool_calls == 1
+    assert ledger.tools_used == ["peek_file"]
+
+
+def test_result_capture_skips_cancelled_calls() -> None:
+    from sana_evaluation.tools.delegation_common import _SubagentResultCapture
+
+    capture = _SubagentResultCapture(kind="inspect", return_tool_name="return_inspect_result")
+    cancelled = _fake_after_tool_event(
+        "peek_file",
+        {"s3_uri": "s3://bucket/x"},
+        {"text": "Tool call cancelled."},
+        cancel_message="budget exhausted",
+    )
+    capture.on_after_tool(cancelled)
+
+    assert capture.captured_evidence() == []

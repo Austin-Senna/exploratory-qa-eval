@@ -34,8 +34,6 @@ _INSPECT_TOOL_NAMES = {
     "download",
     "execute_code",
     "execute_ideal",
-    "get_sandbox_info",
-    "cleanup_sandbox",
 }
 
 _VALID_INSPECT_STATUS = {"success", "partial", "failed", "budget_exhausted"}
@@ -156,7 +154,7 @@ def _build_inspect_return_tool(
         tool_context: ToolContext,
         answer_fragments: Optional[List[Dict[str, Any]]] = None,
         missing_outputs: Optional[List[str]] = None,
-        evidence: Optional[List[Any]] = None,
+        evidence: Optional[List[str]] = None,
         executor_summary: str = "",
         retry_recommended: bool = False,
         failure_reason: str = "",

@@ -65,7 +65,6 @@ from strands_evaluation.tools.agent_tools import (
 from strands_evaluation.tools.agent_tools_v2 import (
     cleanup_sandbox,
     execute_code,
-    get_sandbox_info,
     grep_file,
     list_files,
     parse_xml_records,
@@ -433,6 +432,25 @@ def _tool_limit_exclusions_for_run(
     return tuple(dict.fromkeys(str(name) for name in names))
 
 
+def _merge_sources_used(
+    planner_sources: Optional[Sequence[Any]],
+    delegation_subagent_stats: Optional[Dict[str, Any]],
+) -> List[str]:
+    """Merge parent-agent reads with gold reads observed inside delegation workers."""
+
+    merged: List[str] = []
+    seen: set[str] = set()
+    delegation_sources = []
+    if delegation_subagent_stats:
+        delegation_sources = delegation_subagent_stats.get("delegation_gold_datasets_read") or []
+    for value in [*(planner_sources or []), *delegation_sources]:
+        dataset_id = str(value).strip()
+        if dataset_id and dataset_id not in seen:
+            merged.append(dataset_id)
+            seen.add(dataset_id)
+    return merged
+
+
 class DataLakeAgent:
     """Strands-based agent for the Data Lake benchmark."""
 
@@ -467,6 +485,17 @@ class DataLakeAgent:
         """Return additional prompt text appended after the search-budget block but before the task trailer."""
         return ""
 
+    def _system_prompt_override(
+        self,
+        *,
+        system_prompt: str,
+        search_tool_mode: Optional[str],
+        agent_management_mode: Optional[str],
+        task_context: Optional[Dict[str, Any]] = None,
+    ) -> Optional[str]:
+        """Return a full replacement system prompt, or None to keep the composed prompt."""
+        return None
+
     def _extra_plugins(
         self,
         *,
@@ -495,6 +524,16 @@ class DataLakeAgent:
     ) -> List[Any]:
         """Return a (possibly modified) tools list. Default: identity."""
         return tools
+
+    def _decorate_plugins(
+        self,
+        plugins: List[Any],
+        *,
+        search_tool_mode: Optional[str],
+        agent_management_mode: Optional[str],
+    ) -> List[Any]:
+        """Return a (possibly modified) plugin list. Default: identity."""
+        return plugins
 
     def _tool_limit_excluded_tools(
         self,
@@ -529,7 +568,7 @@ class DataLakeAgent:
         # Core data-manipulation tools shared across all conditions
         _data_tools = [
             list_files, peek_file, peek_multiple, read_file, grep_file,
-            parse_xml_records, query_file, download, execute_code, get_sandbox_info, cleanup_sandbox,
+            parse_xml_records, query_file, download, execute_code,
             submit_answer,
         ]
 
@@ -614,6 +653,15 @@ class DataLakeAgent:
         if not mode_overrides_enabled:
             system_prompt = inject_debug_prompt(system_prompt, self.run_config.debug_mode)
 
+        prompt_override = self._system_prompt_override(
+            system_prompt=system_prompt,
+            search_tool_mode=_hook_search_tool_mode,
+            agent_management_mode=_hook_agent_management_mode,
+            task_context=task_context,
+        )
+        if prompt_override is not None:
+            system_prompt = prompt_override
+
         extra_prompt = self._extra_prompt_text(
             search_tool_mode=_hook_search_tool_mode,
             agent_management_mode=_hook_agent_management_mode,
@@ -686,6 +734,11 @@ class DataLakeAgent:
                 search_tool_mode=_hook_search_tool_mode,
                 agent_management_mode=_hook_agent_management_mode,
             )
+        )
+        plugins = self._decorate_plugins(
+            plugins,
+            search_tool_mode=_hook_search_tool_mode,
+            agent_management_mode=_hook_agent_management_mode,
         )
 
         tools = self._decorate_tools(
@@ -926,6 +979,13 @@ def _run_task_worker(
 
         _ideal_costs.reset_stats()
 
+        try:
+            from sana_evaluation.instrumentation import delegation_subagent_costs as _deleg_costs
+        except ImportError:
+            _deleg_costs = None
+        if _deleg_costs is not None:
+            _deleg_costs.reset_stats()
+
         task_context = {
             "task_id": task_id,
             "datasets_used": gold_ids,
@@ -937,6 +997,9 @@ def _run_task_worker(
             _si.set_task_context(task_context)
 
         result = da.run(task["question"], task_context=task_context)
+        delegation_subagent_stats: Dict[str, Any] = {}
+        if _deleg_costs is not None:
+            delegation_subagent_stats = _deleg_costs.get_stats()
 
         result_dict: Dict[str, Any] = {
             "task_id": task.get("id", task_index),
@@ -945,7 +1008,7 @@ def _run_task_worker(
             "ground_truth": task.get("answer", ""),
             "predicted_answer": result.answer,
             "reasoning": result.reasoning,
-            "sources_used": result.sources,
+            "sources_used": _merge_sources_used(result.sources, delegation_subagent_stats),
             "time": result.elapsed_time,
             "success": result.success,
             "error": result.error,
@@ -977,9 +1040,24 @@ def _run_task_worker(
 
         ideal_subagent_stats = _ideal_costs.get_stats()
         result_dict.update(ideal_subagent_stats)
-        result_dict["total_cost_with_ideal_subagents_usd"] = (
-            result.cost_usd + float(ideal_subagent_stats.get("ideal_subagent_cost_usd", 0.0) or 0.0)
+        ideal_cost = float(ideal_subagent_stats.get("ideal_subagent_cost_usd", 0.0) or 0.0)
+        result_dict["total_cost_with_ideal_subagents_usd"] = result.cost_usd + ideal_cost
+
+        if _deleg_costs is not None:
+            result_dict.update(delegation_subagent_stats)
+        delegation_cost = float(
+            delegation_subagent_stats.get("delegation_subagent_cost_usd", 0.0) or 0.0
         )
+        result_dict["total_cost_with_all_subagents_usd"] = (
+            result.cost_usd + ideal_cost + delegation_cost
+        )
+
+        try:
+            from sana_evaluation.tools.delegation_common import clear_delegation_runtime
+        except ImportError:
+            pass
+        else:
+            clear_delegation_runtime()
 
         # Compute accuracy metrics if ground truth available
         if task.get("answer"):

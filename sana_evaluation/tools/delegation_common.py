@@ -235,6 +235,8 @@ class _SubagentToolLedger(Plugin):
         tool_name = getattr(event, "tool_use", {}).get("name", "")
         if not tool_name or tool_name == self.return_tool_name:
             return
+        if getattr(event, "cancel_message", None):
+            return
         self.tool_calls += 1
         self.tools_used.append(tool_name)
 
@@ -248,6 +250,12 @@ _SEARCH_RESULT_TOOL_NAMES = {
     "search",
     "search_keyword",
 }
+
+
+_COMPUTE_TOOLS = {"execute_code", "execute_ideal", "query_ideal"}
+
+
+_COMPUTE_SUMMARY_MAX_CHARS = 60
 
 
 def _result_payloads(result: Any) -> List[Any]:
@@ -366,6 +374,37 @@ def _file_references_from_batch_tool_use(tool_use: Dict[str, Any]) -> List[Dict[
     return refs
 
 
+def _summary_from_compute_tool_use(tool_use: Dict[str, Any]) -> str:
+    """Return a short label for a compute tool invocation (execute_code / query_ideal)."""
+
+    tool_input = (tool_use or {}).get("input") or {}
+    if not isinstance(tool_input, dict):
+        return ""
+    raw = tool_input.get("code") or tool_input.get("sql") or tool_input.get("intent") or ""
+    if not isinstance(raw, str):
+        return ""
+    for line in raw.splitlines():
+        stripped = line.strip()
+        if stripped:
+            return stripped[:_COMPUTE_SUMMARY_MAX_CHARS]
+    return raw.strip()[:_COMPUTE_SUMMARY_MAX_CHARS]
+
+
+def _evidence_string_from_ref(tool_name: str, ref: Dict[str, str]) -> str:
+    """Return a compact evidence string for a file-tool reference."""
+
+    s3_uri = ref.get("s3_uri")
+    if s3_uri:
+        return f"{tool_name}({s3_uri})"
+    dataset_id = ref.get("dataset_id")
+    file_path = ref.get("file_path")
+    if dataset_id and file_path:
+        return f"{tool_name}({dataset_id}/{file_path})"
+    if dataset_id:
+        return f"{tool_name}({dataset_id})"
+    return f"{tool_name}()"
+
+
 class _SubagentResultCapture(Plugin):
     """Accumulates fallback contract-return values from tool outputs."""
 
@@ -377,14 +416,14 @@ class _SubagentResultCapture(Plugin):
         self.return_tool_name = return_tool_name
         self._candidates: List[Dict[str, str]] = []
         self._seen_uris: set[str] = set()
-        self._evidence: List[Dict[str, str]] = []
-        self._seen_evidence_keys: set[str] = set()
+        self._evidence: List[str] = []
+        self._seen_evidence: set[str] = set()
 
     def captured_candidates(self) -> List[Dict[str, str]]:
         return [dict(record) for record in self._candidates]
 
-    def captured_evidence(self) -> List[Dict[str, str]]:
-        return [dict(record) for record in self._evidence]
+    def captured_evidence(self) -> List[str]:
+        return list(self._evidence)
 
     def _record_candidate(self, record: Dict[str, str]) -> None:
         key = record.get("s3_uri") or record.get("dataset_id") or ""
@@ -394,11 +433,17 @@ class _SubagentResultCapture(Plugin):
         self._candidates.append(record)
 
     def _record_evidence(self, tool_name: str, ref: Dict[str, str]) -> None:
-        key = f"{tool_name}::{ref.get('s3_uri') or ref.get('dataset_id', '')}::{ref.get('file_path', '')}"
-        if key in self._seen_evidence_keys:
+        entry = _evidence_string_from_ref(tool_name, ref)
+        if not entry or entry in self._seen_evidence:
             return
-        self._seen_evidence_keys.add(key)
-        entry = {"tool": tool_name, **ref}
+        self._seen_evidence.add(entry)
+        self._evidence.append(entry)
+
+    def _record_compute_evidence(self, tool_name: str, summary: str) -> None:
+        entry = f"{tool_name}({summary})" if summary else f"{tool_name}()"
+        if entry in self._seen_evidence:
+            return
+        self._seen_evidence.add(entry)
         self._evidence.append(entry)
 
     @hook
@@ -406,6 +451,8 @@ class _SubagentResultCapture(Plugin):
         tool_use = getattr(event, "tool_use", {}) or {}
         tool_name = tool_use.get("name", "")
         if not tool_name or tool_name == self.return_tool_name:
+            return
+        if getattr(event, "cancel_message", None):
             return
         result = getattr(event, "result", None)
         if _result_is_error(result):
@@ -424,6 +471,9 @@ class _SubagentResultCapture(Plugin):
             elif tool_name in _BATCH_FILE_REFERENCE_TOOLS:
                 for ref in _file_references_from_batch_tool_use(tool_use):
                     self._record_evidence(tool_name, ref)
+            elif tool_name in _COMPUTE_TOOLS:
+                summary = _summary_from_compute_tool_use(tool_use)
+                self._record_compute_evidence(tool_name, summary)
 
 
 class _SubagentBudgetSteer(SteeringHandler):
@@ -572,13 +622,84 @@ def _contract_failure(
     }
 
 
+_SEARCH_TOOL_CATALOG = """
+TOOL PICKER (pick ONE primary search call per contract, then verify):
+- search_ideal(query, top_k=100): preferred when search_results=ideal. Returns
+  `results=[{dataset_id, s3_uri, ...}]`; the inner judge has already filtered.
+  One focused query is usually enough.
+- search_value(query, top_k=10): hybrid semantic+keyword over dataset content.
+  Use when looking for a topic or phrase (e.g. "annual overdose deaths").
+- search_schema(query, top_k=10): hybrid search over column names / schemas.
+  Use when you need a dataset by column name (e.g. "Violent Count column").
+- search_reranked(query, top_k=10): cross-encoder reranking on top of hybrid.
+  Slower but more accurate; use when search_value is ambiguous.
+- search_prefix(prefixes=[...]): S3 native prefix search across wikipedia/ and
+  datagov/. Use for known entity name fragments (e.g. ["Erie_County"]).
+- search_keyword(keywords=[...]): tag-style keyword filter. Use short tags
+  (e.g. ["police", "crime"]), not sentences.
+
+VERIFY: after a candidate is returned, call `peek_file(s3_uri=...)` (or
+`peek_multiple(files=[...])` for several) to confirm columns / record_tag /
+file family before you forward it. Do NOT call query_file, read_file,
+grep_file, or execute_code — those belong to the inspect worker.
+""".strip()
+
+
+_INSPECT_TOOL_CATALOG = """
+TOOL PICKER (always start with peek_file; then dispatch on its `family`):
+- Unknown family yet → `peek_file(s3_uri=...)` for one file, or
+  `peek_multiple(files=[{s3_uri: ...}, ...])` for several. Read `family`,
+  `header_columns`, `xml_record_tag_candidates`, and `size_bytes` from the
+  response before choosing the next tool.
+
+- family=csv → `query_file(s3_uri=..., sql="...")` with DuckDB. Table alias
+  is `t`. Quote any column name with spaces or special chars:
+  `WHERE "Poor Status" = 'Y'`. Use GROUP BY/HAVING for counts and thresholds.
+  Results capped at 200 rows.
+
+- family=json AND the file is a flat tabular array (one row per record) →
+  `query_file` works the same as CSV.
+
+- family=json AND the file is a nested FeatureCollection / large (>5MB) /
+  GeoJSON / arbitrary nested → DO NOT call `query_file` (DuckDB sees one row
+  at the top level). Instead:
+    1. `download(files=[{"s3_uri": "..."}])`  (single call; ≤5 files).
+    2. `execute_code(code='''
+         import ijson
+         from collections import Counter
+         counts = Counter()
+         path = SANDBOX_DIR + "/<dataset_id>/<file_path>"
+         for feat in ijson.items(open(path, "rb"), "features.item"):
+             props = feat.get("properties", {})
+             if props.get("STATE") == "CA":
+                 counts[props.get("NMCNTY")] += 1
+         print(counts.most_common(3))
+       ''')`
+  `ijson` is pre-imported. `SANDBOX_DIR` is a pre-set variable.
+
+- family=xml OR family=kml → `parse_xml_records(s3_uri=..., record_tag=...,
+  fields=[...], filters={...}, group_by=[...], limit=200)`. `record_tag`
+  comes from peek_file's `xml_record_tag_candidates` (e.g. "Placemark").
+  NEVER call `query_file` or `execute_code` on XML/KML.
+
+- family=text (wikipedia content.txt, prose, HTML) → `grep_file(s3_uri=...,
+  regex_pattern="...", context_lines=2)` first to locate the relevant line,
+  then `read_file(s3_uri=..., start_line=..., max_lines=120)` for context.
+  NEVER call `query_file` or `execute_code` on prose. When asked for a
+  specific fact (year, name, date), grep the authoritative article
+  (e.g. `wikipedia/Holland_Land_Company/content.txt`), not a tangentially
+  related one.
+
+""".strip()
+
+
 def _subagent_system_prompt(kind: str, return_tool_name: str) -> str:
     if kind == "search":
         role = (
-            "You are a bounded dataset-search worker. Find useful datasets for the "
-            "contract. You may use search and peek/profile tools only. Do not "
-            "perform the final computation."
+            "You are a bounded dataset-search worker. Find dataset candidates for "
+            "the contract. Do not perform the final computation; do not parse data."
         )
+        tool_catalog = _SEARCH_TOOL_CATALOG
         return_requirement = (
             "When status is `success` or `partial`, you MUST populate `candidates` "
             "with every dataset you intend to forward. Each entry needs `dataset_id` "
@@ -587,11 +708,10 @@ def _subagent_system_prompt(kind: str, return_tool_name: str) -> str:
         )
     else:
         role = (
-            "You are a bounded tabular-inspection worker. Inspect only the explicit "
-            "dataset ids in the contract, handle schema/query/parsing issues locally, "
-            "and return compact extracted evidence. For text-based sources, use "
-            "`grep_file` or `read_file` to inspect content."
+            "You are a bounded tabular-inspection worker. Extract compact evidence "
+            "from the contracted dataset ids. Do not search; do not pick the dataset."
         )
+        tool_catalog = _INSPECT_TOOL_CATALOG
         return_requirement = (
             "When status is `success` or `partial`, you MUST populate "
             "`answer_fragments` with the derived values for `required_outputs` and "
@@ -600,11 +720,14 @@ def _subagent_system_prompt(kind: str, return_tool_name: str) -> str:
         )
     return (
         role
-        + "\nFor every file tool call, pass an exact `s3_uri`, or pass both "
-        "`dataset_id` and `file_path`; never call file tools with dataset_id alone."
-        + "\nCall `"
+        + "\n\n"
+        + tool_catalog
+        + "\n\nEXACT FILE REFERENCES: every file tool call must pass an exact "
+        "`s3_uri`, or pass both `dataset_id` and `file_path`; never call file "
+        "tools with a bare `dataset_id`."
+        + "\n\nRETURN: call `"
         + return_tool_name
-        + "` exactly once before finishing. Return compact summaries only; do not "
+        + "` EXACTLY once before finishing. Return compact summaries only; do not "
         "include raw row dumps, long schemas, or full tracebacks."
         + "\n" + return_requirement
     )

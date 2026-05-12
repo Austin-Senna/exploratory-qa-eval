@@ -112,6 +112,12 @@ def test_delegation_rejects_sprint_combination() -> None:
         flags.validate(plan_mode="standard")
 
 
+def test_delegation_rejects_cot_combination() -> None:
+    flags = SanaFlags(delegation=True, cot=True)
+    with pytest.raises(ValueError, match="mutually exclusive"):
+        flags.validate(plan_mode="standard")
+
+
 def test_delegation_requires_management() -> None:
     flags = SanaFlags(delegation=True)
     with pytest.raises(ValueError, match="delegation requires plan"):

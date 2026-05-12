@@ -29,7 +29,7 @@ class CategoryStagnationHandler(SteeringHandler):
                 "search_reranked",
                 "search_ideal",
             },
-            "inspect": {"list_files", "peek_file", "peek_multiple", "get_sandbox_info", "read_file"},
+            "inspect": {"list_files", "peek_file", "peek_multiple", "read_file"},
             "execute": {
                 "execute_code",
                 "execute_ideal",

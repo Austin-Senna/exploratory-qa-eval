@@ -23,11 +23,24 @@ from sana_evaluation.plugins import (
 )
 from sana_evaluation.prompts import (
     cot_block,
-    delegation_block,
+    delegation_planner_prompt,
     sprint_block,
 )
 
 logger = logging.getLogger(__name__)
+
+
+_SEARCH_TOOL_NAMES_BY_MODE = {
+    "naive": ("search_value", "search_schema", "search_prefix"),
+    "standard": ("search_reranked", "search_schema", "search_prefix"),
+    "ideal": ("search_ideal",),
+    "preloaded": (),
+}
+
+
+def _search_tool_names_for_mode(search_tool_mode: Optional[str]) -> tuple[str, ...]:
+    mode = (search_tool_mode or "naive").strip().lower() or "naive"
+    return _SEARCH_TOOL_NAMES_BY_MODE.get(mode, ())
 
 
 class SanaDataLakeAgent(DataLakeAgent):
@@ -41,6 +54,9 @@ class SanaDataLakeAgent(DataLakeAgent):
         super().__init__(agent_config, run_config)
         flags = getattr(self.run_config, "sana_flags", None)
         self.sana_flags: SanaFlags = flags if isinstance(flags, SanaFlags) else SanaFlags()
+        if self.sana_flags.delegation and bool(self.run_config.plan_skills_enabled):
+            logger.info("Disabling AgentSkills for SANA delegation mode.")
+            self.run_config.plan_skills_enabled = False
 
         active_plan_mode = (
             self.run_config.agent_management_mode
@@ -70,12 +86,11 @@ class SanaDataLakeAgent(DataLakeAgent):
         agent_management_mode: Optional[str] = None,
         plan_mode: Optional[str] = None,
     ) -> None:
-        if self.sana_flags.delegation:
-            from sana_evaluation.instrumentation import delegation_subagent_costs
-
-            delegation_subagent_costs.reset_stats()
-        # results is a tool swap (see _decorate_tools), not a runtime
-        # toggle. Nothing to do here.
+        # Cost-stat resets for delegation/ideal subagents live in the base
+        # DataLakeAgent._run_task_worker (alongside the existing _ideal_costs
+        # reset) so all entry paths get a fresh slate per task. results is a
+        # tool swap (see _decorate_tools), not a runtime toggle. Nothing to
+        # do here.
         return None
 
     def _extra_prompt_text(
@@ -92,14 +107,32 @@ class SanaDataLakeAgent(DataLakeAgent):
         parts: List[str] = []
         if flags.cot:
             parts.append(cot_block(st))
-        if flags.delegation:
-            parts.append(delegation_block(st))
+        # Delegation mode replaces the parent prompt wholesale via
+        # _system_prompt_override, so avoid appending the older overlay.
         if flags.sprint:
             parts.append(sprint_block(st, sprint_mode=flags.sprint_mode))
         # results: no system-prompt block — the peek_file docstring already
         # documents the `profile` field. The flag toggles the profile loader
         # callback at runtime in _pre_build_setup.
         return "".join(parts)
+
+    def _system_prompt_override(
+        self,
+        *,
+        system_prompt: str,
+        search_tool_mode: Optional[str],
+        agent_management_mode: Optional[str],
+        task_context: Optional[dict[str, Any]] = None,
+    ) -> Optional[str]:
+        _ = system_prompt, task_context
+        if not self.sana_flags.delegation:
+            return None
+        management_mode = (agent_management_mode or "standard").strip().lower()
+        management_tool = "plan_ideal" if management_mode == "ideal" else "plan"
+        return delegation_planner_prompt(
+            search_tool_mode or "naive",
+            management_tool=management_tool,
+        )
 
     def _extra_plugins(
         self,
@@ -113,6 +146,9 @@ class SanaDataLakeAgent(DataLakeAgent):
             return []
 
         plugins: List[Any] = []
+        counted_excluded_tools: Sequence[str] = ()
+        if bool(getattr(self.run_config, "search_free", False)):
+            counted_excluded_tools = _search_tool_names_for_mode(search_tool_mode)
 
         if flags.cot:
             plugins.append(CoTSteerHandler())
@@ -124,6 +160,7 @@ class SanaDataLakeAgent(DataLakeAgent):
                 sprint_mode=flags.sprint_mode,
                 commitment_budget_calls=flags.commitment_budget_calls,
                 max_tool_calls=int(self.run_config.max_tool_calls),
+                counted_excluded_tools=counted_excluded_tools,
             )
             plugins.append(sprint_plugin)
 
@@ -133,6 +170,7 @@ class SanaDataLakeAgent(DataLakeAgent):
         if sprint_plugin is not None:
             dashboard_plugin = StateOfTaskDashboardPlugin(
                 max_tool_calls=int(self.run_config.max_tool_calls),
+                counted_excluded_tools=counted_excluded_tools,
             )
             dashboard_plugin.sprint_plugin = sprint_plugin
             sprint_plugin.dashboard_plugin = dashboard_plugin

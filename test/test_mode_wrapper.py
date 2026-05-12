@@ -2,8 +2,9 @@ import json
 import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from unittest.mock import MagicMock, patch
 
-from strands_evaluation.config import RunConfig
+from strands_evaluation.config import AgentConfig, RunConfig
 from strands_evaluation.agent_with_mode import (
     DataLakeAgent,
     build_mode_bundle,
@@ -178,6 +179,31 @@ class TestModeWrapper(unittest.TestCase):
         self.assertTrue(bundle.enable_skills)
         self.assertTrue(bundle.enable_stagnation)
         self.assertEqual(bundle.modes["plan_skills"], "on")
+
+    def test_base_agent_does_not_expose_sandbox_admin_tools(self):
+        import strands_evaluation.agent_with_mode as agent_with_mode
+
+        captured = {}
+
+        class _FakeStrandsAgent:
+            def __init__(self, *args, **kwargs):
+                captured["tools"] = kwargs["tools"]
+                self.model = kwargs["model"]
+
+        cfg = RunConfig(
+            search_tool_mode="standard",
+            search_results_mode="naive",
+            agent_management_mode="standard",
+        )
+
+        with patch.object(agent_with_mode, "build_model", return_value=object()):
+            with patch.object(agent_with_mode, "Agent", _FakeStrandsAgent):
+                agent = DataLakeAgent(AgentConfig(model_name="openai/gpt-5.4-nano"), cfg)
+                agent._build_agent(MagicMock(), task_context={})
+
+        tool_names = [getattr(tool, "tool_name", None) for tool in captured["tools"]]
+        self.assertNotIn("get_sandbox_info", tool_names)
+        self.assertNotIn("cleanup_sandbox", tool_names)
 
     def test_managed_prompt_omits_skills_when_plugin_disabled(self):
         cfg = RunConfig(
