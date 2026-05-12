@@ -385,6 +385,15 @@ class TestSearchIdealJudge(unittest.TestCase):
             prompt,
         )
 
+    def test_judge_system_prompt_guides_subset_retrieval_without_domain_specific_examples(self):
+        prompt = search_ideal._JUDGE_SYSTEM_PROMPT
+
+        self.assertIn("filtered subset", prompt)
+        self.assertIn("not need to mention the exact filter value", prompt)
+        self.assertIn("Pick multiple datasets only", prompt)
+        self.assertNotIn("public/private/postsecondary", prompt)
+        self.assertLessEqual(len(prompt.split()), 100)
+
     def test_set_task_context_resets_used(self):
         with TemporaryDirectory() as tmpdir:
             plans_root = Path(tmpdir) / "plans_mini"

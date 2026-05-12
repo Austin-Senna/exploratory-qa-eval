@@ -24,12 +24,12 @@ logger = logging.getLogger(__name__)
 _S3_PREFIX = "s3://lakeqa-yc4103-datalake/"
 _DATASET_NOT_FOUND = "Dataset not found"
 _JUDGE_SYSTEM_PROMPT = (
-    "You are a dataset selector. The user gives you a search query and a list of\n"
-    "candidate datasets (each with s3_uri, dataset_id, and description). Call the `pick` tool\n"
-    "exactly once with the s3_uris most relevant to the query. If no candidate is semantically close enough,\n"
-    "call `pick` with an empty s3_uris list. If\n"
-    'the query is clearly aggregate (year ranges, "all of", multiple regions),\n'
-    "pick the matching group. Never pick an s3_uri not in the list."
+    "You are a dataset selector. Given a query and candidate datasets, call `pick` exactly once "
+    "with the most relevant s3_uris, or an empty list if none are close. For aggregate queries "
+    '(year ranges, "all of", multiple regions), pick the matching group. For filtered subset '
+    "questions, pick the dataset with records and fields needed to filter that subset; it does "
+    "not need to mention the exact filter value. Pick multiple datasets only when the query asks "
+    "to compare, join, subtract, or aggregate across them. Never pick an s3_uri not in the list."
 )
 
 # The eval runner uses one task at a time per process; parallel runs fork subprocesses.
