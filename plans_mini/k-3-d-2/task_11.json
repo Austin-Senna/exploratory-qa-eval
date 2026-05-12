@@ -1,0 +1,27 @@
+{
+  "dataset_sequence": [
+    "fy-2019-disability-pension-recipient-by-county",
+    "fy-2023-disability-compensation-recipients-by-county",
+    "Big_Horn_County,_Wyoming",
+    "Basin,_Wyoming"
+  ],
+  "source_sequence": [
+    "datagov/fy-2019-disability-pension-recipient-by-county/files/rows.txt",
+    "datagov/fy-2023-disability-compensation-recipients-by-county/files/rows.txt",
+    "wikipedia/Big_Horn_County,_Wyoming/content.txt",
+    "wikipedia/Basin,_Wyoming/content.txt"
+  ],
+  "reasoning_chain_text": [
+    "1. Identify Wyoming counties with between 150 and 180 veteran disability recipients in 2019.",
+    "2. Identify Wyoming counties with between 260 and 280 veteran disability recipients in 2023, and keep the county that also qualified in step 1.",
+    "3. Determine the county seat of the Wyoming county kept in step 2.",
+    "4. For the county seat from step 3, determine the record high temperature ever recorded there and return the Fahrenheit integer."
+  ],
+  "original_final_question": "I'm interested in extreme weather records across Wyoming. What is the record high temperature ever recorded in the county seat of the Wyoming county that had between 150-180 veteran disability recipients in 2019 and 260-280 recipients in 2023? Answer the integer in Fahrenheit. Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    "HOP 1 (d=1, nodes 1): Wyoming counties with 150-180 VA recipients 2019 \u2192 {Big Horn, Crook, Teton, Sublette}; Wyoming counties with 260-280 VA recipients 2023 \u2192 {Big Horn, Weston}",
+    "HOP 2 (d=1, nodes 2): Intersection \u2192 Big Horn County; county seat \u2192 Basin",
+    "HOP 3 (d=1, nodes 3): Record high temperature in Basin \u2192 115\u00b0F",
+    "Final answer: 115"
+  ]
+}

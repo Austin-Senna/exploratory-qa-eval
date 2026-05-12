@@ -1,0 +1,30 @@
+{
+  "dataset_sequence": [
+    "crime-data-from-2010-to-2019",
+    "arrest-data-from-2010-to-2019",
+    "lapd-ripa-ab-953-stop-incident-details-from-7-1-2018-to-present",
+    "crime-data-from-2020-to-present"
+  ],
+  "source_sequence": [
+    "datagov/crime-data-from-2010-to-2019/files/rows.txt",
+    "datagov/arrest-data-from-2010-to-2019/files/rows.txt",
+    "datagov/lapd-ripa-ab-953-stop-incident-details-from-7-1-2018-to-present/files/rows.txt",
+    "datagov/crime-data-from-2010-to-2019/files/rows.txt",
+    "datagov/crime-data-from-2020-to-present/files/rows.txt"
+  ],
+  "reasoning_chain_text": [
+    "1. In 2010 through 2019 Los Angeles crime records, identify the year with the most stolen vehicle incidents.",
+    "2. Using the peak year from step 1, identify the Los Angeles area with the most arrests for driving under the influence.",
+    "3. Using LAPD stop-incident records, determine the numeric area identifier for the area from step 2.",
+    "4. Determine the crime code for stolen vehicles, then in 2020 Los Angeles crime records count incidents with that code for the area identifier from step 3 and return that count."
+  ],
+  "original_final_question": "Which year saw the highest number of stolen vehicle incidents in Los Angeles between 2010 to 2019? During that peak year, which area had the most arrests for driving under the influence? Finally, how many stolen vehicles were reported in that specific area in 2020? Only report the number of the stolen vehicles. Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    "Node 1: In 2010 to 2019 LA crime records, the year with the most VEHICLE - STOLEN incidents -> 2016.",
+    "Node 2 depends on node 1: In 2016 arrests, the area with the most Driving Under Influence arrests -> Van Nuys.",
+    "Node 3 depends on node 2: In LAPD RIPA stop-incident records, Van Nuys corresponds to Area ID 9.",
+    "Node 4: In Los Angeles crime records, VEHICLE - STOLEN corresponds to crime code 510.",
+    "Node 5 depends on nodes 3-4: In 2020 crime records for Area ID 9, incident count where Crm Cd = 510 -> 915.",
+    "Final answer: 915"
+  ]
+}

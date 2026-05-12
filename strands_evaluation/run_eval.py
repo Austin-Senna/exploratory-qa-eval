@@ -250,6 +250,22 @@ _IDEAL_SUBAGENT_CSV_FIELDS = [
 ]
 
 
+_DELEGATION_SUBAGENT_CSV_FIELDS = [
+    "delegation_subagent_calls",
+    "delegation_subagent_input_tokens",
+    "delegation_subagent_cached_input_tokens",
+    "delegation_subagent_uncached_input_tokens",
+    "delegation_subagent_output_tokens",
+    "delegation_subagent_total_tokens",
+    "delegation_subagent_cost_usd",
+    "search_subagent_calls",
+    "search_subagent_cost_usd",
+    "inspect_subagent_calls",
+    "inspect_subagent_cost_usd",
+    "total_cost_with_all_subagents_usd",
+]
+
+
 def _float_value(raw) -> float:
     try:
         return float(raw or 0.0)
@@ -261,6 +277,16 @@ def _combined_cost(row: dict) -> float:
     if row.get("total_cost_with_ideal_subagents_usd") not in (None, ""):
         return _float_value(row.get("total_cost_with_ideal_subagents_usd"))
     return _float_value(row.get("cost_usd")) + _float_value(row.get("ideal_subagent_cost_usd"))
+
+
+def _combined_cost_with_delegation(row: dict) -> float:
+    if row.get("total_cost_with_all_subagents_usd") not in (None, ""):
+        return _float_value(row.get("total_cost_with_all_subagents_usd"))
+    return (
+        _float_value(row.get("cost_usd"))
+        + _float_value(row.get("ideal_subagent_cost_usd"))
+        + _float_value(row.get("delegation_subagent_cost_usd"))
+    )
 
 
 def _normalize_main_csv_row(row: dict) -> dict:
@@ -302,6 +328,11 @@ def _normalize_main_csv_row(row: dict) -> dict:
             normalized[field] = _combined_cost(row)
         else:
             normalized[field] = row.get(field, 0)
+    for field in _DELEGATION_SUBAGENT_CSV_FIELDS:
+        if field == "total_cost_with_all_subagents_usd":
+            normalized[field] = _combined_cost_with_delegation(row)
+        else:
+            normalized[field] = row.get(field, 0)
     return normalized
 
 
@@ -316,6 +347,7 @@ def _write_main_csv(csv_path: str, results: list, tasks_by_id: dict) -> None:
         "tool_calls_total", "api_tool_calls",
         "execute_ideal_agent_repair_calls", "query_ideal_agent_repair_calls",
         *_IDEAL_SUBAGENT_CSV_FIELDS,
+        *_DELEGATION_SUBAGENT_CSV_FIELDS,
         "success", "error",
     ]
     existing_rows: dict = {}
@@ -360,6 +392,11 @@ def _write_main_csv(csv_path: str, results: list, tasks_by_id: dict) -> None:
         for field in _IDEAL_SUBAGENT_CSV_FIELDS:
             if field == "total_cost_with_ideal_subagents_usd":
                 row[field] = _combined_cost(r)
+            else:
+                row[field] = r.get(field, 0)
+        for field in _DELEGATION_SUBAGENT_CSV_FIELDS:
+            if field == "total_cost_with_all_subagents_usd":
+                row[field] = _combined_cost_with_delegation(r)
             else:
                 row[field] = r.get(field, 0)
         existing_rows[str(task_id)] = row

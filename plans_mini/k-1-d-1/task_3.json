@@ -1,0 +1,16 @@
+{
+  "dataset_sequence": [
+    "cta-ridership-bus-routes-monthly-day-type-averages-totals"
+  ],
+  "source_sequence": [
+    "datagov/cta-ridership-bus-routes-monthly-day-type-averages-totals/files/rows.txt"
+  ],
+  "reasoning_chain_text": [
+    "1. Sum monthly CTA bus passenger totals across all routes by year for the period needed to compare 2006 through 2010 against the prior year, compute each year's PIAL from the annual total and absolute year-over-year percentage change, and return the year with the lowest PIAL using the earlier year as the tie-breaker."
+  ],
+  "original_final_question": "Define a yearly Passenger Instability-Adjusted Load (PIAL) as: annual total CTA bus passengers across all routes (from summed monthly totals) multiplied by (1 + absolute year-over-year percentage change in that annual total). For years 2006 through 2010, which year has the lowest PIAL? If there is a tie, choose the earlier year. Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    "Node 1: Sum monthly CTA bus passenger totals across all routes by year, compute absolute year-over-year percentage change in annual totals, then score 2006-2010 as PIAL = annual total x (1 + abs(yoy change)). The smallest PIAL is in 2006.",
+    "Final answer: 2006"
+  ]
+}

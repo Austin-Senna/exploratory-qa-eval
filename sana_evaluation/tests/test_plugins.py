@@ -28,6 +28,7 @@ class _StubAfterToolEvent:
     tool_use: Dict[str, Any]
     result: Optional[Dict[str, Any]] = None
     exception: Optional[BaseException] = None
+    cancel_message: Optional[str] = None
 
 
 # ---------------------------------------------------------------------------
@@ -172,6 +173,57 @@ def test_sprint_steer_cot_calls_dont_count_toward_sprint() -> None:
     h.on_after_tool(_StubAfterToolEvent(tool_use={"name": "cot"}))
 
     action = _run_steer(h, {"name": "peek_file"})
+
+    assert isinstance(action, Proceed)
+
+
+def test_sprint_steer_skips_cancelled_tool_events() -> None:
+    h = SprintSteerHandler(macro_reflection_k=1, max_tool_calls=3)
+    h.on_after_tool(
+        _StubAfterToolEvent(
+            tool_use={"name": "peek_file"},
+            cancel_message="Tool call cancelled. Call sprint first.",
+        )
+    )
+
+    action = _run_steer(h, {"name": "peek_file"})
+
+    assert isinstance(action, Proceed)
+
+
+def test_commitment_skips_cancelled_tool_events_for_source_budget() -> None:
+    h = SprintSteerHandler(
+        macro_reflection_k=5,
+        sprint_mode="commitment",
+        commitment_budget_calls=1,
+    )
+    _run_steer(h, {"name": "peek_file", "input": {"dataset_id": "schools"}})
+    _send_source_contract(h, "schools", 1)
+
+    h.on_after_tool(
+        _StubAfterToolEvent(
+            tool_use={"name": "peek_file", "input": {"dataset_id": "schools"}},
+            cancel_message="Tool call cancelled. Renew the source contract first.",
+        )
+    )
+
+    assert h.source_session is not None
+    assert h.source_session.calls_used == 0
+    assert isinstance(
+        _run_steer(h, {"name": "query_file", "input": {"dataset_id": "schools"}}),
+        Proceed,
+    )
+
+
+def test_sprint_steer_uses_tool_limit_exclusions_for_final_budget() -> None:
+    h = SprintSteerHandler(
+        macro_reflection_k=5,
+        max_tool_calls=3,
+        counted_excluded_tools=("search_ideal",),
+    )
+    h.on_after_tool(_StubAfterToolEvent(tool_use={"name": "search_ideal"}))
+
+    action = _run_steer(h, {"name": "query_file"})
 
     assert isinstance(action, Proceed)
 
@@ -644,6 +696,23 @@ def test_dashboard_render_block_includes_observed_state() -> None:
     assert "long_plan" not in text
     assert "confidence" not in text
     assert "reflection" not in text
+
+
+def test_dashboard_uses_tool_limit_exclusions_for_calls_left() -> None:
+    plugin = StateOfTaskDashboardPlugin(
+        max_tool_calls=3,
+        counted_excluded_tools=("search_ideal",),
+    )
+
+    plugin.on_after_tool(_StubAfterToolEvent(tool_use={"name": "search_ideal"}))
+    plugin.on_after_tool(
+        _StubAfterToolEvent(
+            tool_use={"name": "peek_file"},
+            cancel_message="Tool call cancelled. Call sprint first.",
+        )
+    )
+
+    assert "tool_calls_left: 3/3" in plugin.render_block()
 
 
 def test_dashboard_uses_source_session_plan_step_when_available() -> None:

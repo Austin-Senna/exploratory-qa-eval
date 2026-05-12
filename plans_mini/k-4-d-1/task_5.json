@@ -1,0 +1,28 @@
+{
+  "dataset_sequence": [
+    "Austin_City_Council",
+    "apd-computer-aided-dispatch-incidents",
+    "apd-searches-by-type",
+    "apd-use-of-force"
+  ],
+  "source_sequence": [
+    "wikipedia/Austin_City_Council/content.txt",
+    "datagov/apd-computer-aided-dispatch-incidents/files/rows.txt",
+    "datagov/apd-searches-by-type/files/rows.txt",
+    "datagov/apd-use-of-force/files/rows.txt"
+  ],
+  "reasoning_chain_text": [
+    "1. Determine the Austin City Council district number associated with Mike Siegel.",
+    "2. For that council district, identify the most common APD dispatch sector in 2023 incidents.",
+    "3. For that sector, identify which council district has the most APD searches in 2023.",
+    "4. For that council district, count 2023 use-of-force incidents where a taser was used."
+  ],
+  "original_final_question": "Can you find the most common sector in 2023 for incidents recorded in the dispatch system reported by Austin Police for the council district whose number is associated with Mike Siegel. For that sector, find which council district has the most searches according to released data about the type of searches conducted by Austin Police in 2023, and only report the number of use-of-force incidents in that district where taser is used of the same year. Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    "Node 1: Mike Siegel is associated with District 7 in the Austin City Council article.",
+    "Node 2 depends on node 1: In 2023 CAD incidents, within council district 7, the most common sector is Adam.",
+    "Node 3 depends on node 2: In 2023 searches-by-type data, within sector Adam, council district 6 has the most searches.",
+    "Node 4 depends on node 3: In 2023 use-of-force data, council district 6 has 12 incidents with Used Taser(s) > 0.",
+    "Final answer: 12"
+  ]
+}

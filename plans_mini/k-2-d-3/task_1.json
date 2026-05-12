@@ -1,0 +1,29 @@
+{
+  "dataset_sequence": [
+    "nopd-use-of-force-incidents",
+    "apd-searches-by-type",
+    "apd-computer-aided-dispatch-incidents",
+    "apd-use-of-force"
+  ],
+  "source_sequence": [
+    "datagov/nopd-use-of-force-incidents/files/rows.txt",
+    "datagov/apd-searches-by-type/files/rows.txt",
+    "datagov/apd-computer-aided-dispatch-incidents/files/rows.txt",
+    "datagov/apd-use-of-force/files/rows.txt"
+  ],
+  "reasoning_chain_text": [
+    "1. For 2022 NOPD incident records, determine the largest count of incidents where an officer applied a weapon across divisions.",
+    "2. For 2022 APD search records, identify the patrol sector excluding Unknown with the most searches due to illegal items.",
+    "3. Using the patrol sector from step 2, count 2022 APD mental-health call-log incidents in that sector.",
+    "4. For 2022 APD officer-applied-weapon incident records, determine the largest count across Austin City Council districts, then compare the three incident counts and return the greatest value."
+  ],
+  "original_final_question": "Can you tell me which has the greatest number of incidents in 2022 among (1) the highest number of incidents where an officer applies weapon across NOPD divisions, (2) the count of APD mental-health call-log incidents in the patrol sector with the most searches due to illegal items, and (3) the highest number of incidents where an officer applies weapon across Austin City Council districts? Report the greatest number. Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    "Node 1: 2022 NOPD maximum division-level incident count = 92.",
+    "Node 2: 2022 APD searches-by-type top sector for contraband/evidence in plain view (excluding Unknown) = Edward.",
+    "Node 3 depends on node 2: 2022 APD CAD mental health incidents in sector Edward = 5021.",
+    "Node 4: 2022 Austin use-of-force maximum council-district incident count = 1790.",
+    "Take the largest of (92, 5021, 1790) = 5021.",
+    "Final answer: 5021"
+  ]
+}

@@ -67,6 +67,16 @@ def _coerce_positive_int(value: Any, *, default: Optional[int] = None) -> Option
     return out
 
 
+def _coerce_nonnegative_int(value: Any, *, default: Optional[int] = None) -> Optional[int]:
+    try:
+        out = int(value)
+    except (TypeError, ValueError):
+        return default
+    if out < 0:
+        return default
+    return out
+
+
 def _source_parts(source: Any) -> set[str]:
     if not isinstance(source, str):
         return set()
@@ -187,16 +197,6 @@ def _validate_record(state: SprintState, record: Dict[str, Any]) -> List[str]:
         if state.source_session is not None and not _record_matches_active_source_session(state, record):
             errors.append("commitment_reflection current_source must be in the active source package")
     return errors
-
-
-def _coerce_nonnegative_int(value: Any, *, default: Optional[int] = None) -> Optional[int]:
-    try:
-        out = int(value)
-    except (TypeError, ValueError):
-        return default
-    if out < 0:
-        return default
-    return out
 
 
 def _apply_record(state: SprintState, record: Dict[str, Any]) -> None:

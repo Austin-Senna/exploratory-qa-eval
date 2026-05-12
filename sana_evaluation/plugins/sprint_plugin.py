@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Sequence
 
 from strands.hooks import AfterToolCallEvent, AgentInitializedEvent
 from strands.plugins import hook
@@ -88,6 +88,18 @@ def _final_budget_locked_reason() -> str:
     )
 
 
+def _is_cancelled_tool_event(event: AfterToolCallEvent) -> bool:
+    if getattr(event, "cancel_message", None):
+        return True
+    result = getattr(event, "result", None)
+    if not isinstance(result, dict):
+        return False
+    for block in result.get("content") or []:
+        if isinstance(block, dict) and "Tool call cancelled" in str(block.get("text", "")):
+            return True
+    return False
+
+
 class SprintSteerHandler(SteeringHandler):
     """Runtime controller for sprint cadence and source commitment mode."""
 
@@ -100,12 +112,16 @@ class SprintSteerHandler(SteeringHandler):
         sprint_mode: str = "cadence",
         commitment_budget_calls: int = 3,
         max_tool_calls: int = 30,
+        counted_excluded_tools: Sequence[str] = (),
     ) -> None:
         super().__init__()
         self._k = max(int(macro_reflection_k), 1)
         self._mode = sprint_mode
         self._commitment_budget_calls = max(int(commitment_budget_calls), 1)
         self._max_tool_calls = max(int(max_tool_calls), 1)
+        self._counted_excluded_tools = frozenset(
+            str(name) for name in counted_excluded_tools
+        )
         self.state = SprintState()
         self._tool_calls_since_reflection = 0
         self._counted_tool_calls = 0
@@ -136,7 +152,12 @@ class SprintSteerHandler(SteeringHandler):
     def on_after_tool(self, event: AfterToolCallEvent) -> None:
         tool_use = getattr(event, "tool_use", {}) or {}
         tool_name = tool_use.get("name", "")
-        if tool_name in _EXCLUDED_TOOLS or tool_name == "submit_answer":
+        if (
+            tool_name in _EXCLUDED_TOOLS
+            or tool_name == "submit_answer"
+            or tool_name in self._counted_excluded_tools
+            or _is_cancelled_tool_event(event)
+        ):
             return
         self._counted_tool_calls += 1
         if self._final_budget_state == _FINAL_AWAITING_LOOKUP:

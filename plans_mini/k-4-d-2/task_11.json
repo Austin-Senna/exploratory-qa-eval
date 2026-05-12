@@ -1,0 +1,46 @@
+{
+  "dataset_sequence": [
+    "index-violent-property-and-firearm-rates-by-county-beginning-1990",
+    "nys-school-tax-relief-star-reimbursement-by-county-beginning-levy-year-1998",
+    "jail-population-by-county-beginning-1997",
+    "hate-crimes-by-county-and-bias-type-beginning-2010",
+    "Nassau_County,_New_York",
+    "William_III_of_England"
+  ],
+  "source_sequence": [
+    "datagov/index-violent-property-and-firearm-rates-by-county-beginning-1990/files/rows.txt",
+    "datagov/nys-school-tax-relief-star-reimbursement-by-county-beginning-levy-year-1998/files/rows.txt",
+    "datagov/jail-population-by-county-beginning-1997/files/rows.txt",
+    "datagov/hate-crimes-by-county-and-bias-type-beginning-2010/files/rows.txt",
+    "wikipedia/Nassau_County,_New_York/content.txt",
+    "wikipedia/William_III_of_England/content.txt"
+  ],
+  "reasoning_chain_text": [
+    "1. Identify New York counties in 2015 with population over 900,000 and a firearm rate under 35 per 100,000.",
+    "2. From those counties, keep the ones with School Tax Relief reimbursement over $100 million in 2015.",
+    "3. From the remaining counties, keep those with a total jail population under 1,200 in 2015.",
+    "4. From the remaining counties, keep those with more than 20 total hate crime incidents in 2015.",
+    "5. For the remaining county, determine the king after whom it is named.",
+    "6. Using the king identified in step 5, determine the king's birth year."
+  ],
+  "original_final_question": "In 2015, which New York county named after a king had a population over 900,000, a firearm rate under 35 per 100,000, School Tax Relief (STAR) reimbursement over $100 million, a total jail population under 1,200, and more than 20 total hate crime incidents? Please report the king's birth year. Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    "HOP 1 (d=2 - nodes 1,2 intersection):",
+    "  Node 1: Crime Rates 2015, Population > 900,000 AND Firearm Rate < 35 -> {Nassau, Suffolk, Westchester}",
+    "  Node 2: STAR Reimbursement 2015, Amount > $100M -> {Nassau, Suffolk, Westchester, Monroe, Erie}",
+    "  Intersection(1,2) -> {Nassau, Suffolk, Westchester}",
+    "",
+    "HOP 2 (d=2 - nodes 3,4 intersection within hop 1 result):",
+    "  Node 3: Jail Population 2015, Total Census < 1,200 -> {Nassau (1,148), Westchester (1,100)}",
+    "  Node 4: Hate Crimes 2015, Total Incidents > 20 -> {Nassau (35), Suffolk (69)}",
+    "  Intersection(3,4) within hop 1 result -> {Nassau County}",
+    "",
+    "HOP 3 (Wikipedia - node 5 identifies the king the county is named after):",
+    "  Node 5: Wikipedia Nassau County, NY -> Named after King William III of England (House of Nassau)",
+    "",
+    "HOP 4 (Wikipedia - node 6 finds birth year of the king):",
+    "  Node 6: Wikipedia William III of England -> Born November 4, 1650",
+    "",
+    "Final answer: 1650"
+  ]
+}

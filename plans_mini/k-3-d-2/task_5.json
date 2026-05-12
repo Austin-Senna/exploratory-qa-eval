@@ -1,0 +1,29 @@
+{
+  "dataset_sequence": [
+    "California",
+    "postsecondary-school-locations-current-5a74c",
+    "public-school-locations-current-23297",
+    "school-district-office-locations-current-c8f9d"
+  ],
+  "source_sequence": [
+    "wikipedia/California/content.txt",
+    "datagov/postsecondary-school-locations-current-5a74c/files/Postsecondary_School_Locations_Current_-3631565628879840217.txt",
+    "datagov/public-school-locations-current-23297/files/data.txt",
+    "datagov/school-district-office-locations-current-c8f9d/files/data.txt"
+  ],
+  "reasoning_chain_text": [
+    "1. Determine California's capital city.",
+    "2. Using the relevant school-location records, determine the county associated with that city.",
+    "3. Count public schools in the county from step 2 for school year 2022-2023.",
+    "4. Count school district administrative offices in that same county for school year 2022-2023, then subtract this count from the public-school count from step 3."
+  ],
+  "original_final_question": "In school year 2022-2023, in the capital city of California, what is the number of public schools in its county minus the number of district administrative offices in its county? . Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    "Node 1: California's capital city is Sacramento.",
+    "Node 2 depends on node 1: In school year 2022-2023, postsecondary institutions located in Sacramento are in Sacramento County.",
+    "Node 3 depends on nodes 1 and 2: Public schools in Sacramento in Sacramento County (school year 2022-2023) = 203.",
+    "Node 4 depends on nodes 1 and 2: School district offices in Sacramento in Sacramento County (school year 2022-2023) = 27.",
+    "Compute 203 - 27 = 176.",
+    "Final answer: 176"
+  ]
+}

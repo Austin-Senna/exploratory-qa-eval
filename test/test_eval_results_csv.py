@@ -140,6 +140,18 @@ class EvalResultsCsvTests(unittest.TestCase):
                     "execute_ideal_subagent_calls",
                     "execute_ideal_subagent_cost_usd",
                     "total_cost_with_ideal_subagents_usd",
+                    "delegation_subagent_calls",
+                    "delegation_subagent_input_tokens",
+                    "delegation_subagent_cached_input_tokens",
+                    "delegation_subagent_uncached_input_tokens",
+                    "delegation_subagent_output_tokens",
+                    "delegation_subagent_total_tokens",
+                    "delegation_subagent_cost_usd",
+                    "search_subagent_calls",
+                    "search_subagent_cost_usd",
+                    "inspect_subagent_calls",
+                    "inspect_subagent_cost_usd",
+                    "total_cost_with_all_subagents_usd",
                     "success",
                     "error",
                 },
@@ -233,6 +245,75 @@ class EvalResultsCsvTests(unittest.TestCase):
             self.assertNotIn("reasoning", row)
             self.assertNotIn("required_datasets", row)
             self.assertNotIn("sources_used", row)
+
+
+    def test_write_main_csv_records_delegation_subagent_costs(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            csv_path = Path(tmpdir) / "eval_results.csv"
+            results = [
+                {
+                    "task_id": "tasks_mini/k-1-d-1/task_1.json",
+                    "model": "test-model",
+                    "predicted_answer": "[42]",
+                    "exact_match": 1.0,
+                    "f1_score": 1.0,
+                    "sources_used": [],
+                    "time": 1.5,
+                    "cycle_count": 2,
+                    "input_tokens": 10,
+                    "cached_input_tokens": 6,
+                    "uncached_input_tokens": 4,
+                    "output_tokens": 5,
+                    "total_tokens": 15,
+                    "cost_usd": 0.004,
+                    "tool_calls_total": 3,
+                    "api_tool_calls": 0,
+                    # No ideal subagents in this run.
+                    "ideal_subagent_calls": 0,
+                    "ideal_subagent_cost_usd": 0.0,
+                    # Delegation subagents — the new columns.
+                    "delegation_subagent_calls": 5,
+                    "delegation_subagent_input_tokens": 30000,
+                    "delegation_subagent_cached_input_tokens": 20000,
+                    "delegation_subagent_uncached_input_tokens": 10000,
+                    "delegation_subagent_output_tokens": 1500,
+                    "delegation_subagent_total_tokens": 31500,
+                    "delegation_subagent_cost_usd": 0.025,
+                    "search_subagent_calls": 1,
+                    "search_subagent_cost_usd": 0.005,
+                    "inspect_subagent_calls": 4,
+                    "inspect_subagent_cost_usd": 0.020,
+                    "success": True,
+                    "error": "",
+                }
+            ]
+            tasks_by_id = {
+                "tasks_mini/k-1-d-1/task_1.json": {
+                    "answer": "42",
+                    "datasets_used": [],
+                }
+            }
+
+            _write_main_csv(str(csv_path), results, tasks_by_id)
+
+            with csv_path.open(newline="") as f:
+                rows = list(csv.DictReader(f))
+
+            self.assertEqual(len(rows), 1)
+            row = rows[0]
+            self.assertEqual(row["delegation_subagent_calls"], "5")
+            self.assertEqual(row["delegation_subagent_input_tokens"], "30000")
+            self.assertEqual(row["delegation_subagent_uncached_input_tokens"], "10000")
+            self.assertEqual(row["delegation_subagent_cost_usd"], "0.025")
+            self.assertEqual(row["search_subagent_calls"], "1")
+            self.assertEqual(row["inspect_subagent_calls"], "4")
+            # total_cost_with_ideal stays equal to planner cost when no ideal subagent used.
+            self.assertAlmostEqual(float(row["total_cost_with_ideal_subagents_usd"]), 0.004)
+            # total_cost_with_all_subagents adds delegation cost on top.
+            self.assertAlmostEqual(
+                float(row["total_cost_with_all_subagents_usd"]),
+                0.004 + 0.025,
+            )
 
 
 if __name__ == "__main__":

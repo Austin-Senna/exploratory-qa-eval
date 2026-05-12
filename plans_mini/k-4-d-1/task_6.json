@@ -1,0 +1,40 @@
+{
+  "dataset_sequence": [
+    "Pittsburgh",
+    "pittsburgh-international-airport-scheduled-passenger-traffic",
+    "airports-5e97a",
+    "boundaries-us-zip-codes"
+  ],
+  "source_sequence": [
+    "wikipedia/Pittsburgh/content.txt",
+    "datagov/pittsburgh-international-airport-scheduled-passenger-traffic/files/pittsburgh-international-traffic-report-march-2019.txt",
+    "datagov/airports-5e97a/files/rows.txt",
+    "datagov/boundaries-us-zip-codes/files/rows.txt"
+  ],
+  "reasoning_chain_text": [
+    "1. Identify the largest airport in Pittsburgh.",
+    "2. In that airport's March 2019 scheduled passenger traffic report, rank destination airports by seats and keep the destination with the most seats.",
+    "3. Map that destination airport code to its city and state.",
+    "4. Among ZIP codes in that city and state, determine the largest land area in square miles."
+  ],
+  "original_final_question": "In Pittsburgh, identify the largest airport; in its March 2019 scheduled traffic report, find the destination with the most seats and map it to its city and state. What is the largest land area (SQMI) among ZIP codes in that destination city/state? Please return the land area only. Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    "HOP 1 (d=1): Identify the largest airport in Pittsburgh",
+    "  Node 1: Pittsburgh International Airport is the largest airport in Pittsburgh",
+    "  Result: Pittsburgh International Airport",
+    "",
+    "HOP 2 (d=1): Find the top March 2019 destination by seats",
+    "  Node 2: Atlanta (ATL) has the most seats (44,912)",
+    "  Result: Atlanta (ATL)",
+    "",
+    "HOP 3 (d=1): Map the destination airport code to its city and state",
+    "  Node 3: Loc_Id ATL -> Atlanta, GA",
+    "  Result: Atlanta, GA",
+    "",
+    "HOP 4 (d=1): Find the largest land area (SQMI) among ZIP codes in that city/state",
+    "  Node 4: Atlanta, GA -> largest land area is 45.68",
+    "  Result: 45.68",
+    "",
+    "Final answer: 45.68"
+  ]
+}

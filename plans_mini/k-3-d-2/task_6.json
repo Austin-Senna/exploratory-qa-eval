@@ -1,0 +1,29 @@
+{
+  "dataset_sequence": [
+    "Michigan",
+    "postsecondary-school-locations-current-5a74c",
+    "school-district-office-locations-current-c8f9d",
+    "private-school-locations-current-f7d96"
+  ],
+  "source_sequence": [
+    "wikipedia/Michigan/content.txt",
+    "datagov/postsecondary-school-locations-current-5a74c/files/Postsecondary_School_Locations_Current_-3631565628879840217.txt",
+    "datagov/school-district-office-locations-current-c8f9d/files/data.txt",
+    "datagov/private-school-locations-current-f7d96/files/data-FGgJBu.txt"
+  ],
+  "reasoning_chain_text": [
+    "1. Determine Michigan's capital city.",
+    "2. Using the relevant school-location records, determine the core-based statistical area associated with that city.",
+    "3. Count school district administrative offices in the core-based statistical area from step 2 for school year 2022-2023.",
+    "4. Count private schools in that same core-based statistical area for school year 2021-2022, then subtract this count from the district-office count from step 3."
+  ],
+  "original_final_question": "For Michigan's capital city, what is the number of school district administrative offices in its core-based statistical area in school year 2022-2023 minus the number of private schools in that CBSA in school year 2021-2022? Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    "Node 1: The state capital of Michigan is Lansing.",
+    "Node 2 depends on node 1: In school year 2022-2023, postsecondary institutions located in Lansing are in CBSA 29620.",
+    "Node 3 depends on nodes 1 and 2: School district offices in Lansing in CBSA 29620 (school year 2022-2023) = 11.",
+    "Node 4 depends on nodes 1 and 2: Private schools in Lansing in CBSA 29620 (school year 2021-2022) = 7.",
+    "Compute 11 - 7 = 4.",
+    "Final answer: 4"
+  ]
+}

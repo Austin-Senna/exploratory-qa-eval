@@ -98,6 +98,12 @@ def test_delegation_block_describes_planner_subagent_tools(search_tool: str) -> 
     assert "s3_uri" in text
     assert "file_path" in text
     assert "SANA" not in text
+    # Atomic contract guidance must anchor the planner toward decomposition.
+    assert "ATOMIC CONTRACT GUIDANCE" in text
+    assert "required_outputs" in text
+    assert "known_context" in text
+    assert "Split the contract" in text
+    assert "Never invent a dataset_id" in text
 
 
 def test_delegation_block_preloaded_is_inspect_only() -> None:
@@ -110,3 +116,8 @@ def test_delegation_block_preloaded_is_inspect_only() -> None:
     assert "s3_uri" in text
     assert "file_path" in text
     assert "SANA" not in text
+    # Atomic guidance is symmetric on the preloaded branch.
+    assert "ATOMIC CONTRACT GUIDANCE" in text
+    assert "required_outputs" in text
+    assert "known_context" in text
+    assert "Split the contract" in text

@@ -1,0 +1,30 @@
+{
+  "dataset_sequence": [
+    "crime-data-from-2010-to-2019",
+    "arrest-data-from-2010-to-2019",
+    "lapd-ripa-ab-953-stop-incident-details-from-7-1-2018-to-present",
+    "crime-data-from-2020-to-present"
+  ],
+  "source_sequence": [
+    "datagov/crime-data-from-2010-to-2019/files/rows.txt",
+    "datagov/arrest-data-from-2010-to-2019/files/rows.txt",
+    "datagov/lapd-ripa-ab-953-stop-incident-details-from-7-1-2018-to-present/files/rows.txt",
+    "datagov/crime-data-from-2010-to-2019/files/rows.txt",
+    "datagov/crime-data-from-2020-to-present/files/rows.txt"
+  ],
+  "reasoning_chain_text": [
+    "1. In Los Angeles crime records from 2010-2019, determine the year with the most simple battery assault incidents and record the crime code for that offense.",
+    "2. For that year, determine which LAPD area had the most arrests for other miscellaneous violations.",
+    "3. Map the LAPD area from step 2 to its numeric area identifier in LAPD stop records.",
+    "4. Count 2020 simple battery assault incidents for the area identifier from step 3."
+  ],
+  "original_final_question": "I'm analyzing simple battery assault trends in Los Angeles. First, identify the year between 2010 and 2019 that saw the highest number of these incidents. In that same year, which LAPD area recorded the most arrests for other miscellaneous violations? Focusing on that specific area, how many simple assault battery incidents occurred there in 2020?. Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    "Node 1: In 2010 to 2019 LA crime records, the year with the most BATTERY - SIMPLE ASSAULT incidents -> 2016.",
+    "Node 2 depends on node 1: In 2016 arrests, the area with the most Miscellaneous Other Violations arrests -> Central.",
+    "Node 3 depends on node 2: In LAPD RIPA stop-incident records, Central corresponds to Area ID 1.",
+    "Node 4: In Los Angeles crime records, BATTERY - SIMPLE ASSAULT corresponds to crime code 624.",
+    "Node 5 depends on nodes 3-4: In 2020 crime records for Area ID 1, incident count where Crm Cd = 624 -> 1350.",
+    "Final answer: 1350"
+  ]
+}

@@ -228,6 +228,54 @@ class TestPlanVerifierScripts(unittest.TestCase):
             codes = {issue["code"] for issue in result["issues"]}
             self.assertIn("reasoning_chain_mismatch", codes)
 
+    def test_verify_plan_allows_hidden_page_titles_in_metadata_when_reasoning_is_abstract(self):
+        with TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            self._seed_author_checker(root)
+            task_path = root / "tasks_mini" / "k-4-d-2" / "task_11.json"
+            plan_path = root / "plans_mini" / "k-4-d-2" / "task_11.json"
+            source_sequence = [
+                "datagov/county-filter/files/rows.txt",
+                "wikipedia/Hidden_County/content.txt",
+                "wikipedia/Hidden_Person/content.txt",
+            ]
+            self._seed_indexed_sources(root, source_sequence)
+
+            self._write_json(
+                task_path,
+                {
+                    "question": "Which county satisfies the filters, and what year was its namesake born?",
+                    "answer": "1900",
+                    "datasets_used": ["county-filter", "Hidden_County", "Hidden_Person"],
+                    "reasoning_chain": [
+                        "Node 1: identify counties satisfying the filters",
+                        "Node 2: determine the namesake for the remaining county",
+                        "Node 3: determine that person's birth year",
+                    ],
+                    "nodes": {
+                        "1": {"source": source_sequence[0], "answer": ["Hidden County"]},
+                        "2": {"source": source_sequence[1], "answer": "Hidden Person"},
+                        "3": {"source": source_sequence[2], "answer": "1900"},
+                    },
+                },
+            )
+            self._write_json(
+                plan_path,
+                {
+                    "dataset_sequence": ["county-filter", "Hidden_County", "Hidden_Person"],
+                    "source_sequence": source_sequence,
+                    "reasoning_chain_text": [
+                        "1. Identify counties satisfying the requested filters.",
+                        "2. For the remaining county, determine its namesake.",
+                        "3. Using the namesake identified in step 2, determine the birth year.",
+                    ],
+                },
+            )
+
+            result = plan_verifier.evaluate_verification(plan_path)
+            self.assertEqual(result["status"], "clean")
+            self.assertEqual(result["issues"], [])
+
     def test_verify_plan_propagates_answer_leak_failures(self):
         with TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)

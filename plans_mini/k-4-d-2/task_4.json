@@ -1,0 +1,33 @@
+{
+  "dataset_sequence": [
+    "Austin_City_Council",
+    "city-of-austin-council-voting-record",
+    "apd-searches-by-type",
+    "apd-computer-aided-dispatch-incidents",
+    "public-school-locations-current-23297"
+  ],
+  "source_sequence": [
+    "wikipedia/Austin_City_Council/content.txt",
+    "datagov/city-of-austin-council-voting-record/files/rows.txt",
+    "datagov/apd-searches-by-type/files/rows.txt",
+    "datagov/apd-computer-aided-dispatch-incidents/files/rows.txt",
+    "datagov/public-school-locations-current-23297/files/data.txt"
+  ],
+  "reasoning_chain_text": [
+    "1. Determine which Austin City Council district is represented by Zohaib \"Zo\" Qadri.",
+    "2. For that council district, determine the year of its earliest recorded council meeting.",
+    "3. In that district and year, identify the police sector with the highest number of searches.",
+    "4. Count dispatch incidents in the sector from step 3 during that same year.",
+    "5. Count public schools in Austin, then return the rounded ratio of dispatch incidents from step 4 to the school count."
+  ],
+  "original_final_question": "I\u2019m analyzing data for the Austin City Council district represented by Zohaib 'Zo' Qadri. Starting from the year of the earliest recorded council meeting for this district, identify which police sector had the highest number of searches that year. Then, what is the ratio of the total number of dispatch incidents in that sector compared to the number of public schools in Austin? Round that to the nearest integer. Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    "Node 1: Zohaib \"Zo\" Qadri represents Austin City Council District 9.",
+    "Node 2 depends on node 1: In the council voting record, the earliest meeting date listed for District 9 -> 2023-01-26.",
+    "Node 3 depends on nodes 1-2: In 2023, within District 9, the sector with the most searches -> George.",
+    "Node 4 depends on nodes 2-3: In 2023, dispatch incidents with Sector = George -> 31,517.",
+    "Node 5: Public schools in Austin, TX -> 279.",
+    "Compute round(31517 / 279) = 113.",
+    "Final answer: 113"
+  ]
+}

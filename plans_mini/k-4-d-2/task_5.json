@@ -1,0 +1,33 @@
+{
+  "dataset_sequence": [
+    "LAPD_Rampart_Division",
+    "arrest-data-from-2010-to-2019",
+    "lapd-ripa-ab-953-stop-incident-details-from-7-1-2018-to-present",
+    "crime-data-from-2020-to-present",
+    "public-school-locations-current-23297"
+  ],
+  "source_sequence": [
+    "wikipedia/LAPD_Rampart_Division/content.txt",
+    "datagov/arrest-data-from-2010-to-2019/files/rows.txt",
+    "datagov/lapd-ripa-ab-953-stop-incident-details-from-7-1-2018-to-present/files/rows.txt",
+    "datagov/crime-data-from-2020-to-present/files/rows.txt",
+    "datagov/public-school-locations-current-23297/files/data.txt"
+  ],
+  "reasoning_chain_text": [
+    "1. Identify the LAPD area associated with the division that covers Echo Park and Silver Lake.",
+    "2. In 2019 arrest records for that area, determine the most common arrest charge group and then identify the LAPD area with the most arrests for that charge group.",
+    "3. Map the LAPD area from step 2 to the numeric area identifier needed for the 2021 crime records.",
+    "4. For that area identifier in 2021, determine the most frequent reported crime and its incident count.",
+    "5. Count public schools in Los Angeles, then return the rounded ratio of the incident count from step 4 to the school count."
+  ],
+  "original_final_question": "I am analyzing the LAPD division that covers Echo Park and Silver Lake. After identifying the most common arrest charge group in that area named after this division in 2019, I want to find which LAPD area had the highest number of arrests for that charge group. What is the ratio of the most frequent crime reported in 2021 for that area to the total number of public schools in Los Angeles? Round that to the nearest number. Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    "Node 1: LAPD area serving Echo Park and Silver Lake -> Rampart.",
+    "Node 2 depends on node 1: In 2019 arrests within Rampart, find the most common charge group, then the area with the most arrests for that charge group -> Central.",
+    "Node 3 depends on node 2: Map area name Central to an Area ID via RIPA -> 1.",
+    "Node 4 depends on node 3: In 2021 within Area ID 1, most common crime description (with count) -> BURGLARY FROM VEHICLE (1620).",
+    "Node 5: Public schools listed in Los Angeles, CA -> 579.",
+    "Compute round(1620 / 579) = 3.",
+    "Final answer: 3"
+  ]
+}

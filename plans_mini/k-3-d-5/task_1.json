@@ -1,0 +1,38 @@
+{
+  "dataset_sequence": [
+    "2006-2007-school-progress-report",
+    "2007-2008-school-progress-report",
+    "2008-2009-school-progress-report",
+    "2009-2010-school-progress-report",
+    "2010-2011-school-progress-report",
+    "Marble_Hill,_Manhattan",
+    "Frederick_Philipse"
+  ],
+  "source_sequence": [
+    "datagov/2006-2007-school-progress-report/files/rows.txt",
+    "datagov/2007-2008-school-progress-report/files/rows.txt",
+    "datagov/2008-2009-school-progress-report/files/rows.txt",
+    "datagov/2009-2010-school-progress-report/files/rows.txt",
+    "datagov/2010-2011-school-progress-report/files/rows.txt",
+    "wikipedia/Marble_Hill,_Manhattan/content.txt",
+    "wikipedia/Frederick_Philipse/content.txt"
+  ],
+  "reasoning_chain_text": [
+    "1. For school years 2006-2007, 2007-2008, 2008-2009, 2009-2010, and 2010-2011, identify the NYC high schools ranked in the top eight by overall score and keep the school that appears in every year.",
+    "2. Determine the neighborhood named by the school that remains after the yearly comparison.",
+    "3. For that neighborhood, identify the person who built the first bridge connecting New York City to it.",
+    "4. Determine the province or area from which that bridge builder emigrated."
+  ],
+  "original_final_question": "Can you first find the neighborhood after which the only NYC high school that was in the top 8 by overall score every year from 2006-2010 is named, then report which province did the person who built the first bridge connecting NYC to that neighborhood emigrate from?. Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    "Node 1: Find top 8 NYC high schools by overall score in 2006-07 \u2192 includes Marble Hill",
+    "Node 2: Find top 8 NYC high schools by overall score in 2007-08 \u2192 includes Marble Hill",
+    "Node 3: Find top 8 NYC high schools by overall score in 2008-09 \u2192 includes Marble Hill",
+    "Node 4: Find top 8 NYC high schools by overall score in 2009-10 \u2192 includes Marble Hill",
+    "Node 5: Find top 8 NYC high schools by overall score in 2010-11 \u2192 includes Marble Hill",
+    "Intersection of <node_1>, <node_2>, <node_3>, <node_4>, <node_5>: Only school in top 7 all five years \u2192 Marble Hill High School for International Studies",
+    "Node 6 depends on intersection: Find who built first bridge at Marble Hill in 1693 \u2192 Frederick Philipse",
+    "Node 7 depends on node 6: Find area of Netherlands where Philipse emigrated from \u2192 Friesland",
+    "Final answer: Friesland"
+  ]
+}

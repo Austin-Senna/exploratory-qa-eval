@@ -1,0 +1,28 @@
+{
+  "dataset_sequence": [
+    "arrest-data-from-2010-to-2019",
+    "lapd-ripa-ab-953-stop-incident-details-from-7-1-2018-to-present",
+    "crime-data-from-2010-to-2019",
+    "crime-data-from-2020-to-present"
+  ],
+  "source_sequence": [
+    "datagov/arrest-data-from-2010-to-2019/files/rows.txt",
+    "datagov/lapd-ripa-ab-953-stop-incident-details-from-7-1-2018-to-present/files/rows.txt",
+    "datagov/crime-data-from-2010-to-2019/files/rows.txt",
+    "datagov/crime-data-from-2020-to-present/files/rows.txt"
+  ],
+  "reasoning_chain_text": [
+    "1. In 2019 LAPD arrest records, identify the geo area with the most Moving Traffic Violations arrests.",
+    "2. Determine the numeric Area ID corresponding to that geo area in LAPD stop-incident records.",
+    "3. For that Area ID, identify the most common 2019 crime description.",
+    "4. For the same Area ID and crime description, count 2020 incidents, then find the 2021 crime-description count that is the smallest value greater than the 2020 count."
+  ],
+  "original_final_question": "In 2019 data reported by the Los Angeles Police Department, find the geo area with the most violations of moving traffic arrests. Then, find that area's numeric Area ID, and the most common 2019 crime description for that Area ID. Using 2020-present crime data for the same Area ID, find the 2020 incident count for that description, then in 2021 identify the crime description whose incident count is the smallest value exceeding that 2020 count and report that 2021 count as your final answer. Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    "Node 1: In 2019 arrest data, Van Nuys has the most Moving Traffic Violations arrests.",
+    "Node 2 depends on node 1: In the LAPD RIPA stop-incident records, Van Nuys corresponds to Area ID 9.",
+    "Node 3 depends on node 2: In 2019 crime data for Area ID 9, the most common crime description is THEFT OF IDENTITY.",
+    "Node 4 depends on node 3: In 2020\u2013present crime data for Area ID 9, THEFT OF IDENTITY incidents in 2020 = 761, and the smallest 2021 description count greater than 761 is 915.",
+    "Final answer: 915"
+  ]
+}

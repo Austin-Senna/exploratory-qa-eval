@@ -1,0 +1,44 @@
+{
+  "dataset_sequence": [
+    "parking-violations-issued-in-january-2019",
+    "parking-violations-issued-in-january-2020",
+    "parking-violations-issued-in-january-2021",
+    "moving-violations-issued-in-january-2019",
+    "moving-violations-issued-in-january-2020",
+    "moving-violations-issued-in-january-2021",
+    "United_States_Park_Police"
+  ],
+  "source_sequence": [
+    "datagov/parking-violations-issued-in-january-2019/files/data.txt",
+    "datagov/parking-violations-issued-in-january-2020/files/data.txt",
+    "datagov/parking-violations-issued-in-january-2021/files/data.txt",
+    "datagov/moving-violations-issued-in-january-2019/files/data.txt",
+    "datagov/moving-violations-issued-in-january-2020/files/data.txt",
+    "datagov/moving-violations-issued-in-january-2021/files/data.txt",
+    "wikipedia/United_States_Park_Police/content.txt"
+  ],
+  "reasoning_chain_text": [
+    "1. For January 2019, January 2020, and January 2021, identify the issuing agencies in the top 20 by total parking-violation fines and keep the agencies that qualify in every year.",
+    "2. From the agencies kept in step 1, keep only the U.S. national law-enforcement bodies.",
+    "3. For the law-enforcement bodies kept in step 2, gather January moving-violation counts for 2019, 2020, and 2021.",
+    "4. Compute each remaining body's average January moving-violation count across the three years and identify the body with the highest average.",
+    "5. Determine the federal agency that operates the law-enforcement body identified in step 4."
+  ],
+  "original_final_question": "Across January 2019-2021, identify the issuing agencies that consistently ranked in the top 20 by total parking-violation fines. From those, keep only the U.S. national law-enforcement bodies and find which had the highest average number of January moving violations from 2019-2021. Which federal agency operates that law-enforcement body? Return the agency name only. Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    "HOP 1 (d=3): Find agencies in the top 20 for total January parking-violation fines in 2019-2021 and keep the intersection",
+    "  Node 1: 2019 top 20 agencies by fine total",
+    "  Node 2: 2020 top 20 agencies by fine total",
+    "  Node 3: 2021 top 20 agencies by fine total",
+    "  Intersection: {DEPARTMENT OF PUBLIC WORKS, METROPOLITAN POLICE DPT-DISTRICT 2, METROPOLITAN POLICE DPT-DISTRICT 1, METROPOLITAN POLICE DPT-DISTRICT 4, METROPOLITAN POLICE DPT-DISTRICT 5, METROPOLITAN POLICE DPT-DISTRICT 7, D.C. HOUSING AUTHORITY, METROPOLITAN POLICE DPT-DISTRICT 3, METROPOLITAN POLICE DPT-DISTRICT 6, SPECIAL OPERATION DIV & TRAFFIC DIV, UNITED STATES CAPITOL POLICE, METRO POLICE, PROTECTIVE SERVICES DEPT (DC GOVT), TAXI COMMISSION, US. SECRET SERVICE UNIFORM DIVISION, UNITED STATES PARK POLICE}",
+    "  Subset rule: keep the U.S. national law-enforcement bodies -> {UNITED STATES CAPITOL POLICE, US. SECRET SERVICE UNIFORM DIVISION, UNITED STATES PARK POLICE}",
+    "HOP 2 (d=3): Compare January moving-violation counts for the subset in 2019-2021",
+    "  Node 4: 2019 moving violations",
+    "  Node 5: 2020 moving violations",
+    "  Node 6: 2021 moving violations; average is highest for UNITED STATES PARK POLICE",
+    "  Result: UNITED STATES PARK POLICE",
+    "HOP 3 (d=1): Identify the federal agency that operates the United States Park Police",
+    "  Node 7: Operated by the National Park Service",
+    "Final answer: National Park Service"
+  ]
+}

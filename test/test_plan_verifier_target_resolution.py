@@ -62,6 +62,25 @@ class TestPlanVerifierTargetResolution(unittest.TestCase):
 
             self.assertEqual(resolved, sorted(path.resolve() for path in matching))
 
+    def test_resolve_targets_caps_subtree_batches_at_five(self):
+        with TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            self._seed_repo(root)
+            subtree = root / "plans_mini" / "k-2-d-4"
+            subtree.mkdir(parents=True, exist_ok=True)
+
+            matching = [subtree / f"task_{i}.json" for i in range(1, 8)]
+            for path in matching:
+                path.write_text("{}\n")
+
+            resolved = resolve_plan_targets.resolve_targets(subtree)
+
+            self.assertEqual(
+                resolved,
+                sorted(path.resolve() for path in matching)[: resolve_plan_targets.MAX_TARGETS],
+            )
+            self.assertEqual(len(resolved), 5)
+
     def test_resolve_targets_rejects_missing_path(self):
         with TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)

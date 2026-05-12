@@ -1,0 +1,33 @@
+{
+  "dataset_sequence": [
+    "2006-2007-school-progress-report",
+    "2009-2010-school-progress-report",
+    "2010-2011-school-progress-report",
+    "Marble_Hill,_Manhattan",
+    "Frederick_Philipse"
+  ],
+  "source_sequence": [
+    "datagov/2006-2007-school-progress-report/files/rows.txt",
+    "datagov/2009-2010-school-progress-report/files/rows.txt",
+    "datagov/2010-2011-school-progress-report/files/rows.txt",
+    "wikipedia/Marble_Hill,_Manhattan/content.txt",
+    "wikipedia/Frederick_Philipse/content.txt"
+  ],
+  "reasoning_chain_text": [
+    "1. For NYC high schools in 2006-07, identify the top seven by comprehensive ranking.",
+    "2. For NYC high schools in 2009-10 and 2010-11, identify the top seven by comprehensive ranking in each school year and keep the school that appears in all three top-seven lists.",
+    "3. Determine the neighborhood named after the remaining high school.",
+    "4. Determine the earliest constructed bridge that connects that neighborhood with the mainland and identify its builder.",
+    "5. Using the builder identified in step 4, determine the New York village where that person is buried."
+  ],
+  "original_final_question": "For the NYC high school that ranked in the top 7 based on the comprehensive ranking in 2006-07 and 2009-11, find the neighborhood named after this high school. Finally report the New York village where the builder of the earliest constructed bridge that connects this neighborhood with the mainland is buried. Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    "Node 1: Find top 7 NYC high schools by Progress Report composite score in 2006-07 \u2192 {Manhattan Bridges, Bedford Academy, Marble Hill, Contemporary Arts, Bronx Aerospace, Eleanor Roosevelt, Bronx Academy Letters}",
+    "Node 2: Find top 7 NYC high schools by Progress Report composite score in 2009-10 \u2192 {Theatre Arts, Brooklyn International, Williamsburg Prep, Marble Hill, Williamsburg Arch, Manhattan Village, Violin Dance}",
+    "Node 3: Find top 7 NYC high schools by Progress Report composite score in 2010-11 \u2192 {Brooklyn International, Manhattan Village, It Takes Village, Williamsburg Arch, Manhattan Bridges, Academy Finance, Marble Hill}",
+    "Intersection of <node_1>, <node_2>, <node_3>: Only school in all three top 7 lists \u2192 Marble Hill High School for International Studies",
+    "Node 4 depends on intersection: Find who built King's Bridge at Marble Hill neighborhood in 1693 \u2192 Frederick Philipse",
+    "Node 5 depends on node 4: Find village where Frederick Philipse is buried \u2192 Sleepy Hollow",
+    "Final answer: Sleepy Hollow"
+  ]
+}

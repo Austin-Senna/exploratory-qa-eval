@@ -1,0 +1,16 @@
+{
+  "dataset_sequence": [
+    "lottery-ny-lotto-winning-numbers-beginning-2001"
+  ],
+  "source_sequence": [
+    "datagov/lottery-ny-lotto-winning-numbers-beginning-2001/files/rows.txt"
+  ],
+  "reasoning_chain_text": [
+    "1. For New York Lotto draws from 2005 through 2010, group bonus ball numbers by draw year, compute each year's BVAL as the average plus half of the standard deviation, and return the year with the highest BVAL using the earlier year as the tie-breaker."
+  ],
+  "original_final_question": "For each year from 2005 through 2010, define Bonus Volatility-Adjusted Level (BVAL) as the draws' average New York Lotto bonus ball number plus half of the standard deviation of bonus ball numbers. Which year has the highest BVAL? If there is a tie, choose the earlier year. Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    "Node 1: For each year from 2005 through 2010, compute BVAL = average bonus ball number + 0.5 x standard deviation of bonus ball numbers, then rank descending with earlier-year tie break. The highest BVAL is in 2007.",
+    "Final answer: 2007"
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "dataset_sequence": [
+    "Adams_Morgan",
+    "crime-incidents-in-2019",
+    "crime-incidents-in-2020",
+    "crime-incidents-in-2021"
+  ],
+  "source_sequence": [
+    "wikipedia/Adams_Morgan/content.txt",
+    "datagov/crime-incidents-in-2019/files/data.txt",
+    "datagov/crime-incidents-in-2020/files/data.txt",
+    "datagov/crime-incidents-in-2021/files/data.txt"
+  ],
+  "reasoning_chain_text": [
+    "1. Determine which Washington, D.C. ward contains Adams Morgan.",
+    "2. In 2019 crime incidents for that ward, identify the most common offense.",
+    "3. Count 2020 incidents for the ward and offense from step 2.",
+    "4. Count 2021 incidents for the same ward and offense, then compare the 2020 and 2021 counts and return the larger count."
+  ],
+  "original_final_question": "I want to investigate Adams Morgan in Washington, D.C. Identify the ward Adams Morgan belongs to, find the most common offense in that ward in 2019, and report the maximum of the incidents for that offense over the next two years?. Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    "Node 1: Adams Morgan is in Washington, D.C. Ward 1.",
+    "Node 2 depends on node 1: In 2019 within Ward 1, the most common offense is THEFT/OTHER.",
+    "Node 3 depends on node 2: 2020 Ward 1 incidents for THEFT/OTHER = 1,587.",
+    "Node 4 depends on node 2: 2021 Ward 1 incidents for THEFT/OTHER = 1,702.",
+    "Compare 2020 vs 2021: max(1587, 1702) = 1702.",
+    "Final answer: 1702"
+  ]
+}

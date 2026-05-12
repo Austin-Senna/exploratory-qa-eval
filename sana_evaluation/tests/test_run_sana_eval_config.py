@@ -1,5 +1,9 @@
 from sana_evaluation.flags import SanaFlags
-from sana_evaluation.run_sana_eval import _validate_axis_combination, _variant_condition_label
+from sana_evaluation.run_sana_eval import (
+    _effective_plan_skills_enabled,
+    _validate_axis_combination,
+    _variant_condition_label,
+)
 
 
 def test_variant_label_includes_cadence_sprint_mode() -> None:
@@ -104,3 +108,23 @@ def test_skills_on_rejects_naive_plans_axis() -> None:
         assert "--skills on requires --plans standard or --plans ideal" in str(exc)
     else:
         raise AssertionError("Expected ValueError for --skills on with naive plans")
+
+
+def test_delegation_makes_plan_skills_nonfactor() -> None:
+    assert (
+        _effective_plan_skills_enabled(
+            requested="on",
+            sana_flags=SanaFlags(delegation=True),
+        )
+        is False
+    )
+
+
+def test_non_delegation_keeps_requested_plan_skills() -> None:
+    assert (
+        _effective_plan_skills_enabled(
+            requested="on",
+            sana_flags=SanaFlags(delegation=False),
+        )
+        is True
+    )

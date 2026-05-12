@@ -1,0 +1,30 @@
+{
+  "dataset_sequence": [
+    "crime-data-from-2010-to-2019",
+    "arrest-data-from-2010-to-2019",
+    "lapd-ripa-ab-953-stop-incident-details-from-7-1-2018-to-present",
+    "crime-data-from-2020-to-present"
+  ],
+  "source_sequence": [
+    "datagov/crime-data-from-2010-to-2019/files/rows.txt",
+    "datagov/arrest-data-from-2010-to-2019/files/rows.txt",
+    "datagov/lapd-ripa-ab-953-stop-incident-details-from-7-1-2018-to-present/files/rows.txt",
+    "datagov/crime-data-from-2010-to-2019/files/rows.txt",
+    "datagov/crime-data-from-2020-to-present/files/rows.txt"
+  ],
+  "reasoning_chain_text": [
+    "1. In Los Angeles crime records from 2010-2019, determine the year with the most vehicle burglaries and record the crime code for that offense.",
+    "2. For that year, determine which LAPD area had the most narcotic drug law arrests.",
+    "3. Map the LAPD area from step 2 to its numeric area identifier in LAPD stop records.",
+    "4. Count 2020 vehicle burglaries for the area identifier from step 3."
+  ],
+  "original_final_question": "Between 2010 and 2019, what year has the highest number of burglaries from vehicles in Los Angeles? In that year, determine which area had the most narcotic drug laws arrests, how many vehicle burglaries occurred in that specific area in 2020? Only report the number of vehicle burglaries. Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    "Node 1: In 2010 to 2019 LA crime records, the year with the most BURGLARY FROM VEHICLE incidents -> 2016.",
+    "Node 2 depends on node 1: In 2016 arrests, the area with the most Narcotic Drug Laws arrests -> Central.",
+    "Node 3 depends on node 2: In LAPD RIPA stop-incident records, Central corresponds to Area ID 1.",
+    "Node 4: In Los Angeles crime records, BURGLARY FROM VEHICLE corresponds to crime code 330.",
+    "Node 5 depends on nodes 3-4: In 2020 crime records for Area ID 1, incident count where Crm Cd = 330 -> 1220.",
+    "Final answer: 1220"
+  ]
+}

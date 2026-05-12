@@ -1,0 +1,35 @@
+{
+  "dataset_sequence": [
+    "2007-2008-school-progress-report",
+    "2008-2009-school-progress-report",
+    "2009-2010-school-progress-report",
+    "2010-2011-school-progress-report",
+    "Adam_Clayton_Powell_Jr.",
+    "Colgate_University"
+  ],
+  "source_sequence": [
+    "datagov/2007-2008-school-progress-report/files/rows.txt",
+    "datagov/2008-2009-school-progress-report/files/rows.txt",
+    "datagov/2009-2010-school-progress-report/files/rows.txt",
+    "datagov/2010-2011-school-progress-report/files/rows.txt",
+    "wikipedia/Adam_Clayton_Powell_Jr./content.txt",
+    "wikipedia/Colgate_University/content.txt"
+  ],
+  "reasoning_chain_text": [
+    "1. For each school year, 2007-08, 2008-09, 2009-10, and 2010-11, identify NYC District 6 elementary schools that received an `A` grade.",
+    "2. Intersect the yearly school sets and keep the school that received an `A` in all four school years.",
+    "3. Determine the civil rights leader named by the school from step 2 and identify where that person earned a bachelor's degree.",
+    "4. Determine the founding year of that university and return the year."
+  ],
+  "original_final_question": "In what year was the university founded where the civil rights leader after whom the only NYC elementary school that received an 'A' consistently from 2007-2011 in District 6 is named after earned his bachelor's degree? Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    "Node 1: Find District 6 elementary schools with 'A' grade in 2007-08 \u2192 {P.S. 153 Adam Clayton Powell, P.S. 128, P.S. 132}",
+    "Node 2: Find District 6 elementary schools with 'A' grade in 2008-09 \u2192 {P.S. 153 Adam Clayton Powell, P.S. 128}",
+    "Node 3: Find District 6 elementary schools with 'A' grade in 2009-10 \u2192 {P.S. 153 Adam Clayton Powell, P.S. 128, P.S. 48}",
+    "Node 4: Find District 6 elementary schools with 'A' grade in 2010-11 \u2192 {P.S. 153 Adam Clayton Powell, P.S. 132}",
+    "Intersection of <node_1>, <node_2>, <node_3>, <node_4>: Only school with 'A' all four years \u2192 P.S. 153 Adam Clayton Powell",
+    "Node 5 depends on intersection: Find where Adam Clayton Powell Jr. earned bachelor's degree \u2192 Colgate University",
+    "Node 6 depends on node 5: Find when Colgate University was founded \u2192 1819",
+    "Final answer: 1819"
+  ]
+}

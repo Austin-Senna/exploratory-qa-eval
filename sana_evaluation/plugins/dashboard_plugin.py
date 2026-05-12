@@ -14,7 +14,7 @@ State sources:
 from __future__ import annotations
 
 import re
-from typing import Any, List, Optional
+from typing import Any, List, Optional, Sequence
 
 from strands import Plugin
 from strands.hooks import (
@@ -35,14 +35,35 @@ _ADMIN_TOOLS = {
 }
 
 
+def _is_cancelled_tool_event(event: AfterToolCallEvent) -> bool:
+    if getattr(event, "cancel_message", None):
+        return True
+    result = getattr(event, "result", None)
+    if not isinstance(result, dict):
+        return False
+    for block in result.get("content") or []:
+        if isinstance(block, dict) and "Tool call cancelled" in str(block.get("text", "")):
+            return True
+    return False
+
+
 class StateOfTaskDashboardPlugin(Plugin):
     """Observe runtime state; render a state-of-task block on demand."""
 
     name = "sana-dashboard"
 
-    def __init__(self, *, max_tool_calls: int, history_window: int = 3) -> None:
+    def __init__(
+        self,
+        *,
+        max_tool_calls: int,
+        history_window: int = 3,
+        counted_excluded_tools: Sequence[str] = (),
+    ) -> None:
         super().__init__()
         self._max_tool_calls = max(int(max_tool_calls), 1)
+        self._counted_excluded_tools = frozenset(
+            str(name) for name in counted_excluded_tools
+        )
         self._reset()
 
         # Peer-plugin reference (set externally by sana_bundle when both are wired).
@@ -74,7 +95,12 @@ class StateOfTaskDashboardPlugin(Plugin):
         if tool_name in {"plan", "plan_ideal"}:
             self._record_plan(tool_input.get("plan_text") or tool_input.get("plan"))
             return
-        if tool_name and tool_name not in _ADMIN_TOOLS:
+        if (
+            tool_name
+            and tool_name not in _ADMIN_TOOLS
+            and tool_name not in self._counted_excluded_tools
+            and not _is_cancelled_tool_event(event)
+        ):
             self._tool_call_count += 1
 
     def _record_plan(self, plan_text: Any) -> None:

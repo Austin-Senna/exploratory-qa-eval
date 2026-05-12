@@ -22,6 +22,7 @@ def _initial_stats() -> Dict[str, Any]:
         "delegation_subagent_output_tokens": 0,
         "delegation_subagent_total_tokens": 0,
         "delegation_subagent_cost_usd": 0.0,
+        "delegation_gold_datasets_read": [],
     }
     for tool_name in _TOOL_NAMES:
         stats[f"{tool_name}_calls"] = 0
@@ -111,6 +112,14 @@ def record_subagent_call(
     if tool in _TOOL_NAMES:
         _STATS[f"{tool}_calls"] += 1
         _STATS[f"{tool}_cost_usd"] += cost_usd
+
+    gold_datasets_read = extras.get("gold_datasets_read") or []
+    seen = set(_STATS["delegation_gold_datasets_read"])
+    for value in gold_datasets_read:
+        dataset_id = str(value).strip()
+        if dataset_id and dataset_id not in seen:
+            _STATS["delegation_gold_datasets_read"].append(dataset_id)
+            seen.add(dataset_id)
 
     record: Dict[str, Any] = {
         "event": "delegation_subagent_cost",

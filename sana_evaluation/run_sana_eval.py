@@ -124,6 +124,12 @@ def _validate_axis_combination(*, agent_management: str, skills: str) -> None:
         raise ValueError("--skills on requires --plans standard or --plans ideal.")
 
 
+def _effective_plan_skills_enabled(*, requested: str, sana_flags: SanaFlags) -> bool:
+    """Return the plan-skills setting after SANA feature-level overrides."""
+
+    return requested == "on" and not sana_flags.delegation
+
+
 def _collect_task_files(args) -> list[str]:
     if args.task_continue or args.all_tasks:
         task_dirs = base_eval.find_all_task_dirs(args.task_set)
@@ -429,6 +435,11 @@ def main() -> None:
     except ValueError as exc:
         parser.error(str(exc))
 
+    plan_skills_enabled = _effective_plan_skills_enabled(
+        requested=args.skills,
+        sana_flags=sana_flags,
+    )
+
     safe_model_name = base_eval._display_name(agent_config)
     variant_condition = _variant_condition_label(
         search_tool=search_tool_mode,
@@ -439,7 +450,7 @@ def main() -> None:
         search_calls=args.search_calls,
         search_free=args.search_free,
         search_lessguide=args.search_lessguide,
-        plan_skills_enabled=args.skills == "on",
+        plan_skills_enabled=plan_skills_enabled,
         sana_flags=sana_flags,
     )
     variant_condition = _with_debug_suffix(variant_condition, args.debug_mode)
@@ -468,7 +479,7 @@ def main() -> None:
         search_results_mode=search_results_mode,
         agent_management_mode=agent_management_mode,
         computation_tool_mode=computation_tool_mode,
-        plan_skills_enabled=args.skills == "on",
+        plan_skills_enabled=plan_skills_enabled,
         search_free=args.search_free,
         search_lessguide=args.search_lessguide,
         sana_flags=sana_flags,
@@ -487,7 +498,7 @@ def main() -> None:
         search_results_mode,
         agent_management_mode,
         computation_tool_mode,
-        args.skills,
+        "on" if plan_skills_enabled else "off",
         sana_flags.active_features() or ["none"],
         sana_flags.macro_reflection_k,
     )
