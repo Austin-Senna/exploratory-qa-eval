@@ -88,8 +88,8 @@ If a result is too large, you will receive:
 
 `execute_code` stdout is also capped at ~6,000 chars (~1.5k tokens). If output is truncated, print less or query more specifically.
 
-## QUERY DISCIPLINE — peek before SQL
-NEVER call `query_file` on a file you have not first inspected with `peek_file`. The most common failure modes come from guessing the schema:
+## QUERY DISCIPLINE — know the schema before SQL
+NEVER call `query_file` on a file you do not know the schema of. The most common failure modes come from guessing the schema:
 - Inventing column names (`county_name` when the column is `County`, `ISSUING_AGENCY_NAME` when it's `IssuingAgency`) -> Binder Error
 - Inventing nested table refs like `t.features` or `properties.X` -> DuckDB only exposes the flat table alias `t`
 - Casting strings to numbers when the column actually contains values like `'>80'`, `'0-5'`, or `'Under Review'` -> Conversion Error

@@ -622,6 +622,7 @@ def test_subagent_system_prompts_include_tool_catalog() -> None:
     assert "family=csv" in inspect_prompt
     assert "family=xml" in inspect_prompt
     assert "family=text" in inspect_prompt
+    assert "NEVER call `query_file` on a file you do not know the schema of." in inspect_prompt
     assert "get_sandbox_info" not in inspect_prompt
     assert "cleanup_sandbox" not in inspect_prompt
 

@@ -646,11 +646,13 @@ grep_file, or execute_code — those belong to the inspect worker.
 
 
 _INSPECT_TOOL_CATALOG = """
-TOOL PICKER (always start with peek_file; then dispatch on its `family`):
+TOOL PICKER (know the schema before SQL; dispatch on `family`):
 - Unknown family yet → `peek_file(s3_uri=...)` for one file, or
   `peek_multiple(files=[{s3_uri: ...}, ...])` for several. Read `family`,
   `header_columns`, `xml_record_tag_candidates`, and `size_bytes` from the
   response before choosing the next tool.
+
+- NEVER call `query_file` on a file you do not know the schema of.
 
 - family=csv → `query_file(s3_uri=..., sql="...")` with DuckDB. Table alias
   is `t`. Quote any column name with spaces or special chars:

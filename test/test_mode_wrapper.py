@@ -105,6 +105,14 @@ class TestModeWrapper(unittest.TestCase):
         self.assertNotIn("search_ideal", prompt)
         self.assertNotIn("search_reranked", prompt)
 
+    def test_query_file_schema_rule_uses_schema_knowledge_not_peek_requirement(self):
+        expected = "NEVER call `query_file` on a file you do not know the schema of."
+        old = "NEVER call `query_file` on a file you have not first inspected with `peek_file`."
+
+        for prompt in (compose_managed_prompt("preloaded"), compose_baseline_prompt("preloaded")):
+            self.assertIn(expected, prompt)
+            self.assertNotIn(old, prompt)
+
     def test_baseline_prompt_mentions_reranked_search_in_standard_mode(self):
         prompt = compose_baseline_prompt("standard")
         self.assertIn("search_reranked", prompt)
