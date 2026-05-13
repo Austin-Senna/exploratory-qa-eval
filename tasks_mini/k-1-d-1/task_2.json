@@ -5,7 +5,7 @@
   "nodes": {
     "1": {
       "source": "datagov/lottery-ny-lotto-winning-numbers-beginning-2001/files/rows.txt",
-      "fact": "In the New York Lotto winning numbers dataset, parsing Draw Date to year and averaging Bonus # for 2005-2010 shows the highest yearly average occurs in 2005.",
+      "fact": "import pandas as pd\n\ndf = pd.read_csv('datagov/lottery-ny-lotto-winning-numbers-beginning-2001/files/rows.txt')\ndf['Draw Date'] = pd.to_datetime(df['Draw Date'], errors='coerce')\ndf['Bonus #'] = pd.to_numeric(df['Bonus #'], errors='coerce')\ndf['year'] = df['Draw Date'].dt.year\n\nfiltered = df[df['year'].between(2005, 2010, inclusive='both')].copy()\nstats = filtered.groupby('year')['Bonus #'].agg(['mean', 'std']).reset_index()\nstats['bval'] = stats['mean'] + 0.5 * stats['std']\nranked = stats.sort_values(['bval', 'year'], ascending=[False, True])\nresult = str(int(ranked.iloc[0]['year']))",
       "subquestion": "For each year from 2005 through 2010, compute BVAL (Bonus Volatility-Adjusted Level) as the draws' average bonus ball number plus half of the standard deviation of bonus ball numbers. Which year has the highest BVAL? If there is a tie, choose the earlier year.",
       "answer": "2007"
     }

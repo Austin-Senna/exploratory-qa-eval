@@ -5,7 +5,7 @@
   "nodes": {
     "1": {
       "source": "datagov/cta-ridership-bus-routes-monthly-day-type-averages-totals/files/rows.txt",
-      "fact": "In the CTA bus route ridership dataset, parsing Month_Beginning to year and summing MonthTotal for 2005-2010 shows the lowest yearly total occurs in 2006.",
+      "fact": "import pandas as pd\n\ndf = pd.read_csv('datagov/cta-ridership-bus-routes-monthly-day-type-averages-totals/files/rows.txt')\ndf['Month_Beginning'] = pd.to_datetime(df['Month_Beginning'], errors='coerce')\ndf['MonthTotal'] = pd.to_numeric(df['MonthTotal'], errors='coerce')\ndf['year'] = df['Month_Beginning'].dt.year\n\nannual = df[df['year'].between(2005, 2010, inclusive='both')].groupby('year', as_index=False)['MonthTotal'].sum()\nannual = annual.sort_values('year')\nannual['pct_change'] = annual['MonthTotal'].pct_change().abs()\nannual['pial'] = annual['MonthTotal'] * (1 + annual['pct_change'])\nranked = annual[annual['year'].between(2006, 2010, inclusive='both')].sort_values(['pial', 'year'], ascending=[True, True])\nresult = str(int(ranked.iloc[0]['year']))",
       "subquestion": "For each year from 2006 through 2010, compute PIAL (Passenger Instability-Adjusted Load) as annual total CTA bus passengers across all routes times (1 + absolute year-over-year percentage change in that annual total). Which year has the lowest PIAL?",
       "answer": "2006"
     }
