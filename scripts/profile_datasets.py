@@ -10,9 +10,12 @@ import decimal
 import json
 import math
 import os
+import re
 import sys
+import zipfile
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple
+import xml.etree.ElementTree as ET
 
 _REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(_REPO_ROOT) not in sys.path:
@@ -27,6 +30,12 @@ except Exception:  # pragma: no cover
         return iterable if iterable is not None else _NullTqdm()
 
 from strands_evaluation.tools.agent_tools import BUCKET, REGION, _build_s3_client
+from strands_evaluation.tools.agent_tools_v2 import (
+    _build_xml_preview,
+    _local_xml_name,
+    _normalize_xml_record_tag,
+    _xml_record_to_row,
+)
 from strands_evaluation.tools.external.description_rows import reject_forbidden_description_row
 from strands_evaluation.tools.helper.detect import detect_family
 
@@ -49,12 +58,53 @@ class _NullTqdm:
     def __exit__(self, exc_type, exc, tb) -> bool:
         return False
 
+
+class _UnusableSchemaError(ValueError):
+    """Raised when DuckDB can parse bytes but the inferred schema is not useful."""
+
+
 _DESC_PATH = Path("table_descriptions.jsonl")
 _URI_LIST_PATH = Path("table_profiles_needed.txt")
 _SNIPPET_PATH = Path("snippet.jsonl")
 _SNIFF_BYTES = 8 * 1024
 _SNIPPET_FALLBACK_BYTES = 2 * 1024
 _MAX_CELL_CHARS = 80
+_QUERY_MAX_FILE_BYTES = 500 * 1024 * 1024
+_MAX_COLUMNS = 200
+_MAX_CANDIDATE_COLUMNS = 200
+_MAX_XML_SCHEMA_RECORDS = 200
+_MAX_ARCHIVE_MEMBERS = 50
+
+_SOCRATA_ID_RE = re.compile(r"^[a-z0-9]{4}-[a-z0-9]{4}$")
+_GENERIC_COLUMN_RE = re.compile(r"^column\d+$", re.IGNORECASE)
+_PROFILE_METADATA_STEMS = {
+    "metadata",
+    "dcat-us",
+    "catalog",
+    "signed-metadata",
+    "headers",
+    "gmi",
+    "open-licenses",
+    "legalcode",
+    "government-works",
+    "index",
+    "odc-odbl",
+    "wmsserver",
+    "resolve",
+    "request",
+    "edit",
+    "search",
+    "contact",
+    "policyinformation",
+    "gmxcodelists",
+    "bios",
+    "hires",
+    "cwhr",
+    "license",
+    "readme",
+    "cc-zero",
+    "cc-by",
+}
 
 _TABULAR_KIND_TO_FAMILY = {
     "delimited_text": "csv",
@@ -203,6 +253,31 @@ def _read_prefix_bytes(source_ref: str, num_bytes: int) -> bytes:
         return f.read(num_bytes)
 
 
+def _looks_binary_prefix(raw: bytes) -> bool:
+    if raw.startswith((b"PK\x03\x04", b"PK\x05\x06", b"PK\x07\x08")):
+        return True
+    if b"\x00" in raw[:512]:
+        return True
+    if not raw:
+        return False
+    controls = sum(1 for b in raw[:512] if b < 32 and b not in {9, 10, 13})
+    return controls / min(len(raw), 512) > 0.20
+
+
+def _looks_archive_prefix(raw: bytes) -> bool:
+    return raw.startswith((b"PK\x03\x04", b"PK\x05\x06", b"PK\x07\x08"))
+
+
+def _metadata_stem(path_like: str) -> str:
+    name = str(path_like or "").split("?", 1)[0].rsplit("/", 1)[-1].strip().lower()
+    return name.rsplit(".", 1)[0] if "." in name else name
+
+
+def _is_metadata_profile_path(path_like: str) -> bool:
+    stem = _metadata_stem(path_like)
+    return stem in _PROFILE_METADATA_STEMS or bool(_SOCRATA_ID_RE.match(stem))
+
+
 def _expected_family(table_kind: str) -> Optional[str]:
     return _TABULAR_KIND_TO_FAMILY.get((table_kind or "").strip().lower())
 
@@ -213,10 +288,15 @@ def _resolve_family(table: Dict[str, Any], source_ref: str) -> str:
         return "parquet"
 
     try:
-        sniff_text = _read_prefix_bytes(source_ref, _SNIFF_BYTES).decode("utf-8", errors="replace")
+        raw = _read_prefix_bytes(source_ref, _SNIFF_BYTES)
     except Exception:
         return expected or "text"
 
+    if _looks_archive_prefix(raw):
+        return "archive"
+    if _looks_binary_prefix(raw):
+        return "binary"
+    sniff_text = raw.decode("utf-8", errors="replace")
     sniffed = detect_family(sniff_text)
     if expected and sniffed == "text":
         return expected
@@ -421,10 +501,25 @@ def _scan_sql(source_ref: str, family: str, table: Dict[str, Any]) -> str:
     if family == "parquet":
         return f"read_parquet({ref})"
     if family == "json":
-        return f"read_json_auto({ref})"
+        return f"read_json_auto({ref}, maximum_object_size={_QUERY_MAX_FILE_BYTES})"
 
     delimiter = table.get("delimiter")
-    options = ["sample_size=-1"]
+    options = ["quote='\"'"]
+    if delimiter:
+        options.append(f"delim={_sql_quote_string(str(delimiter))}")
+    return f"read_csv_auto({ref}, {', '.join(options)})"
+
+
+def _candidate_csv_scan_sql(source_ref: str, table: Dict[str, Any]) -> str:
+    ref = _sql_quote_string(source_ref)
+    options = [
+        "quote='\"'",
+        "strict_mode=false",
+        "null_padding=true",
+        "ignore_errors=true",
+        "all_varchar=true",
+    ]
+    delimiter = table.get("delimiter")
     if delimiter:
         options.append(f"delim={_sql_quote_string(str(delimiter))}")
     return f"read_csv_auto({ref}, {', '.join(options)})"
@@ -438,8 +533,10 @@ def _type_category(raw_type: str) -> Tuple[str, Optional[str]]:
         return "number", "numeric"
     if upper.startswith("DATE"):
         return "date", "temporal"
-    if upper.startswith(("TIMESTAMP", "TIME")):
+    if upper.startswith("TIMESTAMP"):
         return "datetime", "temporal"
+    if upper.startswith("TIME"):
+        return "time", "time"
     if upper.startswith("BOOLEAN"):
         return "boolean", None
     return "string", None
@@ -531,7 +628,42 @@ def _mean_from_epoch(value: Any, kind: str) -> Optional[str]:
     return stamp.isoformat()
 
 
-def _column_profiles(conn: duckdb.DuckDBPyConnection, scan_sql: str) -> Tuple[int, List[Dict[str, Any]]]:
+def _schema_looks_like_prose(columns: List[Tuple[str, str, Optional[str]]]) -> bool:
+    if len(columns) > 2:
+        return False
+    return any(_column_name_looks_like_prose(name) for name, _output_type, _aggregate_kind in columns)
+
+
+def _column_name_looks_like_prose(name: str) -> bool:
+    name = str(name or "").strip()
+    words = [part for part in name.replace("/", " ").split() if part]
+    if len(name) > 80:
+        return True
+    if len(words) >= 8:
+        return True
+    if len(words) >= 5:
+        return True
+    return len(words) >= 3 and any(mark in name for mark in (".", ":", ";", "?", "!"))
+
+
+def _is_generic_column_name(name: str) -> bool:
+    return bool(_GENERIC_COLUMN_RE.match(str(name or "").strip()))
+
+
+def _all_generic_columns(columns: List[Dict[str, Any]]) -> bool:
+    return bool(columns) and all(_is_generic_column_name(str(col.get("name") or "")) for col in columns)
+
+
+def _validate_profile_schema(columns: List[Tuple[str, str, Optional[str]]], family: str) -> None:
+    if family != "csv":
+        return
+    if _schema_looks_like_prose(columns):
+        raise _UnusableSchemaError(
+            "DuckDB inferred a single prose-like CSV column; suppressing columns to avoid misleading agents"
+        )
+
+
+def _describe_column_tuples(conn: duckdb.DuckDBPyConnection, scan_sql: str) -> List[Tuple[str, str, Optional[str]]]:
     describe_rows = conn.execute(f"DESCRIBE SELECT * FROM {scan_sql}").fetchall()
     columns: List[Tuple[str, str, Optional[str]]] = []
     for row in describe_rows:
@@ -539,13 +671,43 @@ def _column_profiles(conn: duckdb.DuckDBPyConnection, scan_sql: str) -> Tuple[in
         raw_type = str(row[1])
         output_type, aggregate_kind = _type_category(raw_type)
         columns.append((name, output_type, aggregate_kind))
+    return columns
+
+
+def _column_summaries(columns: List[Tuple[str, str, Optional[str]]]) -> List[Dict[str, Any]]:
+    return [{"name": name, "type": output_type} for name, output_type, _aggregate_kind in columns]
+
+
+def _candidate_column_summaries(columns: List[Tuple[str, str, Optional[str]]]) -> List[Dict[str, Any]]:
+    summaries = _column_summaries(columns)
+    has_named_column = any(not _is_generic_column_name(str(col.get("name") or "")) for col in summaries)
+    if has_named_column:
+        summaries = [col for col in summaries if not _is_generic_column_name(str(col.get("name") or ""))]
+    return summaries
+
+
+def _cap_list(values: List[Any], limit: int) -> Tuple[List[Any], bool, int]:
+    return values[:limit], len(values) > limit, len(values)
+
+
+def _add_capped_list(profile: Dict[str, Any], key: str, values: List[Any], limit: int) -> None:
+    capped, truncated, total = _cap_list(values, limit)
+    profile[key] = capped
+    if truncated:
+        profile[f"{key}_truncated"] = True
+        profile[f"{key}_total"] = total
+
+
+def _column_profiles(conn: duckdb.DuckDBPyConnection, scan_sql: str, family: str) -> Tuple[int, List[Dict[str, Any]]]:
+    columns = _describe_column_tuples(conn, scan_sql)
+    _validate_profile_schema(columns, family)
 
     select_exprs = ["COUNT(*) AS row_count"]
     for idx, (name, output_type, aggregate_kind) in enumerate(columns):
         quoted = _sql_quote_ident(name)
         select_exprs.append(f"SUM(CASE WHEN {quoted} IS NULL THEN 1 ELSE 0 END) AS null_count_{idx}")
         select_exprs.append(f"COUNT(DISTINCT CAST({quoted} AS VARCHAR)) AS distinct_count_{idx}")
-        if aggregate_kind in {"numeric", "temporal"}:
+        if aggregate_kind in {"numeric", "temporal", "time"}:
             select_exprs.append(f"MIN({quoted}) AS min_{idx}")
             select_exprs.append(f"MAX({quoted}) AS max_{idx}")
         else:
@@ -578,8 +740,8 @@ def _column_profiles(conn: duckdb.DuckDBPyConnection, scan_sql: str) -> Tuple[in
                 "type": output_type,
                 "null_rate": round((null_count / row_count), 2) if row_count else 0.0,
                 "distinct_count": distinct_count,
-                "min": _json_value(min_value) if aggregate_kind in {"numeric", "temporal"} else None,
-                "max": _json_value(max_value) if aggregate_kind in {"numeric", "temporal"} else None,
+                "min": _json_value(min_value) if aggregate_kind in {"numeric", "temporal", "time"} else None,
+                "max": _json_value(max_value) if aggregate_kind in {"numeric", "temporal", "time"} else None,
                 "mean": mean_value if aggregate_kind in {"numeric", "temporal"} else None,
             }
         )
@@ -590,6 +752,42 @@ def _column_profiles(conn: duckdb.DuckDBPyConnection, scan_sql: str) -> Tuple[in
 def _snippet_fallback(source_ref: str) -> str:
     raw = _read_prefix_bytes(source_ref, _SNIPPET_FALLBACK_BYTES)
     return raw.decode("utf-8", errors="replace").strip()
+
+
+def _base_profile(
+    *,
+    slug: str,
+    filename: str,
+    family: str,
+    size_bytes: int,
+    schema_status: str,
+    s3_uri: Optional[str],
+    dataset_id: Optional[str],
+    file_path: Optional[str],
+    description: Optional[str],
+) -> Dict[str, Any]:
+    profile: Dict[str, Any] = {
+        "slug": slug,
+        "filename": filename,
+        "family": family,
+        "schema_status": schema_status,
+        "size_bytes": size_bytes,
+    }
+    if s3_uri:
+        profile["s3_uri"] = s3_uri
+    if dataset_id:
+        profile["dataset_id"] = dataset_id
+    if file_path:
+        profile["file_path"] = file_path
+    if description:
+        profile["llm_description"] = description
+    return profile
+
+
+def _attach_snippet(profile: Dict[str, Any], source_ref: str, snippet_cache: Dict[str, str]) -> None:
+    snippet = snippet_cache.get(source_ref) or _snippet_fallback(source_ref)
+    if snippet:
+        profile["snippet"] = snippet
 
 
 def _build_tabular_profile(
@@ -608,28 +806,25 @@ def _build_tabular_profile(
     conn = _duckdb_connection(needs_httpfs=_is_s3_ref(source_ref))
     try:
         scan_sql = _scan_sql(source_ref, family, table)
-        row_count, columns = _column_profiles(conn, scan_sql)
+        row_count, columns = _column_profiles(conn, scan_sql, family)
         top_2_rows = _top_rows(conn, scan_sql)
     finally:
         conn.close()
 
-    profile: Dict[str, Any] = {
-        "slug": slug,
-        "filename": filename,
-        "family": family,
-        "size_bytes": size_bytes,
-        "row_count": row_count,
-        "top_2_rows": top_2_rows,
-        "columns": columns,
-    }
-    if s3_uri:
-        profile["s3_uri"] = s3_uri
-    if dataset_id:
-        profile["dataset_id"] = dataset_id
-    if file_path:
-        profile["file_path"] = file_path
-    if description:
-        profile["llm_description"] = description
+    profile = _base_profile(
+        slug=slug,
+        filename=filename,
+        family=family,
+        schema_status="strict",
+        size_bytes=size_bytes,
+        s3_uri=s3_uri,
+        dataset_id=dataset_id,
+        file_path=file_path,
+        description=description,
+    )
+    profile["row_count"] = row_count
+    profile["top_2_rows"] = top_2_rows
+    _add_capped_list(profile, "columns", columns, _MAX_COLUMNS)
     return profile
 
 
@@ -642,25 +837,255 @@ def _build_non_tabular_profile(
     dataset_id: Optional[str],
     file_path: Optional[str],
     family: str,
+    schema_status: str,
+    size_bytes: int,
+    description: Optional[str],
+    snippet_cache: Dict[str, str],
+    schema_error: Optional[str] = None,
+) -> Dict[str, Any]:
+    profile = _base_profile(
+        slug=slug,
+        filename=filename,
+        family=family,
+        schema_status=schema_status,
+        size_bytes=size_bytes,
+        s3_uri=s3_uri,
+        dataset_id=dataset_id,
+        file_path=file_path,
+        description=description,
+    )
+    if schema_status not in {"archive"}:
+        _attach_snippet(profile, source_ref, snippet_cache)
+    if schema_error:
+        profile["schema_error"] = schema_error
+    return profile
+
+
+def _build_candidate_csv_profile(
+    *,
+    slug: str,
+    filename: str,
+    source_ref: str,
+    s3_uri: Optional[str],
+    dataset_id: Optional[str],
+    file_path: Optional[str],
+    family: str,
+    table: Dict[str, Any],
+    size_bytes: int,
+    description: Optional[str],
+    snippet_cache: Dict[str, str],
+    schema_error: str,
+) -> Dict[str, Any]:
+    status = "unavailable"
+    candidate_columns: List[Dict[str, Any]] = []
+    try:
+        conn = _duckdb_connection(needs_httpfs=_is_s3_ref(source_ref))
+        try:
+            columns = _describe_column_tuples(conn, _candidate_csv_scan_sql(source_ref, table))
+            _validate_profile_schema(columns, family)
+            candidate_columns = _candidate_column_summaries(columns)
+            if candidate_columns:
+                status = "candidate"
+        finally:
+            conn.close()
+    except Exception:
+        candidate_columns = []
+
+    profile = _build_non_tabular_profile(
+        slug=slug,
+        filename=filename,
+        source_ref=source_ref,
+        s3_uri=s3_uri,
+        dataset_id=dataset_id,
+        file_path=file_path,
+        family=family,
+        schema_status=status,
+        size_bytes=size_bytes,
+        description=description,
+        snippet_cache=snippet_cache,
+        schema_error=schema_error,
+    )
+    if candidate_columns:
+        _add_capped_list(profile, "candidate_columns", candidate_columns, _MAX_CANDIDATE_COLUMNS)
+    return profile
+
+
+def _archive_members(source_ref: str) -> List[str]:
+    if _is_s3_ref(source_ref):
+        return []
+    path = Path(source_ref)
+    try:
+        if not zipfile.is_zipfile(path):
+            return []
+        with zipfile.ZipFile(path) as zf:
+            return [info.filename for info in zf.infolist() if not info.is_dir()]
+    except Exception:
+        return []
+
+
+def _build_archive_profile(
+    *,
+    slug: str,
+    filename: str,
+    source_ref: str,
+    s3_uri: Optional[str],
+    dataset_id: Optional[str],
+    file_path: Optional[str],
+    family: str,
+    size_bytes: int,
+    description: Optional[str],
+) -> Dict[str, Any]:
+    profile = _base_profile(
+        slug=slug,
+        filename=filename,
+        family=family,
+        schema_status="archive",
+        size_bytes=size_bytes,
+        s3_uri=s3_uri,
+        dataset_id=dataset_id,
+        file_path=file_path,
+        description=description,
+    )
+    members = _archive_members(source_ref)
+    if members:
+        _add_capped_list(profile, "archive_members", members, _MAX_ARCHIVE_MEMBERS)
+    return profile
+
+
+def _iter_xml_rows(source_ref: str, record_tag: str) -> Tuple[List[Dict[str, str]], int, bool]:
+    rows: List[Dict[str, str]] = []
+    scanned = 0
+    truncated = False
+    body = None
+    try:
+        if _is_s3_ref(source_ref):
+            bucket, key = _parse_s3_uri(source_ref)
+            body = _build_s3_client_for_runtime().get_object(Bucket=bucket, Key=key)["Body"]
+        else:
+            body = Path(source_ref).open("rb")
+        for _event, elem in ET.iterparse(body, events=("end",)):
+            if _local_xml_name(elem.tag) != record_tag:
+                continue
+            scanned += 1
+            row = _xml_record_to_row(elem)
+            if row:
+                rows.append(row)
+            elem.clear()
+            if scanned >= _MAX_XML_SCHEMA_RECORDS:
+                truncated = True
+                break
+    finally:
+        if body is not None and hasattr(body, "close"):
+            body.close()
+    return rows, scanned, truncated
+
+
+def _xml_columns_from_rows(rows: List[Dict[str, str]], fallback_fields: List[str]) -> List[Dict[str, Any]]:
+    names: List[str] = []
+    seen = set()
+    for row in rows:
+        for name in row:
+            if name not in seen:
+                seen.add(name)
+                names.append(name)
+    for name in fallback_fields:
+        if name not in seen:
+            seen.add(name)
+            names.append(name)
+    return [{"name": name, "type": "string"} for name in names]
+
+
+def _build_xml_profile(
+    *,
+    slug: str,
+    filename: str,
+    source_ref: str,
+    s3_uri: Optional[str],
+    dataset_id: Optional[str],
+    file_path: Optional[str],
+    family: str,
     size_bytes: int,
     description: Optional[str],
     snippet_cache: Dict[str, str],
 ) -> Dict[str, Any]:
-    profile: Dict[str, Any] = {
-        "slug": slug,
-        "filename": filename,
-        "family": family,
-        "size_bytes": size_bytes,
-        "snippet": snippet_cache.get(source_ref) or _snippet_fallback(source_ref),
-    }
-    if s3_uri:
-        profile["s3_uri"] = s3_uri
-    if dataset_id:
-        profile["dataset_id"] = dataset_id
-    if file_path:
-        profile["file_path"] = file_path
-    if description:
-        profile["llm_description"] = description
+    text = _read_prefix_bytes(source_ref, _SNIFF_BYTES).decode("utf-8", errors="replace")
+    preview = _build_xml_preview(text, size_bytes)
+    candidates = preview.get("xml_record_tag_candidates") or []
+    record_tag = _normalize_xml_record_tag(candidates[0]) if candidates else None
+    if not record_tag:
+        profile = _build_non_tabular_profile(
+            slug=slug,
+            filename=filename,
+            source_ref=source_ref,
+            s3_uri=s3_uri,
+            dataset_id=dataset_id,
+            file_path=file_path,
+            family=family,
+            schema_status="unavailable",
+            size_bytes=size_bytes,
+            description=description,
+            snippet_cache=snippet_cache,
+            schema_error="Could not infer an XML record_tag",
+        )
+        profile.update(preview)
+        return profile
+
+    try:
+        rows, scanned, truncated = _iter_xml_rows(source_ref, record_tag)
+    except Exception as exc:
+        profile = _build_non_tabular_profile(
+            slug=slug,
+            filename=filename,
+            source_ref=source_ref,
+            s3_uri=s3_uri,
+            dataset_id=dataset_id,
+            file_path=file_path,
+            family=family,
+            schema_status="unavailable",
+            size_bytes=size_bytes,
+            description=description,
+            snippet_cache=snippet_cache,
+            schema_error=f"{type(exc).__name__}: {exc}",
+        )
+        profile.update(preview)
+        profile["record_tag"] = record_tag
+        return profile
+
+    columns = _xml_columns_from_rows(rows, [str(field) for field in preview.get("xml_schema_fields") or []])
+    if not columns:
+        profile = _build_non_tabular_profile(
+            slug=slug,
+            filename=filename,
+            source_ref=source_ref,
+            s3_uri=s3_uri,
+            dataset_id=dataset_id,
+            file_path=file_path,
+            family=family,
+            schema_status="unavailable",
+            size_bytes=size_bytes,
+            description=description,
+            snippet_cache=snippet_cache,
+            schema_error="No queryable XML record fields found",
+        )
+    else:
+        profile = _base_profile(
+            slug=slug,
+            filename=filename,
+            family=family,
+            schema_status="strict",
+            size_bytes=size_bytes,
+            s3_uri=s3_uri,
+            dataset_id=dataset_id,
+            file_path=file_path,
+            description=description,
+        )
+        _add_capped_list(profile, "columns", columns, _MAX_COLUMNS)
+        profile["top_2_rows"] = [{key: _truncate_cell(value) for key, value in row.items()} for row in rows[:2]]
+        profile["records_scanned_for_schema"] = scanned
+        if truncated:
+            profile["records_scanned_for_schema_truncated"] = True
+    profile.update(preview)
+    profile["record_tag"] = record_tag
     return profile
 
 
@@ -678,8 +1103,9 @@ def _process_entry(entry: Dict[str, Any], description_cache: Dict[str, str], sni
         cache_key = s3_uri or source_ref
         description = description_cache.get(cache_key)
         family = _resolve_family(table, source_ref)
-        if family in {"csv", "json", "parquet"}:
-            profile = _build_tabular_profile(
+        metadata_path = file_path or source_ref
+        if _is_metadata_profile_path(metadata_path):
+            profile = _build_non_tabular_profile(
                 slug=slug,
                 filename=filename,
                 source_ref=source_ref,
@@ -687,10 +1113,99 @@ def _process_entry(entry: Dict[str, Any], description_cache: Dict[str, str], sni
                 dataset_id=dataset_id,
                 file_path=file_path,
                 family=family,
-                table=table,
+                schema_status="metadata",
+                size_bytes=size_bytes,
+                description=description,
+                snippet_cache=snippet_cache,
+            )
+        elif family in {"archive", "binary"}:
+            profile = _build_archive_profile(
+                slug=slug,
+                filename=filename,
+                source_ref=source_ref,
+                s3_uri=s3_uri,
+                dataset_id=dataset_id,
+                file_path=file_path,
+                family="archive",
                 size_bytes=size_bytes,
                 description=description,
             )
+        elif family == "xml":
+            profile = _build_xml_profile(
+                slug=slug,
+                filename=filename,
+                source_ref=source_ref,
+                s3_uri=s3_uri,
+                dataset_id=dataset_id,
+                file_path=file_path,
+                family=family,
+                size_bytes=size_bytes,
+                description=description,
+                snippet_cache=snippet_cache,
+            )
+        elif family in {"csv", "json", "parquet"}:
+            try:
+                profile = _build_tabular_profile(
+                    slug=slug,
+                    filename=filename,
+                    source_ref=source_ref,
+                    s3_uri=s3_uri,
+                    dataset_id=dataset_id,
+                    file_path=file_path,
+                    family=family,
+                    table=table,
+                    size_bytes=size_bytes,
+                    description=description,
+                )
+                if family == "csv" and _all_generic_columns(profile.get("columns") or []):
+                    candidate_profile = _build_candidate_csv_profile(
+                        slug=slug,
+                        filename=filename,
+                        source_ref=source_ref,
+                        s3_uri=s3_uri,
+                        dataset_id=dataset_id,
+                        file_path=file_path,
+                        family=family,
+                        table=table,
+                        size_bytes=size_bytes,
+                        description=description,
+                        snippet_cache=snippet_cache,
+                        schema_error="Strict parser inferred generic column names",
+                    )
+                    if candidate_profile.get("schema_status") == "candidate":
+                        profile = candidate_profile
+            except Exception as exc:
+                schema_error = f"{type(exc).__name__}: {exc}"
+                if family == "csv":
+                    profile = _build_candidate_csv_profile(
+                        slug=slug,
+                        filename=filename,
+                        source_ref=source_ref,
+                        s3_uri=s3_uri,
+                        dataset_id=dataset_id,
+                        file_path=file_path,
+                        family=family,
+                        table=table,
+                        size_bytes=size_bytes,
+                        description=description,
+                        snippet_cache=snippet_cache,
+                        schema_error=schema_error,
+                    )
+                else:
+                    profile = _build_non_tabular_profile(
+                        slug=slug,
+                        filename=filename,
+                        source_ref=source_ref,
+                        s3_uri=s3_uri,
+                        dataset_id=dataset_id,
+                        file_path=file_path,
+                        family=family,
+                        schema_status="unavailable",
+                        size_bytes=size_bytes,
+                        description=description,
+                        snippet_cache=snippet_cache,
+                        schema_error=schema_error,
+                    )
         else:
             profile = _build_non_tabular_profile(
                 slug=slug,
@@ -700,6 +1215,7 @@ def _process_entry(entry: Dict[str, Any], description_cache: Dict[str, str], sni
                 dataset_id=dataset_id,
                 file_path=file_path,
                 family=family,
+                schema_status="unavailable",
                 size_bytes=size_bytes,
                 description=description,
                 snippet_cache=snippet_cache,

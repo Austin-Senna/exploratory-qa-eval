@@ -1,6 +1,7 @@
 import importlib.util
 import json
 import unittest
+import zipfile
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
@@ -28,6 +29,14 @@ class ProfileDatasetsScriptTests(unittest.TestCase):
         self._snippets_path = self._root / "snippets.jsonl"
         self._csv_path = self._root / "rows.csv"
         self._jsonl_path = self._root / "rows.jsonl"
+        self._text_path = self._root / "notes.txt"
+        self._txt_csv_path = self._root / "rows.txt"
+        self._binary_txt_path = self._root / "archive-ish.txt"
+        self._zip_path = self._root / "archive.zip"
+        self._time_csv_path = self._root / "times.csv"
+        self._ragged_csv_path = self._root / "ragged.txt"
+        self._metadata_path = self._root / "dcat-us.txt"
+        self._xml_path = self._root / "schools.kml"
         self._csv_path.write_text(
             "name,value,day\n"
             "Ada,1,2020-01-01\n"
@@ -39,6 +48,36 @@ class ProfileDatasetsScriptTests(unittest.TestCase):
             + ("x" * 120)
             + '"}}}\n'
             '{"id":2,"payload":{"nested":{"message":"ok"}}}\n'
+        )
+        self._text_path.write_text(
+            "This is a prose file, not a table.\n"
+            "It has multiple lines and no stable delimiter.\n"
+        )
+        self._txt_csv_path.write_text("name,value\nAda,1\nGrace,2\n")
+        self._binary_txt_path.write_bytes(b"PK\x03\x04\x14\x00\x00\x00\x00\x00fake zip bytes,name,value\n")
+        self._time_csv_path.write_text("name,duration\nAda,12:30:00\nGrace,13:00:00\n")
+        self._ragged_csv_path.write_text("name,value\nAda,1\nGrace\nLinus,3,extra\n")
+        self._metadata_path.write_text("title,url\nDCAT-US Schema,https://resources.data.gov\n")
+        with zipfile.ZipFile(self._zip_path, "w") as zf:
+            zf.writestr("inner.csv", "name,value\nAda,1\n")
+        self._xml_path.write_text(
+            '<?xml version="1.0" encoding="UTF-8"?>\n'
+            '<kml xmlns="http://www.opengis.net/kml/2.2">\n'
+            '  <Document>\n'
+            '    <Schema name="schools" id="schools">\n'
+            '      <SimpleField name="NCESSCH" type="string"/>\n'
+            '      <SimpleField name="CITY" type="string"/>\n'
+            '    </Schema>\n'
+            '    <Placemark><name>School A</name><ExtendedData><SchemaData>\n'
+            '      <SimpleData name="NCESSCH">0001</SimpleData>\n'
+            '      <SimpleData name="CITY">Austin</SimpleData>\n'
+            '    </SchemaData></ExtendedData></Placemark>\n'
+            '    <Placemark><name>School B</name><ExtendedData><SchemaData>\n'
+            '      <SimpleData name="NCESSCH">0002</SimpleData>\n'
+            '      <SimpleData name="CITY">Boston</SimpleData>\n'
+            '    </SchemaData></ExtendedData></Placemark>\n'
+            '  </Document>\n'
+            '</kml>\n'
         )
         self._write_jsonl(
             self._input_path,
@@ -94,6 +133,7 @@ class ProfileDatasetsScriptTests(unittest.TestCase):
         self.assertEqual(row["slug"], "example-dataset")
         self.assertEqual(row["filename"], "rows")
         self.assertEqual(row["family"], "csv")
+        self.assertEqual(row["schema_status"], "strict")
         self.assertEqual(row["row_count"], 3)
         self.assertGreater(row["size_bytes"], 0)
         self.assertEqual(row["llm_description"], "Local example dataset")
@@ -182,6 +222,7 @@ class ProfileDatasetsScriptTests(unittest.TestCase):
         self.assertEqual(row["dataset_id"], "example-dataset")
         self.assertEqual(row["file_path"], "files/rows.csv")
         self.assertEqual(row["llm_description"], "Manifest description")
+        self.assertEqual(row["schema_status"], "strict")
 
     def test_build_profiles_accepts_uri_list_input(self):
         uri_list_path = self._root / "table_profiles_needed.txt"
@@ -211,6 +252,203 @@ class ProfileDatasetsScriptTests(unittest.TestCase):
         row = self._read_output_rows()[0]
         self.assertEqual(row["llm_description"], "Canonical description from merged table_descriptions")
         self.assertEqual(row["filename"], "rows")
+        self.assertEqual(row["schema_status"], "strict")
+
+    def test_uri_list_txt_prose_does_not_expose_fake_columns(self):
+        uri_list_path = self._root / "table_profiles_needed.txt"
+        uri_list_path.write_text(str(self._text_path) + "\n")
+        self._write_jsonl(
+            self._descriptions_path,
+            [{"dataset_uri": str(self._text_path), "description": "Plain-text notes"}],
+        )
+
+        summary = profile_datasets.build_profiles(
+            input_path=uri_list_path,
+            output_path=self._output_path,
+            input_kind="uri-list",
+            descriptions_path=self._descriptions_path,
+            snippets_path=self._snippets_path,
+            parallel=1,
+            resume=False,
+            bucket="unused",
+        )
+
+        self.assertEqual(summary, {"written": 1, "skipped": 0, "errors": 0})
+        row = self._read_output_rows()[0]
+        self.assertEqual(row["family"], "csv")
+        self.assertEqual(row["schema_status"], "unavailable")
+        self.assertIn("snippet", row)
+        self.assertIn("schema_error", row)
+        self.assertNotIn("candidate_columns", row)
+        self.assertNotIn("columns", row)
+        self.assertNotIn("top_2_rows", row)
+
+    def test_uri_list_txt_with_delimited_content_still_profiles_as_csv(self):
+        uri_list_path = self._root / "table_profiles_needed.txt"
+        uri_list_path.write_text(str(self._txt_csv_path) + "\n")
+
+        summary = profile_datasets.build_profiles(
+            input_path=uri_list_path,
+            output_path=self._output_path,
+            input_kind="uri-list",
+            descriptions_path=self._descriptions_path,
+            snippets_path=self._snippets_path,
+            parallel=1,
+            resume=False,
+            bucket="unused",
+        )
+
+        self.assertEqual(summary, {"written": 1, "skipped": 0, "errors": 0})
+        row = self._read_output_rows()[0]
+        self.assertEqual(row["family"], "csv")
+        self.assertEqual(row["schema_status"], "strict")
+        self.assertEqual([col["name"] for col in row["columns"]], ["name", "value"])
+
+    def test_ragged_txt_csv_writes_candidate_columns_only(self):
+        uri_list_path = self._root / "table_profiles_needed.txt"
+        uri_list_path.write_text(str(self._ragged_csv_path) + "\n")
+
+        summary = profile_datasets.build_profiles(
+            input_path=uri_list_path,
+            output_path=self._output_path,
+            input_kind="uri-list",
+            descriptions_path=self._descriptions_path,
+            snippets_path=self._snippets_path,
+            parallel=1,
+            resume=False,
+            bucket="unused",
+        )
+
+        self.assertEqual(summary, {"written": 1, "skipped": 0, "errors": 0})
+        row = self._read_output_rows()[0]
+        self.assertEqual(row["family"], "csv")
+        self.assertEqual(row["schema_status"], "candidate")
+        self.assertIn("schema_error", row)
+        self.assertEqual([col["name"] for col in row["candidate_columns"]], ["name", "value"])
+        self.assertNotIn("columns", row)
+
+    def test_metadata_like_file_sets_metadata_status_without_columns(self):
+        uri_list_path = self._root / "table_profiles_needed.txt"
+        uri_list_path.write_text(str(self._metadata_path) + "\n")
+
+        summary = profile_datasets.build_profiles(
+            input_path=uri_list_path,
+            output_path=self._output_path,
+            input_kind="uri-list",
+            descriptions_path=self._descriptions_path,
+            snippets_path=self._snippets_path,
+            parallel=1,
+            resume=False,
+            bucket="unused",
+        )
+
+        self.assertEqual(summary, {"written": 1, "skipped": 0, "errors": 0})
+        row = self._read_output_rows()[0]
+        self.assertEqual(row["schema_status"], "metadata")
+        self.assertNotIn("columns", row)
+        self.assertNotIn("candidate_columns", row)
+
+    def test_xml_profile_exposes_primary_record_columns(self):
+        uri_list_path = self._root / "table_profiles_needed.txt"
+        uri_list_path.write_text(str(self._xml_path) + "\n")
+
+        summary = profile_datasets.build_profiles(
+            input_path=uri_list_path,
+            output_path=self._output_path,
+            input_kind="uri-list",
+            descriptions_path=self._descriptions_path,
+            snippets_path=self._snippets_path,
+            parallel=1,
+            resume=False,
+            bucket="unused",
+        )
+
+        self.assertEqual(summary, {"written": 1, "skipped": 0, "errors": 0})
+        row = self._read_output_rows()[0]
+        self.assertEqual(row["family"], "xml")
+        self.assertEqual(row["schema_status"], "strict")
+        self.assertEqual(row["record_tag"], "Placemark")
+        self.assertEqual(row["xml_root_tag"], "kml")
+        self.assertEqual([col["name"] for col in row["columns"]], ["NCESSCH", "CITY", "name"])
+        self.assertEqual(row["top_2_rows"][0]["CITY"], "Austin")
+
+    def test_binary_txt_prefix_does_not_generate_fake_columns(self):
+        uri_list_path = self._root / "table_profiles_needed.txt"
+        uri_list_path.write_text(str(self._binary_txt_path) + "\n")
+
+        summary = profile_datasets.build_profiles(
+            input_path=uri_list_path,
+            output_path=self._output_path,
+            input_kind="uri-list",
+            descriptions_path=self._descriptions_path,
+            snippets_path=self._snippets_path,
+            parallel=1,
+            resume=False,
+            bucket="unused",
+        )
+
+        self.assertEqual(summary, {"written": 1, "skipped": 0, "errors": 0})
+        row = self._read_output_rows()[0]
+        self.assertEqual(row["family"], "archive")
+        self.assertEqual(row["schema_status"], "archive")
+        self.assertNotIn("columns", row)
+        self.assertNotIn("top_2_rows", row)
+        self.assertNotIn("snippet", row)
+
+    def test_zip_profile_exposes_archive_member_hints_only(self):
+        uri_list_path = self._root / "table_profiles_needed.txt"
+        uri_list_path.write_text(str(self._zip_path) + "\n")
+
+        summary = profile_datasets.build_profiles(
+            input_path=uri_list_path,
+            output_path=self._output_path,
+            input_kind="uri-list",
+            descriptions_path=self._descriptions_path,
+            snippets_path=self._snippets_path,
+            parallel=1,
+            resume=False,
+            bucket="unused",
+        )
+
+        self.assertEqual(summary, {"written": 1, "skipped": 0, "errors": 0})
+        row = self._read_output_rows()[0]
+        self.assertEqual(row["schema_status"], "archive")
+        self.assertEqual(row["archive_members"], ["inner.csv"])
+        self.assertNotIn("columns", row)
+
+    def test_time_columns_do_not_fail_profile_generation(self):
+        manifest_path = self._root / "manifest_time.jsonl"
+        local_uri = f"s3://lakeqa-yc4103-datalake/datagov/example-dataset/files/times.csv"
+        self._write_jsonl(
+            manifest_path,
+            [
+                {
+                    "dataset_id": "example-dataset",
+                    "file_path": "files/times.csv",
+                    "s3_uri": local_uri,
+                    "source_ref": str(self._time_csv_path),
+                    "size_bytes": self._time_csv_path.stat().st_size,
+                }
+            ],
+        )
+
+        summary = profile_datasets.build_profiles(
+            input_path=manifest_path,
+            output_path=self._output_path,
+            input_kind="manifest",
+            descriptions_path=self._descriptions_path,
+            snippets_path=self._snippets_path,
+            parallel=1,
+            resume=False,
+            bucket="unused",
+        )
+
+        self.assertEqual(summary, {"written": 1, "skipped": 0, "errors": 0})
+        row = self._read_output_rows()[0]
+        self.assertEqual(row["schema_status"], "strict")
+        columns = {col["name"]: col for col in row["columns"]}
+        self.assertEqual(columns["duration"]["type"], "time")
+        self.assertIsNone(columns["duration"]["mean"])
 
     def test_build_profiles_stringifies_nested_top_rows(self):
         manifest_path = self._root / "manifest_nested.jsonl"
@@ -245,6 +483,7 @@ class ProfileDatasetsScriptTests(unittest.TestCase):
         self.assertEqual(summary, {"written": 1, "skipped": 0, "errors": 0})
         row = self._read_output_rows()[0]
         self.assertEqual(row["family"], "json")
+        self.assertEqual(row["schema_status"], "strict")
         self.assertIsInstance(row["top_2_rows"][0]["payload"], str)
         self.assertTrue(row["top_2_rows"][0]["payload"].endswith("…"))
 
