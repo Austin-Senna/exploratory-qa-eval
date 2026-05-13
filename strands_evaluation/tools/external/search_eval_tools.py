@@ -14,6 +14,7 @@ from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 from strands import tool
 from strands.tools.decorator import DecoratedFunctionTool
+from strands_evaluation.tools.external.description_rows import reject_forbidden_description_row
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +23,6 @@ _PREFIX_TOOLS = {"search_prefix"}
 _SEARCH_TOOL_NAMES = _QUERY_TOOLS | _PREFIX_TOOLS
 
 _TABLE_DESCRIPTIONS_PATH = Path("table_descriptions.jsonl")
-_MANIFEST_DESCRIPTIONS_PATH = Path("tasks_core_quality_file_manifest_descriptions.jsonl")
 
 _DESC_CACHE_LOADED = False
 _DESC_BY_URI: Dict[str, str] = {}
@@ -50,38 +50,37 @@ def _load_description_cache() -> None:
     if _DESC_CACHE_LOADED:
         return
 
-    desc_paths = [path for path in (_TABLE_DESCRIPTIONS_PATH, _MANIFEST_DESCRIPTIONS_PATH) if path.exists()]
-    if not desc_paths:
+    if not _TABLE_DESCRIPTIONS_PATH.exists():
         raise FileNotFoundError(
-            "Required dependency 'table_descriptions.jsonl' or "
-            "'tasks_core_quality_file_manifest_descriptions.jsonl' not found. "
-            "search description mode requires at least one descriptions jsonl at the repo root."
+            "Required dependency 'table_descriptions.jsonl' not found. "
+            "search description mode requires the canonical descriptions JSONL at the repo root."
         )
 
     _DESC_CACHE_LOADED = True
     uri_map: Dict[str, str] = {}
     dataset_map: Dict[str, str] = {}
 
-    for path in desc_paths:
-        with path.open() as f:
-            for line in f:
-                line = line.strip()
-                if not line:
-                    continue
-                try:
-                    obj = json.loads(line)
-                except json.JSONDecodeError:
-                    continue
+    with _TABLE_DESCRIPTIONS_PATH.open() as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                obj = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            reject_forbidden_description_row(obj, path=_TABLE_DESCRIPTIONS_PATH)
 
-                uri = str(obj.get("dataset_uri") or obj.get("uri") or "").strip()
-                description = str(obj.get("description") or "").strip()
-                if not uri or not description:
-                    continue
+            uri = str(obj.get("dataset_uri") or obj.get("uri") or "").strip()
+            description = str(obj.get("description") or "").strip()
+            if not uri or not description:
+                continue
 
+            if uri not in uri_map:
                 uri_map[uri] = description
-                dsid = _dataset_id_from_uri(uri)
-                if dsid:
-                    dataset_map[dsid] = description
+            dsid = _dataset_id_from_uri(uri)
+            if dsid and dsid not in dataset_map:
+                dataset_map[dsid] = description
 
     _DESC_BY_URI = uri_map
     _DESC_BY_DATASET_ID = dataset_map
@@ -89,7 +88,7 @@ def _load_description_cache() -> None:
         "Loaded %d URI descriptions and %d dataset-level descriptions from %s",
         len(_DESC_BY_URI),
         len(_DESC_BY_DATASET_ID),
-        ", ".join(path.name for path in desc_paths),
+        _TABLE_DESCRIPTIONS_PATH.name,
     )
 
 

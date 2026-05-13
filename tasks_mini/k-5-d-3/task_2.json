@@ -4,19 +4,19 @@
   "nodes": {
     "1": {
       "source": "datagov/texas-state-expenditures-by-county-2018/files/rows.txt",
-      "fact": "In the 2018 Texas State Expenditures dataset, Travis County had $29.37 billion in total expenditures, Harris County had $28.16 billion, and Dallas County had $21.39 billion.",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/texas-state-expenditures-by-county-2018/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)\n\ncounties = ['TRAVIS', 'HARRIS', 'DALLAS']\nlabels = {'TRAVIS': 'Travis', 'HARRIS': 'Harris', 'DALLAS': 'Dallas'}\ndf['Amount'] = pd.to_numeric(df['Amount'], errors='coerce')\nfiltered = df[df['County'].isin(counties)].copy()\ntotals = filtered.groupby('County')['Amount'].sum()\nanswer = '; '.join(f\"{labels[county]}: ${totals[county] / 1_000_000_000:.2f}B\" for county in counties)",
       "subquestion": "What were the total state expenditures in 2018 for Travis, Harris, and Dallas counties? (Filter County in {TRAVIS, HARRIS, DALLAS}; exclude County == 'INTEX' or null; group by County; sum Amount.)",
       "answer": "Travis: $29.37B; Harris: $28.16B; Dallas: $21.39B"
     },
     "2": {
       "source": "datagov/texas-state-expenditures-by-county-2019/files/rows.txt",
-      "fact": "In the 2019 Texas State Expenditures dataset, Travis County had $16.34 billion in total expenditures, Harris County had $14.99 billion, and Dallas County had $10.58 billion.",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/texas-state-expenditures-by-county-2019/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)\n\ncounties = ['TRAVIS', 'HARRIS', 'DALLAS']\nlabels = {'TRAVIS': 'Travis', 'HARRIS': 'Harris', 'DALLAS': 'Dallas'}\ndf['Amount'] = pd.to_numeric(df['Amount'], errors='coerce')\nfiltered = df[df['County'].isin(counties)].copy()\ntotals = filtered.groupby('County')['Amount'].sum()\nanswer = '; '.join(f\"{labels[county]}: ${totals[county] / 1_000_000_000:.2f}B\" for county in counties)",
       "subquestion": "What were the total state expenditures in 2019 for Travis, Harris, and Dallas counties? (Filter County in {TRAVIS, HARRIS, DALLAS}; exclude County == 'INTEX' or null; group by County; sum Amount.)",
       "answer": "Travis: $16.34B; Harris: $14.99B; Dallas: $10.58B"
     },
     "3": {
       "source": "datagov/texas-state-expenditures-by-county-2020/files/rows.txt",
-      "fact": "In the 2020 Texas State Expenditures dataset, Travis County had $16.76 billion in total expenditures, Harris County had $16.45 billion, and Dallas County had $12.50 billion.",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/texas-state-expenditures-by-county-2020/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)\n\ncounties = ['TRAVIS', 'HARRIS', 'DALLAS']\nlabels = {'TRAVIS': 'Travis', 'HARRIS': 'Harris', 'DALLAS': 'Dallas'}\ndf['Amount'] = pd.to_numeric(df['Amount'], errors='coerce')\nfiltered = df[df['County'].isin(counties)].copy()\ntotals = filtered.groupby('County')['Amount'].sum()\nanswer = '; '.join(f\"{labels[county]}: ${totals[county] / 1_000_000_000:.2f}B\" for county in counties)",
       "subquestion": "What were the total state expenditures in 2020 for Travis, Harris, and Dallas counties? (Filter County in {TRAVIS, HARRIS, DALLAS}; exclude County == 'INTEX' or null; group by County; sum Amount.)",
       "answer": "Travis: $16.76B; Harris: $16.45B; Dallas: $12.50B"
     },
@@ -58,19 +58,19 @@
     },
     "10": {
       "source": "datagov/school-nutrition-programs-contact-information-and-site-level-program-participation-pr-2018/files/rows.txt",
-      "fact": "In the 2018-2019 Texas School Nutrition Program data for Harris County, Sheldon ISD had an average Identified Student Percentage (ISP) of 81.47% across its sites.",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/school-nutrition-programs-contact-information-and-site-level-program-participation-pr-2018/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)\n\ndf['SiteISP'] = pd.to_numeric(df['SiteISP'], errors='coerce')\nfiltered = df[(df['SiteCounty'] == 'HARRIS') & (df['CEName'] == 'SHELDON ISD')].copy()\naverage_isp = filtered['SiteISP'].mean()\nanswer = f'Sheldon ISD: {average_isp:.2f}% average ISP'",
       "subquestion": "For Harris County in 2018-2019, what is the average SiteISP for each ISD? (Filter SiteCounty == 'HARRIS'; filter CEName contains 'ISD'; group by CEName; average SiteISP.)",
       "answer": "Sheldon ISD: 81.47% average ISP"
     },
     "11": {
       "source": "datagov/school-nutrition-programs-contact-information-and-site-level-program-participation-pr-2019/files/rows.txt",
-      "fact": "In the 2019-2020 Texas School Nutrition Program data for Harris County, Sheldon ISD had an average Identified Student Percentage (ISP) of 60.66% across its sites.",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/school-nutrition-programs-contact-information-and-site-level-program-participation-pr-2019/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)\n\ndf['SiteISP'] = pd.to_numeric(df['SiteISP'], errors='coerce')\nfiltered = df[(df['SiteCounty'] == 'HARRIS') & (df['CEName'] == 'SHELDON ISD')].copy()\naverage_isp = filtered['SiteISP'].mean()\nanswer = f'Sheldon ISD: {average_isp:.2f}% average ISP'",
       "subquestion": "For Harris County in 2019-2020, what is the average SiteISP for each ISD? (Filter SiteCounty == 'HARRIS'; filter CEName contains 'ISD'; group by CEName; average SiteISP.)",
       "answer": "Sheldon ISD: 60.66% average ISP"
     },
     "12": {
       "source": "datagov/school-nutrition-programs-contact-information-and-site-level-program-participation-pr-2020/files/rows.txt",
-      "fact": "In the 2020-2021 Texas School Nutrition Program data for Harris County, Sheldon ISD had an average Identified Student Percentage (ISP) of 66.11% across its sites.",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/school-nutrition-programs-contact-information-and-site-level-program-participation-pr-2020/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)\n\ndf['SiteISP'] = pd.to_numeric(df['SiteISP'], errors='coerce')\nfiltered = df[(df['SiteCounty'] == 'HARRIS') & (df['CEName'] == 'SHELDON ISD')].copy()\naverage_isp = filtered['SiteISP'].mean()\nanswer = f'Sheldon ISD: {average_isp:.2f}% average ISP'",
       "subquestion": "For Harris County in 2020-2021, what is the average SiteISP for each ISD? (Filter SiteCounty == 'HARRIS'; filter CEName contains 'ISD'; group by CEName; average SiteISP.)",
       "answer": "Sheldon ISD: 66.11% average ISP"
     },

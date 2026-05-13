@@ -4,7 +4,7 @@
   "nodes": {
     "1": {
       "source": "datagov/crime-incidents-in-2019/files/data.txt",
-      "fact": "In 2019, DC Ward 7 had 905 violent crimes (homicide, assault with dangerous weapon, robbery, sex abuse), and Ward 8 had 765 violent crimes.",
+      "fact": "import io\nimport json\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/crime-incidents-in-2019/files/data.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndata = json.load(io.BytesIO(obj[\"Body\"].read()))\ndf = pd.json_normalize(data[\"features\"])\n\nviolent_offenses = [\"HOMICIDE\", \"ASSAULT W/DANGEROUS WEAPON\", \"ROBBERY\", \"SEX ABUSE\"]\nresult = (\n    df[\n        df[\"properties.OFFENSE\"].isin(violent_offenses)\n        & df[\"properties.WARD\"].notna()\n    ]\n    .groupby(\"properties.WARD\")\n    .size()\n    .reset_index(name=\"violent_crime_count\")\n)\nresult[\"ward_num\"] = result[\"properties.WARD\"].astype(int)\nresult = result.sort_values([\"violent_crime_count\", \"ward_num\"], ascending=[False, True]).head(2)\nanswer = [f\"Ward {int(row['ward_num'])} ({row['violent_crime_count']})\" for _, row in result.iterrows()]",
       "subquestion": "Which DC wards had the top 2 average violent crimes between 2019 and 2020? (Filter for this node: OFFENSE in {HOMICIDE, ASSAULT W/DANGEROUS WEAPON, ROBBERY, SEX ABUSE}; group by WARD; count records; rank by count; keep top 2.)",
       "answer": [
         "Ward 7 (905)",
@@ -13,7 +13,7 @@
     },
     "2": {
       "source": "datagov/crime-incidents-in-2020/files/data.txt",
-      "fact": "In 2020, DC Ward 7 had 945 violent crimes and Ward 8 had 907 violent crimes.",
+      "fact": "import io\nimport json\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/crime-incidents-in-2020/files/data.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndata = json.load(io.BytesIO(obj[\"Body\"].read()))\ndf = pd.json_normalize(data[\"features\"])\n\nviolent_offenses = [\"HOMICIDE\", \"ASSAULT W/DANGEROUS WEAPON\", \"ROBBERY\", \"SEX ABUSE\"]\nresult = (\n    df[\n        df[\"properties.OFFENSE\"].isin(violent_offenses)\n        & df[\"properties.WARD\"].notna()\n    ]\n    .groupby(\"properties.WARD\")\n    .size()\n    .reset_index(name=\"violent_crime_count\")\n)\nresult[\"ward_num\"] = result[\"properties.WARD\"].astype(int)\nresult = result.sort_values([\"violent_crime_count\", \"ward_num\"], ascending=[False, True]).head(2)\nanswer = [f\"Ward {int(row['ward_num'])} ({row['violent_crime_count']})\" for _, row in result.iterrows()]",
       "subquestion": "Which DC wards had the top 2 average violent crimes between 2019 and 2020? (Filter for this node: OFFENSE in {HOMICIDE, ASSAULT W/DANGEROUS WEAPON, ROBBERY, SEX ABUSE}; group by WARD; count records; rank by count; keep top 2.)",
       "answer": [
         "Ward 7 (945)",
@@ -22,7 +22,7 @@
     },
     "3": {
       "source": "datagov/311-city-service-requests-in-2019/files/data.txt",
-      "fact": "In 2019, DC Ward 7 had 42,226 service requests and Ward 8 had 34,959 service requests.",
+      "fact": "import io\nimport json\nfrom collections import Counter\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/311-city-service-requests-in-2019/files/data.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndata = json.load(io.BytesIO(obj[\"Body\"].read()))\n\ncounts = Counter()\nfor feature in data.get(\"features\", []):\n    props = feature.get(\"properties\") or {}\n    ward = str(props.get(\"WARD\") or \"\").strip()\n    if ward in {\"7\", \"8\"}:\n        counts[ward] += 1\n\nanswer = [f\"Ward {ward} ({counts[ward]:,})\" for ward in sorted(counts, key=int)]",
       "subquestion": "Between the top 2 crime wards (from hop 1), which had higher average 311 service requests (2019-2020)? (Filter for this node: WARD in {7, 8}; group by WARD; count records.)",
       "answer": [
         "Ward 7 (42,226)",
@@ -31,7 +31,7 @@
     },
     "4": {
       "source": "datagov/311-city-service-requests-in-2020/files/data.txt",
-      "fact": "In 2020, DC Ward 7 had 36,113 service requests and Ward 8 had 37,124 service requests.",
+      "fact": "import io\nimport json\nfrom collections import Counter\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/311-city-service-requests-in-2020/files/data.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndata = json.load(io.BytesIO(obj[\"Body\"].read()))\n\ncounts = Counter()\nfor feature in data.get(\"features\", []):\n    props = feature.get(\"properties\") or {}\n    ward = str(props.get(\"WARD\") or \"\").strip()\n    if ward in {\"7\", \"8\"}:\n        counts[ward] += 1\n\nanswer = [f\"Ward {ward} ({counts[ward]:,})\" for ward in sorted(counts, key=int)]",
       "subquestion": "Between the top 2 crime wards (from hop 1), which had higher average 311 service requests (2019-2020)? (Filter for this node: WARD in {7, 8}; group by WARD; count records.)",
       "answer": [
         "Ward 7 (36,113)",

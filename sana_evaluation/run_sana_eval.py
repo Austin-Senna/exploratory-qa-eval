@@ -214,8 +214,8 @@ def main() -> None:
     parser.add_argument("--all-tasks", action="store_true", help="Evaluate all k-*-d-* directories")
     parser.add_argument(
         "--task-set",
-        default="tasks_core_quality",
-        help="Base directory for --all-tasks (default: tasks_core_quality)",
+        default="tasks_mini",
+        help="Base directory for --all-tasks (default: tasks_mini)",
     )
     parser.add_argument("--tasks-per-dir", type=int, default=None, help="Limit tasks per directory")
     parser.add_argument(

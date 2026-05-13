@@ -10,25 +10,25 @@
     },
     "2": {
       "source": "datagov/arrest-data-from-2010-to-2019/files/rows.txt",
-      "fact": "Filter to year 2019 and Area Name = Rampart; group by Charge Group Description to find the most common, then filter to that charge group and group by Area Name; Central has the most arrests (no tie observed). This identifies the area with the highest arrest count for that charge group.",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/arrest-data-from-2010-to-2019/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\ndf[\"Arrest Date\"] = pd.to_datetime(df[\"Arrest Date\"], errors=\"coerce\")\ndf_2019 = df[df[\"Arrest Date\"].dt.year == 2019]\nrampart_2019 = df_2019[df_2019[\"Area Name\"] == \"Rampart\"]\n\ntop_charge_group = rampart_2019[\"Charge Group Description\"].value_counts().idxmax()\nanswer = df_2019[df_2019[\"Charge Group Description\"] == top_charge_group][\"Area Name\"].value_counts().idxmax()\nprint(answer)",
       "subquestion": "In 2019 arrest records, within area <node_1 answer>, identify the most common charge group; then, for that charge group, which area has the most arrests? Answer with the area name.",
       "answer": "Central"
     },
     "3": {
       "source": "datagov/lapd-ripa-ab-953-stop-incident-details-from-7-1-2018-to-present/files/rows.txt",
-      "fact": "Filter to rows where Area Name = Central; the corresponding Area ID is 1 (sometimes recorded as 01). This maps the area name to its numeric ID.",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/lapd-ripa-ab-953-stop-incident-details-from-7-1-2018-to-present/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\nanswer = df.loc[df[\"Area Name\"] == \"Central\", \"Area ID\"].value_counts().idxmax()\nprint(answer)\nanswer = str(answer)",
       "subquestion": "In the LAPD stop-incident records collected under California's RIPA program, what Area ID corresponds to area name <node_2 answer> (answer as an integer)?",
       "answer": "1"
     },
     "4": {
       "source": "datagov/crime-data-from-2020-to-present/files/rows.txt",
-      "fact": "Filter to year 2021 and Area ID = 1; group by Crm Cd Desc and count; the most common description is BURGLARY FROM VEHICLE with 1,620 incidents (no tie observed). This indicates the top category in that scope.",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/crime-data-from-2020-to-present/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\ndf[\"DATE OCC\"] = pd.to_datetime(df[\"DATE OCC\"], errors=\"coerce\")\ndf_2021 = df[df[\"DATE OCC\"].dt.year == 2021]\narea_1_2021 = df_2021[df_2021[\"AREA\"] == 1]\ncrime_counts = area_1_2021[\"Crm Cd Desc\"].value_counts()\nanswer = f\"{crime_counts.index[0]} ({int(crime_counts.iloc[0])})\"\nprint(answer)",
       "subquestion": "In 2021 crime data, within Area ID <node_3 answer> (the Area ID for area <node_2 answer>), which crime description is most common and what is its incident count?",
       "answer": "BURGLARY FROM VEHICLE (1620)"
     },
     "5": {
       "source": "datagov/public-school-locations-current-23297/files/data-oyCYxF.txt",
-      "fact": "Filter to STATE = CA and CITY = Los Angeles; the public school count is 579. This provides the required count.",
+      "fact": "import json\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/public-school-locations-current-23297/files/data-oyCYxF.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndata = json.loads(obj[\"Body\"].read())\n\nanswer = sum(\n    1\n    for feature in data[\"features\"]\n    if feature.get(\"properties\", {}).get(\"STATE\") == \"CA\"\n    and feature.get(\"properties\", {}).get(\"CITY\") == \"Los Angeles\"\n)\nprint(answer)\nanswer = str(answer)",
       "subquestion": "Within city Los Angeles and state CA, how many public schools are listed?",
       "answer": "579"
     }

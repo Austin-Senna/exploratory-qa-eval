@@ -48,7 +48,7 @@ def _build_base_tools(search_tool_mode: str, db_path: str, task_file: Optional[s
         from strands_evaluation.tools.external import search_a_tools
         search_a_tools.set_db_path(db_path)
         search_a_tools.setup()
-        return [search_a_tools.search_reranked, search_a_tools.search_schema, search_prefix]
+        return [search_a_tools.search_value, search_a_tools.search_schema, search_prefix]
 
     if search_tool_mode == "ideal":
         if not task_file:
@@ -141,7 +141,7 @@ def run_matrix(
 def main(argv: Optional[List[str]] = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--db", default="lance_data", help="Lance DB root for non-ideal search tools.")
-    parser.add_argument("--query", default="traffic events", help="Query fed to every search_value/search_schema/search_reranked call.")
+    parser.add_argument("--query", default="traffic events", help="Query fed to every search_value/search_schema call.")
     parser.add_argument("--task-file", default="tasks_mini/k-5-d-4/task_1.json", help="Task id used to set search_ideal context.")
     parser.add_argument("--k", type=int, default=3, help="Fixed result limit (passed as fixed_k to build_search_tools).")
     parser.add_argument("--out", default=None, help="Optional explicit output log path; defaults to test_logs/search_matrix_<ts>.log")

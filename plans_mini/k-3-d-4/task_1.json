@@ -45,5 +45,145 @@
     "HOP 3 (d=1, Wikipedia - node 7 depends on node 6):",
     "  Node 7: The average household income in Montgomery County is the 20th-highest among U.S. counties as of 2020.",
     "  Final answer: 20"
+  ],
+  "ideal_code": [
+    {
+      "node_id": "1",
+      "dataset_id": "crime-incidents-in-2018",
+      "source": "datagov/crime-incidents-in-2018/files/data.txt",
+      "intent": "Which DC Ward had the lowest average total crime count across 2018-2021? (Filter for this node: 2018 file; group by WARD in feature properties; count incidents per ward.)",
+      "code": "import json\nimport pandas as pd\n\nwith open('datagov/crime-incidents-in-2018/files/data.txt', 'r', encoding='utf-8') as f:\n    obj = json.load(f)\n\ndf = pd.DataFrame([feature.get('properties', {}) for feature in obj.get('features', [])])\ndf['WARD'] = df['WARD'].astype(str).str.strip()\ncounts = df[df['WARD'] != ''].groupby('WARD').size().reset_index(name='incident_count')\ncounts['ward_label'] = 'Ward ' + counts['WARD']\ncounts = counts.sort_values('ward_label')\nresult = dict(zip(counts['ward_label'], counts['incident_count'].astype(int)))",
+      "answer": {
+        "Ward 1": 4734,
+        "Ward 2": 6634,
+        "Ward 3": 1930,
+        "Ward 4": 3136,
+        "Ward 5": 5191,
+        "Ward 6": 4335,
+        "Ward 7": 4514,
+        "Ward 8": 3372
+      }
+    },
+    {
+      "node_id": "2",
+      "dataset_id": "crime-incidents-in-2019",
+      "source": "datagov/crime-incidents-in-2019/files/data.txt",
+      "intent": "Which DC Ward had the lowest average total crime count across 2018-2021? (Filter for this node: 2019 file; group by WARD in feature properties; count incidents per ward.)",
+      "code": "import json\nimport pandas as pd\n\nwith open('datagov/crime-incidents-in-2019/files/data.txt', 'r', encoding='utf-8') as f:\n    obj = json.load(f)\n\ndf = pd.DataFrame([feature.get('properties', {}) for feature in obj.get('features', [])])\ndf['WARD'] = df['WARD'].astype(str).str.strip()\ncounts = df[df['WARD'] != ''].groupby('WARD').size().reset_index(name='incident_count')\ncounts['ward_label'] = 'Ward ' + counts['WARD']\ncounts = counts.sort_values('ward_label')\nresult = dict(zip(counts['ward_label'], counts['incident_count'].astype(int)))",
+      "answer": {
+        "Ward 1": 4826,
+        "Ward 2": 7478,
+        "Ward 3": 1952,
+        "Ward 4": 2942,
+        "Ward 5": 5256,
+        "Ward 6": 4325,
+        "Ward 7": 4179,
+        "Ward 8": 3011
+      }
+    },
+    {
+      "node_id": "3",
+      "dataset_id": "crime-incidents-in-2020",
+      "source": "datagov/crime-incidents-in-2020/files/data.txt",
+      "intent": "Which DC Ward had the lowest average total crime count across 2018-2021? (Filter for this node: 2020 file; group by WARD in feature properties; count incidents per ward.)",
+      "code": "import json\nimport pandas as pd\n\nwith open('datagov/crime-incidents-in-2020/files/data.txt', 'r', encoding='utf-8') as f:\n    obj = json.load(f)\n\ndf = pd.DataFrame([feature.get('properties', {}) for feature in obj.get('features', [])])\ndf['WARD'] = df['WARD'].astype(str).str.strip()\ncounts = df[df['WARD'] != ''].groupby('WARD').size().reset_index(name='incident_count')\ncounts['ward_label'] = 'Ward ' + counts['WARD']\ncounts = counts.sort_values('ward_label')\nresult = dict(zip(counts['ward_label'], counts['incident_count'].astype(int)))",
+      "answer": {
+        "Ward 1": 3542,
+        "Ward 2": 4685,
+        "Ward 3": 1709,
+        "Ward 4": 2703,
+        "Ward 5": 4394,
+        "Ward 6": 3815,
+        "Ward 7": 4148,
+        "Ward 8": 2935
+      }
+    },
+    {
+      "node_id": "4",
+      "dataset_id": "crime-incidents-in-2021",
+      "source": "datagov/crime-incidents-in-2021/files/data.txt",
+      "intent": "Which DC Ward had the lowest average total crime count across 2018-2021? (Filter for this node: 2021 file; group by WARD in feature properties; count incidents per ward.)",
+      "code": "import json\nimport pandas as pd\n\nwith open('datagov/crime-incidents-in-2021/files/data.txt', 'r', encoding='utf-8') as f:\n    obj = json.load(f)\n\ndf = pd.DataFrame([feature.get('properties', {}) for feature in obj.get('features', [])])\ndf['WARD'] = df['WARD'].astype(str).str.strip()\ncounts = df[df['WARD'] != ''].groupby('WARD').size().reset_index(name='incident_count')\ncounts['ward_label'] = 'Ward ' + counts['WARD']\ncounts = counts.sort_values('ward_label')\nresult = dict(zip(counts['ward_label'], counts['incident_count'].astype(int)))",
+      "answer": {
+        "Ward 1": 4195,
+        "Ward 2": 5360,
+        "Ward 3": 1440,
+        "Ward 4": 2576,
+        "Ward 5": 4415,
+        "Ward 6": 3799,
+        "Ward 7": 3585,
+        "Ward 8": 2926
+      }
+    }
+  ],
+  "ideal_query": [
+    {
+      "node_id": "1",
+      "dataset_id": "crime-incidents-in-2018",
+      "source": "datagov/crime-incidents-in-2018/files/data.txt",
+      "intent": "Which DC Ward had the lowest average total crime count across 2018-2021? (Filter for this node: 2018 file; group by WARD in feature properties; count incidents per ward.)",
+      "sql": "WITH counts AS (\n  SELECT 'Ward ' || trim(f.properties.WARD) AS ward, COUNT(*) AS cnt\n  FROM t, UNNEST(features) AS u(f)\n  WHERE trim(f.properties.WARD) <> ''\n  GROUP BY ward\n)\nSELECT json_group_object(ward, cnt) AS answer\nFROM counts",
+      "answer": {
+        "Ward 1": 4734,
+        "Ward 2": 6634,
+        "Ward 3": 1930,
+        "Ward 4": 3136,
+        "Ward 5": 5191,
+        "Ward 6": 4335,
+        "Ward 7": 4514,
+        "Ward 8": 3372
+      }
+    },
+    {
+      "node_id": "2",
+      "dataset_id": "crime-incidents-in-2019",
+      "source": "datagov/crime-incidents-in-2019/files/data.txt",
+      "intent": "Which DC Ward had the lowest average total crime count across 2018-2021? (Filter for this node: 2019 file; group by WARD in feature properties; count incidents per ward.)",
+      "sql": "WITH counts AS (\n  SELECT 'Ward ' || trim(f.properties.WARD) AS ward, COUNT(*) AS cnt\n  FROM t, UNNEST(features) AS u(f)\n  WHERE trim(f.properties.WARD) <> ''\n  GROUP BY ward\n)\nSELECT json_group_object(ward, cnt) AS answer\nFROM counts",
+      "answer": {
+        "Ward 1": 4826,
+        "Ward 2": 7478,
+        "Ward 3": 1952,
+        "Ward 4": 2942,
+        "Ward 5": 5256,
+        "Ward 6": 4325,
+        "Ward 7": 4179,
+        "Ward 8": 3011
+      }
+    },
+    {
+      "node_id": "3",
+      "dataset_id": "crime-incidents-in-2020",
+      "source": "datagov/crime-incidents-in-2020/files/data.txt",
+      "intent": "Which DC Ward had the lowest average total crime count across 2018-2021? (Filter for this node: 2020 file; group by WARD in feature properties; count incidents per ward.)",
+      "sql": "WITH counts AS (\n  SELECT 'Ward ' || trim(f.properties.WARD) AS ward, COUNT(*) AS cnt\n  FROM t, UNNEST(features) AS u(f)\n  WHERE trim(f.properties.WARD) <> ''\n  GROUP BY ward\n)\nSELECT json_group_object(ward, cnt) AS answer\nFROM counts",
+      "answer": {
+        "Ward 1": 3542,
+        "Ward 2": 4685,
+        "Ward 3": 1709,
+        "Ward 4": 2703,
+        "Ward 5": 4394,
+        "Ward 6": 3815,
+        "Ward 7": 4148,
+        "Ward 8": 2935
+      }
+    },
+    {
+      "node_id": "4",
+      "dataset_id": "crime-incidents-in-2021",
+      "source": "datagov/crime-incidents-in-2021/files/data.txt",
+      "intent": "Which DC Ward had the lowest average total crime count across 2018-2021? (Filter for this node: 2021 file; group by WARD in feature properties; count incidents per ward.)",
+      "sql": "WITH counts AS (\n  SELECT 'Ward ' || trim(f.properties.WARD) AS ward, COUNT(*) AS cnt\n  FROM t, UNNEST(features) AS u(f)\n  WHERE trim(f.properties.WARD) <> ''\n  GROUP BY ward\n)\nSELECT json_group_object(ward, cnt) AS answer\nFROM counts",
+      "answer": {
+        "Ward 1": 4195,
+        "Ward 2": 5360,
+        "Ward 3": 1440,
+        "Ward 4": 2576,
+        "Ward 5": 4415,
+        "Ward 6": 3799,
+        "Ward 7": 3585,
+        "Ward 8": 2926
+      }
+    }
   ]
 }

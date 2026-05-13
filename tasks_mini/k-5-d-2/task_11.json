@@ -5,7 +5,7 @@
   "nodes": {
     "1": {
       "source": "datagov/recidivism-beginning-2008/files/rows.txt",
-      "fact": "In 2018, the return-to-custody rates for NY counties included: Erie County (41.6%), Monroe County (43.2%), Onondaga County (42.3%), Albany County (43.0%), Sullivan County (45.3%), and other counties.",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/recidivism-beginning-2008/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\ncounties = [\"Erie\", \"Monroe\", \"Onondaga\", \"Albany\", \"Sullivan\"]\nreturned_statuses = {\"Returned Parole Violation\", \"New Felony Offense\"}\nfiltered = df[df[\"Release Year\"] == 2018].copy()\nfiltered[\"county_title\"] = filtered[\"County of Indictment\"].astype(str).str.title()\nrates = (\n    filtered[filtered[\"county_title\"].isin(counties)]\n    .groupby(\"county_title\")[\"Return Status\"]\n    .apply(lambda s: f\"{(s.isin(returned_statuses).mean() * 100):.1f}%\")\n    .to_dict()\n)\nanswer = {county: rates[county] for county in counties}",
       "subquestion": "What were the return-to-custody rates for NY counties in 2018? (answers not shown completely, but intersection result is correct, see reasoning chain)",
       "answer": {
         "Erie": "41.6%",
@@ -17,7 +17,7 @@
     },
     "2": {
       "source": "datagov/recidivism-beginning-2008/files/rows.txt",
-      "fact": "In 2019, the return-to-custody rates for NY counties included: Erie County (35.1%), Monroe County (33.3%), Onondaga County (34.8%), Albany County (34.1%), Sullivan County (34.7%), and other counties.",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/recidivism-beginning-2008/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\ncounties = [\"Erie\", \"Monroe\", \"Onondaga\", \"Albany\", \"Sullivan\"]\nreturned_statuses = {\"Returned Parole Violation\", \"New Felony Offense\"}\nfiltered = df[df[\"Release Year\"] == 2019].copy()\nfiltered[\"county_title\"] = filtered[\"County of Indictment\"].astype(str).str.title()\nrates = (\n    filtered[filtered[\"county_title\"].isin(counties)]\n    .groupby(\"county_title\")[\"Return Status\"]\n    .apply(lambda s: f\"{(s.isin(returned_statuses).mean() * 100):.1f}%\")\n    .to_dict()\n)\nanswer = {county: rates[county] for county in counties}",
       "subquestion": "What were the return-to-custody rates for NY counties in 2019? (answers not shown completely, but intersection result is correct, see reasoning chain)",
       "answer": {
         "Erie": "35.1%",
@@ -29,7 +29,7 @@
     },
     "3": {
       "source": "datagov/motor-vehicle-crashes-case-information-three-year-window/files/rows.txt",
-      "fact": "In 2019, motor vehicle crash counts by NY county included: Erie County (22,877), Monroe County (21,157), Onondaga County (15,095), and Albany County (9,930).",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/motor-vehicle-crashes-case-information-three-year-window/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\ncounties = [\"Erie\", \"Monroe\"]\nfiltered = df[df[\"Year\"] == 2019].copy()\nfiltered[\"county_title\"] = filtered[\"County Name\"].astype(str).str.title()\ncounts = filtered[filtered[\"county_title\"].isin(counties)].groupby(\"county_title\").size().to_dict()\nanswer = {county: f\"{int(counts[county]):,}\" for county in counties}",
       "subquestion": "What were the motor vehicle crash counts for Erie and Monroe counties (from <aggregation of nodes 1-2: counties with avg rate 38-40%>) in 2019?",
       "answer": {
         "Erie": "22,877",
@@ -38,7 +38,7 @@
     },
     "4": {
       "source": "datagov/motor-vehicle-crashes-case-information-three-year-window/files/rows.txt",
-      "fact": "In 2020, motor vehicle crash counts by NY county included: Erie County (17,239), Monroe County (15,919), Onondaga County (11,011), and Albany County (7,564).",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/motor-vehicle-crashes-case-information-three-year-window/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\ncounties = [\"Erie\", \"Monroe\"]\nfiltered = df[df[\"Year\"] == 2020].copy()\nfiltered[\"county_title\"] = filtered[\"County Name\"].astype(str).str.title()\ncounts = filtered[filtered[\"county_title\"].isin(counties)].groupby(\"county_title\").size().to_dict()\nanswer = {county: f\"{int(counts[county]):,}\" for county in counties}",
       "subquestion": "What were the motor vehicle crash counts for Erie and Monroe counties (from <aggregation of nodes 1-2: counties with avg rate 38-40%>) in 2020?",
       "answer": {
         "Erie": "17,239",

@@ -1,0 +1,55 @@
+{
+  "question": "Which piece did Ludwig van Beethoven publish in 1801 that was dedicated to Count Moritz von Fries? Write your answer as [ANSWER].",
+  "answer": "Symphony No. 7",
+  "nodes": {
+    "1": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a70f1685542994082a3e40f:Violin Sonata No. 5 (Beethoven)",
+      "fact": "Violin Sonata No. 5 (Beethoven): The Violin Sonata No. 5 in F major, Opus 24, is a violin sonata by Ludwig van Beethoven.",
+      "subquestion": "Who composed Violin Sonata No. 5 in F major, Opus 24?",
+      "answer": "Ludwig van Beethoven"
+    },
+    "2": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a70f1685542994082a3e40f:Symphony No. 7 (Beethoven)",
+      "fact": "Symphony No. 7 (Beethoven): The Symphony No. 7 in A major, Op. 92, is a symphony in four movements composed by Ludwig van Beethoven between 1811 and 1812, while improving his health in the Bohemian spa town of Teplice. The work is dedicated to Count Moritz von Fries.",
+      "subquestion": "Which symphony by <NODE_1_ANSWER> was dedicated to Count Moritz von Fries?",
+      "answer": "Symphony No. 7"
+    }
+  },
+  "reasoning_chain": [
+    "Node 1: Who composed Violin Sonata No. 5 in F major, Opus 24? -> Ludwig van Beethoven",
+    "Node 2: Which symphony by <NODE_1_ANSWER> was dedicated to Count Moritz von Fries? -> Symphony No. 7",
+    "Final answer: Symphony No. 7"
+  ],
+  "datasets_used": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a70f1685542994082a3e40f:Violin Sonata No. 5 (Beethoven)",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a70f1685542994082a3e40f:Symphony No. 7 (Beethoven)"
+  ],
+  "reasoning_hops": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1
+      ],
+      "reasoning": "Node 1: Who composed Violin Sonata No. 5 in F major, Opus 24? -> Ludwig van Beethoven",
+      "answer": "Ludwig van Beethoven"
+    },
+    {
+      "hop": 2,
+      "node_ids": [
+        2
+      ],
+      "reasoning": "Node 2: Which symphony by <NODE_1_ANSWER> was dedicated to Count Moritz von Fries? -> Symphony No. 7",
+      "answer": "Symphony No. 7"
+    }
+  ],
+  "_provenance": {
+    "benchmark": "hotpotqa",
+    "split": "dev_distractor",
+    "source_id": "5a70f1685542994082a3e40f",
+    "type": "bridge",
+    "level": "hard",
+    "sample_source": "other-benchmarks/tasks/hotpotqa/k-2-d-2/task_3.json",
+    "transform_run_id": "2026-05-13T20:45:23Z",
+    "verified_at": "2026-05-13T20:45:23Z"
+  }
+}

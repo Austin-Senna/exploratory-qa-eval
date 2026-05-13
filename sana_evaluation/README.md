@@ -121,21 +121,20 @@ The `candidate_answer` line appears once a reflection has produced `potential_an
 
 ### `results` — `peek_file` profile enrichment
 
-**No system prompt block.** The information is documented in the wrapped `peek_file`'s docstring — the baseline tool's docstring does not mention profiles, the SANA wrapper's does.
+**No system prompt block.** The information is documented in the shared baseline `peek_file` docstring. Baseline `strands_evaluation` peek tools are profile-aware by default.
 
 **Tool wrapper** — `tools/peek_file_with_profile.py:peek_file`
 
-A `@tool`-decorated function whose body delegates to `_baseline_peek_file._tool_func(...)` and then attaches a `profile` field to the result when one can be loaded for the URI. The wrapper docstring tells the agent that `peek_file` returns column statistics, top rows, and an LLM-generated description.
+Compatibility `@tool`-decorated functions whose bodies delegate to the shared baseline peek tools. They remain for older imports, but SANA no longer swaps them into the active tool list.
 
-`SanaDataLakeAgent._decorate_tools` swaps the baseline `peek_file` for the SANA wrapper when `results=on` (identified by `tool_name == "peek_file"`).
+`SanaDataLakeAgent._decorate_tools` keeps the baseline `peek_file` and `peek_multiple` because they already attach raw profile rows when available.
 
-**Profile loader** — `helper/peek_profile.py:load_dataset_profile(s3_uri)`
+**Profile loader** — `strands_evaluation.helper.peek_profile:load_dataset_profile(s3_uri)`
 
-Two sources, in priority order:
-1. Precomputed profile rows from `data/datagov_tables_profiles.jsonl` — keyed by S3 URI or by `(slug, filename)` stems.
-2. Legacy fallback to the ideal-search wrapper's schema/description/snippet caches when no precomputed row is available.
+Single source:
+1. Precomputed raw profile rows from repo-root `datagov_tables_profiles.jsonl` — keyed by S3 URI or by `(slug, filename)` stems.
 
-Returns `None` softly if no profile can be assembled; `peek_file` then omits the field.
+Returns `None` softly if no profile row is available; `peek_file` then omits the field. Search-result ideal enrichment owns schema/snippet fallbacks separately.
 
 ---
 

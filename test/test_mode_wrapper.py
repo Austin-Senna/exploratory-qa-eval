@@ -63,14 +63,15 @@ class TestModeWrapper(unittest.TestCase):
         self.assertFalse(bundle.enable_stagnation)
         self.assertIn("search_value", bundle.search_tool_names)
 
-    def test_standard_search_includes_reranked(self):
+    def test_standard_search_includes_hybrid_rrf_value_search(self):
         cfg = RunConfig(
             search_tool_mode="standard",
             search_results_mode="naive",
             agent_management_mode="naive",
         )
         bundle = build_mode_bundle(cfg, data_tools=[])
-        self.assertIn("search_reranked", bundle.search_tool_names)
+        self.assertIn("search_value", bundle.search_tool_names)
+        self.assertNotIn("search_reranked", bundle.search_tool_names)
         self.assertNotIn("search_ideal", bundle.search_tool_names)
 
     def test_managed_naive_prompt_mentions_sparse_search_only(self):
@@ -81,12 +82,12 @@ class TestModeWrapper(unittest.TestCase):
         self.assertNotIn("search_reranked", prompt)
         self.assertNotIn("search_ideal", prompt)
 
-    def test_managed_standard_prompt_mentions_reranked_search(self):
+    def test_managed_standard_prompt_mentions_hybrid_rrf_search(self):
         prompt = compose_managed_prompt("standard")
-        self.assertIn("search_reranked", prompt)
+        self.assertIn("search_value", prompt)
         self.assertIn("search_schema", prompt)
         self.assertIn("search_prefix", prompt)
-        self.assertNotIn("search_value", prompt)
+        self.assertNotIn("search_reranked", prompt)
         self.assertNotIn("search_ideal", prompt)
 
     def test_managed_ideal_prompt_mentions_only_search_ideal(self):
@@ -113,11 +114,11 @@ class TestModeWrapper(unittest.TestCase):
             self.assertIn(expected, prompt)
             self.assertNotIn(old, prompt)
 
-    def test_baseline_prompt_mentions_reranked_search_in_standard_mode(self):
+    def test_baseline_prompt_mentions_hybrid_rrf_search_in_standard_mode(self):
         prompt = compose_baseline_prompt("standard")
-        self.assertIn("search_reranked", prompt)
+        self.assertIn("search_value", prompt)
         self.assertIn("search_schema", prompt)
-        self.assertNotIn("search_value", prompt)
+        self.assertNotIn("search_reranked", prompt)
         self.assertNotIn("search_ideal", prompt)
 
     def test_baseline_prompt_mentions_only_search_ideal_in_ideal_mode(self):
@@ -284,7 +285,8 @@ class TestModeWrapper(unittest.TestCase):
             agent_management_mode="standard",
         )
         bundle = build_mode_bundle(cfg, data_tools=[])
-        self.assertIn("search_reranked", bundle.system_prompt)
+        self.assertIn("search_value", bundle.system_prompt)
+        self.assertNotIn("search_reranked", bundle.system_prompt)
         self.assertNotIn("search_ideal", bundle.system_prompt)
 
     def test_standard_management_prompt_matches_ideal_search_tools(self):
@@ -318,7 +320,8 @@ class TestModeWrapper(unittest.TestCase):
             agent_management_mode="naive",
         )
         bundle = build_mode_bundle(cfg, data_tools=[])
-        self.assertIn("search_reranked", bundle.system_prompt)
+        self.assertIn("search_value", bundle.system_prompt)
+        self.assertNotIn("search_reranked", bundle.system_prompt)
         self.assertNotIn("search_ideal", bundle.system_prompt)
 
     def test_naive_management_prompt_matches_ideal_search_tools(self):

@@ -19,7 +19,7 @@
     },
     "3": {
       "source": "datagov/500-cities-local-data-for-better-health-2016-release/files/rows.txt",
-      "fact": "In the 500-Cities 2016 health data release, the binge drinking prevalence (city-level, crude) was: Chicago 20.1% and Los Angeles 15.9%. Chicago had higher binge drinking prevalence.",
+      "fact": "import io\nimport csv\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/500-cities-local-data-for-better-health-2016-release/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ntext = obj[\"Body\"].read().decode(\"utf-8\", errors=\"replace\").splitlines()\nreader = csv.DictReader(text)\nanswer = {}\nfor row in reader:\n    if (\n        row[\"Short_Question_Text\"] == \"Binge Drinking\"\n        and row[\"GeographicLevel\"] == \"City\"\n        and row[\"DataValueTypeID\"] == \"CrdPrv\"\n        and row[\"CityName\"] in {\"Chicago\", \"Los Angeles\"}\n    ):\n        answer[row[\"CityName\"]] = float(row[\"Data_Value\"])\nprint(answer)",
       "subquestion": "Which terminus city (from <node_2 answer>) had higher average binge drinking prevalence across the 2016 and 2018 500-Cities health releases? (Filter for this node: Short_Question_Text == 'Binge Drinking'; GeographicLevel == 'City'; Data_Value_Type == 'Crude prevalence'; CityName in {Chicago, Los Angeles}; use Data_Value.)",
       "answer": {
         "Chicago": 20.1,
@@ -28,7 +28,7 @@
     },
     "4": {
       "source": "datagov/500-cities-local-data-for-better-health-2018-release/files/rows.txt",
-      "fact": "In the 500-Cities 2018 health data release, the binge drinking prevalence (city-level, crude) was: Chicago 21.5% and Los Angeles 16.7%. Chicago had higher binge drinking prevalence.",
+      "fact": "import io\nimport csv\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/500-cities-local-data-for-better-health-2018-release/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ntext = obj[\"Body\"].read().decode(\"utf-8\", errors=\"replace\").splitlines()\nreader = csv.DictReader(text)\nanswer = {}\nfor row in reader:\n    if (\n        row[\"Short_Question_Text\"] == \"Binge Drinking\"\n        and row[\"GeographicLevel\"] == \"City\"\n        and row[\"DataValueTypeID\"] == \"CrdPrv\"\n        and row[\"CityName\"] in {\"Chicago\", \"Los Angeles\"}\n    ):\n        answer[row[\"CityName\"]] = float(row[\"Data_Value\"])\nprint(answer)",
       "subquestion": "Which terminus city (from <node_2 answer>) had higher average binge drinking prevalence across the 2016 and 2018 500-Cities health releases? (Filter for this node: Short_Question_Text == 'Binge Drinking'; GeographicLevel == 'City'; Data_Value_Type == 'Crude prevalence'; CityName in {Chicago, Los Angeles}; use Data_Value.)",
       "answer": {
         "Chicago": 21.5,
@@ -37,7 +37,7 @@
     },
     "5": {
       "source": "datagov/employee-overtime-and-supplemental-earnings-2014/files/rows.txt",
-      "fact": "In the 2014 Chicago Employee Overtime data, the top departments by total overtime were: Police ($101,460,132.24), Fire ($63,941,565.36), Water Management ($23,507,061.70), Streets and Sanitation ($15,393,693.24), and Aviation ($13,147,383.40). Fire had the 2nd highest.",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/employee-overtime-and-supplemental-earnings-2014/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\ndf[\"TOTAL\"] = pd.to_numeric(df[\"TOTAL\"], errors=\"coerce\")\nanswer = (df.groupby(\"DEPARTMENT NAME\")[\"TOTAL\"].sum().sort_values(ascending=False).head(3).to_dict())\nprint(answer)",
       "subquestion": "Which city department had the 2nd highest total overtime from 2014-2017 in the city identified from the binge drinking comparison? (Filter for this node: group by DEPARTMENT NAME; sum TOTAL; rank by total; keep top departments.)",
       "answer": {
         "Police": 101460132.24,
@@ -47,7 +47,7 @@
     },
     "6": {
       "source": "datagov/employee-overtime-and-supplemental-earnings-2015/files/rows.txt",
-      "fact": "In the 2015 Chicago Employee Overtime data, the top departments by total overtime were: Police ($116,144,553.32), Fire ($43,847,384.30), Water Management ($19,954,056.68), Streets and Sanitation ($16,582,331.52). Fire had the 2nd highest.",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/employee-overtime-and-supplemental-earnings-2015/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\ndf[\"TOTAL\"] = pd.to_numeric(df[\"TOTAL\"], errors=\"coerce\")\nanswer = (df.groupby(\"DEPARTMENT NAME\")[\"TOTAL\"].sum().sort_values(ascending=False).head(3).to_dict())\nprint(answer)",
       "subquestion": "Which city department had the 2nd highest total overtime from 2014-2017 in the city identified from the binge drinking comparison? (Filter for this node: group by DEPARTMENT NAME; sum TOTAL; rank by total; keep top departments.)",
       "answer": {
         "Police": 116144553.32,
@@ -57,7 +57,7 @@
     },
     "7": {
       "source": "datagov/employee-overtime-and-supplemental-earnings-2016/files/rows.txt",
-      "fact": "In the 2016 Chicago Employee Overtime data, the top departments by total overtime were: Police ($143,032,724.45), Fire ($50,604,010.67), Water Management ($21,335,912.52), Streets and Sanitation ($13,836,742.94). Fire had the 2nd highest.",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/employee-overtime-and-supplemental-earnings-2016/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\ndf[\"TOTAL\"] = pd.to_numeric(df[\"TOTAL\"], errors=\"coerce\")\nanswer = (df.groupby(\"DEPARTMENT NAME\")[\"TOTAL\"].sum().sort_values(ascending=False).head(3).to_dict())\nprint(answer)",
       "subquestion": "Which city department had the 2nd highest total overtime from 2014-2017 in the city identified from the binge drinking comparison? (Filter for this node: group by DEPARTMENT NAME; sum TOTAL; rank by total; keep top departments.)",
       "answer": {
         "Police": 143032724.45,
@@ -67,7 +67,7 @@
     },
     "8": {
       "source": "datagov/employee-overtime-and-supplemental-earnings-2017/files/rows.txt",
-      "fact": "In the 2017 Chicago Employee Overtime data, the top departments by total overtime were: Police ($156,732,988), Fire ($49,571,354), Water Management ($20,049,910), Aviation ($14,884,756). Fire had the 2nd highest. Fire was consistently 2nd across all 4 years (2014-2017).",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/employee-overtime-and-supplemental-earnings-2017/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\ndf[\"TOTAL\"] = pd.to_numeric(df[\"TOTAL\"], errors=\"coerce\")\nanswer = (df.groupby(\"DEPARTMENT NAME\")[\"TOTAL\"].sum().sort_values(ascending=False).head(3).to_dict())\nprint(answer)",
       "subquestion": "Which city department had the 2nd highest total overtime from 2014-2017 in the city identified from the binge drinking comparison? (Filter for this node: group by DEPARTMENT NAME; sum TOTAL; rank by total; keep top departments.)",
       "answer": {
         "Police": 156732988,

@@ -4,7 +4,7 @@
   "nodes": {
     "1": {
       "source": "datagov/chicago-public-schools-progress-report-cards-2011-2012/files/rows.txt",
-      "fact": "In the 2011-2012 CPS Progress Report Cards, there are 127 elementary schools with CPS Performance Policy Level \"Level 1\"; among them are Cleveland (609857), Hawthorne (609974), Poe (610132), Reinberg (610145), and 123 others.",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/chicago-public-schools-progress-report-cards-2011-2012/files/rows.txt'\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\nmask = df['CPS Performance Policy Level'].isin(['Level 1'])\nmask = mask & (df['Elementary, Middle, or High School'] == 'ES')\nfiltered = df[mask].copy()\nassert len(filtered) == 127\nlookup = dict(zip(filtered['School Name'].astype(str), filtered['School ID'].astype(str)))\nanswer = {\n    \"Cleveland\": lookup[\"Cleveland\"],\n    \"Hawthorne\": lookup[\"Hawthorne\"],\n    \"Poe\": lookup[\"Poe\"],\n    \"Reinberg\": lookup[\"Reinberg\"],\n    'and 123 others': \"...\",\n}\n",
       "subquestion": "Which elementary schools had CPS Performance Policy Level \"Level 1\" in the 2011-2012 CPS Progress Report Cards?",
       "answer": {
         "Cleveland": "609857",
@@ -16,7 +16,7 @@
     },
     "2": {
       "source": "datagov/chicago-public-schools-elementary-school-progress-report-card-2012-2013/files/rows.txt",
-      "fact": "In the 2012-2013 CPS elementary progress report card, there are 230 schools with Growth Overall Level \"Above Average\"; among them are Cleveland (609857), Hawthorne (609974), Poe (610132), Reinberg (610145), and 226 others.",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/chicago-public-schools-elementary-school-progress-report-card-2012-2013/files/rows.txt'\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\nmask = df['Growth Overall Level'].isin(['Above Average'])\nfiltered = df[mask].copy()\nassert len(filtered) == 230\nlookup = dict(zip(filtered['Short Name'].astype(str), filtered['School ID'].astype(str)))\nanswer = {\n    \"Cleveland\": lookup[\"Cleveland\"],\n    \"Hawthorne\": lookup[\"Hawthorne\"],\n    \"Poe\": lookup[\"Poe\"],\n    \"Reinberg\": lookup[\"Reinberg\"],\n    'and 226 others': \"...\",\n}\n",
       "subquestion": "Which schools in the 2012-2013 CPS elementary progress report card have Growth Overall Level \"Above Average\"?",
       "answer": {
         "Cleveland": "609857",
@@ -28,7 +28,7 @@
     },
     "3": {
       "source": "datagov/chicago-public-schools-elementary-school-progress-report-2013-2014/files/rows.txt",
-      "fact": "In the 2013-2014 CPS elementary progress report, there are 42 schools with My Voice, My School Overall Rating \"MODERATELY ORGANIZED\"; among them are Cleveland (609857), Hawthorne (609974), Poe (610132), Reinberg (610145), and 38 others.",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/chicago-public-schools-elementary-school-progress-report-2013-2014/files/rows.txt'\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\nmask = df['My Voice, My School Overall Rating'].isin(['MODERATELY ORGANIZED'])\nfiltered = df[mask].copy()\nassert len(filtered) == 42\nlookup = dict(zip(filtered['Short Name'].astype(str), filtered['School ID'].astype(str)))\nanswer = {\n    \"Cleveland\": lookup[\"Cleveland\"],\n    \"Hawthorne\": lookup[\"Hawthorne\"],\n    \"Poe\": lookup[\"Poe\"],\n    \"Reinberg\": lookup[\"Reinberg\"],\n    'and 38 others': \"...\",\n}\n",
       "subquestion": "Which schools in the 2013-2014 CPS elementary progress report have My Voice, My School Overall Rating \"MODERATELY ORGANIZED\"?",
       "answer": {
         "Cleveland": "609857",
@@ -40,7 +40,7 @@
     },
     "4": {
       "source": "datagov/chicago-public-schools-school-progress-reports-sy1718/files/rows.txt",
-      "fact": "In school year 2017-18, there are 299 Chicago Public Schools with Student_Growth_Rating \"ABOVE AVERAGE\" or \"FAR ABOVE AVERAGE\"; among them are Cleveland (609857), Hawthorne (609974), Poe (610132), Reinberg (610145), and 295 others.",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/chicago-public-schools-school-progress-reports-sy1718/files/rows.txt'\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\nmask = df['Student_Growth_Rating'].isin(['ABOVE AVERAGE', 'FAR ABOVE AVERAGE'])\nfiltered = df[mask].copy()\nassert len(filtered) == 299\nlookup = dict(zip(filtered['Short_Name'].astype(str), filtered['School_ID'].astype(str)))\nanswer = {\n    \"Cleveland\": lookup[\"Cleveland\"],\n    \"Hawthorne\": lookup[\"Hawthorne\"],\n    \"Poe\": lookup[\"Poe\"],\n    \"Reinberg\": lookup[\"Reinberg\"],\n    'and 295 others': \"...\",\n}\n",
       "subquestion": "Which Chicago Public Schools had Student_Growth_Rating \"ABOVE AVERAGE\" or \"FAR ABOVE AVERAGE\" in school year 2017-18?",
       "answer": {
         "Cleveland": "609857",
@@ -52,7 +52,7 @@
     },
     "5": {
       "source": "datagov/chicago-public-schools-school-locations-sy1516/files/rows.txt",
-      "fact": "In CPS School Locations SY2015-16, the four schools are in these community areas: Cleveland (609857) in Irving Park, Hawthorne (609974) in Lake View, Poe (610132) in Pullman, and Reinberg (610145) in Portage Park.",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/chicago-public-schools-school-locations-sy1516/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\nschool_ids = [609857, 609974, 610132, 610145]\nmask = df[\"School_ID\"].isin(school_ids)\nname_map = {\"CLEVELAND\": \"Cleveland\", \"HAWTHORNE\": \"Hawthorne\", \"POE\": \"Poe\", \"REINBERG\": \"Reinberg\"}\narea_map = {\n    row[\"Short_Name\"]: str(row[\"Community_Area_Name\"]).title()\n    for _, row in df.loc[mask].iterrows()\n}\nanswer = {name_map[name]: area_map[name] for name in [\"CLEVELAND\", \"HAWTHORNE\", \"POE\", \"REINBERG\"]}\n",
       "subquestion": "In which community areas are the schools that meet all four progress-report criteria located, according to CPS School Locations SY2015-16?",
       "answer": {
         "Cleveland": "Irving Park",
@@ -63,7 +63,7 @@
     },
     "6": {
       "source": "datagov/census-data-selected-socioeconomic-indicators-in-chicago-2008-2012/files/rows.txt",
-      "fact": "According to the Chicago Census Data (2008-2012), the per capita income for the community areas containing the four schools are: Irving Park $27,249, Lake View $60,058, Portage Park $24,336, and Pullman $20,588. Only Lake View is above $50,000.",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/census-data-selected-socioeconomic-indicators-in-chicago-2008-2012/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\ncommunity_areas = [\"Irving Park\", \"Lake View\", \"Pullman\", \"Portage Park\"]\nmask = (\n    df[\"COMMUNITY AREA NAME\"].isin(community_areas)\n    & (df[\"PER CAPITA INCOME \"] > 50000)\n)\n\nanswer = dict(\n    zip(\n        df.loc[mask, \"COMMUNITY AREA NAME\"],\n        df.loc[mask, \"PER CAPITA INCOME \"].map(lambda x: f\"${x:,.0f}\")\n    )\n)\nprint(answer)",
       "subquestion": "Which of those community areas has per capita income above $50,000?",
       "answer": {
         "Lake View": "$60,058"

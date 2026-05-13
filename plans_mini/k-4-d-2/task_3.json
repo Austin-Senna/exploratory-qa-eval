@@ -42,5 +42,41 @@
     "  Computation: Increase = 8,701 - 7,871 = 830",
     "",
     "Final answer: 830"
+  ],
+  "ideal_code": [
+    {
+      "node_id": "5",
+      "dataset_id": "fy-2020-disability-compensation-recipients-by-county",
+      "source": "datagov/fy-2020-disability-compensation-recipients-by-county/files/rows.txt",
+      "intent": "How many VA disability compensation recipients were in <county from node 4: Sedgwick County, Kansas> in FY 2020?",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/fy-2020-disability-compensation-recipients-by-county/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\nanswer = int(df.loc[(df[\"State\"] == \"Kansas\") & (df[\"County Name\"] == \"Sedgwick\"), \"Total: Disability Compensation Recipients\"].iloc[0])\nanswer = str(answer)",
+      "answer": "7871"
+    },
+    {
+      "node_id": "6",
+      "dataset_id": "fy-2023-disability-compensation-recipients-by-county",
+      "source": "datagov/fy-2023-disability-compensation-recipients-by-county/files/rows.txt",
+      "intent": "How many VA disability compensation recipients were in <county from node 4: Sedgwick County, Kansas> in FY 2023?",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/fy-2023-disability-compensation-recipients-by-county/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\nanswer = int(df.loc[(df[\"State\"] == \"Kansas\") & (df[\"County Name\"] == \"Sedgwick\"), \"Total: Disability Compensation Recipients\"].iloc[0])\nanswer = str(answer)",
+      "answer": "8701"
+    }
+  ],
+  "ideal_query": [
+    {
+      "node_id": "5",
+      "dataset_id": "fy-2020-disability-compensation-recipients-by-county",
+      "source": "datagov/fy-2020-disability-compensation-recipients-by-county/files/rows.txt",
+      "intent": "How many VA disability compensation recipients were in <county from node 4: Sedgwick County, Kansas> in FY 2020?",
+      "sql": "SELECT CAST(\"Total: Disability Compensation Recipients\" AS INTEGER) AS answer\nFROM t\nWHERE State = 'Kansas' AND \"County Name\" = 'Sedgwick'\nLIMIT 1",
+      "answer": "7871"
+    },
+    {
+      "node_id": "6",
+      "dataset_id": "fy-2023-disability-compensation-recipients-by-county",
+      "source": "datagov/fy-2023-disability-compensation-recipients-by-county/files/rows.txt",
+      "intent": "How many VA disability compensation recipients were in <county from node 4: Sedgwick County, Kansas> in FY 2023?",
+      "sql": "SELECT CAST(\"Total: Disability Compensation Recipients\" AS INTEGER) AS answer\nFROM t\nWHERE State = 'Kansas' AND \"County Name\" = 'Sedgwick'\nLIMIT 1",
+      "answer": "8701"
+    }
   ]
 }

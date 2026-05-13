@@ -4,7 +4,7 @@
   "nodes": {
     "1": {
       "source": "datagov/500-cities-local-data-for-better-health-2016-release/files/rows.txt",
-      "fact": "According to the 2016 500 Cities health data, the top 3 cities by age-adjusted adult obesity prevalence were: Dayton (47.2%), Gary (46.9%), and Detroit (45.2%).",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/500-cities-local-data-for-better-health-2016-release/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\ncity_obesity = (\n    df[\n        (df[\"GeographicLevel\"] == \"City\")\n        & (df[\"Measure\"] == \"Obesity among adults aged >=18 Years\")\n        & (df[\"Data_Value_Type\"] == \"Age-adjusted prevalence\")\n    ][[\"CityName\", \"StateDesc\", \"Data_Value\"]]\n    .dropna(subset=[\"Data_Value\"])\n    .sort_values([\"Data_Value\", \"CityName\", \"StateDesc\"], ascending=[False, True, True])\n    .reset_index(drop=True)\n)\n\ntop_ranked = city_obesity.head(3)\nanswer = dict(zip(top_ranked[\"CityName\"], top_ranked[\"Data_Value\"]))",
       "subquestion": "What is the US city with the highest average age-adjusted adult obesity rate (2016-2018)? (Filter for this node: GeographicLevel == City; Measure == \"Obesity among adults aged >=18 Years\"; Data_Value_Type == \"Age-adjusted prevalence\"; rank by Data_Value; keep top 3.)",
       "answer": {
         "Dayton": 47.2,
@@ -14,7 +14,7 @@
     },
     "2": {
       "source": "datagov/500-cities-local-data-for-better-health-2018-release/files/rows.txt",
-      "fact": "According to the 2018 500 Cities health data, the top 3 cities by age-adjusted adult obesity prevalence were: Gary (49.0%), Detroit (47.4%), and Flint (45.4%). Dayton dropped to 43.5%.",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/500-cities-local-data-for-better-health-2018-release/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\ncity_obesity = (\n    df[\n        (df[\"GeographicLevel\"] == \"City\")\n        & (df[\"Measure\"] == \"Obesity among adults aged >=18 Years\")\n        & (df[\"Data_Value_Type\"] == \"Age-adjusted prevalence\")\n        & (df[\"CityName\"].isin([\"Gary\", \"Detroit\", \"Dayton\"]))\n    ][[\"CityName\", \"StateDesc\", \"Data_Value\"]]\n    .dropna(subset=[\"Data_Value\"])\n    .sort_values([\"CityName\", \"StateDesc\"])\n    .reset_index(drop=True)\n)\n\nanswer = dict(zip(city_obesity[\"CityName\"], city_obesity[\"Data_Value\"]))",
       "subquestion": "What is the US city with the highest average age-adjusted adult obesity rate (2016-2018)? (Filter for this node: GeographicLevel == City; Measure == \"Obesity among adults aged >=18 Years\"; Data_Value_Type == \"Age-adjusted prevalence\"; rank by Data_Value; keep top 3.)",
       "answer": {
         "Gary": 49.0,

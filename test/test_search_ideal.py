@@ -385,6 +385,33 @@ class TestSearchIdealJudge(unittest.TestCase):
             prompt,
         )
 
+    def test_judge_prompt_includes_merged_tasks_mini_descriptions(self):
+        with TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            uri = "s3://lakeqa-yc4103-datalake/datagov/chicago-crime-2017/files/rows.txt"
+            desc_path = root / "table_descriptions.jsonl"
+            desc_path.write_text(
+                json.dumps(
+                    {
+                        "dataset_uri": uri,
+                        "description": "Merged task mini description for Chicago crime 2017.",
+                    }
+                )
+                + "\n"
+            )
+
+            with ExitStack() as stack:
+                stack.enter_context(patch.object(search_wrapper, "_TABLE_DESCRIPTIONS_PATH", desc_path))
+                prompt = search_ideal._format_judge_prompt(
+                    "crime data",
+                    [(uri, "chicago-crime-2017")],
+                )
+
+        self.assertIn(
+            "description=Merged task mini description for Chicago crime 2017.",
+            prompt,
+        )
+
     def test_judge_system_prompt_guides_subset_retrieval_without_domain_specific_examples(self):
         prompt = search_ideal._JUDGE_SYSTEM_PROMPT
 

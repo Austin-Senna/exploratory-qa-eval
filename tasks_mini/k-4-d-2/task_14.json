@@ -4,7 +4,7 @@
   "nodes": {
     "1": {
       "source": "datagov/budget-2018-budget-ordinance-appropriations/files/rows.txt",
-      "fact": "In the 2018 Chicago Budget Ordinance totals by department, CFD ($642,620,615) and CDOT ($459,129,158) are the only departments with total appropriations between $400 million and $700 million.",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/budget-2018-budget-ordinance-appropriations/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\namount_col = \"2018 ORDINANCE (AMOUNT $)\"\nresult = (\n    df.groupby(\"DEPARTMENT DESCRIPTION\", dropna=False)[amount_col]\n    .sum()\n    .loc[lambda s: (s >= 400000000) & (s <= 700000000)]\n    .sort_values(ascending=False)\n)\nanswer = result.round().astype(int).to_dict()\nprint(answer)",
       "subquestion": "Which Chicago city department had a budget between $400 million and $700 million in 2018 AND between $600 million and $700 million in 2019? (Filter for this node: group by DEPARTMENT DESCRIPTION; sum 2018 ORDINANCE (AMOUNT $); keep totals between 400000000 and 700000000.)",
       "answer": {
         "CFD": 642620615,
@@ -13,7 +13,7 @@
     },
     "2": {
       "source": "datagov/budget-2019-budget-ordinance-appropriations/files/rows.txt",
-      "fact": "In the 2019 Chicago Budget Ordinance totals by department, CFD ($652,282,316) and DFSS ($633,571,744) are the only departments with total appropriations between $600 million and $700 million.",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/budget-2019-budget-ordinance-appropriations/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\namount_col = \"2019 ORDINANCE (AMOUNT $)\"\nresult = (\n    df.groupby(\"DEPARTMENT DESCRIPTION\", dropna=False)[amount_col]\n    .sum()\n    .loc[lambda s: (s >= 600000000) & (s <= 700000000)]\n    .sort_values(ascending=False)\n)\nanswer = result.round().astype(int).to_dict()\nprint(answer)",
       "subquestion": "Which Chicago city department had a budget between $400 million and $700 million in 2018 AND between $600 million and $700 million in 2019? (Filter for this node: group by DEPARTMENT DESCRIPTION; sum 2019 ORDINANCE (AMOUNT $); keep totals between 600000000 and 700000000.)",
       "answer": {
         "CFD": 652282316,
@@ -40,7 +40,7 @@
     },
     "6": {
       "source": "datagov/pittsburgh-international-airport-scheduled-passenger-traffic/files/pittsburgh-international-traffic-report-march-2019.txt",
-      "fact": "In the March 2019 Pittsburgh International scheduled traffic report, Atlanta (ATL) has 44,912 total seats, the highest of any destination (next highest is Chicago O'Hare with 35,699).",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/pittsburgh-international-airport-scheduled-passenger-traffic/files/pittsburgh-international-traffic-report-march-2019.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\nanswer = str(int(df.groupby(\"Destination Code\", dropna=False)[\"Seats March 2019\"].sum().max()))",
       "subquestion": "For the airport identified in hop 3 (from hop 3), how many total scheduled seats did the top destination have in March 2019? (Filter for this node: group by Destination Code; sum Seats March 2019; select max; return seats.)",
       "answer": "44912"
     }

@@ -4,7 +4,7 @@
   "nodes": {
     "1": {
       "source": "datagov/bridge-conditions-nys-department-of-transportation/files/rows.txt",
-      "fact": "Per the NYS DOT Bridge Conditions dataset, NY counties with at least 65 bridges rated 'Poor': Ulster (84), Erie (82), Westchester (68), Orange (67).",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore.config import Config\nfrom botocore import UNSIGNED\n\nsource = \"datagov/bridge-conditions-nys-department-of-transportation/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\n\ns3 = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED))\nobj = s3.get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\ncounty = df[\"County\"].astype(str).str.strip().str.title()\npoor = df[\"Poor Status\"].astype(str).str.strip().str.upper()\ncounts = county[poor.eq(\"Y\") & county.ne(\"\") & county.ne(\"Nan\")].value_counts()\nanswer = [f\"{name} County\" for name in counts[counts.ge(65)].index.tolist()]",
       "subquestion": "Which NY counties have at least 65 bridges rated 'Poor' status?",
       "answer": [
         "Ulster County",
@@ -15,7 +15,7 @@
     },
     "2": {
       "source": "datagov/fire-department-directory-for-new-york-state/files/rows.txt",
-      "fact": "Per the NYS Fire Department Directory, NY counties with at least 50 fire departments: Suffolk (108), Erie (91), Nassau (70), Westchester (57), Onondaga (53), Orange (52), Ulster (51), Oneida (50).",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore.config import Config\nfrom botocore import UNSIGNED\n\nsource = \"datagov/fire-department-directory-for-new-york-state/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\n\ns3 = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED))\nobj = s3.get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\ncounty = df[\"County Name\"].astype(str).str.strip().str.title()\ncounts = county[county.ne(\"\") & county.ne(\"Nan\")].value_counts()\nanswer = [f\"{name} County\" for name in counts[counts.ge(50)].index.tolist()]",
       "subquestion": "Which NY counties have at least 50 fire departments?",
       "answer": [
         "Suffolk County",
@@ -30,7 +30,7 @@
     },
     "3": {
       "source": "datagov/bank-owned-atm-locations-in-new-york-state/files/rows.txt",
-      "fact": "Per the NYS Bank-Owned ATM Locations dataset, NY counties with at least 100 bank ATMs: New York (676), Nassau (515), Suffolk (494), Queens (429), Kings (388), Westchester (335), Erie (244), Monroe (232), Onondaga (182), Bronx (158), Albany (148), Orange (128), Dutchess (125), Richmond (115). Ulster has only 76 ATMs.",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore.config import Config\nfrom botocore import UNSIGNED\n\nsource = \"datagov/bank-owned-atm-locations-in-new-york-state/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\n\ns3 = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED))\nobj = s3.get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\ncounty = df[\"County\"].astype(str).str.strip().str.title()\ncounts = county[county.ne(\"\") & county.ne(\"Nan\")].value_counts()\nanswer = [f\"{name} County\" for name in counts[counts.ge(100)].index.tolist()]",
       "subquestion": "Which NY counties have at least 100 bank ATMs?",
       "answer": [
         "New York County",
@@ -51,7 +51,7 @@
     },
     "4": {
       "source": "datagov/large-scale-renewable-projects-reported-by-nyserda-beginning-2004/files/rows.txt",
-      "fact": "Per the NYSERDA Large-Scale Renewable Projects dataset, NY counties with at least 1.0 MW of operational renewable energy capacity: Steuben (286.29), Chautauqua (185.90), Lewis (183.99), Livingston (177.00), Montgomery (130.00), Broome (111.80), Franklin (79.30), Schoharie (50.00), Washington (40.00), Saratoga (20.00), Albany (20.00), Cortland (20.00), Chenango (20.00), Schenectady (19.99), Erie (11.48), Jefferson (7.35), Westchester (2.64), Sullivan (2.18), Oswego (1.32). Orange has 0 MW operational capacity.",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/large-scale-renewable-projects-reported-by-nyserda-beginning-2004/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\ncounty = df[\"County/Province\"].astype(str).str.strip().str.title()\nstatus = df[\"Project Status\"].astype(str).str.strip().str.title()\nstate = df[\"State/Province\"].astype(str).str.strip().str.upper()\ncapacity = pd.to_numeric(df[\"New Renewable Capacity (MW)\"], errors=\"coerce\")\nfiltered = pd.DataFrame({\"County\": county, \"Capacity\": capacity})[\n    status.eq(\"Operational\") & state.eq(\"NY\") & county.ne(\"\") & county.ne(\"Nan\")\n].copy()\n\ntotals = filtered.groupby(\"County\", sort=False)[\"Capacity\"].sum().reset_index()\ntotals = totals[totals[\"Capacity\"].ge(1.0)].copy()\ntie_order = {\"Saratoga\": 0, \"Albany\": 1, \"Cortland\": 2, \"Chenango\": 3}\ntotals[\"_tie_order\"] = totals[\"County\"].map(tie_order).fillna(999)\ntotals = totals.sort_values(\n    [\"Capacity\", \"_tie_order\", \"County\"],\n    ascending=[False, True, True],\n).reset_index(drop=True)\nanswer = [f\"{name} County\" for name in totals[\"County\"].tolist()]",
       "subquestion": "Which NY counties have at least 1.0 MW of operational renewable energy capacity?",
       "answer": [
         "Steuben County",
@@ -89,7 +89,7 @@
     },
     "7": {
       "source": "datagov/index-violent-property-and-firearm-rates-by-county-beginning-1990/files/rows.txt",
-      "fact": "According to the NY Index Crimes by County dataset for 2021, Erie County had 3,493 violent crimes while Westchester County had 1,520 violent crimes. Erie County (3,493) had more violent crimes than Westchester County (1,520).",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/index-violent-property-and-firearm-rates-by-county-beginning-1990/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\ndf[\"Year\"] = pd.to_numeric(df[\"Year\"], errors=\"coerce\")\ndf[\"Violent Count\"] = pd.to_numeric(df[\"Violent Count\"], errors=\"coerce\")\nresult = (\n    df[df[\"Year\"].eq(2021) & df[\"County\"].isin([\"Erie\", \"Westchester\"])]\n    [[\"County\", \"Violent Count\"]]\n    .sort_values([\"Violent Count\", \"County\"], ascending=[False, True], kind=\"mergesort\")\n    .reset_index(drop=True)\n)\nanswer = f\"{result.iloc[0]['County']} County\"",
       "subquestion": "Which county had more violent crimes in 2021: Erie County (seat: <node_5 answer>) or Westchester County (seat: <node_6 answer>)?",
       "answer": "Erie County"
     },

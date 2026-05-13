@@ -59,6 +59,12 @@ class BuildTaskFileManifestTests(unittest.TestCase):
         with self._output_path.open() as f:
             return [json.loads(line) for line in f if line.strip()]
 
+    def test_cli_defaults_target_tasks_mini_artifact(self):
+        args = manifest_builder._parse_args([])
+
+        self.assertEqual(args.task_root, "tasks_mini")
+        self.assertEqual(args.output, "tasks_mini_file_manifest.jsonl")
+
     def test_build_manifest_expands_dataset_ids_to_files(self):
         fake_s3 = FakeS3Client(
             {

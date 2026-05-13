@@ -4,31 +4,31 @@
   "nodes": {
     "1": {
       "source": "datagov/crime-data-from-2010-to-2019/files/rows.txt",
-      "fact": "Filter to rows where Crm Cd Desc = 'BATTERY - SIMPLE ASSAULT' and group by DATE OCC year; the year with the most incidents is 2016 (46,258; no tie observed). This identifies the peak year within the specified range.",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/crime-data-from-2010-to-2019/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\ndf[\"DATE OCC\"] = pd.to_datetime(df[\"DATE OCC\"], errors=\"coerce\")\nanswer = (\n    df.loc[df[\"Crm Cd Desc\"] == \"BATTERY - SIMPLE ASSAULT\"]\n      .assign(year=df[\"DATE OCC\"].dt.year)\n      .loc[lambda x: x[\"year\"].between(2010, 2019, inclusive=\"both\")]\n      .groupby(\"year\")\n      .size()\n      .sort_values(ascending=False)\n      .index[0]\n)\nanswer = int(answer)\nanswer = str(answer)",
       "subquestion": "From 2010 to 2019, which year has the most Los Angeles incidents with crime description \"BATTERY - SIMPLE ASSAULT\"?",
       "answer": "2016"
     },
     "2": {
       "source": "datagov/arrest-data-from-2010-to-2019/files/rows.txt",
-      "fact": "Filter to Arrest Date year = <node_1 answer> and Charge Group Description = \"Miscellaneous Other Violations\". Group by Area Name and count arrests; Central has the highest count (2,434; no tie observed within scope).",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/arrest-data-from-2010-to-2019/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\ndf[\"Arrest Date\"] = pd.to_datetime(df[\"Arrest Date\"], errors=\"coerce\")\nanswer = (\n    df.assign(year=df[\"Arrest Date\"].dt.year)\n      .loc[\n          lambda x: (x[\"year\"] == 2016)\n          & (x[\"Charge Group Description\"] == \"Miscellaneous Other Violations\")\n      ]\n      .groupby(\"Area Name\")\n      .size()\n      .sort_values(ascending=False)\n      .index[0]\n)",
       "subquestion": "In <node_1 answer> Los Angeles arrest records, which area has the most arrests in the charge group \"Miscellaneous Other Violations\"?",
       "answer": "Central"
     },
     "3": {
       "source": "datagov/lapd-ripa-ab-953-stop-incident-details-from-7-1-2018-to-present/files/rows.txt",
-      "fact": "Filter to rows where Area Name = Central; the corresponding Area ID is 1 (values appear as 1/01 in this file). This maps the area name to its numeric ID.",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/lapd-ripa-ab-953-stop-incident-details-from-7-1-2018-to-present/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\narea_id_value = (\n    df.loc[df[\"Area Name\"] == \"Central\", \"Area ID\"]\n      .dropna()\n      .iloc[0]\n)\nanswer = int(str(area_id_value).split(\"/\")[0])\nanswer = str(answer)",
       "subquestion": "Using LAPD stop-incident records collected under California's RIPA program, what numeric Area ID corresponds to area name <node_2 answer> (answer as an integer)?",
       "answer": "1"
     },
     "4": {
       "source": "datagov/crime-data-from-2010-to-2019/files/rows.txt",
-      "fact": "Filter to rows where Crm Cd Desc = 'BATTERY - SIMPLE ASSAULT'; the corresponding crime code is 624 (unique mapping in this file). This maps the description to its code.",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/crime-data-from-2010-to-2019/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\nanswer = (\n    df.loc[df[\"Crm Cd Desc\"] == \"BATTERY - SIMPLE ASSAULT\", \"Crm Cd\"]\n      .dropna()\n      .iloc[0]\n)\nanswer = int(answer)\nanswer = str(answer)",
       "subquestion": "In Los Angeles crime records, what crime code corresponds to the crime description \"BATTERY - SIMPLE ASSAULT\"? Answer with the crime code only.",
       "answer": "624"
     },
     "5": {
       "source": "datagov/crime-data-from-2020-to-present/files/rows.txt",
-      "fact": "Filter to year 2020 (from DATE OCC), Area = <node_3 answer>, and Crm Cd = <node_4 answer>. The incident count is 1350.",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/crime-data-from-2020-to-present/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\ndf[\"DATE OCC\"] = pd.to_datetime(df[\"DATE OCC\"], errors=\"coerce\")\nanswer = int(\n    df.assign(year=df[\"DATE OCC\"].dt.year)\n      .loc[\n          lambda x: (x[\"year\"] == 2020)\n          & (x[\"AREA\"] == 1)\n          & (x[\"Crm Cd\"] == 624)\n      ]\n      .shape[0]\n)\nanswer = str(answer)",
       "subquestion": "Using the 2020 to present Los Angeles crime records, in 2020 how many incidents with crime code <node_4 answer> occurred in Area ID <node_3 answer>?",
       "answer": "1350"
     }

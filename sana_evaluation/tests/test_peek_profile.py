@@ -1,8 +1,4 @@
-"""Tests for sana_evaluation.helper.peek_profile.load_dataset_profile.
-
-Patches the module's path constants and the ideal-search wrapper's caches to
-exercise the precomputed-profile path and the legacy fallback path.
-"""
+"""Tests for the shared dataset-profile loader and SANA compatibility wrappers."""
 
 from __future__ import annotations
 
@@ -11,13 +7,13 @@ import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-import sana_evaluation.helper.peek_profile as peek_profile
-from strands_evaluation.tools.external.ideal import search_wrapper
+import sana_evaluation.helper.peek_profile as sana_peek_profile
+import strands_evaluation.helper.peek_profile as peek_profile
 
 
-def test_default_profiles_path_points_to_packaged_data_file() -> None:
+def test_default_profiles_path_points_to_repo_root_data_file() -> None:
     assert peek_profile._PROFILES_PATH.name == "datagov_tables_profiles.jsonl"
-    assert peek_profile._PROFILES_PATH.parent.name == "data"
+    assert peek_profile._PROFILES_PATH.parent.name == "exploratory-qa-eval"
     assert peek_profile._PROFILES_PATH.exists()
 
 
@@ -26,10 +22,6 @@ class DatasetProfilesTests(unittest.TestCase):
         self._tmp = TemporaryDirectory()
         self._root = Path(self._tmp.name)
         self._profiles_path = self._root / "datagov_tables_profiles.jsonl"
-        self._desc_path = self._root / "table_descriptions.jsonl"
-        self._manifest_desc_path = self._root / "tasks_core_quality_file_manifest_descriptions.jsonl"
-        self._snippet_path = self._root / "snippet.jsonl"
-        self._schemas_path = self._root / "datagov_tables_schemas_full.jsonl"
 
         self._orig_peek_state = {
             "profiles_path": peek_profile._PROFILES_PATH,
@@ -37,28 +29,11 @@ class DatasetProfilesTests(unittest.TestCase):
             "profile_by_uri": peek_profile._PROFILE_BY_URI,
             "profile_by_slug_filename": peek_profile._PROFILE_BY_SLUG_FILENAME,
         }
-        self._orig_search_wrapper_state = {
-            "desc_path": search_wrapper._TABLE_DESCRIPTIONS_PATH,
-            "snippet_path": search_wrapper._SNIPPETS_PATH,
-            "schemas_path": search_wrapper._SCHEMAS_PATH,
-            "desc_loaded": search_wrapper._DESC_CACHE_LOADED,
-            "desc_by_uri": search_wrapper._DESC_BY_URI,
-            "desc_row_by_uri": search_wrapper._DESC_ROW_BY_URI,
-            "snippet_loaded": search_wrapper._SNIPPET_CACHE_LOADED,
-            "snippet_by_uri": search_wrapper._SNIPPET_BY_URI,
-            "schemas_loaded": search_wrapper._SCHEMAS_CACHE_LOADED,
-            "schema_by_slug_filename": search_wrapper._SCHEMA_BY_SLUG_FILENAME,
-        }
 
         peek_profile._PROFILES_PATH = self._profiles_path
         peek_profile._PROFILES_LOADED = False
         peek_profile._PROFILE_BY_URI = {}
         peek_profile._PROFILE_BY_SLUG_FILENAME = {}
-
-        search_wrapper._TABLE_DESCRIPTIONS_PATH = self._desc_path
-        search_wrapper._SNIPPETS_PATH = self._snippet_path
-        search_wrapper._SCHEMAS_PATH = self._schemas_path
-        self._reset_search_wrapper_caches()
 
         self._tabular_uri = (
             "s3://lakeqa-yc4103-datalake/datagov/example-dataset/v1/files/rows.csv"
@@ -67,57 +42,12 @@ class DatasetProfilesTests(unittest.TestCase):
             "s3://lakeqa-yc4103-datalake/datagov/example-dataset/v1/files/notes.txt"
         )
 
-        self._write_jsonl(
-            self._desc_path,
-            [{"dataset_uri": self._tabular_uri, "description": "Legacy description"}],
-        )
-        self._write_jsonl(
-            self._snippet_path,
-            [{"dataset_uri": self._tabular_uri, "dataset_snippet": "Legacy snippet"}],
-        )
-        self._write_jsonl(
-            self._schemas_path,
-            [
-                {
-                    "dataset_slug": "example-dataset",
-                    "tables": [
-                        {
-                            "relative_path": "rows.csv",
-                            "table_kind": "delimited_text",
-                            "columns": ["name", "value"],
-                            "delimiter": ",",
-                        }
-                    ],
-                }
-            ],
-        )
-
     def tearDown(self) -> None:
         peek_profile._PROFILES_PATH = self._orig_peek_state["profiles_path"]
         peek_profile._PROFILES_LOADED = self._orig_peek_state["profiles_loaded"]
         peek_profile._PROFILE_BY_URI = self._orig_peek_state["profile_by_uri"]
         peek_profile._PROFILE_BY_SLUG_FILENAME = self._orig_peek_state["profile_by_slug_filename"]
-
-        search_wrapper._TABLE_DESCRIPTIONS_PATH = self._orig_search_wrapper_state["desc_path"]
-        search_wrapper._SNIPPETS_PATH = self._orig_search_wrapper_state["snippet_path"]
-        search_wrapper._SCHEMAS_PATH = self._orig_search_wrapper_state["schemas_path"]
-        search_wrapper._DESC_CACHE_LOADED = self._orig_search_wrapper_state["desc_loaded"]
-        search_wrapper._DESC_BY_URI = self._orig_search_wrapper_state["desc_by_uri"]
-        search_wrapper._DESC_ROW_BY_URI = self._orig_search_wrapper_state["desc_row_by_uri"]
-        search_wrapper._SNIPPET_CACHE_LOADED = self._orig_search_wrapper_state["snippet_loaded"]
-        search_wrapper._SNIPPET_BY_URI = self._orig_search_wrapper_state["snippet_by_uri"]
-        search_wrapper._SCHEMAS_CACHE_LOADED = self._orig_search_wrapper_state["schemas_loaded"]
-        search_wrapper._SCHEMA_BY_SLUG_FILENAME = self._orig_search_wrapper_state["schema_by_slug_filename"]
         self._tmp.cleanup()
-
-    def _reset_search_wrapper_caches(self) -> None:
-        search_wrapper._DESC_CACHE_LOADED = False
-        search_wrapper._DESC_BY_URI = {}
-        search_wrapper._DESC_ROW_BY_URI = {}
-        search_wrapper._SNIPPET_CACHE_LOADED = False
-        search_wrapper._SNIPPET_BY_URI = {}
-        search_wrapper._SCHEMAS_CACHE_LOADED = False
-        search_wrapper._SCHEMA_BY_SLUG_FILENAME = {}
 
     def _write_jsonl(self, path: Path, rows: list[dict]) -> None:
         with path.open("w") as f:
@@ -156,47 +86,9 @@ class DatasetProfilesTests(unittest.TestCase):
         profile = peek_profile.load_dataset_profile(self._tabular_uri)
         self.assertEqual(profile, expected)
 
-    def test_profile_lookup_falls_back_to_legacy_bundle_when_profile_missing(self) -> None:
+    def test_profile_lookup_returns_none_when_profile_missing(self) -> None:
         profile = peek_profile.load_dataset_profile(self._tabular_uri)
-        self.assertEqual(
-            profile,
-            {
-                "schema_columns": ["name", "value"],
-                "table_kind": "delimited_text",
-                "llm_description": "Legacy description",
-                "snippet": "Legacy snippet",
-            },
-        )
-
-    @unittest.skipUnless(
-        hasattr(search_wrapper, "_MANIFEST_DESCRIPTIONS_PATH"),
-        "search_wrapper at HEAD does not expose _MANIFEST_DESCRIPTIONS_PATH",
-    )
-    def test_profile_lookup_uses_manifest_description_fields_when_present(self) -> None:
-        self._write_jsonl(
-            self._manifest_desc_path,
-            [
-                {
-                    "dataset_uri": self._tabular_uri,
-                    "description": "Manifest description",
-                    "metadata": "Manifest metadata",
-                    "generated_metadata": "Generated title",
-                    "original_metadata": "Original title",
-                    "content": "Manifest content block",
-                }
-            ],
-        )
-        self._reset_search_wrapper_caches()
-        profile = peek_profile.load_dataset_profile(self._tabular_uri)
-        self.assertEqual(profile["llm_description"], "Manifest description")
-        for k in (
-            "description_metadata",
-            "description_generated_metadata",
-            "description_original_metadata",
-            "description_content",
-            "description_source_file",
-        ):
-            self.assertNotIn(k, profile)
+        self.assertIsNone(profile)
 
     def test_profile_lookup_returns_none_when_uri_missing_everywhere(self) -> None:
         profile = peek_profile.load_dataset_profile(
@@ -265,6 +157,21 @@ class DatasetProfilesTests(unittest.TestCase):
         self._reset_profile_cache()
         profile = peek_profile.load_dataset_profile(self._tabular_uri)
         self.assertEqual(profile["row_count"], 2)
+
+    def test_profile_lookup_uses_slug_filename_fallback(self) -> None:
+        fallback = {
+            "slug": "example-dataset",
+            "filename": "rows",
+            "family": "csv",
+            "row_count": 7,
+        }
+        self._write_jsonl(self._profiles_path, [fallback])
+        self._reset_profile_cache()
+        profile = peek_profile.load_dataset_profile(self._tabular_uri)
+        self.assertEqual(profile, fallback)
+
+    def test_sana_helper_reexports_shared_profile_loader(self) -> None:
+        self.assertIs(sana_peek_profile.load_dataset_profile, peek_profile.load_dataset_profile)
 
 
 class SanaPeekFileWrapperTests(unittest.TestCase):

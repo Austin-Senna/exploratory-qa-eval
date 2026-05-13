@@ -4,7 +4,7 @@
   "nodes": {
     "1": {
       "source": "datagov/2015-property-tax-roll/files/rows.txt",
-      "fact": "In 2015, the 9 Providence properties with total assessment between $6.9 million and $7.3 million were: 000-0001-0003 (City of Providence, $7.00M), 016-0633-0000 (Brown University, $6.99M), 023-0772-LL01 (RI Hospital, $7.05M), 004-0261-0000 (261 LLC, $7.25M), 024-0613-0000 (Gilbane Building, $7.09M), 025-0346-REVO (Johnson and Wales University, $6.96M), 033-0381-0000 (Housing Authority, $7.05M), 034-0381-0000 (Calvi Realty, $7.14M), and 068-0638-0000 (Housing Authority, $6.96M).",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/2015-property-tax-roll/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)\n\nanswer = (\n    df.loc[(df['Total_Assessment'] >= 6900000) & (df['Total_Assessment'] <= 7300000), 'Plat-Lot-Unit']\n    .drop_duplicates()\n    .sort_values()\n    .tolist()\n)",
       "subquestion": "Which Providence properties had total assessment between $6.9 million and $7.3 million in 2015?",
       "answer": [
         "000-0001-0003",
@@ -20,7 +20,7 @@
     },
     "2": {
       "source": "datagov/2016-property-tax-roll/files/rows.txt",
-      "fact": "In 2016, the 18 Providence properties with total assessment between $6.9 million and $7.3 million included: 000-0001-0003 (City of Providence), 016-0633-0000 (Brown University), 023-0772-LL01 (RI Hospital), and 15 other properties including Brown University, RI Hospital, Hospital Properties Inc, and various commercial entities.",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/2016-property-tax-roll/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)\n\nanswer = (\n    df.loc[(df['Total_Assessment'] >= 6900000) & (df['Total_Assessment'] <= 7300000), 'Plat-Lot-Unit']\n    .drop_duplicates()\n    .sort_values()\n    .tolist()\n)",
       "subquestion": "Which Providence properties had total assessment between $6.9 million and $7.3 million in 2016?",
       "answer": [
         "000-0001-0003",
@@ -45,7 +45,7 @@
     },
     "3": {
       "source": "datagov/2017-property-tax-roll/files/rows.txt",
-      "fact": "In 2017, the 19 Providence properties with total assessment between $6.9 million and $7.3 million included: 000-0001-0003 (City of Providence), 016-0633-0000 (Brown University), 023-0772-LL01 (RI Hospital), and 16 other properties.",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/2017-property-tax-roll/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)\n\nanswer = (\n    df.loc[(df['Total Assessment'] >= 6900000) & (df['Total Assessment'] <= 7300000), 'Plat-Lot-Unit']\n    .drop_duplicates()\n    .sort_values()\n    .tolist()\n)",
       "subquestion": "Which Providence properties had total assessment between $6.9 million and $7.3 million in 2017?",
       "answer": [
         "000-0001-0003",
@@ -71,7 +71,7 @@
     },
     "4": {
       "source": "datagov/2018-property-tax-roll/files/rows.txt",
-      "fact": "In 2018, the 21 Providence properties with total assessment between $6.9 million and $7.3 million included: 000-0001-0003 (City of Providence, $7.00M), 016-0633-0000 (Brown University, $7.25M), 023-0772-LL01 (RI Hospital, $7.05M), and 18 other properties.",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/2018-property-tax-roll/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)\n\nanswer = (\n    df.loc[(df['Total Assessment'] >= 6900000) & (df['Total Assessment'] <= 7300000), 'Plat-Lot-Unit']\n    .drop_duplicates()\n    .sort_values()\n    .tolist()\n)",
       "subquestion": "Which Providence properties had total assessment between $6.9 million and $7.3 million in 2018?",
       "answer": [
         "000-0001-0003",
@@ -99,7 +99,7 @@
     },
     "5": {
       "source": "datagov/national-incorporated-places-and-counties/files/rows.txt",
-      "fact": "The national-incorporated-places dataset lists incorporated places in the United States by name, state, and class code. 'City of Providence' (Rhode Island, Class C5) is listed as an incorporated city. Neither 'RI Hospital' nor 'Brown University' appear as incorporated places in the dataset.",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/national-incorporated-places-and-counties/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)\n\ncandidates = ['City of Providence', 'RI Hospital', 'Brown University']\nanswer = (\n    df.loc[(df['State Name'] == 'Rhode Island') & df['Name'].isin(candidates), 'Name']\n    .drop_duplicates()\n    .sort_values()\n    .tolist()\n)",
       "subquestion": "Of the three properties in the intersection (City of Providence, RI Hospital, Brown University), which have owner names that match incorporated places in Rhode Island according to the national-incorporated-places dataset?",
       "answer": [
         "City of Providence"

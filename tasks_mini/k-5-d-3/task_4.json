@@ -13,7 +13,7 @@
     },
     "2": {
       "source": "datagov/fy-2020-disability-compensation-recipients-by-county/files/rows.txt",
-      "fact": "According to the 2020 Disability Compensation Recipients by County dataset, Harris County, Texas had 49,804 recipients and Dallas County, Texas had 26,317 recipients.",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/fy-2020-disability-compensation-recipients-by-county/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)\n\ndf['Total: Disability Compensation Recipients'] = pd.to_numeric(df['Total: Disability Compensation Recipients'], errors='coerce')\nanswer = (\n    df[\n        (df['State'] == 'Texas')\n        & (df['County Name'].isin(['Harris', 'Dallas']))\n    ][['County Name', 'Total: Disability Compensation Recipients']]\n    .set_index('County Name')['Total: Disability Compensation Recipients']\n    .astype(int)\n    .to_dict()\n)",
       "subquestion": "For the two counties from <node_1 answer>, what were the disability compensation recipient counts in 2020 and 2023? (Filter for this node: State == Texas; County Name in {Harris, Dallas}; use Total: Disability Compensation Recipients.)",
       "answer": {
         "Harris": 49804,
@@ -22,7 +22,7 @@
     },
     "3": {
       "source": "datagov/fy-2023-disability-compensation-recipients-by-county/files/rows.txt",
-      "fact": "According to the 2023 Disability Compensation Recipients by County dataset, Harris County, Texas had 54,266 recipients and Dallas County, Texas had 25,704 recipients.",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/fy-2023-disability-compensation-recipients-by-county/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)\n\ndf['Total: Disability Compensation Recipients'] = pd.to_numeric(df['Total: Disability Compensation Recipients'], errors='coerce')\nanswer = (\n    df[\n        (df['State'] == 'Texas')\n        & (df['County Name'].isin(['Harris', 'Dallas']))\n    ][['County Name', 'Total: Disability Compensation Recipients']]\n    .set_index('County Name')['Total: Disability Compensation Recipients']\n    .astype(int)\n    .to_dict()\n)",
       "subquestion": "For the two counties from <node_1 answer>, what were the disability compensation recipient counts in 2020 and 2023? (Filter for this node: State == Texas; County Name in {Harris, Dallas}; use Total: Disability Compensation Recipients.)",
       "answer": {
         "Harris": 54266,

@@ -21,7 +21,7 @@ class _FakeRunner:
 
 def _write_smoke_fixture(repo_root: Path) -> None:
     (repo_root / "lance_data").mkdir(parents=True, exist_ok=True)
-    task_dir = repo_root / "tasks_core_quality" / "k-5-d-4"
+    task_dir = repo_root / "tasks_mini" / "k-5-d-4"
     task_dir.mkdir(parents=True, exist_ok=True)
     (task_dir / "task_1.json").write_text("{}")
 

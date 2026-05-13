@@ -16,9 +16,12 @@ test_results
 .agents
 ec2setup.md
 datagov_tables_schemas_full.jsonl
+table_descriptions.parquet
 results-ec2
 logs-ec2
 tmp
 results-*/
 sana-results*
 reference_papers
+other-benchmarks
+extras/

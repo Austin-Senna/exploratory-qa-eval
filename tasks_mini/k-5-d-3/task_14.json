@@ -16,31 +16,31 @@
     },
     "3": {
       "source": "datagov/school-district-office-locations-current-d848f/files/nces::school-district-office-locations-current-1.txt",
-      "fact": "In the school district office listings, there are 1 entry(ies) with CITY='Iowa City' and NMCNTY='Johnson County', and they all use the same two-digit state FIPS code (STFIP): 19.",
+      "fact": "import io\nimport json\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/school-district-office-locations-current-d848f/files/nces::school-district-office-locations-current-1.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\npayload = json.load(io.TextIOWrapper(obj['Body'], encoding='utf-8'))\ndf = pd.json_normalize(payload['features'])\ndf.columns = [col.replace('properties.', '') for col in df.columns]\n\nfiltered = df[(df['CITY'] == 'Iowa City') & (df['NMCNTY'] == 'Johnson County')]\nanswer = str(filtered['STFIP'].dropna().drop_duplicates().iloc[0]).zfill(2)",
       "subquestion": "In the school district office listings, entries with CITY='<node_1 answer>' and NMCNTY='<node_2 answer>' share what two-digit state FIPS code (STFIP)?",
       "answer": "19"
     },
     "4": {
       "source": "datagov/public-school-locations-2018-19-42360/files/data-F2nGlG.txt",
-      "fact": "For STFIP=19, the 3 counties with the most public schools are: Polk County (130); Linn County (77); Scott County (52). The next county is Johnson County (40), so the cut is unique.",
+      "fact": "import io\nimport json\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/public-school-locations-2018-19-42360/files/data-F2nGlG.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\npayload = json.load(io.TextIOWrapper(obj['Body'], encoding='utf-8'))\ndf = pd.json_normalize(payload['features'])\ndf.columns = [col.replace('properties.', '') for col in df.columns]\n\ndf['STFIP'] = df['STFIP'].astype(str).str.strip().str.zfill(2)\ndf['NMCNTY'] = df['NMCNTY'].astype(str).str.strip()\ncounts = df[(df['STFIP'] == '19') & (df['NMCNTY'] != '')].groupby('NMCNTY').size().reset_index(name='count')\ntop = counts.sort_values(['count', 'NMCNTY'], ascending=[False, True]).head(3)\nanswer = '; '.join(top['NMCNTY'].tolist())",
       "subquestion": "For STFIP='<node_3 answer>', which 3 county names have the most public schools? Return the county names separated by '; '.",
       "answer": "Polk County; Linn County; Scott County"
     },
     "5": {
       "source": "datagov/private-school-locations-2017-18-f49f6/files/data-dqdQDP.txt",
-      "fact": "For STFIP=19, the 3 counties with the most private schools are: Polk County (19); Linn County (14); Sioux County (14). The next county is Dubuque County (13), so the cut is unique.",
+      "fact": "import io\nimport json\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/private-school-locations-2017-18-f49f6/files/data-dqdQDP.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\npayload = json.load(io.TextIOWrapper(obj['Body'], encoding='utf-8'))\ndf = pd.json_normalize(payload['features'])\ndf.columns = [col.replace('properties.', '') for col in df.columns]\n\ndf['STFIP'] = df['STFIP'].astype(str).str.strip().str.zfill(2)\ndf['NMCNTY'] = df['NMCNTY'].astype(str).str.strip()\ncounts = df[(df['STFIP'] == '19') & (df['NMCNTY'] != '')].groupby('NMCNTY').size().reset_index(name='count')\ntop = counts.sort_values(['count', 'NMCNTY'], ascending=[False, True]).head(3)\nanswer = '; '.join(top['NMCNTY'].tolist())",
       "subquestion": "For STFIP='<node_3 answer>', which 3 county names have the most private schools? Return the county names separated by '; '.",
       "answer": "Polk County; Linn County; Sioux County"
     },
     "6": {
       "source": "datagov/school-district-office-locations-2020-21-d8df0/files/data-UDaCeM.txt",
-      "fact": "For STFIP=19, the 3 counties with the most school district offices are: Linn County (12); Polk County (10); Pottawattamie County (8). The next county is Story County (7), so the cut is unique.",
+      "fact": "import io\nimport json\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/school-district-office-locations-2020-21-d8df0/files/data-UDaCeM.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\npayload = json.load(io.TextIOWrapper(obj['Body'], encoding='utf-8'))\ndf = pd.json_normalize(payload['features'])\ndf.columns = [col.replace('properties.', '') for col in df.columns]\n\ndf['STFIP'] = df['STFIP'].astype(str).str.strip().str.zfill(2)\ndf['NMCNTY'] = df['NMCNTY'].astype(str).str.strip()\ncounts = df[(df['STFIP'] == '19') & (df['NMCNTY'] != '')].groupby('NMCNTY').size().reset_index(name='count')\ntop = counts.sort_values(['count', 'NMCNTY'], ascending=[False, True]).head(3)\nanswer = '; '.join(top['NMCNTY'].tolist())",
       "subquestion": "For STFIP='<node_3 answer>', which 3 county names have the most school district offices? Return the county names separated by '; '.",
       "answer": "Linn County; Polk County; Pottawattamie County"
     },
     "7": {
       "source": "datagov/postsecondary-school-locations-2019-20-64b31/files/data-cbxYz6.txt",
-      "fact": "Using the intersection of C with the union of A and B, the candidate counties are: Linn County, Polk County. Postsecondary counts within that set are: Polk County (11); Linn County (7).",
+      "fact": "import io\nimport json\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/postsecondary-school-locations-2019-20-64b31/files/data-cbxYz6.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\npayload = json.load(io.TextIOWrapper(obj['Body'], encoding='utf-8'))\ndf = pd.json_normalize(payload['features'])\ndf.columns = [col.replace('properties.', '') for col in df.columns]\n\ndf['STFIP'] = df['STFIP'].astype(str).str.strip().str.zfill(2)\ndf['NMCNTY'] = df['NMCNTY'].astype(str).str.strip()\ncandidate_counties = ['Linn County', 'Polk County']\ncounts = df[(df['STFIP'] == '19') & (df['NMCNTY'].isin(candidate_counties))].groupby('NMCNTY').size()\nanswer = str(int(counts.min()))",
       "subquestion": "Let A be the set of counties in <node_4 answer>, B be the set of counties in <node_5 answer>, and C be the set of counties in <node_6 answer>. Consider the intersection of C with the union of A and B. Among those counties, what is the smaller postsecondary institution count in STFIP='<node_3 answer>'? Answer with the number only.",
       "answer": "7"
     }

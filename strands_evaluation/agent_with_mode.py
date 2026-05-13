@@ -187,10 +187,10 @@ def build_search(
             raise RuntimeError("Condition A search tools are unavailable (import failed).")
         from strands_evaluation.tools.external.search_a_tools import (
             search_schema as search_schema_hybrid,
-            search_reranked as search_reranked_hybrid,
+            search_value as search_value_hybrid,
         )
 
-        return [search_reranked_hybrid, search_schema_hybrid, search_prefix]
+        return [search_value_hybrid, search_schema_hybrid, search_prefix]
 
     if search_mode == "preloaded":
         return []
@@ -267,7 +267,11 @@ def build_mode_bundle(
     """Build final tools/prompt/plugin toggles from multi-axis ablation modes."""
     search_tool_mode = _normalize_mode(run_config.search_tool_mode, "standard", "search_tool")
     search_results_mode = _normalize_result_mode(run_config.search_results_mode, "naive", "search_results")
-    agent_management_mode = _normalize_mode(run_config.agent_management_mode, "standard", "agent_management")
+    agent_management_mode = _normalize_mode(
+        run_config.agent_management_mode or run_config.plan_mode,
+        "standard",
+        "agent_management",
+    )
     computation_tool_mode = _normalize_computation_mode(run_config.computation_tool_mode)
 
     if search_tool_mode == "ideal" or agent_management_mode == "ideal" or computation_tool_mode == "ideal":
@@ -313,6 +317,7 @@ def build_mode_bundle(
         modes={
             "search_tool": search_tool_mode,
             "search_results": search_results_mode,
+            "plan": agent_management_mode,
             "agent_management": agent_management_mode,
             "computation_tool": computation_tool_mode,
             "plan_skills": "on" if run_config.plan_skills_enabled else "off",

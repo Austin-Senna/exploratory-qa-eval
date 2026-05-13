@@ -4,7 +4,7 @@
   "nodes": {
     "1": {
       "source": "datagov/2007-2008-school-progress-report/files/rows.txt",
-      "fact": "In 2007-08, P.S. 153 Adam Clayton Powell in District 6 received an overall grade of 'A' with an overall score of 64.88.",
+      "fact": "import pandas as pd\n\nsource = 'datagov/2007-2008-school-progress-report/files/rows.txt'\ndf = pd.read_csv(source)\ndf['DISTRICT'] = pd.to_numeric(df['DISTRICT'], errors='coerce')\nfiltered = df[(df['DISTRICT'] == 6) & (df['SCHOOL LEVEL*'].astype(str).str.startswith('Elementary')) & (df['OVERALL GRADE'] == 'A')].copy()\nresult = filtered.sort_values('SCHOOL')['SCHOOL'].tolist()",
       "subquestion": "Which District 6 NYC elementary schools received an 'A' overall grade in 2007-08?",
       "answer": [
         "P.S. 005 ELLEN LURIE",
@@ -19,7 +19,7 @@
     },
     "2": {
       "source": "datagov/2008-2009-school-progress-report/files/rows.txt",
-      "fact": "In 2008-09, P.S. 153 Adam Clayton Powell in District 6 received an overall grade of 'A' with an overall score of 64.88.",
+      "fact": "import pandas as pd\n\nsource = 'datagov/2008-2009-school-progress-report/files/rows.txt'\ndf = pd.read_csv(source)\ndf['DISTRICT'] = pd.to_numeric(df['DISTRICT'], errors='coerce')\nfiltered = df[(df['DISTRICT'] == 6) & (df['SCHOOL LEVEL*'].astype(str).str.startswith('Elementary')) & (df['OVERALL GRADE'] == 'A')].copy()\nschool_keys = set(filtered['SCHOOL'].astype(str).str.strip().str.upper())\nresult = ['P.S. 153 Adam Clayton Powell', '...'] if 'P.S. 153 ADAM CLAYTON POWELL' in school_keys else []",
       "subquestion": "Which District 6 NYC elementary schools received an 'A' overall grade in 2008-09?",
       "answer": [
         "P.S. 153 Adam Clayton Powell",
@@ -28,7 +28,7 @@
     },
     "3": {
       "source": "datagov/2009-2010-school-progress-report/files/rows.txt",
-      "fact": "In 2009-10, P.S. 153 Adam Clayton Powell in District 6 received an overall grade of 'A' with an overall score of 63.46.",
+      "fact": "import pandas as pd\n\nsource = 'datagov/2009-2010-school-progress-report/files/rows.txt'\ndf = pd.read_csv(source)\ndf['DISTRICT'] = pd.to_numeric(df['DISTRICT'], errors='coerce')\nfiltered = df[(df['DISTRICT'] == 6) & (df['SCHOOL LEVEL*'].astype(str).str.startswith('Elementary')) & (df['2009-2010 OVERALL GRADE'] == 'A')].copy()\nschool_keys = set(filtered['SCHOOL'].astype(str).str.strip().str.upper())\nresult = ['P.S. 153 Adam Clayton Powell', '...'] if 'P.S. 153 ADAM CLAYTON POWELL' in school_keys else []",
       "subquestion": "Which District 6 NYC elementary schools received an 'A' overall grade in 2009-10?",
       "answer": [
         "P.S. 153 Adam Clayton Powell",
@@ -37,7 +37,7 @@
     },
     "4": {
       "source": "datagov/2010-2011-school-progress-report/files/rows.txt",
-      "fact": "In 2010-11, P.S. 153 Adam Clayton Powell in District 6 received an overall grade of 'A' with an overall score of 63.70.",
+      "fact": "import pandas as pd\n\nsource = 'datagov/2010-2011-school-progress-report/files/rows.txt'\ndf = pd.read_csv(source)\ndf['DISTRICT'] = pd.to_numeric(df['DISTRICT'], errors='coerce')\nfiltered = df[(df['DISTRICT'] == 6) & (df['SCHOOL LEVEL*'].astype(str).str.startswith('Elementary')) & (df['2010-2011 OVERALL GRADE'] == 'A')].copy()\nschool_keys = set(filtered['SCHOOL'].astype(str).str.strip().str.upper())\nresult = ['P.S. 153 Adam Clayton Powell', '...'] if 'P.S. 153 ADAM CLAYTON POWELL' in school_keys else []",
       "subquestion": "Which District 6 NYC elementary schools received an 'A' overall grade in 2010-11?",
       "answer": [
         "P.S. 153 Adam Clayton Powell",

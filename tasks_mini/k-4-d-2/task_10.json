@@ -5,7 +5,7 @@
   "nodes": {
     "1": {
       "source": "datagov/2005-2015-graduation-rates-public-school/files/rows.txt",
-      "fact": "In the 2005-2015 graduation rates data, NYC high schools with a 4-year (4 Year June) graduation rate of exactly 100.0% for the 2009 cohort included: Eleanor Roosevelt High School, Young Women's Leadership School, High School of American Studies at Lehman College, Townsend Harris High School, and Scholars' Academy.",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/2005-2015-graduation-rates-public-school/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\nmask = (\n    df[\"Cohort Year\"].astype(str).eq(\"2009\")\n    & df[\"Cohort Category\"].eq(\"4 Year  June\")\n    & df[\"Total Grads   % of cohort\"].eq(\"100.0%\")\n)\n\nanswer = df.loc[mask, \"School\"].drop_duplicates().tolist()\nname_map = {\n    \"ELEANOR ROOSEVELT HIGH SCHOOL\": \"Eleanor Roosevelt High School\",\n    \"YOUNG WOMEN'S LEADERSHIP SCHOOL\": \"Young Women's Leadership School\",\n    \"HIGH SCHOOL OF AMERICAN STUDIES AT LEHMAN COLLEGE\": \"High School of American Studies at Lehman College\",\n    \"TOWNSEND HARRIS HIGH SCHOOL\": \"Townsend Harris High School\",\n    \"SCHOLARS' ACADEMY\": \"Scholars' Academy\",\n}\nanswer = [name_map.get(str(name).strip(), str(name).strip()) for name in answer]",
       "subquestion": "Which NYC high schools had a 4-year graduation rate of 100% for the 2009 cohort?",
       "depends_on": [],
       "answer": [
@@ -18,7 +18,7 @@
     },
     "2": {
       "source": "datagov/2005-2019-graduation-rates-all/files/rows.txt",
-      "fact": "In the 2005-2019 graduation rates data, NYC high schools with a 4-year (4 year June) graduation rate of 100.0% for the 2010 cohort included: Baruch College Campus High School, Eleanor Roosevelt High School, Brooklyn College Academy, Townsend Harris High School, Scholars' Academy, and Queens High School for the Sciences at York College. Young Women's Leadership School had 95.4%.",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/2005-2019-graduation-rates-all/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\nmask = (\n    df[\"Cohort Year\"].astype(str).eq(\"2010\")\n    & df[\"Cohort\"].eq(\"4 year June\")\n    & pd.to_numeric(df[\"% Grads\"], errors=\"coerce\").eq(100.0)\n)\n\nanswer = df.loc[mask, \"School Name\"].drop_duplicates().tolist()\nname_map = {\n    \"BARUCH COLLEGE CAMPUS HIGH SCHOOL\": \"Baruch College Campus High School\",\n    \"ELEANOR ROOSEVELT HIGH SCHOOL\": \"Eleanor Roosevelt High School\",\n    \"BROOKLYN COLLEGE ACADEMY\": \"Brooklyn College Academy\",\n    \"TOWNSEND HARRIS HIGH SCHOOL\": \"Townsend Harris High School\",\n    \"SCHOLARS' ACADEMY\": \"Scholars' Academy\",\n    \"QUEENS HIGH SCHOOL FOR THE SCIENCES AT YORK COLLEGE\": \"Queens High School for the Sciences at York College\",\n}\nanswer = [name_map.get(str(name).strip(), str(name).strip()) for name in answer]",
       "subquestion": "Which NYC high schools had a 4-year graduation rate of 100% for the 2010 cohort?",
       "depends_on": [
         "node_1"
@@ -34,7 +34,7 @@
     },
     "3": {
       "source": "datagov/2011-2016-demographic-snapshot/files/rows.txt",
-      "fact": "In the 2011-12 school year, female student percentages among the intersection schools were: Eleanor Roosevelt HS (67.5%), Townsend Harris HS (71.1%), and Scholars' Academy (56.1%). Schools with female % > 60% are Eleanor Roosevelt and Townsend Harris.",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/2011-2016-demographic-snapshot/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\nintersection_schools = [\n    \"Eleanor Roosevelt High School\",\n    \"Townsend Harris High School\",\n    \"Scholars' Academy\",\n]\n\nfemale_pct = pd.to_numeric(df[\"% Female\"].astype(str).str.rstrip(\"%\"), errors=\"coerce\")\nmask = (\n    df[\"Year\"].eq(\"2011-12\")\n    & df[\"School Name\"].isin(intersection_schools)\n    & female_pct.gt(60)\n)\n\nanswer = df.loc[mask, \"School Name\"].drop_duplicates().tolist()",
       "subquestion": "Which of <intersection of node_1, node_2> had a female student percentage greater than 60% in 2011-12?",
       "depends_on": [
         "intersection_of_1_2"
@@ -46,7 +46,7 @@
     },
     "4": {
       "source": "datagov/2013-2018-demographic-snapshot-school/files/rows.txt",
-      "fact": "In the 2013-14 school year, total enrollment among the intersection schools was: Eleanor Roosevelt HS (531 students), Townsend Harris HS (1,151 students), and Scholars' Academy (1,253 students). The only school with enrollment < 600 is Eleanor Roosevelt.",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/2013-2018-demographic-snapshot-school/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\nintersection_schools = [\n    \"Eleanor Roosevelt High School\",\n    \"Townsend Harris High School\",\n    \"Scholars' Academy\",\n]\n\nmask = (\n    df[\"Year\"].astype(str).eq(\"2013-14\")\n    & df[\"School Name\"].isin(intersection_schools)\n    & pd.to_numeric(df[\"Total Enrollment\"], errors=\"coerce\").lt(600)\n)\n\nanswer = df.loc[mask, \"School Name\"].drop_duplicates().tolist()",
       "subquestion": "Which of <intersection of node_1, node_2> had enrollment less than 600 students in 2013-14?",
       "depends_on": [
         "intersection_of_1_2"

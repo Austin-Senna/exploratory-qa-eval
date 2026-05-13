@@ -4,19 +4,19 @@
   "nodes": {
     "1": {
       "source": "datagov/texas-department-of-criminal-justice-releases-fy-2019/files/rows.txt",
-      "fact": "In FY 2019, Harris County had 9,029 TDCJ releases, Dallas County had 5,355 releases, and Tarrant County had 4,769 releases.",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/texas-department-of-criminal-justice-releases-fy-2019/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)\n\ncounties = ['Harris', 'Dallas', 'Tarrant']\ncounts = df[df['County'].isin(counties)].groupby('County').size()\nanswer = '; '.join(f\"{county}: {int(counts[county]):,}\" for county in counties)",
       "subquestion": "How many TDCJ releases did Harris, Dallas, and Tarrant counties have in FY 2019? (Filter County in {Harris, Dallas, Tarrant}; count rows.)",
       "answer": "Harris: 9,029; Dallas: 5,355; Tarrant: 4,769"
     },
     "2": {
       "source": "datagov/texas-department-of-criminal-justice-releases-fy-2020/files/rows.txt",
-      "fact": "In FY 2020, Harris County had 7,059 TDCJ releases, Dallas County had 4,540 releases, and Tarrant County had 4,450 releases.",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/texas-department-of-criminal-justice-releases-fy-2020/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)\n\ncounties = ['Harris', 'Dallas', 'Tarrant']\ncounts = df[df['County'].isin(counties)].groupby('County').size()\nanswer = '; '.join(f\"{county}: {int(counts[county]):,}\" for county in counties)",
       "subquestion": "How many TDCJ releases did Harris, Dallas, and Tarrant counties have in FY 2020? (Filter County in {Harris, Dallas, Tarrant}; count rows.)",
       "answer": "Harris: 7,059; Dallas: 4,540; Tarrant: 4,450"
     },
     "3": {
       "source": "datagov/texas-department-of-criminal-justice-releases-fy-2021/files/rows.txt",
-      "fact": "In FY 2021, Harris County had 5,210 TDCJ releases, Dallas County had 3,565 releases, and Tarrant County had 3,252 releases.",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/texas-department-of-criminal-justice-releases-fy-2021/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)\n\ncounties = ['Harris', 'Dallas', 'Tarrant']\ncounts = df[df['County'].isin(counties)].groupby('County').size()\nanswer = '; '.join(f\"{county}: {int(counts[county]):,}\" for county in counties)",
       "subquestion": "How many TDCJ releases did Harris, Dallas, and Tarrant counties have in FY 2021? (Filter County in {Harris, Dallas, Tarrant}; count rows.)",
       "answer": "Harris: 5,210; Dallas: 3,565; Tarrant: 3,252"
     },
@@ -58,19 +58,19 @@
     },
     "10": {
       "source": "datagov/school-nutrition-programs-contact-information-and-site-level-program-participation-pr-2019/files/rows.txt",
-      "fact": "In the 2019-2020 Texas School Nutrition Program data for Tarrant County, Lake Worth ISD had an average Identified Student Percentage (ISP) of 65.00% across its sites, the highest among Tarrant County ISDs.",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/school-nutrition-programs-contact-information-and-site-level-program-participation-pr-2019/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)\n\ndf['SiteISP'] = pd.to_numeric(df['SiteISP'], errors='coerce')\nresult = (\n    df[(df['SiteCounty'] == 'TARRANT') & (df['CEName'].str.contains('ISD', na=False))]\n    .groupby('CEName', as_index=False)['SiteISP']\n    .mean()\n)\nresult['SiteISP'] = result['SiteISP'].round(2)\nranked = result.sort_values(['SiteISP', 'CEName'], ascending=[False, True]).reset_index(drop=True)\nanswer = f\"Lake Worth ISD: {ranked.loc[0, 'SiteISP']:.2f}% average ISP\"",
       "subquestion": "Which ISD had the highest average ISP in Tarrant County (from nodes 7-9: the county with the newest county seat) in the 2019-2020 program year? (Filter SiteCounty == 'TARRANT'; filter CEName contains 'ISD'; group by CEName; average SiteISP.)",
       "answer": "Lake Worth ISD: 65.00% average ISP"
     },
     "11": {
       "source": "datagov/school-nutrition-programs-contact-information-and-site-level-program-participation-pr-2020/files/rows.txt",
-      "fact": "In the 2020-2021 Texas School Nutrition Program data for Tarrant County, Lake Worth ISD had an average Identified Student Percentage (ISP) of 65.94% across its sites.",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/school-nutrition-programs-contact-information-and-site-level-program-participation-pr-2020/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)\n\ndf['SiteISP'] = pd.to_numeric(df['SiteISP'], errors='coerce')\nfiltered = df[(df['SiteCounty'] == 'TARRANT') & (df['CEName'] == 'LAKE WORTH ISD')].copy()\naverage_isp = filtered['SiteISP'].mean()\nanswer = f'Lake Worth ISD: {average_isp:.2f}% average ISP'",
       "subquestion": "What was the average ISP for Lake Worth ISD in Tarrant County in the 2020-2021 program year? (Filter SiteCounty == 'TARRANT'; filter CEName == 'LAKE WORTH ISD'; average SiteISP.)",
       "answer": "Lake Worth ISD: 65.94% average ISP"
     },
     "12": {
       "source": "datagov/school-nutrition-programs-contact-information-and-site-level-program-participation-pr-2021/files/rows.txt",
-      "fact": "In the 2021-2022 Texas School Nutrition Program data for Tarrant County, Lake Worth ISD had an average Identified Student Percentage (ISP) of 71.65% across its sites.",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/school-nutrition-programs-contact-information-and-site-level-program-participation-pr-2021/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)\n\ndf['SiteISP'] = pd.to_numeric(df['SiteISP'], errors='coerce')\nfiltered = df[(df['SiteCounty'] == 'TARRANT') & (df['CEName'] == 'LAKE WORTH ISD')].copy()\naverage_isp = filtered['SiteISP'].mean()\nanswer = f'Lake Worth ISD: {average_isp:.2f}% average ISP'",
       "subquestion": "What was the average ISP for Lake Worth ISD in Tarrant County in the 2021-2022 program year? (Filter SiteCounty == 'TARRANT'; filter CEName == 'LAKE WORTH ISD'; average SiteISP.)",
       "answer": "Lake Worth ISD: 71.65% average ISP"
     },

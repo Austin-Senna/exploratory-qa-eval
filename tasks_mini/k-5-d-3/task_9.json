@@ -4,7 +4,7 @@
   "nodes": {
     "1": {
       "source": "datagov/libraries-2019-circulation-by-location/files/rows.txt",
-      "fact": "In the 2019 Chicago Public Library circulation-by-location dataset (physical branches with non-null addresses), the top 5 by YTD circulation were: HAROLD WASHINGTON LIBRARY CENTER (581151), Sulzer Regional Library (369530), Edgewater (171399), Lincoln Belmont (168646), and Lincoln Park (133337).",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/libraries-2019-circulation-by-location/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)\n\ndf['YTD'] = pd.to_numeric(df['YTD'], errors='coerce')\nranked = (\n    df[df['ADDRESS'].notna()]\n    .groupby('LOCATION', as_index=False)['YTD'].sum()\n    .sort_values(['YTD', 'LOCATION'], ascending=[False, True])\n    .reset_index(drop=True)\n)\nanswer = ranked['LOCATION'].head(5).tolist()",
       "subquestion": "Which branches (with physical addresses) were in the top 5 by YTD circulation in the given year? (Filter for this node: keep rows with non-null ADDRESS; group by LOCATION; sum YTD; sort YTD desc; take top 5.)",
       "answer": [
         "HAROLD WASHINGTON LIBRARY CENTER",
@@ -16,7 +16,7 @@
     },
     "2": {
       "source": "datagov/libraries-2020-circulation-by-location/files/rows.txt",
-      "fact": "In the 2020 Chicago Public Library circulation-by-location dataset (physical branches with non-null addresses), the top 5 by YTD circulation were: Harold Washington Library Center (276878), Sulzer Regional Library (226464), Lincoln Belmont (105388), Edgewater (103570), and Northtown (94797).",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/libraries-2020-circulation-by-location/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)\n\ndf['YTD'] = pd.to_numeric(df['YTD'], errors='coerce')\nranked = (\n    df[df['ADDRESS'].notna()]\n    .groupby('BRANCH', as_index=False)['YTD'].sum()\n    .sort_values(['YTD', 'BRANCH'], ascending=[False, True])\n    .reset_index(drop=True)\n)\nanswer = ranked['BRANCH'].head(5).tolist()",
       "subquestion": "Which branches (with physical addresses) were in the top 5 by YTD circulation in the given year? (Filter for this node: keep rows with non-null ADDRESS; group by BRANCH; sum YTD; sort YTD desc; take top 5.)",
       "answer": [
         "Harold Washington Library Center",
@@ -28,7 +28,7 @@
     },
     "3": {
       "source": "datagov/libraries-2021-circulation-by-location/files/rows.txt",
-      "fact": "In the 2021 Chicago Public Library circulation-by-location dataset (physical branches with non-null addresses), the top 5 by YTD circulation were: Harold Washington Library Center (271811), Sulzer Regional Library (260163), Lincoln Belmont (129149), Edgewater (127737), and Lincoln Park (114599).",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/libraries-2021-circulation-by-location/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)\n\ndf['YTD'] = pd.to_numeric(df['YTD'], errors='coerce')\nranked = (\n    df[df['ADDRESS'].notna()]\n    .groupby('BRANCH', as_index=False)['YTD'].sum()\n    .sort_values(['YTD', 'BRANCH'], ascending=[False, True])\n    .reset_index(drop=True)\n)\nanswer = ranked['BRANCH'].head(5).tolist()",
       "subquestion": "Which branches (with physical addresses) were in the top 5 by YTD circulation in the given year? (Filter for this node: keep rows with non-null ADDRESS; group by BRANCH; sum YTD; sort YTD desc; take top 5.)",
       "answer": [
         "Harold Washington Library Center",
@@ -40,7 +40,7 @@
     },
     "4": {
       "source": "datagov/libraries-2019-visitors-by-location/files/rows.txt",
-      "fact": "In the 2019 Chicago Public Library visitors-by-location dataset (physical branches with non-null addresses), the top 5 by YTD visitors were: Harold Washtington Library Center (1405964), Sulzer Regional Library (358644), Chinatown (271514), Woodson Regional Library (214173), and Edgewater (197045).",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/libraries-2019-visitors-by-location/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)\n\ndf['YTD'] = pd.to_numeric(df['YTD'], errors='coerce')\nranked = (\n    df[df['ADDRESS'].notna()]\n    .groupby('LOCATION', as_index=False)['YTD'].sum()\n    .sort_values(['YTD', 'LOCATION'], ascending=[False, True])\n    .reset_index(drop=True)\n)\nanswer = ranked['LOCATION'].head(5).tolist()",
       "subquestion": "Among the branches (from hop 1), which were in the top 5 by YTD visitors in the given year? (Filter for this node: keep rows with non-null ADDRESS; group by LOCATION; sum YTD; sort YTD desc; take top 5 overall.)",
       "answer": [
         "Harold Washtington Library Center",
@@ -52,7 +52,7 @@
     },
     "5": {
       "source": "datagov/libraries-2020-visitors-by-location/files/rows.txt",
-      "fact": "In the 2020 Chicago Public Library visitors-by-location dataset (physical branches with non-null addresses), the top 5 by YTD visitors were: Harold Washtington Library Center (554374), Sulzer Regional Library (165519), Edgewater (91450), Woodson Regional Library (78366), and Rogers Park (75717).",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/libraries-2020-visitors-by-location/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)\n\ndf['YTD'] = pd.to_numeric(df['YTD'], errors='coerce')\nranked = (\n    df[df['ADDRESS'].notna()]\n    .groupby('BRANCH', as_index=False)['YTD'].sum()\n    .sort_values(['YTD', 'BRANCH'], ascending=[False, True])\n    .reset_index(drop=True)\n)\nanswer = ranked['BRANCH'].head(5).tolist()",
       "subquestion": "Among the branches (from hop 1), which were in the top 5 by YTD visitors in the given year? (Filter for this node: keep rows with non-null ADDRESS; group by BRANCH; sum YTD; sort YTD desc; take top 5 overall.)",
       "answer": [
         "Harold Washtington Library Center",
@@ -64,7 +64,7 @@
     },
     "6": {
       "source": "datagov/libraries-2021-visitors-by-location/files/rows.txt",
-      "fact": "In the 2021 Chicago Public Library visitors-by-location dataset (physical branches with non-null addresses), the top 5 by YTD visitors were: Harold Washtington Library Center (543951), Sulzer Regional Library (175377), Edgewater (94307), Chinatown (93783), and Logan Square (92688).",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/libraries-2021-visitors-by-location/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)\n\ndf['YTD'] = pd.to_numeric(df['YTD'], errors='coerce')\nranked = (\n    df[df['ADDRESS'].notna()]\n    .groupby('BRANCH', as_index=False)['YTD'].sum()\n    .sort_values(['YTD', 'BRANCH'], ascending=[False, True])\n    .reset_index(drop=True)\n)\nanswer = ranked['BRANCH'].head(5).tolist()",
       "subquestion": "Among the branches (from hop 1), which were in the top 5 by YTD visitors in the given year? (Filter for this node: keep rows with non-null ADDRESS; group by BRANCH; sum YTD; sort YTD desc; take top 5 overall.)",
       "answer": [
         "Harold Washtington Library Center",
@@ -76,7 +76,7 @@
     },
     "7": {
       "source": "datagov/libraries-2019-computer-sessions-by-location/files/rows.txt",
-      "fact": "In the 2019 Chicago Public Library computer-sessions-by-location dataset (physical branches with non-null addresses), the top 3 by YTD computer sessions were: HAROLD WASHINGTON LIBRARY CENTER (209583), Woodson Regional Library (86153), and Sulzer Regional Library (75723).",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/libraries-2019-computer-sessions-by-location/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)\n\ndf['YTD'] = pd.to_numeric(df['YTD'], errors='coerce')\nranked = (\n    df[df['ADDRESS'].notna()]\n    .groupby('LOCATION', as_index=False)['YTD'].sum()\n    .sort_values(['YTD', 'LOCATION'], ascending=[False, True])\n    .reset_index(drop=True)\n)\nanswer = ranked['LOCATION'].head(3).tolist()",
       "subquestion": "Among the branches (from hop 2), which were in the top 3 by YTD computer sessions in the given year? (Filter for this node: keep rows with non-null ADDRESS; group by LOCATION; sum YTD; sort YTD desc; take top 3 overall.)",
       "answer": [
         "HAROLD WASHINGTON LIBRARY CENTER",
@@ -86,7 +86,7 @@
     },
     "8": {
       "source": "datagov/libraries-2020-computer-sessions-by-location/files/rows.txt",
-      "fact": "In the 2020 Chicago Public Library computer-sessions-by-location dataset (physical branches with non-null addresses), the top 3 by YTD computer sessions were: Harold Washington Library Center (78203), Woodson Regional Library (33365), and Sulzer Regional Library (27772).",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/libraries-2020-computer-sessions-by-location/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)\n\ndf['YTD'] = pd.to_numeric(df['YTD'], errors='coerce')\nranked = (\n    df[df['ADDRESS'].notna()]\n    .groupby('BRANCH', as_index=False)['YTD'].sum()\n    .sort_values(['YTD', 'BRANCH'], ascending=[False, True])\n    .reset_index(drop=True)\n)\nanswer = ranked['BRANCH'].head(3).tolist()",
       "subquestion": "Among the branches (from hop 2), which were in the top 3 by YTD computer sessions in the given year? (Filter for this node: keep rows with non-null ADDRESS; group by BRANCH; sum YTD; sort YTD desc; take top 3 overall.)",
       "answer": [
         "Harold Washington Library Center",
@@ -96,7 +96,7 @@
     },
     "9": {
       "source": "datagov/libraries-2021-computer-sessions-by-location/files/rows.txt",
-      "fact": "In the 2021 Chicago Public Library computer-sessions-by-location dataset (physical branches with non-null addresses), the top 3 by YTD computer sessions were: Harold Washington Library Center (69312), Woodson Regional Library (28566), and Sulzer Regional Library (22938).",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/libraries-2021-computer-sessions-by-location/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)\n\ndf['YTD'] = pd.to_numeric(df['YTD'], errors='coerce')\nranked = (\n    df[df['ADDRESS'].notna()]\n    .groupby('BRANCH', as_index=False)['YTD'].sum()\n    .sort_values(['YTD', 'BRANCH'], ascending=[False, True])\n    .reset_index(drop=True)\n)\nanswer = ranked['BRANCH'].head(3).tolist()",
       "subquestion": "Among the branches (from hop 2), which were in the top 3 by YTD computer sessions in the given year? (Filter for this node: keep rows with non-null ADDRESS; group by BRANCH; sum YTD; sort YTD desc; take top 3 overall.)",
       "answer": [
         "Harold Washington Library Center",
@@ -112,7 +112,7 @@
     },
     "11": {
       "source": "datagov/public-health-statistics-life-expectancy-by-community-area/files/rows.txt",
-      "fact": "In the Chicago life expectancy by community area dataset, Lincoln Square has Community Area Number 4.",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/public-health-statistics-life-expectancy-by-community-area/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)\n\nanswer = str(int(df.loc[df['Community Area'] == 'Lincoln Square', 'Community Area Number'].iloc[0]))",
       "subquestion": "What community area number corresponds to the neighborhood from hop 4? (Filter for this node: Community Area == 'Lincoln Square'; return Community Area Number.)",
       "answer": "4"
     }

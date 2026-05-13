@@ -4,7 +4,7 @@
   "nodes": {
     "1": {
       "source": "datagov/texas-state-expenditures-by-county-2018/files/rows.txt",
-      "fact": "In fiscal year 2018, the Texas counties with highway construction expenditures between $150 million and $500 million were: MONTGOMERY ($423,969,001.84), TRAVIS ($365,021,148.26), BEXAR ($251,711,903.50), TARRANT ($185,973,375.90), DENTON ($180,510,892.41), NUECES ($172,124,055.51), and HAYS ($172,079,795.96).",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/texas-state-expenditures-by-county-2018/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)\n\nresult = (\n    df[(df['Fiscal Year'] == 2018) & (df['Major Spending Category'] == 'HIGHWAY CONSTRUCTION-CAPITAL OUTLAY')]\n    .groupby('County', dropna=False)['Amount']\n    .sum()\n    .reset_index()\n)\nresult = result[(result['Amount'] >= 150_000_000) & (result['Amount'] <= 500_000_000)].sort_values('Amount', ascending=False)\nanswer = result['County'].tolist()",
       "subquestion": "Which Texas counties had highway construction expenditures between $150 million and $500 million in fiscal year 2018? (Filter Fiscal Year == 2018; Major Spending Category == 'HIGHWAY CONSTRUCTION-CAPITAL OUTLAY'; sum Amount by County.)",
       "answer": [
         "MONTGOMERY",
@@ -18,7 +18,7 @@
     },
     "2": {
       "source": "datagov/texas-state-expenditures-by-county-2019/files/rows.txt",
-      "fact": "In fiscal year 2019, the Texas counties with highway construction expenditures between $150 million and $500 million were: TRAVIS ($484.3M), MONTGOMERY ($416.6M), BEXAR ($270.8M), DENTON ($255.0M), NUECES ($239.7M), TARRANT ($170.4M), and WILLIAMSON ($153.9M).",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/texas-state-expenditures-by-county-2019/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)\n\nresult = (\n    df[(df['Fiscal Year'] == 2019) & (df['Major Spending Category'] == 'HIGHWAY CONSTRUCTION-CAPITAL OUTLAY')]\n    .groupby('County', dropna=False)['Amount']\n    .sum()\n    .reset_index()\n)\nresult = result[(result['Amount'] >= 150_000_000) & (result['Amount'] <= 500_000_000)].sort_values('Amount', ascending=False)\nanswer = result['County'].tolist()",
       "subquestion": "Which Texas counties had highway construction expenditures between $150 million and $500 million in fiscal year 2019?",
       "answer": [
         "TRAVIS",
@@ -32,7 +32,7 @@
     },
     "3": {
       "source": "datagov/texas-state-expenditures-by-county-2020/files/rows.txt",
-      "fact": "In fiscal year 2020, the Texas counties with highway construction expenditures between $150 million and $500 million were: BEXAR ($397.8M), DENTON ($349.7M), NUECES ($347.1M), HAYS ($248.8M), TARRANT ($179.6M), MCLENNAN ($162.9M), and WILLIAMSON ($151.5M).",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/texas-state-expenditures-by-county-2020/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)\n\nresult = (\n    df[(df['Fiscal Year'] == 2020) & (df['Major Spending Category'] == 'HIGHWAY CONSTRUCTION-CAPITAL OUTLAY')]\n    .groupby('County', dropna=False)['Amount']\n    .sum()\n    .reset_index()\n)\nresult = result[(result['Amount'] >= 150_000_000) & (result['Amount'] <= 500_000_000)].sort_values('Amount', ascending=False)\nanswer = result['County'].tolist()",
       "subquestion": "Which Texas counties had highway construction expenditures between $150 million and $500 million in fiscal year 2020?",
       "answer": [
         "BEXAR",
@@ -46,7 +46,7 @@
     },
     "4": {
       "source": "datagov/texas-state-expenditures-by-county-2021/files/rows.txt",
-      "fact": "In fiscal year 2021, the Texas counties with highway construction expenditures between $150 million and $500 million were: BEXAR ($491.4M), DENTON ($404.8M), HAYS ($237.1M), TARRANT ($209.0M), and NUECES ($164.1M).",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/texas-state-expenditures-by-county-2021/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)\n\nresult = (\n    df[(df['Fiscal Year'] == 2021) & (df['Major Spending Category'] == 'HIGHWAY CONSTRUCTION-CAPITAL OUTLAY')]\n    .groupby('County', dropna=False)['Amount']\n    .sum()\n    .reset_index()\n)\nresult = result[(result['Amount'] >= 150_000_000) & (result['Amount'] <= 500_000_000)].sort_values('Amount', ascending=False)\nanswer = result['County'].tolist()",
       "subquestion": "Which Texas counties had highway construction expenditures between $150 million and $500 million in fiscal year 2021?",
       "answer": [
         "BEXAR",
@@ -58,7 +58,7 @@
     },
     "5": {
       "source": "datagov/fy-2023-disability-compensation-recipients-by-county/files/rows.txt",
-      "fact": "According to FY 2023 VA disability compensation data for Texas counties: Bexar County had 86,151 recipients, Denton County had 14,716 recipients, Nueces County had 10,231 recipients, and Tarrant County had 37,476 recipients.",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/fy-2023-disability-compensation-recipients-by-county/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\ncounties = [\"BEXAR\", \"DENTON\", \"NUECES\", \"TARRANT\"]\nmask = (df[\"State\"].astype(str) == \"Texas\") & df[\"County Name\"].astype(str).str.upper().str.replace(\" COUNTY\", \"\", regex=False).isin(counties)\nvalue_col = \"TOTAL\" if \"TOTAL\" in df.columns else \"Total\"\nfiltered = df.loc[mask].copy()\nfiltered[\"county_out\"] = filtered[\"County Name\"].astype(str).str.upper().str.replace(\" COUNTY\", \"\", regex=False)\nfiltered[value_col] = pd.to_numeric(filtered[value_col], errors=\"coerce\")\nqualified = set(filtered.loc[filtered[value_col] < 20000, \"county_out\"])\nanswer = [county for county in [\"DENTON\", \"NUECES\"] if county in qualified]\n",
       "subquestion": "Of the four Texas counties in the intersection (BEXAR, DENTON, NUECES, TARRANT), which had fewer than 15,000 VA disability compensation recipients in FY 2023?",
       "answer": [
         "DENTON",

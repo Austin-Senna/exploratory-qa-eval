@@ -5,7 +5,7 @@
   "nodes": {
     "1": {
       "source": "datagov/500-cities-city-level-data-gis-friendly-format-2016-release/files/rows.txt",
-      "fact": "In the 2016 CDC 500 Cities data, only two California cities had teeth loss crude prevalence (TEETHLOST_CrudePrev) above 19%: Compton (19.1%) and San Bernardino (19.3%).",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\nsource = \"datagov/500-cities-city-level-data-gis-friendly-format-2016-release/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\nanswer = (\n    df.loc[(df[\"StateAbbr\"] == \"CA\") & (df[\"TEETHLOST_CrudePrev\"] > 19), \"PlaceName\"]\n    .sort_values()\n    .tolist()\n)",
       "subquestion": "Which California cities had teeth loss crude prevalence (TEETHLOST_CrudePrev) above 19% in the 2016 CDC 500 Cities data (StateAbbr = CA)?",
       "answer": [
         "Compton",
@@ -14,7 +14,7 @@
     },
     "2": {
       "source": "datagov/500-cities-city-level-data-gis-friendly-format-2017-release/files/rows.txt",
-      "fact": "In the 2017 CDC 500 Cities data, ten California cities had mental health crude prevalence (MHLTH_CrudePrev) above 15%: Compton (16.4%), Hesperia, Lynwood, Merced, Perris, Salinas, San Bernardino (16.4%), Santa Ana, Santa Maria, and South Gate.",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\nsource = \"datagov/500-cities-city-level-data-gis-friendly-format-2017-release/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\nresult = (\n    df.loc[(df[\"StateAbbr\"] == \"CA\") & (df[\"MHLTH_CrudePrev\"] > 15), [\"PlaceName\", \"MHLTH_CrudePrev\"]]\n    .sort_values([\"PlaceName\", \"MHLTH_CrudePrev\"], ascending=[True, False])\n    .reset_index(drop=True)\n)\nanswer = result[\"PlaceName\"].tolist()",
       "subquestion": "Which California cities had mental health crude prevalence (MHLTH_CrudePrev) above 15% in the 2017 CDC 500 Cities data (StateAbbr = CA)?",
       "answer": [
         "Compton",

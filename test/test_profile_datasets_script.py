@@ -22,15 +22,12 @@ class ProfileDatasetsScriptTests(unittest.TestCase):
     def setUp(self) -> None:
         self._tmp = TemporaryDirectory()
         self._root = Path(self._tmp.name)
-        self._orig_manifest_desc_path = profile_datasets._MANIFEST_DESC_PATH
         self._input_path = self._root / "schemas.jsonl"
         self._output_path = self._root / "profiles.jsonl"
         self._descriptions_path = self._root / "descriptions.jsonl"
-        self._manifest_descriptions_path = self._root / "tasks_core_quality_file_manifest_descriptions.jsonl"
         self._snippets_path = self._root / "snippets.jsonl"
         self._csv_path = self._root / "rows.csv"
         self._jsonl_path = self._root / "rows.jsonl"
-        profile_datasets._MANIFEST_DESC_PATH = self._manifest_descriptions_path
         self._csv_path.write_text(
             "name,value,day\n"
             "Ada,1,2020-01-01\n"
@@ -67,7 +64,6 @@ class ProfileDatasetsScriptTests(unittest.TestCase):
         self._snippets_path.write_text("")
 
     def tearDown(self) -> None:
-        profile_datasets._MANIFEST_DESC_PATH = self._orig_manifest_desc_path
         self._tmp.cleanup()
 
     def _write_jsonl(self, path: Path, rows: list[dict]) -> None:
@@ -187,20 +183,23 @@ class ProfileDatasetsScriptTests(unittest.TestCase):
         self.assertEqual(row["file_path"], "files/rows.csv")
         self.assertEqual(row["llm_description"], "Manifest description")
 
-    def test_build_profiles_loads_benchmark_manifest_descriptions_as_overlay(self):
+    def test_build_profiles_accepts_uri_list_input(self):
+        uri_list_path = self._root / "table_profiles_needed.txt"
+        uri_list_path.write_text(str(self._csv_path) + "\n")
         self._write_jsonl(
-            self._manifest_descriptions_path,
+            self._descriptions_path,
             [
                 {
                     "dataset_uri": str(self._csv_path),
-                    "description": "Overlay description",
+                    "description": "Canonical description from merged table_descriptions",
                 }
             ],
         )
 
         summary = profile_datasets.build_profiles(
-            input_path=self._input_path,
+            input_path=uri_list_path,
             output_path=self._output_path,
+            input_kind="uri-list",
             descriptions_path=self._descriptions_path,
             snippets_path=self._snippets_path,
             parallel=1,
@@ -210,7 +209,8 @@ class ProfileDatasetsScriptTests(unittest.TestCase):
 
         self.assertEqual(summary, {"written": 1, "skipped": 0, "errors": 0})
         row = self._read_output_rows()[0]
-        self.assertEqual(row["llm_description"], "Overlay description")
+        self.assertEqual(row["llm_description"], "Canonical description from merged table_descriptions")
+        self.assertEqual(row["filename"], "rows")
 
     def test_build_profiles_stringifies_nested_top_rows(self):
         manifest_path = self._root / "manifest_nested.jsonl"

@@ -28,13 +28,13 @@
     },
     "5": {
       "source": "datagov/hate-crimes-by-county-and-bias-type-beginning-2010/files/rows.txt",
-      "fact": "According to the NY Hate Crimes by County dataset, in 2020, New York County had 35 Crimes Against Persons incidents and 47 Property Crimes incidents, totaling 82 hate crime incidents.",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/hate-crimes-by-county-and-bias-type-beginning-2010/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\nanswer = int(df.loc[\n    (df[\"Year\"] == 2020)\n    & (df[\"County\"] == \"New York\")\n    & (df[\"Crime Type\"].isin([\"Crimes Against Persons\", \"Property Crimes\"])),\n    \"Total Incidents\",\n].sum())",
       "subquestion": "How many total hate crime incidents were there in <node_4 answer> in 2020? (Filter: Year == 2020; County == New York; Crime Type in {Crimes Against Persons, Property Crimes}; sum Total Incidents.)",
       "answer": "82"
     },
     "6": {
       "source": "datagov/index-violent-property-and-firearm-rates-by-county-beginning-1990/files/rows.txt",
-      "fact": "According to the NY Index Crimes dataset, New York County had 898 firearm crimes (Firearm Count) in 2020.",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/index-violent-property-and-firearm-rates-by-county-beginning-1990/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\nanswer = int(df.loc[\n    (df[\"Year\"] == 2020) & (df[\"County\"] == \"New York\"),\n    \"Firearm Count\",\n].iloc[0])",
       "subquestion": "How many firearm crimes were there in <node_4 answer> in 2020? (Filter: Year == 2020; County == New York; use Firearm Count.)",
       "answer": "898"
     }

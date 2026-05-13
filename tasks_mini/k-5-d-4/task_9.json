@@ -4,7 +4,7 @@
   "nodes": {
     "1": {
       "source": "datagov/texas-department-of-criminal-justice-releases-fy-2019/files/rows.txt",
-      "fact": "In the FY 2019 TDCJ Releases dataset, release counts for the counties in the top five by average releases across FY2019-FY2022 (Harris, Dallas, Tarrant, Bexar, Hidalgo) were: Harris 9,029; Dallas 5,355; Tarrant 4,769; Bexar 4,545; Hidalgo 1,861.",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/texas-department-of-criminal-justice-releases-fy-2019/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\ncounty_counts = (\n    df.assign(County=df[\"County\"].astype(str).str.upper())\n      .groupby(\"County\")\n      .size()\n      .to_dict()\n)\n\ntop_five_counties = [\"Harris\", \"Dallas\", \"Tarrant\", \"Bexar\", \"Hidalgo\"]\nanswer = {county: int(county_counts[county.upper()]) for county in top_five_counties}",
       "subquestion": "For FY2019, what were release counts for the counties that rank in the top five by average releases across FY2019-FY2022? (Filter for this node: count rows by County in the FY2019 file; normalize County to uppercase; keep counties in the hop 1 average top five set.)",
       "answer": {
         "Harris": 9029,
@@ -16,7 +16,7 @@
     },
     "2": {
       "source": "datagov/texas-department-of-criminal-justice-releases-fy-2020/files/rows.txt",
-      "fact": "In the FY 2020 TDCJ Releases dataset, release counts for the counties in the top five by average releases across FY2019-FY2022 (Harris, Dallas, Tarrant, Bexar, Hidalgo) were: Harris 7,059; Dallas 4,540; Tarrant 4,450; Bexar 3,917; Hidalgo 1,572.",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/texas-department-of-criminal-justice-releases-fy-2020/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\ncounty_counts = (\n    df.assign(County=df[\"County\"].astype(str).str.upper())\n      .groupby(\"County\")\n      .size()\n      .to_dict()\n)\n\ntop_five_counties = [\"Harris\", \"Dallas\", \"Tarrant\", \"Bexar\", \"Hidalgo\"]\nanswer = {county: int(county_counts[county.upper()]) for county in top_five_counties}",
       "subquestion": "For FY2020, what were release counts for the counties that rank in the top five by average releases across FY2019-FY2022? (Filter for this node: count rows by County in the FY2020 file; normalize County to uppercase; keep counties in the hop 1 average top five set.)",
       "answer": {
         "Harris": 7059,
@@ -28,7 +28,7 @@
     },
     "3": {
       "source": "datagov/texas-department-of-criminal-justice-releases-fy-2021/files/rows.txt",
-      "fact": "In the FY 2021 TDCJ Releases dataset, release counts for the counties in the top five by average releases across FY2019-FY2022 (Harris, Dallas, Tarrant, Bexar, Hidalgo) were: Harris 5,210; Dallas 3,565; Tarrant 3,252; Bexar 3,236; Hidalgo 1,147.",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/texas-department-of-criminal-justice-releases-fy-2021/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\ncounty_counts = (\n    df.assign(County=df[\"County\"].astype(str).str.upper())\n      .groupby(\"County\")\n      .size()\n      .to_dict()\n)\n\ntop_five_counties = [\"Harris\", \"Dallas\", \"Tarrant\", \"Bexar\", \"Hidalgo\"]\nanswer = {county: int(county_counts[county.upper()]) for county in top_five_counties}",
       "subquestion": "For FY2021, what were release counts for the counties that rank in the top five by average releases across FY2019-FY2022? (Filter for this node: count rows by County in the FY2021 file; normalize County to uppercase; keep counties in the hop 1 average top five set.)",
       "answer": {
         "Harris": 5210,
@@ -40,7 +40,7 @@
     },
     "4": {
       "source": "datagov/texas-department-of-criminal-justice-releases-fy-2022/files/rows.txt",
-      "fact": "In the FY 2022 TDCJ Releases dataset, release counts for the counties in the top five by average releases across FY2019-FY2022 (Harris, Dallas, Tarrant, Bexar, Hidalgo) were: Harris 4,988; Dallas 3,557; Tarrant 3,231; Bexar 2,918; Hidalgo 1,015.",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/texas-department-of-criminal-justice-releases-fy-2022/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\ncounty_counts = (\n    df.assign(County=df[\"County\"].astype(str).str.upper())\n      .groupby(\"County\")\n      .size()\n      .to_dict()\n)\n\ntop_five_counties = [\"Harris\", \"Dallas\", \"Tarrant\", \"Bexar\", \"Hidalgo\"]\nanswer = {county: int(county_counts[county.upper()]) for county in top_five_counties}",
       "subquestion": "For FY2022, what were release counts for the counties that rank in the top five by average releases across FY2019-FY2022? (Filter for this node: count rows by County in the FY2022 file; normalize County to uppercase; keep counties in the hop 1 average top five set.)",
       "answer": {
         "Harris": 4988,
@@ -112,8 +112,7 @@
     "Bexar_County,_Texas",
     "San_Antonio",
     "San_Antonio_Spurs",
-    "New_York_Knicks",
-    "Manhattan"
+    "New_York_Knicks"
   ],
   "reasoning_hops": [
     {

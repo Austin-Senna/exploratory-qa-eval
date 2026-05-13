@@ -13,6 +13,7 @@ from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple
 
 from strands import tool
 from strands.tools.decorator import DecoratedFunctionTool
+from strands_evaluation.tools.external.description_rows import reject_forbidden_description_row
 
 _QUERY_TOOLS = {"search_value", "search_schema", "search_reranked", "search_ideal"}
 _PREFIX_TOOLS = {"search_prefix"}
@@ -99,11 +100,10 @@ def _load_desc_cache() -> None:
 
     if not _TABLE_DESCRIPTIONS_PATH.exists():
         raise FileNotFoundError(
-            f"Required dependency '{_TABLE_DESCRIPTIONS_PATH}' not found. "
-            "search_results=ideal requires table_descriptions.jsonl at the repo root."
+            "Required dependency 'table_descriptions.jsonl' not found. "
+            "search_results=ideal requires the canonical descriptions JSONL at the repo root."
         )
 
-    _DESC_CACHE_LOADED = True
     uri_map: Dict[str, str] = {}
     row_map: Dict[str, Dict[str, Any]] = {}
     with _TABLE_DESCRIPTIONS_PATH.open() as f:
@@ -115,14 +115,18 @@ def _load_desc_cache() -> None:
                 obj = json.loads(line)
             except json.JSONDecodeError:
                 continue
+            reject_forbidden_description_row(obj, path=_TABLE_DESCRIPTIONS_PATH)
             uri = str(obj.get("dataset_uri") or obj.get("uri") or "").strip()
             desc = str(obj.get("description") or "").strip()
-            if uri and desc and uri not in uri_map:
+            if not uri or not desc:
+                continue
+            if uri not in uri_map:
                 uri_map[uri] = desc
                 row_map[uri] = obj
 
     _DESC_BY_URI = uri_map
     _DESC_ROW_BY_URI = row_map
+    _DESC_CACHE_LOADED = True
 
 
 def _load_snippet_cache() -> None:

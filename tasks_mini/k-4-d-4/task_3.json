@@ -4,7 +4,7 @@
   "nodes": {
     "1": {
       "source": "datagov/2015-2016-shsat-admissions-test-offers-by-sending-school/files/rows.txt",
-      "fact": "In school year 2015-16, 27 NYC middle schools had at least 50 SHSAT offers to specialized high schools. These included J.H.S. 067 Louis Pasteur (26Q067) with 84 offers, M.S. 158 Marie Curie (26Q158) with 104 offers, J.H.S. 074 Nathaniel Hawthorne (26Q074) with 102 offers, J.H.S. 216 George J. Ryan (26Q216) with 92 offers, and 23 others.",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/2015-2016-shsat-admissions-test-offers-by-sending-school/files/rows.txt'\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\noffers = pd.to_numeric(df['Count of Offers'], errors=\"coerce\")\nfiltered = df[offers >= 50].copy()\nlookup = {row[\"Feeder School Name\"]: (row[\"Feeder School DBN\"], int(pd.to_numeric(row['Count of Offers'], errors=\"coerce\"))) for _, row in filtered.iterrows()}\nanswer = {}\nfor school in [\"J.H.S. 067 Louis Pasteur\", \"M.S. 158 Marie Curie\", \"J.H.S. 074 Nathaniel Hawthorne\", \"J.H.S. 216 George J. Ryan\"]:\n    dbn, count = lookup[school]\n    answer[school] = f\"{dbn}, {count} offers\" if True else dbn\nanswer['and 23 others'] = \"...\"\n",
       "subquestion": "Which NYC middle schools had at least 50 SHSAT offers to specialized high schools in school year 2015-16?",
       "answer": {
         "J.H.S. 067 Louis Pasteur": "26Q067, 84 offers",
@@ -16,7 +16,7 @@
     },
     "2": {
       "source": "datagov/2016-2017-shsat-admissions-test-offers-by-sending-school/files/rows.txt",
-      "fact": "In school year 2016-17, 27 NYC middle schools had at least 50 SHSAT offers to specialized high schools. These included J.H.S. 067 Louis Pasteur (26Q067), M.S. 158 Marie Curie (26Q158), J.H.S. 074 Nathaniel Hawthorne (26Q074), J.H.S. 216 George J. Ryan (26Q216), and 23 others.",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/2016-2017-shsat-admissions-test-offers-by-sending-school/files/rows.txt'\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\noffers = pd.to_numeric(df['Count of Offers'], errors=\"coerce\")\nfiltered = df[offers >= 50].copy()\nlookup = {row[\"Feeder School Name\"]: (row[\"Feeder School DBN\"], int(pd.to_numeric(row['Count of Offers'], errors=\"coerce\"))) for _, row in filtered.iterrows()}\nanswer = {}\nfor school in [\"J.H.S. 067 Louis Pasteur\", \"M.S. 158 Marie Curie\", \"J.H.S. 074 Nathaniel Hawthorne\", \"J.H.S. 216 George J. Ryan\"]:\n    dbn, count = lookup[school]\n    answer[school] = f\"{dbn}, {count} offers\" if False else dbn\nanswer['and 23 others'] = \"...\"\n",
       "subquestion": "Which NYC middle schools had at least 50 SHSAT offers to specialized high schools in school year 2016-17?",
       "answer": {
         "J.H.S. 067 Louis Pasteur": "26Q067",
@@ -28,7 +28,7 @@
     },
     "3": {
       "source": "datagov/2017-2018-shsat-admissions-test-offers-by-sending-school/files/rows.txt",
-      "fact": "In school year 2017-18, 28 NYC middle schools had at least 50 SHSAT offers to specialized high schools. These included J.H.S. 067 Louis Pasteur (26Q067), M.S. 158 Marie Curie (26Q158), J.H.S. 074 Nathaniel Hawthorne (26Q074), J.H.S. 216 George J. Ryan (26Q216), and 24 others.",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/2017-2018-shsat-admissions-test-offers-by-sending-school/files/rows.txt'\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\noffers = pd.to_numeric(df['Count of Offers'], errors=\"coerce\")\nfiltered = df[offers >= 50].copy()\nlookup = {row[\"Feeder School Name\"]: (row[\"Feeder School DBN\"], int(pd.to_numeric(row['Count of Offers'], errors=\"coerce\"))) for _, row in filtered.iterrows()}\nanswer = {}\nfor school in [\"J.H.S. 067 Louis Pasteur\", \"M.S. 158 Marie Curie\", \"J.H.S. 074 Nathaniel Hawthorne\", \"J.H.S. 216 George J. Ryan\"]:\n    dbn, count = lookup[school]\n    answer[school] = f\"{dbn}, {count} offers\" if False else dbn\nanswer['and 24 others'] = \"...\"\n",
       "subquestion": "Which NYC middle schools had at least 50 SHSAT offers to specialized high schools in school year 2017-18?",
       "answer": {
         "J.H.S. 067 Louis Pasteur": "26Q067",
@@ -40,7 +40,7 @@
     },
     "4": {
       "source": "datagov/2018-2019-shsat-admissions-test-offers-by-sending-school/files/rows.txt",
-      "fact": "In school year 2018-19, 23 NYC middle schools had at least 50 SHSAT offers to specialized high schools. These included J.H.S. 067 Louis Pasteur (26Q067), M.S. 158 Marie Curie (26Q158), J.H.S. 074 Nathaniel Hawthorne (26Q074), J.H.S. 216 George J. Ryan (26Q216), and 19 others.",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/2018-2019-shsat-admissions-test-offers-by-sending-school/files/rows.txt'\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\noffers = pd.to_numeric(df['Number of Offers'], errors=\"coerce\")\nfiltered = df[offers >= 50].copy()\nlookup = {row[\"Feeder School Name\"]: (row[\"Feeder School DBN\"], int(pd.to_numeric(row['Number of Offers'], errors=\"coerce\"))) for _, row in filtered.iterrows()}\nanswer = {}\nfor school in [\"J.H.S. 067 Louis Pasteur\", \"M.S. 158 Marie Curie\", \"J.H.S. 074 Nathaniel Hawthorne\", \"J.H.S. 216 George J. Ryan\"]:\n    dbn, count = lookup[school]\n    answer[school] = f\"{dbn}, {count} offers\" if False else dbn\nanswer['and 19 others'] = \"...\"\n",
       "subquestion": "Which NYC middle schools had at least 50 SHSAT offers to specialized high schools in school year 2018-19?",
       "answer": {
         "J.H.S. 067 Louis Pasteur": "26Q067",
@@ -52,7 +52,7 @@
     },
     "5": {
       "source": "datagov/2016-2017-school-locations/files/rows.txt",
-      "fact": "According to NYC DOE School Locations data for 2016-17, four schools from the intersection are in Queens District 26: J.H.S. 067 Louis Pasteur (26Q067) in Douglas Manor-Douglaston-Little Neck (NTA QN45), J.H.S. 074 Nathaniel Hawthorne (26Q074) in Oakland Gardens (NTA QN42), M.S. 158 Marie Curie (26Q158) in Bayside-Bayside Hills (NTA QN46), and J.H.S. 216 George J. Ryan (26Q216) in Fresh Meadows-Utopia (NTA QN41). The GEOGRAPHICAL_DISTRICT_CODE for all four is 26.",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/2016-2017-school-locations/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\nschools = [\"J.H.S. 067 Louis Pasteur\", \"J.H.S. 074 Nathaniel Hawthorne\", \"M.S. 158 Marie Curie\", \"J.H.S. 216 George J. Ryan\"]\nfiltered = df[df[\"LOCATION_NAME\"].isin(schools)].copy()\nfiltered[\"GEOGRAPHICAL_DISTRICT_CODE\"] = pd.to_numeric(filtered[\"GEOGRAPHICAL_DISTRICT_CODE\"], errors=\"coerce\")\nassert set(filtered[\"GEOGRAPHICAL_DISTRICT_CODE\"].dropna().astype(int)) == {26}\nlookup = dict(zip(filtered[\"LOCATION_NAME\"], filtered[\"ATS_SYSTEM_CODE\"]))\nanswer = {school: f\"{lookup[school]}, District 26\" for school in schools}\n",
       "subquestion": "Which of the 21 schools with >= 50 SHSAT offers in all 4 years are located in Queens District 26?",
       "answer": {
         "J.H.S. 067 Louis Pasteur": "26Q067, District 26",

@@ -4,7 +4,7 @@
   "nodes": {
     "1": {
       "source": "datagov/ocs-1-1-abuse-neglect-related-texas-child-fatalities-fy2013-fy2022/files/rows.txt",
-      "fact": "From 2018-2022 abuse/neglect-related child fatalities, county counts were: Brooks 1, Willacy 2, Comal 5, Atascosa 0, Victoria 6. Counties with at least 1 fatality were Brooks, Willacy, Comal, and Victoria.",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\nsource = \"datagov/ocs-1-1-abuse-neglect-related-texas-child-fatalities-fy2013-fy2022/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\ntarget_counties = [\"Brooks\", \"Willacy\", \"Comal\", \"Atascosa\", \"Victoria\"]\n\ncounty_totals = (\n    df[df[\"Fiscal Year\"].between(2018, 2022) & df[\"County\"].isin(target_counties)]\n    .groupby(\"County\", as_index=False)[\"Abuse Neglect Fatalities\"].sum()\n)\n\nqualifying = county_totals.loc[county_totals[\"Abuse Neglect Fatalities\"] >= 1, \"County\"].tolist()\nanswer = [f\"{county} County\" for county in target_counties if county in qualifying]",
       "subquestion": "Among Brooks, Willacy, Comal, Atascosa, and Victoria counties, which had at least 1 abuse/neglect-related child fatality (2018-2022)? (Filter for this node: Fiscal Year in 2018-2022; group by County; sum Abuse Neglect Fatalities.)",
       "answer": [
         "Brooks County",
@@ -15,7 +15,7 @@
     },
     "2": {
       "source": "datagov/ocs-1-2-non-abuse-neglect-related-texas-child-fatality-investigations-fy2013-fy2022/files/rows.txt",
-      "fact": "From 2018-2022 non-abuse/neglect child fatality investigations, county counts were: Brooks 1, Willacy 3, Comal 16, Atascosa 6, Victoria 11. Counties with at least 3 investigations were Willacy, Comal, Atascosa, and Victoria.",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\nsource = \"datagov/ocs-1-2-non-abuse-neglect-related-texas-child-fatality-investigations-fy2013-fy2022/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\ntarget_counties = [\"Brooks\", \"Willacy\", \"Comal\", \"Atascosa\", \"Victoria\"]\n\ncounty_totals = (\n    df[df[\"Fiscal Year\"].between(2018, 2022) & df[\"County\"].isin(target_counties)]\n    .groupby(\"County\", as_index=False)[\"Non-Abuse/Neglect Fatalities Investigated\"].sum()\n)\n\nqualifying = county_totals.loc[county_totals[\"Non-Abuse/Neglect Fatalities Investigated\"] >= 3, \"County\"].tolist()\nanswer = [f\"{county} County\" for county in target_counties if county in qualifying]",
       "subquestion": "Among Brooks, Willacy, Comal, Atascosa, and Victoria counties, which had at least 3 non-abuse/neglect child fatality investigations (2018-2022)? (Filter for this node: Fiscal Year in 2018-2022; group by County; sum Non-Abuse/Neglect Fatalities Investigated.)",
       "answer": [
         "Willacy County",
@@ -26,7 +26,7 @@
     },
     "3": {
       "source": "datagov/nchs-drug-poisoning-mortality-by-county-united-states/files/rows.txt",
-      "fact": "In the 2021 drug poisoning mortality data for Texas, model-based death rates were: Comal County 19.21235, Victoria County 19.51998, Willacy County 10.24776. The two highest rates are Victoria and Comal.",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\nsource = \"datagov/nchs-drug-poisoning-mortality-by-county-united-states/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\ntarget_counties = [\"Comal County, TX\", \"Victoria County, TX\", \"Willacy County, TX\"]\n\ncounty_rates = (\n    df[(df[\"Year\"] == 2021) & (df[\"State\"] == \"Texas\") & df[\"County\"].isin(target_counties)]\n    [[\"County\", \"Model-based Death Rate\"]]\n    .sort_values([\"Model-based Death Rate\", \"County\"], ascending=[False, True])\n    .reset_index(drop=True)\n)\n\nanswer = county_rates.head(2)[\"County\"].str.replace(\", TX\", \"\", regex=False).tolist()",
       "subquestion": "Among the counties from hop 1, which two had the highest model-based drug poisoning death rates in 2021? (Filter for this node: Year == 2021; State == Texas; County in {Comal County, TX, Victoria County, TX, Willacy County, TX}; use Model-based Death Rate.)",
       "answer": [
         "Victoria County",
@@ -35,7 +35,7 @@
     },
     "4": {
       "source": "datagov/nchs-drug-poisoning-mortality-by-county-united-states-20278/files/rows.txt",
-      "fact": "In the 2016 drug poisoning mortality data for Texas, estimated age-adjusted death rate categories were: Comal County 14-15.9, Victoria County 10-11.9, Willacy County 6-7.9. The two lowest categories are Willacy and Victoria.",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\nsource = \"datagov/nchs-drug-poisoning-mortality-by-county-united-states-20278/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\ntarget_counties = [\"Comal County, TX\", \"Victoria County, TX\", \"Willacy County, TX\"]\ncategory_col = \"Estimated Age-adjusted Death Rate, 16 Categories (in ranges)\"\n\ncounty_categories = (\n    df[(df[\"Year\"] == 2016) & (df[\"State\"] == \"Texas\") & df[\"County\"].isin(target_counties)]\n    [[\"County\", category_col]]\n    .copy()\n)\n\ncounty_categories[\"category_lower_bound\"] = county_categories[category_col].str.split(\"-\").str[0].astype(float)\ncounty_categories = county_categories.sort_values([\"category_lower_bound\", \"County\"], ascending=[True, True]).reset_index(drop=True)\nanswer = county_categories.head(2)[\"County\"].str.replace(\", TX\", \"\", regex=False).tolist()",
       "subquestion": "Among the counties from hop 1, which two had the lowest age-adjusted drug poisoning death rate categories in 2016? (Filter for this node: Year == 2016; State == Texas; County in {Comal County, TX, Victoria County, TX, Willacy County, TX}; use Estimated Age-adjusted Death Rate, 16 Categories (in ranges).)",
       "answer": [
         "Willacy County",

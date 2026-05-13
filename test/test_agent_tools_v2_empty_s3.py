@@ -153,6 +153,34 @@ class AgentToolsV2EmptyS3Tests(unittest.TestCase):
         self.assertEqual(result["row_count_estimate"], 0)
         range_get.assert_not_called()
 
+    def test_peek_file_attaches_profile_when_available(self):
+        with ExitStack() as stack:
+            self._apply_empty_object_patches(stack)
+            stack.enter_context(
+                mock.patch.object(
+                    self.mod,
+                    "load_dataset_profile",
+                    return_value={"family": "text", "row_count": 0},
+                )
+            )
+            result = self.mod.peek_file(s3_uri=self.ref["s3_uri"])
+
+        self.assertEqual(result["profile"], {"family": "text", "row_count": 0})
+
+    def test_peek_file_omits_profile_when_loader_fails(self):
+        with ExitStack() as stack:
+            self._apply_empty_object_patches(stack)
+            stack.enter_context(
+                mock.patch.object(
+                    self.mod,
+                    "load_dataset_profile",
+                    side_effect=RuntimeError("profile cache unavailable"),
+                )
+            )
+            result = self.mod.peek_file(s3_uri=self.ref["s3_uri"])
+
+        self.assertNotIn("profile", result)
+
     def test_parse_xml_records_reports_empty_object_as_non_xml_without_range_get(self):
         with ExitStack() as stack:
             range_get = self._apply_empty_object_patches(stack)

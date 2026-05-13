@@ -45,8 +45,8 @@ class _NullTqdm:
 
 def _parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--task-root", default="tasks_core_quality")
-    parser.add_argument("--output", default="tasks_core_quality_file_manifest.jsonl")
+    parser.add_argument("--task-root", default="tasks_mini")
+    parser.add_argument("--output", default="tasks_mini_file_manifest.jsonl")
     parser.add_argument("--bucket", default=BUCKET)
     return parser.parse_args(argv)
 
