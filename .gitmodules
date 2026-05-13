@@ -1,6 +1,7 @@
 [submodule "external-tools"]
 	path = external-tools
 	url = https://github.com/Austin-Senna/tools-for-lakeagent.git
+	branch = main
 [submodule "sana_framework_paper"]
 	path = sana_framework_paper
 	url = https://github.com/Austin-Senna/sana_framework_paper.git
