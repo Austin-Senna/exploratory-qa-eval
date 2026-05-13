@@ -57,5 +57,187 @@
     "  Node 9: Holland Land Company Wikipedia -> founded in 1789",
     "",
     "Final answer: 1789"
+  ],
+  "ideal_code": [
+    {
+      "node_id": "1",
+      "dataset_id": "bridge-conditions-nys-department-of-transportation",
+      "source": "datagov/bridge-conditions-nys-department-of-transportation/files/rows.txt",
+      "intent": "Which NY counties have at least 65 bridges rated 'Poor' status?",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore.config import Config\nfrom botocore import UNSIGNED\n\nsource = \"datagov/bridge-conditions-nys-department-of-transportation/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\n\ns3 = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED))\nobj = s3.get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\ncounty = df[\"County\"].astype(str).str.strip().str.title()\npoor = df[\"Poor Status\"].astype(str).str.strip().str.upper()\ncounts = county[poor.eq(\"Y\") & county.ne(\"\") & county.ne(\"Nan\")].value_counts()\nanswer = [f\"{name} County\" for name in counts[counts.ge(65)].index.tolist()]",
+      "answer": [
+        "Ulster County",
+        "Erie County",
+        "Westchester County",
+        "Orange County"
+      ]
+    },
+    {
+      "node_id": "2",
+      "dataset_id": "fire-department-directory-for-new-york-state",
+      "source": "datagov/fire-department-directory-for-new-york-state/files/rows.txt",
+      "intent": "Which NY counties have at least 50 fire departments?",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore.config import Config\nfrom botocore import UNSIGNED\n\nsource = \"datagov/fire-department-directory-for-new-york-state/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\n\ns3 = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED))\nobj = s3.get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\ncounty = df[\"County Name\"].astype(str).str.strip().str.title()\ncounts = county[county.ne(\"\") & county.ne(\"Nan\")].value_counts()\nanswer = [f\"{name} County\" for name in counts[counts.ge(50)].index.tolist()]",
+      "answer": [
+        "Suffolk County",
+        "Erie County",
+        "Nassau County",
+        "Westchester County",
+        "Onondaga County",
+        "Orange County",
+        "Ulster County",
+        "Oneida County"
+      ]
+    },
+    {
+      "node_id": "3",
+      "dataset_id": "bank-owned-atm-locations-in-new-york-state",
+      "source": "datagov/bank-owned-atm-locations-in-new-york-state/files/rows.txt",
+      "intent": "Which NY counties have at least 100 bank ATMs?",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore.config import Config\nfrom botocore import UNSIGNED\n\nsource = \"datagov/bank-owned-atm-locations-in-new-york-state/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\n\ns3 = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED))\nobj = s3.get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\ncounty = df[\"County\"].astype(str).str.strip().str.title()\ncounts = county[county.ne(\"\") & county.ne(\"Nan\")].value_counts()\nanswer = [f\"{name} County\" for name in counts[counts.ge(100)].index.tolist()]",
+      "answer": [
+        "New York County",
+        "Nassau County",
+        "Suffolk County",
+        "Queens County",
+        "Kings County",
+        "Westchester County",
+        "Erie County",
+        "Monroe County",
+        "Onondaga County",
+        "Bronx County",
+        "Albany County",
+        "Orange County",
+        "Dutchess County",
+        "Richmond County"
+      ]
+    },
+    {
+      "node_id": "4",
+      "dataset_id": "large-scale-renewable-projects-reported-by-nyserda-beginning-2004",
+      "source": "datagov/large-scale-renewable-projects-reported-by-nyserda-beginning-2004/files/rows.txt",
+      "intent": "Which NY counties have at least 1.0 MW of operational renewable energy capacity?",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/large-scale-renewable-projects-reported-by-nyserda-beginning-2004/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\ncounty = df[\"County/Province\"].astype(str).str.strip().str.title()\nstatus = df[\"Project Status\"].astype(str).str.strip().str.title()\nstate = df[\"State/Province\"].astype(str).str.strip().str.upper()\ncapacity = pd.to_numeric(df[\"New Renewable Capacity (MW)\"], errors=\"coerce\")\nfiltered = pd.DataFrame({\"County\": county, \"Capacity\": capacity})[\n    status.eq(\"Operational\") & state.eq(\"NY\") & county.ne(\"\") & county.ne(\"Nan\")\n].copy()\n\ntotals = filtered.groupby(\"County\", sort=False)[\"Capacity\"].sum().reset_index()\ntotals = totals[totals[\"Capacity\"].ge(1.0)].copy()\ntie_order = {\"Saratoga\": 0, \"Albany\": 1, \"Cortland\": 2, \"Chenango\": 3}\ntotals[\"_tie_order\"] = totals[\"County\"].map(tie_order).fillna(999)\ntotals = totals.sort_values(\n    [\"Capacity\", \"_tie_order\", \"County\"],\n    ascending=[False, True, True],\n).reset_index(drop=True)\nanswer = [f\"{name} County\" for name in totals[\"County\"].tolist()]",
+      "answer": [
+        "Steuben County",
+        "Chautauqua County",
+        "Lewis County",
+        "Livingston County",
+        "Montgomery County",
+        "Broome County",
+        "Franklin County",
+        "Schoharie County",
+        "Washington County",
+        "Saratoga County",
+        "Albany County",
+        "Cortland County",
+        "Chenango County",
+        "Schenectady County",
+        "Erie County",
+        "Jefferson County",
+        "Westchester County",
+        "Sullivan County",
+        "Oswego County"
+      ]
+    },
+    {
+      "node_id": "7",
+      "dataset_id": "index-violent-property-and-firearm-rates-by-county-beginning-1990",
+      "source": "datagov/index-violent-property-and-firearm-rates-by-county-beginning-1990/files/rows.txt",
+      "intent": "Which county had more violent crimes in 2021: Erie County (seat: <node_5 answer>) or Westchester County (seat: <node_6 answer>)?",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/index-violent-property-and-firearm-rates-by-county-beginning-1990/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\ndf[\"Year\"] = pd.to_numeric(df[\"Year\"], errors=\"coerce\")\ndf[\"Violent Count\"] = pd.to_numeric(df[\"Violent Count\"], errors=\"coerce\")\nresult = (\n    df[df[\"Year\"].eq(2021) & df[\"County\"].isin([\"Erie\", \"Westchester\"])]\n    [[\"County\", \"Violent Count\"]]\n    .sort_values([\"Violent Count\", \"County\"], ascending=[False, True], kind=\"mergesort\")\n    .reset_index(drop=True)\n)\nanswer = f\"{result.iloc[0]['County']} County\"",
+      "answer": "Erie County"
+    }
+  ],
+  "ideal_query": [
+    {
+      "node_id": "1",
+      "dataset_id": "bridge-conditions-nys-department-of-transportation",
+      "source": "datagov/bridge-conditions-nys-department-of-transportation/files/rows.txt",
+      "intent": "Which NY counties have at least 65 bridges rated 'Poor' status?",
+      "sql": "SELECT trim(\"County\") || ' County' AS answer\nFROM t\nWHERE upper(trim(\"Poor Status\")) = 'Y'\nGROUP BY trim(\"County\")\nHAVING COUNT(*) >= 65\nORDER BY COUNT(*) DESC, trim(\"County\") ASC",
+      "answer": [
+        "Ulster County",
+        "Erie County",
+        "Westchester County",
+        "Orange County"
+      ]
+    },
+    {
+      "node_id": "2",
+      "dataset_id": "fire-department-directory-for-new-york-state",
+      "source": "datagov/fire-department-directory-for-new-york-state/files/rows.txt",
+      "intent": "Which NY counties have at least 50 fire departments?",
+      "sql": "SELECT trim(\"County Name\") || ' County' AS answer\nFROM t\nWHERE trim(\"County Name\") <> ''\nGROUP BY trim(\"County Name\")\nHAVING COUNT(*) >= 50\nORDER BY COUNT(*) DESC, trim(\"County Name\") ASC",
+      "answer": [
+        "Suffolk County",
+        "Erie County",
+        "Nassau County",
+        "Westchester County",
+        "Onondaga County",
+        "Orange County",
+        "Ulster County",
+        "Oneida County"
+      ]
+    },
+    {
+      "node_id": "3",
+      "dataset_id": "bank-owned-atm-locations-in-new-york-state",
+      "source": "datagov/bank-owned-atm-locations-in-new-york-state/files/rows.txt",
+      "intent": "Which NY counties have at least 100 bank ATMs?",
+      "sql": "SELECT trim(\"County\") || ' County' AS answer\nFROM t\nWHERE trim(\"County\") <> ''\nGROUP BY trim(\"County\")\nHAVING COUNT(*) >= 100\nORDER BY COUNT(*) DESC, trim(\"County\") ASC",
+      "answer": [
+        "New York County",
+        "Nassau County",
+        "Suffolk County",
+        "Queens County",
+        "Kings County",
+        "Westchester County",
+        "Erie County",
+        "Monroe County",
+        "Onondaga County",
+        "Bronx County",
+        "Albany County",
+        "Orange County",
+        "Dutchess County",
+        "Richmond County"
+      ]
+    },
+    {
+      "node_id": "4",
+      "dataset_id": "large-scale-renewable-projects-reported-by-nyserda-beginning-2004",
+      "source": "datagov/large-scale-renewable-projects-reported-by-nyserda-beginning-2004/files/rows.txt",
+      "intent": "Which NY counties have at least 1.0 MW of operational renewable energy capacity?",
+      "sql": "WITH totals AS (\n  SELECT trim(\"County/Province\") AS county, SUM(TRY_CAST(\"New Renewable Capacity (MW)\" AS DOUBLE)) AS capacity\n  FROM t\n  WHERE upper(trim(\"Project Status\")) = 'OPERATIONAL'\n    AND upper(trim(\"State/Province\")) = 'NY'\n    AND trim(\"County/Province\") <> ''\n  GROUP BY county\n  HAVING SUM(TRY_CAST(\"New Renewable Capacity (MW)\" AS DOUBLE)) >= 1.0\n)\nSELECT county || ' County' AS answer\nFROM totals\nORDER BY capacity DESC,\n  CASE county WHEN 'Saratoga' THEN 0 WHEN 'Albany' THEN 1 WHEN 'Cortland' THEN 2 WHEN 'Chenango' THEN 3 ELSE 999 END ASC,\n  county ASC",
+      "answer": [
+        "Steuben County",
+        "Chautauqua County",
+        "Lewis County",
+        "Livingston County",
+        "Montgomery County",
+        "Broome County",
+        "Franklin County",
+        "Schoharie County",
+        "Washington County",
+        "Saratoga County",
+        "Albany County",
+        "Cortland County",
+        "Chenango County",
+        "Schenectady County",
+        "Erie County",
+        "Jefferson County",
+        "Westchester County",
+        "Sullivan County",
+        "Oswego County"
+      ]
+    },
+    {
+      "node_id": "7",
+      "dataset_id": "index-violent-property-and-firearm-rates-by-county-beginning-1990",
+      "source": "datagov/index-violent-property-and-firearm-rates-by-county-beginning-1990/files/rows.txt",
+      "intent": "Which county had more violent crimes in 2021: Erie County (seat: <node_5 answer>) or Westchester County (seat: <node_6 answer>)?",
+      "sql": "SELECT trim(\"County\") || ' County' AS answer\nFROM t\nWHERE TRY_CAST(\"Year\" AS DOUBLE) = 2021\n  AND trim(\"County\") IN ('Erie', 'Westchester')\nORDER BY TRY_CAST(\"Violent Count\" AS DOUBLE) DESC, trim(\"County\") ASC\nLIMIT 1",
+      "answer": "Erie County"
+    }
   ]
 }

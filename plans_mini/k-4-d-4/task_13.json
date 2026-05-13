@@ -49,5 +49,235 @@
     "  Node 8: Moses Brown (after whom Moses Brown Ives was named) had grandfather James Brown (1666-1732)",
     "",
     "Final answer: James Brown"
+  ],
+  "ideal_code": [
+    {
+      "node_id": "1",
+      "dataset_id": "2015-property-tax-roll",
+      "source": "datagov/2015-property-tax-roll/files/rows.txt",
+      "intent": "Which Providence properties had total assessment between $6.9 million and $7.3 million in 2015?",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/2015-property-tax-roll/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)\n\nanswer = (\n    df.loc[(df['Total_Assessment'] >= 6900000) & (df['Total_Assessment'] <= 7300000), 'Plat-Lot-Unit']\n    .drop_duplicates()\n    .sort_values()\n    .tolist()\n)",
+      "answer": [
+        "000-0001-0003",
+        "004-0261-0000",
+        "016-0633-0000",
+        "023-0772-LL01",
+        "024-0613-0000",
+        "025-0346-REVO",
+        "033-0381-0000",
+        "034-0381-0000",
+        "068-0638-0000"
+      ]
+    },
+    {
+      "node_id": "2",
+      "dataset_id": "2016-property-tax-roll",
+      "source": "datagov/2016-property-tax-roll/files/rows.txt",
+      "intent": "Which Providence properties had total assessment between $6.9 million and $7.3 million in 2016?",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/2016-property-tax-roll/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)\n\nanswer = (\n    df.loc[(df['Total_Assessment'] >= 6900000) & (df['Total_Assessment'] <= 7300000), 'Plat-Lot-Unit']\n    .drop_duplicates()\n    .sort_values()\n    .tolist()\n)",
+      "answer": [
+        "000-0001-0003",
+        "010-0718-00EX",
+        "012-0486-0000",
+        "015-0480-0000",
+        "016-0239-0000",
+        "016-0633-0000",
+        "017-0262-0000",
+        "017-0655-0000",
+        "022-0342-LB01",
+        "023-0772-LL01",
+        "025-0443-0000",
+        "029-0538-0000",
+        "039-0236-0000",
+        "046-0629-0000",
+        "065-0978-0001",
+        "067-0539-0000",
+        "076-0528-8LAW",
+        "109-0369-0000"
+      ]
+    },
+    {
+      "node_id": "3",
+      "dataset_id": "2017-property-tax-roll",
+      "source": "datagov/2017-property-tax-roll/files/rows.txt",
+      "intent": "Which Providence properties had total assessment between $6.9 million and $7.3 million in 2017?",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/2017-property-tax-roll/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)\n\nanswer = (\n    df.loc[(df['Total Assessment'] >= 6900000) & (df['Total Assessment'] <= 7300000), 'Plat-Lot-Unit']\n    .drop_duplicates()\n    .sort_values()\n    .tolist()\n)",
+      "answer": [
+        "000-0001-0003",
+        "010-0718-00EX",
+        "012-0486-0000",
+        "015-0480-0000",
+        "016-0239-0000",
+        "016-0633-0000",
+        "017-0262-0000",
+        "017-0655-0000",
+        "022-0342-LB01",
+        "023-0772-LL01",
+        "023-0997-0000",
+        "025-0440-8LAW",
+        "025-0443-0000",
+        "029-0538-0000",
+        "039-0236-0000",
+        "046-0629-0000",
+        "065-0978-0001",
+        "067-0539-0000",
+        "109-0369-0000"
+      ]
+    },
+    {
+      "node_id": "4",
+      "dataset_id": "2018-property-tax-roll",
+      "source": "datagov/2018-property-tax-roll/files/rows.txt",
+      "intent": "Which Providence properties had total assessment between $6.9 million and $7.3 million in 2018?",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/2018-property-tax-roll/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)\n\nanswer = (\n    df.loc[(df['Total Assessment'] >= 6900000) & (df['Total Assessment'] <= 7300000), 'Plat-Lot-Unit']\n    .drop_duplicates()\n    .sort_values()\n    .tolist()\n)",
+      "answer": [
+        "000-0001-0003",
+        "010-0718-00EX",
+        "012-0486-0000",
+        "015-0480-0000",
+        "016-0239-0000",
+        "016-0633-0000",
+        "017-0262-0000",
+        "017-0655-0000",
+        "022-0342-LB01",
+        "023-0772-LL01",
+        "023-0997-0000",
+        "024-0631-0000",
+        "025-0440-8LAW",
+        "025-0443-0000",
+        "029-0538-0000",
+        "039-0236-0000",
+        "046-0629-0000",
+        "065-0978-0001",
+        "067-0539-0000",
+        "091-0655-0001",
+        "109-0369-0000"
+      ]
+    },
+    {
+      "node_id": "5",
+      "dataset_id": "national-incorporated-places-and-counties",
+      "source": "datagov/national-incorporated-places-and-counties/files/rows.txt",
+      "intent": "Of the three properties in the intersection (City of Providence, RI Hospital, Brown University), which have owner names that match incorporated places in Rhode Island according to the national-incorporated-places dataset?",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/national-incorporated-places-and-counties/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)\n\ncandidates = ['City of Providence', 'RI Hospital', 'Brown University']\nanswer = (\n    df.loc[(df['State Name'] == 'Rhode Island') & df['Name'].isin(candidates), 'Name']\n    .drop_duplicates()\n    .sort_values()\n    .tolist()\n)",
+      "answer": [
+        "City of Providence"
+      ]
+    }
+  ],
+  "ideal_query": [
+    {
+      "node_id": "1",
+      "dataset_id": "2015-property-tax-roll",
+      "source": "datagov/2015-property-tax-roll/files/rows.txt",
+      "intent": "Which Providence properties had total assessment between $6.9 million and $7.3 million in 2015?",
+      "sql": "SELECT DISTINCT \"Plat-Lot-Unit\" AS answer\nFROM t\nWHERE TRY_CAST(Total_Assessment AS DOUBLE) BETWEEN 6900000 AND 7300000\nORDER BY \"Plat-Lot-Unit\" ASC",
+      "answer": [
+        "000-0001-0003",
+        "004-0261-0000",
+        "016-0633-0000",
+        "023-0772-LL01",
+        "024-0613-0000",
+        "025-0346-REVO",
+        "033-0381-0000",
+        "034-0381-0000",
+        "068-0638-0000"
+      ]
+    },
+    {
+      "node_id": "2",
+      "dataset_id": "2016-property-tax-roll",
+      "source": "datagov/2016-property-tax-roll/files/rows.txt",
+      "intent": "Which Providence properties had total assessment between $6.9 million and $7.3 million in 2016?",
+      "sql": "SELECT DISTINCT \"Plat-Lot-Unit\" AS answer\nFROM t\nWHERE TRY_CAST(Total_Assessment AS DOUBLE) BETWEEN 6900000 AND 7300000\nORDER BY \"Plat-Lot-Unit\" ASC",
+      "answer": [
+        "000-0001-0003",
+        "010-0718-00EX",
+        "012-0486-0000",
+        "015-0480-0000",
+        "016-0239-0000",
+        "016-0633-0000",
+        "017-0262-0000",
+        "017-0655-0000",
+        "022-0342-LB01",
+        "023-0772-LL01",
+        "025-0443-0000",
+        "029-0538-0000",
+        "039-0236-0000",
+        "046-0629-0000",
+        "065-0978-0001",
+        "067-0539-0000",
+        "076-0528-8LAW",
+        "109-0369-0000"
+      ]
+    },
+    {
+      "node_id": "3",
+      "dataset_id": "2017-property-tax-roll",
+      "source": "datagov/2017-property-tax-roll/files/rows.txt",
+      "intent": "Which Providence properties had total assessment between $6.9 million and $7.3 million in 2017?",
+      "sql": "SELECT DISTINCT \"Plat-Lot-Unit\" AS answer\nFROM t\nWHERE TRY_CAST(\"Total Assessment\" AS DOUBLE) BETWEEN 6900000 AND 7300000\nORDER BY \"Plat-Lot-Unit\" ASC",
+      "answer": [
+        "000-0001-0003",
+        "010-0718-00EX",
+        "012-0486-0000",
+        "015-0480-0000",
+        "016-0239-0000",
+        "016-0633-0000",
+        "017-0262-0000",
+        "017-0655-0000",
+        "022-0342-LB01",
+        "023-0772-LL01",
+        "023-0997-0000",
+        "025-0440-8LAW",
+        "025-0443-0000",
+        "029-0538-0000",
+        "039-0236-0000",
+        "046-0629-0000",
+        "065-0978-0001",
+        "067-0539-0000",
+        "109-0369-0000"
+      ]
+    },
+    {
+      "node_id": "4",
+      "dataset_id": "2018-property-tax-roll",
+      "source": "datagov/2018-property-tax-roll/files/rows.txt",
+      "intent": "Which Providence properties had total assessment between $6.9 million and $7.3 million in 2018?",
+      "sql": "SELECT DISTINCT \"Plat-Lot-Unit\" AS answer\nFROM t\nWHERE TRY_CAST(\"Total Assessment\" AS DOUBLE) BETWEEN 6900000 AND 7300000\nORDER BY \"Plat-Lot-Unit\" ASC",
+      "answer": [
+        "000-0001-0003",
+        "010-0718-00EX",
+        "012-0486-0000",
+        "015-0480-0000",
+        "016-0239-0000",
+        "016-0633-0000",
+        "017-0262-0000",
+        "017-0655-0000",
+        "022-0342-LB01",
+        "023-0772-LL01",
+        "023-0997-0000",
+        "024-0631-0000",
+        "025-0440-8LAW",
+        "025-0443-0000",
+        "029-0538-0000",
+        "039-0236-0000",
+        "046-0629-0000",
+        "065-0978-0001",
+        "067-0539-0000",
+        "091-0655-0001",
+        "109-0369-0000"
+      ]
+    },
+    {
+      "node_id": "5",
+      "dataset_id": "national-incorporated-places-and-counties",
+      "source": "datagov/national-incorporated-places-and-counties/files/rows.txt",
+      "intent": "Of the three properties in the intersection (City of Providence, RI Hospital, Brown University), which have owner names that match incorporated places in Rhode Island according to the national-incorporated-places dataset?",
+      "sql": "SELECT to_json(list(Name ORDER BY Name)) AS answer\nFROM t\nWHERE Name = 'City of Providence'\n  AND \"State Name\" = 'Rhode Island'\n  AND \"Class Code\" = 'C5'",
+      "answer": [
+        "City of Providence"
+      ]
+    }
   ]
 }

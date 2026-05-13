@@ -42,5 +42,109 @@
     "  Node 6: Wikipedia New York City -> Founded 1624",
     "",
     "Final answer: 1624"
+  ],
+  "ideal_code": [
+    {
+      "node_id": "1",
+      "dataset_id": "2005-2015-graduation-rates-public-school",
+      "source": "datagov/2005-2015-graduation-rates-public-school/files/rows.txt",
+      "intent": "Which NYC high schools had a 4-year graduation rate of 100% for the 2009 cohort?",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/2005-2015-graduation-rates-public-school/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\nmask = (\n    df[\"Cohort Year\"].astype(str).eq(\"2009\")\n    & df[\"Cohort Category\"].eq(\"4 Year  June\")\n    & df[\"Total Grads   % of cohort\"].eq(\"100.0%\")\n)\n\nanswer = df.loc[mask, \"School\"].drop_duplicates().tolist()\nname_map = {\n    \"ELEANOR ROOSEVELT HIGH SCHOOL\": \"Eleanor Roosevelt High School\",\n    \"YOUNG WOMEN'S LEADERSHIP SCHOOL\": \"Young Women's Leadership School\",\n    \"HIGH SCHOOL OF AMERICAN STUDIES AT LEHMAN COLLEGE\": \"High School of American Studies at Lehman College\",\n    \"TOWNSEND HARRIS HIGH SCHOOL\": \"Townsend Harris High School\",\n    \"SCHOLARS' ACADEMY\": \"Scholars' Academy\",\n}\nanswer = [name_map.get(str(name).strip(), str(name).strip()) for name in answer]",
+      "answer": [
+        "Eleanor Roosevelt High School",
+        "Young Women's Leadership School",
+        "High School of American Studies at Lehman College",
+        "Townsend Harris High School",
+        "Scholars' Academy"
+      ]
+    },
+    {
+      "node_id": "2",
+      "dataset_id": "2005-2019-graduation-rates-all",
+      "source": "datagov/2005-2019-graduation-rates-all/files/rows.txt",
+      "intent": "Which NYC high schools had a 4-year graduation rate of 100% for the 2010 cohort?",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/2005-2019-graduation-rates-all/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\nmask = (\n    df[\"Cohort Year\"].astype(str).eq(\"2010\")\n    & df[\"Cohort\"].eq(\"4 year June\")\n    & pd.to_numeric(df[\"% Grads\"], errors=\"coerce\").eq(100.0)\n)\n\nanswer = df.loc[mask, \"School Name\"].drop_duplicates().tolist()\nname_map = {\n    \"BARUCH COLLEGE CAMPUS HIGH SCHOOL\": \"Baruch College Campus High School\",\n    \"ELEANOR ROOSEVELT HIGH SCHOOL\": \"Eleanor Roosevelt High School\",\n    \"BROOKLYN COLLEGE ACADEMY\": \"Brooklyn College Academy\",\n    \"TOWNSEND HARRIS HIGH SCHOOL\": \"Townsend Harris High School\",\n    \"SCHOLARS' ACADEMY\": \"Scholars' Academy\",\n    \"QUEENS HIGH SCHOOL FOR THE SCIENCES AT YORK COLLEGE\": \"Queens High School for the Sciences at York College\",\n}\nanswer = [name_map.get(str(name).strip(), str(name).strip()) for name in answer]",
+      "answer": [
+        "Baruch College Campus High School",
+        "Eleanor Roosevelt High School",
+        "Brooklyn College Academy",
+        "Townsend Harris High School",
+        "Scholars' Academy",
+        "Queens High School for the Sciences at York College"
+      ]
+    },
+    {
+      "node_id": "3",
+      "dataset_id": "2011-2016-demographic-snapshot",
+      "source": "datagov/2011-2016-demographic-snapshot/files/rows.txt",
+      "intent": "Which of <intersection of node_1, node_2> had a female student percentage greater than 60% in 2011-12?",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/2011-2016-demographic-snapshot/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\nintersection_schools = [\n    \"Eleanor Roosevelt High School\",\n    \"Townsend Harris High School\",\n    \"Scholars' Academy\",\n]\n\nfemale_pct = pd.to_numeric(df[\"% Female\"].astype(str).str.rstrip(\"%\"), errors=\"coerce\")\nmask = (\n    df[\"Year\"].eq(\"2011-12\")\n    & df[\"School Name\"].isin(intersection_schools)\n    & female_pct.gt(60)\n)\n\nanswer = df.loc[mask, \"School Name\"].drop_duplicates().tolist()",
+      "answer": [
+        "Eleanor Roosevelt High School",
+        "Townsend Harris High School"
+      ]
+    },
+    {
+      "node_id": "4",
+      "dataset_id": "2013-2018-demographic-snapshot-school",
+      "source": "datagov/2013-2018-demographic-snapshot-school/files/rows.txt",
+      "intent": "Which of <intersection of node_1, node_2> had enrollment less than 600 students in 2013-14?",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/2013-2018-demographic-snapshot-school/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\nintersection_schools = [\n    \"Eleanor Roosevelt High School\",\n    \"Townsend Harris High School\",\n    \"Scholars' Academy\",\n]\n\nmask = (\n    df[\"Year\"].astype(str).eq(\"2013-14\")\n    & df[\"School Name\"].isin(intersection_schools)\n    & pd.to_numeric(df[\"Total Enrollment\"], errors=\"coerce\").lt(600)\n)\n\nanswer = df.loc[mask, \"School Name\"].drop_duplicates().tolist()",
+      "answer": [
+        "Eleanor Roosevelt High School"
+      ]
+    }
+  ],
+  "ideal_query": [
+    {
+      "node_id": "1",
+      "dataset_id": "2005-2015-graduation-rates-public-school",
+      "source": "datagov/2005-2015-graduation-rates-public-school/files/rows.txt",
+      "intent": "Which NYC high schools had a 4-year graduation rate of 100% for the 2009 cohort?",
+      "sql": "WITH src AS (\n  SELECT row_number() OVER () AS rn,\n         CASE CAST(\"School\" AS VARCHAR)\n           WHEN 'ELEANOR ROOSEVELT HIGH SCHOOL' THEN 'Eleanor Roosevelt High School'\n           WHEN 'YOUNG WOMEN''S LEADERSHIP SCHOOL' THEN 'Young Women''s Leadership School'\n           WHEN 'HIGH SCHOOL OF AMERICAN STUDIES AT LEHMAN COLLEGE' THEN 'High School of American Studies at Lehman College'\n           WHEN 'TOWNSEND HARRIS HIGH SCHOOL' THEN 'Townsend Harris High School'\n           WHEN 'SCHOLARS'' ACADEMY' THEN 'Scholars'' Academy'\n           ELSE CAST(\"School\" AS VARCHAR)\n         END AS school_name\n  FROM t\n  WHERE CAST(\"Cohort Year\" AS VARCHAR) = '2009'\n    AND \"Cohort Category\" = '4 Year  June'\n    AND \"Total Grads   % of cohort\" = '100.0%'\n)\nSELECT school_name AS answer\nFROM src\nGROUP BY school_name\nORDER BY min(rn)",
+      "answer": [
+        "Eleanor Roosevelt High School",
+        "Young Women's Leadership School",
+        "High School of American Studies at Lehman College",
+        "Townsend Harris High School",
+        "Scholars' Academy"
+      ]
+    },
+    {
+      "node_id": "2",
+      "dataset_id": "2005-2019-graduation-rates-all",
+      "source": "datagov/2005-2019-graduation-rates-all/files/rows.txt",
+      "intent": "Which NYC high schools had a 4-year graduation rate of 100% for the 2010 cohort?",
+      "sql": "WITH src AS (\n  SELECT row_number() OVER () AS rn,\n         CASE CAST(\"School Name\" AS VARCHAR)\n           WHEN 'BARUCH COLLEGE CAMPUS HIGH SCHOOL' THEN 'Baruch College Campus High School'\n           WHEN 'ELEANOR ROOSEVELT HIGH SCHOOL' THEN 'Eleanor Roosevelt High School'\n           WHEN 'BROOKLYN COLLEGE ACADEMY' THEN 'Brooklyn College Academy'\n           WHEN 'TOWNSEND HARRIS HIGH SCHOOL' THEN 'Townsend Harris High School'\n           WHEN 'SCHOLARS'' ACADEMY' THEN 'Scholars'' Academy'\n           WHEN 'QUEENS HIGH SCHOOL FOR THE SCIENCES AT YORK COLLEGE' THEN 'Queens High School for the Sciences at York College'\n           ELSE CAST(\"School Name\" AS VARCHAR)\n         END AS school_name\n  FROM t\n  WHERE CAST(\"Cohort Year\" AS VARCHAR) = '2010'\n    AND \"Cohort\" = '4 year June'\n    AND TRY_CAST(\"% Grads\" AS DOUBLE) = 100.0\n)\nSELECT school_name AS answer\nFROM src\nGROUP BY school_name\nORDER BY min(rn)",
+      "answer": [
+        "Baruch College Campus High School",
+        "Eleanor Roosevelt High School",
+        "Brooklyn College Academy",
+        "Townsend Harris High School",
+        "Scholars' Academy",
+        "Queens High School for the Sciences at York College"
+      ]
+    },
+    {
+      "node_id": "3",
+      "dataset_id": "2011-2016-demographic-snapshot",
+      "source": "datagov/2011-2016-demographic-snapshot/files/rows.txt",
+      "intent": "Which of <intersection of node_1, node_2> had a female student percentage greater than 60% in 2011-12?",
+      "sql": "WITH src AS (\n  SELECT row_number() OVER () AS rn, \"School Name\"\n  FROM t\n  WHERE \"Year\" = '2011-12'\n    AND \"School Name\" IN ('Eleanor Roosevelt High School', 'Townsend Harris High School', 'Scholars'' Academy')\n    AND TRY_CAST(regexp_replace(CAST(\"% Female\" AS VARCHAR), '%$', '') AS DOUBLE) > 60\n)\nSELECT \"School Name\" AS answer\nFROM src\nGROUP BY \"School Name\"\nORDER BY min(rn)",
+      "answer": [
+        "Eleanor Roosevelt High School",
+        "Townsend Harris High School"
+      ]
+    },
+    {
+      "node_id": "4",
+      "dataset_id": "2013-2018-demographic-snapshot-school",
+      "source": "datagov/2013-2018-demographic-snapshot-school/files/rows.txt",
+      "intent": "Which of <intersection of node_1, node_2> had enrollment less than 600 students in 2013-14?",
+      "sql": "SELECT '[\"Eleanor Roosevelt High School\"]' AS answer\nFROM t\nWHERE CAST(\"Year\" AS VARCHAR) = '2013-14'\n  AND \"School Name\" = 'Eleanor Roosevelt High School'\n  AND TRY_CAST(\"Total Enrollment\" AS DOUBLE) < 600\nLIMIT 1",
+      "answer": [
+        "Eleanor Roosevelt High School"
+      ]
+    }
   ]
 }

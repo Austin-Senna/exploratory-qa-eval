@@ -50,5 +50,57 @@
     "  Result: Pittsburgh, Pennsylvania",
     "",
     "Final answer: Pittsburgh, Pennsylvania"
+  ],
+  "ideal_code": [
+    {
+      "node_id": "1",
+      "dataset_id": "500-cities-local-data-for-better-health-2016-release",
+      "source": "datagov/500-cities-local-data-for-better-health-2016-release/files/rows.txt",
+      "intent": "What is the US city with the highest average age-adjusted adult obesity rate (2016-2018)? (Filter for this node: GeographicLevel == City; Measure == \"Obesity among adults aged >=18 Years\"; Data_Value_Type == \"Age-adjusted prevalence\"; rank by Data_Value; keep top 3.)",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/500-cities-local-data-for-better-health-2016-release/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\ncity_obesity = (\n    df[\n        (df[\"GeographicLevel\"] == \"City\")\n        & (df[\"Measure\"] == \"Obesity among adults aged >=18 Years\")\n        & (df[\"Data_Value_Type\"] == \"Age-adjusted prevalence\")\n    ][[\"CityName\", \"StateDesc\", \"Data_Value\"]]\n    .dropna(subset=[\"Data_Value\"])\n    .sort_values([\"Data_Value\", \"CityName\", \"StateDesc\"], ascending=[False, True, True])\n    .reset_index(drop=True)\n)\n\ntop_ranked = city_obesity.head(3)\nanswer = dict(zip(top_ranked[\"CityName\"], top_ranked[\"Data_Value\"]))",
+      "answer": {
+        "Dayton": 47.2,
+        "Gary": 46.9,
+        "Detroit": 45.2
+      }
+    },
+    {
+      "node_id": "2",
+      "dataset_id": "500-cities-local-data-for-better-health-2018-release",
+      "source": "datagov/500-cities-local-data-for-better-health-2018-release/files/rows.txt",
+      "intent": "What is the US city with the highest average age-adjusted adult obesity rate (2016-2018)? (Filter for this node: GeographicLevel == City; Measure == \"Obesity among adults aged >=18 Years\"; Data_Value_Type == \"Age-adjusted prevalence\"; rank by Data_Value; keep top 3.)",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/500-cities-local-data-for-better-health-2018-release/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\ncity_obesity = (\n    df[\n        (df[\"GeographicLevel\"] == \"City\")\n        & (df[\"Measure\"] == \"Obesity among adults aged >=18 Years\")\n        & (df[\"Data_Value_Type\"] == \"Age-adjusted prevalence\")\n        & (df[\"CityName\"].isin([\"Gary\", \"Detroit\", \"Dayton\"]))\n    ][[\"CityName\", \"StateDesc\", \"Data_Value\"]]\n    .dropna(subset=[\"Data_Value\"])\n    .sort_values([\"CityName\", \"StateDesc\"])\n    .reset_index(drop=True)\n)\n\nanswer = dict(zip(city_obesity[\"CityName\"], city_obesity[\"Data_Value\"]))",
+      "answer": {
+        "Gary": 49.0,
+        "Detroit": 47.4,
+        "Dayton": 43.5
+      }
+    }
+  ],
+  "ideal_query": [
+    {
+      "node_id": "1",
+      "dataset_id": "500-cities-local-data-for-better-health-2016-release",
+      "source": "datagov/500-cities-local-data-for-better-health-2016-release/files/rows.txt",
+      "intent": "What is the US city with the highest average age-adjusted adult obesity rate (2016-2018)? (Filter for this node: GeographicLevel == City; Measure == \"Obesity among adults aged >=18 Years\"; Data_Value_Type == \"Age-adjusted prevalence\"; rank by Data_Value; keep top 3.)",
+      "sql": "WITH ranked AS (\n  SELECT \"CityName\" AS city, TRY_CAST(\"Data_Value\" AS DOUBLE) AS value\n  FROM t\n  WHERE \"GeographicLevel\" = 'City'\n    AND \"Measure\" = 'Obesity among adults aged >=18 Years'\n    AND \"Data_Value_Type\" = 'Age-adjusted prevalence'\n    AND \"Data_Value\" IS NOT NULL\n  ORDER BY value DESC, \"CityName\" ASC, \"StateDesc\" ASC\n  LIMIT 3\n)\nSELECT json_group_object(city, value) AS answer FROM ranked",
+      "answer": {
+        "Dayton": 47.2,
+        "Gary": 46.9,
+        "Detroit": 45.2
+      }
+    },
+    {
+      "node_id": "2",
+      "dataset_id": "500-cities-local-data-for-better-health-2018-release",
+      "source": "datagov/500-cities-local-data-for-better-health-2018-release/files/rows.txt",
+      "intent": "What is the US city with the highest average age-adjusted adult obesity rate (2016-2018)? (Filter for this node: GeographicLevel == City; Measure == \"Obesity among adults aged >=18 Years\"; Data_Value_Type == \"Age-adjusted prevalence\"; rank by Data_Value; keep top 3.)",
+      "sql": "WITH filtered AS (\n  SELECT \"CityName\" AS city, TRY_CAST(\"Data_Value\" AS DOUBLE) AS value\n  FROM t\n  WHERE \"GeographicLevel\" = 'City'\n    AND \"Measure\" = 'Obesity among adults aged >=18 Years'\n    AND \"Data_Value_Type\" = 'Age-adjusted prevalence'\n    AND \"CityName\" IN ('Gary', 'Detroit', 'Dayton')\n    AND \"Data_Value\" IS NOT NULL\n)\nSELECT json_group_object(city, value) AS answer FROM filtered",
+      "answer": {
+        "Gary": 49.0,
+        "Detroit": 47.4,
+        "Dayton": 43.5
+      }
+    }
   ]
 }

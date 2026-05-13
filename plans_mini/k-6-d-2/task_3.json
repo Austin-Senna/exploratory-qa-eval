@@ -51,5 +51,47 @@
     "  Node 8: Albany County -> 359.8 per 100,000 in 2018",
     "  Result: 359.8",
     "Final answer: Albany County; 359.8"
+  ],
+  "ideal_code": [
+    {
+      "node_id": "1",
+      "dataset_id": "county-mental-health-profiles-phase-2-beginning-2014",
+      "source": "datagov/county-mental-health-profiles-phase-2-beginning-2014/files/rows.txt",
+      "intent": "Which non-NYC NY counties are in the top 2 by total mental health service recipients (2017-2018)? (Filter for this node: Service Year in {2017, 2018}; group by County Label; sum Count of Recipients by Rate Code Group and County; exclude NYC counties {Bronx, Kings, New York, Queens, Richmond}; rank by total; keep top 2.)",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/county-mental-health-profiles-phase-2-beginning-2014/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\nrecipient_col = \"Count of Recipients by Rate Code Group and County\"\nexclude_nyc = {\"Bronx\", \"Kings\", \"New York\", \"Queens\", \"Richmond\"}\n\nresult = (\n    df[\n        df[\"Service Year\"].isin([2017, 2018])\n        & ~df[\"County Label\"].isin(exclude_nyc)\n    ]\n    .groupby(\"County Label\", as_index=False)[recipient_col]\n    .sum()\n    .sort_values(recipient_col, ascending=False)\n    .reset_index(drop=True)\n)\n\nanswer = [f\"{county} County\" for county in result.head(2)[\"County Label\"].tolist()]",
+      "answer": [
+        "Erie County",
+        "Monroe County"
+      ]
+    },
+    {
+      "node_id": "8",
+      "dataset_id": "index-violent-property-and-firearm-rates-by-county-beginning-1990",
+      "source": "datagov/index-violent-property-and-firearm-rates-by-county-beginning-1990/files/rows.txt",
+      "intent": "What was the violent crime rate per 100,000 population in 2018 for the county (from hop 5)? (Filter for this node: County == Albany; Year == 2018; read Violent Rate.)",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/index-violent-property-and-firearm-rates-by-county-beginning-1990/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\nresult = df[(df[\"County\"] == \"Albany\") & (df[\"Year\"] == 2018)][[\"County\", \"Year\", \"Violent Rate\"]]\nanswer = str(result[\"Violent Rate\"].iloc[0])",
+      "answer": "359.8"
+    }
+  ],
+  "ideal_query": [
+    {
+      "node_id": "1",
+      "dataset_id": "county-mental-health-profiles-phase-2-beginning-2014",
+      "source": "datagov/county-mental-health-profiles-phase-2-beginning-2014/files/rows.txt",
+      "intent": "Which non-NYC NY counties are in the top 2 by total mental health service recipients (2017-2018)? (Filter for this node: Service Year in {2017, 2018}; group by County Label; sum Count of Recipients by Rate Code Group and County; exclude NYC counties {Bronx, Kings, New York, Queens, Richmond}; rank by total; keep top 2.)",
+      "answer": [
+        "Erie County",
+        "Monroe County"
+      ],
+      "sql": "WITH totals AS (\n  SELECT \"County Label\" AS county, SUM(TRY_CAST(\"Count of Recipients by Rate Code Group and County\" AS DOUBLE)) AS recipients\n  FROM t\n  WHERE TRY_CAST(\"Service Year\" AS INTEGER) IN (2017, 2018)\n    AND \"County Label\" NOT IN ('Bronx', 'Kings', 'New York', 'Queens', 'Richmond')\n  GROUP BY \"County Label\"\n)\nSELECT county || ' County' AS answer\nFROM totals\nORDER BY recipients DESC, county ASC\nLIMIT 2"
+    },
+    {
+      "node_id": "8",
+      "dataset_id": "index-violent-property-and-firearm-rates-by-county-beginning-1990",
+      "source": "datagov/index-violent-property-and-firearm-rates-by-county-beginning-1990/files/rows.txt",
+      "intent": "What was the violent crime rate per 100,000 population in 2018 for the county (from hop 5)? (Filter for this node: County == Albany; Year == 2018; read Violent Rate.)",
+      "answer": "359.8",
+      "sql": "SELECT TRY_CAST(\"Violent Rate\" AS DOUBLE) AS answer\nFROM t\nWHERE \"County\" = 'Albany'\n  AND TRY_CAST(\"Year\" AS INTEGER) = 2018\nLIMIT 1"
+    }
   ]
 }

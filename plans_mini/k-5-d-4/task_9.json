@@ -55,5 +55,121 @@
     "  Node 8: Knicks are based in Manhattan",
     "",
     "Final answer: Manhattan"
+  ],
+  "ideal_code": [
+    {
+      "node_id": "1",
+      "dataset_id": "texas-department-of-criminal-justice-releases-fy-2019",
+      "source": "datagov/texas-department-of-criminal-justice-releases-fy-2019/files/rows.txt",
+      "intent": "For FY2019, what were release counts for the counties that rank in the top five by average releases across FY2019-FY2022? (Filter for this node: count rows by County in the FY2019 file; normalize County to uppercase; keep counties in the hop 1 average top five set.)",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/texas-department-of-criminal-justice-releases-fy-2019/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\ncounty_counts = (\n    df.assign(County=df[\"County\"].astype(str).str.upper())\n      .groupby(\"County\")\n      .size()\n      .to_dict()\n)\n\ntop_five_counties = [\"Harris\", \"Dallas\", \"Tarrant\", \"Bexar\", \"Hidalgo\"]\nanswer = {county: int(county_counts[county.upper()]) for county in top_five_counties}",
+      "answer": {
+        "Harris": 9029,
+        "Dallas": 5355,
+        "Tarrant": 4769,
+        "Bexar": 4545,
+        "Hidalgo": 1861
+      }
+    },
+    {
+      "node_id": "2",
+      "dataset_id": "texas-department-of-criminal-justice-releases-fy-2020",
+      "source": "datagov/texas-department-of-criminal-justice-releases-fy-2020/files/rows.txt",
+      "intent": "For FY2020, what were release counts for the counties that rank in the top five by average releases across FY2019-FY2022? (Filter for this node: count rows by County in the FY2020 file; normalize County to uppercase; keep counties in the hop 1 average top five set.)",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/texas-department-of-criminal-justice-releases-fy-2020/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\ncounty_counts = (\n    df.assign(County=df[\"County\"].astype(str).str.upper())\n      .groupby(\"County\")\n      .size()\n      .to_dict()\n)\n\ntop_five_counties = [\"Harris\", \"Dallas\", \"Tarrant\", \"Bexar\", \"Hidalgo\"]\nanswer = {county: int(county_counts[county.upper()]) for county in top_five_counties}",
+      "answer": {
+        "Harris": 7059,
+        "Dallas": 4540,
+        "Tarrant": 4450,
+        "Bexar": 3917,
+        "Hidalgo": 1572
+      }
+    },
+    {
+      "node_id": "3",
+      "dataset_id": "texas-department-of-criminal-justice-releases-fy-2021",
+      "source": "datagov/texas-department-of-criminal-justice-releases-fy-2021/files/rows.txt",
+      "intent": "For FY2021, what were release counts for the counties that rank in the top five by average releases across FY2019-FY2022? (Filter for this node: count rows by County in the FY2021 file; normalize County to uppercase; keep counties in the hop 1 average top five set.)",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/texas-department-of-criminal-justice-releases-fy-2021/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\ncounty_counts = (\n    df.assign(County=df[\"County\"].astype(str).str.upper())\n      .groupby(\"County\")\n      .size()\n      .to_dict()\n)\n\ntop_five_counties = [\"Harris\", \"Dallas\", \"Tarrant\", \"Bexar\", \"Hidalgo\"]\nanswer = {county: int(county_counts[county.upper()]) for county in top_five_counties}",
+      "answer": {
+        "Harris": 5210,
+        "Dallas": 3565,
+        "Tarrant": 3252,
+        "Bexar": 3236,
+        "Hidalgo": 1147
+      }
+    },
+    {
+      "node_id": "4",
+      "dataset_id": "texas-department-of-criminal-justice-releases-fy-2022",
+      "source": "datagov/texas-department-of-criminal-justice-releases-fy-2022/files/rows.txt",
+      "intent": "For FY2022, what were release counts for the counties that rank in the top five by average releases across FY2019-FY2022? (Filter for this node: count rows by County in the FY2022 file; normalize County to uppercase; keep counties in the hop 1 average top five set.)",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/texas-department-of-criminal-justice-releases-fy-2022/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\ncounty_counts = (\n    df.assign(County=df[\"County\"].astype(str).str.upper())\n      .groupby(\"County\")\n      .size()\n      .to_dict()\n)\n\ntop_five_counties = [\"Harris\", \"Dallas\", \"Tarrant\", \"Bexar\", \"Hidalgo\"]\nanswer = {county: int(county_counts[county.upper()]) for county in top_five_counties}",
+      "answer": {
+        "Harris": 4988,
+        "Dallas": 3557,
+        "Tarrant": 3231,
+        "Bexar": 2918,
+        "Hidalgo": 1015
+      }
+    }
+  ],
+  "ideal_query": [
+    {
+      "node_id": "1",
+      "dataset_id": "texas-department-of-criminal-justice-releases-fy-2019",
+      "source": "datagov/texas-department-of-criminal-justice-releases-fy-2019/files/rows.txt",
+      "intent": "For FY2019, what were release counts for the counties that rank in the top five by average releases across FY2019-FY2022? (Filter for this node: count rows by County in the FY2019 file; normalize County to uppercase; keep counties in the hop 1 average top five set.)",
+      "sql": "WITH targets(name, upper_name, ord) AS (VALUES ('Harris', 'HARRIS', 0), ('Dallas', 'DALLAS', 1), ('Tarrant', 'TARRANT', 2), ('Bexar', 'BEXAR', 3), ('Hidalgo', 'HIDALGO', 4)), counts AS (\n  SELECT upper(trim(\"County\")) AS county, COUNT(*) AS release_count\n  FROM t\n  GROUP BY county\n)\nSELECT json_group_object(targets.name, CAST(counts.release_count AS BIGINT)) AS answer\nFROM targets\nJOIN counts ON counts.county = targets.upper_name",
+      "answer": {
+        "Harris": 9029,
+        "Dallas": 5355,
+        "Tarrant": 4769,
+        "Bexar": 4545,
+        "Hidalgo": 1861
+      }
+    },
+    {
+      "node_id": "2",
+      "dataset_id": "texas-department-of-criminal-justice-releases-fy-2020",
+      "source": "datagov/texas-department-of-criminal-justice-releases-fy-2020/files/rows.txt",
+      "intent": "For FY2020, what were release counts for the counties that rank in the top five by average releases across FY2019-FY2022? (Filter for this node: count rows by County in the FY2020 file; normalize County to uppercase; keep counties in the hop 1 average top five set.)",
+      "sql": "WITH targets(name, upper_name, ord) AS (VALUES ('Harris', 'HARRIS', 0), ('Dallas', 'DALLAS', 1), ('Tarrant', 'TARRANT', 2), ('Bexar', 'BEXAR', 3), ('Hidalgo', 'HIDALGO', 4)), counts AS (\n  SELECT upper(trim(\"County\")) AS county, COUNT(*) AS release_count\n  FROM t\n  GROUP BY county\n)\nSELECT json_group_object(targets.name, CAST(counts.release_count AS BIGINT)) AS answer\nFROM targets\nJOIN counts ON counts.county = targets.upper_name",
+      "answer": {
+        "Harris": 7059,
+        "Dallas": 4540,
+        "Tarrant": 4450,
+        "Bexar": 3917,
+        "Hidalgo": 1572
+      }
+    },
+    {
+      "node_id": "3",
+      "dataset_id": "texas-department-of-criminal-justice-releases-fy-2021",
+      "source": "datagov/texas-department-of-criminal-justice-releases-fy-2021/files/rows.txt",
+      "intent": "For FY2021, what were release counts for the counties that rank in the top five by average releases across FY2019-FY2022? (Filter for this node: count rows by County in the FY2021 file; normalize County to uppercase; keep counties in the hop 1 average top five set.)",
+      "sql": "WITH targets(name, upper_name, ord) AS (VALUES ('Harris', 'HARRIS', 0), ('Dallas', 'DALLAS', 1), ('Tarrant', 'TARRANT', 2), ('Bexar', 'BEXAR', 3), ('Hidalgo', 'HIDALGO', 4)), counts AS (\n  SELECT upper(trim(\"County\")) AS county, COUNT(*) AS release_count\n  FROM t\n  GROUP BY county\n)\nSELECT json_group_object(targets.name, CAST(counts.release_count AS BIGINT)) AS answer\nFROM targets\nJOIN counts ON counts.county = targets.upper_name",
+      "answer": {
+        "Harris": 5210,
+        "Dallas": 3565,
+        "Tarrant": 3252,
+        "Bexar": 3236,
+        "Hidalgo": 1147
+      }
+    },
+    {
+      "node_id": "4",
+      "dataset_id": "texas-department-of-criminal-justice-releases-fy-2022",
+      "source": "datagov/texas-department-of-criminal-justice-releases-fy-2022/files/rows.txt",
+      "intent": "For FY2022, what were release counts for the counties that rank in the top five by average releases across FY2019-FY2022? (Filter for this node: count rows by County in the FY2022 file; normalize County to uppercase; keep counties in the hop 1 average top five set.)",
+      "sql": "WITH targets(name, upper_name, ord) AS (VALUES ('Harris', 'HARRIS', 0), ('Dallas', 'DALLAS', 1), ('Tarrant', 'TARRANT', 2), ('Bexar', 'BEXAR', 3), ('Hidalgo', 'HIDALGO', 4)), counts AS (\n  SELECT upper(trim(\"County\")) AS county, COUNT(*) AS release_count\n  FROM t\n  GROUP BY county\n)\nSELECT json_group_object(targets.name, CAST(counts.release_count AS BIGINT)) AS answer\nFROM targets\nJOIN counts ON counts.county = targets.upper_name",
+      "answer": {
+        "Harris": 4988,
+        "Dallas": 3557,
+        "Tarrant": 3231,
+        "Bexar": 2918,
+        "Hidalgo": 1015
+      }
+    }
   ]
 }

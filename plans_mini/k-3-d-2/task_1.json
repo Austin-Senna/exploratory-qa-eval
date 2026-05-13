@@ -68,8 +68,7 @@
       "dataset_id": "apd-computer-aided-dispatch-incidents",
       "source": "datagov/apd-computer-aided-dispatch-incidents/files/rows.txt",
       "intent": "In 2023 APD computer-aided-dispatch incidents data, within sector <node_2 answer>, which council district has the most incidents?",
-      "sql": "SELECT trim(CAST(\"Council District\" AS VARCHAR)) AS answer\nFROM t\nWHERE TRY_CAST(\"Response Year\" AS INTEGER) = 2023\n  AND lower(trim(CAST(Sector AS VARCHAR))) = 'charlie'\n  AND trim(CAST(\"Council District\" AS VARCHAR)) <> ''\nGROUP BY answer\nORDER BY COUNT(*) DESC, answer ASC\nLIMIT 1",
-      "answer": "1"
+      "answer": "Cannot execute SQL: file is too big (1377 MB >= 500 MB limit)."
     },
     {
       "node_id": "4",

@@ -28,5 +28,69 @@
     "Node 4 depends on node 3: In 2019 Ward 2, the most common offense is THEFT/OTHER.",
     "Node 5 depends on node 4: In 2020, THEFT/OTHER incidents total 10,926.",
     "Final answer: 10926"
+  ],
+  "ideal_code": [
+    {
+      "node_id": "2",
+      "dataset_id": "crime-incidents-in-2017",
+      "source": "datagov/crime-incidents-in-2017/files/data.txt",
+      "intent": "In 2017, within Ward <node_1 answer>, which offense is most common?",
+      "code": "import os\nimport io\nimport json\nfrom collections import Counter\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/crime-incidents-in-2017/files/data.txt'\nbucket = 'lakeqa-yc4103-datalake'\nlocal_path = source if os.path.exists(source) else '/tmp/k123_data_cache/' + source\n\nif os.path.exists(local_path):\n    with open(local_path, 'rb') as f:\n        raw = f.read()\nelse:\n    s3 = boto3.client('s3', config=Config(signature_version=UNSIGNED))\n    obj = s3.get_object(Bucket=bucket, Key=source)\n    raw = obj['Body'].read()\n\ndata = json.load(io.BytesIO(raw))\nnode_1_answer = '1'\ncounts = Counter()\nfor feature in data.get('features', []):\n    props = feature.get('properties') or {}\n    if str(props.get('WARD') or '').strip() == node_1_answer:\n        offense = str(props.get('OFFENSE') or '').strip()\n        if offense:\n            counts[offense] += 1\n\nanswer = str(max(counts, key=counts.get))\n",
+      "answer": "THEFT F/AUTO"
+    },
+    {
+      "node_id": "3",
+      "dataset_id": "crime-incidents-in-2018",
+      "source": "datagov/crime-incidents-in-2018/files/data.txt",
+      "intent": "In 2018, which ward has the most <node_2 answer> incidents?",
+      "code": "import os\nimport io\nimport json\nfrom collections import Counter\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/crime-incidents-in-2018/files/data.txt'\nbucket = 'lakeqa-yc4103-datalake'\nlocal_path = source if os.path.exists(source) else '/tmp/k123_data_cache/' + source\n\nif os.path.exists(local_path):\n    with open(local_path, 'rb') as f:\n        raw = f.read()\nelse:\n    s3 = boto3.client('s3', config=Config(signature_version=UNSIGNED))\n    obj = s3.get_object(Bucket=bucket, Key=source)\n    raw = obj['Body'].read()\n\ndata = json.load(io.BytesIO(raw))\nnode_2_answer = 'THEFT F/AUTO'\ncounts = Counter()\nfor feature in data.get('features', []):\n    props = feature.get('properties') or {}\n    if str(props.get('OFFENSE') or '').strip() == node_2_answer:\n        ward = str(props.get('WARD') or '').strip()\n        if ward:\n            counts[ward] += 1\n\nanswer = str(max(counts, key=counts.get))\n",
+      "answer": "2"
+    },
+    {
+      "node_id": "4",
+      "dataset_id": "crime-incidents-in-2019",
+      "source": "datagov/crime-incidents-in-2019/files/data.txt",
+      "intent": "In 2019, within Ward <node_3 answer>, which offense is most common?",
+      "code": "import os\nimport io\nimport json\nfrom collections import Counter\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/crime-incidents-in-2019/files/data.txt'\nbucket = 'lakeqa-yc4103-datalake'\nlocal_path = source if os.path.exists(source) else '/tmp/k123_data_cache/' + source\n\nif os.path.exists(local_path):\n    with open(local_path, 'rb') as f:\n        raw = f.read()\nelse:\n    s3 = boto3.client('s3', config=Config(signature_version=UNSIGNED))\n    obj = s3.get_object(Bucket=bucket, Key=source)\n    raw = obj['Body'].read()\n\ndata = json.load(io.BytesIO(raw))\nnode_3_answer = '2'\ncounts = Counter()\nfor feature in data.get('features', []):\n    props = feature.get('properties') or {}\n    if str(props.get('WARD') or '').strip() == node_3_answer:\n        offense = str(props.get('OFFENSE') or '').strip()\n        if offense:\n            counts[offense] += 1\n\nanswer = str(max(counts, key=counts.get))\n",
+      "answer": "THEFT/OTHER"
+    },
+    {
+      "node_id": "5",
+      "dataset_id": "crime-incidents-in-2020",
+      "source": "datagov/crime-incidents-in-2020/files/data.txt",
+      "intent": "In 2020, how many incidents had OFFENSE = <node_4 answer>?",
+      "code": "import os\nimport io\nimport json\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/crime-incidents-in-2020/files/data.txt'\nbucket = 'lakeqa-yc4103-datalake'\nlocal_path = source if os.path.exists(source) else '/tmp/k123_data_cache/' + source\n\nif os.path.exists(local_path):\n    with open(local_path, 'rb') as f:\n        raw = f.read()\nelse:\n    s3 = boto3.client('s3', config=Config(signature_version=UNSIGNED))\n    obj = s3.get_object(Bucket=bucket, Key=source)\n    raw = obj['Body'].read()\n\ndata = json.load(io.BytesIO(raw))\nnode_4_answer = 'THEFT/OTHER'\ncount = 0\nfor feature in data.get('features', []):\n    props = feature.get('properties') or {}\n    if str(props.get('OFFENSE') or '').strip() == node_4_answer:\n        count += 1\n\nanswer = str(count)\n",
+      "answer": "10926"
+    }
+  ],
+  "ideal_query": [
+    {
+      "node_id": "2",
+      "dataset_id": "crime-incidents-in-2017",
+      "source": "datagov/crime-incidents-in-2017/files/data.txt",
+      "intent": "In 2017, within Ward <node_1 answer>, which offense is most common?",
+      "answer": "Cannot execute SQL: query_file does not complete within practical preflight time for this nested GeoJSON source."
+    },
+    {
+      "node_id": "3",
+      "dataset_id": "crime-incidents-in-2018",
+      "source": "datagov/crime-incidents-in-2018/files/data.txt",
+      "intent": "In 2018, which ward has the most <node_2 answer> incidents?",
+      "answer": "Cannot execute SQL: query_file does not complete within practical preflight time for this nested GeoJSON source."
+    },
+    {
+      "node_id": "4",
+      "dataset_id": "crime-incidents-in-2019",
+      "source": "datagov/crime-incidents-in-2019/files/data.txt",
+      "intent": "In 2019, within Ward <node_3 answer>, which offense is most common?",
+      "answer": "Cannot execute SQL: query_file does not complete within practical preflight time for this nested GeoJSON source."
+    },
+    {
+      "node_id": "5",
+      "dataset_id": "crime-incidents-in-2020",
+      "source": "datagov/crime-incidents-in-2020/files/data.txt",
+      "intent": "In 2020, how many incidents had OFFENSE = <node_4 answer>?",
+      "answer": "Cannot execute SQL: query_file does not complete within practical preflight time for this nested GeoJSON source."
+    }
   ]
 }

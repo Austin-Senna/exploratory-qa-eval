@@ -82,8 +82,7 @@
       "dataset_id": "apd-computer-aided-dispatch-incidents",
       "source": "datagov/apd-computer-aided-dispatch-incidents/files/rows.txt",
       "intent": "In 2022, how many APD call logs were labeled as mental health incidents in patrol sector <node_2 answer>?",
-      "sql": "SELECT CAST(COUNT(*) AS VARCHAR) AS answer\nFROM t\nWHERE TRY_CAST(\"Response Year\" AS INTEGER) = 2022\n  AND lower(trim(CAST(Sector AS VARCHAR))) = 'edward'\n  AND trim(CAST(\"Mental Health Flag\" AS VARCHAR)) = 'Mental Health Incident' ",
-      "answer": "5021"
+      "answer": "Cannot execute SQL: file is too big (1377 MB >= 500 MB limit)."
     },
     {
       "node_id": "4",

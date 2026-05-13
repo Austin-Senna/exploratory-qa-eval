@@ -64,5 +64,73 @@
     "  Node 10: Boeing Plant 2 was built in 1936",
     "",
     "Final answer: 1936"
+  ],
+  "ideal_code": [
+    {
+      "node_id": "1",
+      "dataset_id": "agency-contracts-fiscal-year-2014",
+      "source": "datagov/agency-contracts-fiscal-year-2014/files/rows.txt",
+      "intent": "How many contracts did Seattle Community College - District 6 (SCCD-6), Green River Community College (GRC), and Spokane, Community Colleges of SCCD-17 have in FY 2014?",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/agency-contracts-fiscal-year-2014/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)\n\nraw_names = ['Seattle Community College - District 6 (SCCD-6)', 'Green River Community College (GRC)', 'Spokane, Community Colleges of SCCD-17)']\nout_labels = ['Seattle Community College - District 6', 'Green River Community College', 'Community Colleges of Spokane']\ncounts = df['Agency Name'].astype(str).value_counts()\nanswer = '; '.join(f'{label}: {int(counts[raw]):,}' for raw, label in zip(raw_names, out_labels))",
+      "answer": "Seattle Community College - District 6: 1,308; Green River Community College: 1,723; Community Colleges of Spokane: 1,797"
+    },
+    {
+      "node_id": "2",
+      "dataset_id": "agency-contracts-fiscal-year-2015",
+      "source": "datagov/agency-contracts-fiscal-year-2015/files/rows.txt",
+      "intent": "How many contracts did Seattle Colleges, Green River Community College (GRC), and Spokane, Community Colleges of SCCD-17 have in FY 2015?",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/agency-contracts-fiscal-year-2015/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)\n\nraw_names = ['Seattle Colleges', 'Green River Community College (GRC)', 'Spokane, Community Colleges of SCCD-17)']\nout_labels = ['Seattle Colleges', 'Green River Community College', 'Community Colleges of Spokane']\ncounts = df['Agency Name'].astype(str).value_counts()\nanswer = '; '.join(f'{label}: {int(counts[raw]):,}' for raw, label in zip(raw_names, out_labels))",
+      "answer": "Seattle Colleges: 1,292; Green River Community College: 633; Community Colleges of Spokane: 383"
+    },
+    {
+      "node_id": "3",
+      "dataset_id": "agency-contracts-fiscal-year-2016",
+      "source": "datagov/agency-contracts-fiscal-year-2016/files/rows.txt",
+      "intent": "How many contracts did Seattle Community College - District 6 (SCCD-6), Green River Community College (GRC), and Spokane, Community Colleges of SCCD-17 have in FY 2016?",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/agency-contracts-fiscal-year-2016/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)\n\nraw_names = ['Seattle Community College - District 6 (SCCD-6)', 'Green River Community College (GRC)', 'Spokane, Community Colleges of SCCD-17)']\nout_labels = ['Seattle Community College - District 6', 'Green River Community College', 'Community Colleges of Spokane']\ncounts = df['Agency Name'].astype(str).value_counts()\nanswer = '; '.join(f'{label}: {int(counts[raw]):,}' for raw, label in zip(raw_names, out_labels))",
+      "answer": "Seattle Community College - District 6: 5,244; Green River Community College: 872; Community Colleges of Spokane: 265"
+    },
+    {
+      "node_id": "9",
+      "dataset_id": "building-energy-benchmarking-data-2015-present",
+      "source": "datagov/building-energy-benchmarking-data-2015-present/files/rows.txt",
+      "intent": "Which Seattle building (from nodes 7-8: the county seat of the most populous county) has the highest average TotalGHGEmissions from 2015 to 2023? (Filter DataYear between 2015 and 2023 inclusive; group by BuildingName; average TotalGHGEmissions.)",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/building-energy-benchmarking-data-2015-present/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)\n\ndf['DataYear'] = pd.to_numeric(df['DataYear'], errors='coerce')\ndf['TotalGHGEmissions'] = pd.to_numeric(df['TotalGHGEmissions'], errors='coerce')\nranked = (\n    df.loc[\n        df['City'].astype(str).str.upper().eq('SEATTLE')\n        & df['DataYear'].between(2015, 2023, inclusive='both')\n        & df['BuildingName'].notna(),\n        ['BuildingName', 'TotalGHGEmissions'],\n    ]\n    .groupby('BuildingName', dropna=False)['TotalGHGEmissions']\n    .mean()\n    .reset_index(name='avg_TotalGHGEmissions')\n    .sort_values(['avg_TotalGHGEmissions', 'BuildingName'], ascending=[False, True])\n    .reset_index(drop=True)\n)\ntop = ranked.iloc[0]\nanswer = f\"{top['BuildingName']} with {top['avg_TotalGHGEmissions']:,.1f} metric tons CO2e average\"",
+      "answer": "BOEING PLANT 2 ISAL  (BLDG 2-122)-North Boeing Field Campus with 20,835.8 metric tons CO2e average"
+    }
+  ],
+  "ideal_query": [
+    {
+      "node_id": "1",
+      "dataset_id": "agency-contracts-fiscal-year-2014",
+      "source": "datagov/agency-contracts-fiscal-year-2014/files/rows.txt",
+      "intent": "How many contracts did Seattle Community College - District 6 (SCCD-6), Green River Community College (GRC), and Spokane, Community Colleges of SCCD-17 have in FY 2014?",
+      "sql": "WITH wanted(ord, raw_name, label) AS (VALUES (1, 'Seattle Community College - District 6 (SCCD-6)', 'Seattle Community College - District 6'), (2, 'Green River Community College (GRC)', 'Green River Community College'), (3, 'Spokane, Community Colleges of SCCD-17)', 'Community Colleges of Spokane')),\ncounts AS (\n  SELECT CAST(\"Agency Name\" AS VARCHAR) AS raw_name, COUNT(*) AS cnt\n  FROM t\n  GROUP BY raw_name\n), parts AS (\n  SELECT w.ord, w.label || ': ' || regexp_replace(CAST(c.cnt AS VARCHAR), '([0-9]+)([0-9]{3})$', '\\1,\\2') AS part\n  FROM wanted w\n  JOIN counts c ON w.raw_name = c.raw_name\n)\nSELECT string_agg(part, '; ' ORDER BY ord) AS answer\nFROM parts",
+      "answer": "Seattle Community College - District 6: 1,308; Green River Community College: 1,723; Community Colleges of Spokane: 1,797"
+    },
+    {
+      "node_id": "2",
+      "dataset_id": "agency-contracts-fiscal-year-2015",
+      "source": "datagov/agency-contracts-fiscal-year-2015/files/rows.txt",
+      "intent": "How many contracts did Seattle Colleges, Green River Community College (GRC), and Spokane, Community Colleges of SCCD-17 have in FY 2015?",
+      "sql": "WITH wanted(ord, raw_name, label) AS (VALUES (1, 'Seattle Colleges', 'Seattle Colleges'), (2, 'Green River Community College (GRC)', 'Green River Community College'), (3, 'Spokane, Community Colleges of SCCD-17)', 'Community Colleges of Spokane')),\ncounts AS (\n  SELECT CAST(\"Agency Name\" AS VARCHAR) AS raw_name, COUNT(*) AS cnt\n  FROM t\n  GROUP BY raw_name\n), parts AS (\n  SELECT w.ord, w.label || ': ' || regexp_replace(CAST(c.cnt AS VARCHAR), '([0-9]+)([0-9]{3})$', '\\1,\\2') AS part\n  FROM wanted w\n  JOIN counts c ON w.raw_name = c.raw_name\n)\nSELECT string_agg(part, '; ' ORDER BY ord) AS answer\nFROM parts",
+      "answer": "Seattle Colleges: 1,292; Green River Community College: 633; Community Colleges of Spokane: 383"
+    },
+    {
+      "node_id": "3",
+      "dataset_id": "agency-contracts-fiscal-year-2016",
+      "source": "datagov/agency-contracts-fiscal-year-2016/files/rows.txt",
+      "intent": "How many contracts did Seattle Community College - District 6 (SCCD-6), Green River Community College (GRC), and Spokane, Community Colleges of SCCD-17 have in FY 2016?",
+      "sql": "WITH wanted(ord, raw_name, label) AS (VALUES (1, 'Seattle Community College - District 6 (SCCD-6)', 'Seattle Community College - District 6'), (2, 'Green River Community College (GRC)', 'Green River Community College'), (3, 'Spokane, Community Colleges of SCCD-17)', 'Community Colleges of Spokane')),\ncounts AS (\n  SELECT CAST(\"Agency Name\" AS VARCHAR) AS raw_name, COUNT(*) AS cnt\n  FROM t\n  GROUP BY raw_name\n), parts AS (\n  SELECT w.ord, w.label || ': ' || regexp_replace(CAST(c.cnt AS VARCHAR), '([0-9]+)([0-9]{3})$', '\\1,\\2') AS part\n  FROM wanted w\n  JOIN counts c ON w.raw_name = c.raw_name\n)\nSELECT string_agg(part, '; ' ORDER BY ord) AS answer\nFROM parts",
+      "answer": "Seattle Community College - District 6: 5,244; Green River Community College: 872; Community Colleges of Spokane: 265"
+    },
+    {
+      "node_id": "9",
+      "dataset_id": "building-energy-benchmarking-data-2015-present",
+      "source": "datagov/building-energy-benchmarking-data-2015-present/files/rows.txt",
+      "intent": "Which Seattle building (from nodes 7-8: the county seat of the most populous county) has the highest average TotalGHGEmissions from 2015 to 2023? (Filter DataYear between 2015 and 2023 inclusive; group by BuildingName; average TotalGHGEmissions.)",
+      "sql": "WITH ranked AS (\n  SELECT \"BuildingName\" AS building_name, AVG(TRY_CAST(\"TotalGHGEmissions\" AS DOUBLE)) AS avg_ghg\n  FROM t\n  WHERE upper(CAST(\"City\" AS VARCHAR)) = 'SEATTLE'\n    AND TRY_CAST(\"DataYear\" AS INTEGER) BETWEEN 2015 AND 2023\n    AND \"BuildingName\" IS NOT NULL\n  GROUP BY \"BuildingName\"\n  ORDER BY avg_ghg DESC, building_name ASC\n  LIMIT 1\n)\nSELECT building_name || ' with ' || regexp_replace(printf('%.1f', avg_ghg), '([0-9]+)([0-9]{3}\\.[0-9])$', '\\1,\\2') || ' metric tons CO2e average' AS answer\nFROM ranked",
+      "answer": "BOEING PLANT 2 ISAL  (BLDG 2-122)-North Boeing Field Campus with 20,835.8 metric tons CO2e average"
+    }
   ]
 }

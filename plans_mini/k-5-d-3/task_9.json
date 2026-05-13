@@ -66,5 +66,265 @@
     "  Answer: 4",
     "",
     "Final answer: 4"
+  ],
+  "ideal_code": [
+    {
+      "node_id": "1",
+      "dataset_id": "libraries-2019-circulation-by-location",
+      "source": "datagov/libraries-2019-circulation-by-location/files/rows.txt",
+      "intent": "Which branches (with physical addresses) were in the top 5 by YTD circulation in the given year? (Filter for this node: keep rows with non-null ADDRESS; group by LOCATION; sum YTD; sort YTD desc; take top 5.)",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/libraries-2019-circulation-by-location/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)\n\ndf['YTD'] = pd.to_numeric(df['YTD'], errors='coerce')\nranked = (\n    df[df['ADDRESS'].notna()]\n    .groupby('LOCATION', as_index=False)['YTD'].sum()\n    .sort_values(['YTD', 'LOCATION'], ascending=[False, True])\n    .reset_index(drop=True)\n)\nanswer = ranked['LOCATION'].head(5).tolist()",
+      "answer": [
+        "HAROLD WASHINGTON LIBRARY CENTER",
+        "Sulzer Regional Library",
+        "Edgewater",
+        "Lincoln Belmont",
+        "Lincoln Park"
+      ]
+    },
+    {
+      "node_id": "2",
+      "dataset_id": "libraries-2020-circulation-by-location",
+      "source": "datagov/libraries-2020-circulation-by-location/files/rows.txt",
+      "intent": "Which branches (with physical addresses) were in the top 5 by YTD circulation in the given year? (Filter for this node: keep rows with non-null ADDRESS; group by BRANCH; sum YTD; sort YTD desc; take top 5.)",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/libraries-2020-circulation-by-location/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)\n\ndf['YTD'] = pd.to_numeric(df['YTD'], errors='coerce')\nranked = (\n    df[df['ADDRESS'].notna()]\n    .groupby('BRANCH', as_index=False)['YTD'].sum()\n    .sort_values(['YTD', 'BRANCH'], ascending=[False, True])\n    .reset_index(drop=True)\n)\nanswer = ranked['BRANCH'].head(5).tolist()",
+      "answer": [
+        "Harold Washington Library Center",
+        "Sulzer Regional Library",
+        "Lincoln Belmont",
+        "Edgewater",
+        "Northtown"
+      ]
+    },
+    {
+      "node_id": "3",
+      "dataset_id": "libraries-2021-circulation-by-location",
+      "source": "datagov/libraries-2021-circulation-by-location/files/rows.txt",
+      "intent": "Which branches (with physical addresses) were in the top 5 by YTD circulation in the given year? (Filter for this node: keep rows with non-null ADDRESS; group by BRANCH; sum YTD; sort YTD desc; take top 5.)",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/libraries-2021-circulation-by-location/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)\n\ndf['YTD'] = pd.to_numeric(df['YTD'], errors='coerce')\nranked = (\n    df[df['ADDRESS'].notna()]\n    .groupby('BRANCH', as_index=False)['YTD'].sum()\n    .sort_values(['YTD', 'BRANCH'], ascending=[False, True])\n    .reset_index(drop=True)\n)\nanswer = ranked['BRANCH'].head(5).tolist()",
+      "answer": [
+        "Harold Washington Library Center",
+        "Sulzer Regional Library",
+        "Lincoln Belmont",
+        "Edgewater",
+        "Lincoln Park"
+      ]
+    },
+    {
+      "node_id": "4",
+      "dataset_id": "libraries-2019-visitors-by-location",
+      "source": "datagov/libraries-2019-visitors-by-location/files/rows.txt",
+      "intent": "Among the branches (from hop 1), which were in the top 5 by YTD visitors in the given year? (Filter for this node: keep rows with non-null ADDRESS; group by LOCATION; sum YTD; sort YTD desc; take top 5 overall.)",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/libraries-2019-visitors-by-location/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)\n\ndf['YTD'] = pd.to_numeric(df['YTD'], errors='coerce')\nranked = (\n    df[df['ADDRESS'].notna()]\n    .groupby('LOCATION', as_index=False)['YTD'].sum()\n    .sort_values(['YTD', 'LOCATION'], ascending=[False, True])\n    .reset_index(drop=True)\n)\nanswer = ranked['LOCATION'].head(5).tolist()",
+      "answer": [
+        "Harold Washtington Library Center",
+        "Sulzer Regional Library",
+        "Chinatown",
+        "Woodson Regional Library",
+        "Edgewater"
+      ]
+    },
+    {
+      "node_id": "5",
+      "dataset_id": "libraries-2020-visitors-by-location",
+      "source": "datagov/libraries-2020-visitors-by-location/files/rows.txt",
+      "intent": "Among the branches (from hop 1), which were in the top 5 by YTD visitors in the given year? (Filter for this node: keep rows with non-null ADDRESS; group by BRANCH; sum YTD; sort YTD desc; take top 5 overall.)",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/libraries-2020-visitors-by-location/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)\n\ndf['YTD'] = pd.to_numeric(df['YTD'], errors='coerce')\nranked = (\n    df[df['ADDRESS'].notna()]\n    .groupby('BRANCH', as_index=False)['YTD'].sum()\n    .sort_values(['YTD', 'BRANCH'], ascending=[False, True])\n    .reset_index(drop=True)\n)\nanswer = ranked['BRANCH'].head(5).tolist()",
+      "answer": [
+        "Harold Washtington Library Center",
+        "Sulzer Regional Library",
+        "Edgewater",
+        "Woodson Regional Library",
+        "Rogers Park"
+      ]
+    },
+    {
+      "node_id": "6",
+      "dataset_id": "libraries-2021-visitors-by-location",
+      "source": "datagov/libraries-2021-visitors-by-location/files/rows.txt",
+      "intent": "Among the branches (from hop 1), which were in the top 5 by YTD visitors in the given year? (Filter for this node: keep rows with non-null ADDRESS; group by BRANCH; sum YTD; sort YTD desc; take top 5 overall.)",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/libraries-2021-visitors-by-location/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)\n\ndf['YTD'] = pd.to_numeric(df['YTD'], errors='coerce')\nranked = (\n    df[df['ADDRESS'].notna()]\n    .groupby('BRANCH', as_index=False)['YTD'].sum()\n    .sort_values(['YTD', 'BRANCH'], ascending=[False, True])\n    .reset_index(drop=True)\n)\nanswer = ranked['BRANCH'].head(5).tolist()",
+      "answer": [
+        "Harold Washtington Library Center",
+        "Sulzer Regional Library",
+        "Edgewater",
+        "Chinatown",
+        "Logan Square"
+      ]
+    },
+    {
+      "node_id": "7",
+      "dataset_id": "libraries-2019-computer-sessions-by-location",
+      "source": "datagov/libraries-2019-computer-sessions-by-location/files/rows.txt",
+      "intent": "Among the branches (from hop 2), which were in the top 3 by YTD computer sessions in the given year? (Filter for this node: keep rows with non-null ADDRESS; group by LOCATION; sum YTD; sort YTD desc; take top 3 overall.)",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/libraries-2019-computer-sessions-by-location/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)\n\ndf['YTD'] = pd.to_numeric(df['YTD'], errors='coerce')\nranked = (\n    df[df['ADDRESS'].notna()]\n    .groupby('LOCATION', as_index=False)['YTD'].sum()\n    .sort_values(['YTD', 'LOCATION'], ascending=[False, True])\n    .reset_index(drop=True)\n)\nanswer = ranked['LOCATION'].head(3).tolist()",
+      "answer": [
+        "HAROLD WASHINGTON LIBRARY CENTER",
+        "Woodson Regional Library",
+        "Sulzer Regional Library"
+      ]
+    },
+    {
+      "node_id": "8",
+      "dataset_id": "libraries-2020-computer-sessions-by-location",
+      "source": "datagov/libraries-2020-computer-sessions-by-location/files/rows.txt",
+      "intent": "Among the branches (from hop 2), which were in the top 3 by YTD computer sessions in the given year? (Filter for this node: keep rows with non-null ADDRESS; group by BRANCH; sum YTD; sort YTD desc; take top 3 overall.)",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/libraries-2020-computer-sessions-by-location/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)\n\ndf['YTD'] = pd.to_numeric(df['YTD'], errors='coerce')\nranked = (\n    df[df['ADDRESS'].notna()]\n    .groupby('BRANCH', as_index=False)['YTD'].sum()\n    .sort_values(['YTD', 'BRANCH'], ascending=[False, True])\n    .reset_index(drop=True)\n)\nanswer = ranked['BRANCH'].head(3).tolist()",
+      "answer": [
+        "Harold Washington Library Center",
+        "Woodson Regional Library",
+        "Sulzer Regional Library"
+      ]
+    },
+    {
+      "node_id": "9",
+      "dataset_id": "libraries-2021-computer-sessions-by-location",
+      "source": "datagov/libraries-2021-computer-sessions-by-location/files/rows.txt",
+      "intent": "Among the branches (from hop 2), which were in the top 3 by YTD computer sessions in the given year? (Filter for this node: keep rows with non-null ADDRESS; group by BRANCH; sum YTD; sort YTD desc; take top 3 overall.)",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/libraries-2021-computer-sessions-by-location/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)\n\ndf['YTD'] = pd.to_numeric(df['YTD'], errors='coerce')\nranked = (\n    df[df['ADDRESS'].notna()]\n    .groupby('BRANCH', as_index=False)['YTD'].sum()\n    .sort_values(['YTD', 'BRANCH'], ascending=[False, True])\n    .reset_index(drop=True)\n)\nanswer = ranked['BRANCH'].head(3).tolist()",
+      "answer": [
+        "Harold Washington Library Center",
+        "Woodson Regional Library",
+        "Sulzer Regional Library"
+      ]
+    },
+    {
+      "node_id": "11",
+      "dataset_id": "public-health-statistics-life-expectancy-by-community-area",
+      "source": "datagov/public-health-statistics-life-expectancy-by-community-area/files/rows.txt",
+      "intent": "What community area number corresponds to the neighborhood from hop 4? (Filter for this node: Community Area == 'Lincoln Square'; return Community Area Number.)",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/public-health-statistics-life-expectancy-by-community-area/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)\n\nanswer = str(int(df.loc[df['Community Area'] == 'Lincoln Square', 'Community Area Number'].iloc[0]))",
+      "answer": "4"
+    }
+  ],
+  "ideal_query": [
+    {
+      "node_id": "1",
+      "dataset_id": "libraries-2019-circulation-by-location",
+      "source": "datagov/libraries-2019-circulation-by-location/files/rows.txt",
+      "intent": "Which branches (with physical addresses) were in the top 5 by YTD circulation in the given year? (Filter for this node: keep rows with non-null ADDRESS; group by LOCATION; sum YTD; sort YTD desc; take top 5.)",
+      "sql": "SELECT name AS answer\nFROM (\n  SELECT \"LOCATION\" AS name, SUM(TRY_CAST(\"YTD\" AS DOUBLE)) AS ytd\n  FROM t\n  WHERE \"ADDRESS\" IS NOT NULL\n  GROUP BY \"LOCATION\"\n  ORDER BY ytd DESC, name ASC\n  LIMIT 5\n) q",
+      "answer": [
+        "HAROLD WASHINGTON LIBRARY CENTER",
+        "Sulzer Regional Library",
+        "Edgewater",
+        "Lincoln Belmont",
+        "Lincoln Park"
+      ]
+    },
+    {
+      "node_id": "2",
+      "dataset_id": "libraries-2020-circulation-by-location",
+      "source": "datagov/libraries-2020-circulation-by-location/files/rows.txt",
+      "intent": "Which branches (with physical addresses) were in the top 5 by YTD circulation in the given year? (Filter for this node: keep rows with non-null ADDRESS; group by BRANCH; sum YTD; sort YTD desc; take top 5.)",
+      "sql": "SELECT name AS answer\nFROM (\n  SELECT \"BRANCH\" AS name, SUM(TRY_CAST(\"YTD\" AS DOUBLE)) AS ytd\n  FROM t\n  WHERE \"ADDRESS\" IS NOT NULL\n  GROUP BY \"BRANCH\"\n  ORDER BY ytd DESC, name ASC\n  LIMIT 5\n) q",
+      "answer": [
+        "Harold Washington Library Center",
+        "Sulzer Regional Library",
+        "Lincoln Belmont",
+        "Edgewater",
+        "Northtown"
+      ]
+    },
+    {
+      "node_id": "3",
+      "dataset_id": "libraries-2021-circulation-by-location",
+      "source": "datagov/libraries-2021-circulation-by-location/files/rows.txt",
+      "intent": "Which branches (with physical addresses) were in the top 5 by YTD circulation in the given year? (Filter for this node: keep rows with non-null ADDRESS; group by BRANCH; sum YTD; sort YTD desc; take top 5.)",
+      "sql": "SELECT name AS answer\nFROM (\n  SELECT \"BRANCH\" AS name, SUM(TRY_CAST(\"YTD\" AS DOUBLE)) AS ytd\n  FROM t\n  WHERE \"ADDRESS\" IS NOT NULL\n  GROUP BY \"BRANCH\"\n  ORDER BY ytd DESC, name ASC\n  LIMIT 5\n) q",
+      "answer": [
+        "Harold Washington Library Center",
+        "Sulzer Regional Library",
+        "Lincoln Belmont",
+        "Edgewater",
+        "Lincoln Park"
+      ]
+    },
+    {
+      "node_id": "4",
+      "dataset_id": "libraries-2019-visitors-by-location",
+      "source": "datagov/libraries-2019-visitors-by-location/files/rows.txt",
+      "intent": "Among the branches (from hop 1), which were in the top 5 by YTD visitors in the given year? (Filter for this node: keep rows with non-null ADDRESS; group by LOCATION; sum YTD; sort YTD desc; take top 5 overall.)",
+      "sql": "SELECT name AS answer\nFROM (\n  SELECT \"LOCATION\" AS name, SUM(TRY_CAST(\"YTD\" AS DOUBLE)) AS ytd\n  FROM t\n  WHERE \"ADDRESS\" IS NOT NULL\n  GROUP BY \"LOCATION\"\n  ORDER BY ytd DESC, name ASC\n  LIMIT 5\n) q",
+      "answer": [
+        "Harold Washtington Library Center",
+        "Sulzer Regional Library",
+        "Chinatown",
+        "Woodson Regional Library",
+        "Edgewater"
+      ]
+    },
+    {
+      "node_id": "5",
+      "dataset_id": "libraries-2020-visitors-by-location",
+      "source": "datagov/libraries-2020-visitors-by-location/files/rows.txt",
+      "intent": "Among the branches (from hop 1), which were in the top 5 by YTD visitors in the given year? (Filter for this node: keep rows with non-null ADDRESS; group by BRANCH; sum YTD; sort YTD desc; take top 5 overall.)",
+      "sql": "SELECT name AS answer\nFROM (\n  SELECT \"BRANCH\" AS name, SUM(TRY_CAST(\"YTD\" AS DOUBLE)) AS ytd\n  FROM t\n  WHERE \"ADDRESS\" IS NOT NULL\n  GROUP BY \"BRANCH\"\n  ORDER BY ytd DESC, name ASC\n  LIMIT 5\n) q",
+      "answer": [
+        "Harold Washtington Library Center",
+        "Sulzer Regional Library",
+        "Edgewater",
+        "Woodson Regional Library",
+        "Rogers Park"
+      ]
+    },
+    {
+      "node_id": "6",
+      "dataset_id": "libraries-2021-visitors-by-location",
+      "source": "datagov/libraries-2021-visitors-by-location/files/rows.txt",
+      "intent": "Among the branches (from hop 1), which were in the top 5 by YTD visitors in the given year? (Filter for this node: keep rows with non-null ADDRESS; group by BRANCH; sum YTD; sort YTD desc; take top 5 overall.)",
+      "sql": "SELECT name AS answer\nFROM (\n  SELECT \"BRANCH\" AS name, SUM(TRY_CAST(\"YTD\" AS DOUBLE)) AS ytd\n  FROM t\n  WHERE \"ADDRESS\" IS NOT NULL\n  GROUP BY \"BRANCH\"\n  ORDER BY ytd DESC, name ASC\n  LIMIT 5\n) q",
+      "answer": [
+        "Harold Washtington Library Center",
+        "Sulzer Regional Library",
+        "Edgewater",
+        "Chinatown",
+        "Logan Square"
+      ]
+    },
+    {
+      "node_id": "7",
+      "dataset_id": "libraries-2019-computer-sessions-by-location",
+      "source": "datagov/libraries-2019-computer-sessions-by-location/files/rows.txt",
+      "intent": "Among the branches (from hop 2), which were in the top 3 by YTD computer sessions in the given year? (Filter for this node: keep rows with non-null ADDRESS; group by LOCATION; sum YTD; sort YTD desc; take top 3 overall.)",
+      "sql": "SELECT name AS answer\nFROM (\n  SELECT \"LOCATION\" AS name, SUM(TRY_CAST(\"YTD\" AS DOUBLE)) AS ytd\n  FROM t\n  WHERE \"ADDRESS\" IS NOT NULL\n  GROUP BY \"LOCATION\"\n  ORDER BY ytd DESC, name ASC\n  LIMIT 3\n) q",
+      "answer": [
+        "HAROLD WASHINGTON LIBRARY CENTER",
+        "Woodson Regional Library",
+        "Sulzer Regional Library"
+      ]
+    },
+    {
+      "node_id": "8",
+      "dataset_id": "libraries-2020-computer-sessions-by-location",
+      "source": "datagov/libraries-2020-computer-sessions-by-location/files/rows.txt",
+      "intent": "Among the branches (from hop 2), which were in the top 3 by YTD computer sessions in the given year? (Filter for this node: keep rows with non-null ADDRESS; group by BRANCH; sum YTD; sort YTD desc; take top 3 overall.)",
+      "sql": "SELECT name AS answer\nFROM (\n  SELECT \"BRANCH\" AS name, SUM(TRY_CAST(\"YTD\" AS DOUBLE)) AS ytd\n  FROM t\n  WHERE \"ADDRESS\" IS NOT NULL\n  GROUP BY \"BRANCH\"\n  ORDER BY ytd DESC, name ASC\n  LIMIT 3\n) q",
+      "answer": [
+        "Harold Washington Library Center",
+        "Woodson Regional Library",
+        "Sulzer Regional Library"
+      ]
+    },
+    {
+      "node_id": "9",
+      "dataset_id": "libraries-2021-computer-sessions-by-location",
+      "source": "datagov/libraries-2021-computer-sessions-by-location/files/rows.txt",
+      "intent": "Among the branches (from hop 2), which were in the top 3 by YTD computer sessions in the given year? (Filter for this node: keep rows with non-null ADDRESS; group by BRANCH; sum YTD; sort YTD desc; take top 3 overall.)",
+      "sql": "SELECT name AS answer\nFROM (\n  SELECT \"BRANCH\" AS name, SUM(TRY_CAST(\"YTD\" AS DOUBLE)) AS ytd\n  FROM t\n  WHERE \"ADDRESS\" IS NOT NULL\n  GROUP BY \"BRANCH\"\n  ORDER BY ytd DESC, name ASC\n  LIMIT 3\n) q",
+      "answer": [
+        "Harold Washington Library Center",
+        "Woodson Regional Library",
+        "Sulzer Regional Library"
+      ]
+    },
+    {
+      "node_id": "11",
+      "dataset_id": "public-health-statistics-life-expectancy-by-community-area",
+      "source": "datagov/public-health-statistics-life-expectancy-by-community-area/files/rows.txt",
+      "intent": "What community area number corresponds to the neighborhood from hop 4? (Filter for this node: Community Area == 'Lincoln Square'; return Community Area Number.)",
+      "sql": "SELECT CAST(\"Community Area Number\" AS VARCHAR) AS answer\nFROM t\nWHERE \"Community Area\" = 'Lincoln Square'\nLIMIT 1",
+      "answer": "4"
+    }
   ]
 }

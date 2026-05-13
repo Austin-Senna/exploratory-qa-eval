@@ -43,5 +43,41 @@
     "  Computation: |898 - 82| = 816",
     "",
     "Final answer: 816"
+  ],
+  "ideal_code": [
+    {
+      "node_id": "5",
+      "dataset_id": "hate-crimes-by-county-and-bias-type-beginning-2010",
+      "source": "datagov/hate-crimes-by-county-and-bias-type-beginning-2010/files/rows.txt",
+      "intent": "How many total hate crime incidents were there in <node_4 answer> in 2020? (Filter: Year == 2020; County == New York; Crime Type in {Crimes Against Persons, Property Crimes}; sum Total Incidents.)",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/hate-crimes-by-county-and-bias-type-beginning-2010/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\nanswer = int(df.loc[\n    (df[\"Year\"] == 2020)\n    & (df[\"County\"] == \"New York\")\n    & (df[\"Crime Type\"].isin([\"Crimes Against Persons\", \"Property Crimes\"])),\n    \"Total Incidents\",\n].sum())",
+      "answer": "82"
+    },
+    {
+      "node_id": "6",
+      "dataset_id": "index-violent-property-and-firearm-rates-by-county-beginning-1990",
+      "source": "datagov/index-violent-property-and-firearm-rates-by-county-beginning-1990/files/rows.txt",
+      "intent": "How many firearm crimes were there in <node_4 answer> in 2020? (Filter: Year == 2020; County == New York; use Firearm Count.)",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/index-violent-property-and-firearm-rates-by-county-beginning-1990/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\nanswer = int(df.loc[\n    (df[\"Year\"] == 2020) & (df[\"County\"] == \"New York\"),\n    \"Firearm Count\",\n].iloc[0])",
+      "answer": "898"
+    }
+  ],
+  "ideal_query": [
+    {
+      "node_id": "5",
+      "dataset_id": "hate-crimes-by-county-and-bias-type-beginning-2010",
+      "source": "datagov/hate-crimes-by-county-and-bias-type-beginning-2010/files/rows.txt",
+      "intent": "How many total hate crime incidents were there in <node_4 answer> in 2020? (Filter: Year == 2020; County == New York; Crime Type in {Crimes Against Persons, Property Crimes}; sum Total Incidents.)",
+      "sql": "SELECT CAST(SUM(TRY_CAST(\"Total Incidents\" AS BIGINT)) AS BIGINT) AS answer\nFROM t\nWHERE TRY_CAST(\"Year\" AS INTEGER) = 2020\n  AND \"County\" = 'New York'\n  AND \"Crime Type\" IN ('Crimes Against Persons', 'Property Crimes')",
+      "answer": "82"
+    },
+    {
+      "node_id": "6",
+      "dataset_id": "index-violent-property-and-firearm-rates-by-county-beginning-1990",
+      "source": "datagov/index-violent-property-and-firearm-rates-by-county-beginning-1990/files/rows.txt",
+      "intent": "How many firearm crimes were there in <node_4 answer> in 2020? (Filter: Year == 2020; County == New York; use Firearm Count.)",
+      "sql": "SELECT CAST(\"Firearm Count\" AS BIGINT) AS answer\nFROM t\nWHERE TRY_CAST(\"Year\" AS INTEGER) = 2020\n  AND \"County\" = 'New York'\nLIMIT 1",
+      "answer": "898"
+    }
   ]
 }

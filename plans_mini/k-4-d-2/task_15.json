@@ -39,5 +39,25 @@
     "  Result: 2941 (REQUIRES hop 3 to know the city is Pullman)",
     "",
     "Final answer: 2941"
+  ],
+  "ideal_code": [
+    {
+      "node_id": "5",
+      "dataset_id": "report-card-enrollment-2017-18-school-year",
+      "source": "datagov/report-card-enrollment-2017-18-school-year/files/rows.txt",
+      "intent": "What is the 2017-18 total student enrollment for the school district in <hop 3 answer: Pullman>? (Filter: OrganizationLevel=District; DistrictName=Pullman School District; GradeLevel=All Grades; column=All Students.)",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/report-card-enrollment-2017-18-school-year/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\nresult = df[\n    (df[\"SchoolYear\"] == \"2017-18\")\n    & (df[\"OrganizationLevel\"] == \"District\")\n    & (df[\"DistrictName\"] == \"Pullman School District\")\n    & (df[\"GradeLevel\"] == \"All Grades\")\n]\n\nanswer = result.iloc[0][\"All Students\"]\nanswer = str(answer)",
+      "answer": "2941"
+    }
+  ],
+  "ideal_query": [
+    {
+      "node_id": "5",
+      "dataset_id": "report-card-enrollment-2017-18-school-year",
+      "source": "datagov/report-card-enrollment-2017-18-school-year/files/rows.txt",
+      "intent": "What is the 2017-18 total student enrollment for the school district in <hop 3 answer: Pullman>? (Filter: OrganizationLevel=District; DistrictName=Pullman School District; GradeLevel=All Grades; column=All Students.)",
+      "sql": "SELECT CAST(\"All Students\" AS VARCHAR) AS answer\nFROM t\nWHERE \"SchoolYear\" = '2017-18'\n  AND \"OrganizationLevel\" = 'District'\n  AND \"DistrictName\" = 'Pullman School District'\n  AND \"GradeLevel\" = 'All Grades'\nLIMIT 1",
+      "answer": "2941"
+    }
   ]
 }

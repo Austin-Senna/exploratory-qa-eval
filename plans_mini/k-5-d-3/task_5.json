@@ -45,5 +45,73 @@
     "HOP 5 (d=1, James Milton Turner - node 7):",
     "  Node 7: Died in 1915",
     "  Final answer: 1915"
+  ],
+  "ideal_code": [
+    {
+      "node_id": "1",
+      "dataset_id": "2021-state-employee-pay",
+      "source": "datagov/2021-state-employee-pay/files/rows.txt",
+      "intent": "Among CORRECTIONS, SOCIAL SERVICES, and TRANSPORTATION, which had the highest average employee count across 2021-2023? (Filter for this node: Agency Name in {CORRECTIONS, SOCIAL SERVICES, TRANSPORTATION}; count rows by Agency Name.)",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/2021-state-employee-pay/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)\n\nagencies = ['CORRECTIONS', 'SOCIAL SERVICES', 'TRANSPORTATION']\nanswer = (\n    df[df['Agency Name'].isin(agencies)]\n    ['Agency Name']\n    .value_counts()\n    .reindex(agencies)\n    .astype(int)\n    .to_dict()\n)",
+      "answer": {
+        "CORRECTIONS": 12530,
+        "SOCIAL SERVICES": 8362,
+        "TRANSPORTATION": 7170
+      }
+    },
+    {
+      "node_id": "2",
+      "dataset_id": "2022-state-employee-pay",
+      "source": "datagov/2022-state-employee-pay/files/rows.txt",
+      "intent": "Among CORRECTIONS, SOCIAL SERVICES, and TRANSPORTATION, which had the highest average employee count across 2021-2023? (Filter for this node: Agency Name in {CORRECTIONS, SOCIAL SERVICES, TRANSPORTATION}; count rows by Agency Name.)",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/2022-state-employee-pay/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)\n\nagencies = ['CORRECTIONS', 'SOCIAL SERVICES', 'TRANSPORTATION']\nanswer = (\n    df[df['Agency Name'].isin(agencies)]\n    ['Agency Name']\n    .value_counts()\n    .reindex(agencies)\n    .astype(int)\n    .to_dict()\n)",
+      "answer": {
+        "CORRECTIONS": 12380,
+        "SOCIAL SERVICES": 8723,
+        "TRANSPORTATION": 6917
+      }
+    },
+    {
+      "node_id": "3",
+      "dataset_id": "2023-state-employee-pay",
+      "source": "datagov/2023-state-employee-pay/files/rows.txt",
+      "intent": "Among CORRECTIONS, SOCIAL SERVICES, and TRANSPORTATION, which had the highest average employee count across 2021-2023? (Filter for this node: Agency Name in {CORRECTIONS, SOCIAL SERVICES, TRANSPORTATION}; count rows by Agency Name.)",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/2023-state-employee-pay/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)\n\nagencies = ['CORRECTIONS', 'SOCIAL SERVICES', 'TRANSPORTATION']\ncounts_2021 = {'CORRECTIONS': 12530, 'SOCIAL SERVICES': 8362, 'TRANSPORTATION': 7170}\ncounts_2022 = {'CORRECTIONS': 12380, 'SOCIAL SERVICES': 8723, 'TRANSPORTATION': 6917}\ncounts_2023 = (\n    df[df['Agency Name'].isin(agencies)]\n    ['Agency Name']\n    .value_counts()\n    .reindex(agencies)\n    .astype(int)\n    .to_dict()\n)\naverages = {agency: (counts_2021[agency] + counts_2022[agency] + counts_2023[agency]) / 3 for agency in agencies}\nanswer = sorted(averages, key=lambda agency: (-averages[agency], agency))[0]",
+      "answer": "CORRECTIONS"
+    }
+  ],
+  "ideal_query": [
+    {
+      "node_id": "1",
+      "dataset_id": "2021-state-employee-pay",
+      "source": "datagov/2021-state-employee-pay/files/rows.txt",
+      "intent": "Among CORRECTIONS, SOCIAL SERVICES, and TRANSPORTATION, which had the highest average employee count across 2021-2023? (Filter for this node: Agency Name in {CORRECTIONS, SOCIAL SERVICES, TRANSPORTATION}; count rows by Agency Name.)",
+      "sql": "SELECT json_group_object(\"Agency Name\", cnt) AS answer\nFROM (\n  SELECT \"Agency Name\", COUNT(*) AS cnt\n  FROM t\n  WHERE \"Agency Name\" IN ('CORRECTIONS', 'SOCIAL SERVICES', 'TRANSPORTATION')\n  GROUP BY \"Agency Name\"\n  ORDER BY CASE \"Agency Name\" WHEN 'CORRECTIONS' THEN 1 WHEN 'SOCIAL SERVICES' THEN 2 WHEN 'TRANSPORTATION' THEN 3 END\n) q",
+      "answer": {
+        "CORRECTIONS": 12530,
+        "SOCIAL SERVICES": 8362,
+        "TRANSPORTATION": 7170
+      }
+    },
+    {
+      "node_id": "2",
+      "dataset_id": "2022-state-employee-pay",
+      "source": "datagov/2022-state-employee-pay/files/rows.txt",
+      "intent": "Among CORRECTIONS, SOCIAL SERVICES, and TRANSPORTATION, which had the highest average employee count across 2021-2023? (Filter for this node: Agency Name in {CORRECTIONS, SOCIAL SERVICES, TRANSPORTATION}; count rows by Agency Name.)",
+      "sql": "SELECT json_group_object(\"Agency Name\", cnt) AS answer\nFROM (\n  SELECT \"Agency Name\", COUNT(*) AS cnt\n  FROM t\n  WHERE \"Agency Name\" IN ('CORRECTIONS', 'SOCIAL SERVICES', 'TRANSPORTATION')\n  GROUP BY \"Agency Name\"\n  ORDER BY CASE \"Agency Name\" WHEN 'CORRECTIONS' THEN 1 WHEN 'SOCIAL SERVICES' THEN 2 WHEN 'TRANSPORTATION' THEN 3 END\n) q",
+      "answer": {
+        "CORRECTIONS": 12380,
+        "SOCIAL SERVICES": 8723,
+        "TRANSPORTATION": 6917
+      }
+    },
+    {
+      "node_id": "3",
+      "dataset_id": "2023-state-employee-pay",
+      "source": "datagov/2023-state-employee-pay/files/rows.txt",
+      "intent": "Among CORRECTIONS, SOCIAL SERVICES, and TRANSPORTATION, which had the highest average employee count across 2021-2023? (Filter for this node: Agency Name in {CORRECTIONS, SOCIAL SERVICES, TRANSPORTATION}; count rows by Agency Name.)",
+      "sql": "WITH counts_2023 AS (\n  SELECT \"Agency Name\" AS agency, COUNT(*) AS cnt\n  FROM t\n  WHERE \"Agency Name\" IN ('CORRECTIONS', 'SOCIAL SERVICES', 'TRANSPORTATION')\n  GROUP BY \"Agency Name\"\n), averages AS (\n  SELECT agency,\n         CASE agency\n           WHEN 'CORRECTIONS' THEN (12530 + 12380 + cnt) / 3.0\n           WHEN 'SOCIAL SERVICES' THEN (8362 + 8723 + cnt) / 3.0\n           WHEN 'TRANSPORTATION' THEN (7170 + 6917 + cnt) / 3.0\n         END AS avg_count\n  FROM counts_2023\n)\nSELECT agency AS answer\nFROM averages\nORDER BY avg_count DESC, agency ASC\nLIMIT 1",
+      "answer": "CORRECTIONS"
+    }
   ]
 }

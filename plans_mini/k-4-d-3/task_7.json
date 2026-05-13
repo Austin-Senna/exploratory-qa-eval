@@ -40,5 +40,79 @@
     "  Node 6: Rifton (which includes the former Swartekill hamlet) is in Ulster County, New York",
     "",
     "Final answer: Ulster County"
+  ],
+  "ideal_code": [
+    {
+      "node_id": "1",
+      "dataset_id": "street-sweeping-schedule-2022",
+      "source": "datagov/street-sweeping-schedule-2022/files/data.txt",
+      "intent": "Among the wards 2 and 5, which ward had the higher average number of street-sweeping schedule entries across 2022-2024? (Filter for this node: 2022 file; WARD in {2,5}; count rows by WARD.)",
+      "code": "import json\nimport boto3\nimport pandas as pd\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/street-sweeping-schedule-2022/files/data.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ncatalog = json.loads(obj[\"Body\"].read())\n\ntitle = \"Street Sweeping Schedule - 2022\"\nurl = None\nfor dataset in catalog.get(\"dataset\", []):\n    if dataset.get(\"title\") == title:\n        for dist in dataset.get(\"distribution\", []):\n            if dist.get(\"mediaType\") == \"text/csv\":\n                url = dist.get(\"downloadURL\")\n                break\n    if url:\n        break\nif not url:\n    raise ValueError(f\"Could not find CSV distribution for {title}\")\n\ndf = pd.read_csv(url)\ncounts = df[df[\"WARD\"].isin([2, 5])].groupby(\"WARD\").size().to_dict()\nanswer = {\"Ward 2\": int(counts.get(2, 0)), \"Ward 5\": int(counts.get(5, 0))}",
+      "answer": {
+        "Ward 2": 72,
+        "Ward 5": 80
+      }
+    },
+    {
+      "node_id": "2",
+      "dataset_id": "street-sweeping-schedule-2023",
+      "source": "datagov/street-sweeping-schedule-2023/files/data.txt",
+      "intent": "Among the wards 2 and 5, which ward had the higher average number of street-sweeping schedule entries across 2022-2024? (Filter for this node: 2023 file; WARD in {2,5}; count rows by WARD.)",
+      "code": "import json\nimport boto3\nimport pandas as pd\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/street-sweeping-schedule-2023/files/data.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ncatalog = json.loads(obj[\"Body\"].read())\n\ntitle = \"Street Sweeping Schedule - 2023\"\nurl = None\nfor dataset in catalog.get(\"dataset\", []):\n    if dataset.get(\"title\") == title:\n        for dist in dataset.get(\"distribution\", []):\n            if dist.get(\"mediaType\") == \"text/csv\":\n                url = dist.get(\"downloadURL\")\n                break\n    if url:\n        break\nif not url:\n    raise ValueError(f\"Could not find CSV distribution for {title}\")\n\ndf = pd.read_csv(url)\ncounts = df[df[\"WARD\"].isin([2, 5])].groupby(\"WARD\").size().to_dict()\nanswer = {\"Ward 2\": int(counts.get(2, 0)), \"Ward 5\": int(counts.get(5, 0))}",
+      "answer": {
+        "Ward 2": 54,
+        "Ward 5": 83
+      }
+    },
+    {
+      "node_id": "3",
+      "dataset_id": "street-sweeping-schedule-2024",
+      "source": "datagov/street-sweeping-schedule-2024/files/data.txt",
+      "intent": "Among the wards 2 and 5, which ward had the higher average number of street-sweeping schedule entries across 2022-2024? (Filter for this node: 2024 file; WARD in {2,5}; count rows by WARD.)",
+      "code": "import json\nimport boto3\nimport pandas as pd\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/street-sweeping-schedule-2024/files/data.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ncatalog = json.loads(obj[\"Body\"].read())\n\ntitle = \"Street Sweeping Schedule - 2024\"\nurl = None\nfor dataset in catalog.get(\"dataset\", []):\n    if dataset.get(\"title\") == title:\n        for dist in dataset.get(\"distribution\", []):\n            if dist.get(\"mediaType\") == \"text/csv\":\n                url = dist.get(\"downloadURL\")\n                break\n    if url:\n        break\nif not url:\n    raise ValueError(f\"Could not find CSV distribution for {title}\")\n\ndf = pd.read_csv(url)\ncounts = df[df[\"WARD\"].isin([2, 5])].groupby(\"WARD\").size().to_dict()\nanswer = {\"Ward 2\": int(counts.get(2, 0)), \"Ward 5\": int(counts.get(5, 0))}",
+      "answer": {
+        "Ward 2": 54,
+        "Ward 5": 87
+      }
+    },
+    {
+      "node_id": "4",
+      "dataset_id": "dc-charter-schools",
+      "source": "datagov/dc-charter-schools/files/data.txt",
+      "intent": "Which charter school in the ward (from hop 1) spans grade 8 and grade 9? (Filter for this node: WARD == 5; GRADES include 8 and 9 in the range.)",
+      "code": "import json\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/dc-charter-schools/files/data.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndata = json.loads(obj[\"Body\"].read())\nanswer = None\nfor feature in data.get(\"features\", []):\n    props = feature.get(\"properties\") or {}\n    ward = str(props.get(\"WARD\") or props.get(\"Ward\") or \"\").strip()\n    grades = str(props.get(\"GRADES\") or props.get(\"Grades\") or \"\").strip()\n    if ward == \"Ward 5\" and grades == \"6th-9th\":\n        answer = str(props.get(\"NAME\") or props.get(\"School_Name\") or props.get(\"SCHOOL_NAME\") or \"\").strip()\n        break",
+      "answer": "Sojourner Truth PCS"
+    }
+  ],
+  "ideal_query": [
+    {
+      "node_id": "1",
+      "dataset_id": "street-sweeping-schedule-2022",
+      "source": "datagov/street-sweeping-schedule-2022/files/data.txt",
+      "intent": "Among the wards 2 and 5, which ward had the higher average number of street-sweeping schedule entries across 2022-2024? (Filter for this node: 2022 file; WARD in {2,5}; count rows by WARD.)",
+      "answer": "Cannot execute SQL: source is a data catalog JSON; the required street-sweeping rows are only available through external distribution URLs that query_file cannot follow."
+    },
+    {
+      "node_id": "2",
+      "dataset_id": "street-sweeping-schedule-2023",
+      "source": "datagov/street-sweeping-schedule-2023/files/data.txt",
+      "intent": "Among the wards 2 and 5, which ward had the higher average number of street-sweeping schedule entries across 2022-2024? (Filter for this node: 2023 file; WARD in {2,5}; count rows by WARD.)",
+      "answer": "Cannot execute SQL: source is a data catalog JSON; the required street-sweeping rows are only available through external distribution URLs that query_file cannot follow."
+    },
+    {
+      "node_id": "3",
+      "dataset_id": "street-sweeping-schedule-2024",
+      "source": "datagov/street-sweeping-schedule-2024/files/data.txt",
+      "intent": "Among the wards 2 and 5, which ward had the higher average number of street-sweeping schedule entries across 2022-2024? (Filter for this node: 2024 file; WARD in {2,5}; count rows by WARD.)",
+      "answer": "Cannot execute SQL: source is a data catalog JSON; the required street-sweeping rows are only available through external distribution URLs that query_file cannot follow."
+    },
+    {
+      "node_id": "4",
+      "dataset_id": "dc-charter-schools",
+      "source": "datagov/dc-charter-schools/files/data.txt",
+      "intent": "Which charter school in the ward (from hop 1) spans grade 8 and grade 9? (Filter for this node: WARD == 5; GRADES include 8 and 9 in the range.)",
+      "sql": "SELECT feature.properties.NAME AS answer\nFROM t, UNNEST(features) AS u(feature)\nWHERE feature.properties.WARD = 'Ward 5'\n  AND feature.properties.GRADES = '6th-9th'\nLIMIT 1",
+      "answer": "Sojourner Truth PCS"
+    }
   ]
 }

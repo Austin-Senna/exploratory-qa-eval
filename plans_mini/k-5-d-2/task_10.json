@@ -53,5 +53,69 @@
     "  Node 8: Felipe de Neve Wikipedia -> born in 1724",
     "",
     "Final answer: 1724"
+  ],
+  "ideal_code": [
+    {
+      "node_id": "1",
+      "dataset_id": "500-cities-city-level-data-gis-friendly-format-2016-release",
+      "source": "datagov/500-cities-city-level-data-gis-friendly-format-2016-release/files/rows.txt",
+      "intent": "Which California cities had teeth loss crude prevalence (TEETHLOST_CrudePrev) above 19% in the 2016 CDC 500 Cities data (StateAbbr = CA)?",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\nsource = \"datagov/500-cities-city-level-data-gis-friendly-format-2016-release/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\nanswer = (\n    df.loc[(df[\"StateAbbr\"] == \"CA\") & (df[\"TEETHLOST_CrudePrev\"] > 19), \"PlaceName\"]\n    .sort_values()\n    .tolist()\n)",
+      "answer": [
+        "Compton",
+        "San Bernardino"
+      ]
+    },
+    {
+      "node_id": "2",
+      "dataset_id": "500-cities-city-level-data-gis-friendly-format-2017-release",
+      "source": "datagov/500-cities-city-level-data-gis-friendly-format-2017-release/files/rows.txt",
+      "intent": "Which California cities had mental health crude prevalence (MHLTH_CrudePrev) above 15% in the 2017 CDC 500 Cities data (StateAbbr = CA)?",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\nsource = \"datagov/500-cities-city-level-data-gis-friendly-format-2017-release/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\nresult = (\n    df.loc[(df[\"StateAbbr\"] == \"CA\") & (df[\"MHLTH_CrudePrev\"] > 15), [\"PlaceName\", \"MHLTH_CrudePrev\"]]\n    .sort_values([\"PlaceName\", \"MHLTH_CrudePrev\"], ascending=[True, False])\n    .reset_index(drop=True)\n)\nanswer = result[\"PlaceName\"].tolist()",
+      "answer": [
+        "Compton",
+        "Hesperia",
+        "Lynwood",
+        "Merced",
+        "Perris",
+        "Salinas",
+        "San Bernardino",
+        "Santa Ana",
+        "Santa Maria",
+        "South Gate"
+      ]
+    }
+  ],
+  "ideal_query": [
+    {
+      "node_id": "1",
+      "dataset_id": "500-cities-city-level-data-gis-friendly-format-2016-release",
+      "source": "datagov/500-cities-city-level-data-gis-friendly-format-2016-release/files/rows.txt",
+      "intent": "Which California cities had teeth loss crude prevalence (TEETHLOST_CrudePrev) above 19% in the 2016 CDC 500 Cities data (StateAbbr = CA)?",
+      "sql": "SELECT \"PlaceName\" AS answer\nFROM t\nWHERE \"StateAbbr\" = 'CA'\n  AND TRY_CAST(\"TEETHLOST_CrudePrev\" AS DOUBLE) > 19\nORDER BY \"PlaceName\"",
+      "answer": [
+        "Compton",
+        "San Bernardino"
+      ]
+    },
+    {
+      "node_id": "2",
+      "dataset_id": "500-cities-city-level-data-gis-friendly-format-2017-release",
+      "source": "datagov/500-cities-city-level-data-gis-friendly-format-2017-release/files/rows.txt",
+      "intent": "Which California cities had mental health crude prevalence (MHLTH_CrudePrev) above 15% in the 2017 CDC 500 Cities data (StateAbbr = CA)?",
+      "sql": "SELECT \"PlaceName\" AS answer\nFROM t\nWHERE \"StateAbbr\" = 'CA'\n  AND TRY_CAST(\"MHLTH_CrudePrev\" AS DOUBLE) > 15\nORDER BY \"PlaceName\", TRY_CAST(\"MHLTH_CrudePrev\" AS DOUBLE) DESC",
+      "answer": [
+        "Compton",
+        "Hesperia",
+        "Lynwood",
+        "Merced",
+        "Perris",
+        "Salinas",
+        "San Bernardino",
+        "Santa Ana",
+        "Santa Maria",
+        "South Gate"
+      ]
+    }
   ]
 }

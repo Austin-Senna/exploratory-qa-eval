@@ -70,5 +70,89 @@
     "  Result: 1735",
     "",
     "Final answer: 1735"
+  ],
+  "ideal_code": [
+    {
+      "node_id": "1",
+      "dataset_id": "crime-incidents-in-2019",
+      "source": "datagov/crime-incidents-in-2019/files/data.txt",
+      "intent": "Which DC wards had the top 2 average violent crimes between 2019 and 2020? (Filter for this node: OFFENSE in {HOMICIDE, ASSAULT W/DANGEROUS WEAPON, ROBBERY, SEX ABUSE}; group by WARD; count records; rank by count; keep top 2.)",
+      "code": "import io\nimport json\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/crime-incidents-in-2019/files/data.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndata = json.load(io.BytesIO(obj[\"Body\"].read()))\ndf = pd.json_normalize(data[\"features\"])\n\nviolent_offenses = [\"HOMICIDE\", \"ASSAULT W/DANGEROUS WEAPON\", \"ROBBERY\", \"SEX ABUSE\"]\nresult = (\n    df[\n        df[\"properties.OFFENSE\"].isin(violent_offenses)\n        & df[\"properties.WARD\"].notna()\n    ]\n    .groupby(\"properties.WARD\")\n    .size()\n    .reset_index(name=\"violent_crime_count\")\n)\nresult[\"ward_num\"] = result[\"properties.WARD\"].astype(int)\nresult = result.sort_values([\"violent_crime_count\", \"ward_num\"], ascending=[False, True]).head(2)\nanswer = [f\"Ward {int(row['ward_num'])} ({row['violent_crime_count']})\" for _, row in result.iterrows()]",
+      "answer": [
+        "Ward 7 (905)",
+        "Ward 8 (765)"
+      ]
+    },
+    {
+      "node_id": "2",
+      "dataset_id": "crime-incidents-in-2020",
+      "source": "datagov/crime-incidents-in-2020/files/data.txt",
+      "intent": "Which DC wards had the top 2 average violent crimes between 2019 and 2020? (Filter for this node: OFFENSE in {HOMICIDE, ASSAULT W/DANGEROUS WEAPON, ROBBERY, SEX ABUSE}; group by WARD; count records; rank by count; keep top 2.)",
+      "code": "import io\nimport json\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/crime-incidents-in-2020/files/data.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndata = json.load(io.BytesIO(obj[\"Body\"].read()))\ndf = pd.json_normalize(data[\"features\"])\n\nviolent_offenses = [\"HOMICIDE\", \"ASSAULT W/DANGEROUS WEAPON\", \"ROBBERY\", \"SEX ABUSE\"]\nresult = (\n    df[\n        df[\"properties.OFFENSE\"].isin(violent_offenses)\n        & df[\"properties.WARD\"].notna()\n    ]\n    .groupby(\"properties.WARD\")\n    .size()\n    .reset_index(name=\"violent_crime_count\")\n)\nresult[\"ward_num\"] = result[\"properties.WARD\"].astype(int)\nresult = result.sort_values([\"violent_crime_count\", \"ward_num\"], ascending=[False, True]).head(2)\nanswer = [f\"Ward {int(row['ward_num'])} ({row['violent_crime_count']})\" for _, row in result.iterrows()]",
+      "answer": [
+        "Ward 7 (945)",
+        "Ward 8 (907)"
+      ]
+    },
+    {
+      "node_id": "3",
+      "dataset_id": "311-city-service-requests-in-2019",
+      "source": "datagov/311-city-service-requests-in-2019/files/data.txt",
+      "intent": "Between the top 2 crime wards (from hop 1), which had higher average 311 service requests (2019-2020)? (Filter for this node: WARD in {7, 8}; group by WARD; count records.)",
+      "code": "import io\nimport json\nfrom collections import Counter\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/311-city-service-requests-in-2019/files/data.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndata = json.load(io.BytesIO(obj[\"Body\"].read()))\n\ncounts = Counter()\nfor feature in data.get(\"features\", []):\n    props = feature.get(\"properties\") or {}\n    ward = str(props.get(\"WARD\") or \"\").strip()\n    if ward in {\"7\", \"8\"}:\n        counts[ward] += 1\n\nanswer = [f\"Ward {ward} ({counts[ward]:,})\" for ward in sorted(counts, key=int)]",
+      "answer": [
+        "Ward 7 (42,226)",
+        "Ward 8 (34,959)"
+      ]
+    },
+    {
+      "node_id": "4",
+      "dataset_id": "311-city-service-requests-in-2020",
+      "source": "datagov/311-city-service-requests-in-2020/files/data.txt",
+      "intent": "Between the top 2 crime wards (from hop 1), which had higher average 311 service requests (2019-2020)? (Filter for this node: WARD in {7, 8}; group by WARD; count records.)",
+      "code": "import io\nimport json\nfrom collections import Counter\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/311-city-service-requests-in-2020/files/data.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndata = json.load(io.BytesIO(obj[\"Body\"].read()))\n\ncounts = Counter()\nfor feature in data.get(\"features\", []):\n    props = feature.get(\"properties\") or {}\n    ward = str(props.get(\"WARD\") or \"\").strip()\n    if ward in {\"7\", \"8\"}:\n        counts[ward] += 1\n\nanswer = [f\"Ward {ward} ({counts[ward]:,})\" for ward in sorted(counts, key=int)]",
+      "answer": [
+        "Ward 7 (36,113)",
+        "Ward 8 (37,124)"
+      ]
+    }
+  ],
+  "ideal_query": [
+    {
+      "node_id": "1",
+      "dataset_id": "crime-incidents-in-2019",
+      "source": "datagov/crime-incidents-in-2019/files/data.txt",
+      "intent": "Which DC wards had the top 2 average violent crimes between 2019 and 2020? (Filter for this node: OFFENSE in {HOMICIDE, ASSAULT W/DANGEROUS WEAPON, ROBBERY, SEX ABUSE}; group by WARD; count records; rank by count; keep top 2.)",
+      "answer": [
+        "Ward 7 (905)",
+        "Ward 8 (765)"
+      ],
+      "sql": "WITH counts AS (\n  SELECT CAST(trim(f.properties.WARD) AS INTEGER) AS ward_num, COUNT(*) AS cnt\n  FROM t, UNNEST(features) AS u(f)\n  WHERE trim(f.properties.OFFENSE) IN ('HOMICIDE', 'ASSAULT W/DANGEROUS WEAPON', 'ROBBERY', 'SEX ABUSE')\n    AND trim(f.properties.WARD) <> ''\n  GROUP BY ward_num\n)\nSELECT 'Ward ' || CAST(ward_num AS VARCHAR) || ' (' || CAST(cnt AS VARCHAR) || ')' AS answer\nFROM counts\nORDER BY cnt DESC, ward_num ASC\nLIMIT 2"
+    },
+    {
+      "node_id": "2",
+      "dataset_id": "crime-incidents-in-2020",
+      "source": "datagov/crime-incidents-in-2020/files/data.txt",
+      "intent": "Which DC wards had the top 2 average violent crimes between 2019 and 2020? (Filter for this node: OFFENSE in {HOMICIDE, ASSAULT W/DANGEROUS WEAPON, ROBBERY, SEX ABUSE}; group by WARD; count records; rank by count; keep top 2.)",
+      "answer": [
+        "Ward 7 (945)",
+        "Ward 8 (907)"
+      ],
+      "sql": "WITH counts AS (\n  SELECT CAST(trim(f.properties.WARD) AS INTEGER) AS ward_num, COUNT(*) AS cnt\n  FROM t, UNNEST(features) AS u(f)\n  WHERE trim(f.properties.OFFENSE) IN ('HOMICIDE', 'ASSAULT W/DANGEROUS WEAPON', 'ROBBERY', 'SEX ABUSE')\n    AND trim(f.properties.WARD) <> ''\n  GROUP BY ward_num\n)\nSELECT 'Ward ' || CAST(ward_num AS VARCHAR) || ' (' || CAST(cnt AS VARCHAR) || ')' AS answer\nFROM counts\nORDER BY cnt DESC, ward_num ASC\nLIMIT 2"
+    },
+    {
+      "node_id": "3",
+      "dataset_id": "311-city-service-requests-in-2019",
+      "source": "datagov/311-city-service-requests-in-2019/files/data.txt",
+      "intent": "Between the top 2 crime wards (from hop 1), which had higher average 311 service requests (2019-2020)? (Filter for this node: WARD in {7, 8}; group by WARD; count records.)",
+      "answer": "Cannot execute SQL: query_file does not complete within practical preflight time for this GeoJSON source."
+    },
+    {
+      "node_id": "4",
+      "dataset_id": "311-city-service-requests-in-2020",
+      "source": "datagov/311-city-service-requests-in-2020/files/data.txt",
+      "intent": "Between the top 2 crime wards (from hop 1), which had higher average 311 service requests (2019-2020)? (Filter for this node: WARD in {7, 8}; group by WARD; count records.)",
+      "answer": "Cannot execute SQL: query_file does not complete within practical preflight time for this GeoJSON source."
+    }
   ]
 }

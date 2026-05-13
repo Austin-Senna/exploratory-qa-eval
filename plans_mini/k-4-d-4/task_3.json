@@ -52,5 +52,147 @@
     "  Node 9: Louis Pasteur founded the Pasteur Institute in 1887 and was its first director until his death",
     "",
     "Final answer: 1887"
+  ],
+  "ideal_code": [
+    {
+      "node_id": "1",
+      "dataset_id": "2015-2016-shsat-admissions-test-offers-by-sending-school",
+      "source": "datagov/2015-2016-shsat-admissions-test-offers-by-sending-school/files/rows.txt",
+      "intent": "Which NYC middle schools had at least 50 SHSAT offers to specialized high schools in school year 2015-16?",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/2015-2016-shsat-admissions-test-offers-by-sending-school/files/rows.txt'\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\noffers = pd.to_numeric(df['Count of Offers'], errors=\"coerce\")\nfiltered = df[offers >= 50].copy()\nlookup = {row[\"Feeder School Name\"]: (row[\"Feeder School DBN\"], int(pd.to_numeric(row['Count of Offers'], errors=\"coerce\"))) for _, row in filtered.iterrows()}\nanswer = {}\nfor school in [\"J.H.S. 067 Louis Pasteur\", \"M.S. 158 Marie Curie\", \"J.H.S. 074 Nathaniel Hawthorne\", \"J.H.S. 216 George J. Ryan\"]:\n    dbn, count = lookup[school]\n    answer[school] = f\"{dbn}, {count} offers\" if True else dbn\nanswer['and 23 others'] = \"...\"\n",
+      "answer": {
+        "J.H.S. 067 Louis Pasteur": "26Q067, 84 offers",
+        "M.S. 158 Marie Curie": "26Q158, 104 offers",
+        "J.H.S. 074 Nathaniel Hawthorne": "26Q074, 102 offers",
+        "J.H.S. 216 George J. Ryan": "26Q216, 92 offers",
+        "and 23 others": "..."
+      }
+    },
+    {
+      "node_id": "2",
+      "dataset_id": "2016-2017-shsat-admissions-test-offers-by-sending-school",
+      "source": "datagov/2016-2017-shsat-admissions-test-offers-by-sending-school/files/rows.txt",
+      "intent": "Which NYC middle schools had at least 50 SHSAT offers to specialized high schools in school year 2016-17?",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/2016-2017-shsat-admissions-test-offers-by-sending-school/files/rows.txt'\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\noffers = pd.to_numeric(df['Count of Offers'], errors=\"coerce\")\nfiltered = df[offers >= 50].copy()\nlookup = {row[\"Feeder School Name\"]: (row[\"Feeder School DBN\"], int(pd.to_numeric(row['Count of Offers'], errors=\"coerce\"))) for _, row in filtered.iterrows()}\nanswer = {}\nfor school in [\"J.H.S. 067 Louis Pasteur\", \"M.S. 158 Marie Curie\", \"J.H.S. 074 Nathaniel Hawthorne\", \"J.H.S. 216 George J. Ryan\"]:\n    dbn, count = lookup[school]\n    answer[school] = f\"{dbn}, {count} offers\" if False else dbn\nanswer['and 23 others'] = \"...\"\n",
+      "answer": {
+        "J.H.S. 067 Louis Pasteur": "26Q067",
+        "M.S. 158 Marie Curie": "26Q158",
+        "J.H.S. 074 Nathaniel Hawthorne": "26Q074",
+        "J.H.S. 216 George J. Ryan": "26Q216",
+        "and 23 others": "..."
+      }
+    },
+    {
+      "node_id": "3",
+      "dataset_id": "2017-2018-shsat-admissions-test-offers-by-sending-school",
+      "source": "datagov/2017-2018-shsat-admissions-test-offers-by-sending-school/files/rows.txt",
+      "intent": "Which NYC middle schools had at least 50 SHSAT offers to specialized high schools in school year 2017-18?",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/2017-2018-shsat-admissions-test-offers-by-sending-school/files/rows.txt'\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\noffers = pd.to_numeric(df['Count of Offers'], errors=\"coerce\")\nfiltered = df[offers >= 50].copy()\nlookup = {row[\"Feeder School Name\"]: (row[\"Feeder School DBN\"], int(pd.to_numeric(row['Count of Offers'], errors=\"coerce\"))) for _, row in filtered.iterrows()}\nanswer = {}\nfor school in [\"J.H.S. 067 Louis Pasteur\", \"M.S. 158 Marie Curie\", \"J.H.S. 074 Nathaniel Hawthorne\", \"J.H.S. 216 George J. Ryan\"]:\n    dbn, count = lookup[school]\n    answer[school] = f\"{dbn}, {count} offers\" if False else dbn\nanswer['and 24 others'] = \"...\"\n",
+      "answer": {
+        "J.H.S. 067 Louis Pasteur": "26Q067",
+        "M.S. 158 Marie Curie": "26Q158",
+        "J.H.S. 074 Nathaniel Hawthorne": "26Q074",
+        "J.H.S. 216 George J. Ryan": "26Q216",
+        "and 24 others": "..."
+      }
+    },
+    {
+      "node_id": "4",
+      "dataset_id": "2018-2019-shsat-admissions-test-offers-by-sending-school",
+      "source": "datagov/2018-2019-shsat-admissions-test-offers-by-sending-school/files/rows.txt",
+      "intent": "Which NYC middle schools had at least 50 SHSAT offers to specialized high schools in school year 2018-19?",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/2018-2019-shsat-admissions-test-offers-by-sending-school/files/rows.txt'\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\noffers = pd.to_numeric(df['Number of Offers'], errors=\"coerce\")\nfiltered = df[offers >= 50].copy()\nlookup = {row[\"Feeder School Name\"]: (row[\"Feeder School DBN\"], int(pd.to_numeric(row['Number of Offers'], errors=\"coerce\"))) for _, row in filtered.iterrows()}\nanswer = {}\nfor school in [\"J.H.S. 067 Louis Pasteur\", \"M.S. 158 Marie Curie\", \"J.H.S. 074 Nathaniel Hawthorne\", \"J.H.S. 216 George J. Ryan\"]:\n    dbn, count = lookup[school]\n    answer[school] = f\"{dbn}, {count} offers\" if False else dbn\nanswer['and 19 others'] = \"...\"\n",
+      "answer": {
+        "J.H.S. 067 Louis Pasteur": "26Q067",
+        "M.S. 158 Marie Curie": "26Q158",
+        "J.H.S. 074 Nathaniel Hawthorne": "26Q074",
+        "J.H.S. 216 George J. Ryan": "26Q216",
+        "and 19 others": "..."
+      }
+    },
+    {
+      "node_id": "5",
+      "dataset_id": "2016-2017-school-locations",
+      "source": "datagov/2016-2017-school-locations/files/rows.txt",
+      "intent": "Which of the 21 schools with >= 50 SHSAT offers in all 4 years are located in Queens District 26?",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/2016-2017-school-locations/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\nschools = [\"J.H.S. 067 Louis Pasteur\", \"J.H.S. 074 Nathaniel Hawthorne\", \"M.S. 158 Marie Curie\", \"J.H.S. 216 George J. Ryan\"]\nfiltered = df[df[\"LOCATION_NAME\"].isin(schools)].copy()\nfiltered[\"GEOGRAPHICAL_DISTRICT_CODE\"] = pd.to_numeric(filtered[\"GEOGRAPHICAL_DISTRICT_CODE\"], errors=\"coerce\")\nassert set(filtered[\"GEOGRAPHICAL_DISTRICT_CODE\"].dropna().astype(int)) == {26}\nlookup = dict(zip(filtered[\"LOCATION_NAME\"], filtered[\"ATS_SYSTEM_CODE\"]))\nanswer = {school: f\"{lookup[school]}, District 26\" for school in schools}\n",
+      "answer": {
+        "J.H.S. 067 Louis Pasteur": "26Q067, District 26",
+        "J.H.S. 074 Nathaniel Hawthorne": "26Q074, District 26",
+        "M.S. 158 Marie Curie": "26Q158, District 26",
+        "J.H.S. 216 George J. Ryan": "26Q216, District 26"
+      }
+    }
+  ],
+  "ideal_query": [
+    {
+      "node_id": "1",
+      "dataset_id": "2015-2016-shsat-admissions-test-offers-by-sending-school",
+      "source": "datagov/2015-2016-shsat-admissions-test-offers-by-sending-school/files/rows.txt",
+      "intent": "Which NYC middle schools had at least 50 SHSAT offers to specialized high schools in school year 2015-16?",
+      "sql": "WITH filtered AS (\n  SELECT upper(trim(\"Feeder School Name\")) AS school_key, \"Feeder School DBN\" || ', ' || CAST(TRY_CAST(\"Count of Offers\" AS BIGINT) AS VARCHAR) || ' offers' AS val\n  FROM t\n  WHERE TRY_CAST(\"Count of Offers\" AS BIGINT) >= 50\n), vals AS (\n  SELECT 'J.H.S. 067 Louis Pasteur' AS key, max(CASE WHEN school_key = 'J.H.S. 067 LOUIS PASTEUR' THEN val END) AS value FROM filtered\n  UNION ALL SELECT 'M.S. 158 Marie Curie' AS key, max(CASE WHEN school_key = 'M.S. 158 MARIE CURIE' THEN val END) AS value FROM filtered\n  UNION ALL SELECT 'J.H.S. 074 Nathaniel Hawthorne' AS key, max(CASE WHEN school_key = 'J.H.S. 074 NATHANIEL HAWTHORNE' THEN val END) AS value FROM filtered\n  UNION ALL SELECT 'J.H.S. 216 George J. Ryan' AS key, max(CASE WHEN school_key = 'J.H.S. 216 GEORGE J. RYAN' THEN val END) AS value FROM filtered\n  UNION ALL SELECT 'and 23 others', '...'\n)\nSELECT to_json(map(list(key), list(value))) AS answer FROM vals",
+      "answer": {
+        "J.H.S. 067 Louis Pasteur": "26Q067, 84 offers",
+        "M.S. 158 Marie Curie": "26Q158, 104 offers",
+        "J.H.S. 074 Nathaniel Hawthorne": "26Q074, 102 offers",
+        "J.H.S. 216 George J. Ryan": "26Q216, 92 offers",
+        "and 23 others": "..."
+      }
+    },
+    {
+      "node_id": "2",
+      "dataset_id": "2016-2017-shsat-admissions-test-offers-by-sending-school",
+      "source": "datagov/2016-2017-shsat-admissions-test-offers-by-sending-school/files/rows.txt",
+      "intent": "Which NYC middle schools had at least 50 SHSAT offers to specialized high schools in school year 2016-17?",
+      "sql": "WITH filtered AS (\n  SELECT upper(trim(\"Feeder School Name\")) AS school_key, \"Feeder School DBN\" AS val\n  FROM t\n  WHERE TRY_CAST(\"Count of Offers\" AS BIGINT) >= 50\n), vals AS (\n  SELECT 'J.H.S. 067 Louis Pasteur' AS key, max(CASE WHEN school_key = 'J.H.S. 067 LOUIS PASTEUR' THEN val END) AS value FROM filtered\n  UNION ALL SELECT 'M.S. 158 Marie Curie' AS key, max(CASE WHEN school_key = 'M.S. 158 MARIE CURIE' THEN val END) AS value FROM filtered\n  UNION ALL SELECT 'J.H.S. 074 Nathaniel Hawthorne' AS key, max(CASE WHEN school_key = 'J.H.S. 074 NATHANIEL HAWTHORNE' THEN val END) AS value FROM filtered\n  UNION ALL SELECT 'J.H.S. 216 George J. Ryan' AS key, max(CASE WHEN school_key = 'J.H.S. 216 GEORGE J. RYAN' THEN val END) AS value FROM filtered\n  UNION ALL SELECT 'and 23 others', '...'\n)\nSELECT to_json(map(list(key), list(value))) AS answer FROM vals",
+      "answer": {
+        "J.H.S. 067 Louis Pasteur": "26Q067",
+        "M.S. 158 Marie Curie": "26Q158",
+        "J.H.S. 074 Nathaniel Hawthorne": "26Q074",
+        "J.H.S. 216 George J. Ryan": "26Q216",
+        "and 23 others": "..."
+      }
+    },
+    {
+      "node_id": "3",
+      "dataset_id": "2017-2018-shsat-admissions-test-offers-by-sending-school",
+      "source": "datagov/2017-2018-shsat-admissions-test-offers-by-sending-school/files/rows.txt",
+      "intent": "Which NYC middle schools had at least 50 SHSAT offers to specialized high schools in school year 2017-18?",
+      "sql": "WITH filtered AS (\n  SELECT upper(trim(\"Feeder School Name\")) AS school_key, \"Feeder School DBN\" AS val\n  FROM t\n  WHERE TRY_CAST(\"Count of Offers\" AS BIGINT) >= 50\n), vals AS (\n  SELECT 'J.H.S. 067 Louis Pasteur' AS key, max(CASE WHEN school_key = 'J.H.S. 067 LOUIS PASTEUR' THEN val END) AS value FROM filtered\n  UNION ALL SELECT 'M.S. 158 Marie Curie' AS key, max(CASE WHEN school_key = 'M.S. 158 MARIE CURIE' THEN val END) AS value FROM filtered\n  UNION ALL SELECT 'J.H.S. 074 Nathaniel Hawthorne' AS key, max(CASE WHEN school_key = 'J.H.S. 074 NATHANIEL HAWTHORNE' THEN val END) AS value FROM filtered\n  UNION ALL SELECT 'J.H.S. 216 George J. Ryan' AS key, max(CASE WHEN school_key = 'J.H.S. 216 GEORGE J. RYAN' THEN val END) AS value FROM filtered\n  UNION ALL SELECT 'and 24 others', '...'\n)\nSELECT to_json(map(list(key), list(value))) AS answer FROM vals",
+      "answer": {
+        "J.H.S. 067 Louis Pasteur": "26Q067",
+        "M.S. 158 Marie Curie": "26Q158",
+        "J.H.S. 074 Nathaniel Hawthorne": "26Q074",
+        "J.H.S. 216 George J. Ryan": "26Q216",
+        "and 24 others": "..."
+      }
+    },
+    {
+      "node_id": "4",
+      "dataset_id": "2018-2019-shsat-admissions-test-offers-by-sending-school",
+      "source": "datagov/2018-2019-shsat-admissions-test-offers-by-sending-school/files/rows.txt",
+      "intent": "Which NYC middle schools had at least 50 SHSAT offers to specialized high schools in school year 2018-19?",
+      "sql": "WITH filtered AS (\n  SELECT upper(trim(\"Feeder School Name\")) AS school_key, \"Feeder School DBN\" AS val\n  FROM t\n  WHERE TRY_CAST(\"Number of Offers\" AS BIGINT) >= 50\n), vals AS (\n  SELECT 'J.H.S. 067 Louis Pasteur' AS key, max(CASE WHEN school_key = 'J.H.S. 067 LOUIS PASTEUR' THEN val END) AS value FROM filtered\n  UNION ALL SELECT 'M.S. 158 Marie Curie' AS key, max(CASE WHEN school_key = 'M.S. 158 MARIE CURIE' THEN val END) AS value FROM filtered\n  UNION ALL SELECT 'J.H.S. 074 Nathaniel Hawthorne' AS key, max(CASE WHEN school_key = 'J.H.S. 074 NATHANIEL HAWTHORNE' THEN val END) AS value FROM filtered\n  UNION ALL SELECT 'J.H.S. 216 George J. Ryan' AS key, max(CASE WHEN school_key = 'J.H.S. 216 GEORGE J. RYAN' THEN val END) AS value FROM filtered\n  UNION ALL SELECT 'and 19 others', '...'\n)\nSELECT to_json(map(list(key), list(value))) AS answer FROM vals",
+      "answer": {
+        "J.H.S. 067 Louis Pasteur": "26Q067",
+        "M.S. 158 Marie Curie": "26Q158",
+        "J.H.S. 074 Nathaniel Hawthorne": "26Q074",
+        "J.H.S. 216 George J. Ryan": "26Q216",
+        "and 19 others": "..."
+      }
+    },
+    {
+      "node_id": "5",
+      "dataset_id": "2016-2017-school-locations",
+      "source": "datagov/2016-2017-school-locations/files/rows.txt",
+      "intent": "Which of the 21 schools with >= 50 SHSAT offers in all 4 years are located in Queens District 26?",
+      "sql": "WITH vals AS (\n  SELECT LOCATION_NAME AS key, trim(\"ATS SYSTEM CODE\") || ', District ' || CAST(TRY_CAST(GEOGRAPHICAL_DISTRICT_CODE AS BIGINT) AS VARCHAR) AS value\n  FROM t\n  WHERE LOCATION_NAME IN ('J.H.S. 067 Louis Pasteur', 'J.H.S. 074 Nathaniel Hawthorne', 'M.S. 158 Marie Curie', 'J.H.S. 216 George J. Ryan')\n    AND TRY_CAST(GEOGRAPHICAL_DISTRICT_CODE AS BIGINT) = 26\n)\nSELECT to_json(map(list(key), list(value))) AS answer FROM vals",
+      "answer": {
+        "J.H.S. 067 Louis Pasteur": "26Q067, District 26",
+        "J.H.S. 074 Nathaniel Hawthorne": "26Q074, District 26",
+        "M.S. 158 Marie Curie": "26Q158, District 26",
+        "J.H.S. 216 George J. Ryan": "26Q216, District 26"
+      }
+    }
   ]
 }

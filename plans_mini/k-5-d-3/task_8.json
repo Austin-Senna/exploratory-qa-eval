@@ -67,5 +67,243 @@
     "  Answer: University of California, Berkeley",
     "",
     "Final answer: University of California, Berkeley"
+  ],
+  "ideal_code": [
+    {
+      "node_id": "1",
+      "dataset_id": "budget-2019-budget-ordinance-appropriations",
+      "source": "datagov/budget-2019-budget-ordinance-appropriations/files/rows.txt",
+      "intent": "Which department numbers were in the top 5 by total ordinance appropriation in each year 2019-2021? (Filter for this node: group by DEPARTMENT NUMBER; sum 2019 ORDINANCE (AMOUNT $); rank desc; take top 5.)",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/budget-2019-budget-ordinance-appropriations/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)\n\ndf['2019 ORDINANCE (AMOUNT $)'] = pd.to_numeric(df['2019 ORDINANCE (AMOUNT $)'], errors='coerce')\nresult = df.groupby('DEPARTMENT NUMBER', as_index=False)['2019 ORDINANCE (AMOUNT $)'].sum()\nresult = result[result['2019 ORDINANCE (AMOUNT $)'] > 0]\nresult = result.sort_values('2019 ORDINANCE (AMOUNT $)', ascending=False).reset_index(drop=True)\nanswer = result['DEPARTMENT NUMBER'].head(5).astype(int).tolist()",
+      "answer": [
+        99,
+        57,
+        85,
+        59,
+        50
+      ]
+    },
+    {
+      "node_id": "2",
+      "dataset_id": "budget-2020-budget-ordinance-appropriations",
+      "source": "datagov/budget-2020-budget-ordinance-appropriations/files/rows.txt",
+      "intent": "Which department numbers were in the top 5 by total ordinance appropriation in each year 2019-2021? (Filter for this node: group by DEPARTMENT NUMBER; sum 2020 ORDINANCE (AMOUNT $); rank desc; take top 5.)",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/budget-2020-budget-ordinance-appropriations/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)\n\ndf['2020 ORDINANCE (AMOUNT $)'] = pd.to_numeric(df['2020 ORDINANCE (AMOUNT $)'], errors='coerce')\nresult = df.groupby('DEPARTMENT NUMBER', as_index=False)['2020 ORDINANCE (AMOUNT $)'].sum()\nresult = result[result['2020 ORDINANCE (AMOUNT $)'] > 0]\nresult = result.sort_values('2020 ORDINANCE (AMOUNT $)', ascending=False).reset_index(drop=True)\nanswer = result['DEPARTMENT NUMBER'].head(5).astype(int).tolist()",
+      "answer": [
+        99,
+        57,
+        85,
+        50,
+        59
+      ]
+    },
+    {
+      "node_id": "3",
+      "dataset_id": "budget-2021-budget-ordinance-appropriations",
+      "source": "datagov/budget-2021-budget-ordinance-appropriations/files/rows.txt",
+      "intent": "Which department numbers were in the top 5 by total ordinance appropriation in each year 2019-2021? (Filter for this node: group by DEPARTMENT NUMBER; sum 2021 ORDINANCE (AMOUNT $); rank desc; take top 5.)",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/budget-2021-budget-ordinance-appropriations/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)\n\ndf['2021 ORDINANCE (AMOUNT $)'] = pd.to_numeric(df['2021 ORDINANCE (AMOUNT $)'], errors='coerce')\nresult = df.groupby('DEPARTMENT NUMBER', as_index=False)['2021 ORDINANCE (AMOUNT $)'].sum()\nresult = result[result['2021 ORDINANCE (AMOUNT $)'] > 0]\nresult = result.sort_values('2021 ORDINANCE (AMOUNT $)', ascending=False).reset_index(drop=True)\nanswer = result['DEPARTMENT NUMBER'].head(5).astype(int).tolist()",
+      "answer": [
+        99,
+        57,
+        85,
+        50,
+        84
+      ]
+    },
+    {
+      "node_id": "4",
+      "dataset_id": "budget-2019-budget-ordinance-positions-and-salaries",
+      "source": "datagov/budget-2019-budget-ordinance-positions-and-salaries/files/rows.txt",
+      "intent": "For the department numbers (from hop 1), what were the total budgeted amounts in the Budget Ordinance Positions and Salaries dataset for each year 2019-2021? (Filter for this node: DEPARTMENT CODE in hop 1 intersection {99, 57, 85, 50}; sum TOTAL BUDGETED AMOUNT by DEPARTMENT CODE.)",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/budget-2019-budget-ordinance-positions-and-salaries/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)\n\ndepartment_codes = [50, 57, 85, 99]\ndf['TOTAL BUDGETED AMOUNT'] = pd.to_numeric(df['TOTAL BUDGETED AMOUNT'], errors='coerce')\nresult = (\n    df[df['DEPARTMENT CODE'].isin(department_codes)]\n    .groupby('DEPARTMENT CODE')['TOTAL BUDGETED AMOUNT']\n    .sum()\n    .reindex(department_codes, fill_value=0.0)\n)\nanswer = {str(k): float(v) for k, v in result.to_dict().items()}",
+      "answer": {
+        "50": 42342535.0,
+        "57": 1293487079.0,
+        "85": 144020555.0,
+        "99": 0.0
+      }
+    },
+    {
+      "node_id": "5",
+      "dataset_id": "budget-2020-budget-ordinance-positions-and-salaries",
+      "source": "datagov/budget-2020-budget-ordinance-positions-and-salaries/files/rows.txt",
+      "intent": "For the department numbers (from hop 1), what were the total budgeted amounts in the Budget Ordinance Positions and Salaries dataset for each year 2019-2021? (Filter for this node: DEPARTMENT CODE in hop 1 intersection {99, 57, 85, 50}; sum TOTAL BUDGETED AMOUNT by DEPARTMENT CODE.)",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/budget-2020-budget-ordinance-positions-and-salaries/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)\n\ndepartment_codes = [50, 57, 85, 99]\ndf['TOTAL BUDGETED AMOUNT'] = pd.to_numeric(df['TOTAL BUDGETED AMOUNT'], errors='coerce')\nresult = (\n    df[df['DEPARTMENT CODE'].isin(department_codes)]\n    .groupby('DEPARTMENT CODE')['TOTAL BUDGETED AMOUNT']\n    .sum()\n    .reindex(department_codes, fill_value=0.0)\n)\nanswer = {str(k): float(v) for k, v in result.to_dict().items()}",
+      "answer": {
+        "50": 42996687.0,
+        "57": 1308621421.0,
+        "85": 159362510.0,
+        "99": 0.0
+      }
+    },
+    {
+      "node_id": "6",
+      "dataset_id": "budget-2021-budget-ordinance-positions-and-salaries",
+      "source": "datagov/budget-2021-budget-ordinance-positions-and-salaries/files/rows.txt",
+      "intent": "For the department numbers (from hop 1), what were the total budgeted amounts in the Budget Ordinance Positions and Salaries dataset for each year 2019-2021? (Filter for this node: DEPARTMENT CODE in hop 1 intersection {99, 57, 85, 50}; sum TOTAL BUDGETED AMOUNT by DEPARTMENT CODE.)",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/budget-2021-budget-ordinance-positions-and-salaries/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)\n\ndepartment_codes = [50, 57, 85, 99]\ndf['TOTAL BUDGETED AMOUNT'] = pd.to_numeric(df['TOTAL BUDGETED AMOUNT'], errors='coerce')\nresult = (\n    df[df['DEPARTMENT CODE'].isin(department_codes)]\n    .groupby('DEPARTMENT CODE')['TOTAL BUDGETED AMOUNT']\n    .sum()\n    .reindex(department_codes, fill_value=0.0)\n)\nanswer = {str(k): float(v) for k, v in result.to_dict().items()}",
+      "answer": {
+        "50": 43046519.0,
+        "57": 1277019448.0,
+        "85": 158941618.0,
+        "99": 0.0
+      }
+    },
+    {
+      "node_id": "7",
+      "dataset_id": "budget-2019-budget-recommendations-positions-and-salaries",
+      "source": "datagov/budget-2019-budget-recommendations-positions-and-salaries/files/rows.txt",
+      "intent": "For the department codes (from hop 2), what were the total budgeted amounts in the Budget Recommendations Positions and Salaries dataset for each year 2019-2021? (Filter for this node: DEPARTMENT CODE in hop 2 list {57, 85, 50}; sum TOTAL BUDGETED AMOUNT by DEPARTMENT CODE.)",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/budget-2019-budget-recommendations-positions-and-salaries/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)\n\ndepartment_codes = [50, 57, 85]\ndf['TOTAL BUDGETED AMOUNT'] = pd.to_numeric(df['TOTAL BUDGETED AMOUNT'], errors='coerce')\nresult = (\n    df[df['DEPARTMENT CODE'].isin(department_codes)]\n    .groupby('DEPARTMENT CODE')['TOTAL BUDGETED AMOUNT']\n    .sum()\n    .reindex(department_codes, fill_value=0.0)\n)\nanswer = {str(k): float(v) for k, v in result.to_dict().items()}",
+      "answer": {
+        "50": 42342535.0,
+        "57": 1293460481.0,
+        "85": 144015863.0
+      }
+    },
+    {
+      "node_id": "8",
+      "dataset_id": "budget-2020-budget-recommendations-positions-and-salaries",
+      "source": "datagov/budget-2020-budget-recommendations-positions-and-salaries/files/rows.txt",
+      "intent": "For the department codes (from hop 2), what were the total budgeted amounts in the Budget Recommendations Positions and Salaries dataset for each year 2019-2021? (Filter for this node: DEPARTMENT CODE in hop 2 list {57, 85, 50}; sum TOTAL BUDGETED AMOUNT by DEPARTMENT CODE.)",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/budget-2020-budget-recommendations-positions-and-salaries/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)\n\ndepartment_codes = [50, 57, 85]\ndf['TOTAL BUDGETED AMOUNT'] = pd.to_numeric(df['TOTAL BUDGETED AMOUNT'], errors='coerce')\nresult = (\n    df[df['DEPARTMENT CODE'].isin(department_codes)]\n    .groupby('DEPARTMENT CODE')['TOTAL BUDGETED AMOUNT']\n    .sum()\n    .reindex(department_codes, fill_value=0.0)\n)\nanswer = {str(k): float(v) for k, v in result.to_dict().items()}",
+      "answer": {
+        "50": 42996687.0,
+        "57": 1308615601.0,
+        "85": 159389114.0
+      }
+    },
+    {
+      "node_id": "9",
+      "dataset_id": "budget-2021-budget-recommendations-positions-and-salaries",
+      "source": "datagov/budget-2021-budget-recommendations-positions-and-salaries/files/rows.txt",
+      "intent": "For the department codes (from hop 2), what were the total budgeted amounts in the Budget Recommendations Positions and Salaries dataset for each year 2019-2021? (Filter for this node: DEPARTMENT CODE in hop 2 list {57, 85, 50}; sum TOTAL BUDGETED AMOUNT by DEPARTMENT CODE.)",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/budget-2021-budget-recommendations-positions-and-salaries/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)\n\ndepartment_codes = [50, 57, 85]\ndf['TOTAL BUDGETED AMOUNT'] = pd.to_numeric(df['TOTAL BUDGETED AMOUNT'], errors='coerce')\nresult = (\n    df[df['DEPARTMENT CODE'].isin(department_codes)]\n    .groupby('DEPARTMENT CODE')['TOTAL BUDGETED AMOUNT']\n    .sum()\n    .reindex(department_codes, fill_value=0.0)\n)\nanswer = {str(k): float(v) for k, v in result.to_dict().items()}",
+      "answer": {
+        "50": 43048415.0,
+        "57": 1277090115.0,
+        "85": 158946654.0
+      }
+    }
+  ],
+  "ideal_query": [
+    {
+      "node_id": "1",
+      "dataset_id": "budget-2019-budget-ordinance-appropriations",
+      "source": "datagov/budget-2019-budget-ordinance-appropriations/files/rows.txt",
+      "intent": "Which department numbers were in the top 5 by total ordinance appropriation in each year 2019-2021? (Filter for this node: group by DEPARTMENT NUMBER; sum 2019 ORDINANCE (AMOUNT $); rank desc; take top 5.)",
+      "sql": "SELECT CAST(\"DEPARTMENT NUMBER\" AS INTEGER) AS answer\nFROM t\nGROUP BY \"DEPARTMENT NUMBER\"\nHAVING SUM(TRY_CAST(\"2019 ORDINANCE (AMOUNT $)\" AS DOUBLE)) > 0\nORDER BY SUM(TRY_CAST(\"2019 ORDINANCE (AMOUNT $)\" AS DOUBLE)) DESC\nLIMIT 5",
+      "answer": [
+        99,
+        57,
+        85,
+        59,
+        50
+      ]
+    },
+    {
+      "node_id": "2",
+      "dataset_id": "budget-2020-budget-ordinance-appropriations",
+      "source": "datagov/budget-2020-budget-ordinance-appropriations/files/rows.txt",
+      "intent": "Which department numbers were in the top 5 by total ordinance appropriation in each year 2019-2021? (Filter for this node: group by DEPARTMENT NUMBER; sum 2020 ORDINANCE (AMOUNT $); rank desc; take top 5.)",
+      "sql": "SELECT CAST(\"DEPARTMENT NUMBER\" AS INTEGER) AS answer\nFROM t\nGROUP BY \"DEPARTMENT NUMBER\"\nHAVING SUM(TRY_CAST(\"2020 ORDINANCE (AMOUNT $)\" AS DOUBLE)) > 0\nORDER BY SUM(TRY_CAST(\"2020 ORDINANCE (AMOUNT $)\" AS DOUBLE)) DESC\nLIMIT 5",
+      "answer": [
+        99,
+        57,
+        85,
+        50,
+        59
+      ]
+    },
+    {
+      "node_id": "3",
+      "dataset_id": "budget-2021-budget-ordinance-appropriations",
+      "source": "datagov/budget-2021-budget-ordinance-appropriations/files/rows.txt",
+      "intent": "Which department numbers were in the top 5 by total ordinance appropriation in each year 2019-2021? (Filter for this node: group by DEPARTMENT NUMBER; sum 2021 ORDINANCE (AMOUNT $); rank desc; take top 5.)",
+      "sql": "SELECT CAST(\"DEPARTMENT NUMBER\" AS INTEGER) AS answer\nFROM t\nGROUP BY \"DEPARTMENT NUMBER\"\nHAVING SUM(TRY_CAST(\"2021 ORDINANCE (AMOUNT $)\" AS DOUBLE)) > 0\nORDER BY SUM(TRY_CAST(\"2021 ORDINANCE (AMOUNT $)\" AS DOUBLE)) DESC\nLIMIT 5",
+      "answer": [
+        99,
+        57,
+        85,
+        50,
+        84
+      ]
+    },
+    {
+      "node_id": "4",
+      "dataset_id": "budget-2019-budget-ordinance-positions-and-salaries",
+      "source": "datagov/budget-2019-budget-ordinance-positions-and-salaries/files/rows.txt",
+      "intent": "For the department numbers (from hop 1), what were the total budgeted amounts in the Budget Ordinance Positions and Salaries dataset for each year 2019-2021? (Filter for this node: DEPARTMENT CODE in hop 1 intersection {99, 57, 85, 50}; sum TOTAL BUDGETED AMOUNT by DEPARTMENT CODE.)",
+      "sql": "WITH wanted(dept) AS (\n  VALUES (50), (57), (85), (99)\n), totals AS (\n  SELECT CAST(\"DEPARTMENT CODE\" AS INTEGER) AS dept, SUM(TRY_CAST(\"TOTAL BUDGETED AMOUNT\" AS DOUBLE)) AS total\n  FROM t\n  WHERE CAST(\"DEPARTMENT CODE\" AS INTEGER) IN (50, 57, 85, 99)\n  GROUP BY dept\n)\nSELECT json_group_object(CAST(dept AS VARCHAR), total) AS answer\nFROM (\n  SELECT w.dept, COALESCE(t.total, 0.0) AS total\n  FROM wanted w\n  LEFT JOIN totals t ON w.dept = t.dept\n  ORDER BY CASE w.dept WHEN 50 THEN 1 WHEN 57 THEN 2 WHEN 85 THEN 3 WHEN 99 THEN 4 END\n) q",
+      "answer": {
+        "50": 42342535.0,
+        "57": 1293487079.0,
+        "85": 144020555.0,
+        "99": 0.0
+      }
+    },
+    {
+      "node_id": "5",
+      "dataset_id": "budget-2020-budget-ordinance-positions-and-salaries",
+      "source": "datagov/budget-2020-budget-ordinance-positions-and-salaries/files/rows.txt",
+      "intent": "For the department numbers (from hop 1), what were the total budgeted amounts in the Budget Ordinance Positions and Salaries dataset for each year 2019-2021? (Filter for this node: DEPARTMENT CODE in hop 1 intersection {99, 57, 85, 50}; sum TOTAL BUDGETED AMOUNT by DEPARTMENT CODE.)",
+      "sql": "WITH wanted(dept) AS (\n  VALUES (50), (57), (85), (99)\n), totals AS (\n  SELECT CAST(\"DEPARTMENT CODE\" AS INTEGER) AS dept, SUM(TRY_CAST(\"TOTAL BUDGETED AMOUNT\" AS DOUBLE)) AS total\n  FROM t\n  WHERE CAST(\"DEPARTMENT CODE\" AS INTEGER) IN (50, 57, 85, 99)\n  GROUP BY dept\n)\nSELECT json_group_object(CAST(dept AS VARCHAR), total) AS answer\nFROM (\n  SELECT w.dept, COALESCE(t.total, 0.0) AS total\n  FROM wanted w\n  LEFT JOIN totals t ON w.dept = t.dept\n  ORDER BY CASE w.dept WHEN 50 THEN 1 WHEN 57 THEN 2 WHEN 85 THEN 3 WHEN 99 THEN 4 END\n) q",
+      "answer": {
+        "50": 42996687.0,
+        "57": 1308621421.0,
+        "85": 159362510.0,
+        "99": 0.0
+      }
+    },
+    {
+      "node_id": "6",
+      "dataset_id": "budget-2021-budget-ordinance-positions-and-salaries",
+      "source": "datagov/budget-2021-budget-ordinance-positions-and-salaries/files/rows.txt",
+      "intent": "For the department numbers (from hop 1), what were the total budgeted amounts in the Budget Ordinance Positions and Salaries dataset for each year 2019-2021? (Filter for this node: DEPARTMENT CODE in hop 1 intersection {99, 57, 85, 50}; sum TOTAL BUDGETED AMOUNT by DEPARTMENT CODE.)",
+      "sql": "WITH wanted(dept) AS (\n  VALUES (50), (57), (85), (99)\n), totals AS (\n  SELECT CAST(\"DEPARTMENT CODE\" AS INTEGER) AS dept, SUM(TRY_CAST(\"TOTAL BUDGETED AMOUNT\" AS DOUBLE)) AS total\n  FROM t\n  WHERE CAST(\"DEPARTMENT CODE\" AS INTEGER) IN (50, 57, 85, 99)\n  GROUP BY dept\n)\nSELECT json_group_object(CAST(dept AS VARCHAR), total) AS answer\nFROM (\n  SELECT w.dept, COALESCE(t.total, 0.0) AS total\n  FROM wanted w\n  LEFT JOIN totals t ON w.dept = t.dept\n  ORDER BY CASE w.dept WHEN 50 THEN 1 WHEN 57 THEN 2 WHEN 85 THEN 3 WHEN 99 THEN 4 END\n) q",
+      "answer": {
+        "50": 43046519.0,
+        "57": 1277019448.0,
+        "85": 158941618.0,
+        "99": 0.0
+      }
+    },
+    {
+      "node_id": "7",
+      "dataset_id": "budget-2019-budget-recommendations-positions-and-salaries",
+      "source": "datagov/budget-2019-budget-recommendations-positions-and-salaries/files/rows.txt",
+      "intent": "For the department codes (from hop 2), what were the total budgeted amounts in the Budget Recommendations Positions and Salaries dataset for each year 2019-2021? (Filter for this node: DEPARTMENT CODE in hop 2 list {57, 85, 50}; sum TOTAL BUDGETED AMOUNT by DEPARTMENT CODE.)",
+      "sql": "WITH wanted(dept) AS (\n  VALUES (50), (57), (85)\n), totals AS (\n  SELECT CAST(\"DEPARTMENT CODE\" AS INTEGER) AS dept, SUM(TRY_CAST(\"TOTAL BUDGETED AMOUNT\" AS DOUBLE)) AS total\n  FROM t\n  WHERE CAST(\"DEPARTMENT CODE\" AS INTEGER) IN (50, 57, 85)\n  GROUP BY dept\n)\nSELECT json_group_object(CAST(dept AS VARCHAR), total) AS answer\nFROM (\n  SELECT w.dept, COALESCE(t.total, 0.0) AS total\n  FROM wanted w\n  LEFT JOIN totals t ON w.dept = t.dept\n  ORDER BY CASE w.dept WHEN 50 THEN 1 WHEN 57 THEN 2 WHEN 85 THEN 3 END\n) q",
+      "answer": {
+        "50": 42342535.0,
+        "57": 1293460481.0,
+        "85": 144015863.0
+      }
+    },
+    {
+      "node_id": "8",
+      "dataset_id": "budget-2020-budget-recommendations-positions-and-salaries",
+      "source": "datagov/budget-2020-budget-recommendations-positions-and-salaries/files/rows.txt",
+      "intent": "For the department codes (from hop 2), what were the total budgeted amounts in the Budget Recommendations Positions and Salaries dataset for each year 2019-2021? (Filter for this node: DEPARTMENT CODE in hop 2 list {57, 85, 50}; sum TOTAL BUDGETED AMOUNT by DEPARTMENT CODE.)",
+      "sql": "WITH wanted(dept) AS (\n  VALUES (50), (57), (85)\n), totals AS (\n  SELECT CAST(\"DEPARTMENT CODE\" AS INTEGER) AS dept, SUM(TRY_CAST(\"TOTAL BUDGETED AMOUNT\" AS DOUBLE)) AS total\n  FROM t\n  WHERE CAST(\"DEPARTMENT CODE\" AS INTEGER) IN (50, 57, 85)\n  GROUP BY dept\n)\nSELECT json_group_object(CAST(dept AS VARCHAR), total) AS answer\nFROM (\n  SELECT w.dept, COALESCE(t.total, 0.0) AS total\n  FROM wanted w\n  LEFT JOIN totals t ON w.dept = t.dept\n  ORDER BY CASE w.dept WHEN 50 THEN 1 WHEN 57 THEN 2 WHEN 85 THEN 3 END\n) q",
+      "answer": {
+        "50": 42996687.0,
+        "57": 1308615601.0,
+        "85": 159389114.0
+      }
+    },
+    {
+      "node_id": "9",
+      "dataset_id": "budget-2021-budget-recommendations-positions-and-salaries",
+      "source": "datagov/budget-2021-budget-recommendations-positions-and-salaries/files/rows.txt",
+      "intent": "For the department codes (from hop 2), what were the total budgeted amounts in the Budget Recommendations Positions and Salaries dataset for each year 2019-2021? (Filter for this node: DEPARTMENT CODE in hop 2 list {57, 85, 50}; sum TOTAL BUDGETED AMOUNT by DEPARTMENT CODE.)",
+      "sql": "WITH wanted(dept) AS (\n  VALUES (50), (57), (85)\n), totals AS (\n  SELECT CAST(\"DEPARTMENT CODE\" AS INTEGER) AS dept, SUM(TRY_CAST(\"TOTAL BUDGETED AMOUNT\" AS DOUBLE)) AS total\n  FROM t\n  WHERE CAST(\"DEPARTMENT CODE\" AS INTEGER) IN (50, 57, 85)\n  GROUP BY dept\n)\nSELECT json_group_object(CAST(dept AS VARCHAR), total) AS answer\nFROM (\n  SELECT w.dept, COALESCE(t.total, 0.0) AS total\n  FROM wanted w\n  LEFT JOIN totals t ON w.dept = t.dept\n  ORDER BY CASE w.dept WHEN 50 THEN 1 WHEN 57 THEN 2 WHEN 85 THEN 3 END\n) q",
+      "answer": {
+        "50": 43048415.0,
+        "57": 1277090115.0,
+        "85": 158946654.0
+      }
+    }
   ]
 }

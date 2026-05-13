@@ -49,5 +49,115 @@
     "  Node 7: Tallapoosa County, Alabama Wikipedia -> county seat is Dadeville",
     "",
     "Final answer: Dadeville"
+  ],
+  "ideal_code": [
+    {
+      "node_id": "1",
+      "dataset_id": "aps-1-1-texas-adult-populations-at-risk-by-county-region-fy2013-fy2022",
+      "source": "datagov/aps-1-1-texas-adult-populations-at-risk-by-county-region-fy2013-fy2022/files/rows.txt",
+      "intent": "Which Texas counties had at least 10% adult disabled population and at least 23% elderly population in FY2023?",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\nsource = \"datagov/aps-1-1-texas-adult-populations-at-risk-by-county-region-fy2013-fy2022/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\ndf[\"Fiscal Year\"] = pd.to_numeric(df[\"Fiscal Year\"], errors=\"coerce\")\ndf[\"Adult Disabled 18-64: % of Population\"] = pd.to_numeric(df[\"Adult Disabled 18-64: % of Population\"], errors=\"coerce\")\ndf[\"65 and older: % of Population\"] = pd.to_numeric(df[\"65 and older: % of Population\"], errors=\"coerce\")\n\nresult = df[\n    (df[\"Fiscal Year\"] == 2023)\n    & (df[\"Adult Disabled 18-64: % of Population\"] >= 10)\n    & (df[\"65 and older: % of Population\"] >= 23)\n][[\"County\", \"Adult Disabled 18-64: % of Population\", \"65 and older: % of Population\"]].sort_values([\"County\"]).reset_index(drop=True)\n\nanswer = result[\"County\"].tolist()",
+      "answer": [
+        "Culberson",
+        "Eastland",
+        "Edwards",
+        "Hudspeth",
+        "Kent",
+        "King",
+        "Kinney",
+        "Lampasas",
+        "Montague",
+        "Sabine",
+        "San Augustine",
+        "San Jacinto",
+        "Trinity",
+        "Tyler"
+      ]
+    },
+    {
+      "node_id": "2",
+      "dataset_id": "aps-3-1-investigations-activity-by-county-fy2013-fy2022",
+      "source": "datagov/aps-3-1-investigations-activity-by-county-fy2013-fy2022/files/rows.txt",
+      "intent": "Which Texas counties in Region 2-Abilene had 150 or more completed APS investigations in FY2023?",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\nsource = \"datagov/aps-3-1-investigations-activity-by-county-fy2013-fy2022/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\ndf[\"Fiscal Year\"] = pd.to_numeric(df[\"Fiscal Year\"], errors=\"coerce\")\ndf[\"Completed Investigations\"] = pd.to_numeric(df[\"Completed Investigations\"], errors=\"coerce\")\n\nresult = df[\n    (df[\"Fiscal Year\"] == 2023)\n    & (df[\"Region\"] == \"2-Abilene\")\n    & (df[\"Completed Investigations\"] >= 150)\n][[\"County\", \"Completed Investigations\"]].sort_values([\"County\"]).reset_index(drop=True)\n\nanswer = result[\"County\"].tolist()",
+      "answer": [
+        "Brown",
+        "Eastland",
+        "Montague",
+        "Taylor",
+        "Wichita"
+      ]
+    },
+    {
+      "node_id": "3",
+      "dataset_id": "cpi-3-1-completed-abuse-neglect-investigations-by-county-fy2013-fy2022",
+      "source": "datagov/cpi-3-1-completed-abuse-neglect-investigations-by-county-fy2013-fy2022/files/rows.txt",
+      "intent": "How many completed child abuse/neglect investigations did Eastland County have in FY2023?",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\nsource = \"datagov/cpi-3-1-completed-abuse-neglect-investigations-by-county-fy2013-fy2022/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\ndf[\"Fiscal Year\"] = pd.to_numeric(df[\"Fiscal Year\"], errors=\"coerce\")\ndf[\"Completed Investigations\"] = pd.to_numeric(df[\"Completed Investigations\"], errors=\"coerce\")\n\nresult = df[\n    (df[\"Fiscal Year\"] == 2023)\n    & (df[\"County\"] == \"Eastland\")\n][[\"County\", \"Completed Investigations\"]].reset_index(drop=True)\n\nanswer = result.loc[0, \"Completed Investigations\"]",
+      "answer": "149"
+    },
+    {
+      "node_id": "4",
+      "dataset_id": "cpi-3-2-completed-investigations-initiated-timely-by-county-fy2013-fy2022",
+      "source": "datagov/cpi-3-2-completed-investigations-initiated-timely-by-county-fy2013-fy2022/files/rows.txt",
+      "intent": "How many completed child abuse/neglect investigations did Montague County have in FY2023?",
+      "code": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\nsource = \"datagov/cpi-3-2-completed-investigations-initiated-timely-by-county-fy2013-fy2022/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\ndf[\"Fiscal Year\"] = pd.to_numeric(df[\"Fiscal Year\"], errors=\"coerce\")\ndf[\"Completed Investigations\"] = pd.to_numeric(df[\"Completed Investigations\"], errors=\"coerce\")\n\nresult = df[\n    (df[\"Fiscal Year\"] == 2023)\n    & (df[\"County\"] == \"Montague\")\n][[\"County\", \"Priority\", \"Reponse Timely\", \"Completed Investigations\"]].reset_index(drop=True)\n\nanswer = result[\"Completed Investigations\"].sum()",
+      "answer": "193"
+    }
+  ],
+  "ideal_query": [
+    {
+      "node_id": "1",
+      "dataset_id": "aps-1-1-texas-adult-populations-at-risk-by-county-region-fy2013-fy2022",
+      "source": "datagov/aps-1-1-texas-adult-populations-at-risk-by-county-region-fy2013-fy2022/files/rows.txt",
+      "intent": "Which Texas counties had at least 10% adult disabled population and at least 23% elderly population in FY2023?",
+      "sql": "SELECT \"County\" AS answer\nFROM t\nWHERE TRY_CAST(\"Fiscal Year\" AS INTEGER) = 2023\n  AND TRY_CAST(\"Adult Disabled 18-64: % of Population\" AS DOUBLE) >= 10\n  AND TRY_CAST(\"65 and older: % of Population\" AS DOUBLE) >= 23\nORDER BY \"County\"",
+      "answer": [
+        "Culberson",
+        "Eastland",
+        "Edwards",
+        "Hudspeth",
+        "Kent",
+        "King",
+        "Kinney",
+        "Lampasas",
+        "Montague",
+        "Sabine",
+        "San Augustine",
+        "San Jacinto",
+        "Trinity",
+        "Tyler"
+      ]
+    },
+    {
+      "node_id": "2",
+      "dataset_id": "aps-3-1-investigations-activity-by-county-fy2013-fy2022",
+      "source": "datagov/aps-3-1-investigations-activity-by-county-fy2013-fy2022/files/rows.txt",
+      "intent": "Which Texas counties in Region 2-Abilene had 150 or more completed APS investigations in FY2023?",
+      "sql": "SELECT \"County\" AS answer\nFROM t\nWHERE TRY_CAST(\"Fiscal Year\" AS INTEGER) = 2023\n  AND \"Region\" = '2-Abilene'\n  AND TRY_CAST(\"Completed Investigations\" AS DOUBLE) >= 150\nORDER BY \"County\"",
+      "answer": [
+        "Brown",
+        "Eastland",
+        "Montague",
+        "Taylor",
+        "Wichita"
+      ]
+    },
+    {
+      "node_id": "3",
+      "dataset_id": "cpi-3-1-completed-abuse-neglect-investigations-by-county-fy2013-fy2022",
+      "source": "datagov/cpi-3-1-completed-abuse-neglect-investigations-by-county-fy2013-fy2022/files/rows.txt",
+      "intent": "How many completed child abuse/neglect investigations did Eastland County have in FY2023?",
+      "sql": "SELECT CAST(\"Completed Investigations\" AS BIGINT) AS answer\nFROM t\nWHERE TRY_CAST(\"Fiscal Year\" AS INTEGER) = 2023\n  AND \"County\" = 'Eastland'\nLIMIT 1",
+      "answer": "149"
+    },
+    {
+      "node_id": "4",
+      "dataset_id": "cpi-3-2-completed-investigations-initiated-timely-by-county-fy2013-fy2022",
+      "source": "datagov/cpi-3-2-completed-investigations-initiated-timely-by-county-fy2013-fy2022/files/rows.txt",
+      "intent": "How many completed child abuse/neglect investigations did Montague County have in FY2023?",
+      "sql": "SELECT CAST(SUM(TRY_CAST(\"Completed Investigations\" AS DOUBLE)) AS BIGINT) AS answer\nFROM t\nWHERE TRY_CAST(\"Fiscal Year\" AS INTEGER) = 2023\n  AND \"County\" = 'Montague' ",
+      "answer": "193"
+    }
   ]
 }
