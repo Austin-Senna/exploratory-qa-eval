@@ -4,7 +4,7 @@
   "nodes": {
     "1": {
       "source": "datagov/2018-state-employee-pay/files/rows.txt",
-      "fact": "In 2018, the top 5 Missouri state agencies by average employee pay were: (1) Office of Attorney General ($41,431), (2) Office of State Auditor ($37,236), (3) Legislature ($33,943), (4) Office of Administration ($33,469), (5) Economic Development ($33,432).",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/2018-state-employee-pay/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)\n\ndf['YTD Gross Pay'] = pd.to_numeric(df['YTD Gross Pay'], errors='coerce')\nresult = df.groupby('Agency Name', dropna=False)['YTD Gross Pay'].mean().sort_values(ascending=False)\nanswer = result.head(5).index.tolist()",
       "subquestion": "Which Missouri state agencies had the highest average employee pay in 2018?",
       "answer": [
         "OFFICE OF ATTORNEY GENERAL",
@@ -16,7 +16,7 @@
     },
     "2": {
       "source": "datagov/2019-state-employee-pay/files/rows.txt",
-      "fact": "In 2019, the top 5 Missouri state agencies by average employee pay were: (1) Office of Governor ($43,883), (2) Office of Attorney General ($41,180), (3) Judiciary ($39,239), (4) Office of State Auditor ($38,745), (5) Office of Administration ($36,065).",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/2019-state-employee-pay/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)\n\nprevious = ['OFFICE OF ATTORNEY GENERAL', 'OFFICE OF STATE AUDITOR', 'LEGISLATURE', 'OFFICE OF ADMINISTRATION', 'ECONOMIC DEVELOPMENT']\ndf['YTD Gross Pay'] = pd.to_numeric(df['YTD Gross Pay'], errors='coerce')\ntop5 = df.groupby('Agency Name', dropna=False)['YTD Gross Pay'].mean().sort_values(ascending=False).head(5).index.tolist()\nanswer = [agency for agency in previous if agency in top5]",
       "subquestion": "Which of <node_1 answer> remained in the top 5 by average employee pay in 2019?",
       "answer": [
         "OFFICE OF ATTORNEY GENERAL",
@@ -26,7 +26,7 @@
     },
     "3": {
       "source": "datagov/2020-state-employee-pay/files/rows.txt",
-      "fact": "In 2020, the top 5 Missouri state agencies by average employee pay were: (1) Office of State Auditor ($55,794), (2) Office of Governor ($53,122), (3) Office of Lieutenant Governor ($47,353), (4) Office of Attorney General ($43,923), (5) Judiciary ($42,795).",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/2020-state-employee-pay/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)\n\nprevious = ['OFFICE OF ATTORNEY GENERAL', 'OFFICE OF STATE AUDITOR', 'OFFICE OF ADMINISTRATION']\ndf['YTD Gross Pay'] = pd.to_numeric(df['YTD Gross Pay'], errors='coerce')\ntop5 = df.groupby('Agency Name', dropna=False)['YTD Gross Pay'].mean().sort_values(ascending=False).head(5).index.tolist()\nanswer = [agency for agency in previous if agency in top5]",
       "subquestion": "Which of <node_2 answer> remained in the top 5 by average employee pay in 2020?",
       "answer": [
         "OFFICE OF ATTORNEY GENERAL",
@@ -65,7 +65,7 @@
     },
     "9": {
       "source": "datagov/chicago-population-counts/files/rows.txt",
-      "fact": "According to the Chicago Population Counts dataset, the citywide total population of Chicago in 2018 was 2,705,988.",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/chicago-population-counts/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)\n\nresult = df[(df['Geography Type'] == 'Citywide') & (pd.to_numeric(df['Year'], errors='coerce') == 2018) & (df['Geography'] == 'Chicago')]['Population - Total']\nanswer = str(int(result.iloc[0]))",
       "subquestion": "What was the 2018 citywide population of <node_8 answer>?",
       "answer": "2705988"
     }

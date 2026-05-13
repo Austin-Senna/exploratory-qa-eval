@@ -4,7 +4,7 @@
   "nodes": {
     "1": {
       "source": "datagov/311-city-service-requests-in-2019/files/data.txt",
-      "fact": "In 2019, DC Ward 7 had 42,226 service requests and Ward 8 had 34,959 service requests.",
+      "fact": "import json\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/crime-incidents-in-2019/files/data.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ngeo = json.loads(obj[\"Body\"].read().decode(\"utf-8\", errors=\"replace\"))\n\ndf = pd.DataFrame([feat.get(\"properties\", {}) for feat in geo.get(\"features\", [])])\nviolent_offenses = {\"HOMICIDE\", \"ASSAULT W/DANGEROUS WEAPON\", \"ROBBERY\", \"SEX ABUSE\"}\nfiltered = df[df[\"OFFENSE\"].astype(str).str.strip().isin(violent_offenses)]\ncounts = filtered[\"WARD\"].astype(str).str.strip()\ncounts = counts[counts.ne(\"\") & counts.ne(\"nan\")].value_counts().to_dict()\nanswer = {f\"Ward {ward}\": int(counts[ward]) for ward in sorted(counts, key=int)}\n",
       "subquestion": "Between DC wards 7 and 8, which had higher average 311 service requests (2019-2020)? (Filter for this node: WARD in {7, 8}; group by WARD; count records.)",
       "answer": [
         "Ward 7 (42,226)",
@@ -13,7 +13,7 @@
     },
     "2": {
       "source": "datagov/311-city-service-requests-in-2020/files/data.txt",
-      "fact": "In 2020, DC Ward 7 had 36,113 service requests and Ward 8 had 37,124 service requests.",
+      "fact": "import json\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/crime-incidents-in-2020/files/data.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ngeo = json.loads(obj[\"Body\"].read().decode(\"utf-8\", errors=\"replace\"))\n\ndf = pd.DataFrame([feat.get(\"properties\", {}) for feat in geo.get(\"features\", [])])\nviolent_offenses = {\"HOMICIDE\", \"ASSAULT W/DANGEROUS WEAPON\", \"ROBBERY\", \"SEX ABUSE\"}\nfiltered = df[df[\"OFFENSE\"].astype(str).str.strip().isin(violent_offenses)]\ncounts = filtered[\"WARD\"].astype(str).str.strip()\ncounts = counts[counts.ne(\"\") & counts.ne(\"nan\")].value_counts().to_dict()\nanswer = {f\"Ward {ward}\": int(counts[ward]) for ward in sorted(counts, key=int)}\n",
       "subquestion": "Between DC wards 7 and 8, which had higher average 311 service requests (2019-2020)? (Filter for this node: WARD in {7, 8}; group by WARD; count records.)",
       "answer": [
         "Ward 7 (36,113)",

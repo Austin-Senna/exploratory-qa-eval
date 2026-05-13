@@ -4,7 +4,7 @@
   "nodes": {
     "1": {
       "source": "datagov/2021-state-employee-pay/files/rows.txt",
-      "fact": "According to Missouri state employee pay data for calendar year 2021, CORRECTIONS had 12,530 employees, SOCIAL SERVICES had 8,362 employees, and TRANSPORTATION had 7,170 employees.",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/2021-state-employee-pay/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)\n\nagencies = ['CORRECTIONS', 'SOCIAL SERVICES', 'TRANSPORTATION']\nanswer = (\n    df[df['Agency Name'].isin(agencies)]\n    ['Agency Name']\n    .value_counts()\n    .reindex(agencies)\n    .astype(int)\n    .to_dict()\n)",
       "subquestion": "Among CORRECTIONS, SOCIAL SERVICES, and TRANSPORTATION, which had the highest average employee count across 2021-2023? (Filter for this node: Agency Name in {CORRECTIONS, SOCIAL SERVICES, TRANSPORTATION}; count rows by Agency Name.)",
       "answer": {
         "CORRECTIONS": 12530,
@@ -14,7 +14,7 @@
     },
     "2": {
       "source": "datagov/2022-state-employee-pay/files/rows.txt",
-      "fact": "According to Missouri state employee pay data for calendar year 2022, CORRECTIONS had 12,380 employees, SOCIAL SERVICES had 8,723 employees, and TRANSPORTATION had 6,917 employees.",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/2022-state-employee-pay/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)\n\nagencies = ['CORRECTIONS', 'SOCIAL SERVICES', 'TRANSPORTATION']\nanswer = (\n    df[df['Agency Name'].isin(agencies)]\n    ['Agency Name']\n    .value_counts()\n    .reindex(agencies)\n    .astype(int)\n    .to_dict()\n)",
       "subquestion": "Among CORRECTIONS, SOCIAL SERVICES, and TRANSPORTATION, which had the highest average employee count across 2021-2023? (Filter for this node: Agency Name in {CORRECTIONS, SOCIAL SERVICES, TRANSPORTATION}; count rows by Agency Name.)",
       "answer": {
         "CORRECTIONS": 12380,
@@ -24,7 +24,7 @@
     },
     "3": {
       "source": "datagov/2023-state-employee-pay/files/rows.txt",
-      "fact": "According to Missouri state employee pay data for calendar year 2023, CORRECTIONS had 13,107 employees, SOCIAL SERVICES had 8,932 employees, and TRANSPORTATION had 6,956 employees. Computing averages: CORRECTIONS avg = 12,672, SOCIAL SERVICES avg = 8,672, TRANSPORTATION avg = 7,014. CORRECTIONS has the highest average.",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/2023-state-employee-pay/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)\n\nagencies = ['CORRECTIONS', 'SOCIAL SERVICES', 'TRANSPORTATION']\ncounts_2021 = {'CORRECTIONS': 12530, 'SOCIAL SERVICES': 8362, 'TRANSPORTATION': 7170}\ncounts_2022 = {'CORRECTIONS': 12380, 'SOCIAL SERVICES': 8723, 'TRANSPORTATION': 6917}\ncounts_2023 = (\n    df[df['Agency Name'].isin(agencies)]\n    ['Agency Name']\n    .value_counts()\n    .reindex(agencies)\n    .astype(int)\n    .to_dict()\n)\naverages = {agency: (counts_2021[agency] + counts_2022[agency] + counts_2023[agency]) / 3 for agency in agencies}\nanswer = sorted(averages, key=lambda agency: (-averages[agency], agency))[0]",
       "subquestion": "Among CORRECTIONS, SOCIAL SERVICES, and TRANSPORTATION, which had the highest average employee count across 2021-2023? (Filter for this node: Agency Name in {CORRECTIONS, SOCIAL SERVICES, TRANSPORTATION}; count rows by Agency Name.)",
       "answer": "CORRECTIONS"
     },

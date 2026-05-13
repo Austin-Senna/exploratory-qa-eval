@@ -5,7 +5,7 @@
   "nodes": {
     "1": {
       "source": "datagov/aps-1-1-texas-adult-populations-at-risk-by-county-region-fy2013-fy2022/files/rows.txt",
-      "fact": "In FY2023, 14 Texas counties had at least 10% adult disabled (18-64) population AND at least 23% population aged 65+: Culberson (12.8%, 27.3%), Eastland (10.0%, 24.3%), Edwards (10.8%, 31.8%), Hudspeth (13.2%, 25.8%), Kent (13.6%, 34.1%), King (10.3%, 29.1%), Kinney (12.9%, 24.9%), Lampasas (11.1%, 23.2%), Montague (10.1%, 24.2%), Sabine (12.3%, 31.2%), San Augustine (11.1%, 28.9%), San Jacinto (10.4%, 23.5%), Trinity (12.7%, 28.7%), and Tyler (11.4%, 23.4%).",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\nsource = \"datagov/aps-1-1-texas-adult-populations-at-risk-by-county-region-fy2013-fy2022/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\ndf[\"Fiscal Year\"] = pd.to_numeric(df[\"Fiscal Year\"], errors=\"coerce\")\ndf[\"Adult Disabled 18-64: % of Population\"] = pd.to_numeric(df[\"Adult Disabled 18-64: % of Population\"], errors=\"coerce\")\ndf[\"65 and older: % of Population\"] = pd.to_numeric(df[\"65 and older: % of Population\"], errors=\"coerce\")\n\nresult = df[\n    (df[\"Fiscal Year\"] == 2023)\n    & (df[\"Adult Disabled 18-64: % of Population\"] >= 10)\n    & (df[\"65 and older: % of Population\"] >= 23)\n][[\"County\", \"Adult Disabled 18-64: % of Population\", \"65 and older: % of Population\"]].sort_values([\"County\"]).reset_index(drop=True)\n\nanswer = result[\"County\"].tolist()",
       "subquestion": "Which Texas counties had at least 10% adult disabled population and at least 23% elderly population in FY2023?",
       "answer": [
         "Culberson",
@@ -26,7 +26,7 @@
     },
     "2": {
       "source": "datagov/aps-3-1-investigations-activity-by-county-fy2013-fy2022/files/rows.txt",
-      "fact": "In FY2023, five Texas counties in Region 2-Abilene had 150 or more completed APS investigations: Brown (232), Eastland (150), Montague (166), Taylor (1207), and Wichita (1446).",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\nsource = \"datagov/aps-3-1-investigations-activity-by-county-fy2013-fy2022/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\ndf[\"Fiscal Year\"] = pd.to_numeric(df[\"Fiscal Year\"], errors=\"coerce\")\ndf[\"Completed Investigations\"] = pd.to_numeric(df[\"Completed Investigations\"], errors=\"coerce\")\n\nresult = df[\n    (df[\"Fiscal Year\"] == 2023)\n    & (df[\"Region\"] == \"2-Abilene\")\n    & (df[\"Completed Investigations\"] >= 150)\n][[\"County\", \"Completed Investigations\"]].sort_values([\"County\"]).reset_index(drop=True)\n\nanswer = result[\"County\"].tolist()",
       "subquestion": "Which Texas counties in Region 2-Abilene had 150 or more completed APS investigations in FY2023?",
       "answer": [
         "Brown",
@@ -38,13 +38,13 @@
     },
     "3": {
       "source": "datagov/cpi-3-1-completed-abuse-neglect-investigations-by-county-fy2013-fy2022/files/rows.txt",
-      "fact": "In FY2023, Eastland County had 149 completed child abuse/neglect investigations.",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\nsource = \"datagov/cpi-3-1-completed-abuse-neglect-investigations-by-county-fy2013-fy2022/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\ndf[\"Fiscal Year\"] = pd.to_numeric(df[\"Fiscal Year\"], errors=\"coerce\")\ndf[\"Completed Investigations\"] = pd.to_numeric(df[\"Completed Investigations\"], errors=\"coerce\")\n\nresult = df[\n    (df[\"Fiscal Year\"] == 2023)\n    & (df[\"County\"] == \"Eastland\")\n][[\"County\", \"Completed Investigations\"]].reset_index(drop=True)\n\nanswer = result.loc[0, \"Completed Investigations\"]",
       "subquestion": "How many completed child abuse/neglect investigations did Eastland County have in FY2023?",
       "answer": "149"
     },
     "4": {
       "source": "datagov/cpi-3-2-completed-investigations-initiated-timely-by-county-fy2013-fy2022/files/rows.txt",
-      "fact": "In FY2023, Montague County had 193 completed child abuse/neglect investigations (summed across all priorities: 22 + 5 + 166 = 193).",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\nsource = \"datagov/cpi-3-2-completed-investigations-initiated-timely-by-county-fy2013-fy2022/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\ndf[\"Fiscal Year\"] = pd.to_numeric(df[\"Fiscal Year\"], errors=\"coerce\")\ndf[\"Completed Investigations\"] = pd.to_numeric(df[\"Completed Investigations\"], errors=\"coerce\")\n\nresult = df[\n    (df[\"Fiscal Year\"] == 2023)\n    & (df[\"County\"] == \"Montague\")\n][[\"County\", \"Priority\", \"Reponse Timely\", \"Completed Investigations\"]].reset_index(drop=True)\n\nanswer = result[\"Completed Investigations\"].sum()",
       "subquestion": "How many completed child abuse/neglect investigations did Montague County have in FY2023?",
       "answer": "193"
     },

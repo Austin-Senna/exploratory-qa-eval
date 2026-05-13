@@ -34,7 +34,7 @@ class SetupRunTests(unittest.TestCase):
     def _write_smoke_fixture(self, repo_root: Path) -> None:
         (repo_root / "lance_data").mkdir(parents=True, exist_ok=True)
         for task_dir in ("k-1-d-1", "k-5-d-4"):
-            target = repo_root / "tasks_core_quality" / task_dir
+            target = repo_root / "tasks_mini" / task_dir
             target.mkdir(parents=True, exist_ok=True)
             (target / "task_1.json").write_text("{}")
             (target / "task_2.json").write_text("{}")
@@ -80,7 +80,7 @@ class SetupRunTests(unittest.TestCase):
             self.assertIn("ideal", command)
             self.assertEqual(command[command.index("--model-name") + 1], "openai/gpt-5.2")
             self.assertEqual(command[command.index("--db-path") + 1], "lance_data")
-            self.assertEqual(command[command.index("--task-dir") + 1], "tasks_core_quality/k-5-d-4")
+            self.assertEqual(command[command.index("--task-dir") + 1], "tasks_mini/k-5-d-4")
             self.assertEqual(command[command.index("--tasks-per-dir") + 1], "2")
             self.assertEqual(command[command.index("--logs-output-dir") + 1], "test_logs")
             self.assertEqual(command[command.index("--results-output-dir") + 1], "test_results")
@@ -89,7 +89,7 @@ class SetupRunTests(unittest.TestCase):
             self.assertEqual(command[command.index("--openai-prompt-cache-retention") + 1], "24h")
             self.assertIn("--verbose", command)
             self.assertEqual(fake_runner.kwargs, {"check": True, "cwd": str(repo_root)})
-            self.assertIn("Task scope: tasks_core_quality/k-5-d-4 (first 2 tasks)", stdout.getvalue())
+            self.assertIn("Task scope: tasks_mini/k-5-d-4 (first 2 tasks)", stdout.getvalue())
 
     def test_full_builds_expected_command(self):
         with TemporaryDirectory() as tmpdir:
@@ -121,7 +121,7 @@ class SetupRunTests(unittest.TestCase):
 
             self.assertEqual(command[1:3], ["-m", "strands_evaluation.run_mode_eval"])
             self.assertIn("--all-tasks", command)
-            self.assertEqual(command[command.index("--task-set") + 1], "tasks_core_quality")
+            self.assertEqual(command[command.index("--task-set") + 1], "tasks_mini")
             self.assertEqual(command[command.index("--logs-output-dir") + 1], "logs")
             self.assertEqual(command[command.index("--results-output-dir") + 1], "results")
 

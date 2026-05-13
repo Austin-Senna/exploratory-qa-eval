@@ -4,55 +4,55 @@
   "nodes": {
     "1": {
       "source": "datagov/school-district-office-locations-current-d848f/files/nces::school-district-office-locations-current-1.txt",
-      "fact": "In the school district office listings, there are 1 entry(ies) with CITY='Iowa City' and NMCNTY='Johnson County', and they all use the same two-digit state FIPS code (STFIP): 19.",
+      "fact": "import io\nimport json\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/school-district-office-locations-current-d848f/files/nces::school-district-office-locations-current-1.txt'\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndata = json.load(io.TextIOWrapper(obj[\"Body\"], encoding=\"utf-8\"))\ndf = pd.json_normalize(data[\"features\"])\nanswer = df.loc[(df[\"properties.CITY\"] == \"Iowa City\") & (df[\"properties.NMCNTY\"] == \"Johnson County\"), \"properties.STFIP\"].dropna().drop_duplicates().iloc[0]\n",
       "subquestion": "In the school district office listings, entries with CITY='Iowa City' and NMCNTY='Johnson County' share what two-digit state FIPS code (STFIP)?",
       "answer": "19"
     },
     "2": {
       "source": "datagov/public-school-locations-2018-19-42360/files/data-F2nGlG.txt",
-      "fact": "For STFIP=19, the 3 counties with the most public schools are: Polk County (130); Linn County (77); Scott County (52). The next county is Johnson County (40), so the cut is unique.",
+      "fact": "import io\nimport json\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/public-school-locations-2018-19-42360/files/data-F2nGlG.txt'\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndata = json.load(io.TextIOWrapper(obj[\"Body\"], encoding=\"utf-8\"))\ndf = pd.json_normalize(data[\"features\"])\ncounts = (\n    df[df[\"properties.STFIP\"].astype(str) == \"19\"]\n    .groupby(\"properties.NMCNTY\")\n    .size()\n    .sort_values(ascending=False)\n    .head(3)\n    .index.tolist()\n)\nanswer = \"; \".join(counts)\n",
       "subquestion": "For STFIP='<node_1 answer>', which 3 county names have the most public schools? Return the county names separated by '; '.",
       "answer": "Polk County; Linn County; Scott County"
     },
     "3": {
       "source": "datagov/private-school-locations-2017-18-f49f6/files/data-dqdQDP.txt",
-      "fact": "For STFIP=19, the 3 counties with the most private schools are: Polk County (19); Linn County (14); Sioux County (14). The next county is Dubuque County (13), so the cut is unique.",
+      "fact": "import io\nimport json\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/private-school-locations-2017-18-f49f6/files/data-dqdQDP.txt'\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndata = json.load(io.TextIOWrapper(obj[\"Body\"], encoding=\"utf-8\"))\ndf = pd.json_normalize(data[\"features\"])\ncounts = (\n    df[df[\"properties.STFIP\"].astype(str) == \"19\"]\n    .groupby(\"properties.NMCNTY\")\n    .size()\n    .sort_values(ascending=False)\n    .head(3)\n    .index.tolist()\n)\nanswer = \"; \".join(counts)\n",
       "subquestion": "For STFIP='<node_1 answer>', which 3 county names have the most private schools? Return the county names separated by '; '.",
       "answer": "Polk County; Linn County; Sioux County"
     },
     "4": {
       "source": "datagov/school-district-office-locations-2020-21-d8df0/files/data-UDaCeM.txt",
-      "fact": "For STFIP=19, the 3 counties with the most school district offices are: Linn County (12); Polk County (10); Pottawattamie County (8). The next county is Story County (7), so the cut is unique.",
+      "fact": "import io\nimport json\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/school-district-office-locations-2020-21-d8df0/files/data-UDaCeM.txt'\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndata = json.load(io.TextIOWrapper(obj[\"Body\"], encoding=\"utf-8\"))\ndf = pd.json_normalize(data[\"features\"])\ncounts = (\n    df[df[\"properties.STFIP\"].astype(str) == \"19\"]\n    .groupby(\"properties.NMCNTY\")\n    .size()\n    .sort_values(ascending=False)\n    .head(3)\n    .index.tolist()\n)\nanswer = \"; \".join(counts)\n",
       "subquestion": "For STFIP='<node_1 answer>', which 3 county names have the most school district offices? Return the county names separated by '; '.",
       "answer": "Linn County; Polk County; Pottawattamie County"
     },
     "5": {
       "source": "datagov/postsecondary-school-locations-2019-20-64b31/files/data-cbxYz6.txt",
-      "fact": "Using the intersection of C with the union of A and B, the candidate counties are: Linn County, Polk County. Postsecondary counts within that set are: Polk County (11); Linn County (7). Polk County is strictly highest.",
+      "fact": "import io\nimport json\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/postsecondary-school-locations-2019-20-64b31/files/data-cbxYz6.txt'\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndata = json.load(io.TextIOWrapper(obj[\"Body\"], encoding=\"utf-8\"))\ndf = pd.json_normalize(data[\"features\"])\nA = {\"Polk County\", \"Linn County\", \"Scott County\"}\nB = {\"Polk County\", \"Linn County\", \"Sioux County\"}\nC = {\"Linn County\", \"Polk County\", \"Pottawattamie County\"}\ncandidates = sorted(C & (A | B))\ncounts = (\n    df[(df[\"properties.STFIP\"].astype(str) == \"19\") & (df[\"properties.NMCNTY\"].isin(candidates))]\n    .groupby(\"properties.NMCNTY\")\n    .size()\n    .sort_values(ascending=False)\n)\nanswer = counts.index[0]\n",
       "subquestion": "Let A be the set of counties in <node_2 answer>, B be the set of counties in <node_3 answer>, and C be the set of counties in <node_4 answer>. Consider the intersection of C with the union of A and B. Among those counties, which single county has the most postsecondary institutions in STFIP='<node_1 answer>'? Answer with the county name including the word 'County'.",
       "answer": "Polk County"
     },
     "6": {
       "source": "datagov/public-school-locations-2018-19-42360/files/data-F2nGlG.txt",
-      "fact": "For STFIP=19 and NMCNTY='Polk County', the public school count is 130.",
+      "fact": "import io\nimport json\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/public-school-locations-2018-19-42360/files/data-F2nGlG.txt'\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndata = json.load(io.TextIOWrapper(obj[\"Body\"], encoding=\"utf-8\"))\ndf = pd.json_normalize(data[\"features\"])\nanswer = df[(df[\"properties.STFIP\"].astype(str) == \"19\") & (df[\"properties.NMCNTY\"] == 'Polk County')].shape[0]\nanswer = str(answer)\n",
       "subquestion": "How many public schools have NMCNTY='<node_5 answer>' and STFIP='<node_1 answer>'?",
       "answer": "130"
     },
     "7": {
       "source": "datagov/private-school-locations-2017-18-f49f6/files/data-dqdQDP.txt",
-      "fact": "For STFIP=19 and NMCNTY='Polk County', the private school count is 19.",
+      "fact": "import io\nimport json\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/private-school-locations-2017-18-f49f6/files/data-dqdQDP.txt'\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndata = json.load(io.TextIOWrapper(obj[\"Body\"], encoding=\"utf-8\"))\ndf = pd.json_normalize(data[\"features\"])\nanswer = df[(df[\"properties.STFIP\"].astype(str) == \"19\") & (df[\"properties.NMCNTY\"] == 'Polk County')].shape[0]\nanswer = str(answer)\n",
       "subquestion": "How many private schools have NMCNTY='<node_5 answer>' and STFIP='<node_1 answer>'?",
       "answer": "19"
     },
     "8": {
       "source": "datagov/school-district-office-locations-current-c8f9d/files/data-ghDEVP.txt",
-      "fact": "For STFIP=19 and NMCNTY='Polk County', the school district office count is 12.",
+      "fact": "import io\nimport json\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/school-district-office-locations-current-c8f9d/files/data-ghDEVP.txt'\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndata = json.load(io.TextIOWrapper(obj[\"Body\"], encoding=\"utf-8\"))\ndf = pd.json_normalize(data[\"features\"])\nanswer = df[(df[\"properties.STFIP\"].astype(str) == \"19\") & (df[\"properties.NMCNTY\"] == 'Polk County')].shape[0]\nanswer = str(answer)\n",
       "subquestion": "How many school district offices have NMCNTY='<node_5 answer>' and STFIP='<node_1 answer>'?",
       "answer": "12"
     },
     "9": {
       "source": "datagov/postsecondary-school-locations-2017-18-fa280/files/data-7AG3Nw.txt",
-      "fact": "For STFIP=19 and NMCNTY='Polk County', the postsecondary institution count is 14.",
+      "fact": "import io\nimport json\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/postsecondary-school-locations-2017-18-fa280/files/data-7AG3Nw.txt'\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndata = json.load(io.TextIOWrapper(obj[\"Body\"], encoding=\"utf-8\"))\ndf = pd.json_normalize(data[\"features\"])\nanswer = df[(df[\"properties.STFIP\"].astype(str) == \"19\") & (df[\"properties.NMCNTY\"] == 'Polk County')].shape[0]\nanswer = str(answer)\n",
       "subquestion": "How many postsecondary institutions have NMCNTY='<node_5 answer>' and STFIP='<node_1 answer>'?",
       "answer": "14"
     }

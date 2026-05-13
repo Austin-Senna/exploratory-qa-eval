@@ -5,7 +5,7 @@
   "nodes": {
     "1": {
       "source": "datagov/accidental-drug-related-deaths-2012-2018/files/rows.txt",
-      "fact": "In 2020, three Connecticut counties had over 200 accidental drug deaths: New Haven County (383), Hartford County (335), and Fairfield County (208). Other counties had fewer: New London (111), Litchfield (70), Middlesex (57), Windham (47), Tolland (37).",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/accidental-drug-related-deaths-2012-2018/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\ndf[\"Date\"] = pd.to_datetime(df[\"Date\"], errors=\"coerce\")\ndf_2020 = df[df[\"Date\"].dt.year == 2020].copy()\ndf_2020[\"Residence County\"] = df_2020[\"Residence County\"].fillna(\"\").astype(str).str.strip()\ncounty_counts = df_2020.loc[df_2020[\"Residence County\"] != \"\", \"Residence County\"].value_counts().rename_axis(\"county\").reset_index(name=\"count\")\ncounty_counts[\"county\"] = county_counts[\"county\"].str.title() + \" County\"\nanswer = county_counts.loc[county_counts[\"count\"] > 200, \"county\"].tolist()",
       "subquestion": "Which Connecticut counties had over 200 accidental drug deaths in 2020?",
       "answer": [
         "New Haven County",
@@ -15,7 +15,7 @@
     },
     "2": {
       "source": "datagov/connecticut-covid-19-community-levels-by-county-as-originally-posted/files/rows.txt",
-      "fact": "Four Connecticut counties have a COVID-19 health service area number above 80: Fairfield County (121), New Haven County (85), Middlesex County (85), and Litchfield County (85). Other counties have lower numbers: Hartford (4), Tolland (4), Windham (4), New London (20).",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/connecticut-covid-19-community-levels-by-county-as-originally-posted/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\nfiltered = df[(df[\"state\"] == \"Connecticut\") & (df[\"health_service_area_number\"] > 80)].copy()\nanswer = filtered[\"county_name\"].drop_duplicates().tolist()",
       "subquestion": "Which Connecticut counties have a COVID-19 health service area number above 80?",
       "answer": [
         "Fairfield County",
@@ -38,7 +38,7 @@
     },
     "5": {
       "source": "datagov/500-cities-city-level-data-gis-friendly-format-2018-release/files/rows.txt",
-      "fact": "In the 2018 CDC 500 Cities data, New Haven had an ACCESS2 (lack of health insurance) rate of 13.9%, while Bridgeport had 16.9%.",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/500-cities-city-level-data-gis-friendly-format-2018-release/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\ncities = [\"New Haven\", \"Bridgeport\"]\nfiltered = df[(df[\"StateAbbr\"] == \"CT\") & (df[\"PlaceName\"].isin(cities))].copy()\nfiltered[\"ACCESS2_CrudePrev\"] = pd.to_numeric(filtered[\"ACCESS2_CrudePrev\"], errors=\"coerce\")\nvalues = filtered.set_index(\"PlaceName\")[\"ACCESS2_CrudePrev\"].to_dict()\nanswer = {city: f\"{values[city]:.1f}%\" for city in cities}",
       "subquestion": "What was the ACCESS2 (lack of health insurance) rate for <hop 2 answer: New Haven and Bridgeport> in 2018?",
       "answer": {
         "New Haven": "13.9%",
@@ -47,7 +47,7 @@
     },
     "6": {
       "source": "datagov/500-cities-city-level-data-gis-friendly-format-2019-release/files/rows.txt",
-      "fact": "In the 2019 CDC 500 Cities data, New Haven had an ACCESS2 (lack of health insurance) rate of 15.4%, while Bridgeport had 19.3%.",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/500-cities-city-level-data-gis-friendly-format-2019-release/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\ncities = [\"New Haven\", \"Bridgeport\"]\nfiltered = df[(df[\"StateAbbr\"] == \"CT\") & (df[\"PlaceName\"].isin(cities))].copy()\nfiltered[\"ACCESS2_CrudePrev\"] = pd.to_numeric(filtered[\"ACCESS2_CrudePrev\"], errors=\"coerce\")\nvalues = filtered.set_index(\"PlaceName\")[\"ACCESS2_CrudePrev\"].to_dict()\nanswer = {city: f\"{values[city]:.1f}%\" for city in cities}",
       "subquestion": "What was the ACCESS2 (lack of health insurance) rate for <hop 2 answer: New Haven and Bridgeport> in 2019?",
       "answer": {
         "New Haven": "15.4%",

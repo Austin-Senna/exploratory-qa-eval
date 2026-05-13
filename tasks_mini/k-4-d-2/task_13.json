@@ -10,25 +10,25 @@
     },
     "2": {
       "source": "datagov/crime-incidents-in-2017/files/data.txt",
-      "fact": "Filter to WARD = 1 in 2017 and group by OFFENSE; the most common offense is THEFT F/AUTO (1,934; no tie observed). This names the most frequent offense in the filtered scope.",
+      "fact": "import json\nimport boto3\nimport pandas as pd\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/crime-incidents-in-2017/files/data.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndata = json.loads(obj[\"Body\"].read().decode(\"utf-8\"))\ndf = pd.json_normalize(data[\"features\"])\ndf.columns = [c.replace(\"properties.\", \"\").replace(\"geometry.\", \"geometry.\") for c in df.columns]\n\nanswer = df.loc[df[\"WARD\"] == \"1\", \"OFFENSE\"].value_counts().idxmax()",
       "subquestion": "Within Ward <node_1 answer>, which offense is most common?",
       "answer": "THEFT F/AUTO"
     },
     "3": {
       "source": "datagov/crime-incidents-in-2018/files/data.txt",
-      "fact": "Filter to OFFENSE = 'THEFT F/AUTO' in 2018 and group by WARD; Ward 2 has the most incidents (2,289; no tie observed). This identifies the location with the highest incident count for that condition.",
+      "fact": "import json\nimport boto3\nimport pandas as pd\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/crime-incidents-in-2018/files/data.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndata = json.loads(obj[\"Body\"].read().decode(\"utf-8\"))\ndf = pd.json_normalize(data[\"features\"])\ndf.columns = [c.replace(\"properties.\", \"\").replace(\"geometry.\", \"geometry.\") for c in df.columns]\n\nanswer = df.loc[df[\"OFFENSE\"] == \"THEFT F/AUTO\", \"WARD\"].value_counts().idxmax()\nanswer = str(answer)",
       "subquestion": "In 2018, which ward has the most <node_2 answer> incidents?",
       "answer": "2"
     },
     "4": {
       "source": "datagov/crime-incidents-in-2019/files/data.txt",
-      "fact": "Filter to WARD = 2, OFFENSE = 'THEFT F/AUTO', and year 2019; the incident count is 2,431. This provides the required count.",
+      "fact": "import json\nimport boto3\nimport pandas as pd\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/crime-incidents-in-2019/files/data.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndata = json.loads(obj[\"Body\"].read().decode(\"utf-8\"))\ndf = pd.json_normalize(data[\"features\"])\ndf.columns = [c.replace(\"properties.\", \"\").replace(\"geometry.\", \"geometry.\") for c in df.columns]\n\nanswer = int(((df[\"WARD\"] == \"2\") & (df[\"OFFENSE\"] == \"THEFT F/AUTO\")).sum())\nanswer = str(answer)",
       "subquestion": "In 2019, how many <node_2 answer> incidents occurred in Ward <node_3 answer>?",
       "answer": "2431"
     },
     "5": {
       "source": "datagov/crime-incidents-in-2020/files/data.txt",
-      "fact": "Filter to WARD = 2, OFFENSE = 'THEFT F/AUTO', and year 2020; the incident count is 1,247. This provides the required count.",
+      "fact": "import json\nimport boto3\nimport pandas as pd\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/crime-incidents-in-2020/files/data.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndata = json.loads(obj[\"Body\"].read().decode(\"utf-8\"))\ndf = pd.json_normalize(data[\"features\"])\ndf.columns = [c.replace(\"properties.\", \"\").replace(\"geometry.\", \"geometry.\") for c in df.columns]\n\nanswer = int(((df[\"WARD\"] == \"2\") & (df[\"OFFENSE\"] == \"THEFT F/AUTO\")).sum())\nanswer = str(answer)",
       "subquestion": "In 2020, how many <node_2 answer> incidents occurred in Ward <node_3 answer>?",
       "answer": "1247"
     }

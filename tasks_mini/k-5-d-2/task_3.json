@@ -4,7 +4,7 @@
   "nodes": {
     "1": {
       "source": "datagov/child-and-adult-care-food-programs-cacfp-day-care-homes-meal-reimbursement-program-ye-2018/files/rows.txt",
-      "fact": "In the day care homes meal reimbursement dataset for ProgramYear 2018-2019, total reimbursements for Harris, Dallas, Hidalgo, and Cameron counties were: Harris $8,757,796.13; Dallas $2,835,278.75; Hidalgo $1,202,699.73; Cameron $392,489.51.",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.client import Config\n\nsource = 'datagov/summer-meal-programs-seamless-summer-option-sso-meal-count-information-program-period-2016/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)\nprogram_year = '2015-2016'\ncounty = df['SiteCounty'].astype(str).str.strip().str.title()\nlunch_total = pd.to_numeric(df['LunchTotal'], errors='coerce')\nfiltered = pd.DataFrame({'SiteCounty': county, 'LunchTotal': lunch_total})[df['ProgramYear'].astype(str).str.strip().eq(program_year) & county.ne('') & county.ne('Nan')].copy()\nranked = filtered.groupby('SiteCounty', as_index=False)['LunchTotal'].sum().sort_values(['LunchTotal', 'SiteCounty'], ascending=[False, True])\nanswer = ranked['SiteCounty'].head(5).tolist()",
       "subquestion": "Among {Harris, Hidalgo, Dallas, Cameron}, which counties had the largest percentage decrease in day care home meal reimbursements between the 2018-2019 and 2020-2021 program years? (Filter for this node: ProgramYear == 2018-2019; group by SiteCounty; sum TotalMealReimbursement.)",
       "answer": {
         "Harris": 8757796.13,
@@ -15,7 +15,7 @@
     },
     "2": {
       "source": "datagov/child-and-adult-care-food-programs-cacfp-day-care-homes-meal-reimbursement-program-ye-2020/files/rows.txt",
-      "fact": "In the day care homes meal reimbursement dataset for ProgramYear 2020-2021, total reimbursements for Harris, Dallas, Hidalgo, and Cameron counties were: Harris $7,558,597.77; Dallas $2,393,411.26; Hidalgo $971,063.56; Cameron $330,003.06.",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.client import Config\n\nsource = 'datagov/summer-meal-programs-seamless-summer-option-sso-meal-count-information-program-period-2017/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)\nprogram_year = '2016-2017'\ncounty = df['SiteCounty'].astype(str).str.strip().str.title()\nlunch_total = pd.to_numeric(df['LunchTotal'], errors='coerce')\nfiltered = pd.DataFrame({'SiteCounty': county, 'LunchTotal': lunch_total})[df['ProgramYear'].astype(str).str.strip().eq(program_year) & county.ne('') & county.ne('Nan')].copy()\nranked = filtered.groupby('SiteCounty', as_index=False)['LunchTotal'].sum().sort_values(['LunchTotal', 'SiteCounty'], ascending=[False, True])\nanswer = ranked['SiteCounty'].head(5).tolist()",
       "subquestion": "Among {Harris, Hidalgo, Dallas, Cameron}, which counties had the largest percentage decrease in day care home meal reimbursements between the 2018-2019 and 2020-2021 program years? (Filter for this node: ProgramYear == 2020-2021; group by SiteCounty; sum TotalMealReimbursement.)",
       "answer": {
         "Harris": 7558597.77,
@@ -26,7 +26,7 @@
     },
     "3": {
       "source": "datagov/child-and-adult-care-food-program-cacfp-child-centers-meal-reimbursement-program-year-2018/files/rows.txt",
-      "fact": "In the child centers dataset for ProgramYear 2018-2019, total EnrollmentQty was Cameron 7,620,183 and Hidalgo 1,661,128.",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.client import Config\n\nsource = 'datagov/summer-meal-programs-seamless-summer-option-sso-meal-count-information-program-period-2018/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)\nprogram_year = '2017-2018'\ncounty = df['SiteCounty'].astype(str).str.strip().str.title()\nlunch_total = pd.to_numeric(df['LunchTotal'], errors='coerce')\nfiltered = pd.DataFrame({'SiteCounty': county, 'LunchTotal': lunch_total})[df['ProgramYear'].astype(str).str.strip().eq(program_year) & county.ne('') & county.ne('Nan')].copy()\nranked = filtered.groupby('SiteCounty', as_index=False)['LunchTotal'].sum().sort_values(['LunchTotal', 'SiteCounty'], ascending=[False, True])\nanswer = ranked['SiteCounty'].head(5).tolist()",
       "subquestion": "Among {Hidalgo, Cameron}, which county had the higher average child center enrollment across the 2018-2019 and 2019-2020 program years? (Filter for this node: ProgramYear == 2018-2019; group by SiteCounty; sum EnrollmentQty.)",
       "answer": {
         "Cameron": 7620183,
@@ -35,7 +35,7 @@
     },
     "4": {
       "source": "datagov/child-and-adult-care-food-program-cacfp-child-centers-meal-reimbursement-program-year-2019/files/rows.txt",
-      "fact": "In the child centers dataset for ProgramYear 2019-2020, total EnrollmentQty was Cameron 1,076,746 and Hidalgo 1,477,805.",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.client import Config\n\nsource = 'datagov/summer-meal-programs-seamless-summer-option-sso-meal-count-information-program-period-2019/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)\nprogram_year = '2018-2019'\ncounty = df['SiteCounty'].astype(str).str.strip().str.title()\nlunch_total = pd.to_numeric(df['LunchTotal'], errors='coerce')\nfiltered = pd.DataFrame({'SiteCounty': county, 'LunchTotal': lunch_total})[df['ProgramYear'].astype(str).str.strip().eq(program_year) & county.ne('') & county.ne('Nan')].copy()\nranked = filtered.groupby('SiteCounty', as_index=False)['LunchTotal'].sum().sort_values(['LunchTotal', 'SiteCounty'], ascending=[False, True])\nanswer = ranked['SiteCounty'].head(5).tolist()",
       "subquestion": "Among {Hidalgo, Cameron}, which county had the higher average child center enrollment across the 2018-2019 and 2019-2020 program years? (Filter for this node: ProgramYear == 2019-2020; group by SiteCounty; sum EnrollmentQty.)",
       "answer": {
         "Cameron": 1076746,

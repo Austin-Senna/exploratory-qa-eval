@@ -10,25 +10,25 @@
     },
     "2": {
       "source": "datagov/crime-incidents-in-2017/files/data.txt",
-      "fact": "Filter to WARD = 1 in 2017 and group by OFFENSE; the most common offense is THEFT F/AUTO (1,934; no tie observed). This identifies the top offense in that ward.",
+      "fact": "import os\nimport io\nimport json\nfrom collections import Counter\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/crime-incidents-in-2017/files/data.txt'\nbucket = 'lakeqa-yc4103-datalake'\nlocal_path = source if os.path.exists(source) else '/tmp/k123_data_cache/' + source\n\nif os.path.exists(local_path):\n    with open(local_path, 'rb') as f:\n        raw = f.read()\nelse:\n    s3 = boto3.client('s3', config=Config(signature_version=UNSIGNED))\n    obj = s3.get_object(Bucket=bucket, Key=source)\n    raw = obj['Body'].read()\n\ndata = json.load(io.BytesIO(raw))\nnode_1_answer = '1'\ncounts = Counter()\nfor feature in data.get('features', []):\n    props = feature.get('properties') or {}\n    if str(props.get('WARD') or '').strip() == node_1_answer:\n        offense = str(props.get('OFFENSE') or '').strip()\n        if offense:\n            counts[offense] += 1\n\nanswer = str(max(counts, key=counts.get))\n",
       "subquestion": "In 2017, within Ward <node_1 answer>, which offense is most common?",
       "answer": "THEFT F/AUTO"
     },
     "3": {
       "source": "datagov/crime-incidents-in-2018/files/data.txt",
-      "fact": "Filter to OFFENSE = 'THEFT F/AUTO' in 2018 and group by WARD; Ward 2 has the most incidents (2,289; no tie observed). This identifies the top ward for that offense.",
+      "fact": "import os\nimport io\nimport json\nfrom collections import Counter\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/crime-incidents-in-2018/files/data.txt'\nbucket = 'lakeqa-yc4103-datalake'\nlocal_path = source if os.path.exists(source) else '/tmp/k123_data_cache/' + source\n\nif os.path.exists(local_path):\n    with open(local_path, 'rb') as f:\n        raw = f.read()\nelse:\n    s3 = boto3.client('s3', config=Config(signature_version=UNSIGNED))\n    obj = s3.get_object(Bucket=bucket, Key=source)\n    raw = obj['Body'].read()\n\ndata = json.load(io.BytesIO(raw))\nnode_2_answer = 'THEFT F/AUTO'\ncounts = Counter()\nfor feature in data.get('features', []):\n    props = feature.get('properties') or {}\n    if str(props.get('OFFENSE') or '').strip() == node_2_answer:\n        ward = str(props.get('WARD') or '').strip()\n        if ward:\n            counts[ward] += 1\n\nanswer = str(max(counts, key=counts.get))\n",
       "subquestion": "In 2018, which ward has the most <node_2 answer> incidents?",
       "answer": "2"
     },
     "4": {
       "source": "datagov/crime-incidents-in-2019/files/data.txt",
-      "fact": "Filter to WARD = <node_3 answer> in 2019 and group by OFFENSE; THEFT/OTHER is most common (4,118; no tie observed). This identifies the top offense in that ward.",
+      "fact": "import os\nimport io\nimport json\nfrom collections import Counter\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/crime-incidents-in-2019/files/data.txt'\nbucket = 'lakeqa-yc4103-datalake'\nlocal_path = source if os.path.exists(source) else '/tmp/k123_data_cache/' + source\n\nif os.path.exists(local_path):\n    with open(local_path, 'rb') as f:\n        raw = f.read()\nelse:\n    s3 = boto3.client('s3', config=Config(signature_version=UNSIGNED))\n    obj = s3.get_object(Bucket=bucket, Key=source)\n    raw = obj['Body'].read()\n\ndata = json.load(io.BytesIO(raw))\nnode_3_answer = '2'\ncounts = Counter()\nfor feature in data.get('features', []):\n    props = feature.get('properties') or {}\n    if str(props.get('WARD') or '').strip() == node_3_answer:\n        offense = str(props.get('OFFENSE') or '').strip()\n        if offense:\n            counts[offense] += 1\n\nanswer = str(max(counts, key=counts.get))\n",
       "subquestion": "In 2019, within Ward <node_3 answer>, which offense is most common?",
       "answer": "THEFT/OTHER"
     },
     "5": {
       "source": "datagov/crime-incidents-in-2020/files/data.txt",
-      "fact": "Filter to OFFENSE = <node_4 answer> in 2020; count incidents; the total is 10,926. This provides the 2020 incident count for that offense.",
+      "fact": "import os\nimport io\nimport json\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/crime-incidents-in-2020/files/data.txt'\nbucket = 'lakeqa-yc4103-datalake'\nlocal_path = source if os.path.exists(source) else '/tmp/k123_data_cache/' + source\n\nif os.path.exists(local_path):\n    with open(local_path, 'rb') as f:\n        raw = f.read()\nelse:\n    s3 = boto3.client('s3', config=Config(signature_version=UNSIGNED))\n    obj = s3.get_object(Bucket=bucket, Key=source)\n    raw = obj['Body'].read()\n\ndata = json.load(io.BytesIO(raw))\nnode_4_answer = 'THEFT/OTHER'\ncount = 0\nfor feature in data.get('features', []):\n    props = feature.get('properties') or {}\n    if str(props.get('OFFENSE') or '').strip() == node_4_answer:\n        count += 1\n\nanswer = str(count)\n",
       "subquestion": "In 2020, how many incidents had OFFENSE = <node_4 answer>?",
       "answer": "10926"
     }

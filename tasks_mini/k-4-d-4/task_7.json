@@ -4,7 +4,7 @@
   "nodes": {
     "1": {
       "source": "datagov/employee-overtime-and-supplemental-earnings-2018/files/rows.txt",
-      "fact": "In the 2018 Chicago Employee Overtime dataset, the POLICE department had total overtime of $131,675,457.86.",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/employee-overtime-and-supplemental-earnings-2018/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\nanswer = df.groupby(\"DEPARTMENT NAME\", dropna=False)[\"TOTAL\"].sum().sort_values(ascending=False).to_dict()\nprint(answer)",
       "subquestion": "What was the total overtime for each Chicago department in 2018?",
       "answer": {
         "Police": 131675457.86,
@@ -36,7 +36,7 @@
     },
     "2": {
       "source": "datagov/employee-overtime-and-supplemental-earnings-2019/files/rows.txt",
-      "fact": "In the 2019 Chicago Employee Overtime dataset, the POLICE department had total overtime of $139,560,316.72.",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/employee-overtime-and-supplemental-earnings-2019/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\nanswer = df.groupby(\"DEPARTMENT NAME\", dropna=False)[\"TOTAL\"].sum().sort_values(ascending=False).to_dict()\nprint(answer)",
       "subquestion": "What was the total overtime for each Chicago department in 2019?",
       "answer": {
         "CHICAGO POLICE DEPARTMENT": 139560316.72,
@@ -66,7 +66,7 @@
     },
     "3": {
       "source": "datagov/employee-overtime-and-supplemental-earnings-2020/files/rows.txt",
-      "fact": "In the 2020 Chicago Employee Overtime dataset, the POLICE department had total overtime of $177,486,176.09.",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/employee-overtime-and-supplemental-earnings-2020/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\nanswer = df.groupby(\"DEPARTMENT NAME\", dropna=False)[\"TOTAL\"].sum().sort_values(ascending=False).to_dict()\nprint(answer)",
       "subquestion": "What was the total overtime for each Chicago department in 2020?",
       "answer": {
         "CHICAGO POLICE DEPARTMENT": 177486176.09,
@@ -96,7 +96,7 @@
     },
     "4": {
       "source": "datagov/employee-overtime-and-supplemental-earnings-2021/files/rows.txt",
-      "fact": "In the 2021 Chicago Employee Overtime dataset, the POLICE department had total overtime of $134,342,334.79.",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/employee-overtime-and-supplemental-earnings-2021/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\nanswer = df.groupby(\"DEPARTMENT NAME\", dropna=False)[\"TOTAL\"].sum().sort_values(ascending=False).to_dict()\nprint(answer)",
       "subquestion": "What was the total overtime for each Chicago department in 2021?",
       "answer": {
         "Chicago Police Department": 134342334.79,

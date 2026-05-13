@@ -4,7 +4,7 @@
   "nodes": {
     "1": {
       "source": "datagov/county-mental-health-profiles-phase-2-beginning-2014/files/rows.txt",
-      "fact": "According to the NY mental health profiles dataset (2017-2018), excluding NYC counties, the top 2 NY counties by total mental health service recipients are Erie County (83,049 recipients) and Monroe County (74,299 recipients).",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/county-mental-health-profiles-phase-2-beginning-2014/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\nrecipient_col = \"Count of Recipients by Rate Code Group and County\"\nexclude_nyc = {\"Bronx\", \"Kings\", \"New York\", \"Queens\", \"Richmond\"}\n\nresult = (\n    df[\n        df[\"Service Year\"].isin([2017, 2018])\n        & ~df[\"County Label\"].isin(exclude_nyc)\n    ]\n    .groupby(\"County Label\", as_index=False)[recipient_col]\n    .sum()\n    .sort_values(recipient_col, ascending=False)\n    .reset_index(drop=True)\n)\n\nanswer = [f\"{county} County\" for county in result.head(2)[\"County Label\"].tolist()]",
       "subquestion": "Which non-NYC NY counties are in the top 2 by total mental health service recipients (2017-2018)? (Filter for this node: Service Year in {2017, 2018}; group by County Label; sum Count of Recipients by Rate Code Group and County; exclude NYC counties {Bronx, Kings, New York, Queens, Richmond}; rank by total; keep top 2.)",
       "answer": [
         "Erie County",
@@ -49,7 +49,7 @@
     },
     "8": {
       "source": "datagov/index-violent-property-and-firearm-rates-by-county-beginning-1990/files/rows.txt",
-      "fact": "According to the NY index crimes dataset, Albany County had a violent crime rate of 359.8 per 100,000 population in 2018.",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/index-violent-property-and-firearm-rates-by-county-beginning-1990/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\nresult = df[(df[\"County\"] == \"Albany\") & (df[\"Year\"] == 2018)][[\"County\", \"Year\", \"Violent Rate\"]]\nanswer = str(result[\"Violent Rate\"].iloc[0])",
       "subquestion": "What was the violent crime rate per 100,000 population in 2018 for the county (from hop 5)? (Filter for this node: County == Albany; Year == 2018; read Violent Rate.)",
       "answer": "359.8"
     }

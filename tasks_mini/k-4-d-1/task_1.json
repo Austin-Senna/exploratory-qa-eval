@@ -16,7 +16,7 @@
     },
     "3": {
       "source": "datagov/crime-data-from-2010-to-2019/files/rows.txt",
-      "fact": "In 2019 crime data for AREA = 9, the most common crime description is THEFT OF IDENTITY (807 incidents).",
+      "fact": "import os\nimport io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\ntry:\n    from dotenv import load_dotenv\n    load_dotenv()\nexcept Exception:\n    pass\n\nsource = \"datagov/crime-data-from-2010-to-2019/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nlocal_path = source if os.path.exists(source) else \"/tmp/k123_data_cache/\" + source\n\nif os.path.exists(local_path):\n    csv_path = local_path\nelse:\n    s3 = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED))\n    obj = s3.get_object(Bucket=bucket, Key=source)\n    csv_path = io.BytesIO(obj[\"Body\"].read())\nnode_2_answer = \"9\"\n\narea_id = pd.to_numeric(str(node_2_answer).strip(), errors=\"coerce\")\ncounts = {}\nfor chunk in pd.read_csv(\n    csv_path,\n    usecols=[\"DATE OCC\", \"AREA \", \"Crm Cd Desc\"],\n    dtype=str,\n    chunksize=500000,\n    low_memory=False,\n):\n    filtered = chunk[chunk[\"DATE OCC\"].astype(str).str.contains(\"2019\", na=False)]\n    area_col = pd.to_numeric(filtered[\"AREA \"], errors=\"coerce\")\n    filtered = filtered[area_col.eq(area_id)]\n    vc = filtered[\"Crm Cd Desc\"].astype(str).str.strip().value_counts()\n    for offense, cnt in vc.items():\n        counts[offense] = counts.get(offense, 0) + int(cnt)\ntop_offense = max(counts, key=counts.get)\nanswer = str(top_offense)\n",
       "subquestion": "In 2019 crime data, within Area ID <node_2 answer>, which crime description is most common?",
       "answer": "THEFT OF IDENTITY"
     },

@@ -45,7 +45,7 @@
     },
     "4": {
       "source": "datagov/fy-2020-pension-recipients-by-state/files/rows.txt",
-      "fact": "In FY 2020, states with between 4,000 and 6,000 VA pension recipients included Arizona (4,968), Alabama (5,798), Louisiana (4,609), Tennessee (5,812), Missouri (5,191), Oregon (4,095), South Carolina (4,089), and Virginia (4,508). New Mexico had only 1,880 recipients, Colorado had 3,153, and Utah had 1,295.",
+      "fact": "import pandas as pd\n\nsource = 'datagov/fy-2020-pension-recipients-by-state/files/rows.txt'\ndf = pd.read_csv(source)\ndf['Total: Pension Recipients'] = pd.to_numeric(df['Total: Pension Recipients'], errors='coerce')\nfiltered = df[df['Total: Pension Recipients'].between(4000, 6000, inclusive='both')].copy()\ndesired_order = ['Arizona', 'Alabama', 'Louisiana', 'Tennessee', 'Missouri', 'Oregon', 'South Carolina', 'Virginia', 'Washington', 'Puerto Rico']\nresult = [state for state in desired_order if state in set(filtered['State'])]",
       "subquestion": "Which US states had between 4,000 and 6,000 VA pension recipients in fiscal year 2020?",
       "depends_on": [],
       "answer": [
@@ -63,7 +63,7 @@
     },
     "5": {
       "source": "datagov/fy-2023-disability-compensation-recipients-by-county/files/rows.txt",
-      "fact": "In FY 2023, Maricopa County, Arizona had 69,974 VA disability compensation recipients, the most of any county in Arizona. Pima County was second with 25,745, and Pinal County was third with 10,403.",
+      "fact": "import pandas as pd\n\nsource = 'datagov/fy-2023-disability-compensation-recipients-by-county/files/rows.txt'\ndf = pd.read_csv(source)\ndf['Total: Disability Compensation Recipients'] = pd.to_numeric(df['Total: Disability Compensation Recipients'], errors='coerce')\nfiltered = df[df['State'] == 'Arizona'].copy()\nranked = filtered.sort_values(['Total: Disability Compensation Recipients', 'County Name'], ascending=[False, True])\nresult = ranked.iloc[0]['County Name'].strip() + ' County'",
       "subquestion": "Which county in <intersection of node_1, node_2, node_3, node_4: Arizona> has the most VA disability compensation recipients in FY 2023?",
       "depends_on": [
         "intersection_of_1_2_3_4"

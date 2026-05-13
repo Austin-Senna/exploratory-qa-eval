@@ -28,7 +28,7 @@
     },
     "5": {
       "source": "datagov/2011-2023-city-of-pittsburgh-operating-budget/files/2017-operating.txt",
-      "fact": "According to the 2017 Pittsburgh Operating Budget data, the PS - Police Bureau had total expenditures of $98,453,962.68.",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/2011-2023-city-of-pittsburgh-operating-budget/files/2017-operating.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), sep=\",\", engine=\"c\", low_memory=False)\nnode_2_answer = 'Pittsburgh, Pennsylvania'\n\n\ndf[\"Year\"] = pd.to_numeric(df[\"Year\"], errors=\"coerce\")\ndf[\"Amount\"] = pd.to_numeric(df[\"Amount\"], errors=\"coerce\")\nfiltered = df[\n    df[\"Year\"].eq(2017)\n    & df[\"Type\"].astype(str).str.strip().str.lower().eq(\"expenditure\")\n    & df[\"Department\"].astype(str).str.strip().str.upper().eq(\"PS - POLICE BUREAU\")\n]\ntotal_amount = float(filtered[\"Amount\"].sum())\nanswer = {'2017': f\"${total_amount:,.2f}\"}\n",
       "subquestion": "What was Pittsburgh's average Police Bureau expenditure in 2017-2018? (Filter for this node: Year == 2017; Type == Expenditure; Department == \"PS - Police Bureau\"; sum Amount.)",
       "answer": {
         "2017": "$98,453,962.68"
@@ -36,7 +36,7 @@
     },
     "6": {
       "source": "datagov/2011-2023-city-of-pittsburgh-operating-budget/files/2018-operating.txt",
-      "fact": "According to the 2018 Pittsburgh Operating Budget data, the PS - Police Bureau had total expenditures of $100,261,931.64.",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/2011-2023-city-of-pittsburgh-operating-budget/files/2018-operating.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), sep=\",\", engine=\"c\", low_memory=False)\nnode_2_answer = 'Pittsburgh, Pennsylvania'\n\n\ndf[\"Year\"] = pd.to_numeric(df[\"Year\"], errors=\"coerce\")\ndf[\"Amount\"] = pd.to_numeric(df[\"Amount\"], errors=\"coerce\")\nfiltered = df[\n    df[\"Year\"].eq(2018)\n    & df[\"Type\"].astype(str).str.strip().str.lower().eq(\"expenditure\")\n    & df[\"Department\"].astype(str).str.strip().str.upper().eq(\"PS - POLICE BUREAU\")\n]\ntotal_amount = float(filtered[\"Amount\"].sum())\nanswer = {'2018': f\"${total_amount:,.2f}\"}\n",
       "subquestion": "What was Pittsburgh's average Police Bureau expenditure in 2017-2018? (Filter for this node: Year == 2018; Type == Expenditure; Department == \"PS - Police Bureau\"; sum Amount.)",
       "answer": {
         "2018": "$100,261,931.64"

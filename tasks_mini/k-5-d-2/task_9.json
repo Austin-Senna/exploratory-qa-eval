@@ -5,7 +5,7 @@
   "nodes": {
     "1": {
       "source": "datagov/county-mental-health-profiles-phase-2-beginning-2014/files/rows.txt",
-      "fact": "In 2017, New York counties' adult mental health Medicaid paid claims included: Suffolk County ($92,420,995), Erie County ($70,519,223), Westchester ($66,346,132), Nassau ($62,927,542), and Monroe ($48,278,139).",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\nsource = \"datagov/county-mental-health-profiles-phase-2-beginning-2014/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\ncounties = [\"Suffolk\", \"Erie\", \"Westchester\"]\nresult = df[(df[\"Service Year\"] == 2017) & (df[\"Age Group\"] == \"Adult\") & (df[\"County Label\"].isin(counties))].groupby(\"County Label\", as_index=False)[\"Paid Claim Total\"].sum()\nclaims = result.set_index(\"County Label\")[\"Paid Claim Total\"].to_dict()\nanswer = {county: f\"${int(claims[county]):,}\" for county in counties}",
       "subquestion": "What were the adult mental health Medicaid paid claims for New York counties in 2017?",
       "answer": {
         "Suffolk": "$92,420,995",
@@ -15,7 +15,7 @@
     },
     "2": {
       "source": "datagov/county-mental-health-profiles-phase-2-beginning-2014/files/rows.txt",
-      "fact": "In 2018, New York counties' adult mental health Medicaid paid claims included: Suffolk County ($87,249,830), Erie County ($81,139,374), Westchester ($67,149,496), Nassau ($63,138,172), and Monroe ($51,731,436).",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\nsource = \"datagov/county-mental-health-profiles-phase-2-beginning-2014/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\ncounties = [\"Suffolk\", \"Erie\", \"Westchester\"]\nresult = df[(df[\"Service Year\"] == 2018) & (df[\"Age Group\"] == \"Adult\") & (df[\"County Label\"].isin(counties))].groupby(\"County Label\", as_index=False)[\"Paid Claim Total\"].sum()\nclaims = result.set_index(\"County Label\")[\"Paid Claim Total\"].to_dict()\nanswer = {county: f\"${int(claims[county]):,}\" for county in counties}",
       "subquestion": "What were the adult mental health Medicaid paid claims for New York counties in 2018?",
       "answer": {
         "Suffolk": "$87,249,830",
@@ -25,7 +25,7 @@
     },
     "3": {
       "source": "datagov/utility-energy-registry-monthly-county-energy-use-beginning-2016/files/rows.txt",
-      "fact": "In 2017, total natural gas consumption (Total Consumption (T), Therms) by county included: Erie County (621,451,910.24), Suffolk County (537,382,172), Monroe County (441,616,268.322), Westchester County (378,456,122).",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\nsource = \"datagov/utility-energy-registry-monthly-county-energy-use-beginning-2016/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\ncounty_map = {\n    36029: \"Erie\",\n    36103: \"Suffolk\",\n}\n\nresult = (\n    df[\n        (df[\"year\"] == 2017)\n        & (df[\"state_2\"] == \"NY\")\n        & (df[\"data_class\"] == \"natural_gas\")\n        & (df[\"data_field_display_name\"] == \"Total Consumption (T)\")\n        & (df[\"full_fips\"].isin(county_map))\n    ]\n    .groupby(\"full_fips\", as_index=False)[\"value\"]\n    .sum()\n)\nresult[\"County\"] = result[\"full_fips\"].map(county_map)\nresult = result.sort_values(\"value\", ascending=False).reset_index(drop=True)\n\nanswer = {\n    row[\"County\"]: f\"{row['value']:,.2f}\".rstrip(\"0\").rstrip(\".\")\n    for _, row in result.iterrows()\n}",
       "subquestion": "What was the total natural gas consumption (Total Consumption (T), Therms; data_class=natural_gas) for Erie and Suffolk counties (from <aggregation of nodes 1-2: counties with avg $75M-$95M>) in 2017?",
       "answer": {
         "Erie": "621,451,910.24",
@@ -34,7 +34,7 @@
     },
     "4": {
       "source": "datagov/utility-energy-registry-monthly-county-energy-use-beginning-2016/files/rows.txt",
-      "fact": "In 2018, total natural gas consumption (Total Consumption (T), Therms) by county included: Erie County (712,460,330.24), Suffolk County (556,444,750), Monroe County (548,282,992.958), Westchester County (408,624,973).",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\nsource = \"datagov/utility-energy-registry-monthly-county-energy-use-beginning-2016/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\ncounty_map = {\n    36029: \"Erie\",\n    36103: \"Suffolk\",\n}\n\nresult = (\n    df[\n        (df[\"year\"] == 2018)\n        & (df[\"state_2\"] == \"NY\")\n        & (df[\"data_class\"] == \"natural_gas\")\n        & (df[\"data_field_display_name\"] == \"Total Consumption (T)\")\n        & (df[\"full_fips\"].isin(county_map))\n    ]\n    .groupby(\"full_fips\", as_index=False)[\"value\"]\n    .sum()\n)\nresult[\"County\"] = result[\"full_fips\"].map(county_map)\nresult = result.sort_values(\"value\", ascending=False).reset_index(drop=True)\n\nanswer = {\n    row[\"County\"]: f\"{row['value']:,.2f}\".rstrip(\"0\").rstrip(\".\")\n    for _, row in result.iterrows()\n}",
       "subquestion": "What was the total natural gas consumption (Total Consumption (T), Therms; data_class=natural_gas) for Erie and Suffolk counties (from <aggregation of nodes 1-2: counties with avg $75M-$95M>) in 2018?",
       "answer": {
         "Erie": "712,460,330.24",

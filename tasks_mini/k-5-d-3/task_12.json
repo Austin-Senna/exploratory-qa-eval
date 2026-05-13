@@ -4,19 +4,19 @@
   "nodes": {
     "1": {
       "source": "datagov/agency-contracts-fiscal-year-2014/files/rows.txt",
-      "fact": "In FY 2014, Seattle Community College - District 6 (SCCD-6) had 1,308 contracts, Green River Community College (GRC) had 1,723 contracts, and Spokane, Community Colleges of SCCD-17 had 1,797 contracts.",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/agency-contracts-fiscal-year-2014/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)\n\nraw_names = ['Seattle Community College - District 6 (SCCD-6)', 'Green River Community College (GRC)', 'Spokane, Community Colleges of SCCD-17)']\nout_labels = ['Seattle Community College - District 6', 'Green River Community College', 'Community Colleges of Spokane']\ncounts = df['Agency Name'].astype(str).value_counts()\nanswer = '; '.join(f'{label}: {int(counts[raw]):,}' for raw, label in zip(raw_names, out_labels))",
       "subquestion": "How many contracts did Seattle Community College - District 6 (SCCD-6), Green River Community College (GRC), and Spokane, Community Colleges of SCCD-17 have in FY 2014?",
       "answer": "Seattle Community College - District 6: 1,308; Green River Community College: 1,723; Community Colleges of Spokane: 1,797"
     },
     "2": {
       "source": "datagov/agency-contracts-fiscal-year-2015/files/rows.txt",
-      "fact": "In FY 2015, Seattle Colleges had 1,292 contracts, Green River Community College (GRC) had 633 contracts, and Spokane, Community Colleges of SCCD-17 had 383 contracts.",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/agency-contracts-fiscal-year-2015/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)\n\nraw_names = ['Seattle Colleges', 'Green River Community College (GRC)', 'Spokane, Community Colleges of SCCD-17)']\nout_labels = ['Seattle Colleges', 'Green River Community College', 'Community Colleges of Spokane']\ncounts = df['Agency Name'].astype(str).value_counts()\nanswer = '; '.join(f'{label}: {int(counts[raw]):,}' for raw, label in zip(raw_names, out_labels))",
       "subquestion": "How many contracts did Seattle Colleges, Green River Community College (GRC), and Spokane, Community Colleges of SCCD-17 have in FY 2015?",
       "answer": "Seattle Colleges: 1,292; Green River Community College: 633; Community Colleges of Spokane: 383"
     },
     "3": {
       "source": "datagov/agency-contracts-fiscal-year-2016/files/rows.txt",
-      "fact": "In FY 2016, Seattle Community College - District 6 (SCCD-6) had 5,244 contracts, Green River Community College (GRC) had 872 contracts, and Spokane, Community Colleges of SCCD-17 had 265 contracts.",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/agency-contracts-fiscal-year-2016/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)\n\nraw_names = ['Seattle Community College - District 6 (SCCD-6)', 'Green River Community College (GRC)', 'Spokane, Community Colleges of SCCD-17)']\nout_labels = ['Seattle Community College - District 6', 'Green River Community College', 'Community Colleges of Spokane']\ncounts = df['Agency Name'].astype(str).value_counts()\nanswer = '; '.join(f'{label}: {int(counts[raw]):,}' for raw, label in zip(raw_names, out_labels))",
       "subquestion": "How many contracts did Seattle Community College - District 6 (SCCD-6), Green River Community College (GRC), and Spokane, Community Colleges of SCCD-17 have in FY 2016?",
       "answer": "Seattle Community College - District 6: 5,244; Green River Community College: 872; Community Colleges of Spokane: 265"
     },
@@ -52,7 +52,7 @@
     },
     "9": {
       "source": "datagov/building-energy-benchmarking-data-2015-present/files/rows.txt",
-      "fact": "According to the Seattle Building Energy Benchmarking data (2015-2023), BOEING PLANT 2 ISAL  (BLDG 2-122)-North Boeing Field Campus has the highest average TotalGHGEmissions in Seattle, averaging 20,835.8 metric tons CO2e per year.",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/building-energy-benchmarking-data-2015-present/files/rows.txt'\nbucket = 'lakeqa-yc4103-datalake'\nobj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)\n\ndf['DataYear'] = pd.to_numeric(df['DataYear'], errors='coerce')\ndf['TotalGHGEmissions'] = pd.to_numeric(df['TotalGHGEmissions'], errors='coerce')\nranked = (\n    df.loc[\n        df['City'].astype(str).str.upper().eq('SEATTLE')\n        & df['DataYear'].between(2015, 2023, inclusive='both')\n        & df['BuildingName'].notna(),\n        ['BuildingName', 'TotalGHGEmissions'],\n    ]\n    .groupby('BuildingName', dropna=False)['TotalGHGEmissions']\n    .mean()\n    .reset_index(name='avg_TotalGHGEmissions')\n    .sort_values(['avg_TotalGHGEmissions', 'BuildingName'], ascending=[False, True])\n    .reset_index(drop=True)\n)\ntop = ranked.iloc[0]\nanswer = f\"{top['BuildingName']} with {top['avg_TotalGHGEmissions']:,.1f} metric tons CO2e average\"",
       "subquestion": "Which Seattle building (from nodes 7-8: the county seat of the most populous county) has the highest average TotalGHGEmissions from 2015 to 2023? (Filter DataYear between 2015 and 2023 inclusive; group by BuildingName; average TotalGHGEmissions.)",
       "answer": "BOEING PLANT 2 ISAL  (BLDG 2-122)-North Boeing Field Campus with 20,835.8 metric tons CO2e average"
     },

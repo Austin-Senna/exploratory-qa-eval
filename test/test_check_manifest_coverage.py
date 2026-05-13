@@ -37,6 +37,13 @@ class CheckManifestCoverageTests(unittest.TestCase):
                 f.write(json.dumps(row))
                 f.write("\n")
 
+    def test_cli_defaults_target_tasks_mini_manifest(self):
+        args = coverage_script._parse_args([])
+
+        self.assertEqual(args.manifest, "tasks_mini_file_manifest.jsonl")
+        self.assertIsNone(args.descriptions)
+        self.assertEqual(coverage_script.default_description_paths(args), [Path("table_descriptions.jsonl")])
+
     def test_audit_manifest_coverage_counts_missing_rows(self):
         uri1 = "s3://lakeqa-yc4103-datalake/datagov/ds/files/rows.csv"
         uri2 = "s3://lakeqa-yc4103-datalake/wikipedia/Austin,_Texas/content.txt"
@@ -66,6 +73,31 @@ class CheckManifestCoverageTests(unittest.TestCase):
         self.assertTrue((self._root / "coverage_missing_descriptions.jsonl").exists())
         self.assertTrue((self._root / "coverage_missing_snippets.jsonl").exists())
         self.assertTrue((self._root / "coverage_missing_profiles.jsonl").exists())
+
+    def test_audit_manifest_coverage_rejects_manifest_fallback_descriptions(self):
+        uri = "s3://lakeqa-yc4103-datalake/datagov/ds/files/rows.csv"
+        self._write_jsonl(
+            self._manifest_path,
+            [{"dataset_id": "ds", "file_path": "files/rows.csv", "s3_uri": uri}],
+        )
+        self._write_jsonl(
+            self._descriptions_path,
+            [
+                {
+                    "dataset_uri": uri,
+                    "description": "fake fallback",
+                    "description_source": "tasks_mini_manifest_fallback",
+                }
+            ],
+        )
+
+        with self.assertRaisesRegex(ValueError, "tasks_mini_manifest_fallback"):
+            coverage_script.audit_manifest_coverage(
+                manifest_path=self._manifest_path,
+                descriptions_path=self._descriptions_path,
+                snippets_path=self._snippets_path,
+                profiles_path=self._profiles_path,
+            )
 
 
 if __name__ == "__main__":

@@ -16,7 +16,7 @@ def set_db_path(path: str) -> None:
 
 
 def setup() -> None:
-    _api.setup()
+    _api.setup_hybrid()
 
 
 

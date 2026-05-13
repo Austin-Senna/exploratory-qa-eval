@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build datagov_tables_profiles.jsonl from schema and metadata caches."""
+"""Build datagov_tables_profiles.jsonl from canonical description/profile inputs."""
 
 from __future__ import annotations
 
@@ -27,6 +27,7 @@ except Exception:  # pragma: no cover
         return iterable if iterable is not None else _NullTqdm()
 
 from strands_evaluation.tools.agent_tools import BUCKET, REGION, _build_s3_client
+from strands_evaluation.tools.external.description_rows import reject_forbidden_description_row
 from strands_evaluation.tools.helper.detect import detect_family
 
 load_dotenv()
@@ -49,7 +50,7 @@ class _NullTqdm:
         return False
 
 _DESC_PATH = Path("table_descriptions.jsonl")
-_MANIFEST_DESC_PATH = Path("tasks_core_quality_file_manifest_descriptions.jsonl")
+_URI_LIST_PATH = Path("table_profiles_needed.txt")
 _SNIPPET_PATH = Path("snippet.jsonl")
 _SNIFF_BYTES = 8 * 1024
 _SNIPPET_FALLBACK_BYTES = 2 * 1024
@@ -67,8 +68,12 @@ _TABULAR_KIND_TO_FAMILY = {
 
 def _parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--input", default="datagov_tables_schemas_full.jsonl")
-    parser.add_argument("--input-kind", choices=("auto", "schemas", "manifest"), default="auto")
+    parser.add_argument("--input", default=str(_URI_LIST_PATH))
+    parser.add_argument(
+        "--input-kind",
+        choices=("auto", "schemas", "manifest", "uri-list", "descriptions"),
+        default="auto",
+    )
     parser.add_argument("--output", default="datagov_tables_profiles.jsonl")
     parser.add_argument("--descriptions", default=str(_DESC_PATH))
     parser.add_argument("--snippets", default=str(_SNIPPET_PATH))
@@ -98,25 +103,16 @@ def _peek_first_row(path: Path) -> Optional[Dict[str, Any]]:
     return None
 
 
-def _description_paths(path: Path) -> list[Path]:
-    paths: list[Path] = []
-    if path not in paths:
-        paths.append(path)
-    if _MANIFEST_DESC_PATH != path and _MANIFEST_DESC_PATH not in paths:
-        paths.append(_MANIFEST_DESC_PATH)
-    return paths
-
-
 def _load_description_cache(path: Path) -> Dict[str, str]:
     out: Dict[str, str] = {}
-    for candidate in _description_paths(path):
-        if not candidate.exists():
-            continue
-        for obj in _jsonl_rows(candidate):
-            uri = str(obj.get("dataset_uri") or obj.get("uri") or "").strip()
-            desc = str(obj.get("description") or "").strip()
-            if uri and desc:
-                out[uri] = desc
+    if not path.exists():
+        return out
+    for obj in _jsonl_rows(path):
+        reject_forbidden_description_row(obj, path=path)
+        uri = str(obj.get("dataset_uri") or obj.get("uri") or "").strip()
+        desc = str(obj.get("description") or "").strip()
+        if uri and desc and uri not in out:
+            out[uri] = desc
     return out
 
 
@@ -253,6 +249,33 @@ def _stem_from_path(path_like: str) -> str:
     return name.rsplit(".", 1)[0] if "." in name else name
 
 
+def _table_kind_from_path(path_like: str) -> Optional[str]:
+    suffix = Path(str(path_like).split("?", 1)[0]).suffix.lower().lstrip(".")
+    if suffix in {"csv", "tsv", "json", "geojson", "parquet"}:
+        return suffix
+    if suffix in {"txt", "text"}:
+        return "delimited_text"
+    return None
+
+
+def _dataset_and_file_from_source(source_ref: str) -> Tuple[Optional[str], Optional[str]]:
+    raw = str(source_ref or "").strip()
+    if raw.startswith("s3://"):
+        _, key = _parse_s3_uri(raw)
+        parts = key.split("/")
+        if len(parts) >= 2:
+            dataset_id = parts[1] if parts[0] == "datagov" else parts[0]
+            if parts[0] == "datagov":
+                file_path = "/".join(parts[2:]) if len(parts) > 2 else None
+            else:
+                file_path = "/".join(parts[1:]) if len(parts) > 1 else None
+            return dataset_id or None, file_path or None
+        return None, key or None
+
+    path = Path(raw)
+    return path.parent.name or None, path.name or None
+
+
 def _iter_schema_entries(input_path: Path, bucket: str) -> List[Dict[str, Any]]:
     entries: List[Dict[str, Any]] = []
     for obj in _jsonl_rows(input_path):
@@ -281,16 +304,24 @@ def _iter_schema_entries(input_path: Path, bucket: str) -> List[Dict[str, Any]]:
 def _iter_manifest_entries(input_path: Path) -> List[Dict[str, Any]]:
     entries: List[Dict[str, Any]] = []
     for obj in _jsonl_rows(input_path):
-        source_ref = str(obj.get("source_ref") or obj.get("local_path") or obj.get("s3_uri") or "").strip()
+        source_ref = str(
+            obj.get("source_ref")
+            or obj.get("local_path")
+            or obj.get("s3_uri")
+            or obj.get("dataset_uri")
+            or obj.get("uri")
+            or ""
+        ).strip()
         if not source_ref:
             continue
-        dataset_id = str(obj.get("dataset_id") or "").strip()
-        file_path = str(obj.get("file_path") or obj.get("path") or "").strip()
+        inferred_dataset_id, inferred_file_path = _dataset_and_file_from_source(source_ref)
+        dataset_id = str(obj.get("dataset_id") or inferred_dataset_id or "").strip()
+        file_path = str(obj.get("file_path") or obj.get("path") or inferred_file_path or "").strip()
         slug = dataset_id or _stem_from_path(source_ref)
         filename = _stem_from_path(file_path or source_ref)
         table = {
             "delimiter": obj.get("delimiter"),
-            "table_kind": obj.get("table_kind"),
+            "table_kind": obj.get("table_kind") or _table_kind_from_path(file_path or source_ref),
         }
         entry = {
             "slug": slug,
@@ -306,12 +337,46 @@ def _iter_manifest_entries(input_path: Path) -> List[Dict[str, Any]]:
     return entries
 
 
+def _iter_uri_list_entries(input_path: Path) -> List[Dict[str, Any]]:
+    entries: List[Dict[str, Any]] = []
+    if not input_path.exists():
+        return entries
+    with input_path.open() as f:
+        for line in f:
+            source_ref = line.strip()
+            if not source_ref:
+                continue
+            dataset_id, file_path = _dataset_and_file_from_source(source_ref)
+            slug = dataset_id or _stem_from_path(source_ref)
+            filename = _stem_from_path(file_path or source_ref)
+            entries.append(
+                {
+                    "slug": slug,
+                    "filename": filename,
+                    "source_ref": source_ref,
+                    "s3_uri": source_ref if _is_s3_ref(source_ref) else None,
+                    "dataset_id": dataset_id,
+                    "file_path": file_path,
+                    "size_bytes": None,
+                    "table": {
+                        "delimiter": None,
+                        "table_kind": _table_kind_from_path(file_path or source_ref),
+                    },
+                }
+            )
+    return entries
+
+
 def _detect_input_kind(input_path: Path) -> str:
+    if input_path.suffix.lower() == ".txt":
+        return "uri-list"
     first_row = _peek_first_row(input_path)
     if first_row is None:
         return "manifest"
     if isinstance(first_row.get("tables"), list):
         return "schemas"
+    if first_row.get("dataset_uri") and first_row.get("description") is not None:
+        return "descriptions"
     return "manifest"
 
 
@@ -319,6 +384,10 @@ def _iter_input_entries(input_path: Path, *, input_kind: str, bucket: str) -> Li
     resolved = _detect_input_kind(input_path) if input_kind == "auto" else input_kind
     if resolved == "schemas":
         return _iter_schema_entries(input_path, bucket)
+    if resolved == "uri-list":
+        return _iter_uri_list_entries(input_path)
+    if resolved == "descriptions":
+        return _iter_manifest_entries(input_path)
     return _iter_manifest_entries(input_path)
 
 

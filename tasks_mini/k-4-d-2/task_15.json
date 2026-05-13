@@ -28,7 +28,7 @@
     },
     "5": {
       "source": "datagov/report-card-enrollment-2017-18-school-year/files/rows.txt",
-      "fact": "According to the Washington Report Card Enrollment Data 2017-18, Pullman School District (in Whitman County) had 2,941 total students enrolled for All Grades.",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/report-card-enrollment-2017-18-school-year/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\nresult = df[\n    (df[\"SchoolYear\"] == \"2017-18\")\n    & (df[\"OrganizationLevel\"] == \"District\")\n    & (df[\"DistrictName\"] == \"Pullman School District\")\n    & (df[\"GradeLevel\"] == \"All Grades\")\n]\n\nanswer = result.iloc[0][\"All Students\"]\nanswer = str(answer)",
       "subquestion": "What is the 2017-18 total student enrollment for the school district in <hop 3 answer: Pullman>? (Filter: OrganizationLevel=District; DistrictName=Pullman School District; GradeLevel=All Grades; column=All Students.)",
       "answer": "2941"
     }

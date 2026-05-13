@@ -4,7 +4,7 @@
   "nodes": {
     "1": {
       "source": "datagov/texas-department-of-criminal-justice-releases-fy-2019/files/rows.txt",
-      "fact": "In the FY 2019 TDCJ Releases dataset, release counts for the counties in the top five by average releases across FY2019-FY2022 (Harris, Dallas, Tarrant, Bexar, Hidalgo) were: Harris 9,029; Dallas 5,355; Tarrant 4,769; Bexar 4,545; Hidalgo 1,861.",
+      "fact": "import csv\nfrom collections import Counter\n\nsource = 'datagov/texas-department-of-criminal-justice-releases-fy-2019/files/rows.txt'\ntop_average_counties = ['Harris', 'Dallas', 'Tarrant', 'Bexar', 'Hidalgo']\ncounty_set = {county.upper() for county in top_average_counties}\n\nwith open(source, 'r', encoding='utf-8', newline='') as f:\n    rows = list(csv.DictReader(f))\n\ncounts = Counter((row.get('County') or '').strip().upper() for row in rows)\nanswer = {county: int(counts[county.upper()]) for county in top_average_counties}\n",
       "subquestion": "For FY2019, what were release counts for the counties that rank in the top five by average releases across FY2019-FY2022? (Filter for this node: count rows by County in the FY2019 file; normalize County to uppercase; keep counties in the hop 1 average top five set.)",
       "answer": {
         "Harris": 9029,
@@ -16,7 +16,7 @@
     },
     "2": {
       "source": "datagov/texas-department-of-criminal-justice-releases-fy-2020/files/rows.txt",
-      "fact": "In the FY 2020 TDCJ Releases dataset, release counts for the counties in the top five by average releases across FY2019-FY2022 (Harris, Dallas, Tarrant, Bexar, Hidalgo) were: Harris 7,059; Dallas 4,540; Tarrant 4,450; Bexar 3,917; Hidalgo 1,572.",
+      "fact": "import csv\nfrom collections import Counter\n\nsource = 'datagov/texas-department-of-criminal-justice-releases-fy-2020/files/rows.txt'\ntop_average_counties = ['Harris', 'Dallas', 'Tarrant', 'Bexar', 'Hidalgo']\ncounty_set = {county.upper() for county in top_average_counties}\n\nwith open(source, 'r', encoding='utf-8', newline='') as f:\n    rows = list(csv.DictReader(f))\n\ncounts = Counter((row.get('County') or '').strip().upper() for row in rows)\nanswer = {county: int(counts[county.upper()]) for county in top_average_counties}\n",
       "subquestion": "For FY2020, what were release counts for the counties that rank in the top five by average releases across FY2019-FY2022? (Filter for this node: count rows by County in the FY2020 file; normalize County to uppercase; keep counties in the hop 1 average top five set.)",
       "answer": {
         "Harris": 7059,
@@ -28,7 +28,7 @@
     },
     "3": {
       "source": "datagov/texas-department-of-criminal-justice-releases-fy-2021/files/rows.txt",
-      "fact": "In the FY 2021 TDCJ Releases dataset, release counts for the counties in the top five by average releases across FY2019-FY2022 (Harris, Dallas, Tarrant, Bexar, Hidalgo) were: Harris 5,210; Dallas 3,565; Tarrant 3,252; Bexar 3,236; Hidalgo 1,147.",
+      "fact": "import csv\nfrom collections import Counter\n\nsource = 'datagov/texas-department-of-criminal-justice-releases-fy-2021/files/rows.txt'\ntop_average_counties = ['Harris', 'Dallas', 'Tarrant', 'Bexar', 'Hidalgo']\ncounty_set = {county.upper() for county in top_average_counties}\n\nwith open(source, 'r', encoding='utf-8', newline='') as f:\n    rows = list(csv.DictReader(f))\n\ncounts = Counter((row.get('County') or '').strip().upper() for row in rows)\nanswer = {county: int(counts[county.upper()]) for county in top_average_counties}\n",
       "subquestion": "For FY2021, what were release counts for the counties that rank in the top five by average releases across FY2019-FY2022? (Filter for this node: count rows by County in the FY2021 file; normalize County to uppercase; keep counties in the hop 1 average top five set.)",
       "answer": {
         "Harris": 5210,
@@ -40,7 +40,7 @@
     },
     "4": {
       "source": "datagov/texas-department-of-criminal-justice-releases-fy-2022/files/rows.txt",
-      "fact": "In the FY 2022 TDCJ Releases dataset, release counts for the counties in the top five by average releases across FY2019-FY2022 (Harris, Dallas, Tarrant, Bexar, Hidalgo) were: Harris 4,988; Dallas 3,557; Tarrant 3,231; Bexar 2,918; Hidalgo 1,015.",
+      "fact": "import csv\nfrom collections import Counter\n\nsource = 'datagov/texas-department-of-criminal-justice-releases-fy-2022/files/rows.txt'\ntop_average_counties = ['Harris', 'Dallas', 'Tarrant', 'Bexar', 'Hidalgo']\ncounty_set = {county.upper() for county in top_average_counties}\n\nwith open(source, 'r', encoding='utf-8', newline='') as f:\n    rows = list(csv.DictReader(f))\n\ncounts = Counter((row.get('County') or '').strip().upper() for row in rows)\nanswer = {county: int(counts[county.upper()]) for county in top_average_counties}\n",
       "subquestion": "For FY2022, what were release counts for the counties that rank in the top five by average releases across FY2019-FY2022? (Filter for this node: count rows by County in the FY2022 file; normalize County to uppercase; keep counties in the hop 1 average top five set.)",
       "answer": {
         "Harris": 4988,
@@ -82,13 +82,13 @@
     },
     "10": {
       "source": "datagov/hate-crimes-by-county-and-bias-type-beginning-2010/files/rows.txt",
-      "fact": "According to the NY Hate Crimes by County dataset, in 2020, New York County had 35 Crimes Against Persons incidents and 47 Property Crimes incidents, totaling 82 hate crime incidents.",
+      "fact": "import csv\n\nsource = 'datagov/hate-crimes-by-county-and-bias-type-beginning-2010/files/rows.txt'\ntarget_county = 'New York'\ntarget_year = '2020'\ntarget_crime_types = {'Crimes Against Persons', 'Property Crimes'}\n\ntotal = 0\nwith open(source, 'r', encoding='utf-8', newline='') as f:\n    for row in csv.DictReader(f):\n        county = (row.get('County') or '').strip()\n        year = str(row.get('Year') or '').strip()\n        crime_type = (row.get('Crime Type') or '').strip()\n        if county == target_county and year == target_year and crime_type in target_crime_types:\n            total += int(row.get('Total Incidents') or 0)\n\nanswer = str(total)\n",
       "subquestion": "How many total hate crime incidents were there in <county from node 9: New York County> in 2020? (Filter: Year == 2020; County == New York; Crime Type in {Crimes Against Persons, Property Crimes}; sum Total Incidents.)",
       "answer": "82"
     },
     "11": {
       "source": "datagov/index-violent-property-and-firearm-rates-by-county-beginning-1990/files/rows.txt",
-      "fact": "According to the NY Index Crimes dataset, New York County had 898 firearm crimes (Firearm Count) in 2020.",
+      "fact": "import csv\n\nsource = 'datagov/index-violent-property-and-firearm-rates-by-county-beginning-1990/files/rows.txt'\ntarget_county = 'New York'\ntarget_year = '2020'\n\nanswer_value = None\nwith open(source, 'r', encoding='utf-8', newline='') as f:\n    for row in csv.DictReader(f):\n        county = (row.get('County') or '').strip()\n        year = str(row.get('Year') or '').strip()\n        if county == target_county and year == target_year:\n            answer_value = int(float(row.get('Firearm Count') or 0))\n            break\n\nif answer_value is None:\n    raise ValueError('No matching New York County firearm count found for 2020.')\n\nanswer = str(answer_value)\n",
       "subquestion": "How many firearm crimes were there in <county from node 9: New York County> in 2020? (Filter: Year == 2020; County == New York; use Firearm Count.)",
       "answer": "898"
     }

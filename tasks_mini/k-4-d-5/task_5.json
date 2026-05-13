@@ -5,7 +5,7 @@
   "nodes": {
     "1": {
       "source": "datagov/child-and-adult-care-food-programs-cacfp-day-care-homes-site-level-contact-and-progra-2018/files/rows.txt",
-      "fact": "In the 2018-2019 program year, counts by CECounty show 16 Texas counties with CACFP day care homes. The top 5 were: HARRIS (1342), TRAVIS (1287), TAYLOR (691), TARRANT (336), HIDALGO (307).",
+      "fact": "import os\nimport io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/child-and-adult-care-food-programs-cacfp-day-care-homes-site-level-contact-and-progra-2018/files/rows.txt'\nbucket = \"lakeqa-yc4103-datalake\"\nlocal_path = source if os.path.exists(source) else \"/tmp/k123_data_cache/\" + source\n\nif os.path.exists(local_path):\n    csv_path = local_path\nelse:\n    s3 = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED))\n    obj = s3.get_object(Bucket=bucket, Key=source)\n    csv_path = io.BytesIO(obj[\"Body\"].read())\n\nexpected_keys = ['BELL', 'BEXAR', 'COOKE', 'DALLAS', 'EL PASO', 'FORT BEND', 'GRAYSON', 'HARRIS', 'HIDALGO', 'HUNT', 'LUBBOCK', 'RANDALL', 'ROCKWALL', 'TARRANT', 'TAYLOR', 'TRAVIS']\ndf = pd.read_csv(csv_path, low_memory=False)\nfiltered = df[df[\"ProgramYear\"].astype(str).eq('2018-2019')]\ncounts = filtered[\"CECounty\"].astype(str).str.strip().value_counts()\nanswer = {county: int(counts[county]) for county in expected_keys if county in counts.index}\n",
       "subquestion": "How many CACFP day care homes were in each Texas county in 2018-2019? (Filter: ProgramYear == '2018-2019'; count sites by CECounty.)",
       "answer": {
         "BELL": 7,
@@ -28,7 +28,7 @@
     },
     "2": {
       "source": "datagov/child-and-adult-care-food-programs-cacfp-day-care-homes-site-level-contact-and-progra-2019/files/rows.txt",
-      "fact": "In the 2019-2020 program year, counts by CECounty show 17 Texas counties with CACFP day care homes. The top 5 were: TRAVIS (1236), HARRIS (1174), TAYLOR (647), HIDALGO (271), TARRANT (266).",
+      "fact": "import os\nimport io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/child-and-adult-care-food-programs-cacfp-day-care-homes-site-level-contact-and-progra-2019/files/rows.txt'\nbucket = \"lakeqa-yc4103-datalake\"\nlocal_path = source if os.path.exists(source) else \"/tmp/k123_data_cache/\" + source\n\nif os.path.exists(local_path):\n    csv_path = local_path\nelse:\n    s3 = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED))\n    obj = s3.get_object(Bucket=bucket, Key=source)\n    csv_path = io.BytesIO(obj[\"Body\"].read())\n\nexpected_keys = ['BELL', 'BEXAR', 'COOKE', 'DALLAS', 'EL PASO', 'FORT BEND', 'GRAYSON', 'HARRIS', 'HIDALGO', 'HUNT', 'LUBBOCK', 'RANDALL', 'ROCKWALL', 'TARRANT', 'TAYLOR', 'TRAVIS', 'WICHITA']\ndf = pd.read_csv(csv_path, low_memory=False)\nfiltered = df[df[\"ProgramYear\"].astype(str).eq('2019-2020')]\ncounts = filtered[\"CECounty\"].astype(str).str.strip().value_counts()\nanswer = {county: int(counts[county]) for county in expected_keys if county in counts.index}\n",
       "subquestion": "How many CACFP day care homes were in each Texas county in 2019-2020? (Filter: ProgramYear == '2019-2020'; count sites by CECounty.)",
       "answer": {
         "BELL": 9,
@@ -52,7 +52,7 @@
     },
     "3": {
       "source": "datagov/child-and-adult-care-food-programs-cacfp-day-care-homes-site-level-contact-and-progra-2020/files/rows.txt",
-      "fact": "In the 2020-2021 program year, counts by CECounty show 15 Texas counties with CACFP day care homes. The top 5 were: TRAVIS (1175), HARRIS (1046), TAYLOR (643), HIDALGO (252), DALLAS (239).",
+      "fact": "import os\nimport io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/child-and-adult-care-food-programs-cacfp-day-care-homes-site-level-contact-and-progra-2020/files/rows.txt'\nbucket = \"lakeqa-yc4103-datalake\"\nlocal_path = source if os.path.exists(source) else \"/tmp/k123_data_cache/\" + source\n\nif os.path.exists(local_path):\n    csv_path = local_path\nelse:\n    s3 = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED))\n    obj = s3.get_object(Bucket=bucket, Key=source)\n    csv_path = io.BytesIO(obj[\"Body\"].read())\n\nexpected_keys = ['BELL', 'BEXAR', 'COOKE', 'DALLAS', 'EL PASO', 'FORT BEND', 'GRAYSON', 'HARRIS', 'HIDALGO', 'HUNT', 'RANDALL', 'ROCKWALL', 'TARRANT', 'TAYLOR', 'TRAVIS']\ndf = pd.read_csv(csv_path, low_memory=False)\nfiltered = df[df[\"ProgramYear\"].astype(str).eq('2020-2021')]\ncounts = filtered[\"CECounty\"].astype(str).str.strip().value_counts()\nanswer = {county: int(counts[county]) for county in expected_keys if county in counts.index}\n",
       "subquestion": "How many CACFP day care homes were in each Texas county in 2020-2021? (Filter: ProgramYear == '2020-2021'; count sites by CECounty.)",
       "answer": {
         "BELL": 10,
@@ -74,7 +74,7 @@
     },
     "4": {
       "source": "datagov/child-and-adult-care-food-programs-cacfp-day-care-homes-site-level-contact-and-progra-2021/files/rows.txt",
-      "fact": "In the 2021-2022 program year, counts by CECounty show 15 Texas counties with CACFP day care homes. The top 5 were: TRAVIS (1139), HARRIS (759), TAYLOR (726), FORT BEND (359), HIDALGO (225).",
+      "fact": "import os\nimport io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/child-and-adult-care-food-programs-cacfp-day-care-homes-site-level-contact-and-progra-2021/files/rows.txt'\nbucket = \"lakeqa-yc4103-datalake\"\nlocal_path = source if os.path.exists(source) else \"/tmp/k123_data_cache/\" + source\n\nif os.path.exists(local_path):\n    csv_path = local_path\nelse:\n    s3 = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED))\n    obj = s3.get_object(Bucket=bucket, Key=source)\n    csv_path = io.BytesIO(obj[\"Body\"].read())\n\nexpected_keys = ['BELL', 'BEXAR', 'COOKE', 'DALLAS', 'EL PASO', 'FORT BEND', 'GRAYSON', 'HARRIS', 'HIDALGO', 'HUNT', 'RANDALL', 'ROCKWALL', 'TARRANT', 'TAYLOR', 'TRAVIS']\ndf = pd.read_csv(csv_path, low_memory=False)\nfiltered = df[df[\"ProgramYear\"].astype(str).eq('2021-2022')]\ncounts = filtered[\"CECounty\"].astype(str).str.strip().value_counts()\nanswer = {county: int(counts[county]) for county in expected_keys if county in counts.index}\n",
       "subquestion": "How many CACFP day care homes were in each Texas county in 2021-2022? (Filter: ProgramYear == '2021-2022'; count sites by CECounty.)",
       "answer": {
         "BELL": 10,
@@ -96,7 +96,7 @@
     },
     "5": {
       "source": "datagov/child-and-adult-care-food-programs-cacfp-day-care-homes-site-level-contact-and-progra-2022/files/rows.txt",
-      "fact": "In the 2022-2023 program year, counts by CECounty show 11 Texas counties with CACFP day care homes. The top 5 were: TRAVIS (1214), TAYLOR (807), HARRIS (523), TARRANT (272), DALLAS (255).",
+      "fact": "import os\nimport io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/child-and-adult-care-food-programs-cacfp-day-care-homes-site-level-contact-and-progra-2022/files/rows.txt'\nbucket = \"lakeqa-yc4103-datalake\"\nlocal_path = source if os.path.exists(source) else \"/tmp/k123_data_cache/\" + source\n\nif os.path.exists(local_path):\n    csv_path = local_path\nelse:\n    s3 = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED))\n    obj = s3.get_object(Bucket=bucket, Key=source)\n    csv_path = io.BytesIO(obj[\"Body\"].read())\n\nexpected_keys = ['BELL', 'BEXAR', 'COOKE', 'DALLAS', 'EL PASO', 'FORT BEND', 'HARRIS', 'HIDALGO', 'TARRANT', 'TAYLOR', 'TRAVIS']\ndf = pd.read_csv(csv_path, low_memory=False)\nfiltered = df[df[\"ProgramYear\"].astype(str).eq('2022-2023')]\ncounts = filtered[\"CECounty\"].astype(str).str.strip().value_counts()\nanswer = {county: int(counts[county]) for county in expected_keys if county in counts.index}\n",
       "subquestion": "How many CACFP day care homes were in each Texas county in 2022-2023? (Filter: ProgramYear == '2022-2023'; count sites by CECounty.)",
       "answer": {
         "BELL": 6,
@@ -114,7 +114,7 @@
     },
     "6": {
       "source": "datagov/aps-5-2-outcomes-recidivism-by-county-fy2013-2022/files/rows.txt",
-      "fact": "In FY2022, among the top 5 counties by average CACFP day care homes (Travis, Harris, Taylor, Tarrant, Hidalgo), the APS recidivism rates were: Travis (13.9%), Harris (15.1%), Taylor (21.4%), Tarrant (13.8%), and Hidalgo (14.7%). Only Travis and Tarrant had recidivism rates below 14.5%.",
+      "fact": "import os\nimport io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/aps-5-2-outcomes-recidivism-by-county-fy2013-2022/files/rows.txt'\nbucket = \"lakeqa-yc4103-datalake\"\nlocal_path = source if os.path.exists(source) else \"/tmp/k123_data_cache/\" + source\n\nif os.path.exists(local_path):\n    csv_path = local_path\nelse:\n    s3 = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED))\n    obj = s3.get_object(Bucket=bucket, Key=source)\n    csv_path = io.BytesIO(obj[\"Body\"].read())\n\ncandidate_counties = [\"TRAVIS\", \"HARRIS\", \"TAYLOR\", \"TARRANT\", \"HIDALGO\"]\ndf = pd.read_csv(csv_path, low_memory=False)\ncounty = df[\"County\"].astype(str).str.upper()\nfiltered = df[\n    pd.to_numeric(df[\"Fiscal Year\"], errors=\"coerce\").eq(2022)\n    & county.isin(candidate_counties)\n    & pd.to_numeric(df[\"Recidivism\"], errors=\"coerce\").lt(0.145)\n].copy()\neligible = set(filtered[\"County\"].astype(str).str.upper())\nanswer = [county for county in candidate_counties if county in eligible]\n",
       "subquestion": "Which counties from <nodes 1-5 top 5 by average: Travis, Harris, Taylor, Tarrant, Hidalgo> had an APS recidivism rate below 14.5% in FY2022? (Filter: Fiscal Year == 2022; use Recidivism < 0.145.)",
       "answer": [
         "TRAVIS",

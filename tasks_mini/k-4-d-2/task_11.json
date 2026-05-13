@@ -5,7 +5,7 @@
   "nodes": {
     "1": {
       "source": "datagov/index-violent-property-and-firearm-rates-by-county-beginning-1990/files/rows.txt",
-      "fact": "In 2015, NY counties with population greater than 900,000 and firearm rate less than 35 per 100,000 were: Nassau County (1,360,265 population, 27.1 firearm rate), Suffolk County (1,502,075 population, 31.6 firearm rate), and Westchester County (976,316 population, 31.3 firearm rate).",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/index-violent-property-and-firearm-rates-by-county-beginning-1990/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\nanswer = df.loc[\n    (df[\"Year\"] == 2015)\n    & (df[\"Population\"] > 900000)\n    & (df[\"Firearm Rate\"] < 35),\n    \"County\"\n].tolist()\nanswer = [f\"{county} County\" for county in answer]\nprint(answer)",
       "subquestion": "Which NY counties had population greater than 900,000 AND firearm rate less than 35 per 100,000 in 2015?",
       "depends_on": [],
       "answer": [
@@ -16,7 +16,7 @@
     },
     "2": {
       "source": "datagov/nys-school-tax-relief-star-reimbursement-by-county-beginning-levy-year-1998/files/rows.txt",
-      "fact": "In 2015, NY counties with STAR tax relief reimbursement greater than $100 million were: Nassau ($428.2M), Suffolk ($418.2M), Westchester ($315.6M), Monroe ($145.6M), and Erie ($140.6M).",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/nys-school-tax-relief-star-reimbursement-by-county-beginning-levy-year-1998/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\nnode_1_counties = [\"Nassau\", \"Suffolk\", \"Westchester\"]\n\nanswer = df.loc[\n    (df[\"Levy Year\"] == 2015)\n    & (df[\"County\"].isin(node_1_counties))\n    & (df[\"Total Amount of Reimbursement\"] > 100000000),\n    \"County\"\n].tolist()\nanswer = [f\"{county} County\" for county in answer]\nprint(answer)",
       "subquestion": "Which of <node_1 answer> had STAR tax relief reimbursement greater than $100 million in 2015?",
       "depends_on": [
         "node_1"
@@ -29,7 +29,7 @@
     },
     "3": {
       "source": "datagov/jail-population-by-county-beginning-1997/files/rows.txt",
-      "fact": "In 2015, total county jail populations (summing all facilities) were: Nassau County CF (1,148), Suffolk County CF combined (1,351 from Riverhead 680 + Yaphank 671), Westchester County combined (1,100 from Jail 674 + Pen 336 + Annex 90). Counties with total jail population less than 1,200 are Nassau (1,148) and Westchester (1,100).",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/jail-population-by-county-beginning-1997/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\ncandidate_counties = [\"Nassau\", \"Suffolk\", \"Westchester\"]\ndf_2015 = df[df[\"Year\"] == 2015].copy()\n\ncounty_totals = {}\nfor county in candidate_counties:\n    county_totals[county] = df_2015.loc[\n        df_2015[\"Facility Name (ORI)\"].str.contains(county, case=False, na=False),\n        \"Census\"\n    ].sum()\n\nanswer = [f\"{county} County\" for county, total in county_totals.items() if total < 1200]\nprint(answer)",
       "subquestion": "Which of <intersection of node_1, node_2> had a total county jail population less than 1,200 in 2015?",
       "depends_on": [
         "intersection_of_1_2"
@@ -41,7 +41,7 @@
     },
     "4": {
       "source": "datagov/hate-crimes-by-county-and-bias-type-beginning-2010/files/rows.txt",
-      "fact": "In 2015, total hate crime incidents (Crimes Against Persons + Property Crimes) were: Nassau County (11 + 24 = 35), Suffolk County (20 + 49 = 69), Westchester County (7 + 7 = 14). Counties with more than 20 total incidents are Nassau (35) and Suffolk (69).",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/hate-crimes-by-county-and-bias-type-beginning-2010/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\ncandidate_counties = [\"Nassau\", \"Suffolk\", \"Westchester\"]\n\ncounty_totals = (\n    df.loc[\n        (df[\"Year\"] == 2015)\n        & (df[\"County\"].isin(candidate_counties)),\n        [\"County\", \"Total Incidents\"]\n    ]\n    .groupby(\"County\", as_index=False)[\"Total Incidents\"]\n    .sum()\n)\n\nanswer = [f\"{county} County\" for county in county_totals.loc[county_totals[\"Total Incidents\"] > 20, \"County\"].tolist()]\nprint(answer)",
       "subquestion": "Which of <intersection of node_1, node_2> had more than 20 total hate crime incidents in 2015?",
       "depends_on": [
         "intersection_of_1_2"

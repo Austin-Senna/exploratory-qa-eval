@@ -31,13 +31,13 @@
     },
     "5": {
       "source": "datagov/fy-2020-disability-compensation-recipients-by-county/files/rows.txt",
-      "fact": "According to the FY 2020 VA Disability Compensation Recipients by County dataset, Sedgwick County, Kansas had 7,871 total disability compensation recipients.",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/fy-2020-disability-compensation-recipients-by-county/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\nanswer = int(df.loc[(df[\"State\"] == \"Kansas\") & (df[\"County Name\"] == \"Sedgwick\"), \"Total: Disability Compensation Recipients\"].iloc[0])\nanswer = str(answer)",
       "subquestion": "How many VA disability compensation recipients were in <county from node 4: Sedgwick County, Kansas> in FY 2020?",
       "answer": "7871"
     },
     "6": {
       "source": "datagov/fy-2023-disability-compensation-recipients-by-county/files/rows.txt",
-      "fact": "According to the FY 2023 VA Disability Compensation Recipients by County dataset, Sedgwick County, Kansas had 8,701 total disability compensation recipients.",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/fy-2023-disability-compensation-recipients-by-county/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\n\nanswer = int(df.loc[(df[\"State\"] == \"Kansas\") & (df[\"County Name\"] == \"Sedgwick\"), \"Total: Disability Compensation Recipients\"].iloc[0])\nanswer = str(answer)",
       "subquestion": "How many VA disability compensation recipients were in <county from node 4: Sedgwick County, Kansas> in FY 2023?",
       "answer": "8701"
     }

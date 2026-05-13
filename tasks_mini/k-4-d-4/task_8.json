@@ -4,7 +4,7 @@
   "nodes": {
     "1": {
       "source": "datagov/agency-contracts-fiscal-year-2017/files/rows.txt",
-      "fact": "In fiscal year 2017, the top 20 Washington State contractors by contract count included: ARAMARK UNIFORM SERVICES (328), McGranahan Architects (290), Schreiber Starling Whitehead Architects (259), McKinstry Essention (216), Liberty Business Forms (207), PBS Engineering (157), WSP USA (142), HDR Engineering, Inc. (136, rank #8), Schacht/Aslani Architects (134), KMB architects (131), Phoenix Protective Corp (123), MSGS Architects (121), KolorKraze (115), Jacobs Engineering Group, Inc. (102, rank #14), HNTB Corporation (96, rank #15), S.M. Stemper Architects (89), Pioneer Human Services (87), Imagesource Inc (87), Osborn Architects (83), Golden Pacific Embossing (81).",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/agency-contracts-fiscal-year-2017/files/rows.txt'\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\nanswer = df[\"Contractor Name\"].value_counts().head(20).index.tolist()\n",
       "subquestion": "Which contractors ranked in the top 20 by contract count in Washington State agency contracts in fiscal year 2017?",
       "answer": [
         "ARAMARK UNIFORM SERVICES, INC.",
@@ -31,7 +31,7 @@
     },
     "2": {
       "source": "datagov/agency-contracts-fiscal-year-2018/files/rows.txt",
-      "fact": "In fiscal year 2018, the top 20 Washington State contractors by contract count included: A-1 Performance Inc (147), Jacobs Engineering Group, Inc. (137, rank #2), WSP USA Inc (119), Imagesource Inc (117), HDR Engineering, Inc. (102, rank #5), HNTB Corporation (98, rank #6), GENUINE PARTS CO (96), Sharp Electronics (81), A-1 Performance INC (78), Correctional Industries-DOC (75), Pioneer Human Services (74), Puget Sound Executive Srvces (72), Client Network Services (68), DOC Correctional Industries (68), Ricoh Usa Inc (66), Parametrix (65), Phoenix Protective Corp (62), ESD Financial Office (61), Northwest Envirometrics (60), DES (59).",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/agency-contracts-fiscal-year-2018/files/rows.txt'\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\nanswer = df[\"Contractor Name\"].value_counts().head(20).index.tolist()\n",
       "subquestion": "Which contractors ranked in the top 20 by contract count in Washington State agency contracts in fiscal year 2018?",
       "answer": [
         "A-1 Performance Inc",
@@ -58,7 +58,7 @@
     },
     "3": {
       "source": "datagov/agency-contracts-fiscal-year-2019/files/rows.txt",
-      "fact": "In fiscal year 2019, the top 20 Washington State contractors by contract count included: Sharp Electronics (374), DOC Correctional Industries (316), WSP USA Inc (196), A-1 Performance Inc (165), Parametrix (111), Imagesource Inc (100), Northwest Envirometrics (96), Regence Blueshield (95), Shi International Corp (84), Capital Business Machines (76), DES (75), Phoenix Protective Corp (75), Jacobs Engineering Group, Inc. (73, rank #13), Client Network Services (70), HDR Engineering, Inc. (67, rank #15), Talgo Inc (61), MISC CUSTOMER (60), OTB Solutions Group (51), HNTB Corporation (50, rank #19), Service Alternatives Inc (49).",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/agency-contracts-fiscal-year-2019/files/rows.txt'\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\nanswer = df[\"Contractor Name\"].value_counts().head(20).index.tolist()\n",
       "subquestion": "Which contractors ranked in the top 20 by contract count in Washington State agency contracts in fiscal year 2019?",
       "answer": [
         "Sharp Electronics Corporation",
@@ -85,7 +85,7 @@
     },
     "4": {
       "source": "datagov/agency-contracts-fiscal-year-2020/files/rows.txt",
-      "fact": "In fiscal year 2020, the top 20 Washington State contractors by contract count included: JP Morgan Chase Bank NA (1055), WSP USA Inc (366), University of Washington (355), WA State DSHS (305), HDR Engineering, Inc. (248, rank #5), Parametrix (245), Washington State University (236), Shi International Corp (233), Department of Transportation (226), HNTB Corporation (172, rank #10), King County (154), Regence Blueshield (152), South Puget Sound Comm College (146), Jacobs Engineering Group, Inc. (144, rank #14), WA State Univ (142), Department of Children Youth and Families (127), Moda Health Plan (126), Lacey City (125), WSDOT (124), Department of Health (114).",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = 'datagov/agency-contracts-fiscal-year-2020/files/rows.txt'\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\nanswer = df[\"Contractor Name\"].value_counts().head(20).index.tolist()\n",
       "subquestion": "Which contractors ranked in the top 20 by contract count in Washington State agency contracts in fiscal year 2020?",
       "answer": [
         "JP Morgan Chase Bank NA",
@@ -130,7 +130,7 @@
     },
     "8": {
       "source": "datagov/active-construction-projects/files/rows.txt",
-      "fact": "As of the March 2023 NY State active construction projects snapshot, Jacobs Project Management Co. served as Construction Manager on 3 projects (Central New York Psychiatric Center Rehab Bldg 39, City College of New York CCNY-Compton Goethals & Baskerville Hall, and Queens College Razran Hall Energy). Neither HDR Engineering nor HNTB Corporation appear as Construction Manager on any of the 77 active construction projects.",
+      "fact": "import io\nimport pandas as pd\nimport boto3\nfrom botocore import UNSIGNED\nfrom botocore.config import Config\n\nsource = \"datagov/active-construction-projects/files/rows.txt\"\nbucket = \"lakeqa-yc4103-datalake\"\nobj = boto3.client(\"s3\", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)\ndf = pd.read_csv(io.BytesIO(obj[\"Body\"].read()), low_memory=False)\ncandidates = [\"HDR Engineering, Inc.\", \"HNTB Corporation\", \"Jacobs Project Management Co.\"]\ncounts = {name: int((df[\"Construction Manager\"] == name).sum()) for name in candidates}\nanswer = [name for name in [\"HDR Engineering, Inc.\", \"HNTB Corporation\"] if counts[name] == 0]\nassert counts[\"Jacobs Project Management Co.\"] > 0\n",
       "subquestion": "Of the three engineering contractors in the intersection (Jacobs Engineering Group, HNTB Corporation, HDR Engineering), which have zero NY State construction manager projects?",
       "answer": [
         "HDR Engineering, Inc.",

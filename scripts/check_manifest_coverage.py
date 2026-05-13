@@ -13,11 +13,25 @@ _REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
+from strands_evaluation.tools.external.description_rows import (  # noqa: E402
+    description_uri,
+    has_valid_description,
+    reject_forbidden_description_row,
+)
+
 
 def _parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--manifest", default="tasks_core_quality_file_manifest.jsonl")
-    parser.add_argument("--descriptions", default="table_descriptions.jsonl")
+    parser.add_argument("--manifest", default="tasks_mini_file_manifest.jsonl")
+    parser.add_argument(
+        "--descriptions",
+        action="append",
+        default=None,
+        help=(
+            "Description JSONL to check. Repeat to union multiple files. "
+            "Defaults to canonical table_descriptions.jsonl."
+        ),
+    )
     parser.add_argument("--snippets", default="snippet.jsonl")
     parser.add_argument("--profiles", default="datagov_tables_profiles.jsonl")
     parser.add_argument(
@@ -64,6 +78,22 @@ def _load_uri_set(path: Path, *, field_names: Sequence[str]) -> set[str]:
     return values
 
 
+def _as_paths(paths: Path | Sequence[Path]) -> list[Path]:
+    if isinstance(paths, Path):
+        return [paths]
+    return list(paths)
+
+
+def _load_description_uri_set(paths: Path | Sequence[Path]) -> set[str]:
+    values: set[str] = set()
+    for path in _as_paths(paths):
+        for row in _jsonl_rows(path):
+            reject_forbidden_description_row(row, path=path)
+            if has_valid_description(row):
+                values.add(description_uri(row))
+    return values
+
+
 def _write_rows(path: Path, rows: Iterable[dict]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w") as f:
@@ -72,16 +102,20 @@ def _write_rows(path: Path, rows: Iterable[dict]) -> None:
             f.write("\n")
 
 
+def default_description_paths(args: argparse.Namespace) -> list[Path]:
+    return [Path(path) for path in args.descriptions] if args.descriptions else [Path("table_descriptions.jsonl")]
+
+
 def audit_manifest_coverage(
     *,
     manifest_path: Path,
-    descriptions_path: Path,
+    descriptions_path: Path | Sequence[Path],
     snippets_path: Path,
     profiles_path: Path,
     output_prefix: Optional[Path] = None,
 ) -> dict:
     manifest_rows = _load_manifest(manifest_path)
-    desc_uris = _load_uri_set(descriptions_path, field_names=("dataset_uri", "uri"))
+    desc_uris = _load_description_uri_set(descriptions_path)
     snippet_uris = _load_uri_set(snippets_path, field_names=("dataset_uri", "uri"))
     profile_uris = _load_uri_set(profiles_path, field_names=("s3_uri",))
 
@@ -108,9 +142,10 @@ def audit_manifest_coverage(
 def main(argv: Optional[Sequence[str]] = None) -> int:
     args = _parse_args(argv)
     output_prefix = Path(args.output_prefix) if args.output_prefix else None
+    description_paths = default_description_paths(args)
     summary = audit_manifest_coverage(
         manifest_path=Path(args.manifest),
-        descriptions_path=Path(args.descriptions),
+        descriptions_path=description_paths,
         snippets_path=Path(args.snippets),
         profiles_path=Path(args.profiles),
         output_prefix=output_prefix,
