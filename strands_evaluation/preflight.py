@@ -292,13 +292,10 @@ def run_preflight(
     if st == "ideal":
         checks.append(_check_desc_cache_for_enrichment())
 
-    # search_results=ideal needs descriptions, profiles, and legacy snippet/schema fallbacks.
-    profiles_checked = False
-    if sr == "ideal":
+    # search_results=ideal needs the legacy description/snippet/schema caches.
+    if sr == "ideal" and st != "preloaded":
         if st != "ideal":
             checks.append(_check_desc_cache_for_enrichment())
-        checks.append(_check_profiles_jsonl(required=True))
-        profiles_checked = True
         checks.append(_check_snippet_cache())
         checks.append(_check_schemas_jsonl_load())
 
@@ -306,7 +303,7 @@ def run_preflight(
         checks.append(_check_tasks_mini_source_description_coverage(task_files))
 
     sana_flags = getattr(run_config, "sana_flags", None)
-    if getattr(sana_flags, "results", False) and not profiles_checked:
+    if getattr(sana_flags, "results", False):
         checks.append(_check_profiles_jsonl())
 
     ok_count = sum(1 for c in checks if c.ok)
