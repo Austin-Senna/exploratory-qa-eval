@@ -110,7 +110,7 @@ class SanaPreflightTests(unittest.TestCase):
 
         profile_check = next(c for c in checks if c.name == "datagov_tables_profiles.jsonl")
         self.assertTrue(profile_check.ok)
-        self.assertIn("falls back to legacy schema+snippet+description", profile_check.detail)
+        self.assertIn("peek_file omits profile", profile_check.detail)
         self.assertIn("Preflight OK", stream.getvalue())
 
     def test_present_profiles_file_reports_entry_count(self):

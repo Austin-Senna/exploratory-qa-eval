@@ -1,4 +1,4 @@
-"""Tests for SanaDataLakeAgent._decorate_tools — swaps peek_file when results is on."""
+"""Tests for SanaDataLakeAgent._decorate_tools."""
 
 from __future__ import annotations
 
@@ -47,7 +47,7 @@ class DecorateToolsTests(unittest.TestCase):
         self.assertIs(decorated[0], baseline_peek)
         self.assertIs(decorated[1], other)
 
-    def test_results_on_swaps_peek_file(self) -> None:
+    def test_results_on_keeps_shared_profile_aware_peek_file(self) -> None:
         agent = _make_agent(results=True)
         baseline_peek = MagicMock()
         baseline_peek.tool_name = "peek_file"
@@ -58,12 +58,10 @@ class DecorateToolsTests(unittest.TestCase):
             search_tool_mode="preloaded",
             plan_mode="standard",
         )
-        # peek_file should be replaced; query_file untouched
-        self.assertIsNot(decorated[0], baseline_peek)
-        self.assertEqual(getattr(decorated[0], "tool_name", None), "peek_file")
+        self.assertIs(decorated[0], baseline_peek)
         self.assertIs(decorated[1], other)
 
-    def test_results_on_swaps_peek_multiple(self) -> None:
+    def test_results_on_keeps_shared_profile_aware_peek_multiple(self) -> None:
         agent = _make_agent(results=True)
         baseline_peek = MagicMock()
         baseline_peek.tool_name = "peek_file"
@@ -78,7 +76,8 @@ class DecorateToolsTests(unittest.TestCase):
         )
         self.assertEqual(getattr(decorated[0], "tool_name", None), "peek_file")
         self.assertEqual(getattr(decorated[1], "tool_name", None), "peek_multiple")
-        self.assertIsNot(decorated[1], baseline_multi)
+        self.assertIs(decorated[0], baseline_peek)
+        self.assertIs(decorated[1], baseline_multi)
         self.assertIs(decorated[2], other)
 
     def test_sprint_on_adds_sprint_tool(self) -> None:

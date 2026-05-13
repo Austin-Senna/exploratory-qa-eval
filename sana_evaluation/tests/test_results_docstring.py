@@ -1,9 +1,4 @@
-"""Test that SANA's peek_file wrapper documents the `profile` field.
-
-Baseline strands_evaluation peek_file is profile-unaware; SANA's wrapper owns
-the profile concept and must document it in its docstring (since the agent
-reads tool docstrings to learn what the tool returns).
-"""
+"""Test that profile-aware peek docs advertise the shared `profile` field."""
 
 from __future__ import annotations
 
@@ -47,15 +42,15 @@ def test_sana_peek_multiple_docstring_prefers_s3_uri() -> None:
     assert "files" in doc
 
 
-def test_baseline_peek_file_docstring_does_not_mention_profile() -> None:
-    """Baseline tool must stay profile-unaware."""
+def test_baseline_peek_file_docstring_documents_profile_field() -> None:
     from strands_evaluation.tools.agent_tools_v2 import peek_file as baseline_peek
     doc = _doc(baseline_peek)
-    assert "profile" not in doc
+    assert "profile" in doc
+    assert "llm_description" in doc
 
 
-def test_baseline_peek_multiple_docstring_does_not_mention_profile() -> None:
-    """Baseline tool must stay profile-unaware."""
+def test_baseline_peek_multiple_docstring_documents_profile_field() -> None:
     from strands_evaluation.tools.agent_tools_v2 import peek_multiple as baseline_peek_multiple
     doc = _doc(baseline_peek_multiple)
-    assert "profile" not in doc
+    assert "profile" in doc
+    assert "llm_description" in doc

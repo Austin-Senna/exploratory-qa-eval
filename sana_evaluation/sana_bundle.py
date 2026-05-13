@@ -199,18 +199,6 @@ class SanaDataLakeAgent(DataLakeAgent):
         task_context: Optional[dict[str, Any]] = None,
     ) -> List[Any]:
         decorated = list(tools)
-        if self.sana_flags.results:
-            from sana_evaluation.tools.peek_file_with_profile import (
-                peek_file as sana_peek_file,
-                peek_multiple as sana_peek_multiple,
-            )
-
-            decorated = [
-                sana_peek_file if getattr(t, "tool_name", None) == "peek_file"
-                else sana_peek_multiple if getattr(t, "tool_name", None) == "peek_multiple"
-                else t
-                for t in decorated
-            ]
         if self.sana_flags.delegation:
             from sana_evaluation.tools.delegation_tool import (
                 DelegationRuntime,

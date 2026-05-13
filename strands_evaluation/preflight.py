@@ -93,13 +93,64 @@ def _check_schemas_jsonl_load() -> PreflightCheck:
     )
 
 
-def _check_profiles_jsonl() -> PreflightCheck:
+def _canonical_source_uri(source: str) -> str:
+    raw = str(source or "").strip()
+    if raw.startswith("s3://"):
+        return raw
+    return f"s3://lakeqa-yc4103-datalake/{raw.lstrip('/')}"
+
+
+def _check_tasks_mini_source_description_coverage(task_files: Sequence[str]) -> PreflightCheck:
+    from strands_evaluation.tools.external.ideal import plan_store
+    from strands_evaluation.tools.external.ideal import search_wrapper as _sw
+
+    label = "tasks_mini plan source description coverage"
+    missing: List[str] = []
+    checked = 0
+    try:
+        _sw._load_desc_cache()
+    except Exception as exc:
+        return PreflightCheck(label, False, str(exc))
+
+    for task_path in task_files:
+        task_str = str(task_path)
+        if "tasks_mini/" not in task_str:
+            continue
+        try:
+            plan = plan_store.load_plan_for_task(task_str)
+        except Exception as exc:
+            return PreflightCheck(label, False, f"{task_str}: {exc}")
+        for source in plan.source_sequence:
+            checked += 1
+            uri = _canonical_source_uri(source)
+            if uri not in _sw._DESC_BY_URI:
+                missing.append(f"{task_str} -> {uri}")
+
+    if missing:
+        preview = "; ".join(missing[:5])
+        suffix = f"; +{len(missing) - 5} more" if len(missing) > 5 else ""
+        return PreflightCheck(
+            label,
+            False,
+            f"missing descriptions for {len(missing)}/{checked} planned source(s): {preview}{suffix}",
+        )
+
+    return PreflightCheck(label, True, f"covered {checked} planned source(s)")
+
+
+def _check_profiles_jsonl(*, required: bool = False) -> PreflightCheck:
     label = "datagov_tables_profiles.jsonl"
     if not _PROFILES_PATH.exists():
+        if required:
+            return PreflightCheck(
+                label,
+                False,
+                f"missing: {_PROFILES_PATH} (required as the primary search_results=ideal profile source)",
+            )
         return PreflightCheck(
             label,
             True,
-            f"missing: {_PROFILES_PATH} (Agent 1 falls back to legacy schema+snippet+description)",
+            f"missing: {_PROFILES_PATH} (profile enrichment unavailable; peek_file omits profile)",
         )
 
     count = 0
@@ -112,7 +163,8 @@ def _check_profiles_jsonl() -> PreflightCheck:
                 count += 1
     except Exception as exc:
         return PreflightCheck(label, False, str(exc))
-    return PreflightCheck(label, True, f"found: {count} entries")
+    suffix = " (primary search_results=ideal profile source)" if required else ""
+    return PreflightCheck(label, True, f"found: {count} entries{suffix}")
 
 
 def _check_plan_files(task_files: Sequence[str]) -> List[PreflightCheck]:
@@ -240,15 +292,21 @@ def run_preflight(
     if st == "ideal":
         checks.append(_check_desc_cache_for_enrichment())
 
-    # search_results=ideal needs the description/snippet/schema caches.
-    if sr == "ideal" and st != "preloaded":
+    # search_results=ideal needs descriptions, profiles, and legacy snippet/schema fallbacks.
+    profiles_checked = False
+    if sr == "ideal":
         if st != "ideal":
             checks.append(_check_desc_cache_for_enrichment())
+        checks.append(_check_profiles_jsonl(required=True))
+        profiles_checked = True
         checks.append(_check_snippet_cache())
         checks.append(_check_schemas_jsonl_load())
 
+    if (st == "ideal" or sr == "ideal") and task_files:
+        checks.append(_check_tasks_mini_source_description_coverage(task_files))
+
     sana_flags = getattr(run_config, "sana_flags", None)
-    if getattr(sana_flags, "results", False):
+    if getattr(sana_flags, "results", False) and not profiles_checked:
         checks.append(_check_profiles_jsonl())
 
     ok_count = sum(1 for c in checks if c.ok)

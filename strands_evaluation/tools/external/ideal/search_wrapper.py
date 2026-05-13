@@ -13,6 +13,8 @@ from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple
 
 from strands import tool
 from strands.tools.decorator import DecoratedFunctionTool
+from strands_evaluation.helper.peek_profile import load_dataset_profile
+from strands_evaluation.tools.external.description_rows import reject_forbidden_description_row
 
 _QUERY_TOOLS = {"search_value", "search_schema", "search_reranked", "search_ideal"}
 _PREFIX_TOOLS = {"search_prefix"}
@@ -99,11 +101,10 @@ def _load_desc_cache() -> None:
 
     if not _TABLE_DESCRIPTIONS_PATH.exists():
         raise FileNotFoundError(
-            f"Required dependency '{_TABLE_DESCRIPTIONS_PATH}' not found. "
-            "search_results=ideal requires table_descriptions.jsonl at the repo root."
+            "Required dependency 'table_descriptions.jsonl' not found. "
+            "search_results=ideal requires the canonical descriptions JSONL at the repo root."
         )
 
-    _DESC_CACHE_LOADED = True
     uri_map: Dict[str, str] = {}
     row_map: Dict[str, Dict[str, Any]] = {}
     with _TABLE_DESCRIPTIONS_PATH.open() as f:
@@ -115,14 +116,18 @@ def _load_desc_cache() -> None:
                 obj = json.loads(line)
             except json.JSONDecodeError:
                 continue
+            reject_forbidden_description_row(obj, path=_TABLE_DESCRIPTIONS_PATH)
             uri = str(obj.get("dataset_uri") or obj.get("uri") or "").strip()
             desc = str(obj.get("description") or "").strip()
-            if uri and desc and uri not in uri_map:
+            if not uri or not desc:
+                continue
+            if uri not in uri_map:
                 uri_map[uri] = desc
                 row_map[uri] = obj
 
     _DESC_BY_URI = uri_map
     _DESC_ROW_BY_URI = row_map
+    _DESC_CACHE_LOADED = True
 
 
 def _load_snippet_cache() -> None:
@@ -249,6 +254,78 @@ def _lookup_schema(uri: str) -> Optional[Dict[str, Any]]:
     return _SCHEMA_BY_SLUG_FILENAME.get(key)
 
 
+def _profile_for_uri(uri: Optional[str]) -> Optional[Dict[str, Any]]:
+    if not uri:
+        return None
+    try:
+        return load_dataset_profile(uri)
+    except Exception:
+        return None
+
+
+def _profile_description(profile: Optional[Dict[str, Any]]) -> str:
+    if not isinstance(profile, dict):
+        return ""
+    for key in ("llm_description", "description"):
+        value = str(profile.get(key) or "").strip()
+        if value:
+            return value
+    return ""
+
+
+def _column_names_from_profile(profile: Optional[Dict[str, Any]]) -> List[str]:
+    if not isinstance(profile, dict):
+        return []
+    raw_columns = profile.get("columns") or profile.get("schema_columns") or []
+    if not isinstance(raw_columns, list):
+        return []
+
+    names: List[str] = []
+    for column in raw_columns:
+        if isinstance(column, dict):
+            name = str(column.get("name") or column.get("column_name") or "").strip()
+        else:
+            name = str(column or "").strip()
+        if name:
+            names.append(name)
+    return names
+
+
+def _profile_kind(profile: Optional[Dict[str, Any]]) -> str:
+    if not isinstance(profile, dict):
+        return ""
+    return str(profile.get("family") or profile.get("table_kind") or "").strip()
+
+
+def _compact_top_rows(top_rows: Any) -> str:
+    if not top_rows:
+        return ""
+    try:
+        text = json.dumps(top_rows, ensure_ascii=False, default=str)
+    except TypeError:
+        text = str(top_rows)
+    return _truncate_words(text, max_words=_IDEAL_SNIPPET_WORDS)
+
+
+def _profile_snippet(profile: Optional[Dict[str, Any]]) -> str:
+    if not isinstance(profile, dict):
+        return ""
+    snippet = str(profile.get("snippet") or "").strip()
+    if snippet:
+        return _truncate_words(snippet, max_words=_IDEAL_SNIPPET_WORDS)
+    return _compact_top_rows(profile.get("top_2_rows"))
+
+
+def _description_row_snippet(uri: Optional[str]) -> str:
+    if not uri:
+        return ""
+    row = _DESC_ROW_BY_URI.get(uri)
+    if not isinstance(row, dict):
+        return ""
+    text = str(row.get("content") or row.get("description") or "").strip()
+    return _truncate_words(text, max_words=_IDEAL_SNIPPET_WORDS)
+
+
 def _fallback_type_from_uri(uri: str) -> str:
     name = (uri or "").rsplit("/", 1)[-1]
     if "." in name:
@@ -256,10 +333,14 @@ def _fallback_type_from_uri(uri: str) -> str:
     return "unknown"
 
 
-def _schema_fields(uri: str) -> Dict[str, Any]:
+def _schema_fields(uri: str, profile: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    profile_columns = _column_names_from_profile(profile)
+    if profile_columns:
+        return {"columns": profile_columns}
+
     schema = _lookup_schema(uri)
     if not schema:
-        return {"type": _fallback_type_from_uri(uri)}
+        return {"type": _profile_kind(profile) or _fallback_type_from_uri(uri)}
 
     columns = schema.get("columns") or []
     if columns:
@@ -281,16 +362,22 @@ def _reshape_row(row: Dict[str, Any], mode: str) -> Dict[str, Any]:
     if mode == "naive":
         return out
 
-    desc = _DESC_BY_URI.get(uri or "", "")
+    profile = _profile_for_uri(uri)
+
+    desc = _DESC_BY_URI.get(uri or "", "") or _profile_description(profile)
     if desc:
         out["llm_desc"] = desc
 
     if uri:
-        out.update(_schema_fields(uri))
+        out.update(_schema_fields(uri, profile))
 
-    snippet = _SNIPPET_BY_URI.get(uri or "", "")
+    snippet = _profile_snippet(profile)
+    if not snippet:
+        snippet = _SNIPPET_BY_URI.get(uri or "", "")
     if not snippet:
         snippet = _truncate_words(_extract_search_text(row), max_words=_IDEAL_SNIPPET_WORDS)
+    if not snippet:
+        snippet = _description_row_snippet(uri)
     if snippet:
         out["dataset_snippet"] = snippet
 

@@ -1,12 +1,7 @@
-"""SANA's profile-enriched peek tools.
+"""Compatibility profile-enriched peek tools.
 
-Wraps the baseline `peek_file` tool from `strands_evaluation` and merges in a
-`profile` field populated from the precomputed profile cache. When the
-`results` SANA flag is on, these tools replace the baseline `peek_file` and
-`peek_multiple` in the agent's tool list.
-
-Baseline strands_evaluation has zero awareness of profiles — all enrichment
-plumbing lives here in SANA.
+The baseline `strands_evaluation` peek tools are profile-aware now. This module
+remains import-compatible for older SANA callers and tests.
 """
 
 from __future__ import annotations
