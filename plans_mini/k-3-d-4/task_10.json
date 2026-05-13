@@ -32,5 +32,6 @@
     "Node 5 depends on intersection: Find Vermont's capital \u2192 Montpelier",
     "Node 6 depends on node 5: Find when Montpelier was chartered \u2192 1781",
     "Final answer: 1781"
-  ]
+  ],
+  "ideal_code": []
 }

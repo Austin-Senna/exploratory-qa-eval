@@ -143,7 +143,6 @@
   "verdict": "pass",
   "datasets_used": [
     "National_Park_Service",
-    "United_States_Department_of_the_Interior",
     "United_States_Park_Police",
     "moving-violations-issued-in-january-2019",
     "moving-violations-issued-in-january-2020",

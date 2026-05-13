@@ -46,5 +46,165 @@
     "  Answer: Lincoln Square",
     "",
     "Final answer: Lincoln Square"
+  ],
+  "ideal_code": [
+    {
+      "node_id": "1",
+      "dataset_id": "libraries-2019-visitors-by-location",
+      "source": "datagov/libraries-2019-visitors-by-location/files/rows.txt",
+      "intent": "In 2019, which Chicago library branches were in the top 5 by total visitors?",
+      "code": "import csv\nfrom collections import defaultdict\n\nwith open('datagov/libraries-2019-visitors-by-location/files/rows.txt', 'r', encoding='utf-8', newline='') as f:\n    rows = list(csv.DictReader(f))\n\ntotals = defaultdict(float)\nfor r in rows:\n    if not (r.get('ADDRESS') or '').strip():\n        continue\n    branch = (r.get('LOCATION') or '').strip()\n    if not branch:\n        continue\n    try:\n        ytd = float((r.get('YTD') or '').replace(',', '').strip())\n    except (TypeError, ValueError):\n        continue\n    totals[branch] += ytd\n\nranked = sorted(totals.items(), key=lambda x: (-x[1], x[0]))[:5]\nresult = [name for name, _ in ranked]",
+      "answer": [
+        "Harold Washtington Library Center",
+        "Sulzer Regional Library",
+        "Chinatown",
+        "Woodson Regional Library",
+        "Edgewater"
+      ]
+    },
+    {
+      "node_id": "2",
+      "dataset_id": "libraries-2020-visitors-by-location",
+      "source": "datagov/libraries-2020-visitors-by-location/files/rows.txt",
+      "intent": "In 2020, which Chicago library branches were in the top 5 by total visitors?",
+      "code": "import csv\nfrom collections import defaultdict\n\nwith open('datagov/libraries-2020-visitors-by-location/files/rows.txt', 'r', encoding='utf-8', newline='') as f:\n    rows = list(csv.DictReader(f))\n\ntotals = defaultdict(float)\nfor r in rows:\n    if not (r.get('ADDRESS') or '').strip():\n        continue\n    branch = (r.get('BRANCH') or '').strip()\n    if not branch:\n        continue\n    try:\n        ytd = float((r.get('YTD') or '').replace(',', '').strip())\n    except (TypeError, ValueError):\n        continue\n    totals[branch] += ytd\n\nranked = sorted(totals.items(), key=lambda x: (-x[1], x[0]))[:5]\nresult = [name for name, _ in ranked]",
+      "answer": [
+        "Harold Washtington Library Center",
+        "Sulzer Regional Library",
+        "Edgewater",
+        "Woodson Regional Library",
+        "Rogers Park"
+      ]
+    },
+    {
+      "node_id": "3",
+      "dataset_id": "libraries-2021-visitors-by-location",
+      "source": "datagov/libraries-2021-visitors-by-location/files/rows.txt",
+      "intent": "In 2021, which Chicago library branches were in the top 5 by total visitors?",
+      "code": "import csv\nfrom collections import defaultdict\n\nwith open('datagov/libraries-2021-visitors-by-location/files/rows.txt', 'r', encoding='utf-8', newline='') as f:\n    rows = list(csv.DictReader(f))\n\ntotals = defaultdict(float)\nfor r in rows:\n    if not (r.get('ADDRESS') or '').strip():\n        continue\n    branch = (r.get('BRANCH') or '').strip()\n    if not branch:\n        continue\n    try:\n        ytd = float((r.get('YTD') or '').replace(',', '').strip())\n    except (TypeError, ValueError):\n        continue\n    totals[branch] += ytd\n\nranked = sorted(totals.items(), key=lambda x: (-x[1], x[0]))[:5]\nresult = [name for name, _ in ranked]",
+      "answer": [
+        "Harold Washtington Library Center",
+        "Sulzer Regional Library",
+        "Edgewater",
+        "Chinatown",
+        "Logan Square"
+      ]
+    },
+    {
+      "node_id": "4",
+      "dataset_id": "libraries-2019-computer-sessions-by-location",
+      "source": "datagov/libraries-2019-computer-sessions-by-location/files/rows.txt",
+      "intent": "In 2019, which Chicago library branches were in the top 3 by total reserved public-computer time slots (each at most 60 minutes)?",
+      "code": "import csv\nfrom collections import defaultdict\n\nwith open('datagov/libraries-2019-computer-sessions-by-location/files/rows.txt', 'r', encoding='utf-8', newline='') as f:\n    rows = list(csv.DictReader(f))\n\ntotals = defaultdict(float)\nfor r in rows:\n    if not (r.get('ADDRESS') or '').strip():\n        continue\n    branch = (r.get('LOCATION') or '').strip()\n    if not branch:\n        continue\n    try:\n        ytd = float((r.get('YTD') or '').replace(',', '').strip())\n    except (TypeError, ValueError):\n        continue\n    totals[branch] += ytd\n\nranked = sorted(totals.items(), key=lambda x: (-x[1], x[0]))[:3]\nresult = [name for name, _ in ranked]",
+      "answer": [
+        "HAROLD WASHINGTON LIBRARY CENTER",
+        "Woodson Regional Library",
+        "Sulzer Regional Library"
+      ]
+    },
+    {
+      "node_id": "5",
+      "dataset_id": "libraries-2020-computer-sessions-by-location",
+      "source": "datagov/libraries-2020-computer-sessions-by-location/files/rows.txt",
+      "intent": "In 2020, which Chicago library branches were in the top 3 by total reserved public-computer time slots (each at most 60 minutes)?",
+      "code": "import csv\nfrom collections import defaultdict\n\nwith open('datagov/libraries-2020-computer-sessions-by-location/files/rows.txt', 'r', encoding='utf-8', newline='') as f:\n    rows = list(csv.DictReader(f))\n\ntotals = defaultdict(float)\nfor r in rows:\n    if not (r.get('ADDRESS') or '').strip():\n        continue\n    branch = (r.get('BRANCH') or '').strip()\n    if not branch:\n        continue\n    try:\n        ytd = float((r.get('YTD') or '').replace(',', '').strip())\n    except (TypeError, ValueError):\n        continue\n    totals[branch] += ytd\n\nranked = sorted(totals.items(), key=lambda x: (-x[1], x[0]))[:3]\nresult = [name for name, _ in ranked]",
+      "answer": [
+        "Harold Washington Library Center",
+        "Woodson Regional Library",
+        "Sulzer Regional Library"
+      ]
+    },
+    {
+      "node_id": "6",
+      "dataset_id": "libraries-2021-computer-sessions-by-location",
+      "source": "datagov/libraries-2021-computer-sessions-by-location/files/rows.txt",
+      "intent": "In 2021, which Chicago library branches were in the top 3 by total reserved public-computer time slots (each at most 60 minutes)?",
+      "code": "import csv\nfrom collections import defaultdict\n\nwith open('datagov/libraries-2021-computer-sessions-by-location/files/rows.txt', 'r', encoding='utf-8', newline='') as f:\n    rows = list(csv.DictReader(f))\n\ntotals = defaultdict(float)\nfor r in rows:\n    if not (r.get('ADDRESS') or '').strip():\n        continue\n    branch = (r.get('BRANCH') or '').strip()\n    if not branch:\n        continue\n    try:\n        ytd = float((r.get('YTD') or '').replace(',', '').strip())\n    except (TypeError, ValueError):\n        continue\n    totals[branch] += ytd\n\nranked = sorted(totals.items(), key=lambda x: (-x[1], x[0]))[:3]\nresult = [name for name, _ in ranked]",
+      "answer": [
+        "Harold Washington Library Center",
+        "Woodson Regional Library",
+        "Sulzer Regional Library"
+      ]
+    }
+  ],
+  "ideal_query": [
+    {
+      "node_id": "1",
+      "dataset_id": "libraries-2019-visitors-by-location",
+      "source": "datagov/libraries-2019-visitors-by-location/files/rows.txt",
+      "intent": "In 2019, which Chicago library branches were in the top 5 by total visitors?",
+      "sql": "WITH totals AS (\n  SELECT trim(\"LOCATION\") AS branch,\n         SUM(TRY_CAST(replace(CAST(\"YTD\" AS VARCHAR), ',', '') AS DOUBLE)) AS total\n  FROM t\n  WHERE trim(COALESCE(CAST(\"ADDRESS\" AS VARCHAR), '')) <> ''\n    AND trim(COALESCE(CAST(\"LOCATION\" AS VARCHAR), '')) <> ''\n  GROUP BY branch\n)\nSELECT branch AS answer\nFROM totals\nORDER BY total DESC, branch ASC\nLIMIT 5",
+      "answer": [
+        "Harold Washtington Library Center",
+        "Sulzer Regional Library",
+        "Chinatown",
+        "Woodson Regional Library",
+        "Edgewater"
+      ]
+    },
+    {
+      "node_id": "2",
+      "dataset_id": "libraries-2020-visitors-by-location",
+      "source": "datagov/libraries-2020-visitors-by-location/files/rows.txt",
+      "intent": "In 2020, which Chicago library branches were in the top 5 by total visitors?",
+      "sql": "WITH totals AS (\n  SELECT trim(\"BRANCH\") AS branch,\n         SUM(TRY_CAST(replace(CAST(\"YTD\" AS VARCHAR), ',', '') AS DOUBLE)) AS total\n  FROM t\n  WHERE trim(COALESCE(CAST(\"ADDRESS\" AS VARCHAR), '')) <> ''\n    AND trim(COALESCE(CAST(\"BRANCH\" AS VARCHAR), '')) <> ''\n  GROUP BY branch\n)\nSELECT branch AS answer\nFROM totals\nORDER BY total DESC, branch ASC\nLIMIT 5",
+      "answer": [
+        "Harold Washtington Library Center",
+        "Sulzer Regional Library",
+        "Edgewater",
+        "Woodson Regional Library",
+        "Rogers Park"
+      ]
+    },
+    {
+      "node_id": "3",
+      "dataset_id": "libraries-2021-visitors-by-location",
+      "source": "datagov/libraries-2021-visitors-by-location/files/rows.txt",
+      "intent": "In 2021, which Chicago library branches were in the top 5 by total visitors?",
+      "sql": "WITH totals AS (\n  SELECT trim(\"BRANCH\") AS branch,\n         SUM(TRY_CAST(replace(CAST(\"YTD\" AS VARCHAR), ',', '') AS DOUBLE)) AS total\n  FROM t\n  WHERE trim(COALESCE(CAST(\"ADDRESS\" AS VARCHAR), '')) <> ''\n    AND trim(COALESCE(CAST(\"BRANCH\" AS VARCHAR), '')) <> ''\n  GROUP BY branch\n)\nSELECT branch AS answer\nFROM totals\nORDER BY total DESC, branch ASC\nLIMIT 5",
+      "answer": [
+        "Harold Washtington Library Center",
+        "Sulzer Regional Library",
+        "Edgewater",
+        "Chinatown",
+        "Logan Square"
+      ]
+    },
+    {
+      "node_id": "4",
+      "dataset_id": "libraries-2019-computer-sessions-by-location",
+      "source": "datagov/libraries-2019-computer-sessions-by-location/files/rows.txt",
+      "intent": "In 2019, which Chicago library branches were in the top 3 by total reserved public-computer time slots (each at most 60 minutes)?",
+      "sql": "WITH totals AS (\n  SELECT trim(\"LOCATION\") AS branch,\n         SUM(TRY_CAST(replace(CAST(\"YTD\" AS VARCHAR), ',', '') AS DOUBLE)) AS total\n  FROM t\n  WHERE trim(COALESCE(CAST(\"ADDRESS\" AS VARCHAR), '')) <> ''\n    AND trim(COALESCE(CAST(\"LOCATION\" AS VARCHAR), '')) <> ''\n  GROUP BY branch\n)\nSELECT branch AS answer\nFROM totals\nORDER BY total DESC, branch ASC\nLIMIT 3",
+      "answer": [
+        "HAROLD WASHINGTON LIBRARY CENTER",
+        "Woodson Regional Library",
+        "Sulzer Regional Library"
+      ]
+    },
+    {
+      "node_id": "5",
+      "dataset_id": "libraries-2020-computer-sessions-by-location",
+      "source": "datagov/libraries-2020-computer-sessions-by-location/files/rows.txt",
+      "intent": "In 2020, which Chicago library branches were in the top 3 by total reserved public-computer time slots (each at most 60 minutes)?",
+      "sql": "WITH totals AS (\n  SELECT trim(\"BRANCH\") AS branch,\n         SUM(TRY_CAST(replace(CAST(\"YTD\" AS VARCHAR), ',', '') AS DOUBLE)) AS total\n  FROM t\n  WHERE trim(COALESCE(CAST(\"ADDRESS\" AS VARCHAR), '')) <> ''\n    AND trim(COALESCE(CAST(\"BRANCH\" AS VARCHAR), '')) <> ''\n  GROUP BY branch\n)\nSELECT branch AS answer\nFROM totals\nORDER BY total DESC, branch ASC\nLIMIT 3",
+      "answer": [
+        "Harold Washington Library Center",
+        "Woodson Regional Library",
+        "Sulzer Regional Library"
+      ]
+    },
+    {
+      "node_id": "6",
+      "dataset_id": "libraries-2021-computer-sessions-by-location",
+      "source": "datagov/libraries-2021-computer-sessions-by-location/files/rows.txt",
+      "intent": "In 2021, which Chicago library branches were in the top 3 by total reserved public-computer time slots (each at most 60 minutes)?",
+      "sql": "WITH totals AS (\n  SELECT trim(\"BRANCH\") AS branch,\n         SUM(TRY_CAST(replace(CAST(\"YTD\" AS VARCHAR), ',', '') AS DOUBLE)) AS total\n  FROM t\n  WHERE trim(COALESCE(CAST(\"ADDRESS\" AS VARCHAR), '')) <> ''\n    AND trim(COALESCE(CAST(\"BRANCH\" AS VARCHAR), '')) <> ''\n  GROUP BY branch\n)\nSELECT branch AS answer\nFROM totals\nORDER BY total DESC, branch ASC\nLIMIT 3",
+      "answer": [
+        "Harold Washington Library Center",
+        "Woodson Regional Library",
+        "Sulzer Regional Library"
+      ]
+    }
   ]
 }

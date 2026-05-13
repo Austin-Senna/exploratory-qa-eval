@@ -41,5 +41,6 @@
     "  Computation: (130 + 12) - (19 + 14) = 109.",
     "",
     "Final answer: 109"
-  ]
+  ],
+  "ideal_code": []
 }

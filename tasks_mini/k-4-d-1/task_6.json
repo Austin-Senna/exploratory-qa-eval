@@ -10,19 +10,19 @@
     },
     "2": {
       "source": "datagov/pittsburgh-international-airport-scheduled-passenger-traffic/files/pittsburgh-international-traffic-report-march-2019.txt",
-      "fact": "In the March 2019 Pittsburgh International scheduled traffic report, Atlanta (ATL) has 44,912 total seats, the highest of any destination (next highest is Chicago O'Hare with 35,699).",
+      "fact": "import csv\nfrom collections import defaultdict\n\nwith open('datagov/pittsburgh-international-airport-scheduled-passenger-traffic/files/pittsburgh-international-traffic-report-march-2019.txt', 'r', encoding='utf-8', newline='') as f:\n    rows = list(csv.DictReader(f))\n\ntotals = defaultdict(float)\nnames = {}\nfor r in rows:\n    code = (r.get('Destination Code') or '').strip()\n    dest = (r.get('Destination') or '').strip()\n    if not code:\n        continue\n    try:\n        seats = float((r.get('Seats March 2019') or '').replace(',', '').strip())\n    except (TypeError, ValueError):\n        continue\n    totals[code] += seats\n    names[code] = dest\n\ncode, _ = sorted(totals.items(), key=lambda x: (-x[1], x[0]))[0]\nresult = f\"{names[code]} ({code})\"",
       "subquestion": "For Pittsburgh International Airport, which destination had the most scheduled seats in March 2019? (Filter for this node: group by Destination Code; sum Seats March 2019; select max.)",
       "answer": "Atlanta (ATL)"
     },
     "3": {
       "source": "datagov/airports-5e97a/files/rows.txt",
-      "fact": "In the airports dataset, the entry with Loc_Id ATL lists City ATLANTA and State_Post GA (Hartsfield - Jackson Atlanta Intl).",
+      "fact": "import csv\n\nwith open('datagov/airports-5e97a/files/rows.txt', 'r', encoding='utf-8', newline='') as f:\n    rows = list(csv.DictReader(f))\n\nresult = None\nfor r in rows:\n    if (r.get('Loc_Id') or '').strip().upper() == 'ATL':\n        city = (r.get('City') or '').strip().title()\n        state = (r.get('State_Post') or '').strip().upper()\n        result = f\"{city}, {state}\"\n        break",
       "subquestion": "In the airports dataset, what city and state correspond to the destination airport code from hop 2? (Filter for this node: Loc_Id == <destination code from hop 2>; read City and State_Post.)",
       "answer": "Atlanta, GA"
     },
     "4": {
       "source": "datagov/boundaries-us-zip-codes/files/rows.txt",
-      "fact": "In the boundaries-us-zip-codes dataset, among ZIP codes with CITY = Atlanta and STATE = GA, ZIP 30349 has the largest land area (SQMI 45.68).",
+      "fact": "import csv\n\nwith open('datagov/boundaries-us-zip-codes/files/rows.txt', 'r', encoding='utf-8', newline='') as f:\n    rows = list(csv.DictReader(f))\n\nareas = []\nfor r in rows:\n    city = (r.get('CITY') or '').strip().upper()\n    state = (r.get('STATE') or '').strip().upper()\n    if city != 'ATLANTA' or state != 'GA':\n        continue\n    try:\n        sqmi = float((r.get('SQMI') or '').strip())\n    except (TypeError, ValueError):\n        continue\n    areas.append(sqmi)\n\nresult = f\"{max(areas):.2f}\" if areas else None",
       "subquestion": "In the ZIP code boundaries dataset, what is the largest land area (SQMI) among ZIP codes in the city and state from hop 3? (Filter for this node: CITY == Atlanta; STATE == GA; rank by SQMI; return max SQMI.)",
       "answer": "45.68"
     }

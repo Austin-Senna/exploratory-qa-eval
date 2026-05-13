@@ -41,5 +41,6 @@
     "  Computation: (2249 + 206) - (745 + 419) = 1291.",
     "",
     "Final answer: 1291"
-  ]
+  ],
+  "ideal_code": []
 }

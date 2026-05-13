@@ -45,5 +45,6 @@
     "HOP 3 (d=1, Wikipedia - node 7 depends on node 6):",
     "  Node 7: The average household income in Montgomery County is the 20th-highest among U.S. counties as of 2020.",
     "  Final answer: 20"
-  ]
+  ],
+  "ideal_code": []
 }

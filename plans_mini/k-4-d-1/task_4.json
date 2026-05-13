@@ -22,5 +22,7 @@
     "Node 3 depends on node 2: Find Virginia county -> Accomack County",
     "Node 4 depends on node 3: Find largest town in Accomack County -> Chincoteague",
     "Final answer: Chincoteague"
-  ]
+  ],
+  "ideal_code": [],
+  "ideal_query": []
 }

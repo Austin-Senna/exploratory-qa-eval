@@ -4,7 +4,7 @@
   "nodes": {
     "1": {
       "source": "datagov/parking-violations-issued-in-january-2019/files/data.txt",
-      "fact": "According to the January 2019 DC parking violations dataset, the top 20 issuing agencies by total fine amount were: DEPARTMENT OF PUBLIC WORKS ($4,954,065.00), METROPOLITAN POLICE DPT-DISTRICT 2 ($77,631.00), METROPOLITAN POLICE DPT-DISTRICT 1 ($63,915.00), METROPOLITAN POLICE DPT-DISTRICT 4 ($59,570.00), METROPOLITAN POLICE DPT-DISTRICT 5 ($47,620.00), METROPOLITAN POLICE DPT-DISTRICT 7 ($47,050.00), D.C. HOUSING AUTHORITY ($45,080.00), METROPOLITAN POLICE DPT-DISTRICT 3 ($44,695.00), METROPOLITAN POLICE DPT-DISTRICT 6 ($28,595.00), SPECIAL OPERATION DIV & TRAFFIC DIV ($20,030.00), UNITED STATES CAPITOL POLICE ($15,230.00), METRO POLICE ($12,690.00), DDOT ($12,095.00), PROTECTIVE SERVICES DEPT (DC GOVT) ($9,760.00), SPECIAL INSPECTION DIVISION ($5,550.00), MPD RESERVE CORPS ($4,620.00), UNVRSTY OF THE D.C. SECURITY POLICE ($3,510.00), TAXI COMMISSION ($2,700.00), US. SECRET SERVICE UNIFORM DIVISION ($2,695.00), and UNITED STATES PARK POLICE ($2,245.00).",
+      "fact": "import json\nfrom collections import defaultdict\n\nwith open('datagov/parking-violations-issued-in-january-2019/files/data.txt', 'r', encoding='utf-8') as f:\n    obj = json.load(f)\n\ntotals = defaultdict(float)\nfor feature in obj.get('features', []):\n    props = feature.get('properties') or {}\n    agency = (props.get('ISSUING_AGENCY_NAME') or '').strip()\n    if not agency:\n        continue\n    try:\n        fine = float(props.get('FINE_AMOUNT') or 0)\n    except (TypeError, ValueError):\n        continue\n    totals[agency] += fine\n\nranked = sorted(totals.items(), key=lambda x: (-x[1], x[0]))[:20]\nresult = [agency for agency, _ in ranked]",
       "subquestion": "Which agencies were in the top 20 for total January parking-violation fine amount in 2019-2021? (Filter for this node: group by ISSUING_AGENCY_NAME; sum FINE_AMOUNT; rank desc; take top 20.)",
       "answer": [
         "DEPARTMENT OF PUBLIC WORKS",
@@ -31,7 +31,7 @@
     },
     "2": {
       "source": "datagov/parking-violations-issued-in-january-2020/files/data.txt",
-      "fact": "According to the January 2020 DC parking violations dataset, the top 20 issuing agencies by total fine amount were: DEPARTMENT OF PUBLIC WORKS ($6,756,190.00), METROPOLITAN POLICE DPT-DISTRICT 2 ($114,810.00), D.C. HOUSING AUTHORITY ($77,480.00), METROPOLITAN POLICE DPT-DISTRICT 6 ($77,190.00), METROPOLITAN POLICE DPT-DISTRICT 7 ($61,545.00), METROPOLITAN POLICE DPT-DISTRICT 4 ($56,485.00), DDOT ($48,580.00), METROPOLITAN POLICE DPT-DISTRICT 3 ($46,520.00), METROPOLITAN POLICE DPT-DISTRICT 1 ($46,310.00), METROPOLITAN POLICE DPT-DISTRICT 5 ($42,185.00), METRO POLICE ($42,180.00), SPECIAL OPERATION DIV & TRAFFIC DIV ($24,190.00), UNITED STATES PARK POLICE ($15,585.00), UNITED STATES CAPITOL POLICE ($7,595.00), TAXI COMMISSION ($7,370.00), SPECIAL INSPECTION DIVISION ($6,500.00), PROTECTIVE SERVICES DEPT (DC GOVT) ($4,575.00), US. SECRET SERVICE UNIFORM DIVISION ($2,665.00), BOLLING AFB ($1,840.00), and US. GOVERNMENT PRINTING OFFICE ($1,550.00).",
+      "fact": "import json\nfrom collections import defaultdict\n\nwith open('datagov/parking-violations-issued-in-january-2020/files/data.txt', 'r', encoding='utf-8') as f:\n    obj = json.load(f)\n\ntotals = defaultdict(float)\nfor feature in obj.get('features', []):\n    props = feature.get('properties') or {}\n    agency = (props.get('ISSUING_AGENCY_NAME') or '').strip()\n    if not agency:\n        continue\n    try:\n        fine = float(props.get('FINE_AMOUNT') or 0)\n    except (TypeError, ValueError):\n        continue\n    totals[agency] += fine\n\nranked = sorted(totals.items(), key=lambda x: (-x[1], x[0]))[:20]\nresult = [agency for agency, _ in ranked]",
       "subquestion": "Which agencies were in the top 20 for total January parking-violation fine amount in 2019-2021? (Filter for this node: group by ISSUING_AGENCY_NAME; sum FINE_AMOUNT; rank desc; take top 20.)",
       "answer": [
         "DEPARTMENT OF PUBLIC WORKS",
@@ -58,7 +58,7 @@
     },
     "3": {
       "source": "datagov/parking-violations-issued-in-january-2021/files/data.txt",
-      "fact": "According to the January 2021 DC parking violations dataset, the top 20 issuing agencies by total fine amount were: DEPARTMENT OF PUBLIC WORKS ($1,055,060.00), METROPOLITAN POLICE DPT-DISTRICT 7 ($87,685.00), METROPOLITAN POLICE DPT-DISTRICT 3 ($66,435.00), METROPOLITAN POLICE DPT-DISTRICT 6 ($44,730.00), METROPOLITAN POLICE DPT-DISTRICT 1 ($38,955.00), METROPOLITAN POLICE DPT-DISTRICT 2 ($32,930.00), METROPOLITAN POLICE DPT-DISTRICT 4 ($28,740.00), METROPOLITAN POLICE DPT-DISTRICT 5 ($24,440.00), SPECIAL OPERATION DIV & TRAFFIC DIV ($16,725.00), D.C. HOUSING AUTHORITY ($16,695.00), UNITED STATES PARK POLICE ($6,340.00), METRO POLICE ($3,515.00), TAXI COMMISSION ($2,650.00), UNITED STATES CAPITOL POLICE ($1,970.00), MPD RESERVE CORPS ($1,750.00), US. SECRET SERVICE UNIFORM DIVISION ($795.00), PROTECTIVE SERVICES DEPT (DC GOVT) ($750.00), DPT. OF GENERAL SERVICES GUARDS ($555.00), US. GOVERNMENT PRINTING OFFICE ($500.00), and OTHER ($325.00).",
+      "fact": "import json\nfrom collections import defaultdict\n\nwith open('datagov/parking-violations-issued-in-january-2021/files/data.txt', 'r', encoding='utf-8') as f:\n    obj = json.load(f)\n\ntotals = defaultdict(float)\nfor feature in obj.get('features', []):\n    props = feature.get('properties') or {}\n    agency = (props.get('ISSUING_AGENCY_NAME') or '').strip()\n    if not agency:\n        continue\n    try:\n        fine = float(props.get('FINE_AMOUNT') or 0)\n    except (TypeError, ValueError):\n        continue\n    totals[agency] += fine\n\nranked = sorted(totals.items(), key=lambda x: (-x[1], x[0]))[:20]\nresult = [agency for agency, _ in ranked]",
       "subquestion": "Which agencies were in the top 20 for total January parking-violation fine amount in 2019-2021? (Filter for this node: group by ISSUING_AGENCY_NAME; sum FINE_AMOUNT; rank desc; take top 20.)",
       "answer": [
         "DEPARTMENT OF PUBLIC WORKS",
@@ -85,7 +85,7 @@
     },
     "4": {
       "source": "datagov/moving-violations-issued-in-january-2019/files/data.txt",
-      "fact": "According to the January 2019 DC moving violations dataset, for the hop 1 intersection agencies (UNITED STATES PARK POLICE, UNITED STATES CAPITOL POLICE, US. SECRET SERVICE UNIFORM DIVISION), the moving-violation counts were: UNITED STATES PARK POLICE (103), UNITED STATES CAPITOL POLICE (176), US. SECRET SERVICE UNIFORM DIVISION (145).",
+      "fact": "import json\nfrom collections import Counter\n\nagencies = [\n    'UNITED STATES PARK POLICE',\n    'UNITED STATES CAPITOL POLICE',\n    'US. SECRET SERVICE UNIFORM DIVISION',\n]\n\nwith open('datagov/moving-violations-issued-in-january-2019/files/data.txt', 'r', encoding='utf-8') as f:\n    obj = json.load(f)\n\ncounts = Counter()\nfor feature in obj.get('features', []):\n    props = feature.get('properties') or {}\n    agency = (props.get('ISSUING_AGENCY_NAME') or '').strip()\n    if agency in agencies:\n        counts[agency] += 1\n\nresult = {agency: counts[agency] for agency in agencies}",
       "subquestion": "Among the hop 1 intersection agencies that are U.S. national law-enforcement bodies (United States Park Police, United States Capitol Police, and U.S. Secret Service Uniform Division), which had the highest average number of January moving violations from 2019-2021? (Filter for this node: ISSUING_AGENCY_NAME in {UNITED STATES PARK POLICE, UNITED STATES CAPITOL POLICE, US. SECRET SERVICE UNIFORM DIVISION}; count rows by ISSUING_AGENCY_NAME.)",
       "answer": {
         "UNITED STATES PARK POLICE": 103,
@@ -95,7 +95,7 @@
     },
     "5": {
       "source": "datagov/moving-violations-issued-in-january-2020/files/data.txt",
-      "fact": "According to the January 2020 DC moving violations dataset, for the hop 1 intersection agencies (UNITED STATES PARK POLICE, UNITED STATES CAPITOL POLICE, US. SECRET SERVICE UNIFORM DIVISION), the moving-violation counts were: UNITED STATES PARK POLICE (204), UNITED STATES CAPITOL POLICE (139), US. SECRET SERVICE UNIFORM DIVISION (118).",
+      "fact": "import json\nfrom collections import Counter\n\nagencies = [\n    'UNITED STATES PARK POLICE',\n    'UNITED STATES CAPITOL POLICE',\n    'US. SECRET SERVICE UNIFORM DIVISION',\n]\n\nwith open('datagov/moving-violations-issued-in-january-2020/files/data.txt', 'r', encoding='utf-8') as f:\n    obj = json.load(f)\n\ncounts = Counter()\nfor feature in obj.get('features', []):\n    props = feature.get('properties') or {}\n    agency = (props.get('ISSUING_AGENCY_NAME') or '').strip()\n    if agency in agencies:\n        counts[agency] += 1\n\nresult = {agency: counts[agency] for agency in agencies}",
       "subquestion": "Among the hop 1 intersection agencies that are U.S. national law-enforcement bodies (United States Park Police, United States Capitol Police, and U.S. Secret Service Uniform Division), which had the highest average number of January moving violations from 2019-2021? (Filter for this node: ISSUING_AGENCY_NAME in {UNITED STATES PARK POLICE, UNITED STATES CAPITOL POLICE, US. SECRET SERVICE UNIFORM DIVISION}; count rows by ISSUING_AGENCY_NAME.)",
       "answer": {
         "UNITED STATES PARK POLICE": 204,
@@ -105,7 +105,7 @@
     },
     "6": {
       "source": "datagov/moving-violations-issued-in-january-2021/files/data.txt",
-      "fact": "According to the January 2021 DC moving violations dataset, for the hop 1 intersection agencies (UNITED STATES PARK POLICE, UNITED STATES CAPITOL POLICE, US. SECRET SERVICE UNIFORM DIVISION), the moving-violation counts were: UNITED STATES PARK POLICE (71), UNITED STATES CAPITOL POLICE (30), US. SECRET SERVICE UNIFORM DIVISION (32). Averages across 2019-2021: UNITED STATES PARK POLICE (126.0), UNITED STATES CAPITOL POLICE (115.0), US. SECRET SERVICE UNIFORM DIVISION (98.33). UNITED STATES PARK POLICE has the highest average.",
+      "fact": "import json\nfrom collections import Counter\n\nagencies = [\n    'UNITED STATES PARK POLICE',\n    'UNITED STATES CAPITOL POLICE',\n    'US. SECRET SERVICE UNIFORM DIVISION',\n]\nprior_counts = {\n    'UNITED STATES PARK POLICE': [103, 204],\n    'UNITED STATES CAPITOL POLICE': [176, 139],\n    'US. SECRET SERVICE UNIFORM DIVISION': [145, 118],\n}\n\nwith open('datagov/moving-violations-issued-in-january-2021/files/data.txt', 'r', encoding='utf-8') as f:\n    obj = json.load(f)\n\ncounts_2021 = Counter()\nfor feature in obj.get('features', []):\n    props = feature.get('properties') or {}\n    agency = (props.get('ISSUING_AGENCY_NAME') or '').strip()\n    if agency in agencies:\n        counts_2021[agency] += 1\n\naverages = {agency: (sum(prior_counts[agency]) + counts_2021[agency]) / 3 for agency in agencies}\nresult = sorted(averages.items(), key=lambda x: (-x[1], x[0]))[0][0]",
       "subquestion": "Among the hop 1 intersection agencies that are U.S. national law-enforcement bodies (United States Park Police, United States Capitol Police, and U.S. Secret Service Uniform Division), which had the highest average number of January moving violations from 2019-2021? (Filter for this node: ISSUING_AGENCY_NAME in {UNITED STATES PARK POLICE, UNITED STATES CAPITOL POLICE, US. SECRET SERVICE UNIFORM DIVISION}; count rows by ISSUING_AGENCY_NAME.)",
       "answer": "UNITED STATES PARK POLICE"
     },
@@ -134,7 +134,6 @@
   ],
   "verdict": "pass",
   "datasets_used": [
-    "National_Park_Service",
     "United_States_Park_Police",
     "moving-violations-issued-in-january-2019",
     "moving-violations-issued-in-january-2020",

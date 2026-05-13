@@ -46,5 +46,6 @@
     "  Percentage change: Harris (54,266 - 49,804) / 49,804 * 100 = 8.96%; Dallas (25,704 - 26,317) / 26,317 * 100 = -2.33%",
     "  Larger increase percentage: 8.96% -> rounded to 9",
     "  Final answer: 9"
-  ]
+  ],
+  "ideal_code": []
 }

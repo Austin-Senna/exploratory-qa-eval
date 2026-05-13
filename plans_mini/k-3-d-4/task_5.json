@@ -36,5 +36,6 @@
     "Node 7 depends on node 5: Find bridges connecting to Staten Island \u2192 {Verrazzano-Narrows, Outerbridge, Goethals, Bayonne}",
     "Intersection of <node_6>, <node_7>: Only suspension bridge connecting to Staten Island \u2192 Verrazzano-Narrows Bridge",
     "Final answer: Verrazzano-Narrows Bridge"
-  ]
+  ],
+  "ideal_code": []
 }
