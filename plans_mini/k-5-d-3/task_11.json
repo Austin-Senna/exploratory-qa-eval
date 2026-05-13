@@ -1,0 +1,58 @@
+{
+  "dataset_sequence": [
+    "crime-incidents-in-2022",
+    "crime-incidents-in-2023",
+    "crime-incidents-in-2024",
+    "street-sweeping-schedule-2022",
+    "street-sweeping-schedule-2023",
+    "street-sweeping-schedule-2024",
+    "dc-charter-schools",
+    "Sojourner_Truth",
+    "Rifton,_New_York"
+  ],
+  "source_sequence": [
+    "datagov/crime-incidents-in-2022/files/data.txt",
+    "datagov/crime-incidents-in-2023/files/data.txt",
+    "datagov/crime-incidents-in-2024/files/data.txt",
+    "datagov/street-sweeping-schedule-2022/files/data.txt",
+    "datagov/street-sweeping-schedule-2023/files/data.txt",
+    "datagov/street-sweeping-schedule-2024/files/data.txt",
+    "datagov/dc-charter-schools/files/data.txt",
+    "wikipedia/Sojourner_Truth/content.txt",
+    "wikipedia/Rifton,_New_York/content.txt"
+  ],
+  "reasoning_chain_text": [
+    "1. Among Washington, DC wards 2, 4, 5, and 6, calculate average crime-incident counts across 2022, 2023, and 2024 and keep the two wards with the highest averages.",
+    "2. Among those two wards, compare street-sweeping schedule frequency across 2022, 2023, and 2024 and keep the ward with the most frequent schedule.",
+    "3. In that ward, identify the charter school whose served grade span includes both grade 8 and grade 9 and whose name refers to a famous person.",
+    "4. Determine that famous person's birthplace.",
+    "5. Determine which county contains that birthplace and return the county name only."
+  ],
+  "original_final_question": "Among Washington, DC wards 2, 4, 5, and 6, identify the two wards with the highest average crime-incident counts from 2022 to 2024. Among those, identify the ward that had the most frequent street sweeping schedule from 2022 to 2024. In that ward, find the charter school whose serving spans grades 8 and 9, and is named after a famous person. What county is that person's birthplace located in? Please return the county only, i.e. `XX County`. Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    "HOP 1 (d=3, crime incidents 2022-2024 - nodes 1-3):",
+    "  Node 1: 2022 incidents -> Ward 2 4,794; Ward 5 4,497; Ward 6 3,685; Ward 4 2,547",
+    "  Node 2: 2023 incidents -> Ward 2 5,469; Ward 5 5,629; Ward 6 4,281; Ward 4 3,135",
+    "  Node 3: 2024 incidents -> Ward 2 4,420; Ward 5 4,585; Ward 6 3,549; Ward 4 2,595",
+    "  Average incidents (2022-2024): Ward 5 4,903.7; Ward 2 4,894.3; Ward 6 3,838.3; Ward 4 2,759.0",
+    "  Result: {Ward 5, Ward 2}",
+    "",
+    "HOP 2 (d=3, street sweeping schedule 2022-2024 - nodes 4-6):",
+    "  Node 4: 2022 schedule rows -> Ward 2 72; Ward 5 80",
+    "  Node 5: 2023 schedule rows -> Ward 2 54; Ward 5 83",
+    "  Node 6: 2024 schedule rows -> Ward 2 54; Ward 5 87",
+    "  Average schedule rows (2022-2024): Ward 5 83.3 > Ward 2 60.0",
+    "  Result: Ward 5",
+    "",
+    "HOP 3 (d=1, DC charter schools - node 7):",
+    "  Node 7: Ward 5 charter school spanning grade 8 and grade 9 -> Sojourner Truth PCS",
+    "",
+    "HOP 4 (d=1, Wikipedia Sojourner Truth - node 8):",
+    "  Node 8: Sojourner Truth born in Swartekill, New York",
+    "",
+    "HOP 5 (d=1, Wikipedia Rifton, New York - node 9):",
+    "  Node 9: Rifton (which includes the former Swartekill hamlet) is in Ulster County, New York",
+    "",
+    "Final answer: Ulster County"
+  ]
+}

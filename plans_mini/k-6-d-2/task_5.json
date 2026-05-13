@@ -1,0 +1,59 @@
+{
+  "dataset_sequence": [
+    "income-limits-by-county",
+    "california-women-infants-and-children-program-redemption-by-county-967e9",
+    "hospitalization-counts-and-rates-of-selected-adverse-hospital-events-by-california-county-67a4a",
+    "california-county-boundaries-bd0f6",
+    "Santa_Clara_County,_California",
+    "San_Jose,_California",
+    "San_Francisco_Bay"
+  ],
+  "source_sequence": [
+    "datagov/income-limits-by-county/files/2022-income-limits.txt",
+    "datagov/income-limits-by-county/files/2023-income-limits.txt",
+    "datagov/california-women-infants-and-children-program-redemption-by-county-967e9/files/wic-redemption-by-county-by-participant-category-data-2010-2018.txt",
+    "datagov/california-women-infants-and-children-program-redemption-by-county-967e9/files/2019-2020-part-b-wic-redemptions-by-vendor-county-with-family-counts.txt",
+    "datagov/hospitalization-counts-and-rates-of-selected-adverse-hospital-events-by-california-county-67a4a/files/ca-oshpd-adveventhospitalizationspsi-county2005-2015q3.txt",
+    "datagov/california-county-boundaries-bd0f6/files/California_County_Boundaries_9101614255844818638.txt",
+    "wikipedia/Santa_Clara_County,_California/content.txt",
+    "wikipedia/San_Jose,_California/content.txt",
+    "wikipedia/San_Francisco_Bay/content.txt"
+  ],
+  "reasoning_chain_text": [
+    "1. Identify California counties meeting the 2022 Area Median Income threshold, then keep the ones that also meet the 2023 threshold.",
+    "2. From the remaining counties, keep those with women, infants, and children average cost per family at or above the 2018 threshold and the 2020 threshold.",
+    "3. From the remaining counties, keep those with a 2015 perioperative hemorrhage or hematoma observed rate at or above the threshold.",
+    "4. From the remaining counties, keep those with geographical shape area of at least 3 billion square meters.",
+    "5. For the remaining county, determine its county seat.",
+    "6. Determine the bay on the southern shore of that county seat.",
+    "7. Using the bay identified in step 6, determine which ocean it connects to."
+  ],
+  "original_final_question": "Identify a specific California county seat based on a set of health and housing statistics. I'm looking for a county that had an Area Median Income of at least $142,800 in 2022 and $147,900 in 2023. In terms of assistance costs, this county should have had a women, infants and children average cost per family of $570 or more in 2018 and $700 or more in 2020. It also needs to show a 2015 perioperative hemorrhage or hematoma observed rate of 19 or higher and have a geographical shape area of at least 3 billion square meters. Once you identify the county that matches all these figures, could you tell me which ocean the bay on the southern shore of its county seat connects to? Only report that ocean. Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    "HOP 1 (d=2, data.gov intersection - nodes 1-2 independent):",
+    "  Node 1: 2022 income limits - AMI >= 142800 -> {Santa Clara, Marin, San Francisco, San Mateo, Alameda, Contra Costa}",
+    "  Node 2: 2023 income limits - AMI >= 147900 -> {Santa Clara, Marin, San Francisco, San Mateo, Alameda, Contra Costa}",
+    "  Intersection -> {Alameda, Contra Costa, Marin, San Francisco, San Mateo, Santa Clara}",
+    "",
+    "HOP 2 (d=2, data.gov filters from hop 1):",
+    "  Node 3: 2018 WIC Avg Cost per Family >= 570 -> {Alameda, Contra Costa, San Francisco, Santa Clara}",
+    "  Node 4: 2020 WIC Avg Cost per Family >= 700 -> {Alameda, San Francisco, San Mateo, Santa Clara}",
+    "  Intersection -> {Alameda, San Francisco, Santa Clara}",
+    "",
+    "HOP 3 (d=2, data.gov filters from hop 2):",
+    "  Node 5: 2015 PSI 27 ObsRate >= 19 -> {San Francisco, Santa Clara}",
+    "  Node 6: Shape__Area >= 3000000000 -> {Alameda, Santa Clara}",
+    "  Intersection -> {Santa Clara}",
+    "",
+    "HOP 4 (d=1, Wikipedia):",
+    "  Node 7: Santa Clara County seat -> San Jose",
+    "",
+    "HOP 5 (d=1, Wikipedia):",
+    "  Node 8: San Jose on southern shore of -> San Francisco Bay",
+    "",
+    "HOP 6 (d=1, Wikipedia):",
+    "  Node 9: San Francisco Bay connects to -> Pacific Ocean",
+    "",
+    "Final answer: Pacific Ocean"
+  ]
+}

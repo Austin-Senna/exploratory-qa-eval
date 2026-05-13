@@ -21,8 +21,9 @@
     "Node 2 depends on node 1: In 2020 within Ward 4, the most common offense is THEFT F/AUTO.",
     "Node 3 depends on node 2: 2021 Ward 4 incidents for THEFT F/AUTO = 996.",
     "Node 4 depends on node 1: In 2020 within Ward 4, the incident count of the most common offense = 1,070.",
-    "Compute percent of 2020 level in 2021: 996 / 1070 * 100 \u2248 93.08%.",
+    "Compute percent of 2020 level in 2021: 996 / 1070 * 100 ≈ 93.08%.",
     "Round to nearest whole percent: 93.",
     "Final answer: 93"
-  ]
+  ],
+  "ideal_code": []
 }

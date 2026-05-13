@@ -1,0 +1,51 @@
+{
+  "dataset_sequence": [
+    "school-district-office-locations-current-d848f",
+    "public-school-locations-2018-19-42360",
+    "private-school-locations-2017-18-f49f6",
+    "school-district-office-locations-2020-21-d8df0",
+    "postsecondary-school-locations-2019-20-64b31",
+    "school-district-office-locations-current-c8f9d",
+    "postsecondary-school-locations-2017-18-fa280"
+  ],
+  "source_sequence": [
+    "datagov/school-district-office-locations-current-d848f/files/nces::school-district-office-locations-current-1.txt",
+    "datagov/public-school-locations-2018-19-42360/files/data.txt",
+    "datagov/private-school-locations-2017-18-f49f6/files/data-dqdQDP.txt",
+    "datagov/school-district-office-locations-2020-21-d8df0/files/data-UDaCeM.txt",
+    "datagov/postsecondary-school-locations-2019-20-64b31/files/data-cbxYz6.txt",
+    "datagov/public-school-locations-2018-19-42360/files/data.txt",
+    "datagov/private-school-locations-2017-18-f49f6/files/data-dqdQDP.txt",
+    "datagov/school-district-office-locations-current-c8f9d/files/data.txt",
+    "datagov/postsecondary-school-locations-2017-18-fa280/files/data.txt"
+  ],
+  "reasoning_chain_text": [
+    "1. Filter school district office listings to CITY='Iowa City' and NMCNTY='Johnson County' to determine the two-digit state FIPS code.",
+    "2. Within that state, rank counties separately by public schools, private schools, and school district offices, and keep the top three counties from each ranking.",
+    "3. Intersect the three top-three county sets, then select the remaining county with the highest postsecondary institution count.",
+    "4. For that selected county, determine the counts of public schools, private schools, school district offices, and postsecondary institutions from the corresponding count listings.",
+    "5. Add those four counts and report the integer total."
+  ],
+  "original_final_question": "Using the school district office listings for CITY='Iowa City' and NMCNTY='Johnson County', determine the two-digit state FIPS code. In that state, find the counties that rank in the top three for public schools, private schools, and school district offices; among their intersection, select the county with the most postsecondary institutions. For that county, compute the total number of public schools, private schools, district offices, and postsecondary institutions. Only report the integer total. Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    "HOP 1 (d=1, State FIPS lookup - node 1):",
+    "  Node 1: CITY='Iowa City' and NMCNTY='Johnson County' share STFIP 19.",
+    "",
+    "HOP 2 (d=3, County top counts - nodes 2-4):",
+    "  Node 2: For STFIP=19, the top 3 counties by public schools are Polk, Linn, and Scott.",
+    "  Node 3: For STFIP=19, the top 3 counties by private schools are Polk, Linn, and Sioux.",
+    "  Node 4: For STFIP=19, the top 3 counties by school district offices are Linn, Polk, and Pottawattamie.",
+    "",
+    "HOP 3 (d=4, Postsecondary selection - node 5):",
+    "  Node 5: The candidate counties are Linn and Polk; Polk County has the most postsecondary institutions (11).",
+    "",
+    "HOP 4 (d=4, County counts and arithmetic - nodes 6-9):",
+    "  Node 6: Polk County public schools = 130.",
+    "  Node 7: Polk County private schools = 19.",
+    "  Node 8: Polk County school district offices = 12.",
+    "  Node 9: Polk County postsecondary institutions = 14.",
+    "  Computation: 130 + 19 + 12 + 14 = 175.",
+    "",
+    "Final answer: 175"
+  ]
+}

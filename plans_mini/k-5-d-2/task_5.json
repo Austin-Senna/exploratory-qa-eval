@@ -1,0 +1,51 @@
+{
+  "dataset_sequence": [
+    "ocs-1-1-abuse-neglect-related-texas-child-fatalities-fy2013-fy2022",
+    "ocs-1-2-non-abuse-neglect-related-texas-child-fatality-investigations-fy2013-fy2022",
+    "nchs-drug-poisoning-mortality-by-county-united-states",
+    "nchs-drug-poisoning-mortality-by-county-united-states-20278",
+    "Victoria_County,_Texas",
+    "Victoria,_Texas",
+    "Guadalupe_River_(Texas)"
+  ],
+  "source_sequence": [
+    "datagov/ocs-1-1-abuse-neglect-related-texas-child-fatalities-fy2013-fy2022/files/rows.txt",
+    "datagov/ocs-1-2-non-abuse-neglect-related-texas-child-fatality-investigations-fy2013-fy2022/files/rows.txt",
+    "datagov/nchs-drug-poisoning-mortality-by-county-united-states/files/rows.txt",
+    "datagov/nchs-drug-poisoning-mortality-by-county-united-states-20278/files/rows.txt",
+    "wikipedia/Victoria_County,_Texas/content.txt",
+    "wikipedia/Victoria,_Texas/content.txt",
+    "wikipedia/Guadalupe_River_(Texas)/content.txt"
+  ],
+  "reasoning_chain_text": [
+    "1. Among the named Texas counties, identify those with at least one abuse- or neglect-related child fatality between 2018 and 2022.",
+    "2. Among the named Texas counties, identify those with at least three non-abuse or non-neglect child fatality investigations between 2018 and 2022, then keep counties also found in step 1.",
+    "3. For the remaining counties, identify the top two by 2021 model-based drug-poisoning death rate.",
+    "4. For the remaining counties, identify the bottom two by 2016 age-adjusted rate category, then keep the county also found in step 3.",
+    "5. Determine that county's county seat.",
+    "6. Determine the river along which that county seat lies.",
+    "7. Return the bay into which that river flows."
+  ],
+  "original_final_question": "Among Brooks, Willacy, Comal, Atascosa, and Victoria counties in Texas, keep those with at least one abuse/neglect-related child fatality and at least three non-abuse/neglect child fatality investigations between 2018 and 2022. From the remaining counties, find the one that is both in the top two for 2021 model-based drug poisoning death rates and in the bottom two for 2016 age-adjusted rate categories. Identify that county's seat, then the river it lies along, and finally the bay the river flows into. What is the bay's name? Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    "HOP 1 (d=2, Texas child fatality datasets - nodes 1-2):",
+    "  Node 1: Abuse/neglect fatalities 2018-2022 -> >=1: {Brooks, Willacy, Comal, Victoria}",
+    "  Node 2: Non-abuse/neglect investigations 2018-2022 -> >=3: {Willacy, Comal, Atascosa, Victoria}",
+    "  Intersection -> {Willacy, Comal, Victoria}",
+    "",
+    "HOP 2 (d=2, drug poisoning mortality - nodes 3-4):",
+    "  Node 3: 2021 model-based death rates -> highest two {Victoria, Comal}",
+    "  Node 4: 2016 age-adjusted categories -> lowest two {Willacy, Victoria}",
+    "  Intersection -> {Victoria}",
+    "",
+    "HOP 3 (d=1, Victoria County Wikipedia - node 5):",
+    "  Node 5: Victoria County seat -> Victoria",
+    "",
+    "HOP 4 (d=1, Victoria Wikipedia - node 6):",
+    "  Node 6: Victoria lies along the Guadalupe River",
+    "",
+    "HOP 5 (d=1, Guadalupe River Wikipedia - node 7):",
+    "  Node 7: Guadalupe River runs to San Antonio Bay",
+    "  Final answer: San Antonio Bay"
+  ]
+}

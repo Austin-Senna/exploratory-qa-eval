@@ -1,0 +1,55 @@
+{
+  "dataset_sequence": [
+    "campgrounds-by-county-outside-adirondack-catskill-forest-preserve",
+    "farmers-markets-in-new-york-state",
+    "biodiversity-by-county-distribution-of-animals-plants-and-natural-communities",
+    "state-park-annual-attendance-figures-by-facility-beginning-2003",
+    "lottery-aid-to-education-beginning-2002",
+    "Jefferson_County,_New_York",
+    "Tompkins_County,_New_York",
+    "index-violent-property-and-firearm-rates-by-county-beginning-1990",
+    "Watertown,_New_York"
+  ],
+  "source_sequence": [
+    "datagov/campgrounds-by-county-outside-adirondack-catskill-forest-preserve/files/rows.txt",
+    "datagov/farmers-markets-in-new-york-state/files/rows.txt",
+    "datagov/biodiversity-by-county-distribution-of-animals-plants-and-natural-communities/files/rows.txt",
+    "datagov/state-park-annual-attendance-figures-by-facility-beginning-2003/files/rows.txt",
+    "datagov/lottery-aid-to-education-beginning-2002/files/rows.txt",
+    "wikipedia/Jefferson_County,_New_York/content.txt",
+    "wikipedia/Tompkins_County,_New_York/content.txt",
+    "datagov/index-violent-property-and-firearm-rates-by-county-beginning-1990/files/rows.txt",
+    "wikipedia/Watertown,_New_York/content.txt"
+  ],
+  "reasoning_chain_text": [
+    "1. Identify New York counties outside the Adirondack and Catskill preserves that have at least 3 qualifying state-park-related public amenity sites, at least 6 farmers markets, and at least 40 endangered species.",
+    "2. From the counties retained in step 1, keep those with 2019 state park attendance between 800,000 and 2 million and 2020 lottery aid for education between $10 million and $35 million.",
+    "3. For the two counties from step 2, determine each county seat.",
+    "4. Compare the 2020 violent crime counts for the two counties and keep the county with the higher count.",
+    "5. Using the county seat for the county kept in step 4, determine the year the historic Paddock Arcade was built and return that year."
+  ],
+  "original_final_question": "I'm researching upstate New York counties (excluding New York City and the Adirondack/Catskill preserves) that strike a balance between conservation and public amenities. Specifically, I'm looking for the two counties that each have at least 3 state parks, 6 farmers markets, and 40 endangered species, while also recording between 800,000 and 2 million state park visitors in 2019 and receiving $10M-$35M in lottery aid for education in 2020. For the county among these two with the higher 2020 violent crime count, in what year was the historic Paddock Arcade built in its county seat?. Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    "HOP 1 (d=5, data.gov intersection - nodes 1-5 all independent):",
+    "  Node 1: State parks >=3 (outside preserves) \u2192 {Jefferson (13), St. Lawrence (5), Tompkins (3), Suffolk (3), Otsego (3), Cayuga (3)}",
+    "  Node 2: Farmers markets >=6 \u2192 {Monroe (68), Erie (37), Nassau (20), ..., Jefferson (6), Tompkins (7), ... 36 Non-NYC counties total}",
+    "  Node 3: Endangered species >=40 \u2192 {Suffolk (165), Nassau (100), ..., Jefferson (48), Tompkins (56), ... 26 Non-NYC counties total}",
+    "  Node 4: Park attendance 800K-2M in 2019 \u2192 {Tompkins (1,627,981), Cattaraugus (1,521,210), Rockland (1,215,455), Erie (1,157,497), Schuyler (1,037,138), Jefferson (951,816), Livingston/Wyoming (841,681)}",
+    "  Node 5: Lottery aid $10M-$35M in 2019-2020 \u2192 {Chautauqua ($34.57M), ..., Jefferson ($30.81M), ..., Tompkins ($13.95M), ... 29 counties total}",
+    "  Intersection(1,2,3,4,5) \u2192 {Jefferson, Tompkins}",
+    "",
+    "HOP 2 (d=2, Wikipedia - nodes 6-7 BOTH depend on Hop 1 intersection):",
+    "  Node 6: Jefferson County Wikipedia \u2192 county seat is Watertown",
+    "  Node 7: Tompkins County Wikipedia \u2192 county seat is Ithaca",
+    "  Result: {Watertown, Ithaca} - the county seats of the two qualifying counties",
+    "",
+    "HOP 3 (d=1, data.gov comparative - node 8 compares both counties from same dataset):",
+    "  Node 8: Violent crimes 2020 (from rates dataset) \u2192 Jefferson (278) vs Tompkins (170)",
+    "  Comparative: 278 > 170 \u2192 Jefferson has more violent crimes \u2192 county seat is Watertown",
+    "",
+    "HOP 4 (d=1, Wikipedia - node 9 depends on Hop 3 comparative result):",
+    "  Node 9: Watertown was incorporated as a village in 1816. In 1869, it reincorporated as a city.",
+    "",
+    "Final answer: 1850"
+  ]
+}

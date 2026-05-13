@@ -1,0 +1,32 @@
+{
+  "dataset_sequence": [
+    "Austin,_Texas",
+    "apd-computer-aided-dispatch-incidents",
+    "apd-use-of-force",
+    "apd-searches-by-type",
+    "apd-complaints-by-sector"
+  ],
+  "source_sequence": [
+    "wikipedia/Austin,_Texas/content.txt",
+    "datagov/apd-computer-aided-dispatch-incidents/files/rows.txt",
+    "datagov/apd-use-of-force/files/rows.txt",
+    "datagov/apd-searches-by-type/files/rows.txt",
+    "datagov/apd-complaints-by-sector/files/rows.txt"
+  ],
+  "reasoning_chain_text": [
+    "1. Establish the Austin, Texas context for the police-activity datasets.",
+    "2. For 2023, identify the patrol sector with the highest volume of computer-aided dispatch incidents.",
+    "3. Within the sector from step 2, identify the city council district with the most use-of-force incidents in 2023.",
+    "4. For the council district from step 3, identify the sector that conducted the most searches in 2023.",
+    "5. Determine how many total complaints were filed against the sector from step 4 in 2024 and return that number."
+  ],
+  "original_final_question": "I'm analyzing police activity in Austin, Texas. For 2023, I need to know which patrol sector had the highest volume of computer-aided dispatch incidents. Within that sector, which city council district recorded the most use-of-force incidents? Finally, for that specific council district, which sector conducted the most searches in 2023, and how many total complaints were filed against that sector in 2024? Only report the number of total complaints. Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    "Node 1: Austin is the capital of Texas.",
+    "Node 2 depends on node 1: In 2023 CAD incidents, the top sector is Edward.",
+    "Node 3 depends on node 2: In 2023 use-of-force within Edward, the top council district is 4.",
+    "Node 4 depends on node 3: In 2023 searches within district 4, the top sector is Edward.",
+    "Node 5 depends on node 4: In 2024 complaints-by-sector, Edward has 52 complaints.",
+    "Final answer: 52"
+  ]
+}

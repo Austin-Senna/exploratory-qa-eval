@@ -11,7 +11,7 @@
     "datagov/arrest-data-from-2010-to-2019/files/rows.txt",
     "datagov/lapd-ripa-ab-953-stop-incident-details-from-7-1-2018-to-present/files/rows.txt",
     "datagov/crime-data-from-2020-to-present/files/rows.txt",
-    "datagov/public-school-locations-current-23297/files/data.txt"
+    "datagov/public-school-locations-current-23297/files/data-oyCYxF.txt"
   ],
   "reasoning_chain_text": [
     "1. Identify the LAPD area associated with the division that covers Echo Park and Silver Lake.",

@@ -1,0 +1,47 @@
+{
+  "dataset_sequence": [
+    "San_Antonio",
+    "San_Antonio_Spurs",
+    "New_York_Knicks",
+    "Manhattan",
+    "hate-crimes-by-county-and-bias-type-beginning-2010",
+    "index-violent-property-and-firearm-rates-by-county-beginning-1990"
+  ],
+  "source_sequence": [
+    "wikipedia/San_Antonio/content.txt",
+    "wikipedia/San_Antonio_Spurs/content.txt",
+    "wikipedia/New_York_Knicks/content.txt",
+    "wikipedia/Manhattan/content.txt",
+    "datagov/hate-crimes-by-county-and-bias-type-beginning-2010/files/rows.txt",
+    "datagov/index-violent-property-and-firearm-rates-by-county-beginning-1990/files/rows.txt"
+  ],
+  "reasoning_chain_text": [
+    "1. Identify the NBA champion team based in San Antonio.",
+    "2. Determine which team it defeated in its first NBA Finals win.",
+    "3. Determine where that opponent team is based and map that place to its county.",
+    "4. In 2020 hate-crime records for that county, count reported hate crime incidents.",
+    "5. In 2020 county crime records for the same county, determine the firearm crime count.",
+    "6. Return the absolute difference between the firearm crime count and the hate crime incident count."
+  ],
+  "original_final_question": "The NBA champion team based in San Antonio won its first NBA Finals against another team. Find the county that `another` team is based in. In 2020, what is the absolute difference between firearm crimes and hate crime incidents reported in that county? Only report the number in your answer. Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    "HOP 1 (d=1, Wikipedia San_Antonio - node 1):",
+    "  Node 1: Five-time NBA champion team based in San Antonio -> San Antonio Spurs",
+    "",
+    "HOP 2 (d=1, Wikipedia San_Antonio_Spurs - node 2):",
+    "  Node 2: Team Spurs defeated in first Finals (1999) -> New York Knicks",
+    "",
+    "HOP 3 (d=1, Wikipedia New_York_Knicks - node 3):",
+    "  Node 3: Knicks are based in Manhattan",
+    "",
+    "HOP 4 (d=1, Wikipedia Manhattan - node 4):",
+    "  Node 4: Manhattan is coextensive with New York County",
+    "",
+    "HOP 5 (d=2, NY data.gov hate crimes + index crimes 2020 - nodes 5-6):",
+    "  Node 5: New York County 2020 hate crime incidents -> 82",
+    "  Node 6: New York County 2020 firearm crimes -> 898",
+    "  Computation: |898 - 82| = 816",
+    "",
+    "Final answer: 816"
+  ]
+}

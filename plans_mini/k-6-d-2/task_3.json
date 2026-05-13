@@ -1,0 +1,55 @@
+{
+  "dataset_sequence": [
+    "county-mental-health-profiles-phase-2-beginning-2014",
+    "Erie_County,_New_York",
+    "Monroe_County,_New_York",
+    "Buffalo,_New_York",
+    "Rochester,_New_York",
+    "Erie_Canal",
+    "Albany,_New_York",
+    "index-violent-property-and-firearm-rates-by-county-beginning-1990"
+  ],
+  "source_sequence": [
+    "datagov/county-mental-health-profiles-phase-2-beginning-2014/files/rows.txt",
+    "wikipedia/Erie_County,_New_York/content.txt",
+    "wikipedia/Monroe_County,_New_York/content.txt",
+    "wikipedia/Buffalo,_New_York/content.txt",
+    "wikipedia/Rochester,_New_York/content.txt",
+    "wikipedia/Erie_Canal/content.txt",
+    "wikipedia/Albany,_New_York/content.txt",
+    "datagov/index-violent-property-and-firearm-rates-by-county-beginning-1990/files/rows.txt"
+  ],
+  "reasoning_chain_text": [
+    "1. Excluding New York City counties, identify the top two New York counties by total mental health service recipients across 2017 and 2018.",
+    "2. For the two counties from step 1, determine each county seat.",
+    "3. For those county seats, determine each city's incorporation year and identify the earlier-incorporated city.",
+    "4. Determine the canal for which the city from step 3 is a terminus, then identify the city at the canal's other terminus.",
+    "5. Determine the county containing the other-terminus city from step 4.",
+    "6. Return the 2018 violent crime rate per 100,000 population for that county."
+  ],
+  "original_final_question": "Among New York counties outside of NYC, identify the top two by total mental health service recipients from 2017 to 2018. The county seat with the earlier incorporation date between these two is located at the terminus of a canal. What was the 2018 violent crime rate per 100,000 population in the county that contains the city at this canal's other terminus? Please return the numeric rate only. Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    "HOP 1 (d=1): Identify top 2 non-NYC NY counties by total mental health service recipients (2017-2018)",
+    "  Node 1: Mental health data -> Erie County (83,049 recipients) and Monroe County (74,299 recipients)",
+    "  Result: {Erie County, Monroe County}",
+    "HOP 2 (d=2): Find county seats of both counties from hop 1",
+    "  Node 2: Erie County -> Buffalo",
+    "  Node 3: Monroe County -> Rochester",
+    "  Result: {Buffalo, Rochester}",
+    "HOP 3 (d=2): Find incorporation years of cities from hop 2 and determine which is older; identify the canal",
+    "  Node 4: Buffalo -> Erie Canal terminus; incorporated 1832",
+    "  Node 5: Rochester -> incorporated 1834",
+    "  Comparison: 1832 < 1834 -> Buffalo is older",
+    "  Result: Buffalo is older; Erie Canal",
+    "HOP 4 (d=1): Find the eastern terminus of the Erie Canal from hop 3",
+    "  Node 6: Erie Canal -> other terminus is Albany",
+    "  Result: Albany",
+    "HOP 5 (d=1): Find what county Albany is in",
+    "  Node 7: Albany -> county seat of Albany County",
+    "  Result: Albany County",
+    "HOP 6 (d=1): Find violent crime rate for Albany County in 2018",
+    "  Node 8: Albany County -> 359.8 per 100,000 in 2018",
+    "  Result: 359.8",
+    "Final answer: Albany County; 359.8"
+  ]
+}

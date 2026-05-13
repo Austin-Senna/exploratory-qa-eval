@@ -1,0 +1,48 @@
+{
+  "dataset_sequence": [
+    "Khan_Lab_School",
+    "Mountain_View,_California",
+    "school-district-office-locations-current-d848f",
+    "public-school-locations-current-23297",
+    "private-school-locations-current-f7d96",
+    "school-district-office-locations-2022-23",
+    "postsecondary-school-locations-2022-23"
+  ],
+  "source_sequence": [
+    "wikipedia/Khan_Lab_School/content.txt",
+    "wikipedia/Mountain_View,_California/content.txt",
+    "datagov/school-district-office-locations-current-d848f/files/nces::school-district-office-locations-current-1.txt",
+    "datagov/public-school-locations-current-23297/files/data-oyCYxF.txt",
+    "datagov/private-school-locations-current-f7d96/files/data-FGgJBu.txt",
+    "datagov/school-district-office-locations-2022-23/files/data-8V0eVK.txt",
+    "datagov/postsecondary-school-locations-2022-23/files/data-sh56Ar.txt"
+  ],
+  "reasoning_chain_text": [
+    "1. Determine the city where Khan Lab School is located.",
+    "2. Determine the county containing that city.",
+    "3. Using school district office listings for that city and county, determine the shared two-digit state FIPS code.",
+    "4. In that state, identify the top three counties by public-school count, private-school count, and school-district-office count.",
+    "5. Intersect those county sets, compare postsecondary institution counts for the intersected counties, and return the smaller count."
+  ],
+  "original_final_question": "Khan Lab School is located in a city and county. Using school district office listings for that city and county, determine the two-digit state FIPS code. In that state, find the counties that rank in the top three for public schools, private schools, and school district offices; among their intersection, what is the smaller of the postsecondary institution counts? Only report the number. Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    "HOP 1 (d=1, Wikipedia Khan_Lab_School - node 1):",
+    "  Node 1: Khan Lab School is an independent school in Mountain View, California.",
+    "",
+    "HOP 2 (d=1, Wikipedia Mountain_View,_California - node 2):",
+    "  Node 2: Mountain View is a city in Santa Clara County, California, United States.",
+    "",
+    "HOP 3 (d=1, State FIPS lookup - node 3):",
+    "  Node 3: CITY='Mountain View' and NMCNTY='Santa Clara County' share STFIP 06.",
+    "",
+    "HOP 4 (d=3, County top counts - nodes 4-6):",
+    "  Node 4: For STFIP=06, the top 3 counties by public schools are Los Angeles, San Diego, and Orange.",
+    "  Node 5: For STFIP=06, the top 3 counties by private schools are Los Angeles, Orange, and San Diego.",
+    "  Node 6: For STFIP=06, the top 3 counties by school district offices are Los Angeles, San Diego, and San Bernardino.",
+    "",
+    "HOP 5 (d=4, Postsecondary counts - node 7):",
+    "  Node 7: The intersection yields Los Angeles and San Diego; postsecondary counts are 206 and 71, so the smaller count is 71.",
+    "",
+    "Final answer: 71"
+  ]
+}

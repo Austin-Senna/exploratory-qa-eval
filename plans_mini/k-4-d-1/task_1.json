@@ -13,7 +13,7 @@
   ],
   "reasoning_chain_text": [
     "1. In 2019 LAPD arrest records, identify the geo area with the most Moving Traffic Violations arrests.",
-    "2. Determine the numeric Area ID corresponding to that geo area in LAPD stop-incident records.",
+    "2. Determine the numeric Area ID corresponding to that geo area.",
     "3. For that Area ID, identify the most common 2019 crime description.",
     "4. For the same Area ID and crime description, count 2020 incidents, then find the 2021 crime-description count that is the smallest value greater than the 2020 count."
   ],

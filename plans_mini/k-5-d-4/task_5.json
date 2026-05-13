@@ -1,0 +1,62 @@
+{
+  "dataset_sequence": [
+    "child-and-adult-care-food-programs-cacfp-adult-day-care-centers-meal-reimbursement-pr-2016",
+    "child-and-adult-care-food-programs-cacfp-adult-day-care-centers-meal-reimbursement-pr-2017",
+    "child-and-adult-care-food-programs-cacfp-adult-day-care-centers-meal-reimbursement-pr-2018",
+    "child-and-adult-care-food-programs-cacfp-adult-day-care-centers-meal-reimbursement-pr-2019",
+    "ocs-1-1-abuse-neglect-related-texas-child-fatalities-fy2013-fy2022",
+    "ocs-1-2-non-abuse-neglect-related-texas-child-fatality-investigations-fy2013-fy2022",
+    "nchs-drug-poisoning-mortality-by-county-united-states",
+    "nchs-drug-poisoning-mortality-by-county-united-states-20278",
+    "Victoria_County,_Texas",
+    "Victoria,_Texas"
+  ],
+  "source_sequence": [
+    "datagov/child-and-adult-care-food-programs-cacfp-adult-day-care-centers-meal-reimbursement-pr-2016/files/rows.txt",
+    "datagov/child-and-adult-care-food-programs-cacfp-adult-day-care-centers-meal-reimbursement-pr-2017/files/rows.txt",
+    "datagov/child-and-adult-care-food-programs-cacfp-adult-day-care-centers-meal-reimbursement-pr-2018/files/rows.txt",
+    "datagov/child-and-adult-care-food-programs-cacfp-adult-day-care-centers-meal-reimbursement-pr-2019/files/rows.txt",
+    "datagov/ocs-1-1-abuse-neglect-related-texas-child-fatalities-fy2013-fy2022/files/rows.txt",
+    "datagov/ocs-1-2-non-abuse-neglect-related-texas-child-fatality-investigations-fy2013-fy2022/files/rows.txt",
+    "datagov/nchs-drug-poisoning-mortality-by-county-united-states/files/rows.txt",
+    "datagov/nchs-drug-poisoning-mortality-by-county-united-states-20278/files/rows.txt",
+    "wikipedia/Victoria_County,_Texas/content.txt",
+    "wikipedia/Victoria,_Texas/content.txt"
+  ],
+  "reasoning_chain_text": [
+    "1. For Texas counties across 2016-17, 2017-18, 2018-19, and 2019-20, compute adult day care meal reimbursements, keep counties averaging at least $50,000, and identify the five counties with the largest percentage drops over that span.",
+    "2. From those five counties, keep only counties with at least one abuse- or neglect-related child fatality between 2018 and 2022.",
+    "3. From the counties kept in step 2, keep only counties with at least three non-abuse or non-neglect child fatality investigations between 2018 and 2022.",
+    "4. Among the counties kept in step 3, identify the counties in the top two for 2021 model-based drug poisoning death rates.",
+    "5. Among the counties kept in step 3, identify the counties in the bottom two for 2016 age-adjusted rate categories and keep the county that also appeared in step 4.",
+    "6. Using the county identified in step 5, determine its county seat.",
+    "7. Using that county seat, determine the river it lies along."
+  ],
+  "original_final_question": "Across 2016-17 through 2019-20, start with Texas counties that averaged at least $50,000 in adult day care meal reimbursements and had the five largest percentage drops over that span. From those five, keep only counties with at least one abuse/neglect-related child fatality and at least three non-abuse/neglect child fatality investigations between 2018 and 2022. Among the remaining counties, find the one that is both in the top two for 2021 model-based drug poisoning death rates and in the bottom two for 2016 age-adjusted rate categories. What river does the county seat of that county lie along? Return the river name only. Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    "HOP 1 (d=4, adult day care reimbursements 2016-2019 - nodes 1-4):",
+    "  Node 1: 2016 totals -> Brooks 60,454.65; Willacy 158,153.77; Comal 112,322.52; Atascosa 141,083.37; Victoria 95,559.47",
+    "  Node 2: 2017 totals -> Brooks 66,250.97; Willacy 160,898.5925; Comal 88,868.98; Atascosa 142,115.25; Victoria 89,291.24",
+    "  Node 3: 2018 totals -> Brooks 78,426.43; Willacy 143,725.8525; Comal 78,748.11; Atascosa 139,933.33; Victoria 88,676.32",
+    "  Node 4: 2019 totals -> Brooks 0; Willacy 5,005.3; Comal 37,371.2; Atascosa 52,913.23; Victoria 40,390.435",
+    "  Percent decrease from 2016 to 2019: Brooks -100.00%, Willacy -96.84%, Comal -66.73%, Atascosa -62.50%, Victoria -57.73%.",
+    "  Result (top 5 decreases): {Brooks, Willacy, Comal, Atascosa, Victoria}",
+    "",
+    "HOP 2 (d=2, Texas child fatality datasets - nodes 5-6):",
+    "  Node 5: Abuse/neglect fatalities 2018-2022 -> >=1: {Brooks, Willacy, Comal, Victoria}",
+    "  Node 6: Non-abuse/neglect investigations 2018-2022 -> >=3: {Willacy, Comal, Atascosa, Victoria}",
+    "  Intersection -> {Willacy, Comal, Victoria}",
+    "",
+    "HOP 3 (d=2, drug poisoning mortality - nodes 7-8):",
+    "  Node 7: 2021 model-based death rates -> highest two {Victoria, Comal}",
+    "  Node 8: 2016 age-adjusted categories -> lowest two {Willacy, Victoria}",
+    "  Intersection -> {Victoria}",
+    "",
+    "HOP 4 (d=1, Victoria County Wikipedia - node 9):",
+    "  Node 9: Victoria County seat -> Victoria",
+    "",
+    "HOP 5 (d=1, Victoria Wikipedia - node 10):",
+    "  Node 10: Victoria lies along the Guadalupe River",
+    "  Final answer: Guadalupe River"
+  ]
+}

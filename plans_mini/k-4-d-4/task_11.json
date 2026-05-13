@@ -1,0 +1,51 @@
+{
+  "dataset_sequence": [
+    "school-district-office-locations-current-d848f",
+    "public-school-locations-2021-22-5a116",
+    "private-school-locations-2019-20-ee873",
+    "school-district-office-locations-2021-22-d5dd7",
+    "postsecondary-school-locations-current-5a74c",
+    "school-district-office-locations-current-c8f9d",
+    "postsecondary-school-locations-2022-23"
+  ],
+  "source_sequence": [
+    "datagov/school-district-office-locations-current-d848f/files/nces::school-district-office-locations-current-1.txt",
+    "datagov/public-school-locations-2021-22-5a116/files/data.txt",
+    "datagov/private-school-locations-2019-20-ee873/files/data.txt",
+    "datagov/school-district-office-locations-2021-22-d5dd7/files/data-TEK2ZS.txt",
+    "datagov/postsecondary-school-locations-current-5a74c/files/Postsecondary_School_Locations_Current_-3631565628879840217.txt",
+    "datagov/public-school-locations-2021-22-5a116/files/data.txt",
+    "datagov/private-school-locations-2019-20-ee873/files/data.txt",
+    "datagov/school-district-office-locations-current-c8f9d/files/data.txt",
+    "datagov/postsecondary-school-locations-2022-23/files/data-sh56Ar.txt"
+  ],
+  "reasoning_chain_text": [
+    "1. In the school district office listings, use CITY='Princeton' and NMCNTY='Mercer County' to determine the two-digit state FIPS code.",
+    "2. In that state, identify the top three counties by public schools, the top three by private schools, and the top three by school district offices using the listing period for each ranking source.",
+    "3. From the intersection of those three top-three county sets, select the county with the most postsecondary institutions in the postsecondary ranking source.",
+    "4. For that selected county, use the final count sources to count public schools, private schools, school district offices, and postsecondary institutions.",
+    "5. Add those four counts and report the integer total."
+  ],
+  "original_final_question": "Using the school district office listings for CITY='Princeton' and NMCNTY='Mercer County', determine the two-digit state FIPS code. In that state, find the counties that rank in the top three for public schools, private schools, and school district offices; among their intersection, select the county with the most postsecondary institutions. For that county, compute the total number of public schools, private schools, district offices, and postsecondary institutions. Only report the integer total. Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    "HOP 1 (d=1, State FIPS lookup - node 1):",
+    "  Node 1: CITY='Princeton' and NMCNTY='Mercer County' share STFIP 34.",
+    "",
+    "HOP 2 (d=3, County top counts - nodes 2-4):",
+    "  Node 2: For STFIP=34, the top 3 counties by public schools are Bergen, Essex, and Middlesex.",
+    "  Node 3: For STFIP=34, the top 3 counties by private schools are Bergen, Middlesex, and Essex.",
+    "  Node 4: For STFIP=34, the top 3 counties by school district offices are Bergen, Monmouth, and Camden.",
+    "",
+    "HOP 3 (d=4, Postsecondary selection - node 5):",
+    "  Node 5: The intersection yields Bergen County; Bergen has the most postsecondary institutions (16).",
+    "",
+    "HOP 4 (d=4, County counts and arithmetic - nodes 6-9):",
+    "  Node 6: Bergen County public schools = 288.",
+    "  Node 7: Bergen County private schools = 91.",
+    "  Node 8: Bergen County school district offices = 81.",
+    "  Node 9: Bergen County postsecondary institutions = 16.",
+    "  Computation: 288 + 91 + 81 + 16 = 476.",
+    "",
+    "Final answer: 476"
+  ]
+}

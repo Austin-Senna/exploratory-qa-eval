@@ -1,0 +1,55 @@
+{
+  "dataset_sequence": [
+    "Missouri_Department_of_Transportation",
+    "Springfield,_Missouri",
+    "500-cities-local-data-for-better-health-2016-release",
+    "500-cities-local-data-for-better-health-2018-release",
+    "employee-overtime-and-supplemental-earnings-2014",
+    "employee-overtime-and-supplemental-earnings-2015",
+    "employee-overtime-and-supplemental-earnings-2016",
+    "employee-overtime-and-supplemental-earnings-2017",
+    "Chicago_Fire_Department"
+  ],
+  "source_sequence": [
+    "wikipedia/Missouri_Department_of_Transportation/content.txt",
+    "wikipedia/Springfield,_Missouri/content.txt",
+    "datagov/500-cities-local-data-for-better-health-2016-release/files/rows.txt",
+    "datagov/500-cities-local-data-for-better-health-2018-release/files/rows.txt",
+    "datagov/employee-overtime-and-supplemental-earnings-2014/files/rows.txt",
+    "datagov/employee-overtime-and-supplemental-earnings-2015/files/rows.txt",
+    "datagov/employee-overtime-and-supplemental-earnings-2016/files/rows.txt",
+    "datagov/employee-overtime-and-supplemental-earnings-2017/files/rows.txt",
+    "wikipedia/Chicago_Fire_Department/content.txt"
+  ],
+  "reasoning_chain_text": [
+    "1. Determine the city where the Southwest district of the Missouri Department of Transportation is based.",
+    "2. Using that city, identify the highway that was born there and determine its two terminus cities.",
+    "3. For those two terminus cities, compare binge-drinking rates in 2016 and 2018 and keep the city with the higher rate in both years.",
+    "4. For the city kept in step 3, identify the department with the second-highest overtime costs in 2014, 2015, 2016, and 2017 and keep the department that qualifies across those years.",
+    "5. Using the department identified in step 4, return its founding year."
+  ],
+  "original_final_question": "Find the city the Southwest district of the Missouri Department of Transportation is based in and a highway that was born in the city. Between that highway's two terminus cities, which one had higher binge drinking rates in 2016 and 2018? For that city, identify the department with the second-highest overtime costs from 2014 to 2017 and state its founding year. Please return the year only. Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    "HOP 1 (d=1, Wikipedia Missouri_Department_of_Transportation - node 1):",
+    "  Node 1: MoDOT Southwest district is based in Springfield",
+    "",
+    "HOP 2 (d=1, Wikipedia Springfield,_Missouri - node 2):",
+    "  Node 2: Route 66 was the Chicago-to-Los Angeles highway",
+    "",
+    "HOP 3 (d=2, 500-Cities Health Data 2016 and 2018 - nodes 3-4):",
+    "  Node 3: 2016 binge drinking - Chicago 20.1%, LA 15.9% -> Chicago higher",
+    "  Node 4: 2018 binge drinking - Chicago 21.5%, LA 16.7% -> Chicago higher",
+    "  Result: Chicago",
+    "",
+    "HOP 4 (d=4, Chicago Employee Overtime 2014-2017 - nodes 5-8):",
+    "  Node 5: 2014 overtime -> Police #1, Fire #2",
+    "  Node 6: 2015 overtime -> Police #1, Fire #2",
+    "  Node 7: 2016 overtime -> Police #1, Fire #2",
+    "  Node 8: 2017 overtime -> Police #1, Fire #2",
+    "  Result: Fire",
+    "",
+    "HOP 5 (d=1, Wikipedia Chicago_Fire_Department - node 9):",
+    "  Node 9: Chicago Fire Department founded in 1858",
+    "  Final answer: 1858"
+  ]
+}

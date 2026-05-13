@@ -1,0 +1,30 @@
+{
+  "dataset_sequence": [
+    "Rampart_Division",
+    "lapd-ripa-ab-953-stop-incident-details-from-7-1-2018-to-present",
+    "crime-data-from-2020-to-present",
+    "crime-data-from-2010-to-2019"
+  ],
+  "source_sequence": [
+    "wikipedia/Rampart_Division/content.txt",
+    "datagov/lapd-ripa-ab-953-stop-incident-details-from-7-1-2018-to-present/files/rows.txt",
+    "datagov/crime-data-from-2020-to-present/files/rows.txt",
+    "datagov/crime-data-from-2010-to-2019/files/rows.txt",
+    "datagov/crime-data-from-2020-to-present/files/rows.txt"
+  ],
+  "reasoning_chain_text": [
+    "1. Determine the LAPD area name and area identifier associated with the Rampart Division.",
+    "2. Using that area identifier, identify the most frequent reported crime code in the division during 2020.",
+    "3. Determine the crime description associated with the crime code from step 2.",
+    "4. Count that crime across the entire city of Los Angeles in 2020 and return the total number."
+  ],
+  "original_final_question": "I'm analyzing 2020 crime statistics for the LAPD's Rampart Division. What was the most frequent crime reported in that division during that year? Tell me the total number of times that specific crime occurred across the entire city of Los Angeles in 2020. Only report the total number in the response. Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    "Node 1: Rampart Division corresponds to area name Rampart.",
+    "Node 2 depends on node 1: Rampart maps to Area ID 2 in LAPD stop-incident data.",
+    "Node 3 depends on node 2: In 2020 Area 2, the most common crime code is 510.",
+    "Node 4 depends on node 3: Code 510 maps to VEHICLE - STOLEN.",
+    "Node 5 depends on node 4: In 2020, VEHICLE - STOLEN incidents total 29,141.",
+    "Final answer: 29141"
+  ]
+}

@@ -1,0 +1,58 @@
+{
+  "dataset_sequence": [
+    "agency-contracts-fiscal-year-2017",
+    "agency-contracts-fiscal-year-2018",
+    "agency-contracts-fiscal-year-2019",
+    "agency-contracts-fiscal-year-2020",
+    "HDR,_Inc.",
+    "Jacobs_Solutions",
+    "HNTB",
+    "active-construction-projects",
+    "Omaha,_Nebraska",
+    "Logan_Fontenelle"
+  ],
+  "source_sequence": [
+    "datagov/agency-contracts-fiscal-year-2017/files/rows.txt",
+    "datagov/agency-contracts-fiscal-year-2018/files/rows.txt",
+    "datagov/agency-contracts-fiscal-year-2019/files/rows.txt",
+    "datagov/agency-contracts-fiscal-year-2020/files/rows.txt",
+    "wikipedia/HDR,_Inc./content.txt",
+    "wikipedia/Jacobs_Solutions/content.txt",
+    "wikipedia/HNTB/content.txt",
+    "datagov/active-construction-projects/files/rows.txt",
+    "wikipedia/Omaha,_Nebraska/content.txt",
+    "wikipedia/Logan_Fontenelle/content.txt"
+  ],
+  "reasoning_chain_text": [
+    "1. For Washington State agency contracts in fiscal years 2017, 2018, 2019, and 2020, rank contractors by contract count and keep contractors that appear in the top 20 every year.",
+    "2. For the engineering firms among those contractors, determine each firm's founding year and base city, and keep firms founded after 1914.",
+    "3. From those firms, keep the one with no current New York State construction manager projects.",
+    "4. For the city where the remaining firm is based, identify the Native American interpreter who helped negotiate the land cession that led to the city's founding.",
+    "5. Determine that interpreter's birth year."
+  ],
+  "original_final_question": "Consider the only engineering firm founded after 1914 that has no current NY State construction manager projects, yet consistently ranked in the top 20 Washington State contractors by contract count annually from 2017 to 2020. In what year was the Native American interpreter born who helped negotiate the land cession that led to the founding of the city where that firm is based? Please return the year only. Your response should be in the format [Answer].",
+  "original_reasoning_chain": [
+    "HOP 1 (d=4, data.gov agency contracts - nodes 1-4):",
+    "  Node 1: Top 20 contractors by contract count in WA State FY 2017 -> includes HDR, Jacobs, HNTB",
+    "  Node 2: Top 20 contractors by contract count in WA State FY 2018 -> includes HDR, Jacobs, HNTB",
+    "  Node 3: Top 20 contractors by contract count in WA State FY 2019 -> includes HDR, Jacobs, HNTB",
+    "  Node 4: Top 20 contractors by contract count in WA State FY 2020 -> includes HDR, Jacobs, HNTB",
+    "  Intersection of nodes 1-4: Contractors in top 20 all four years -> {Jacobs Engineering Group, HNTB Corporation, HDR Engineering}",
+    "",
+    "HOP 2 (d=4, company founding/NY projects - nodes 5-8):",
+    "  Node 5: HDR is based in Omaha and started in 1917",
+    "  Node 6: Jacobs Engineering was founded in 1947",
+    "  Node 7: HNTB Corporation was founded in 1914",
+    "  From nodes 5-7: Founded after 1914 -> {HDR (1917), Jacobs (1947)}",
+    "  Node 8: Zero NY State construction manager projects -> {HDR, HNTB}",
+    "  Intersection -> {HDR Engineering}",
+    "",
+    "HOP 3 (d=1, Wikipedia Omaha - node 9):",
+    "  Node 9: Omaha land-cession negotiations identify interpreter Logan Fontenelle",
+    "",
+    "HOP 4 (d=1, Wikipedia Logan Fontenelle - node 10):",
+    "  Node 10: Logan Fontenelle was born in 1825",
+    "",
+    "Final answer: 1825"
+  ]
+}

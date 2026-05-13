@@ -19,7 +19,7 @@
     "1. Identify New York counties with violent crime rates over 300 per 100,000 in 2020.",
     "2. From those counties, keep the ones with more than 100 admissions in the secure or mixed juvenile detention categories in 2015.",
     "3. From the remaining counties, keep those with School Tax Relief reimbursement between $60 million and $90 million in 2023.",
-    "4. From the remaining counties, keep those with total jail census above 800.",
+    "4. From the remaining counties, keep those with total jail census above 800 in 2019.",
     "5. For the remaining county, determine its county seat.",
     "6. Using the city identified in step 5, determine the year it was incorporated as a city."
   ],
