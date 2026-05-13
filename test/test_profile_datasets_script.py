@@ -31,6 +31,8 @@ class ProfileDatasetsScriptTests(unittest.TestCase):
         self._jsonl_path = self._root / "rows.jsonl"
         self._text_path = self._root / "notes.txt"
         self._txt_csv_path = self._root / "rows.txt"
+        self._single_column_txt_path = self._root / "one_column.txt"
+        self._weird_csv_path = self._root / "weird_headers.csv"
         self._binary_txt_path = self._root / "archive-ish.txt"
         self._zip_path = self._root / "archive.zip"
         self._time_csv_path = self._root / "times.csv"
@@ -54,6 +56,12 @@ class ProfileDatasetsScriptTests(unittest.TestCase):
             "It has multiple lines and no stable delimiter.\n"
         )
         self._txt_csv_path.write_text("name,value\nAda,1\nGrace,2\n")
+        self._single_column_txt_path.write_text("value\n1\n2\n3\n")
+        self._weird_csv_path.write_text(
+            "Service Request Number,Date [MM/DD (Local Time)],Case Status\n"
+            "SR-001,01/02 09:30,Open\n"
+            "SR-002,01/03 10:45,Closed\n"
+        )
         self._binary_txt_path.write_bytes(b"PK\x03\x04\x14\x00\x00\x00\x00\x00fake zip bytes,name,value\n")
         self._time_csv_path.write_text("name,duration\nAda,12:30:00\nGrace,13:00:00\n")
         self._ragged_csv_path.write_text("name,value\nAda,1\nGrace\nLinus,3,extra\n")
@@ -275,13 +283,36 @@ class ProfileDatasetsScriptTests(unittest.TestCase):
 
         self.assertEqual(summary, {"written": 1, "skipped": 0, "errors": 0})
         row = self._read_output_rows()[0]
-        self.assertEqual(row["family"], "csv")
+        self.assertEqual(row["family"], "text")
         self.assertEqual(row["schema_status"], "unavailable")
         self.assertIn("snippet", row)
         self.assertIn("schema_error", row)
         self.assertNotIn("candidate_columns", row)
         self.assertNotIn("columns", row)
         self.assertNotIn("top_2_rows", row)
+
+    def test_single_column_txt_is_profiled_as_text_without_columns(self):
+        uri_list_path = self._root / "table_profiles_needed.txt"
+        uri_list_path.write_text(str(self._single_column_txt_path) + "\n")
+
+        summary = profile_datasets.build_profiles(
+            input_path=uri_list_path,
+            output_path=self._output_path,
+            input_kind="uri-list",
+            descriptions_path=self._descriptions_path,
+            snippets_path=self._snippets_path,
+            parallel=1,
+            resume=False,
+            bucket="unused",
+        )
+
+        self.assertEqual(summary, {"written": 1, "skipped": 0, "errors": 0})
+        row = self._read_output_rows()[0]
+        self.assertEqual(row["family"], "text")
+        self.assertEqual(row["schema_status"], "unavailable")
+        self.assertIn("schema_error", row)
+        self.assertNotIn("columns", row)
+        self.assertNotIn("candidate_columns", row)
 
     def test_uri_list_txt_with_delimited_content_still_profiles_as_csv(self):
         uri_list_path = self._root / "table_profiles_needed.txt"
@@ -304,7 +335,7 @@ class ProfileDatasetsScriptTests(unittest.TestCase):
         self.assertEqual(row["schema_status"], "strict")
         self.assertEqual([col["name"] for col in row["columns"]], ["name", "value"])
 
-    def test_ragged_txt_csv_writes_candidate_columns_only(self):
+    def test_ragged_txt_csv_failure_is_text_without_candidate_columns(self):
         uri_list_path = self._root / "table_profiles_needed.txt"
         uri_list_path.write_text(str(self._ragged_csv_path) + "\n")
 
@@ -321,11 +352,35 @@ class ProfileDatasetsScriptTests(unittest.TestCase):
 
         self.assertEqual(summary, {"written": 1, "skipped": 0, "errors": 0})
         row = self._read_output_rows()[0]
-        self.assertEqual(row["family"], "csv")
-        self.assertEqual(row["schema_status"], "candidate")
+        self.assertEqual(row["family"], "text")
+        self.assertEqual(row["schema_status"], "unavailable")
         self.assertIn("schema_error", row)
-        self.assertEqual([col["name"] for col in row["candidate_columns"]], ["name", "value"])
         self.assertNotIn("columns", row)
+        self.assertNotIn("candidate_columns", row)
+
+    def test_weird_but_queryable_csv_headers_stay_strict_columns(self):
+        uri_list_path = self._root / "table_profiles_needed.txt"
+        uri_list_path.write_text(str(self._weird_csv_path) + "\n")
+
+        summary = profile_datasets.build_profiles(
+            input_path=uri_list_path,
+            output_path=self._output_path,
+            input_kind="uri-list",
+            descriptions_path=self._descriptions_path,
+            snippets_path=self._snippets_path,
+            parallel=1,
+            resume=False,
+            bucket="unused",
+        )
+
+        self.assertEqual(summary, {"written": 1, "skipped": 0, "errors": 0})
+        row = self._read_output_rows()[0]
+        self.assertEqual(row["family"], "csv")
+        self.assertEqual(row["schema_status"], "strict")
+        self.assertEqual(
+            [col["name"] for col in row["columns"]],
+            ["Service Request Number", "Date [MM/DD (Local Time)]", "Case Status"],
+        )
 
     def test_metadata_like_file_sets_metadata_status_without_columns(self):
         uri_list_path = self._root / "table_profiles_needed.txt"

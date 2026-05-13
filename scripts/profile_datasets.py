@@ -71,7 +71,6 @@ _SNIPPET_FALLBACK_BYTES = 2 * 1024
 _MAX_CELL_CHARS = 80
 _QUERY_MAX_FILE_BYTES = 500 * 1024 * 1024
 _MAX_COLUMNS = 200
-_MAX_CANDIDATE_COLUMNS = 200
 _MAX_XML_SCHEMA_RECORDS = 200
 _MAX_ARCHIVE_MEMBERS = 50
 
@@ -510,21 +509,6 @@ def _scan_sql(source_ref: str, family: str, table: Dict[str, Any]) -> str:
     return f"read_csv_auto({ref}, {', '.join(options)})"
 
 
-def _candidate_csv_scan_sql(source_ref: str, table: Dict[str, Any]) -> str:
-    ref = _sql_quote_string(source_ref)
-    options = [
-        "quote='\"'",
-        "strict_mode=false",
-        "null_padding=true",
-        "ignore_errors=true",
-        "all_varchar=true",
-    ]
-    delimiter = table.get("delimiter")
-    if delimiter:
-        options.append(f"delim={_sql_quote_string(str(delimiter))}")
-    return f"read_csv_auto({ref}, {', '.join(options)})"
-
-
 def _type_category(raw_type: str) -> Tuple[str, Optional[str]]:
     upper = (raw_type or "").upper()
     if upper.startswith(("TINYINT", "SMALLINT", "INTEGER", "BIGINT", "UTINYINT", "USMALLINT", "UINTEGER", "UBIGINT")):
@@ -654,6 +638,10 @@ def _all_generic_columns(columns: List[Dict[str, Any]]) -> bool:
     return bool(columns) and all(_is_generic_column_name(str(col.get("name") or "")) for col in columns)
 
 
+def _single_column_csv(columns: List[Dict[str, Any]]) -> bool:
+    return len(columns or []) == 1
+
+
 def _validate_profile_schema(columns: List[Tuple[str, str, Optional[str]]], family: str) -> None:
     if family != "csv":
         return
@@ -676,14 +664,6 @@ def _describe_column_tuples(conn: duckdb.DuckDBPyConnection, scan_sql: str) -> L
 
 def _column_summaries(columns: List[Tuple[str, str, Optional[str]]]) -> List[Dict[str, Any]]:
     return [{"name": name, "type": output_type} for name, output_type, _aggregate_kind in columns]
-
-
-def _candidate_column_summaries(columns: List[Tuple[str, str, Optional[str]]]) -> List[Dict[str, Any]]:
-    summaries = _column_summaries(columns)
-    has_named_column = any(not _is_generic_column_name(str(col.get("name") or "")) for col in summaries)
-    if has_named_column:
-        summaries = [col for col in summaries if not _is_generic_column_name(str(col.get("name") or ""))]
-    return summaries
 
 
 def _cap_list(values: List[Any], limit: int) -> Tuple[List[Any], bool, int]:
@@ -861,7 +841,7 @@ def _build_non_tabular_profile(
     return profile
 
 
-def _build_candidate_csv_profile(
+def _build_text_unavailable_profile(
     *,
     slug: str,
     filename: str,
@@ -869,45 +849,25 @@ def _build_candidate_csv_profile(
     s3_uri: Optional[str],
     dataset_id: Optional[str],
     file_path: Optional[str],
-    family: str,
-    table: Dict[str, Any],
     size_bytes: int,
     description: Optional[str],
     snippet_cache: Dict[str, str],
     schema_error: str,
 ) -> Dict[str, Any]:
-    status = "unavailable"
-    candidate_columns: List[Dict[str, Any]] = []
-    try:
-        conn = _duckdb_connection(needs_httpfs=_is_s3_ref(source_ref))
-        try:
-            columns = _describe_column_tuples(conn, _candidate_csv_scan_sql(source_ref, table))
-            _validate_profile_schema(columns, family)
-            candidate_columns = _candidate_column_summaries(columns)
-            if candidate_columns:
-                status = "candidate"
-        finally:
-            conn.close()
-    except Exception:
-        candidate_columns = []
-
-    profile = _build_non_tabular_profile(
+    return _build_non_tabular_profile(
         slug=slug,
         filename=filename,
         source_ref=source_ref,
         s3_uri=s3_uri,
         dataset_id=dataset_id,
         file_path=file_path,
-        family=family,
-        schema_status=status,
+        family="text",
+        schema_status="unavailable",
         size_bytes=size_bytes,
         description=description,
         snippet_cache=snippet_cache,
         schema_error=schema_error,
     )
-    if candidate_columns:
-        _add_capped_list(profile, "candidate_columns", candidate_columns, _MAX_CANDIDATE_COLUMNS)
-    return profile
 
 
 def _archive_members(source_ref: str) -> List[str]:
@@ -1157,35 +1117,42 @@ def _process_entry(entry: Dict[str, Any], description_cache: Dict[str, str], sni
                     size_bytes=size_bytes,
                     description=description,
                 )
-                if family == "csv" and _all_generic_columns(profile.get("columns") or []):
-                    candidate_profile = _build_candidate_csv_profile(
+                if family == "csv" and _single_column_csv(profile.get("columns") or []):
+                    profile = _build_text_unavailable_profile(
                         slug=slug,
                         filename=filename,
                         source_ref=source_ref,
                         s3_uri=s3_uri,
                         dataset_id=dataset_id,
                         file_path=file_path,
-                        family=family,
-                        table=table,
                         size_bytes=size_bytes,
                         description=description,
                         snippet_cache=snippet_cache,
-                        schema_error="Strict parser inferred generic column names",
+                        schema_error="CSV parser inferred only one column; treating as text",
                     )
-                    if candidate_profile.get("schema_status") == "candidate":
-                        profile = candidate_profile
-            except Exception as exc:
-                schema_error = f"{type(exc).__name__}: {exc}"
-                if family == "csv":
-                    profile = _build_candidate_csv_profile(
+                elif family == "csv" and _all_generic_columns(profile.get("columns") or []):
+                    profile = _build_text_unavailable_profile(
                         slug=slug,
                         filename=filename,
                         source_ref=source_ref,
                         s3_uri=s3_uri,
                         dataset_id=dataset_id,
                         file_path=file_path,
-                        family=family,
-                        table=table,
+                        size_bytes=size_bytes,
+                        description=description,
+                        snippet_cache=snippet_cache,
+                        schema_error="CSV parser inferred generic columns; treating as text",
+                    )
+            except Exception as exc:
+                schema_error = f"{type(exc).__name__}: {exc}"
+                if family == "csv":
+                    profile = _build_text_unavailable_profile(
+                        slug=slug,
+                        filename=filename,
+                        source_ref=source_ref,
+                        s3_uri=s3_uri,
+                        dataset_id=dataset_id,
+                        file_path=file_path,
                         size_bytes=size_bytes,
                         description=description,
                         snippet_cache=snippet_cache,
