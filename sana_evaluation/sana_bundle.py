@@ -111,9 +111,8 @@ class SanaDataLakeAgent(DataLakeAgent):
         # _system_prompt_override, so avoid appending the older overlay.
         if flags.sprint:
             parts.append(sprint_block(st, sprint_mode=flags.sprint_mode))
-        # results: no system-prompt block — the peek_file docstring already
-        # documents the `profile` field. The flag toggles the profile loader
-        # callback at runtime in _pre_build_setup.
+        # results: no system-prompt block; peek_file already documents the
+        # compact `profile` field when cached profiles are available.
         return "".join(parts)
 
     def _system_prompt_override(

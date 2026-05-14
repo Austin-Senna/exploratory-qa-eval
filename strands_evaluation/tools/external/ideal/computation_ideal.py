@@ -259,10 +259,11 @@ def _enhanced_peek_context(source: str) -> str:
     payload["enhanced_peek_file"] = peek
 
     try:
-        from strands_evaluation.helper.peek_profile import load_dataset_profile
+        from strands_evaluation.helper.peek_profile import load_dataset_profile, select_dataset_profile_fields
         profile = load_dataset_profile(s3_uri)
     except Exception:
         profile = None
+    profile = select_dataset_profile_fields(profile)
     if profile:
         payload["dataset_profile"] = profile
         description = profile.get("llm_description") or profile.get("description")

@@ -28,7 +28,7 @@ import duckdb
 from dotenv import load_dotenv
 from strands import tool
 
-from strands_evaluation.helper.peek_profile import load_dataset_profile
+from strands_evaluation.helper.peek_profile import load_dataset_profile, select_dataset_profile_fields
 
 from .agent_tools import (  # noqa: F401 — re-exported
     search,
@@ -552,8 +552,8 @@ def peek_file(
     """
     Inspect a SINGLE file via a budget range-GET. Returns the content family
     (csv/json/xml/text), column headers or XML tags/schema hints, and a
-    preview — no full download. When available, also returns a raw `profile`
-    field from datagov_tables_profiles.jsonl.
+    preview — no full download. When available, also returns a compact
+    `profile` field from datagov_tables_profiles.jsonl.
 
     USE THIS for one file at a time. For multiple files in one call, use
     `peek_multiple` instead (different signature: takes a `files` list).
@@ -575,8 +575,9 @@ def peek_file(
         size_bytes, dataset_id, file_path. XML previews may also include
         xml_root_tag, xml_namespaces, xml_schema_fields,
         xml_record_tag_candidates, xml_preview_mode.
-        May also include `profile` with cached metadata such as columns,
-        top_2_rows, snippet, family, row_count, and llm_description.
+        May also include `profile` with selected cached metadata such as
+        family, schema_status, schema_error, columns as name/type pairs,
+        top_2_rows, snippet, row_count, and llm_description.
         On error: {error: ...}
     """
     ref = _resolve_file_reference(dataset_id=dataset_id, file_path=file_path, s3_uri=s3_uri)
@@ -648,6 +649,7 @@ def peek_file(
         profile = load_dataset_profile(s3_uri)
     except Exception:
         profile = None
+    profile = select_dataset_profile_fields(profile)
     if profile is not None:
         result["profile"] = profile
 
@@ -666,7 +668,7 @@ def peek_multiple(
 ) -> Dict[str, Any]:
     """
     Inspect SEVERAL files in ONE call — a batch wrapper around peek_file.
-    Results may include raw `profile` fields when cached profiles are available.
+    Results may include compact `profile` fields when cached profiles are available.
 
     USE THIS when you already know which 2+ files you need
     (e.g. immediately after `list_files` returned several relevant paths).
@@ -696,8 +698,9 @@ def peek_multiple(
 
     Returns:
         Dict with 'results' list (one entry per file, same shape as peek_file)
-        and 'count'. Each result may include `profile` with cached metadata such
-        as columns, top_2_rows, snippet, family, row_count, and llm_description.
+        and 'count'. Each result may include `profile` with selected cached
+        metadata such as columns as name/type pairs, top_2_rows, snippet,
+        family, row_count, and llm_description.
     """
     if files is None and entries is not None:
         files = entries

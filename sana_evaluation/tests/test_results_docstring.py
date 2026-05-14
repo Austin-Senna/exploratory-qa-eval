@@ -14,7 +14,8 @@ def _doc(tool) -> str:
 def test_sana_peek_file_docstring_documents_profile_field() -> None:
     doc = _doc(peek_file)
     assert "profile" in doc
-    assert "schema_columns" in doc
+    assert "columns" in doc
+    assert "name/type" in doc
     assert "llm_description" in doc
 
 
@@ -32,7 +33,8 @@ def test_sana_peek_file_docstring_does_not_mention_sana() -> None:
 def test_sana_peek_multiple_docstring_documents_profile_field() -> None:
     doc = _doc(peek_multiple)
     assert "profile" in doc
-    assert "schema_columns" in doc
+    assert "columns" in doc
+    assert "name/type" in doc
     assert "llm_description" in doc
 
 

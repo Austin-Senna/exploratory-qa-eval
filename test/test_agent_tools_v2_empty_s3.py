@@ -153,19 +153,54 @@ class AgentToolsV2EmptyS3Tests(unittest.TestCase):
         self.assertEqual(result["row_count_estimate"], 0)
         range_get.assert_not_called()
 
-    def test_peek_file_attaches_profile_when_available(self):
+    def test_peek_file_attaches_selected_profile_fields_when_available(self):
+        raw_profile = {
+            "s3_uri": self.ref["s3_uri"],
+            "dataset_id": self.ref["dataset_id"],
+            "file_path": self.ref["file_path"],
+            "family": "csv",
+            "schema_status": "strict",
+            "schema_error": False,
+            "row_count": 2,
+            "columns": [
+                {
+                    "name": "value",
+                    "type": "integer",
+                    "null_rate": 0.0,
+                    "distinct_count": 2,
+                    "min": 1,
+                    "max": 2,
+                    "mean": 1.5,
+                }
+            ],
+            "top_2_rows": [{"value": 1}, {"value": 2}],
+            "debug_only": "do not expose",
+        }
         with ExitStack() as stack:
             self._apply_empty_object_patches(stack)
             stack.enter_context(
                 mock.patch.object(
                     self.mod,
                     "load_dataset_profile",
-                    return_value={"family": "text", "row_count": 0},
+                    return_value=raw_profile,
                 )
             )
             result = self.mod.peek_file(s3_uri=self.ref["s3_uri"])
 
-        self.assertEqual(result["profile"], {"family": "text", "row_count": 0})
+        self.assertEqual(
+            result["profile"],
+            {
+                "s3_uri": self.ref["s3_uri"],
+                "dataset_id": self.ref["dataset_id"],
+                "file_path": self.ref["file_path"],
+                "family": "csv",
+                "schema_status": "strict",
+                "schema_error": False,
+                "row_count": 2,
+                "columns": [{"name": "value", "type": "integer"}],
+                "top_2_rows": [{"value": 1}, {"value": 2}],
+            },
+        )
 
     def test_peek_file_omits_profile_when_loader_fails(self):
         with ExitStack() as stack:

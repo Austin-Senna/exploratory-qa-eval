@@ -751,6 +751,7 @@ def _base_profile(
         "filename": filename,
         "family": family,
         "schema_status": schema_status,
+        "schema_error": False,
         "size_bytes": size_bytes,
     }
     if s3_uri:
@@ -762,6 +763,13 @@ def _base_profile(
     if description:
         profile["llm_description"] = description
     return profile
+
+
+def _log_schema_error(*, slug: str, filename: str, source_ref: str, detail: str) -> None:
+    print(
+        f"PROFILE_SCHEMA_ERROR {slug}/{filename} ({source_ref}): {detail}",
+        file=sys.stderr,
+    )
 
 
 def _attach_snippet(profile: Dict[str, Any], source_ref: str, snippet_cache: Dict[str, str]) -> None:
@@ -821,7 +829,8 @@ def _build_non_tabular_profile(
     size_bytes: int,
     description: Optional[str],
     snippet_cache: Dict[str, str],
-    schema_error: Optional[str] = None,
+    schema_error: bool = False,
+    schema_error_detail: Optional[str] = None,
 ) -> Dict[str, Any]:
     profile = _base_profile(
         slug=slug,
@@ -837,7 +846,13 @@ def _build_non_tabular_profile(
     if schema_status not in {"archive"}:
         _attach_snippet(profile, source_ref, snippet_cache)
     if schema_error:
-        profile["schema_error"] = schema_error
+        profile["schema_error"] = True
+        _log_schema_error(
+            slug=slug,
+            filename=filename,
+            source_ref=source_ref,
+            detail=schema_error_detail or "schema unavailable",
+        )
     return profile
 
 
@@ -852,7 +867,7 @@ def _build_text_unavailable_profile(
     size_bytes: int,
     description: Optional[str],
     snippet_cache: Dict[str, str],
-    schema_error: str,
+    schema_error_detail: str,
 ) -> Dict[str, Any]:
     return _build_non_tabular_profile(
         slug=slug,
@@ -866,7 +881,8 @@ def _build_text_unavailable_profile(
         size_bytes=size_bytes,
         description=description,
         snippet_cache=snippet_cache,
-        schema_error=schema_error,
+        schema_error=True,
+        schema_error_detail=schema_error_detail,
     )
 
 
@@ -985,7 +1001,8 @@ def _build_xml_profile(
             size_bytes=size_bytes,
             description=description,
             snippet_cache=snippet_cache,
-            schema_error="Could not infer an XML record_tag",
+            schema_error=True,
+            schema_error_detail="Could not infer an XML record_tag",
         )
         profile.update(preview)
         return profile
@@ -1005,7 +1022,8 @@ def _build_xml_profile(
             size_bytes=size_bytes,
             description=description,
             snippet_cache=snippet_cache,
-            schema_error=f"{type(exc).__name__}: {exc}",
+            schema_error=True,
+            schema_error_detail=f"{type(exc).__name__}: {exc}",
         )
         profile.update(preview)
         profile["record_tag"] = record_tag
@@ -1025,7 +1043,8 @@ def _build_xml_profile(
             size_bytes=size_bytes,
             description=description,
             snippet_cache=snippet_cache,
-            schema_error="No queryable XML record fields found",
+            schema_error=True,
+            schema_error_detail="No queryable XML record fields found",
         )
     else:
         profile = _base_profile(
@@ -1128,7 +1147,7 @@ def _process_entry(entry: Dict[str, Any], description_cache: Dict[str, str], sni
                         size_bytes=size_bytes,
                         description=description,
                         snippet_cache=snippet_cache,
-                        schema_error="CSV parser inferred only one column; treating as text",
+                        schema_error_detail="CSV parser inferred only one column; treating as text",
                     )
                 elif family == "csv" and _all_generic_columns(profile.get("columns") or []):
                     profile = _build_text_unavailable_profile(
@@ -1141,7 +1160,7 @@ def _process_entry(entry: Dict[str, Any], description_cache: Dict[str, str], sni
                         size_bytes=size_bytes,
                         description=description,
                         snippet_cache=snippet_cache,
-                        schema_error="CSV parser inferred generic columns; treating as text",
+                        schema_error_detail="CSV parser inferred generic columns; treating as text",
                     )
             except Exception as exc:
                 schema_error = f"{type(exc).__name__}: {exc}"
@@ -1156,7 +1175,7 @@ def _process_entry(entry: Dict[str, Any], description_cache: Dict[str, str], sni
                         size_bytes=size_bytes,
                         description=description,
                         snippet_cache=snippet_cache,
-                        schema_error=schema_error,
+                        schema_error_detail=schema_error,
                     )
                 else:
                     profile = _build_non_tabular_profile(
@@ -1171,7 +1190,8 @@ def _process_entry(entry: Dict[str, Any], description_cache: Dict[str, str], sni
                         size_bytes=size_bytes,
                         description=description,
                         snippet_cache=snippet_cache,
-                        schema_error=schema_error,
+                        schema_error=True,
+                        schema_error_detail=schema_error,
                     )
         else:
             profile = _build_non_tabular_profile(

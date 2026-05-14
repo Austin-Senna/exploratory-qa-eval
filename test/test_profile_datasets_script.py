@@ -1,6 +1,8 @@
 import importlib.util
+import io
 import json
 import unittest
+from contextlib import redirect_stderr
 import zipfile
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -142,6 +144,7 @@ class ProfileDatasetsScriptTests(unittest.TestCase):
         self.assertEqual(row["filename"], "rows")
         self.assertEqual(row["family"], "csv")
         self.assertEqual(row["schema_status"], "strict")
+        self.assertIs(row["schema_error"], False)
         self.assertEqual(row["row_count"], 3)
         self.assertGreater(row["size_bytes"], 0)
         self.assertEqual(row["llm_description"], "Local example dataset")
@@ -286,7 +289,7 @@ class ProfileDatasetsScriptTests(unittest.TestCase):
         self.assertEqual(row["family"], "text")
         self.assertEqual(row["schema_status"], "unavailable")
         self.assertIn("snippet", row)
-        self.assertIn("schema_error", row)
+        self.assertIs(row["schema_error"], True)
         self.assertNotIn("candidate_columns", row)
         self.assertNotIn("columns", row)
         self.assertNotIn("top_2_rows", row)
@@ -310,7 +313,7 @@ class ProfileDatasetsScriptTests(unittest.TestCase):
         row = self._read_output_rows()[0]
         self.assertEqual(row["family"], "text")
         self.assertEqual(row["schema_status"], "unavailable")
-        self.assertIn("schema_error", row)
+        self.assertIs(row["schema_error"], True)
         self.assertNotIn("columns", row)
         self.assertNotIn("candidate_columns", row)
 
@@ -339,22 +342,26 @@ class ProfileDatasetsScriptTests(unittest.TestCase):
         uri_list_path = self._root / "table_profiles_needed.txt"
         uri_list_path.write_text(str(self._ragged_csv_path) + "\n")
 
-        summary = profile_datasets.build_profiles(
-            input_path=uri_list_path,
-            output_path=self._output_path,
-            input_kind="uri-list",
-            descriptions_path=self._descriptions_path,
-            snippets_path=self._snippets_path,
-            parallel=1,
-            resume=False,
-            bucket="unused",
-        )
+        stderr = io.StringIO()
+        with redirect_stderr(stderr):
+            summary = profile_datasets.build_profiles(
+                input_path=uri_list_path,
+                output_path=self._output_path,
+                input_kind="uri-list",
+                descriptions_path=self._descriptions_path,
+                snippets_path=self._snippets_path,
+                parallel=1,
+                resume=False,
+                bucket="unused",
+            )
 
         self.assertEqual(summary, {"written": 1, "skipped": 0, "errors": 0})
         row = self._read_output_rows()[0]
         self.assertEqual(row["family"], "text")
         self.assertEqual(row["schema_status"], "unavailable")
-        self.assertIn("schema_error", row)
+        self.assertIs(row["schema_error"], True)
+        self.assertIn("PROFILE_SCHEMA_ERROR", stderr.getvalue())
+        self.assertIn("ragged", stderr.getvalue())
         self.assertNotIn("columns", row)
         self.assertNotIn("candidate_columns", row)
 

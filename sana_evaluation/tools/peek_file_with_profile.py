@@ -9,6 +9,7 @@ from __future__ import annotations
 from typing import Any, Dict, List, Optional
 
 from strands import tool
+from strands_evaluation.helper.peek_profile import select_dataset_profile_fields
 from strands_evaluation.tools.agent_tools_v2 import peek_file as _baseline_peek_file
 
 from sana_evaluation.helper.peek_profile import load_dataset_profile
@@ -54,12 +55,10 @@ def peek_file(
         xml_root_tag, xml_namespaces, xml_schema_fields,
         xml_record_tag_candidates, xml_preview_mode.
 
-        May also include a `profile` field with cached metadata for the dataset:
-        `schema_columns`, `table_kind`, `llm_description`, `snippet`. Some
-        profiles also include `row_count`, `size_bytes`, `top_2_rows`, and
-        per-column `null_rate`, `distinct_count`, `min`, `max`, `mean`. When
-        present, prefer reading the profile fields before issuing query_file —
-        they're cheaper than running a query.
+        May also include a `profile` field with selected cached metadata for
+        the dataset: `family`, `schema_status`, `schema_error`, `columns`
+        as name/type pairs, `llm_description`, `snippet`, `row_count`,
+        `size_bytes`, and `top_2_rows`.
 
         On error: {error: ...}
     """
@@ -76,6 +75,7 @@ def peek_file(
                 profile = load_dataset_profile(uri)
             except Exception:
                 profile = None
+            profile = select_dataset_profile_fields(profile)
             if profile is not None:
                 result["profile"] = profile
     return result
@@ -113,10 +113,10 @@ def peek_multiple(
 
     Returns:
         Dict with `results` list and `count`. Each result has the same shape as
-        peek_file and may include a `profile` field with cached metadata:
-        `schema_columns`, `table_kind`, `llm_description`, `snippet`. Some
-        profiles also include `row_count`, `size_bytes`, `top_2_rows`, and
-        per-column `null_rate`, `distinct_count`, `min`, `max`, `mean`.
+        peek_file and may include a `profile` field with selected cached
+        metadata such as family, schema_status, schema_error, columns as
+        name/type pairs, llm_description, snippet, row_count, size_bytes,
+        and top_2_rows.
 
         On error: {error: ...}
     """

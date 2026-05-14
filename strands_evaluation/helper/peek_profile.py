@@ -18,6 +18,34 @@ _PROFILE_BY_URI: Dict[str, Dict[str, Any]] = {}
 _PROFILE_BY_SLUG_FILENAME: Dict[Tuple[str, str], Dict[str, Any]] = {}
 _PROFILES_LOADED: bool = False
 
+_PROFILE_SCALAR_FIELDS = (
+    "s3_uri",
+    "dataset_id",
+    "slug",
+    "filename",
+    "file_path",
+    "family",
+    "schema_status",
+    "schema_error",
+    "size_bytes",
+    "row_count",
+    "llm_description",
+    "snippet",
+    "record_tag",
+    "xml_root_tag",
+    "xml_preview_mode",
+    "records_scanned_for_schema",
+    "records_scanned_for_schema_truncated",
+)
+_PROFILE_LIST_FIELDS = (
+    "top_2_rows",
+    "archive_members",
+    "archive_members_truncated",
+    "archive_members_total",
+    "xml_schema_fields",
+    "xml_record_tag_candidates",
+)
+
 
 def _stem(name: str) -> str:
     value = str(name or "").strip().rsplit("/", 1)[-1]
@@ -103,4 +131,43 @@ def load_dataset_profile(s3_uri: str) -> Optional[Dict[str, Any]]:
     return dict(profile)
 
 
-__all__ = ["load_dataset_profile"]
+def _selected_columns(raw_columns: Any) -> Optional[list[Any]]:
+    if not isinstance(raw_columns, list):
+        return None
+    columns = []
+    for column in raw_columns:
+        if isinstance(column, dict):
+            selected: Dict[str, Any] = {}
+            if "name" in column:
+                selected["name"] = column["name"]
+            if "type" in column:
+                selected["type"] = column["type"]
+            if selected:
+                columns.append(selected)
+        elif column is not None:
+            columns.append(str(column))
+    return columns or None
+
+
+def select_dataset_profile_fields(profile: Optional[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+    """Return the compact profile shape exposed to agent tools."""
+    if not isinstance(profile, dict):
+        return None
+
+    out: Dict[str, Any] = {}
+    for key in _PROFILE_SCALAR_FIELDS:
+        if key in profile:
+            out[key] = bool(profile[key]) if key == "schema_error" else profile[key]
+
+    columns = _selected_columns(profile.get("columns"))
+    if columns is not None:
+        out["columns"] = columns
+
+    for key in _PROFILE_LIST_FIELDS:
+        if key in profile:
+            out[key] = profile[key]
+
+    return out or None
+
+
+__all__ = ["load_dataset_profile", "select_dataset_profile_fields"]
