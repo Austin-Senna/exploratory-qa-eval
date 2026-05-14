@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import logging
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional
 
@@ -49,7 +50,9 @@ Submitted {payload_label}:
 Candidate authored records:
 {candidates_json}
 
-Call select_match exactly once. Select a candidate only if the submitted {payload_label} and/or intent are semantically equivalent to that authored record's computation for the same source. Select 0 if the submitted call is unrelated, too vague, only asking for the answer, or not clearly the same computation. Never select a record merely because its answer would be useful."""
+Decide sequentially:
+1. Call select_match first. Select a candidate only if the submitted {payload_label} and/or intent are semantically equivalent to that authored record's computation for the same source. Select 0 if no authored record matches. Never select a record merely because its answer would be useful.
+2. If and only if you selected 0, call record_intent_match. Set matches=true only if the submitted {payload_label} reasonably attempts the submitted intent. Set matches=false if the payload is unrelated, contradictory, answer-only, or only inspects schema/sample rows while the intent asks for a substantive computation. If the intent itself asks to inspect schema or sample rows, an inspection payload can match."""
 
 _QUERY_REPAIR_PROMPT_TEMPLATE = """Rewrite the SQL so it accomplishes the user's intent against table alias t.
 Call submit_repaired_sql exactly once. Return only executable DuckDB SQL via the tool.
@@ -100,6 +103,13 @@ _STATS: Dict[str, int] = {
 _base_query_file = getattr(_query_file_tool, "_tool_func", _query_file_tool)
 _base_execute_code = getattr(_execute_code_tool, "_tool_func", _execute_code_tool)
 _base_peek_file = getattr(_peek_file_tool, "_tool_func", _peek_file_tool)
+
+
+@dataclass
+class _SemanticDecision:
+    record: Optional[IdealComputationRecord] = None
+    intent_matches_payload: bool = False
+    reason: str = ""
 
 
 def set_task_context(task_context: Dict[str, Any]) -> None:
@@ -409,7 +419,20 @@ def _records_for_target(
     return rows if fallback_all else []
 
 
-def _semantic_record_match(
+def _coerce_bool(value: Any) -> bool:
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, (int, float)):
+        return bool(value)
+    text = str(value or "").strip().lower()
+    if text in {"true", "yes", "y", "1", "match", "matches"}:
+        return True
+    if text in {"false", "no", "n", "0", "mismatch", "does not match"}:
+        return False
+    return bool(value)
+
+
+def _semantic_decision(
     *,
     plan: IdealTaskPlan,
     tool_name: str,
@@ -417,12 +440,15 @@ def _semantic_record_match(
     payload: str,
     intent: str,
     candidates: Iterable[IdealComputationRecord],
-) -> Optional[IdealComputationRecord]:
+) -> _SemanticDecision:
     records = list(candidates)
-    if not records:
-        return None
 
-    state: Dict[str, Any] = {"index": None, "reason": ""}
+    state: Dict[str, Any] = {
+        "index": None,
+        "match_reason": "",
+        "intent_matches": None,
+        "intent_reason": "",
+    }
 
     @tool
     def select_match(index: int, reason: str) -> str:
@@ -432,8 +458,15 @@ def _semantic_record_match(
         if index < 0 or index > len(records):
             raise ValueError(f"index must be between 0 and {len(records)}")
         state["index"] = index
-        state["reason"] = reason
+        state["match_reason"] = reason
         return "semantic match recorded"
+
+    @tool
+    def record_intent_match(matches: bool, reason: str) -> str:
+        """Record whether the submitted payload matches its stated intent."""
+        state["intent_matches"] = _coerce_bool(matches)
+        state["intent_reason"] = str(reason or "")
+        return "intent match recorded"
 
     candidates_json = _plan_records_for_prompt(plan, records)
     prompt = _SEMANTIC_JUDGE_PROMPT_TEMPLATE.format(
@@ -446,7 +479,7 @@ def _semantic_record_match(
     judge = Agent(
         model=_semantic_model(),
         system_prompt=_SEMANTIC_JUDGE_SYSTEM_PROMPT,
-        tools=[select_match],
+        tools=[select_match, record_intent_match],
         plugins=[LoggingPlugin()],
         callback_handler=None,
     )
@@ -472,16 +505,59 @@ def _semantic_record_match(
         candidate_count=len(records),
         selected_index=state["index"],
         decision_recorded=state["index"] is not None,
+        intent_matches_payload=state["intent_matches"],
+        intent_decision_recorded=state["intent_matches"] is not None,
     )
     index = state["index"]
     if index is None:
         logger.warning("%s semantic judge recorded no decision", tool_name)
-        return None
+        return _SemanticDecision(
+            record=None,
+            intent_matches_payload=False,
+            reason="semantic judge recorded no decision",
+        )
     if index == 0:
-        logger.info("%s semantic judge found no equivalent record reason=%r", tool_name, state["reason"])
-        return None
-    logger.info("%s semantic judge matched record index=%s reason=%r", tool_name, index, state["reason"])
-    return records[index - 1]
+        if state["intent_matches"] is None:
+            logger.warning("%s semantic judge recorded no intent/payload decision", tool_name)
+            return _SemanticDecision(
+                record=None,
+                intent_matches_payload=False,
+                reason="semantic judge recorded no intent/payload decision",
+            )
+        logger.info(
+            "%s semantic judge found no equivalent record reason=%r; intent_matches=%s intent_reason=%r",
+            tool_name,
+            state["match_reason"],
+            state["intent_matches"],
+            state["intent_reason"],
+        )
+        return _SemanticDecision(
+            record=None,
+            intent_matches_payload=bool(state["intent_matches"]),
+            reason=str(state["intent_reason"] or state["match_reason"] or ""),
+        )
+
+    logger.info("%s semantic judge matched record index=%s reason=%r", tool_name, index, state["match_reason"])
+    return _SemanticDecision(record=records[index - 1], intent_matches_payload=True, reason=str(state["match_reason"] or ""))
+
+
+def _semantic_record_match(
+    *,
+    plan: IdealTaskPlan,
+    tool_name: str,
+    payload_label: str,
+    payload: str,
+    intent: str,
+    candidates: Iterable[IdealComputationRecord],
+) -> Optional[IdealComputationRecord]:
+    return _semantic_decision(
+        plan=plan,
+        tool_name=tool_name,
+        payload_label=payload_label,
+        payload=payload,
+        intent=intent,
+        candidates=candidates,
+    ).record
 
 
 def _repair_query(
@@ -633,7 +709,7 @@ def query_ideal(
     runnable_records = [
         record for record in candidate_records if not getattr(record, "blocked", False)
     ]
-    record = _semantic_record_match(
+    decision = _semantic_decision(
         plan=plan,
         tool_name="query_ideal",
         payload_label="SQL",
@@ -641,6 +717,7 @@ def query_ideal(
         intent=intent,
         candidates=runnable_records,
     )
+    record = decision.record
     if record is not None:
         return _query_answer_payload(record)
 
@@ -651,11 +728,22 @@ def query_ideal(
     if blocked_record is not None:
         return _blocked_query_payload(blocked_record)
 
-    previous_error = ""
-    last_result: Dict[str, Any] = {
-        "success": False,
-        "error": "query_ideal did not execute; no repair attempted.",
-    }
+    if decision.intent_matches_payload:
+        try:
+            last_result = _base_query_file(
+                dataset_id=dataset_id,
+                file_path=file_path,
+                sql=sql,
+                s3_uri=s3_uri,
+            )
+        except Exception as exc:
+            last_result = {"success": False, "error": f"{type(exc).__name__}: {exc}"}
+        if _is_success(last_result):
+            return dict(last_result)
+        previous_error = str(last_result.get("error") or last_result)
+    else:
+        previous_error = f"Intent/payload mismatch: {decision.reason}".strip()
+        last_result = {"success": False, "error": previous_error}
     for attempt in range(1, _MAX_REPAIR_ATTEMPTS + 1):
         logger.info("query_ideal repair agent invoked attempt=%s", attempt)
         _STATS["query_ideal_agent_repair_calls"] += 1
@@ -735,7 +823,7 @@ def execute_ideal(
         s3_uri=s3_uri,
         fallback_all=True,
     )
-    record = _semantic_record_match(
+    decision = _semantic_decision(
         plan=plan,
         tool_name="execute_ideal",
         payload_label="Python code",
@@ -743,14 +831,21 @@ def execute_ideal(
         intent=intent,
         candidates=candidate_records,
     )
+    record = decision.record
     if record is not None:
         return _execute_answer_payload(record)
 
-    previous_error = ""
-    last_result: Dict[str, Any] = {
-        "success": False,
-        "error": "execute_ideal did not execute; no repair attempted.",
-    }
+    if decision.intent_matches_payload:
+        try:
+            last_result = _base_execute_code(code)
+        except Exception as exc:
+            last_result = {"success": False, "error": f"{type(exc).__name__}: {exc}"}
+        if _is_success(last_result):
+            return dict(last_result)
+        previous_error = str(last_result.get("error") or last_result)
+    else:
+        previous_error = f"Intent/payload mismatch: {decision.reason}".strip()
+        last_result = {"success": False, "error": previous_error}
     for attempt in range(1, _MAX_REPAIR_ATTEMPTS + 1):
         logger.info("execute_ideal repair agent invoked attempt=%s", attempt)
         _STATS["execute_ideal_agent_repair_calls"] += 1

@@ -114,6 +114,12 @@ class TestModeWrapper(unittest.TestCase):
             self.assertIn(expected, prompt)
             self.assertNotIn(old, prompt)
 
+    def test_baseline_prompt_discourages_schema_inspection_loops(self):
+        prompt = compose_baseline_prompt("preloaded")
+
+        self.assertIn("Do not spend many turns inspecting schema.", prompt)
+        self.assertIn("One peek, describe, or small row sample is enough", prompt)
+
     def test_baseline_prompt_mentions_hybrid_rrf_search_in_standard_mode(self):
         prompt = compose_baseline_prompt("standard")
         self.assertIn("search_value", prompt)

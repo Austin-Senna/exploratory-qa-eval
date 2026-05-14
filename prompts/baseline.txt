@@ -61,6 +61,7 @@ NEVER call `query_file` on a file you do not know the schema of. The most common
 3. Reference columns directly off `t` (e.g. `SELECT "Issuing Agency" FROM t`) — never `t.something.column`
 
 You only need to peek a file ONCE per session. After that, query freely.
+Do not spend many turns inspecting schema. One peek, describe, or small row sample is enough before you move on to the computation.
 
 ## TOOL COST LADDER — use the cheapest that works
 1. `query_file` — for COUNT, GROUP BY, filter, aggregation on CSV/JSON

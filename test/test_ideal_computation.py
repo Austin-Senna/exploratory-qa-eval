@@ -92,6 +92,15 @@ class IdealComputationToolTests(unittest.TestCase):
     def _first_semantic_candidate(*, candidates, **_kwargs):
         return list(candidates)[0] if candidates else None
 
+    @staticmethod
+    def _first_semantic_decision(*, candidates, **_kwargs):
+        rows = list(candidates)
+        return computation_ideal._SemanticDecision(
+            record=rows[0] if rows else None,
+            intent_matches_payload=True,
+            reason="same computation",
+        )
+
     def tearDown(self) -> None:
         computation_ideal.reset_state()
         ideal_subagent_costs.reset_stats()
@@ -102,9 +111,9 @@ class IdealComputationToolTests(unittest.TestCase):
     def test_query_ideal_returns_plan_answer_on_match(self):
         with patch.object(
             computation_ideal,
-            "_semantic_record_match",
+            "_semantic_decision",
             create=True,
-            side_effect=self._first_semantic_candidate,
+            side_effect=self._first_semantic_decision,
         ) as semantic:
             result = computation_ideal.query_ideal._tool_func(
                 dataset_id="ds_a",
@@ -127,9 +136,9 @@ class IdealComputationToolTests(unittest.TestCase):
     def test_execute_ideal_returns_plan_answer_on_match(self):
         with patch.object(
             computation_ideal,
-            "_semantic_record_match",
+            "_semantic_decision",
             create=True,
-            side_effect=self._first_semantic_candidate,
+            side_effect=self._first_semantic_decision,
         ) as semantic:
             result = computation_ideal.execute_ideal._tool_func(
                 code="print(3 + 4)",
@@ -283,11 +292,15 @@ class IdealComputationToolTests(unittest.TestCase):
         def semantic(*, candidates, **_kwargs):
             rows = list(candidates)
             captured["sources"] = [record.source for record in rows]
-            return rows[0] if rows else None
+            return computation_ideal._SemanticDecision(
+                record=rows[0] if rows else None,
+                intent_matches_payload=True,
+                reason="same computation",
+            )
 
         with patch.object(
             computation_ideal,
-            "_semantic_record_match",
+            "_semantic_decision",
             create=True,
             side_effect=semantic,
         ):
@@ -309,41 +322,114 @@ class IdealComputationToolTests(unittest.TestCase):
             },
         )
 
-    def test_execute_ideal_semantic_reject_falls_back_to_repair(self):
+    def test_execute_ideal_semantic_reject_runs_submitted_code_when_intent_matches(self):
         with patch.object(
             computation_ideal,
-            "_semantic_record_match",
+            "_semantic_decision",
             create=True,
-            return_value=None,
+            return_value=computation_ideal._SemanticDecision(
+                record=None,
+                intent_matches_payload=True,
+                reason="code matches intent",
+            ),
         ) as semantic, patch.object(
             computation_ideal,
             "_repair_code",
-            return_value={"code": "print(99)", "reason": "not equivalent"},
+            return_value={"code": "print(99)", "reason": "should not repair"},
+        ) as repair, patch.object(
+            computation_ideal,
+            "_base_execute_code",
+            return_value={"success": True, "output": "inspected"},
+        ) as base:
+            result = computation_ideal.execute_ideal._tool_func(
+                code="print('inspect local file')",
+                intent="inspect a local query result JSON",
+            )
+
+        self.assertEqual(result, {"success": True, "output": "inspected"})
+        semantic.assert_called_once()
+        repair.assert_not_called()
+        base.assert_called_once_with("print('inspect local file')")
+
+    def test_execute_ideal_semantic_reject_repairs_when_intent_and_code_mismatch(self):
+        with patch.object(
+            computation_ideal,
+            "_semantic_decision",
+            create=True,
+            return_value=computation_ideal._SemanticDecision(
+                record=None,
+                intent_matches_payload=False,
+                reason="intent asks for a count but code prints schema keys",
+            ),
+        ) as semantic, patch.object(
+            computation_ideal,
+            "_repair_code",
+            return_value={"code": "print(99)", "reason": "aligned with intent"},
         ) as repair, patch.object(
             computation_ideal,
             "_base_execute_code",
             return_value={"success": True, "output": "99"},
         ) as base:
             result = computation_ideal.execute_ideal._tool_func(
-                code="print('just give me the answer')",
-                intent="sum values",
+                code="print(obj.keys())",
+                intent="Count poor bridge records.",
             )
 
         self.assertEqual(result, {"success": True, "output": "99"})
         semantic.assert_called_once()
         repair.assert_called_once()
+        self.assertIn("Intent/payload mismatch", repair.call_args.kwargs["previous_error"])
         base.assert_called_once_with("print(99)")
 
-    def test_query_ideal_uses_repair_fallback_when_no_oracle_match(self):
+    def test_query_ideal_semantic_reject_runs_submitted_sql_when_intent_matches(self):
         with patch.object(
             computation_ideal,
-            "_semantic_record_match",
+            "_semantic_decision",
             create=True,
-            return_value=None,
+            return_value=computation_ideal._SemanticDecision(
+                record=None,
+                intent_matches_payload=True,
+                reason="SQL matches intent",
+            ),
         ) as semantic, patch.object(
             computation_ideal,
             "_repair_query",
-            return_value={"sql": "SELECT 7 AS n", "reason": "matched intent"},
+            return_value={"sql": "SELECT 7 AS n", "reason": "should not repair"},
+        ) as repair, patch.object(
+            computation_ideal,
+            "_base_query_file",
+            return_value={"success": True, "rows": [["County"], ["Poor Status"]], "columns": ["column_name"]},
+        ) as base:
+            result = computation_ideal.query_ideal._tool_func(
+                dataset_id="ds_a",
+                file_path="files/rows.txt",
+                sql="DESCRIBE t",
+                intent="Inspect schema to find columns.",
+        )
+
+        self.assertTrue(result["success"])
+        self.assertNotIn("ideal_oracle", result)
+        self.assertNotIn("repair_attempts", result)
+        self.assertNotIn("repairs", result)
+        semantic.assert_called_once()
+        repair.assert_not_called()
+        base.assert_called_once()
+        self.assertEqual(base.call_args.kwargs["sql"], "DESCRIBE t")
+
+    def test_query_ideal_semantic_reject_repairs_when_intent_and_sql_mismatch(self):
+        with patch.object(
+            computation_ideal,
+            "_semantic_decision",
+            create=True,
+            return_value=computation_ideal._SemanticDecision(
+                record=None,
+                intent_matches_payload=False,
+                reason="intent asks for an aggregate but SQL only inspects schema",
+            ),
+        ) as semantic, patch.object(
+            computation_ideal,
+            "_repair_query",
+            return_value={"sql": "SELECT 7 AS n", "reason": "aligned with intent"},
         ) as repair, patch.object(
             computation_ideal,
             "_base_query_file",
@@ -352,8 +438,8 @@ class IdealComputationToolTests(unittest.TestCase):
             result = computation_ideal.query_ideal._tool_func(
                 dataset_id="ds_a",
                 file_path="files/rows.txt",
-                sql="SELECT bad FROM t",
-                intent="not in the plan",
+                sql="DESCRIBE t",
+                intent="Count all rows.",
         )
 
         self.assertTrue(result["success"])
@@ -362,6 +448,7 @@ class IdealComputationToolTests(unittest.TestCase):
         self.assertNotIn("repairs", result)
         semantic.assert_called_once()
         repair.assert_called_once()
+        self.assertIn("Intent/payload mismatch", repair.call_args.kwargs["previous_error"])
         base.assert_called_once()
         self.assertEqual(base.call_args.kwargs["sql"], "SELECT 7 AS n")
 
@@ -415,8 +502,12 @@ class IdealComputationToolTests(unittest.TestCase):
     def test_query_ideal_retries_after_repair_failure(self):
         with patch.object(
             computation_ideal,
-            "_semantic_record_match",
-            return_value=None,
+            "_semantic_decision",
+            return_value=computation_ideal._SemanticDecision(
+                record=None,
+                intent_matches_payload=False,
+                reason="force repair retry test",
+            ),
         ), patch.object(
             computation_ideal,
             "_repair_query",
@@ -445,9 +536,9 @@ class IdealComputationToolTests(unittest.TestCase):
     def test_query_ideal_falls_back_to_all_records_for_wrong_dataset(self):
         with patch.object(
             computation_ideal,
-            "_semantic_record_match",
+            "_semantic_decision",
             create=True,
-            side_effect=self._first_semantic_candidate,
+            side_effect=self._first_semantic_decision,
         ) as semantic, patch.object(
             computation_ideal,
             "_repair_query",
@@ -475,8 +566,12 @@ class IdealComputationToolTests(unittest.TestCase):
     def test_execute_ideal_returns_failure_after_repair_exhaustion(self):
         with patch.object(
             computation_ideal,
-            "_semantic_record_match",
-            return_value=None,
+            "_semantic_decision",
+            return_value=computation_ideal._SemanticDecision(
+                record=None,
+                intent_matches_payload=False,
+                reason="force repair exhaustion test",
+            ),
         ), patch.object(
             computation_ideal,
             "_repair_code",
@@ -519,9 +614,15 @@ class IdealComputationToolTests(unittest.TestCase):
                 self.tools[0](code="print(7)", reason="matched authored computation")
                 return _FakeAgentResult(input_tokens=2000, output_tokens=100, cached_input_tokens=500)
 
-        with patch.object(computation_ideal, "_semantic_record_match", return_value=None), patch.object(
-            computation_ideal, "Agent", _RepairAgent
-        ), patch.object(
+        with patch.object(
+            computation_ideal,
+            "_semantic_decision",
+            return_value=computation_ideal._SemanticDecision(
+                record=None,
+                intent_matches_payload=False,
+                reason="force repair for instrumentation test",
+            ),
+        ), patch.object(computation_ideal, "Agent", _RepairAgent), patch.object(
             computation_ideal,
             "_repair_model",
             return_value="fake-model",
@@ -577,9 +678,15 @@ class IdealComputationToolTests(unittest.TestCase):
                 self.tools[0](sql="SELECT 7 AS answer", reason="matched authored computation")
                 return _FakeAgentResult(input_tokens=3000, output_tokens=120, cached_input_tokens=1000)
 
-        with patch.object(computation_ideal, "_semantic_record_match", return_value=None), patch.object(
-            computation_ideal, "Agent", _RepairAgent
-        ), patch.object(
+        with patch.object(
+            computation_ideal,
+            "_semantic_decision",
+            return_value=computation_ideal._SemanticDecision(
+                record=None,
+                intent_matches_payload=False,
+                reason="force repair for instrumentation test",
+            ),
+        ), patch.object(computation_ideal, "Agent", _RepairAgent), patch.object(
             computation_ideal,
             "_repair_model",
             return_value="fake-model",
@@ -611,8 +718,12 @@ class IdealComputationToolTests(unittest.TestCase):
     def test_repair_stats_reset_with_task_context(self):
         with patch.object(
             computation_ideal,
-            "_semantic_record_match",
-            return_value=None,
+            "_semantic_decision",
+            return_value=computation_ideal._SemanticDecision(
+                record=None,
+                intent_matches_payload=False,
+                reason="force repair stats test",
+            ),
         ), patch.object(
             computation_ideal,
             "_repair_code",
@@ -648,9 +759,15 @@ class IdealComputationToolTests(unittest.TestCase):
                 captured["prompt"] = prompt
                 self.tools[0](code="print(7)", reason="context was sufficient")
 
-        with patch.object(computation_ideal, "_semantic_record_match", return_value=None), patch.object(
-            computation_ideal, "Agent", _PromptCapturingAgent
-        ), patch.object(
+        with patch.object(
+            computation_ideal,
+            "_semantic_decision",
+            return_value=computation_ideal._SemanticDecision(
+                record=None,
+                intent_matches_payload=False,
+                reason="force repair for prompt test",
+            ),
+        ), patch.object(computation_ideal, "Agent", _PromptCapturingAgent), patch.object(
             computation_ideal,
             "_repair_model",
             return_value="fake-model",
@@ -684,9 +801,15 @@ class IdealComputationToolTests(unittest.TestCase):
                 captured["prompt"] = prompt
                 self.tools[0](sql="SELECT 7 AS answer", reason="context was sufficient")
 
-        with patch.object(computation_ideal, "_semantic_record_match", return_value=None), patch.object(
-            computation_ideal, "Agent", _PromptCapturingAgent
-        ), patch.object(
+        with patch.object(
+            computation_ideal,
+            "_semantic_decision",
+            return_value=computation_ideal._SemanticDecision(
+                record=None,
+                intent_matches_payload=False,
+                reason="force repair for prompt test",
+            ),
+        ), patch.object(computation_ideal, "Agent", _PromptCapturingAgent), patch.object(
             computation_ideal,
             "_repair_model",
             return_value="fake-model",
@@ -792,8 +915,8 @@ class IdealComputationToolTests(unittest.TestCase):
         try:
             with patch.object(
                 computation_ideal,
-                "_semantic_record_match",
-                side_effect=self._first_semantic_candidate,
+                "_semantic_decision",
+                side_effect=self._first_semantic_decision,
             ):
                 plugin.on_agent_initialized(AgentInitializedEvent(agent=agent))
                 query_result = run_logged_tool(
