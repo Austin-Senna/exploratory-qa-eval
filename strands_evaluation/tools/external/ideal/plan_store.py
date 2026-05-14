@@ -196,6 +196,19 @@ def _source_for_dataset(dataset_id: str, source_sequence: List[str]) -> str:
     return ""
 
 
+def _is_blocked_ideal_query_answer(answer: Any) -> bool:
+    answer_text = str(answer or "").strip().lower()
+    if answer_text.startswith("cannot execute sql:"):
+        return True
+    compact = answer_text.replace("_", "").replace("'", "")
+    return "queryfile" in compact and (
+        "doesnt run on xml" in compact
+        or "does not run on xml" in compact
+        or "doesnt run on kml" in compact
+        or "does not run on kml" in compact
+    )
+
+
 def _validate_computation_records(
     raw: Any,
     *,
@@ -245,8 +258,7 @@ def _validate_computation_records(
         payload = str(item.get(payload_key) or "").strip()
         blocked = False
         if not payload:
-            answer_text = str(item.get("answer") or "").strip().lower()
-            blocked = key == "ideal_query" and answer_text.startswith("cannot execute sql:")
+            blocked = key == "ideal_query" and _is_blocked_ideal_query_answer(item.get("answer"))
             if not blocked:
                 raise ValueError(f"Invalid plan at '{plan_path}': {label}.{payload_key} is required.")
 

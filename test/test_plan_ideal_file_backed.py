@@ -265,6 +265,46 @@ class TestPlanIdealFileBacked(unittest.TestCase):
             self.assertEqual(plan.ideal_query[0].payload, "")
             self.assertIn("Cannot execute SQL", plan.ideal_query[0].answer)
 
+    def test_load_plan_accepts_legacy_query_file_xml_blocker_record(self):
+        with TemporaryDirectory() as tmpdir:
+            plans_root = Path(tmpdir) / "plans_mini"
+            target = plans_root / "k-1-d-1"
+            target.mkdir(parents=True, exist_ok=True)
+            (target / "task_9.json").write_text(
+                json.dumps(
+                    {
+                        "dataset_sequence": ["ds_xml"],
+                        "source_sequence": ["datagov/ds_xml/files/data.txt"],
+                        "reasoning_chain_text": "1. Use code for XML.",
+                        "ideal_query": [
+                            {
+                                "node_id": "1",
+                                "dataset_id": "ds_xml",
+                                "intent": "count XML placemarks",
+                                "answer": "Query_file doesnt run on XML",
+                            }
+                        ],
+                        "ideal_code": [
+                            {
+                                "node_id": "1",
+                                "dataset_id": "ds_xml",
+                                "intent": "count XML placemarks",
+                                "code": "print(7)",
+                                "answer": "7",
+                            }
+                        ],
+                    }
+                )
+            )
+
+            set_plans_root(plans_root)
+            plan = load_plan_for_task("tasks_mini/k-1-d-1/task_9.json")
+
+            self.assertEqual(len(plan.ideal_query), 1)
+            self.assertTrue(plan.ideal_query[0].blocked)
+            self.assertEqual(plan.ideal_query[0].payload, "")
+            self.assertIn("Query_file", plan.ideal_query[0].answer)
+
     def test_plan_ideal_records_execution_plan_and_preserves_gold_chain(self):
         gold_prompt = inject_reasoning_chain_prompt("BASE", "1. Gold step.")
         fake_agent = _FakeAgent(gold_prompt)
