@@ -576,12 +576,12 @@ def peek_file(
         xml_root_tag, xml_namespaces, xml_schema_fields,
         xml_record_tag_candidates, xml_preview_mode.
         May also include `profile` with selected cached metadata. Strict
-        queryable profiles include schema_status, columns as name/type pairs,
-        row_count, top_2_rows, and llm_description. Strict XML/KML profiles
-        may also include record_tag. Single-column CSV/TXT profiles include
-        schema_status, column_count, snippet, and llm_description. Profiles
-        with parser errors, metadata, archives, or unavailable schemas are
-        omitted.
+        queryable profiles include columns as name/type pairs, row_count,
+        top_2_rows, and llm_description. Strict XML/KML profiles may also
+        include record_tag. Single-column CSV/TXT profiles include
+        column_count, snippet, and llm_description. Profiles retried from a
+        safe prefix expose the same columns/top_2_rows shape. Profiles with
+        parser errors, metadata, archives, or unavailable schemas are omitted.
         On error: {error: ...}
     """
     ref = _resolve_file_reference(dataset_id=dataset_id, file_path=file_path, s3_uri=s3_uri)
@@ -704,9 +704,9 @@ def peek_multiple(
         Dict with 'results' list (one entry per file, same shape as peek_file)
         and 'count'. Each result may include `profile` with selected cached
         metadata for queryable files: columns as name/type pairs, row_count,
-        top_2_rows, llm_description, and, for XML/KML, record_tag. Profiles
-        with parser errors, metadata, archives, or unavailable schemas are
-        omitted.
+        top_2_rows, llm_description, and, for XML/KML, record_tag. Sampled
+        retry profiles expose the same columns/top_2_rows shape. Profiles with
+        parser errors, metadata, archives, or unavailable schemas are omitted.
     """
     if files is None and entries is not None:
         files = entries

@@ -19,7 +19,6 @@ _PROFILE_BY_SLUG_FILENAME: Dict[Tuple[str, str], Dict[str, Any]] = {}
 _PROFILES_LOADED: bool = False
 
 _PROFILE_SCALAR_FIELDS = (
-    "schema_status",
     "row_count",
     "column_count",
     "llm_description",

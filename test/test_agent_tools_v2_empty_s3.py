@@ -190,7 +190,6 @@ class AgentToolsV2EmptyS3Tests(unittest.TestCase):
         self.assertEqual(
             result["profile"],
             {
-                "schema_status": "strict",
                 "row_count": 2,
                 "columns": [{"name": "value", "type": "integer"}],
                 "top_2_rows": [{"value": 1}, {"value": 2}],
@@ -257,9 +256,35 @@ class AgentToolsV2EmptyS3Tests(unittest.TestCase):
         self.assertEqual(
             result["profile"],
             {
-                "schema_status": "single_column",
                 "column_count": 1,
                 "snippet": "hello",
+            },
+        )
+
+    def test_peek_file_exposes_sampled_profile_fields_separately(self):
+        with ExitStack() as stack:
+            self._apply_empty_object_patches(stack)
+            stack.enter_context(
+                mock.patch.object(
+                    self.mod,
+                    "load_dataset_profile",
+                    return_value={
+                        "schema_status": "sampled",
+                        "schema_error": False,
+                        "columns": [
+                            {"name": "value", "type": "integer", "null_rate": 0.0},
+                        ],
+                        "top_2_rows": [{"value": 1}, {"value": 2}],
+                    },
+                )
+            )
+            result = self.mod.peek_file(s3_uri=self.ref["s3_uri"])
+
+        self.assertEqual(
+            result["profile"],
+            {
+                "columns": [{"name": "value", "type": "integer"}],
+                "top_2_rows": [{"value": 1}, {"value": 2}],
             },
         )
 
