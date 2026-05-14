@@ -12,7 +12,6 @@ import math
 import os
 import re
 import sys
-import zipfile
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple
 import xml.etree.ElementTree as ET
@@ -72,7 +71,6 @@ _MAX_CELL_CHARS = 80
 _QUERY_MAX_FILE_BYTES = 500 * 1024 * 1024
 _MAX_COLUMNS = 200
 _MAX_XML_SCHEMA_RECORDS = 200
-_MAX_ARCHIVE_MEMBERS = 50
 
 _SOCRATA_ID_RE = re.compile(r"^[a-z0-9]{4}-[a-z0-9]{4}$")
 _GENERIC_COLUMN_RE = re.compile(r"^column\d+$", re.IGNORECASE)
@@ -886,17 +884,33 @@ def _build_text_unavailable_profile(
     )
 
 
-def _archive_members(source_ref: str) -> List[str]:
-    if _is_s3_ref(source_ref):
-        return []
-    path = Path(source_ref)
-    try:
-        if not zipfile.is_zipfile(path):
-            return []
-        with zipfile.ZipFile(path) as zf:
-            return [info.filename for info in zf.infolist() if not info.is_dir()]
-    except Exception:
-        return []
+def _build_single_column_profile(
+    *,
+    slug: str,
+    filename: str,
+    source_ref: str,
+    s3_uri: Optional[str],
+    dataset_id: Optional[str],
+    file_path: Optional[str],
+    size_bytes: int,
+    description: Optional[str],
+    snippet_cache: Dict[str, str],
+) -> Dict[str, Any]:
+    profile = _build_non_tabular_profile(
+        slug=slug,
+        filename=filename,
+        source_ref=source_ref,
+        s3_uri=s3_uri,
+        dataset_id=dataset_id,
+        file_path=file_path,
+        family="text",
+        schema_status="single_column",
+        size_bytes=size_bytes,
+        description=description,
+        snippet_cache=snippet_cache,
+    )
+    profile["column_count"] = 1
+    return profile
 
 
 def _build_archive_profile(
@@ -922,9 +936,6 @@ def _build_archive_profile(
         file_path=file_path,
         description=description,
     )
-    members = _archive_members(source_ref)
-    if members:
-        _add_capped_list(profile, "archive_members", members, _MAX_ARCHIVE_MEMBERS)
     return profile
 
 
@@ -1137,7 +1148,7 @@ def _process_entry(entry: Dict[str, Any], description_cache: Dict[str, str], sni
                     description=description,
                 )
                 if family == "csv" and _single_column_csv(profile.get("columns") or []):
-                    profile = _build_text_unavailable_profile(
+                    profile = _build_single_column_profile(
                         slug=slug,
                         filename=filename,
                         source_ref=source_ref,
@@ -1147,7 +1158,6 @@ def _process_entry(entry: Dict[str, Any], description_cache: Dict[str, str], sni
                         size_bytes=size_bytes,
                         description=description,
                         snippet_cache=snippet_cache,
-                        schema_error_detail="CSV parser inferred only one column; treating as text",
                     )
                 elif family == "csv" and _all_generic_columns(profile.get("columns") or []):
                     profile = _build_text_unavailable_profile(

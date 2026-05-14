@@ -575,9 +575,13 @@ def peek_file(
         size_bytes, dataset_id, file_path. XML previews may also include
         xml_root_tag, xml_namespaces, xml_schema_fields,
         xml_record_tag_candidates, xml_preview_mode.
-        May also include `profile` with selected cached metadata such as
-        family, schema_status, schema_error, columns as name/type pairs,
-        top_2_rows, snippet, row_count, and llm_description.
+        May also include `profile` with selected cached metadata. Strict
+        queryable profiles include schema_status, columns as name/type pairs,
+        row_count, top_2_rows, and llm_description. Strict XML/KML profiles
+        may also include record_tag. Single-column CSV/TXT profiles include
+        schema_status, column_count, snippet, and llm_description. Profiles
+        with parser errors, metadata, archives, or unavailable schemas are
+        omitted.
         On error: {error: ...}
     """
     ref = _resolve_file_reference(dataset_id=dataset_id, file_path=file_path, s3_uri=s3_uri)
@@ -699,8 +703,10 @@ def peek_multiple(
     Returns:
         Dict with 'results' list (one entry per file, same shape as peek_file)
         and 'count'. Each result may include `profile` with selected cached
-        metadata such as columns as name/type pairs, top_2_rows, snippet,
-        family, row_count, and llm_description.
+        metadata for queryable files: columns as name/type pairs, row_count,
+        top_2_rows, llm_description, and, for XML/KML, record_tag. Profiles
+        with parser errors, metadata, archives, or unavailable schemas are
+        omitted.
     """
     if files is None and entries is not None:
         files = entries

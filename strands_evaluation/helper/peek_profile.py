@@ -19,31 +19,15 @@ _PROFILE_BY_SLUG_FILENAME: Dict[Tuple[str, str], Dict[str, Any]] = {}
 _PROFILES_LOADED: bool = False
 
 _PROFILE_SCALAR_FIELDS = (
-    "s3_uri",
-    "dataset_id",
-    "slug",
-    "filename",
-    "file_path",
-    "family",
     "schema_status",
-    "schema_error",
-    "size_bytes",
     "row_count",
+    "column_count",
     "llm_description",
     "snippet",
     "record_tag",
-    "xml_root_tag",
-    "xml_preview_mode",
-    "records_scanned_for_schema",
-    "records_scanned_for_schema_truncated",
 )
 _PROFILE_LIST_FIELDS = (
     "top_2_rows",
-    "archive_members",
-    "archive_members_truncated",
-    "archive_members_total",
-    "xml_schema_fields",
-    "xml_record_tag_candidates",
 )
 
 
@@ -154,10 +138,18 @@ def select_dataset_profile_fields(profile: Optional[Dict[str, Any]]) -> Optional
     if not isinstance(profile, dict):
         return None
 
+    schema_status = str(profile.get("schema_status") or "").strip()
+    has_schema_error = bool(profile.get("schema_error"))
+    if has_schema_error or schema_status in {"unavailable", "metadata", "archive"}:
+        return None
+
     out: Dict[str, Any] = {}
     for key in _PROFILE_SCALAR_FIELDS:
         if key in profile:
-            out[key] = bool(profile[key]) if key == "schema_error" else profile[key]
+            out[key] = profile[key]
+
+    if schema_status == "single_column":
+        return out or None
 
     columns = _selected_columns(profile.get("columns"))
     if columns is not None:

@@ -190,15 +190,76 @@ class AgentToolsV2EmptyS3Tests(unittest.TestCase):
         self.assertEqual(
             result["profile"],
             {
-                "s3_uri": self.ref["s3_uri"],
-                "dataset_id": self.ref["dataset_id"],
-                "file_path": self.ref["file_path"],
-                "family": "csv",
                 "schema_status": "strict",
-                "schema_error": False,
                 "row_count": 2,
                 "columns": [{"name": "value", "type": "integer"}],
                 "top_2_rows": [{"value": 1}, {"value": 2}],
+            },
+        )
+
+    def test_peek_file_omits_profile_when_cached_profile_has_schema_error(self):
+        with ExitStack() as stack:
+            self._apply_empty_object_patches(stack)
+            stack.enter_context(
+                mock.patch.object(
+                    self.mod,
+                    "load_dataset_profile",
+                    return_value={
+                        "schema_status": "unavailable",
+                        "schema_error": True,
+                        "snippet": "not useful enough to expose as a profile",
+                    },
+                )
+            )
+            result = self.mod.peek_file(s3_uri=self.ref["s3_uri"])
+
+        self.assertNotIn("profile", result)
+
+    def test_peek_file_omits_non_queryable_cached_profiles(self):
+        for schema_status in ("metadata", "archive", "unavailable"):
+            with self.subTest(schema_status=schema_status):
+                with ExitStack() as stack:
+                    self._apply_empty_object_patches(stack)
+                    stack.enter_context(
+                        mock.patch.object(
+                            self.mod,
+                            "load_dataset_profile",
+                            return_value={
+                                "schema_status": schema_status,
+                                "schema_error": False,
+                                "columns": [{"name": "debug", "type": "string"}],
+                            },
+                        )
+                    )
+                    result = self.mod.peek_file(s3_uri=self.ref["s3_uri"])
+
+                self.assertNotIn("profile", result)
+
+    def test_peek_file_single_column_profile_says_single_column_only(self):
+        with ExitStack() as stack:
+            self._apply_empty_object_patches(stack)
+            stack.enter_context(
+                mock.patch.object(
+                    self.mod,
+                    "load_dataset_profile",
+                    return_value={
+                        "schema_status": "single_column",
+                        "schema_error": False,
+                        "column_count": 1,
+                        "columns": [{"name": "value", "type": "string"}],
+                        "top_2_rows": [{"value": "hello"}],
+                        "snippet": "hello",
+                    },
+                )
+            )
+            result = self.mod.peek_file(s3_uri=self.ref["s3_uri"])
+
+        self.assertEqual(
+            result["profile"],
+            {
+                "schema_status": "single_column",
+                "column_count": 1,
+                "snippet": "hello",
             },
         )
 

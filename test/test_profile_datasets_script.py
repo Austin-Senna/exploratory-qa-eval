@@ -312,8 +312,9 @@ class ProfileDatasetsScriptTests(unittest.TestCase):
         self.assertEqual(summary, {"written": 1, "skipped": 0, "errors": 0})
         row = self._read_output_rows()[0]
         self.assertEqual(row["family"], "text")
-        self.assertEqual(row["schema_status"], "unavailable")
-        self.assertIs(row["schema_error"], True)
+        self.assertEqual(row["schema_status"], "single_column")
+        self.assertIs(row["schema_error"], False)
+        self.assertEqual(row["column_count"], 1)
         self.assertNotIn("columns", row)
         self.assertNotIn("candidate_columns", row)
 
@@ -431,6 +432,9 @@ class ProfileDatasetsScriptTests(unittest.TestCase):
         self.assertEqual(row["schema_status"], "strict")
         self.assertEqual(row["record_tag"], "Placemark")
         self.assertEqual(row["xml_root_tag"], "kml")
+        self.assertEqual(row["xml_preview_mode"], "parsed")
+        self.assertEqual(row["records_scanned_for_schema"], 2)
+        self.assertNotIn("records_scanned_for_schema_truncated", row)
         self.assertEqual([col["name"] for col in row["columns"]], ["NCESSCH", "CITY", "name"])
         self.assertEqual(row["top_2_rows"][0]["CITY"], "Austin")
 
@@ -457,7 +461,7 @@ class ProfileDatasetsScriptTests(unittest.TestCase):
         self.assertNotIn("top_2_rows", row)
         self.assertNotIn("snippet", row)
 
-    def test_zip_profile_exposes_archive_member_hints_only(self):
+    def test_zip_profile_marks_archive_without_member_hints(self):
         uri_list_path = self._root / "table_profiles_needed.txt"
         uri_list_path.write_text(str(self._zip_path) + "\n")
 
@@ -475,7 +479,7 @@ class ProfileDatasetsScriptTests(unittest.TestCase):
         self.assertEqual(summary, {"written": 1, "skipped": 0, "errors": 0})
         row = self._read_output_rows()[0]
         self.assertEqual(row["schema_status"], "archive")
-        self.assertEqual(row["archive_members"], ["inner.csv"])
+        self.assertNotIn("archive_members", row)
         self.assertNotIn("columns", row)
 
     def test_time_columns_do_not_fail_profile_generation(self):

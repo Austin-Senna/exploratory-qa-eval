@@ -55,10 +55,13 @@ def peek_file(
         xml_root_tag, xml_namespaces, xml_schema_fields,
         xml_record_tag_candidates, xml_preview_mode.
 
-        May also include a `profile` field with selected cached metadata for
-        the dataset: `family`, `schema_status`, `schema_error`, `columns`
-        as name/type pairs, `llm_description`, `snippet`, `row_count`,
-        `size_bytes`, and `top_2_rows`.
+        May also include a `profile` field with selected cached metadata.
+        Strict queryable profiles include `schema_status`, `columns` as
+        name/type pairs, `llm_description`, `row_count`, and `top_2_rows`.
+        Strict XML/KML profiles may also include `record_tag`. Single-column
+        CSV/TXT profiles include `schema_status`, `column_count`, `snippet`,
+        and `llm_description`. Profiles with parser errors, metadata,
+        archives, or unavailable schemas are omitted.
 
         On error: {error: ...}
     """
@@ -113,10 +116,10 @@ def peek_multiple(
 
     Returns:
         Dict with `results` list and `count`. Each result has the same shape as
-        peek_file and may include a `profile` field with selected cached
-        metadata such as family, schema_status, schema_error, columns as
-        name/type pairs, llm_description, snippet, row_count, size_bytes,
-        and top_2_rows.
+        peek_file and may include a compact `profile` field for queryable
+        files: columns as name/type pairs, row_count, top_2_rows,
+        llm_description, and, for XML/KML, record_tag. Profiles with parser
+        errors, metadata, archives, or unavailable schemas are omitted.
 
         On error: {error: ...}
     """
