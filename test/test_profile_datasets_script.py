@@ -3,6 +3,7 @@ import io
 import json
 import unittest
 from contextlib import redirect_stderr
+from unittest import mock
 import zipfile
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -125,6 +126,11 @@ class ProfileDatasetsScriptTests(unittest.TestCase):
         with self._output_path.open() as f:
             return [json.loads(line) for line in f if line.strip()]
 
+    def test_parse_args_defaults_to_five_gib_file_cap(self):
+        args = profile_datasets._parse_args([])
+
+        self.assertEqual(args.max_file_bytes, 5 * 1024 * 1024 * 1024)
+
     def test_build_profiles_computes_expected_local_csv_stats(self):
         summary = profile_datasets.build_profiles(
             input_path=self._input_path,
@@ -234,6 +240,51 @@ class ProfileDatasetsScriptTests(unittest.TestCase):
         self.assertEqual(row["file_path"], "files/rows.csv")
         self.assertEqual(row["llm_description"], "Manifest description")
         self.assertEqual(row["schema_status"], "strict")
+
+    def test_oversized_manifest_file_is_not_parsed(self):
+        manifest_path = self._root / "manifest_large.jsonl"
+        local_uri = f"s3://lakeqa-yc4103-datalake/datagov/example-dataset/files/large.csv"
+        self._write_jsonl(
+            manifest_path,
+            [
+                {
+                    "dataset_id": "example-dataset",
+                    "file_path": "files/large.csv",
+                    "s3_uri": local_uri,
+                    "source_ref": str(self._csv_path),
+                    "size_bytes": 10,
+                }
+            ],
+        )
+
+        stderr = io.StringIO()
+        with redirect_stderr(stderr), mock.patch.object(
+            profile_datasets,
+            "_build_tabular_profile",
+            side_effect=AssertionError("oversized file should not be parsed"),
+        ):
+            summary = profile_datasets.build_profiles(
+                input_path=manifest_path,
+                output_path=self._output_path,
+                input_kind="manifest",
+                descriptions_path=self._descriptions_path,
+                snippets_path=self._snippets_path,
+                parallel=1,
+                max_file_bytes=5,
+                resume=False,
+                bucket="unused",
+            )
+
+        self.assertEqual(summary, {"written": 1, "skipped": 0, "errors": 0})
+        row = self._read_output_rows()[0]
+        self.assertEqual(row["family"], "csv")
+        self.assertEqual(row["schema_status"], "unavailable")
+        self.assertIs(row["schema_error"], True)
+        self.assertEqual(row["size_bytes"], 10)
+        self.assertNotIn("columns", row)
+        self.assertNotIn("top_2_rows", row)
+        self.assertIn("PROFILE_SCHEMA_ERROR", stderr.getvalue())
+        self.assertIn("exceeds max profile file size 5", stderr.getvalue())
 
     def test_build_profiles_accepts_uri_list_input(self):
         uri_list_path = self._root / "table_profiles_needed.txt"

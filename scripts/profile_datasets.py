@@ -12,8 +12,9 @@ import math
 import os
 import re
 import sys
+import threading
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple
+from typing import Any, Callable, Dict, Iterable, List, Optional, Sequence, Tuple, TypeVar
 import xml.etree.ElementTree as ET
 
 _REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -69,8 +70,11 @@ _SNIFF_BYTES = 8 * 1024
 _SNIPPET_FALLBACK_BYTES = 2 * 1024
 _MAX_CELL_CHARS = 80
 _QUERY_MAX_FILE_BYTES = 500 * 1024 * 1024
+_DEFAULT_MAX_PROFILE_FILE_BYTES = 5 * 1024 * 1024 * 1024
+_DEFAULT_DUCKDB_TIMEOUT_SECONDS = 300
 _MAX_COLUMNS = 200
 _MAX_XML_SCHEMA_RECORDS = 200
+_T = TypeVar("_T")
 
 _SOCRATA_ID_RE = re.compile(r"^[a-z0-9]{4}-[a-z0-9]{4}$")
 _GENERIC_COLUMN_RE = re.compile(r"^column\d+$", re.IGNORECASE)
@@ -125,6 +129,18 @@ def _parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     parser.add_argument("--descriptions", default=str(_DESC_PATH))
     parser.add_argument("--snippets", default=str(_SNIPPET_PATH))
     parser.add_argument("--parallel", type=int, default=4)
+    parser.add_argument(
+        "--max-file-bytes",
+        type=int,
+        default=_DEFAULT_MAX_PROFILE_FILE_BYTES,
+        help="Maximum object size to profile; default is 5 GiB. Use 0 to disable.",
+    )
+    parser.add_argument(
+        "--duckdb-timeout-seconds",
+        type=int,
+        default=_DEFAULT_DUCKDB_TIMEOUT_SECONDS,
+        help="Seconds before interrupting one DuckDB tabular profiling query group. Use 0 to disable.",
+    )
     parser.add_argument("--resume", action="store_true")
     parser.add_argument("--bucket", default=BUCKET)
     return parser.parse_args(argv)
@@ -493,6 +509,39 @@ def _duckdb_connection(*, needs_httpfs: bool) -> duckdb.DuckDBPyConnection:
     return conn
 
 
+def _run_with_duckdb_timeout(
+    conn: duckdb.DuckDBPyConnection,
+    timeout_seconds: int,
+    action: Callable[[], _T],
+) -> _T:
+    if timeout_seconds <= 0:
+        return action()
+
+    timed_out = threading.Event()
+
+    def interrupt() -> None:
+        timed_out.set()
+        try:
+            conn.interrupt()
+        except Exception:
+            pass
+
+    timer = threading.Timer(timeout_seconds, interrupt)
+    timer.daemon = True
+    timer.start()
+    try:
+        result = action()
+        if timed_out.is_set():
+            raise TimeoutError(f"DuckDB profiling exceeded {timeout_seconds} seconds")
+        return result
+    except Exception as exc:
+        if timed_out.is_set():
+            raise TimeoutError(f"DuckDB profiling exceeded {timeout_seconds} seconds") from exc
+        raise
+    finally:
+        timer.cancel()
+
+
 def _scan_sql(source_ref: str, family: str, table: Dict[str, Any]) -> str:
     ref = _sql_quote_string(source_ref)
     if family == "parquet":
@@ -788,12 +837,21 @@ def _build_tabular_profile(
     table: Dict[str, Any],
     size_bytes: int,
     description: Optional[str],
+    duckdb_timeout_seconds: int,
 ) -> Dict[str, Any]:
     conn = _duckdb_connection(needs_httpfs=_is_s3_ref(source_ref))
     try:
-        scan_sql = _scan_sql(source_ref, family, table)
-        row_count, columns = _column_profiles(conn, scan_sql, family)
-        top_2_rows = _top_rows(conn, scan_sql)
+        def profile_query() -> Tuple[int, List[Dict[str, Any]], List[Dict[str, Any]]]:
+            scan_sql = _scan_sql(source_ref, family, table)
+            row_count, columns = _column_profiles(conn, scan_sql, family)
+            top_2_rows = _top_rows(conn, scan_sql)
+            return row_count, columns, top_2_rows
+
+        row_count, columns, top_2_rows = _run_with_duckdb_timeout(
+            conn,
+            duckdb_timeout_seconds,
+            profile_query,
+        )
     finally:
         conn.close()
 
@@ -882,6 +940,40 @@ def _build_text_unavailable_profile(
         schema_error=True,
         schema_error_detail=schema_error_detail,
     )
+
+
+def _build_oversized_profile(
+    *,
+    slug: str,
+    filename: str,
+    source_ref: str,
+    s3_uri: Optional[str],
+    dataset_id: Optional[str],
+    file_path: Optional[str],
+    family: str,
+    size_bytes: int,
+    max_file_bytes: int,
+    description: Optional[str],
+) -> Dict[str, Any]:
+    profile = _base_profile(
+        slug=slug,
+        filename=filename,
+        family=family,
+        schema_status="unavailable",
+        size_bytes=size_bytes,
+        s3_uri=s3_uri,
+        dataset_id=dataset_id,
+        file_path=file_path,
+        description=description,
+    )
+    profile["schema_error"] = True
+    _log_schema_error(
+        slug=slug,
+        filename=filename,
+        source_ref=source_ref,
+        detail=f"File size {size_bytes} exceeds max profile file size {max_file_bytes}",
+    )
+    return profile
 
 
 def _build_single_column_profile(
@@ -1079,7 +1171,13 @@ def _build_xml_profile(
     return profile
 
 
-def _process_entry(entry: Dict[str, Any], description_cache: Dict[str, str], snippet_cache: Dict[str, str]) -> Tuple[Tuple[str, str], Optional[Dict[str, Any]], Optional[str]]:
+def _process_entry(
+    entry: Dict[str, Any],
+    description_cache: Dict[str, str],
+    snippet_cache: Dict[str, str],
+    max_file_bytes: int,
+    duckdb_timeout_seconds: int,
+) -> Tuple[Tuple[str, str], Optional[Dict[str, Any]], Optional[str]]:
     slug = str(entry["slug"])
     filename = str(entry["filename"])
     source_ref = str(entry["source_ref"])
@@ -1107,6 +1205,19 @@ def _process_entry(entry: Dict[str, Any], description_cache: Dict[str, str], sni
                 size_bytes=size_bytes,
                 description=description,
                 snippet_cache=snippet_cache,
+            )
+        elif max_file_bytes > 0 and size_bytes > max_file_bytes and family not in {"archive", "binary"}:
+            profile = _build_oversized_profile(
+                slug=slug,
+                filename=filename,
+                source_ref=source_ref,
+                s3_uri=s3_uri,
+                dataset_id=dataset_id,
+                file_path=file_path,
+                family=family,
+                size_bytes=size_bytes,
+                max_file_bytes=max_file_bytes,
+                description=description,
             )
         elif family in {"archive", "binary"}:
             profile = _build_archive_profile(
@@ -1146,6 +1257,7 @@ def _process_entry(entry: Dict[str, Any], description_cache: Dict[str, str], sni
                     table=table,
                     size_bytes=size_bytes,
                     description=description,
+                    duckdb_timeout_seconds=duckdb_timeout_seconds,
                 )
                 if family == "csv" and _single_column_csv(profile.get("columns") or []):
                     profile = _build_single_column_profile(
@@ -1230,6 +1342,8 @@ def build_profiles(
     descriptions_path: Path = _DESC_PATH,
     snippets_path: Path = _SNIPPET_PATH,
     parallel: int = 4,
+    max_file_bytes: int = _DEFAULT_MAX_PROFILE_FILE_BYTES,
+    duckdb_timeout_seconds: int = _DEFAULT_DUCKDB_TIMEOUT_SECONDS,
     resume: bool = False,
     bucket: str = BUCKET,
 ) -> Dict[str, int]:
@@ -1257,7 +1371,13 @@ def build_profiles(
                 if identity is not None and identity in existing_keys:
                     skipped += 1
                     continue
-                _, profile, error = _process_entry(entry, description_cache, snippet_cache)
+                _, profile, error = _process_entry(
+                    entry,
+                    description_cache,
+                    snippet_cache,
+                    max_file_bytes,
+                    duckdb_timeout_seconds,
+                )
                 if error is not None or profile is None:
                     errors += 1
                     print(f"SKIP {key[0]}/{key[1]}: {error}", file=sys.stderr)
@@ -1276,7 +1396,14 @@ def build_profiles(
                 if identity is not None and identity in existing_keys:
                     skipped += 1
                     continue
-                future = executor.submit(_process_entry, entry, description_cache, snippet_cache)
+                future = executor.submit(
+                    _process_entry,
+                    entry,
+                    description_cache,
+                    snippet_cache,
+                    max_file_bytes,
+                    duckdb_timeout_seconds,
+                )
                 futures[future] = key
 
             with tqdm(total=len(futures), desc="Profiling files", unit="file") as pbar:
@@ -1306,6 +1433,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         descriptions_path=Path(args.descriptions),
         snippets_path=Path(args.snippets),
         parallel=args.parallel,
+        max_file_bytes=args.max_file_bytes,
+        duckdb_timeout_seconds=args.duckdb_timeout_seconds,
         resume=args.resume,
         bucket=args.bucket,
     )
