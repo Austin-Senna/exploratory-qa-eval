@@ -1,0 +1,58 @@
+{
+  "question": "In what metropolitan area is the future transfer point for the line previously designated the Bi-County Transitway? Write your answer as [ANSWER].",
+  "answer": "Washington, D.C.",
+  "nodes": {
+    "1": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ac413ca5542997ea680c9e9:Purple Line (Maryland)",
+      "fact": "Purple Line (Maryland): The Purple Line, previously designated the Bi-County Transitway, is a 16.2 mi light rail line under construction to link the Maryland suburbs of Bethesda, Silver Spring, College Park, and New Carrollton, all in the Washington metropolitan area.",
+      "subquestion": "Which light rail line was previously designated the Bi-County Transitway?",
+      "answer": "Purple Line"
+    },
+    "2": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ac413ca5542997ea680c9e9:Takoma Langley Crossroads Transit Center",
+      "fact": "Takoma Langley Crossroads Transit Center: It is at the intersection of University Boulevard and New Hampshire Avenue, and is the largest bus-only transfer in the Washington, D.C. metropolitan area. It is a future transfer point for the Purple Line.",
+      "subquestion": "In what metropolitan area is a future transfer point for the Purple Line?",
+      "answer": "Washington, D.C."
+    }
+  },
+  "reasoning_chain": [
+    "Node 1: Which light rail line was previously designated the Bi-County Transitway? Evidence: Purple Line (Maryland): The Purple Line, previously designated the Bi-County Transitway, is a 16.2 mi light rail line under construction to link the Maryland suburbs of Bethesda, Silver Spring, College Park, and New Carrollton, all in the Washington metropolitan area. -> Purple Line",
+    "Node 2: In what metropolitan area is a future transfer point for the Purple Line? Evidence: Takoma Langley Crossroads Transit Center: It is at the intersection of University Boulevard and New Hampshire Avenue, and is the largest bus-only transfer in the Washington, D.C. metropolitan area. It is a future transfer point for the Purple Line. -> Washington, D.C.",
+    "Final answer: Washington, D.C."
+  ],
+  "datasets_used": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ac413ca5542997ea680c9e9:Purple Line (Maryland)",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ac413ca5542997ea680c9e9:Takoma Langley Crossroads Transit Center"
+  ],
+  "reasoning_hops": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1
+      ],
+      "reasoning": "Node 1: Which light rail line was previously designated the Bi-County Transitway? Evidence: Purple Line (Maryland): The Purple Line, previously designated the Bi-County Transitway, is a 16.2 mi light rail line under construction to link the Maryland suburbs of Bethesda, Silver Spring, College Park, and New Carrollton, all in the Washington metropolitan area. -> Purple Line",
+      "answer": "Purple Line"
+    },
+    {
+      "hop": 2,
+      "node_ids": [
+        2
+      ],
+      "reasoning": "Node 2: In what metropolitan area is a future transfer point for the Purple Line? Evidence: Takoma Langley Crossroads Transit Center: It is at the intersection of University Boulevard and New Hampshire Avenue, and is the largest bus-only transfer in the Washington, D.C. metropolitan area. It is a future transfer point for the Purple Line. -> Washington, D.C.",
+      "answer": "Washington, D.C."
+    }
+  ],
+  "_provenance": {
+    "benchmark": "hotpotqa",
+    "split": "dev_distractor",
+    "source_id": "5ac413ca5542997ea680c9e9",
+    "type": "bridge",
+    "level": "hard",
+    "promoted_from": "other-benchmarks/tasks-hotpotqa-mini/k-2-d-2/task_49.json",
+    "sample_source": "other-benchmarks/tasks/hotpotqa/k-2-d-2/task_4228.json",
+    "original_bucket": "k-2-d-2",
+    "promotion_status": "verified",
+    "promotion_rule": "curated_hotpotqa_batch_v1",
+    "source_mapping_status": "raw_anchor_temporary"
+  }
+}

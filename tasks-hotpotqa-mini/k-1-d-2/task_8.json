@@ -1,0 +1,50 @@
+{
+  "question": "Who was the first Russian composer to make a lasting impression internationally, Alessandro Scarlatti or Pyotr Ilyich Tchaikovsky? Write your answer as [ANSWER].",
+  "answer": "Pyotr Ilyich Tchaikovsky",
+  "nodes": {
+    "1": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a7652435542992d0ec060a5:Alessandro Scarlatti",
+      "fact": "Alessandro Scarlatti: Pietro Alessandro Gaspare Scarlatti (2 May 1660 - 22 October 1725) was an Italian Baroque composer, especially famous for his operas and chamber cantatas.",
+      "subquestion": "What nationality and period are associated with composer Alessandro Scarlatti?",
+      "answer": "Italian Baroque composer"
+    },
+    "2": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a7652435542992d0ec060a5:Pyotr Ilyich Tchaikovsky",
+      "fact": "Pyotr Ilyich Tchaikovsky: Pyotr Ilyich Tchaikovsky was a Russian composer of the romantic period. He was the first Russian composer whose music made a lasting impression internationally.",
+      "subquestion": "Which composer is described as the first Russian composer whose music made a lasting impression internationally?",
+      "answer": "Pyotr Ilyich Tchaikovsky"
+    }
+  },
+  "reasoning_chain": [
+    "Node 1 and Node 2: Alessandro Scarlatti is described as an Italian Baroque composer, while Pyotr Ilyich Tchaikovsky is described as the first Russian composer whose music made a lasting impression internationally, so the answer is Pyotr Ilyich Tchaikovsky. -> Pyotr Ilyich Tchaikovsky",
+    "Final answer: Pyotr Ilyich Tchaikovsky"
+  ],
+  "datasets_used": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a7652435542992d0ec060a5:Alessandro Scarlatti",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a7652435542992d0ec060a5:Pyotr Ilyich Tchaikovsky"
+  ],
+  "reasoning_hops": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1,
+        2
+      ],
+      "reasoning": "Node 1 and Node 2: Alessandro Scarlatti is described as an Italian Baroque composer, while Pyotr Ilyich Tchaikovsky is described as the first Russian composer whose music made a lasting impression internationally, so the answer is Pyotr Ilyich Tchaikovsky. -> Pyotr Ilyich Tchaikovsky",
+      "answer": "Pyotr Ilyich Tchaikovsky"
+    }
+  ],
+  "_provenance": {
+    "benchmark": "hotpotqa",
+    "split": "dev_distractor",
+    "source_id": "5a7652435542992d0ec060a5",
+    "type": "comparison",
+    "level": "hard",
+    "promoted_from": "other-benchmarks/tasks-hotpotqa-mini/k-2-d-1/task_8.json",
+    "sample_source": "other-benchmarks/tasks/hotpotqa/k-2-d-1/task_153.json",
+    "original_bucket": "k-2-d-1",
+    "promotion_status": "verified",
+    "promotion_rule": "curated_hotpotqa_batch_v1",
+    "source_mapping_status": "raw_anchor_temporary"
+  }
+}

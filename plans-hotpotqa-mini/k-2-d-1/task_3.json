@@ -1,0 +1,20 @@
+{
+  "dataset_sequence": [
+    "hotpotqa-5a76cb9b55429966f1a36bf2-commissioner-of-the-nba",
+    "hotpotqa-5a76cb9b55429966f1a36bf2-adam-silver"
+  ],
+  "source_sequence": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a76cb9b55429966f1a36bf2:Commissioner of the NBA",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a76cb9b55429966f1a36bf2:Adam Silver"
+  ],
+  "reasoning_chain_text": [
+    "1. Identify who succeeded David Stern as commissioner of the NBA after his retirement.",
+    "2. Use that person to determine the American lawyer and businessman who is the current commissioner."
+  ],
+  "original_final_question": "After David Stern retired from being commissioner of the NBA, this american lawyer and businessman succeed him and is now the current commissioner who is he? Write your answer as [ANSWER].",
+  "original_reasoning_chain": [
+    "Node 1: Who succeeded David Stern as commissioner of the NBA? Evidence: Commissioner of the NBA: The current commissioner is Adam Silver after he succeeded David Stern on February 1, 2014. -> Adam Silver",
+    "Node 2: Which American lawyer and businessman is currently commissioner of the NBA? Evidence: Adam Silver: Adam Silver (born April 25, 1962) is an American lawyer and businessman, who is currently the commissioner of the National Basketball Association (NBA). -> Adam Silver",
+    "Final answer: Adam Silver"
+  ]
+}

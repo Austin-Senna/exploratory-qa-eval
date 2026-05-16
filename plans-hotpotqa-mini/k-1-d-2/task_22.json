@@ -1,0 +1,19 @@
+{
+  "dataset_sequence": [
+    "hotpotqa-5a83305d55429966c78a6b4a-medstar-georgetown-university-hospital",
+    "hotpotqa-5a83305d55429966c78a6b4a-providence-hospital-washington-d-c"
+  ],
+  "source_sequence": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a83305d55429966c78a6b4a:MedStar Georgetown University Hospital",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a83305d55429966c78a6b4a:Providence Hospital (Washington, D.C.)"
+  ],
+  "reasoning_chain_text": [
+    "1. Determine where MedStar Georgetown University Hospital and Providence Hospital are located.",
+    "2. Return the shared jurisdiction for the two hospitals."
+  ],
+  "original_final_question": "In which jurisdiction are MedStar Georgetown University Hospital and Providence Hospital located? Write your answer as [ANSWER].",
+  "original_reasoning_chain": [
+    "Node 1 and Node 2: MedStar Georgetown University Hospital is in Washington, D.C., and Providence Hospital is located in the District of Columbia, so the shared jurisdiction is the District of Columbia. -> District of Columbia",
+    "Final answer: District of Columbia"
+  ]
+}

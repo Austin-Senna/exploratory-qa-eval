@@ -1,0 +1,19 @@
+{
+  "dataset_sequence": [
+    "hotpotqa-5ac029655542992a796decb3-elfenland",
+    "hotpotqa-5ac029655542992a796decb3-san-marco-board-game"
+  ],
+  "source_sequence": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ac029655542992a796decb3:Elfenland",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ac029655542992a796decb3:San Marco (board game)"
+  ],
+  "reasoning_chain_text": [
+    "1. Determine how many designers are credited for Elfenland and San Marco.",
+    "2. Compare the designer counts and return the game designed by more persons."
+  ],
+  "original_final_question": "Which game is designed by more persons, Elfenland or San Marco? Write your answer as [ANSWER].",
+  "original_reasoning_chain": [
+    "Compare the supported evidence: Node 1: Elfenland: Elfenland is a German-style board game designed by Alan R. Moon and published by Amigo Spiele in German and Rio Grande Games in English in 1998.; Node 2: San Marco (board game): San Marco is a 2001 designer board game by Alan R. Moon and Aaron Weissblum.. Final answer: San Marco",
+    "Final answer: San Marco"
+  ]
+}

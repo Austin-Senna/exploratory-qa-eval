@@ -1,0 +1,19 @@
+{
+  "dataset_sequence": [
+    "hotpotqa-5ae198bf5542997b2ef7d20d-chad-gray",
+    "hotpotqa-5ae198bf5542997b2ef7d20d-dickie-peterson"
+  ],
+  "source_sequence": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ae198bf5542997b2ef7d20d:Chad Gray",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ae198bf5542997b2ef7d20d:Dickie Peterson"
+  ],
+  "reasoning_chain_text": [
+    "1. Determine the vocal or musical roles described for Chad Gray and Dickie Peterson.",
+    "2. Compare those roles and return whether both were singers."
+  ],
+  "original_final_question": "Were Chad Gray and Dickie Peterson both singers? Write your answer as [ANSWER].",
+  "original_reasoning_chain": [
+    "Compare the supported evidence: Node 1: Chad Gray: Chad Gray (born October 16, 1971), is the lead vocalist for the groove metal supergroup Hellyeah and former lead vocalist for American heavy metal band Mudvayne.; Node 2: Dickie Peterson: Richard Allan Peterson (September 12, 1946 – October 12, 2009) was an American musician, best known as the bassist and lead singer for Blue Cheer.. Final answer: yes",
+    "Final answer: yes"
+  ]
+}

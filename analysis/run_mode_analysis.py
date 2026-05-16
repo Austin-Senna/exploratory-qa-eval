@@ -713,11 +713,154 @@ def write_per_task_retrieval_csv(discovery: dict, output_csv: Path) -> int:
                 }
             )
 
-    with output_csv.open("w", newline="") as f:
-        writer = csv.DictWriter(f, fieldnames=fieldnames)
+    write_csv(output_csv, rows, fieldnames)
+    return len(rows)
+
+
+def write_csv(path: Path, rows: List[dict], fieldnames: List[str]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=fieldnames, extrasaction="ignore")
         writer.writeheader()
         writer.writerows(rows)
-    return len(rows)
+
+
+def _model_output_dirname(model: str) -> str:
+    return str(model).replace("/", "__") or "unknown"
+
+
+def _row_model(row: dict) -> Optional[str]:
+    model = row.get("model") or row.get("model_dir")
+    if model:
+        return str(model)
+    condition_model = row.get("condition_model")
+    if condition_model:
+        return _split_cm_key(str(condition_model))[0]
+    return None
+
+
+def _filter_rows_for_model(rows: List[dict], model: str) -> List[dict]:
+    return [row for row in rows if _row_model(row) == model]
+
+
+def _filter_json_for_model(filename: str, data: object, model: str, summary_rows: List[dict]) -> object:
+    if filename == "summary.json":
+        return summary_rows
+    if filename == "variant_summary.json":
+        return build_variant_summary(summary_rows)
+    if isinstance(data, dict):
+        return {
+            key: value
+            for key, value in data.items()
+            if _split_cm_key(str(key))[0] == model
+        }
+    if isinstance(data, list):
+        return _filter_rows_for_model([row for row in data if isinstance(row, dict)], model)
+    return data
+
+
+def _models_from_outputs(files: Dict[str, object], csv_rows: List[dict]) -> List[str]:
+    models = set()
+    summary = files.get("summary.json")
+    if isinstance(summary, list):
+        for row in summary:
+            if isinstance(row, dict) and _row_model(row):
+                models.add(str(_row_model(row)))
+    for row in csv_rows:
+        model = _row_model(row)
+        if model:
+            models.add(model)
+    for data in files.values():
+        if isinstance(data, dict):
+            for key in data.keys():
+                model, _ = _split_cm_key(str(key))
+                if model != "unknown":
+                    models.add(model)
+    return sorted(models)
+
+
+def write_per_model_outputs(
+    out_dir: Path,
+    files: Dict[str, object],
+    per_task_retrieval_rows: List[dict],
+    per_task_retrieval_fieldnames: List[str],
+) -> None:
+    models = _models_from_outputs(files, per_task_retrieval_rows)
+    summary = files.get("summary.json")
+    all_summary_rows = summary if isinstance(summary, list) else []
+
+    for model in models:
+        model_dir = out_dir / "by_model" / _model_output_dirname(model)
+        model_dir.mkdir(parents=True, exist_ok=True)
+        model_summary_rows = _filter_rows_for_model(
+            [row for row in all_summary_rows if isinstance(row, dict)],
+            model,
+        )
+        for filename, data in files.items():
+            path = model_dir / filename
+            with path.open("w") as f:
+                json.dump(_filter_json_for_model(filename, data, model, model_summary_rows), f, indent=2)
+        write_csv(
+            model_dir / "per_task_retrieval.csv",
+            _filter_rows_for_model(per_task_retrieval_rows, model),
+            per_task_retrieval_fieldnames,
+        )
+
+
+def build_per_task_retrieval_rows(discovery: dict) -> Tuple[List[dict], List[str]]:
+    fieldnames = [
+        "condition_model",
+        "model",
+        "variant",
+        "search_tool",
+        "search_results",
+        "agent_management",
+        "computation_tool",
+        "plan_skills",
+        "k",
+        "task_id",
+        "search_calls_count",
+        "gold_datasets_needed_count",
+        "datasets_retrieved_count",
+        "datasets_retrieved_unique_count",
+        "gold_datasets_retrieved_count",
+        "retrieval_recall",
+        "retrieval_precision",
+        "retrieval_f1",
+    ]
+    rows: List[dict] = []
+    for key, d in sorted(discovery.items()):
+        model, variant = _split_cm_key(key)
+        axes = _parse_variant(variant)
+        task_metrics = sorted(d.get("task_metrics", []), key=lambda m: str(m.get("task_id", "")))
+        for m in task_metrics:
+            gold_ids_count = len(m.get("gold_ids", []))
+            retrieved_unique_count = len(m.get("retrieved_dataset_ids", []))
+            retrieved_ids_count = int(m.get("num_results_total_non_unique", retrieved_unique_count) or 0)
+            retrieved_gold_ids_count = len(m.get("retrieved_gold_dataset_ids", []))
+            rows.append(
+                {
+                    "condition_model": key,
+                    "model": model,
+                    "variant": variant,
+                    "search_tool": axes["search_tool"],
+                    "search_results": axes["search_results"],
+                    "agent_management": axes["agent_management"],
+                    "computation_tool": axes["computation_tool"],
+                    "plan_skills": axes["plan_skills"],
+                    "k": axes["k"],
+                    "task_id": m.get("task_id", ""),
+                    "search_calls_count": int(m.get("num_search_calls", 0) or 0),
+                    "gold_datasets_needed_count": gold_ids_count,
+                    "datasets_retrieved_count": retrieved_ids_count,
+                    "datasets_retrieved_unique_count": retrieved_unique_count,
+                    "gold_datasets_retrieved_count": retrieved_gold_ids_count,
+                    "retrieval_recall": round(float(m.get("d_ret", 0) or 0), 6),
+                    "retrieval_precision": round(float(m.get("d_ret_precision", 0) or 0), 6),
+                    "retrieval_f1": round(float(m.get("d_ret_f1", 0) or 0), 6),
+                }
+            )
+    return rows, fieldnames
 
 
 def _safe_symlink(src: Path, dst: Path) -> None:
@@ -959,9 +1102,15 @@ def main() -> None:
             json.dump(data, f, indent=2)
         print(f"  Wrote {path}")
 
+    per_task_rows, per_task_fieldnames = build_per_task_retrieval_rows(discovery)
     per_task_csv = out_dir / "per_task_retrieval.csv"
-    num_rows = write_per_task_retrieval_csv(discovery, per_task_csv)
+    write_csv(per_task_csv, per_task_rows, per_task_fieldnames)
+    num_rows = len(per_task_rows)
     print(f"  Wrote {per_task_csv} ({num_rows} rows)")
+
+    print("Writing per-model outputs...")
+    write_per_model_outputs(out_dir, files, per_task_rows, per_task_fieldnames)
+    print(f"  Wrote per-model outputs under {out_dir / 'by_model'}")
 
     print(f"\nSummary ({len(summary)} model\u00d7variant rows):")
     for row in summary:

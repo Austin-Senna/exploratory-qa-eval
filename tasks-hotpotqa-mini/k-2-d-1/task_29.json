@@ -1,0 +1,58 @@
+{
+  "question": "What is the name of the county that Cari Roccaro is from? Write your answer as [ANSWER].",
+  "answer": "Suffolk",
+  "nodes": {
+    "1": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ab2bc80554299194fa934d7:Cari Roccaro",
+      "fact": "Cari Roccaro: Cari Elizabeth Roccaro (born July 18, 1994) is an American soccer defender from East Islip, New York.",
+      "subquestion": "Cari Roccaro is from which New York hamlet?",
+      "answer": "East Islip, New York"
+    },
+    "2": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ab2bc80554299194fa934d7:East Islip, New York",
+      "fact": "East Islip, New York: East Islip is a hamlet and CDP in the Town of Islip, Suffolk County, New York, United States.",
+      "subquestion": "Which county is East Islip in?",
+      "answer": "Suffolk"
+    }
+  },
+  "reasoning_chain": [
+    "Node 1: Cari Roccaro is from which New York hamlet? Evidence: Cari Roccaro: Cari Elizabeth Roccaro (born July 18, 1994) is an American soccer defender from East Islip, New York. -> East Islip, New York",
+    "Node 2: Which county is East Islip in? Evidence: East Islip, New York: East Islip is a hamlet and CDP in the Town of Islip, Suffolk County, New York, United States. -> Suffolk",
+    "Final answer: Suffolk"
+  ],
+  "datasets_used": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ab2bc80554299194fa934d7:Cari Roccaro",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ab2bc80554299194fa934d7:East Islip, New York"
+  ],
+  "reasoning_hops": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1
+      ],
+      "reasoning": "Node 1: Cari Roccaro is from which New York hamlet? Evidence: Cari Roccaro: Cari Elizabeth Roccaro (born July 18, 1994) is an American soccer defender from East Islip, New York. -> East Islip, New York",
+      "answer": "East Islip, New York"
+    },
+    {
+      "hop": 2,
+      "node_ids": [
+        2
+      ],
+      "reasoning": "Node 2: Which county is East Islip in? Evidence: East Islip, New York: East Islip is a hamlet and CDP in the Town of Islip, Suffolk County, New York, United States. -> Suffolk",
+      "answer": "Suffolk"
+    }
+  ],
+  "_provenance": {
+    "benchmark": "hotpotqa",
+    "split": "dev_distractor",
+    "source_id": "5ab2bc80554299194fa934d7",
+    "type": "bridge",
+    "level": "hard",
+    "promoted_from": "other-benchmarks/tasks-hotpotqa-mini/k-2-d-2/task_34.json",
+    "sample_source": "other-benchmarks/tasks/hotpotqa/k-2-d-2/task_2754.json",
+    "original_bucket": "k-2-d-2",
+    "promotion_status": "verified",
+    "promotion_rule": "curated_hotpotqa_batch_v1",
+    "source_mapping_status": "raw_anchor_temporary"
+  }
+}

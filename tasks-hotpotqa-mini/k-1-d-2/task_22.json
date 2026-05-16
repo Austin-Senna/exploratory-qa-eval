@@ -1,0 +1,50 @@
+{
+  "question": "In which jurisdiction are MedStar Georgetown University Hospital and Providence Hospital located? Write your answer as [ANSWER].",
+  "answer": "District of Columbia",
+  "nodes": {
+    "1": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a83305d55429966c78a6b4a:MedStar Georgetown University Hospital",
+      "fact": "MedStar Georgetown University Hospital: MedStar Georgetown University Hospital is located in the Georgetown neighborhood of the Northwest Quadrant of Washington, D.C.",
+      "subquestion": "Where is MedStar Georgetown University Hospital located?",
+      "answer": "Washington, D.C."
+    },
+    "2": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a83305d55429966c78a6b4a:Providence Hospital (Washington, D.C.)",
+      "fact": "Providence Hospital (Washington, D.C.): Providence Hospital is a 408 bed hospital located in the District of Columbia.",
+      "subquestion": "Where is Providence Hospital located?",
+      "answer": "District of Columbia"
+    }
+  },
+  "reasoning_chain": [
+    "Node 1 and Node 2: MedStar Georgetown University Hospital is in Washington, D.C., and Providence Hospital is located in the District of Columbia, so the shared jurisdiction is the District of Columbia. -> District of Columbia",
+    "Final answer: District of Columbia"
+  ],
+  "datasets_used": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a83305d55429966c78a6b4a:MedStar Georgetown University Hospital",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a83305d55429966c78a6b4a:Providence Hospital (Washington, D.C.)"
+  ],
+  "reasoning_hops": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1,
+        2
+      ],
+      "reasoning": "Node 1 and Node 2: MedStar Georgetown University Hospital is in Washington, D.C., and Providence Hospital is located in the District of Columbia, so the shared jurisdiction is the District of Columbia. -> District of Columbia",
+      "answer": "District of Columbia"
+    }
+  ],
+  "_provenance": {
+    "benchmark": "hotpotqa",
+    "split": "dev_distractor",
+    "source_id": "5a83305d55429966c78a6b4a",
+    "type": "comparison",
+    "level": "hard",
+    "promoted_from": "other-benchmarks/tasks-hotpotqa-mini/k-2-d-1/task_22.json",
+    "sample_source": "other-benchmarks/tasks/hotpotqa/k-2-d-1/task_455.json",
+    "original_bucket": "k-2-d-1",
+    "promotion_status": "verified",
+    "promotion_rule": "curated_hotpotqa_batch_v1",
+    "source_mapping_status": "raw_anchor_temporary"
+  }
+}

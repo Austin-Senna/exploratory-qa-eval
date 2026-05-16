@@ -1,0 +1,19 @@
+{
+  "dataset_sequence": [
+    "hotpotqa-5ae3639b5542991a06ce99b2-lumpen-magazine",
+    "hotpotqa-5ae3639b5542991a06ce99b2-saveur"
+  ],
+  "source_sequence": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ae3639b5542991a06ce99b2:Lumpen (magazine)",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ae3639b5542991a06ce99b2:Saveur"
+  ],
+  "reasoning_chain_text": [
+    "1. Use the Lumpen information to anchor the editor-in-chief relationship named in the question.",
+    "2. Determine the editor-in-chief information for Saveur and return the relevant person."
+  ],
+  "original_final_question": "Edward Marszewski is the editor-in-chief of Lumpen, who is the editor-in-chief of Saveur? Write your answer as [ANSWER].",
+  "original_reasoning_chain": [
+    "Node 1 and Node 2: Lumpen's editor-in-chief is Edward Marszewski, and Saveur's editor-in-chief from 1996 to 2001 was Colman Andrews. -> Colman Andrews",
+    "Final answer: Colman Andrews"
+  ]
+}

@@ -12,6 +12,8 @@ Bucket: lakeqa-yc4103-datalake
 Folders: wikipedia/, datagov/
 """
 
+from __future__ import annotations
+
 import base64
 import datetime
 import decimal
@@ -31,6 +33,7 @@ from strands import tool
 from strands_evaluation.helper.peek_profile import load_dataset_profile, select_dataset_profile_fields
 
 from .agent_tools import (  # noqa: F401 — re-exported
+    configure_benchmark as _configure_base_benchmark,
     search,
     search_keyword,
     list_files,
@@ -53,6 +56,13 @@ from .agent_tools import (  # noqa: F401 — re-exported
 from .helper.detect import detect_family, should_skip
 
 load_dotenv()
+
+
+def configure_benchmark(benchmark: str | None = None) -> str:
+    """Configure both v1 and v2 tool modules for a benchmark bucket."""
+    global BUCKET
+    BUCKET = _configure_base_benchmark(benchmark)
+    return BUCKET
 
 
 # ---------------------------------------------------------------------------
@@ -1367,6 +1377,7 @@ __all__ = [
     "grep_file",
     "parse_xml_records",
     "query_file",
+    "configure_benchmark",
     # re-exported from agent_tools
     "search",
     "search_keyword",

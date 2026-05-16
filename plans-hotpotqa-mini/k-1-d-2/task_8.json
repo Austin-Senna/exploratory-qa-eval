@@ -1,0 +1,19 @@
+{
+  "dataset_sequence": [
+    "hotpotqa-5a7652435542992d0ec060a5-alessandro-scarlatti",
+    "hotpotqa-5a7652435542992d0ec060a5-pyotr-ilyich-tchaikovsky"
+  ],
+  "source_sequence": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a7652435542992d0ec060a5:Alessandro Scarlatti",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a7652435542992d0ec060a5:Pyotr Ilyich Tchaikovsky"
+  ],
+  "reasoning_chain_text": [
+    "1. Determine how Alessandro Scarlatti and Pyotr Ilyich Tchaikovsky are described as composers.",
+    "2. Return which named composer is described as the first Russian composer to make a lasting international impression."
+  ],
+  "original_final_question": "Who was the first Russian composer to make a lasting impression internationally, Alessandro Scarlatti or Pyotr Ilyich Tchaikovsky? Write your answer as [ANSWER].",
+  "original_reasoning_chain": [
+    "Node 1 and Node 2: Alessandro Scarlatti is described as an Italian Baroque composer, while Pyotr Ilyich Tchaikovsky is described as the first Russian composer whose music made a lasting impression internationally, so the answer is Pyotr Ilyich Tchaikovsky. -> Pyotr Ilyich Tchaikovsky",
+    "Final answer: Pyotr Ilyich Tchaikovsky"
+  ]
+}

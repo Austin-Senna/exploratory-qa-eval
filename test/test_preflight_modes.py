@@ -16,6 +16,12 @@ from strands_evaluation.tools.external.ideal.plan_store import set_plans_root
 class PreflightModeTests(unittest.TestCase):
     def tearDown(self) -> None:
         set_plans_root("plans_mini")
+        preflight._PROFILES_PATH = Path("datagov_tables_profiles.jsonl")
+        search_wrapper.configure_dependency_paths(
+            descriptions="table_descriptions.jsonl",
+            snippets="snippet.jsonl",
+            schemas="datagov_tables_schemas_full.jsonl",
+        )
         search_wrapper._DESC_CACHE_LOADED = False
         search_wrapper._DESC_BY_URI = {}
         search_wrapper._DESC_ROW_BY_URI = {}
@@ -86,6 +92,59 @@ class PreflightModeTests(unittest.TestCase):
         self.assertNotIn("datagov_tables_profiles.jsonl", names)
         self.assertIn("snippet.jsonl", names)
         self.assertIn("datagov_tables_schemas_full.jsonl", names)
+
+    def test_kramabench_preflight_uses_kramabench_stub_artifacts(self):
+        with TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            plans_root = root / "plans-mini-kramabench"
+            plan_dir = plans_root / "k-3-d-1-s-1"
+            plan_dir.mkdir(parents=True)
+            (plan_dir / "task_1.json").write_text(
+                json.dumps(
+                    {
+                        "dataset_sequence": ["kramabench-demo"],
+                        "source_sequence": ["datagov/kramabench-demo/files/rows.csv"],
+                        "reasoning_chain_text": ["1. Read the first source.", "2. Compute the answer."],
+                    }
+                )
+            )
+            for name in [
+                "kramabench_descriptions.jsonl",
+                "kramabench_snippets.jsonl",
+                "kramabench_tables_schemas_full.jsonl",
+            ]:
+                (root / name).write_text("")
+
+            from strands_evaluation.tools.external.ideal import plan_store
+
+            old_root = plan_store._KRAMABENCH_PLANS_ROOT
+            try:
+                with ExitStack() as stack:
+                    stack.enter_context(patch.object(plan_store, "_KRAMABENCH_PLANS_ROOT", plans_root))
+                    stack.enter_context(patch.object(search_wrapper, "_TABLE_DESCRIPTIONS_PATH", root / "kramabench_descriptions.jsonl"))
+                    stack.enter_context(patch.object(search_wrapper, "_SNIPPETS_PATH", root / "kramabench_snippets.jsonl"))
+                    stack.enter_context(patch.object(search_wrapper, "_SCHEMAS_PATH", root / "kramabench_tables_schemas_full.jsonl"))
+                    cfg = RunConfig(
+                        search_tool_mode="ideal",
+                        search_results_mode="ideal",
+                        plan_mode="ideal",
+                        benchmark="kramabench",
+                    )
+                    checks = run_preflight(
+                        cfg,
+                        ["tasks-mini-kramabench/k-3-d-1-s-1/task_1.json"],
+                        stream=io.StringIO(),
+                    )
+            finally:
+                plan_store._KRAMABENCH_PLANS_ROOT = old_root
+
+        names = [check.name for check in checks]
+        self.assertIn("kramabench_descriptions.jsonl (ideal enrichment load)", names)
+        self.assertIn("kramabench_snippets.jsonl", names)
+        self.assertIn("kramabench_tables_schemas_full.jsonl", names)
+        coverage = next(check for check in checks if check.name == "tasks_mini plan source description coverage")
+        self.assertTrue(coverage.ok)
+        self.assertIn("stub", coverage.detail)
 
     def test_ideal_computation_preflight_allows_missing_code_and_query_records(self):
         with TemporaryDirectory() as tmpdir:

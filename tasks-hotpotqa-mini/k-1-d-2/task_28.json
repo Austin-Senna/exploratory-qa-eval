@@ -1,0 +1,50 @@
+{
+  "question": "Which occurred first, Phillips v. Martin Marietta Corp. or Roth v. United States? Write your answer as [ANSWER].",
+  "answer": "Roth v. United States",
+  "nodes": {
+    "1": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a8782a25542993e715abf95:Phillips v. Martin Marietta Corp.",
+      "fact": "Phillips v. Martin Marietta Corp., 400 U.S. 542 (1971), was a United States Supreme Court case involving Title VII of the Civil Rights Act of 1964.",
+      "subquestion": "When did Phillips v. Martin Marietta Corp. occur?",
+      "answer": "1971"
+    },
+    "2": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a8782a25542993e715abf95:Roth v. United States",
+      "fact": "Roth v. United States, 354 U.S. 476 (1957), was a landmark case before the United States Supreme Court.",
+      "subquestion": "When did Roth v. United States occur?",
+      "answer": "1957"
+    }
+  },
+  "reasoning_chain": [
+    "Node 1 and Node 2: Phillips v. Martin Marietta Corp. occurred in 1971, while Roth v. United States occurred in 1957, so Roth v. United States occurred first. -> Roth v. United States",
+    "Final answer: Roth v. United States"
+  ],
+  "datasets_used": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a8782a25542993e715abf95:Phillips v. Martin Marietta Corp.",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a8782a25542993e715abf95:Roth v. United States"
+  ],
+  "reasoning_hops": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1,
+        2
+      ],
+      "reasoning": "Node 1 and Node 2: Phillips v. Martin Marietta Corp. occurred in 1971, while Roth v. United States occurred in 1957, so Roth v. United States occurred first. -> Roth v. United States",
+      "answer": "Roth v. United States"
+    }
+  ],
+  "_provenance": {
+    "benchmark": "hotpotqa",
+    "split": "dev_distractor",
+    "source_id": "5a8782a25542993e715abf95",
+    "type": "comparison",
+    "level": "hard",
+    "promoted_from": "other-benchmarks/tasks-hotpotqa-mini/k-2-d-1/task_28.json",
+    "sample_source": "other-benchmarks/tasks/hotpotqa/k-2-d-1/task_559.json",
+    "original_bucket": "k-2-d-1",
+    "promotion_status": "verified",
+    "promotion_rule": "curated_hotpotqa_batch_v1",
+    "source_mapping_status": "raw_anchor_temporary"
+  }
+}

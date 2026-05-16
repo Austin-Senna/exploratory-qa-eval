@@ -1,0 +1,19 @@
+{
+  "dataset_sequence": [
+    "hotpotqa-5a88a5645542997e5c09a679-take-it-easy-game",
+    "hotpotqa-5a88a5645542997e5c09a679-personal-preference"
+  ],
+  "source_sequence": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a88a5645542997e5c09a679:Take It Easy (game)",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a88a5645542997e5c09a679:Personal Preference"
+  ],
+  "reasoning_chain_text": [
+    "1. Determine the publication or creation years for Take It Easy and Personal Preference.",
+    "2. Compare the years and return which game was published first."
+  ],
+  "original_final_question": "Which was published first, Take It Easy or Personal Preference? Write your answer as [ANSWER].",
+  "original_reasoning_chain": [
+    "Node 1 and Node 2: Take It Easy has been published since 1983, while Personal Preference is a 1987 board game, so Take It Easy was published first. -> Take It Easy",
+    "Final answer: Take It Easy"
+  ]
+}

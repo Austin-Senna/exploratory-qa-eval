@@ -1,0 +1,19 @@
+{
+  "dataset_sequence": [
+    "hotpotqa-5a89fa2655429970aeb701d2-stanley-elkin",
+    "hotpotqa-5a89fa2655429970aeb701d2-anne-tyler"
+  ],
+  "source_sequence": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a89fa2655429970aeb701d2:Stanley Elkin",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a89fa2655429970aeb701d2:Anne Tyler"
+  ],
+  "reasoning_chain_text": [
+    "1. Determine the countries associated with Stanley Elkin and Anne Tyler.",
+    "2. Compare the countries and return whether they are the same."
+  ],
+  "original_final_question": "Are Stanley Elkin and Anne Tyler from the same country? Write your answer as [ANSWER].",
+  "original_reasoning_chain": [
+    "Node 1 and Node 2: Stanley Elkin and Anne Tyler are both described as American writers, so they are from the same country. -> yes",
+    "Final answer: yes"
+  ]
+}

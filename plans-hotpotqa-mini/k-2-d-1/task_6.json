@@ -1,0 +1,20 @@
+{
+  "dataset_sequence": [
+    "hotpotqa-5a77d2d25542992a6e59dfe2-radio-disney",
+    "hotpotqa-5a77d2d25542992a6e59dfe2-lonely-akon-song"
+  ],
+  "source_sequence": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a77d2d25542992a6e59dfe2:Radio Disney",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a77d2d25542992a6e59dfe2:Lonely (Akon song)"
+  ],
+  "reasoning_chain_text": [
+    "1. Identify the American radio network owned by Disney Channels Worldwide, Inc.",
+    "2. Using that radio network, determine which song by Senegalese-American R&B and rapper Akon appeared there."
+  ],
+  "original_final_question": "What song was on an American radio network that is owned by Disney Channels Worldwide, Inc. is a song by Senegalese-American R&B and rapper Akon? Write your answer as [ANSWER].",
+  "original_reasoning_chain": [
+    "Node 1: Which American radio network is owned by Disney Channels Worldwide, Inc.? Evidence: Radio Disney is an American radio network owned by Disney Channels Worldwide, Inc. -> Radio Disney",
+    "Node 2: Which Akon song had an edited version on Radio Disney? Evidence: \"Lonely\" is a song by Akon, and an edited version was on Radio Disney. -> \"Lonely\"",
+    "Final answer: \"Lonely\""
+  ]
+}

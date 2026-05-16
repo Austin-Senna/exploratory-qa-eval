@@ -1,0 +1,50 @@
+{
+  "question": "Whose works are more likely to be seen in an art gallery, Hovsep Pushman or Armen Chakmakian? Write your answer as [ANSWER].",
+  "answer": "Hovsep Pushman",
+  "nodes": {
+    "1": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a7f5d165542992097ad2f3c:Hovsep Pushman",
+      "fact": "Hovsep Pushman: Hovsep Pushman was an American artist of Armenian background. He was known for his contemplative still lifes and sensitive portraits of women, often in exotic dress. He was closely associated with the Grand Central Art Galleries.",
+      "subquestion": "What kind of work was Hovsep Pushman known for?",
+      "answer": "visual art, including still lifes and portraits"
+    },
+    "2": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a7f5d165542992097ad2f3c:Armen Chakmakian",
+      "fact": "Armen Chakmakian: Armen John Chakmakian is an Armenian-American musician, composer, recording artist, and producer. Formerly the keyboardist for the GRAMMY award-winning band Shadowfax, he has released solo albums on TruArt Records.",
+      "subquestion": "What kind of work was Armen Chakmakian known for?",
+      "answer": "music and recording"
+    }
+  },
+  "reasoning_chain": [
+    "Node 1 and Node 2: Hovsep Pushman is described as an artist associated with art galleries, while Armen Chakmakian is described as a musician and recording artist, so Hovsep Pushman is more likely to have works seen in an art gallery. -> Hovsep Pushman",
+    "Final answer: Hovsep Pushman"
+  ],
+  "datasets_used": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a7f5d165542992097ad2f3c:Hovsep Pushman",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a7f5d165542992097ad2f3c:Armen Chakmakian"
+  ],
+  "reasoning_hops": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1,
+        2
+      ],
+      "reasoning": "Node 1 and Node 2: Hovsep Pushman is described as an artist associated with art galleries, while Armen Chakmakian is described as a musician and recording artist, so Hovsep Pushman is more likely to have works seen in an art gallery. -> Hovsep Pushman",
+      "answer": "Hovsep Pushman"
+    }
+  ],
+  "_provenance": {
+    "benchmark": "hotpotqa",
+    "split": "dev_distractor",
+    "source_id": "5a7f5d165542992097ad2f3c",
+    "type": "comparison",
+    "level": "hard",
+    "promoted_from": "other-benchmarks/tasks-hotpotqa-mini/k-2-d-1/task_17.json",
+    "sample_source": "other-benchmarks/tasks/hotpotqa/k-2-d-1/task_380.json",
+    "original_bucket": "k-2-d-1",
+    "promotion_status": "verified",
+    "promotion_rule": "curated_hotpotqa_batch_v1",
+    "source_mapping_status": "raw_anchor_temporary"
+  }
+}

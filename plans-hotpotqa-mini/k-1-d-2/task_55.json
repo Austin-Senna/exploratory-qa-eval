@@ -1,0 +1,19 @@
+{
+  "dataset_sequence": [
+    "hotpotqa-5ac2455e55429951e9e68512-bee-tree",
+    "hotpotqa-5ac2455e55429951e9e68512-microcachrys"
+  ],
+  "source_sequence": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ac2455e55429951e9e68512:Bee tree",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ac2455e55429951e9e68512:Microcachrys"
+  ],
+  "reasoning_chain_text": [
+    "1. Determine how Bee tree and Microcachrys are each classified.",
+    "2. Return the one that is a formal name of a species of tree."
+  ],
+  "original_final_question": "Which is a formal name of a species of tree, Bee tree or Microcachrys? Write your answer as [ANSWER].",
+  "original_reasoning_chain": [
+    "Compare the supported evidence: Node 1: Bee tree: A bee tree is a tree in which a colony of honey bees makes its home.; Node 2: Microcachrys: Microcachrys tetragona (Creeping Pine or Creeping Strawberry Pine) is a species of dioecious conifer belonging to the podocarp family (Podocarpaceae).. Final answer: Microcachrys",
+    "Final answer: Microcachrys"
+  ]
+}

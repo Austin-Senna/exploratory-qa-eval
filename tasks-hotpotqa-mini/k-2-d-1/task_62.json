@@ -1,0 +1,58 @@
+{
+  "question": "Which British racing driver has raced for 7 different teams and won the European Grand Prix in 1999? Write your answer as [ANSWER].",
+  "answer": "Johnny Herbert",
+  "nodes": {
+    "1": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ae680cc5542996d980e7ba5:Stewart Grand Prix",
+      "fact": "Stewart Grand Prix: The 1999 season was by far its strongest, yielding one win (Johnny Herbert at the European Grand Prix) and one pole position (Rubens Barrichello at the French Grand Prix) en route to finishing fourth overall in the Constructors Championship.",
+      "subquestion": "Who won Stewart Grand Prix's 1999 European Grand Prix race?",
+      "answer": "Johnny Herbert"
+    },
+    "2": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ae680cc5542996d980e7ba5:Johnny Herbert",
+      "fact": "Johnny Herbert: John Paul \"Johnny\" Herbert (born 25 June 1964) is a British racing driver. He raced in Formula One from 1989 to 2000, for 7 different teams, winning three races and placed 4th in the 1995 championship.",
+      "subquestion": "Which British racing driver raced for seven Formula One teams and matches that winner?",
+      "answer": "Johnny Herbert"
+    }
+  },
+  "reasoning_chain": [
+    "Node 1: Who won Stewart Grand Prix's 1999 European Grand Prix race? Evidence: Stewart Grand Prix: The 1999 season was by far its strongest, yielding one win (Johnny Herbert at the European Grand Prix) and one pole position (Rubens Barrichello at the French Grand Prix) en route to finishing fourth overall in the Constructors Championship. -> Johnny Herbert",
+    "Node 2: Which British racing driver raced for seven Formula One teams and matches that winner? Evidence: Johnny Herbert: John Paul \"Johnny\" Herbert (born 25 June 1964) is a British racing driver. He raced in Formula One from 1989 to 2000, for 7 different teams, winning three races and placed 4th in the 1995 championship. -> Johnny Herbert",
+    "Final answer: Johnny Herbert"
+  ],
+  "datasets_used": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ae680cc5542996d980e7ba5:Stewart Grand Prix",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ae680cc5542996d980e7ba5:Johnny Herbert"
+  ],
+  "reasoning_hops": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1
+      ],
+      "reasoning": "Node 1: Who won Stewart Grand Prix's 1999 European Grand Prix race? Evidence: Stewart Grand Prix: The 1999 season was by far its strongest, yielding one win (Johnny Herbert at the European Grand Prix) and one pole position (Rubens Barrichello at the French Grand Prix) en route to finishing fourth overall in the Constructors Championship. -> Johnny Herbert",
+      "answer": "Johnny Herbert"
+    },
+    {
+      "hop": 2,
+      "node_ids": [
+        2
+      ],
+      "reasoning": "Node 2: Which British racing driver raced for seven Formula One teams and matches that winner? Evidence: Johnny Herbert: John Paul \"Johnny\" Herbert (born 25 June 1964) is a British racing driver. He raced in Formula One from 1989 to 2000, for 7 different teams, winning three races and placed 4th in the 1995 championship. -> Johnny Herbert",
+      "answer": "Johnny Herbert"
+    }
+  ],
+  "_provenance": {
+    "benchmark": "hotpotqa",
+    "split": "dev_distractor",
+    "source_id": "5ae680cc5542996d980e7ba5",
+    "type": "bridge",
+    "level": "hard",
+    "promoted_from": "other-benchmarks/tasks-hotpotqa-mini/k-2-d-2/task_67.json",
+    "sample_source": "other-benchmarks/tasks/hotpotqa/k-2-d-2/task_5689.json",
+    "original_bucket": "k-2-d-2",
+    "promotion_status": "verified",
+    "promotion_rule": "curated_hotpotqa_batch_v1",
+    "source_mapping_status": "raw_anchor_temporary"
+  }
+}

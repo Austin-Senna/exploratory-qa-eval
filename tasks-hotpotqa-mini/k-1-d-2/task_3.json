@@ -1,0 +1,50 @@
+{
+  "question": "Who was born first, British novelist Doris Lessing or American writer Philip K. Dick? Write your answer as [ANSWER].",
+  "answer": "Doris May Lessing",
+  "nodes": {
+    "1": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a7385c45542992d56e7e359:Doris Lessing",
+      "fact": "Doris Lessing: Doris May Lessing, CH (nee Tayler; 22 October 1919 - 17 November 2013) was a British novelist, poet, playwright, librettist, biographer and short story writer.",
+      "subquestion": "When was British novelist Doris Lessing born?",
+      "answer": "22 October 1919"
+    },
+    "2": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a7385c45542992d56e7e359:Philip K. Dick",
+      "fact": "Philip K. Dick: Philip Kindred Dick (December 16, 1928 - March 2, 1982) was an American writer notable for publishing works of science fiction.",
+      "subquestion": "When was American writer Philip K. Dick born?",
+      "answer": "December 16, 1928"
+    }
+  },
+  "reasoning_chain": [
+    "Node 1 and Node 2: Doris Lessing was born on 22 October 1919, while Philip K. Dick was born on December 16, 1928, so Doris May Lessing was born first. -> Doris May Lessing",
+    "Final answer: Doris May Lessing"
+  ],
+  "datasets_used": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a7385c45542992d56e7e359:Doris Lessing",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a7385c45542992d56e7e359:Philip K. Dick"
+  ],
+  "reasoning_hops": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1,
+        2
+      ],
+      "reasoning": "Node 1 and Node 2: Doris Lessing was born on 22 October 1919, while Philip K. Dick was born on December 16, 1928, so Doris May Lessing was born first. -> Doris May Lessing",
+      "answer": "Doris May Lessing"
+    }
+  ],
+  "_provenance": {
+    "benchmark": "hotpotqa",
+    "split": "dev_distractor",
+    "source_id": "5a7385c45542992d56e7e359",
+    "type": "comparison",
+    "level": "hard",
+    "promoted_from": "other-benchmarks/tasks-hotpotqa-mini/k-2-d-1/task_3.json",
+    "sample_source": "other-benchmarks/tasks/hotpotqa/k-2-d-1/task_78.json",
+    "original_bucket": "k-2-d-1",
+    "promotion_status": "verified",
+    "promotion_rule": "curated_hotpotqa_batch_v1",
+    "source_mapping_status": "raw_anchor_temporary"
+  }
+}

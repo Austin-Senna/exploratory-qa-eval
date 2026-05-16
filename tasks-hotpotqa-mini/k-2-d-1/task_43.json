@@ -1,0 +1,58 @@
+{
+  "question": "Name the movie that was cowritten by Paul Rudd and the director of the 2011 British science fiction horror comedy film written and directed by Joe Cornish and starring John Boyega, Nick Frost, Jodie Whittaker and Luke Treadaway? Write your answer as [ANSWER].",
+  "answer": "Ant-Man",
+  "nodes": {
+    "1": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ac2eaab5542990b17b154a4:Attack the Block",
+      "fact": "Attack the Block: Attack the Block is a 2011 British science fiction horror comedy film written and directed by Joe Cornish and starring John Boyega, Nick Frost, Jodie Whittaker and Luke Treadaway.",
+      "subquestion": "Who wrote and directed the 2011 film Attack the Block?",
+      "answer": "Joe Cornish"
+    },
+    "2": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ac2eaab5542990b17b154a4:Joe Cornish",
+      "fact": "Joe Cornish: He has also co-written \"\", with Steven Moffat and Edgar Wright, and \"Ant-Man\", with Wright, Adam McKay and Paul Rudd.",
+      "subquestion": "Which movie did that director co-write with Paul Rudd?",
+      "answer": "Ant-Man"
+    }
+  },
+  "reasoning_chain": [
+    "Node 1: Who wrote and directed the 2011 film Attack the Block? Evidence: Attack the Block: Attack the Block is a 2011 British science fiction horror comedy film written and directed by Joe Cornish and starring John Boyega, Nick Frost, Jodie Whittaker and Luke Treadaway. -> Joe Cornish",
+    "Node 2: Which movie did that director co-write with Paul Rudd? Evidence: Joe Cornish: He has also co-written \"\", with Steven Moffat and Edgar Wright, and \"Ant-Man\", with Wright, Adam McKay and Paul Rudd. -> Ant-Man",
+    "Final answer: Ant-Man"
+  ],
+  "datasets_used": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ac2eaab5542990b17b154a4:Attack the Block",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ac2eaab5542990b17b154a4:Joe Cornish"
+  ],
+  "reasoning_hops": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1
+      ],
+      "reasoning": "Node 1: Who wrote and directed the 2011 film Attack the Block? Evidence: Attack the Block: Attack the Block is a 2011 British science fiction horror comedy film written and directed by Joe Cornish and starring John Boyega, Nick Frost, Jodie Whittaker and Luke Treadaway. -> Joe Cornish",
+      "answer": "Joe Cornish"
+    },
+    {
+      "hop": 2,
+      "node_ids": [
+        2
+      ],
+      "reasoning": "Node 2: Which movie did that director co-write with Paul Rudd? Evidence: Joe Cornish: He has also co-written \"\", with Steven Moffat and Edgar Wright, and \"Ant-Man\", with Wright, Adam McKay and Paul Rudd. -> Ant-Man",
+      "answer": "Ant-Man"
+    }
+  ],
+  "_provenance": {
+    "benchmark": "hotpotqa",
+    "split": "dev_distractor",
+    "source_id": "5ac2eaab5542990b17b154a4",
+    "type": "bridge",
+    "level": "hard",
+    "promoted_from": "other-benchmarks/tasks-hotpotqa-mini/k-2-d-2/task_48.json",
+    "sample_source": "other-benchmarks/tasks/hotpotqa/k-2-d-2/task_4119.json",
+    "original_bucket": "k-2-d-2",
+    "promotion_status": "verified",
+    "promotion_rule": "curated_hotpotqa_batch_v1",
+    "source_mapping_status": "raw_anchor_temporary"
+  }
+}

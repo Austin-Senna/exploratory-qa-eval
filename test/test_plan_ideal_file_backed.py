@@ -32,6 +32,7 @@ class _FakeToolContext:
 class TestPlanIdealFileBacked(unittest.TestCase):
     def tearDown(self) -> None:
         set_plans_root("plans_mini")
+        plan_store._KRAMABENCH_PLANS_ROOT = Path("plans-mini-kramabench")
         plan_store._QUALITY_PLANS_ROOT = Path("plans_core_quality")
         set_task_context({})
 
@@ -197,6 +198,22 @@ class TestPlanIdealFileBacked(unittest.TestCase):
             self.assertEqual(plan.plan_path, quality_root / "k-1-d-1" / "task_7.json")
             self.assertEqual(plan.ideal_query[0].dataset_id, "ds_a")
             self.assertEqual(plan.ideal_code[0].source, "datagov/ds_a/files/rows.txt")
+
+    def test_load_plan_maps_tasks_mini_kramabench_to_kramabench_plan_records(self):
+        with TemporaryDirectory() as tmpdir:
+            kramabench_root = Path(tmpdir) / "plans-mini-kramabench"
+            self._write_computation_plan(
+                kramabench_root / "k-2-d-2-s-1" / "task_1.json"
+            )
+
+            plan_store._KRAMABENCH_PLANS_ROOT = kramabench_root
+            plan = load_plan_for_task("tasks-mini-kramabench/k-2-d-2-s-1/task_1.json")
+
+            self.assertEqual(
+                plan.plan_path,
+                kramabench_root / "k-2-d-2-s-1" / "task_1.json",
+            )
+            self.assertEqual(plan.ideal_query[0].answer, 7)
 
     def test_load_plan_rejects_malformed_ideal_query_record(self):
         with TemporaryDirectory() as tmpdir:

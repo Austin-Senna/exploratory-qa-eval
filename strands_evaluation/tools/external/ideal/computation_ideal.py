@@ -23,10 +23,13 @@ from strands_evaluation.tools.external.ideal.plan_store import (
     load_plan_for_context,
     set_task_context as _set_task_context_shared,
 )
+from strands_evaluation.tools.external.ideal.benchmark_paths import (
+    canonical_source_uri,
+    source_key,
+)
 
 logger = logging.getLogger(__name__)
 
-_S3_PREFIX = "s3://lakeqa-yc4103-datalake/"
 _MAX_REPAIR_ATTEMPTS = 2
 _REPAIR_MODEL_NAME = "openai/gpt-5.4"
 _SEMANTIC_MODEL_NAME = "openai/gpt-5.4-nano"
@@ -156,13 +159,9 @@ def _active_plan() -> IdealTaskPlan:
 
 
 def _dataset_id_from_source(value: Any) -> str:
-    text = str(value or "").strip()
+    text = source_key(str(value or ""))
     if not text:
         return ""
-    if text.startswith(_S3_PREFIX):
-        text = text[len(_S3_PREFIX) :]
-    elif text.startswith("s3://"):
-        text = text.split("/", 3)[-1]
     text = text.lstrip("/")
     parts = text.split("/")
     if len(parts) >= 2 and parts[0] in {"datagov", "wikipedia"}:
@@ -171,10 +170,7 @@ def _dataset_id_from_source(value: Any) -> str:
 
 
 def _canonical_uri(source: str) -> str:
-    source = str(source or "").strip()
-    if source.startswith("s3://"):
-        return source
-    return _S3_PREFIX + source.lstrip("/")
+    return canonical_source_uri(source)
 
 
 def _s3_uri_for_record(record: IdealComputationRecord) -> str:
@@ -335,11 +331,7 @@ def _semantic_model():
 
 
 def _normalized_file_path(value: Any) -> str:
-    text = str(value or "").strip()
-    if text.startswith(_S3_PREFIX):
-        text = text[len(_S3_PREFIX) :]
-    elif text.startswith("s3://"):
-        text = text.split("/", 3)[-1]
+    text = source_key(str(value or ""))
     text = text.lstrip("/")
     parts = text.split("/")
     if len(parts) >= 3 and parts[0] in {"datagov", "wikipedia"}:

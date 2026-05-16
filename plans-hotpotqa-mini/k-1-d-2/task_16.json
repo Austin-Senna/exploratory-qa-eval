@@ -1,0 +1,19 @@
+{
+  "dataset_sequence": [
+    "hotpotqa-5a7e37095542995ed0d166d5-robert-z-leonard",
+    "hotpotqa-5a7e37095542995ed0d166d5-sinclair-hill"
+  ],
+  "source_sequence": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a7e37095542995ed0d166d5:Robert Z. Leonard",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a7e37095542995ed0d166d5:Sinclair Hill"
+  ],
+  "reasoning_chain_text": [
+    "1. Determine the birth years for Robert Z. Leonard and Sinclair Hill.",
+    "2. Compare the two birth years and return the younger film director."
+  ],
+  "original_final_question": "Which film director is younger, Robert Z. Leonard or Sinclair Hill? Write your answer as [ANSWER].",
+  "original_reasoning_chain": [
+    "Node 1 and Node 2: Robert Z. Leonard was born on October 7, 1889, while Sinclair Hill was born in 1894, so Sinclair Hill is younger. -> Sinclair Hill",
+    "Final answer: Sinclair Hill"
+  ]
+}

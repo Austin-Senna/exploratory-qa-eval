@@ -1,0 +1,50 @@
+{
+  "question": "Were Chad Gray and Dickie Peterson both singers? Write your answer as [ANSWER].",
+  "answer": "yes",
+  "nodes": {
+    "1": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ae198bf5542997b2ef7d20d:Chad Gray",
+      "fact": "Chad Gray: Chad Gray (born October 16, 1971), is the lead vocalist for the groove metal supergroup Hellyeah and former lead vocalist for American heavy metal band Mudvayne.",
+      "subquestion": "What relevant information is given about Chad Gray?",
+      "answer": "Chad Gray"
+    },
+    "2": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ae198bf5542997b2ef7d20d:Dickie Peterson",
+      "fact": "Dickie Peterson: Richard Allan Peterson (September 12, 1946 – October 12, 2009) was an American musician, best known as the bassist and lead singer for Blue Cheer.",
+      "subquestion": "What relevant information is given about Dickie Peterson?",
+      "answer": "yes"
+    }
+  },
+  "reasoning_chain": [
+    "Compare the supported evidence: Node 1: Chad Gray: Chad Gray (born October 16, 1971), is the lead vocalist for the groove metal supergroup Hellyeah and former lead vocalist for American heavy metal band Mudvayne.; Node 2: Dickie Peterson: Richard Allan Peterson (September 12, 1946 – October 12, 2009) was an American musician, best known as the bassist and lead singer for Blue Cheer.. Final answer: yes",
+    "Final answer: yes"
+  ],
+  "datasets_used": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ae198bf5542997b2ef7d20d:Chad Gray",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ae198bf5542997b2ef7d20d:Dickie Peterson"
+  ],
+  "reasoning_hops": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1,
+        2
+      ],
+      "reasoning": "Compare the supported evidence: Node 1: Chad Gray: Chad Gray (born October 16, 1971), is the lead vocalist for the groove metal supergroup Hellyeah and former lead vocalist for American heavy metal band Mudvayne.; Node 2: Dickie Peterson: Richard Allan Peterson (September 12, 1946 – October 12, 2009) was an American musician, best known as the bassist and lead singer for Blue Cheer.. Final answer: yes",
+      "answer": "yes"
+    }
+  ],
+  "_provenance": {
+    "benchmark": "hotpotqa",
+    "split": "dev_distractor",
+    "source_id": "5ae198bf5542997b2ef7d20d",
+    "type": "comparison",
+    "level": "hard",
+    "promoted_from": "other-benchmarks/tasks-hotpotqa-mini/k-2-d-1/task_64.json",
+    "sample_source": "other-benchmarks/tasks/hotpotqa/k-2-d-1/task_1381.json",
+    "original_bucket": "k-2-d-1",
+    "promotion_status": "verified",
+    "promotion_rule": "curated_hotpotqa_batch_v1",
+    "source_mapping_status": "raw_anchor_temporary"
+  }
+}

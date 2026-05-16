@@ -17,11 +17,11 @@ from strands_evaluation.tools.external.ideal.plan_store import (
     set_plans_root as _set_plans_root_shared,
     set_task_context as _set_task_context_shared,
 )
+from strands_evaluation.tools.external.ideal.benchmark_paths import canonical_source_uri
 from strands_evaluation.tools.external.ideal import search_wrapper
 
 logger = logging.getLogger(__name__)
 
-_S3_PREFIX = "s3://lakeqa-yc4103-datalake/"
 _DATASET_NOT_FOUND = "Dataset not found"
 _JUDGE_SYSTEM_PROMPT = (
     "You are a dataset selector. Given a query and candidate datasets, call `pick` exactly once "
@@ -88,7 +88,7 @@ def _dataset_id_from_source(source: str) -> str:
 
 
 def _canonical_uri(source_path: str) -> str:
-    return f"{_S3_PREFIX}{str(source_path).lstrip('/')}"
+    return canonical_source_uri(source_path)
 
 
 def _description_for_uri(uri: str) -> str:

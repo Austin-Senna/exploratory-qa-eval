@@ -1,0 +1,50 @@
+{
+  "question": "What type of vegetation do Tabernaemontana and Crinum have in common? Write your answer as [ANSWER].",
+  "answer": "plants",
+  "nodes": {
+    "1": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ab7f0b9554299366779405d:Tabernaemontana",
+      "fact": "Tabernaemontana: Tabernaemontana is a genus of flowering plants in the family Apocynaceae.",
+      "subquestion": "What type of vegetation is Tabernaemontana?",
+      "answer": "plants"
+    },
+    "2": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ab7f0b9554299366779405d:Crinum",
+      "fact": "Crinum: Crinum is a genus of about 180 species of perennial plants that have large showy flowers on leafless stems.",
+      "subquestion": "What type of vegetation is Crinum?",
+      "answer": "plants"
+    }
+  },
+  "reasoning_chain": [
+    "Node 1 and Node 2: Tabernaemontana is a genus of flowering plants, and Crinum is a genus of perennial plants, so both are plants. -> plants",
+    "Final answer: plants"
+  ],
+  "datasets_used": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ab7f0b9554299366779405d:Tabernaemontana",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ab7f0b9554299366779405d:Crinum"
+  ],
+  "reasoning_hops": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1,
+        2
+      ],
+      "reasoning": "Node 1 and Node 2: Tabernaemontana is a genus of flowering plants, and Crinum is a genus of perennial plants, so both are plants. -> plants",
+      "answer": "plants"
+    }
+  ],
+  "_provenance": {
+    "benchmark": "hotpotqa",
+    "split": "dev_distractor",
+    "source_id": "5ab7f0b9554299366779405d",
+    "type": "comparison",
+    "level": "hard",
+    "promoted_from": "other-benchmarks/tasks-hotpotqa-mini/k-2-d-1/task_43.json",
+    "sample_source": "other-benchmarks/tasks/hotpotqa/k-2-d-1/task_888.json",
+    "original_bucket": "k-2-d-1",
+    "promotion_status": "verified",
+    "promotion_rule": "curated_hotpotqa_batch_v1",
+    "source_mapping_status": "raw_anchor_temporary"
+  }
+}

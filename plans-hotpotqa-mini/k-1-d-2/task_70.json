@@ -1,0 +1,19 @@
+{
+  "dataset_sequence": [
+    "hotpotqa-5a70f39c5542994082a3e429-libby-mitchell",
+    "hotpotqa-5a70f39c5542994082a3e429-eliot-cutler"
+  ],
+  "source_sequence": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a70f39c5542994082a3e429:Libby Mitchell",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a70f39c5542994082a3e429:Eliot Cutler"
+  ],
+  "reasoning_chain_text": [
+    "1. Determine which candidates finished ahead of Libby Mitchell in Maine's 2010 gubernatorial race.",
+    "2. From those candidates, identify the independent candidate and return that name."
+  ],
+  "original_final_question": "What is the name of the independent candidate in Maine's 2010 gubernatorial race who finished ahead of Libby Mitchell? Write your answer as [ANSWER].",
+  "original_reasoning_chain": [
+    "Use both evidence nodes together: the Libby Mitchell evidence names Eliot Cutler as finishing ahead of her, and the Eliot Cutler evidence confirms he was an Independent candidate in Maine's 2010 gubernatorial race. -> Eliot Cutler",
+    "Final answer: Eliot Cutler"
+  ]
+}

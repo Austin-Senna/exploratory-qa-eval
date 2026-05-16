@@ -42,6 +42,7 @@ _LEGACY_AXIS_DEFAULTS = {
     "agent_management": "standard",
     "computation_tool": "standard",
 }
+_BENCHMARK_CHOICES = ("lakeqa", "kramabench", "hotpotqa")
 
 
 def _variant_condition_label(
@@ -287,6 +288,12 @@ def main() -> None:
     parser.add_argument("--results-output-dir", default="results", help="Base directory for outputs")
     parser.add_argument("--logs-output-dir", default="logs", help="Base directory for per-task log files")
     parser.add_argument(
+        "--benchmark",
+        choices=_BENCHMARK_CHOICES,
+        default="lakeqa",
+        help="Data-lake benchmark bucket to use for agent data tools.",
+    )
+    parser.add_argument(
         "--db-path",
         default=None,
         help="Path to LanceDB search index directory (overrides default ./lance_data).",
@@ -433,6 +440,7 @@ def main() -> None:
         plan_skills_enabled=args.skills == "on",
         search_free=args.search_free,
         search_lessguide=args.search_lessguide,
+        benchmark=args.benchmark,
         condition_config=ConditionConfig(
             condition=condition_label,
             base_condition=args.condition,

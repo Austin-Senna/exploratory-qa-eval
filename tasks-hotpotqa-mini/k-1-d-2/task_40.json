@@ -1,0 +1,50 @@
+{
+  "question": "In what country are both Ugni and Stenomesson native plants? Write your answer as [ANSWER].",
+  "answer": "Chile",
+  "nodes": {
+    "1": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ab6bdd255429953192ad36e:Ugni",
+      "fact": "Ugni: Ugni is native to western Latin America from the Valdivian temperate rain forests of southern Chile and adjacent regions of southern Argentina, north to southern Mexico.",
+      "subquestion": "What country is included in the native range of Ugni?",
+      "answer": "Chile"
+    },
+    "2": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ab6bdd255429953192ad36e:Stenomesson",
+      "fact": "Stenomesson: All the species are native to western South America, including Colombia, Ecuador, Peru and northern Chile.",
+      "subquestion": "What country is included in the native range of Stenomesson?",
+      "answer": "Chile"
+    }
+  },
+  "reasoning_chain": [
+    "Node 1 and Node 2: Ugni is native to southern Chile, and Stenomesson includes northern Chile in its native range, so the shared country is Chile. -> Chile",
+    "Final answer: Chile"
+  ],
+  "datasets_used": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ab6bdd255429953192ad36e:Ugni",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ab6bdd255429953192ad36e:Stenomesson"
+  ],
+  "reasoning_hops": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1,
+        2
+      ],
+      "reasoning": "Node 1 and Node 2: Ugni is native to southern Chile, and Stenomesson includes northern Chile in its native range, so the shared country is Chile. -> Chile",
+      "answer": "Chile"
+    }
+  ],
+  "_provenance": {
+    "benchmark": "hotpotqa",
+    "split": "dev_distractor",
+    "source_id": "5ab6bdd255429953192ad36e",
+    "type": "comparison",
+    "level": "hard",
+    "promoted_from": "other-benchmarks/tasks-hotpotqa-mini/k-2-d-1/task_40.json",
+    "sample_source": "other-benchmarks/tasks/hotpotqa/k-2-d-1/task_864.json",
+    "original_bucket": "k-2-d-1",
+    "promotion_status": "verified",
+    "promotion_rule": "curated_hotpotqa_batch_v1",
+    "source_mapping_status": "raw_anchor_temporary"
+  }
+}

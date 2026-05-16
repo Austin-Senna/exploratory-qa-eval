@@ -1,0 +1,50 @@
+{
+  "question": "Are both Yixing and Shaoshan county-level cities in China? Write your answer as [ANSWER].",
+  "answer": "yes",
+  "nodes": {
+    "1": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ae1ce895542997f29b3c11e:Yixing",
+      "fact": "Yixing: Yixing () is a county-level city with a population of 1.24 million administrated under the prefecture-level city of Wuxi in southern Jiangsu province, People's Republic of China, and is part of the Yangtze River Delta.",
+      "subquestion": "What relevant information is given about Yixing?",
+      "answer": "Yixing"
+    },
+    "2": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ae1ce895542997f29b3c11e:Shaoshan",
+      "fact": "Shaoshan: Shaoshan () is a county-level city in Hunan Province, China.",
+      "subquestion": "What relevant information is given about Shaoshan?",
+      "answer": "yes"
+    }
+  },
+  "reasoning_chain": [
+    "Compare the supported evidence: Node 1: Yixing: Yixing () is a county-level city with a population of 1.24 million administrated under the prefecture-level city of Wuxi in southern Jiangsu province, People's Republic of China, and is part of the Yangtze River Delta.; Node 2: Shaoshan: Shaoshan () is a county-level city in Hunan Province, China.. Final answer: yes",
+    "Final answer: yes"
+  ],
+  "datasets_used": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ae1ce895542997f29b3c11e:Yixing",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ae1ce895542997f29b3c11e:Shaoshan"
+  ],
+  "reasoning_hops": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1,
+        2
+      ],
+      "reasoning": "Compare the supported evidence: Node 1: Yixing: Yixing () is a county-level city with a population of 1.24 million administrated under the prefecture-level city of Wuxi in southern Jiangsu province, People's Republic of China, and is part of the Yangtze River Delta.; Node 2: Shaoshan: Shaoshan () is a county-level city in Hunan Province, China.. Final answer: yes",
+      "answer": "yes"
+    }
+  ],
+  "_provenance": {
+    "benchmark": "hotpotqa",
+    "split": "dev_distractor",
+    "source_id": "5ae1ce895542997f29b3c11e",
+    "type": "comparison",
+    "level": "hard",
+    "promoted_from": "other-benchmarks/tasks-hotpotqa-mini/k-2-d-1/task_65.json",
+    "sample_source": "other-benchmarks/tasks/hotpotqa/k-2-d-1/task_1385.json",
+    "original_bucket": "k-2-d-1",
+    "promotion_status": "verified",
+    "promotion_rule": "curated_hotpotqa_batch_v1",
+    "source_mapping_status": "raw_anchor_temporary"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "dataset_sequence": [
+    "hotpotqa-5adcb30b5542994d58a2f69f-pete-mangurian",
+    "hotpotqa-5adcb30b5542994d58a2f69f-kirk-kerkorian"
+  ],
+  "source_sequence": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5adcb30b5542994d58a2f69f:Pete Mangurian",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5adcb30b5542994d58a2f69f:Kirk Kerkorian"
+  ],
+  "reasoning_chain_text": [
+    "1. Determine the nationality descriptions for Pete Mangurian and Kirk Kerkorian.",
+    "2. Decide whether both descriptions support the nationality claim in the question."
+  ],
+  "original_final_question": "are Pete Mangurian and Kirk Kerkorian both Americans? Write your answer as [ANSWER].",
+  "original_reasoning_chain": [
+    "Node 1 and Node 2: Pete Mangurian is described as American, and Kirk Kerkorian is described as Armenian-American, so both are Americans. -> yes",
+    "Final answer: yes"
+  ]
+}

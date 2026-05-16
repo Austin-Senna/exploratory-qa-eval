@@ -1,0 +1,50 @@
+{
+  "question": "Are TEC-1 and Dubna 48K based on the same processor family? Write your answer as [ANSWER].",
+  "answer": "yes",
+  "nodes": {
+    "1": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ab52bd1554299637185c4ee:TEC-1",
+      "fact": "TEC-1: The TEC-1 was based on the Zilog Z80 CPU, had 2K of RAM and 2K of ROM in a default configuration.",
+      "subquestion": "What processor was the TEC-1 based on?",
+      "answer": "Zilog Z80 CPU"
+    },
+    "2": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ab52bd1554299637185c4ee:Dubna 48K",
+      "fact": "Dubna 48K: The Dubna 48K was based on an analogue of the Zilog Z80 microprocessor.",
+      "subquestion": "What processor was the Dubna 48K based on?",
+      "answer": "an analogue of the Zilog Z80 microprocessor"
+    }
+  },
+  "reasoning_chain": [
+    "Node 1 and Node 2: The TEC-1 was based on the Zilog Z80 CPU, and the Dubna 48K was based on an analogue of the Zilog Z80 microprocessor, so they were based on the same processor family. -> yes",
+    "Final answer: yes"
+  ],
+  "datasets_used": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ab52bd1554299637185c4ee:TEC-1",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ab52bd1554299637185c4ee:Dubna 48K"
+  ],
+  "reasoning_hops": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1,
+        2
+      ],
+      "reasoning": "Node 1 and Node 2: The TEC-1 was based on the Zilog Z80 CPU, and the Dubna 48K was based on an analogue of the Zilog Z80 microprocessor, so they were based on the same processor family. -> yes",
+      "answer": "yes"
+    }
+  ],
+  "_provenance": {
+    "benchmark": "hotpotqa",
+    "split": "dev_distractor",
+    "source_id": "5ab52bd1554299637185c4ee",
+    "type": "comparison",
+    "level": "hard",
+    "promoted_from": "other-benchmarks/tasks-hotpotqa-mini/k-2-d-1/task_39.json",
+    "sample_source": "other-benchmarks/tasks/hotpotqa/k-2-d-1/task_822.json",
+    "original_bucket": "k-2-d-1",
+    "promotion_status": "verified",
+    "promotion_rule": "curated_hotpotqa_batch_v1",
+    "source_mapping_status": "raw_anchor_temporary"
+  }
+}

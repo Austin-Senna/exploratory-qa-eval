@@ -62,6 +62,7 @@ class RunConfig:
     plan_skills_enabled: bool = False
     search_free: bool = False
     search_lessguide: bool = False
+    benchmark: Optional[str] = None
 
 
 @dataclass

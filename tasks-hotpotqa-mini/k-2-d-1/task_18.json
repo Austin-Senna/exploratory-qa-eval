@@ -1,0 +1,58 @@
+{
+  "question": "Who directed a 2006 film where Ron Perkins character plays the manager of a hotel? Write your answer as [ANSWER].",
+  "answer": "Christopher Nolan",
+  "nodes": {
+    "1": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a88a1bb5542997e5c09a64c:Ron Perkins",
+      "fact": "Ron Perkins: Ron Perkins is an American actor who has been active since the early 1960s. He also appeared in \"The Prestige\" (2006) as the manager of a hotel visited by Hugh Jackman's character in Colorado Springs, as well as nine episodes of Fox TV series \"House\" as Dr. Ron Simpson.",
+      "subquestion": "Which 2006 film featured Ron Perkins as the manager of a hotel?",
+      "answer": "The Prestige"
+    },
+    "2": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a88a1bb5542997e5c09a64c:The Prestige (film)",
+      "fact": "The Prestige (film): The Prestige is a 2006 British-American mystery thriller film directed by Christopher Nolan, from a screenplay adapted by Nolan and his brother Jonathan from Christopher Priest's 1995 novel of the same name.",
+      "subquestion": "Who directed the 2006 film The Prestige?",
+      "answer": "Christopher Nolan"
+    }
+  },
+  "reasoning_chain": [
+    "Node 1: Which 2006 film featured Ron Perkins as the manager of a hotel? Evidence: Ron Perkins: Ron Perkins is an American actor who has been active since the early 1960s. He also appeared in \"The Prestige\" (2006) as the manager of a hotel visited by Hugh Jackman's character in Colorado Springs, as well as nine episodes of Fox TV series \"House\" as Dr. Ron Simpson. -> The Prestige",
+    "Node 2: Who directed the 2006 film The Prestige? Evidence: The Prestige (film): The Prestige is a 2006 British-American mystery thriller film directed by Christopher Nolan, from a screenplay adapted by Nolan and his brother Jonathan from Christopher Priest's 1995 novel of the same name. -> Christopher Nolan",
+    "Final answer: Christopher Nolan"
+  ],
+  "datasets_used": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a88a1bb5542997e5c09a64c:Ron Perkins",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a88a1bb5542997e5c09a64c:The Prestige (film)"
+  ],
+  "reasoning_hops": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1
+      ],
+      "reasoning": "Node 1: Which 2006 film featured Ron Perkins as the manager of a hotel? Evidence: Ron Perkins: Ron Perkins is an American actor who has been active since the early 1960s. He also appeared in \"The Prestige\" (2006) as the manager of a hotel visited by Hugh Jackman's character in Colorado Springs, as well as nine episodes of Fox TV series \"House\" as Dr. Ron Simpson. -> The Prestige",
+      "answer": "The Prestige"
+    },
+    {
+      "hop": 2,
+      "node_ids": [
+        2
+      ],
+      "reasoning": "Node 2: Who directed the 2006 film The Prestige? Evidence: The Prestige (film): The Prestige is a 2006 British-American mystery thriller film directed by Christopher Nolan, from a screenplay adapted by Nolan and his brother Jonathan from Christopher Priest's 1995 novel of the same name. -> Christopher Nolan",
+      "answer": "Christopher Nolan"
+    }
+  ],
+  "_provenance": {
+    "benchmark": "hotpotqa",
+    "split": "dev_distractor",
+    "source_id": "5a88a1bb5542997e5c09a64c",
+    "type": "bridge",
+    "level": "hard",
+    "promoted_from": "other-benchmarks/tasks-hotpotqa-mini/k-2-d-2/task_23.json",
+    "sample_source": "other-benchmarks/tasks/hotpotqa/k-2-d-2/task_1967.json",
+    "original_bucket": "k-2-d-2",
+    "promotion_status": "verified",
+    "promotion_rule": "curated_hotpotqa_batch_v1",
+    "source_mapping_status": "raw_anchor_temporary"
+  }
+}

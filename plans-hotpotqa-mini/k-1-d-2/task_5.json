@@ -1,0 +1,19 @@
+{
+  "dataset_sequence": [
+    "hotpotqa-5a74f8235542993748c89766-havanese",
+    "hotpotqa-5a74f8235542993748c89766-black-mouth-cur"
+  ],
+  "source_sequence": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a74f8235542993748c89766:Havanese",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a74f8235542993748c89766:Black Mouth Cur"
+  ],
+  "reasoning_chain_text": [
+    "1. Determine what kind of animal the Havanese and the Black Mouth Cur are described as.",
+    "2. Return the shared kind of animal."
+  ],
+  "original_final_question": "The Havanese and the Black Mouth Cur are both which kind of animal? Write your answer as [ANSWER].",
+  "original_reasoning_chain": [
+    "Node 1 and Node 2: The Havanese is described as a dog, and the Black Mouth Cur is described as a hunting and cattle dog, so both are dogs. -> Dogs",
+    "Final answer: Dogs"
+  ]
+}

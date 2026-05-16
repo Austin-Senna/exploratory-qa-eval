@@ -1,0 +1,20 @@
+{
+  "dataset_sequence": [
+    "hotpotqa-5ab8627f5542990e739ec8da-harrison-newey",
+    "hotpotqa-5ab8627f5542990e739ec8da-mick-schumacher"
+  ],
+  "source_sequence": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ab8627f5542990e739ec8da:Harrison Newey",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ab8627f5542990e739ec8da:Mick Schumacher"
+  ],
+  "reasoning_chain_text": [
+    "1. Identify the partner Harrison Newey had for his ADAC Formula 4 debut.",
+    "2. Determine who that partner is the son of and return the parents as stated."
+  ],
+  "original_final_question": "Harrison Newey made his ADAC Formula 4 debut with a partner who is the son of who? Write your answer as [ANSWER].",
+  "original_reasoning_chain": [
+    "Node 1: Who partnered Harrison Newey for his ADAC Formula 4 debut? Evidence: Harrison Newey: He made his ADAC Formula 4 debut in 2015, partnering Mick Schumacher, son of world champion driver Michael Schumacher, at Van Amersfoort Racing. -> Mick Schumacher",
+    "Node 2: Who are Mick Schumacher's parents? Evidence: Mick Schumacher: He is the son of Corinna and seven-time Formula One World Champion Michael Schumacher, nephew of former Formula One driver Ralf Schumacher, and stepnephew of Sebastian Stahl. -> Corinna and seven-time Formula One World Champion Michael Schumacher",
+    "Final answer: Corinna and seven-time Formula One World Champion Michael Schumacher"
+  ]
+}

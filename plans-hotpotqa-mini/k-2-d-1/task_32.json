@@ -1,0 +1,20 @@
+{
+  "dataset_sequence": [
+    "hotpotqa-5ab91b6c55429934fafe6e5f-alex-lynn",
+    "hotpotqa-5ab91b6c55429934fafe6e5f-ds-virgin-racing"
+  ],
+  "source_sequence": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ab91b6c55429934fafe6e5f:Alex Lynn",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ab91b6c55429934fafe6e5f:DS Virgin Racing"
+  ],
+  "reasoning_chain_text": [
+    "1. Identify the racing organization for which British race car driver Alex Lynn is a reserve driver.",
+    "2. Determine the full name of the Virgin Group-owned electric racing organization and return it."
+  ],
+  "original_final_question": "What is the electric racing series British race car driver Alex Lynn drives for and is owned by Virgin Group? Write your answer as [ANSWER].",
+  "original_reasoning_chain": [
+    "Node 1: Which Formula E team is Alex Lynn a reserve driver for? Evidence: Alex Lynn: Alexander George Lynn (born 17 September 1993) is a British racing driver, who is currently DS Virgin Racing reserve driver in Formula E and G-Drive Racing full-time driver in the 2017 FIA World Endurance Championship. -> DS Virgin Racing",
+    "Node 2: What is the full name of the Virgin Group-owned Formula E team? Evidence: DS Virgin Racing: The DS Virgin Racing Formula E Team is a British motor racing team under ownership of Virgin Group that competes in the electric racing series, Formula E. -> DS Virgin Racing Formula E Team",
+    "Final answer: DS Virgin Racing Formula E Team"
+  ]
+}

@@ -2,6 +2,7 @@
 
 Default mappings:
 - tasks_mini/... -> plans_mini/...
+- tasks-mini-kramabench/... -> plans-mini-kramabench/...
 - tasks_core/... -> plans_mini/tasks_core/...
 - tasks_core_quality/... -> plans_core_quality/...
 """
@@ -14,6 +15,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 _PLANS_ROOT = Path("plans_mini")
+_KRAMABENCH_PLANS_ROOT = Path("plans-mini-kramabench")
 _QUALITY_PLANS_ROOT = Path("plans_core_quality")
 _TASK_CONTEXT: Dict[str, Any] = {}
 
@@ -70,6 +72,13 @@ def _plan_location_from_task(task_id: str) -> tuple[Path, Path]:
 
     p = Path(raw)
     parts = p.parts
+    if "tasks-mini-kramabench" in parts:
+        idx = parts.index("tasks-mini-kramabench")
+        suffix = parts[idx + 1 :]
+        if not suffix:
+            raise ValueError(f"Could not derive relative plan path from task_id '{task_id}'.")
+        return (_KRAMABENCH_PLANS_ROOT, Path(*suffix))
+
     for task_root in ("tasks_core_quality", "tasks_core", "tasks_mini"):
         if task_root not in parts:
             continue

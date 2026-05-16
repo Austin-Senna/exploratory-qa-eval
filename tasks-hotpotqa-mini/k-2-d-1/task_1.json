@@ -1,0 +1,58 @@
+{
+  "question": "After his curacy at the village that is a suburb of Scunthorpe, who was Industrial Chaplain to the Bishop of Lincoln? Write your answer as [ANSWER].",
+  "answer": "Dudman",
+  "nodes": {
+    "1": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a74a8fa55429929fddd8497:Frodingham, Lincolnshire",
+      "fact": "Frodingham, Lincolnshire: Frodingham was a hamlet in Lincolnshire which has grown into a suburb of Scunthorpe, North Lincolnshire.",
+      "subquestion": "Which former Lincolnshire hamlet became a suburb of Scunthorpe?",
+      "answer": "Frodingham"
+    },
+    "2": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a74a8fa55429929fddd8497:Bill Dudman",
+      "fact": "Bill Dudman: Dudman was educated at King's College, Taunton; the University of Hull and Lincoln Theological College. After curacies at Shiregreen,Wombwell and Frodingham he was Industrial Chaplain to the Bishop of Lincoln from 1957 to 1971.",
+      "subquestion": "Who was Industrial Chaplain to the Bishop of Lincoln after curacies including Frodingham?",
+      "answer": "Dudman"
+    }
+  },
+  "reasoning_chain": [
+    "Node 1: Which former Lincolnshire hamlet became a suburb of Scunthorpe? Evidence: Frodingham, Lincolnshire: Frodingham was a hamlet in Lincolnshire which has grown into a suburb of Scunthorpe, North Lincolnshire. -> Frodingham",
+    "Node 2: Who was Industrial Chaplain to the Bishop of Lincoln after curacies including Frodingham? Evidence: Bill Dudman: Dudman was educated at King's College, Taunton; the University of Hull and Lincoln Theological College. After curacies at Shiregreen,Wombwell and Frodingham he was Industrial Chaplain to the Bishop of Lincoln from 1957 to 1971. -> Dudman",
+    "Final answer: Dudman"
+  ],
+  "datasets_used": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a74a8fa55429929fddd8497:Frodingham, Lincolnshire",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a74a8fa55429929fddd8497:Bill Dudman"
+  ],
+  "reasoning_hops": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1
+      ],
+      "reasoning": "Node 1: Which former Lincolnshire hamlet became a suburb of Scunthorpe? Evidence: Frodingham, Lincolnshire: Frodingham was a hamlet in Lincolnshire which has grown into a suburb of Scunthorpe, North Lincolnshire. -> Frodingham",
+      "answer": "Frodingham"
+    },
+    {
+      "hop": 2,
+      "node_ids": [
+        2
+      ],
+      "reasoning": "Node 2: Who was Industrial Chaplain to the Bishop of Lincoln after curacies including Frodingham? Evidence: Bill Dudman: Dudman was educated at King's College, Taunton; the University of Hull and Lincoln Theological College. After curacies at Shiregreen,Wombwell and Frodingham he was Industrial Chaplain to the Bishop of Lincoln from 1957 to 1971. -> Dudman",
+      "answer": "Dudman"
+    }
+  ],
+  "_provenance": {
+    "benchmark": "hotpotqa",
+    "split": "dev_distractor",
+    "source_id": "5a74a8fa55429929fddd8497",
+    "type": "bridge",
+    "level": "hard",
+    "promoted_from": "other-benchmarks/tasks-hotpotqa-mini/k-2-d-2/task_6.json",
+    "sample_source": "other-benchmarks/tasks/hotpotqa/k-2-d-2/task_296.json",
+    "original_bucket": "k-2-d-2",
+    "promotion_status": "verified",
+    "promotion_rule": "curated_hotpotqa_batch_v1",
+    "source_mapping_status": "raw_anchor_temporary"
+  }
+}

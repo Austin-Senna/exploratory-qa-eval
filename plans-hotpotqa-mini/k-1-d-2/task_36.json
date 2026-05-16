@@ -1,0 +1,19 @@
+{
+  "dataset_sequence": [
+    "hotpotqa-5ab2383155429970612095c1-denzel-washington",
+    "hotpotqa-5ab2383155429970612095c1-david-hewlett"
+  ],
+  "source_sequence": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ab2383155429970612095c1:Denzel Washington",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ab2383155429970612095c1:David Hewlett"
+  ],
+  "reasoning_chain_text": [
+    "1. Determine the professions associated with Denzel Washington and David Hewlett.",
+    "2. Return whether both people are actors."
+  ],
+  "original_final_question": "Are Denzel Washington and David Hewlett both actors? Write your answer as [ANSWER].",
+  "original_reasoning_chain": [
+    "Node 1 and Node 2: Denzel Washington is described as an actor, and David Hewlett is also described as an actor, so both are actors. -> yes",
+    "Final answer: yes"
+  ]
+}

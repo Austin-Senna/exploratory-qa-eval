@@ -1,0 +1,20 @@
+{
+  "dataset_sequence": [
+    "hotpotqa-5a769b115542993569682c51-restless-carl-perkins-song",
+    "hotpotqa-5a769b115542993569682c51-mark-oconnor"
+  ],
+  "source_sequence": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a769b115542993569682c51:Restless (Carl Perkins song)",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a769b115542993569682c51:Mark O'Connor"
+  ],
+  "reasoning_chain_text": [
+    "1. Identify who performed the song Restless with The New Nashville Cats.",
+    "2. Using that performer, determine the American bluegrass musician identified by that name and return the name."
+  ],
+  "original_final_question": "What American bluegrass singer performed the song Restless with The New Nashville Cats? Write your answer as [ANSWER].",
+  "original_reasoning_chain": [
+    "Node 1: Who recorded a 1991 all-star version of \"Restless\" with The New Nashville Cats? Evidence: Restless (Carl Perkins song): The song became a major hit again in 1991 in a new all-star recording by Mark O'Connor and The New Nashville Cats. -> Mark O'Connor",
+    "Node 2: What American bluegrass musician is identified by that name? Evidence: Mark O'Connor: Mark O'Connor (born August 5, 1961, Seattle) is an American bluegrass, jazz and country violinist, fiddler, composer and music teacher. -> Mark O'Connor",
+    "Final answer: Mark O'Connor"
+  ]
+}

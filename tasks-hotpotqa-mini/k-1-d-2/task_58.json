@@ -1,0 +1,50 @@
+{
+  "question": "are Pete Mangurian and Kirk Kerkorian both Americans? Write your answer as [ANSWER].",
+  "answer": "yes",
+  "nodes": {
+    "1": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5adcb30b5542994d58a2f69f:Pete Mangurian",
+      "fact": "Pete Mangurian: Peter K. Mangurian born June 17, 1955 is an American football coach and former player.",
+      "subquestion": "What nationality is Pete Mangurian described as?",
+      "answer": "American"
+    },
+    "2": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5adcb30b5542994d58a2f69f:Kirk Kerkorian",
+      "fact": "Kirk Kerkorian: Kerkor \"Kirk\" Kerkorian (June 6, 1917 – June 15, 2015) was an Armenian-American businessman, investor, and philanthropist.",
+      "subquestion": "What nationality is Kirk Kerkorian described as?",
+      "answer": "Armenian-American"
+    }
+  },
+  "reasoning_chain": [
+    "Node 1 and Node 2: Pete Mangurian is described as American, and Kirk Kerkorian is described as Armenian-American, so both are Americans. -> yes",
+    "Final answer: yes"
+  ],
+  "datasets_used": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5adcb30b5542994d58a2f69f:Pete Mangurian",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5adcb30b5542994d58a2f69f:Kirk Kerkorian"
+  ],
+  "reasoning_hops": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1,
+        2
+      ],
+      "reasoning": "Node 1 and Node 2: Pete Mangurian is described as American, and Kirk Kerkorian is described as Armenian-American, so both are Americans. -> yes",
+      "answer": "yes"
+    }
+  ],
+  "_provenance": {
+    "benchmark": "hotpotqa",
+    "split": "dev_distractor",
+    "source_id": "5adcb30b5542994d58a2f69f",
+    "type": "comparison",
+    "level": "hard",
+    "promoted_from": "other-benchmarks/tasks-hotpotqa-mini/k-2-d-1/task_58.json",
+    "sample_source": "other-benchmarks/tasks/hotpotqa/k-2-d-1/task_1220.json",
+    "original_bucket": "k-2-d-1",
+    "promotion_status": "verified",
+    "promotion_rule": "curated_hotpotqa_batch_v1",
+    "source_mapping_status": "raw_anchor_temporary"
+  }
+}

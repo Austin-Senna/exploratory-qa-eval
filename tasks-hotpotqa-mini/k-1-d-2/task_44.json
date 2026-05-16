@@ -1,0 +1,50 @@
+{
+  "question": "What literary characteristic do Rosario Castellanos and Arthur Hailey share? Write your answer as [ANSWER].",
+  "answer": "authors",
+  "nodes": {
+    "1": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ab97b27554299131ca4233c:Rosario Castellanos",
+      "fact": "Rosario Castellanos: Rosario Castellanos Figueroa was a Mexican poet and author.",
+      "subquestion": "What literary role is Rosario Castellanos identified with?",
+      "answer": "author"
+    },
+    "2": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ab97b27554299131ca4233c:Arthur Hailey",
+      "fact": "Arthur Hailey: Arthur Hailey was a British-Canadian novelist whose plot-driven storylines were set against the backdrops of various industries.",
+      "subquestion": "What literary role is Arthur Hailey identified with?",
+      "answer": "novelist"
+    }
+  },
+  "reasoning_chain": [
+    "Node 1 and Node 2: Rosario Castellanos is described as an author, and Arthur Hailey is described as a novelist, so both share being authors. -> authors",
+    "Final answer: authors"
+  ],
+  "datasets_used": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ab97b27554299131ca4233c:Rosario Castellanos",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ab97b27554299131ca4233c:Arthur Hailey"
+  ],
+  "reasoning_hops": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1,
+        2
+      ],
+      "reasoning": "Node 1 and Node 2: Rosario Castellanos is described as an author, and Arthur Hailey is described as a novelist, so both share being authors. -> authors",
+      "answer": "authors"
+    }
+  ],
+  "_provenance": {
+    "benchmark": "hotpotqa",
+    "split": "dev_distractor",
+    "source_id": "5ab97b27554299131ca4233c",
+    "type": "comparison",
+    "level": "hard",
+    "promoted_from": "other-benchmarks/tasks-hotpotqa-mini/k-2-d-1/task_44.json",
+    "sample_source": "other-benchmarks/tasks/hotpotqa/k-2-d-1/task_931.json",
+    "original_bucket": "k-2-d-1",
+    "promotion_status": "verified",
+    "promotion_rule": "curated_hotpotqa_batch_v1",
+    "source_mapping_status": "raw_anchor_temporary"
+  }
+}

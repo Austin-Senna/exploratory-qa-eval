@@ -1,0 +1,19 @@
+{
+  "dataset_sequence": [
+    "hotpotqa-5a83ed9b55429933447460b8-cistus",
+    "hotpotqa-5a83ed9b55429933447460b8-stapelianthus"
+  ],
+  "source_sequence": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a83ed9b55429933447460b8:Cistus",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a83ed9b55429933447460b8:Stapelianthus"
+  ],
+  "reasoning_chain_text": [
+    "1. Determine what kind of organism Cistus and Stapelianthus are each described as.",
+    "2. Return the shared organism type."
+  ],
+  "original_final_question": "Cistus and Stapelianthus are both forms of what? Write your answer as [ANSWER].",
+  "original_reasoning_chain": [
+    "Node 1 and Node 2: Cistus is a genus of flowering plants, and Stapelianthus is also a genus of flowering plants, so both are forms of flowering plants. -> flowering plants",
+    "Final answer: flowering plants"
+  ]
+}

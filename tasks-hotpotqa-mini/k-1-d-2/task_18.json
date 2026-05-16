@@ -1,0 +1,50 @@
+{
+  "question": "Were Stanley Kubrick and Elio Petri from different countries? Write your answer as [ANSWER].",
+  "answer": "yes",
+  "nodes": {
+    "1": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a7f677455429969796c1a37:Stanley Kubrick",
+      "fact": "Stanley Kubrick: Stanley Kubrick was an American film director, screenwriter, producer, cinematographer, editor, and photographer.",
+      "subquestion": "What country is associated with Stanley Kubrick?",
+      "answer": "American"
+    },
+    "2": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a7f677455429969796c1a37:Elio Petri",
+      "fact": "Elio Petri: Elio Petri was an Italian political filmmaker.",
+      "subquestion": "What country is associated with Elio Petri?",
+      "answer": "Italian"
+    }
+  },
+  "reasoning_chain": [
+    "Node 1 and Node 2: Stanley Kubrick is described as American, while Elio Petri is described as Italian, so they were from different countries. -> yes",
+    "Final answer: yes"
+  ],
+  "datasets_used": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a7f677455429969796c1a37:Stanley Kubrick",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a7f677455429969796c1a37:Elio Petri"
+  ],
+  "reasoning_hops": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1,
+        2
+      ],
+      "reasoning": "Node 1 and Node 2: Stanley Kubrick is described as American, while Elio Petri is described as Italian, so they were from different countries. -> yes",
+      "answer": "yes"
+    }
+  ],
+  "_provenance": {
+    "benchmark": "hotpotqa",
+    "split": "dev_distractor",
+    "source_id": "5a7f677455429969796c1a37",
+    "type": "comparison",
+    "level": "hard",
+    "promoted_from": "other-benchmarks/tasks-hotpotqa-mini/k-2-d-1/task_18.json",
+    "sample_source": "other-benchmarks/tasks/hotpotqa/k-2-d-1/task_382.json",
+    "original_bucket": "k-2-d-1",
+    "promotion_status": "verified",
+    "promotion_rule": "curated_hotpotqa_batch_v1",
+    "source_mapping_status": "raw_anchor_temporary"
+  }
+}

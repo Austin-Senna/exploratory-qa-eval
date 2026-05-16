@@ -1,0 +1,20 @@
+{
+  "dataset_sequence": [
+    "hotpotqa-5aba94e355429901930fa845-jonathan-groff",
+    "hotpotqa-5aba94e355429901930fa845-you-ll-be-back"
+  ],
+  "source_sequence": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5aba94e355429901930fa845:Jonathan Groff",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5aba94e355429901930fa845:You'll Be Back"
+  ],
+  "reasoning_chain_text": [
+    "1. Identify the Hamilton performance associated with Jonathan Groff when he was 30 years old.",
+    "2. Determine who wrote the historical musical song connected to that performance and return the writer."
+  ],
+  "original_final_question": "Jonathan Groff was 30 years old when he appeared in a historical musical written by whom? Write your answer as [ANSWER].",
+  "original_reasoning_chain": [
+    "Node 1: Which actor born in 1985 is the performer named in the Hamilton song evidence? Evidence: Jonathan Groff: Jonathan Drew Groff (born March 26, 1985) is an American actor and singer. -> Jonathan Groff",
+    "Node 2: Who wrote the Hamilton song sung by Jonathan Groff? Evidence: You'll Be Back: \"You'll Be Back\" is the seventh song from Act 1 of the musical \"Hamilton\", based on the life of Alexander Hamilton, which premiered on Broadway in 2015. Lin-Manuel Miranda wrote both the music and lyrics to the song. It is sung by Jonathan Groff in the show's original cast recording. -> Lin-Manuel Miranda",
+    "Final answer: Lin-Manuel Miranda"
+  ]
+}

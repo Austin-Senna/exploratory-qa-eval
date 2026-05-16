@@ -1,0 +1,50 @@
+{
+  "question": "Are both Weberocereus and Conospermum part of the same genus? Write your answer as [ANSWER].",
+  "answer": "no",
+  "nodes": {
+    "1": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5aba9e235542994dbf019984:Weberocereus",
+      "fact": "Weberocereus: Weberocereus is genus of cacti. It produces a green and white flower and is found mainly in Costa Rica and Nicaragua.",
+      "subquestion": "What relevant information is given about Weberocereus?",
+      "answer": "Weberocereus"
+    },
+    "2": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5aba9e235542994dbf019984:Conospermum",
+      "fact": "Conospermum: Conospermum is a genus of about 50 species in the family Proteaceae that are endemic to Australia.",
+      "subquestion": "What relevant information is given about Conospermum?",
+      "answer": "no"
+    }
+  },
+  "reasoning_chain": [
+    "Compare the supported evidence: Node 1: Weberocereus: Weberocereus is genus of cacti. It produces a green and white flower and is found mainly in Costa Rica and Nicaragua.; Node 2: Conospermum: Conospermum is a genus of about 50 species in the family Proteaceae that are endemic to Australia.. Final answer: no",
+    "Final answer: no"
+  ],
+  "datasets_used": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5aba9e235542994dbf019984:Weberocereus",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5aba9e235542994dbf019984:Conospermum"
+  ],
+  "reasoning_hops": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1,
+        2
+      ],
+      "reasoning": "Compare the supported evidence: Node 1: Weberocereus: Weberocereus is genus of cacti. It produces a green and white flower and is found mainly in Costa Rica and Nicaragua.; Node 2: Conospermum: Conospermum is a genus of about 50 species in the family Proteaceae that are endemic to Australia.. Final answer: no",
+      "answer": "no"
+    }
+  ],
+  "_provenance": {
+    "benchmark": "hotpotqa",
+    "split": "dev_distractor",
+    "source_id": "5aba9e235542994dbf019984",
+    "type": "comparison",
+    "level": "hard",
+    "promoted_from": "other-benchmarks/tasks-hotpotqa-mini/k-2-d-1/task_47.json",
+    "sample_source": "other-benchmarks/tasks/hotpotqa/k-2-d-1/task_960.json",
+    "original_bucket": "k-2-d-1",
+    "promotion_status": "verified",
+    "promotion_rule": "curated_hotpotqa_batch_v1",
+    "source_mapping_status": "raw_anchor_temporary"
+  }
+}

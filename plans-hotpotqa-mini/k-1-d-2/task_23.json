@@ -1,0 +1,19 @@
+{
+  "dataset_sequence": [
+    "hotpotqa-5a834ed95542990548d0b1ca-712-fifth-avenue",
+    "hotpotqa-5a834ed95542990548d0b1ca-manhattan-life-insurance-building"
+  ],
+  "source_sequence": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a834ed95542990548d0b1ca:712 Fifth Avenue",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a834ed95542990548d0b1ca:Manhattan Life Insurance Building"
+  ],
+  "reasoning_chain_text": [
+    "1. Determine the heights of 712 Fifth Avenue and the Manhattan Life Insurance Building.",
+    "2. Compare the heights and return the taller tower."
+  ],
+  "original_final_question": "Which tower is taller, 712 Fifth Avenue or Manhattan Life Insurance Building? Write your answer as [ANSWER].",
+  "original_reasoning_chain": [
+    "Node 1 and Node 2: 712 Fifth Avenue is 650 ft tall, while the Manhattan Life Insurance Building was 348 ft tall, so 712 5th Avenue is taller. -> 712 5th Avenue",
+    "Final answer: 712 5th Avenue"
+  ]
+}

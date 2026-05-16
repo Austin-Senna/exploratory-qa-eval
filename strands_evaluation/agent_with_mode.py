@@ -64,6 +64,7 @@ from strands_evaluation.tools.agent_tools import (
 )
 from strands_evaluation.tools.agent_tools_v2 import (
     cleanup_sandbox,
+    configure_benchmark as configure_data_lake_benchmark,
     execute_code,
     grep_file,
     list_files,
@@ -555,6 +556,7 @@ class DataLakeAgent:
         trace_attributes: Optional[Dict[str, Any]] = None,
         task_context: Optional[Dict[str, Any]] = None,
     ) -> tuple:
+        configure_data_lake_benchmark(getattr(self.run_config, "benchmark", None))
         cond = self.run_config.condition_config
         condition = _resolve_condition(cond)
         mode_overrides_enabled = any(

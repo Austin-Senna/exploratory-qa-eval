@@ -1,0 +1,58 @@
+{
+  "question": "What party was Johan Henrik Deuntzer a part of before the party that translates to the \"Radical Left?\"? Write your answer as [ANSWER].",
+  "answer": "Liberal \"Venstre\" party",
+  "nodes": {
+    "1": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a7f57a45542992097ad2f29:Danish Social Liberal Party",
+      "fact": "Danish Social Liberal Party: The Danish Social Liberal Party (Danish: \"Radikale Venstre\" , \"Radical Left\", i.e. \"Radical Liberal Party\") is a social-liberal political party in Denmark.",
+      "subquestion": "Which Danish party has a name translated as \"Radical Left\"?",
+      "answer": "Danish Social Liberal Party"
+    },
+    "2": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a7f57a45542992097ad2f29:Johan Henrik Deuntzer",
+      "fact": "Johan Henrik Deuntzer: Johan Henrik Deuntzer (20 May 1845 – 16 November 1918) was a Danish politician, member of the Liberal \"Venstre\" party until 1905 where he joined the Danish Social Liberal Party.",
+      "subquestion": "Which party was Johan Henrik Deuntzer part of before joining the Danish Social Liberal Party?",
+      "answer": "Liberal \"Venstre\" party"
+    }
+  },
+  "reasoning_chain": [
+    "Node 1: Which Danish party has a name translated as \"Radical Left\"? Evidence: Danish Social Liberal Party: The Danish Social Liberal Party (Danish: \"Radikale Venstre\" , \"Radical Left\", i.e. \"Radical Liberal Party\") is a social-liberal political party in Denmark. -> Danish Social Liberal Party",
+    "Node 2: Which party was Johan Henrik Deuntzer part of before joining the Danish Social Liberal Party? Evidence: Johan Henrik Deuntzer: Johan Henrik Deuntzer (20 May 1845 – 16 November 1918) was a Danish politician, member of the Liberal \"Venstre\" party until 1905 where he joined the Danish Social Liberal Party. -> Liberal \"Venstre\" party",
+    "Final answer: Liberal \"Venstre\" party"
+  ],
+  "datasets_used": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a7f57a45542992097ad2f29:Danish Social Liberal Party",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a7f57a45542992097ad2f29:Johan Henrik Deuntzer"
+  ],
+  "reasoning_hops": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1
+      ],
+      "reasoning": "Node 1: Which Danish party has a name translated as \"Radical Left\"? Evidence: Danish Social Liberal Party: The Danish Social Liberal Party (Danish: \"Radikale Venstre\" , \"Radical Left\", i.e. \"Radical Liberal Party\") is a social-liberal political party in Denmark. -> Danish Social Liberal Party",
+      "answer": "Danish Social Liberal Party"
+    },
+    {
+      "hop": 2,
+      "node_ids": [
+        2
+      ],
+      "reasoning": "Node 2: Which party was Johan Henrik Deuntzer part of before joining the Danish Social Liberal Party? Evidence: Johan Henrik Deuntzer: Johan Henrik Deuntzer (20 May 1845 – 16 November 1918) was a Danish politician, member of the Liberal \"Venstre\" party until 1905 where he joined the Danish Social Liberal Party. -> Liberal \"Venstre\" party",
+      "answer": "Liberal \"Venstre\" party"
+    }
+  ],
+  "_provenance": {
+    "benchmark": "hotpotqa",
+    "split": "dev_distractor",
+    "source_id": "5a7f57a45542992097ad2f29",
+    "type": "bridge",
+    "level": "hard",
+    "promoted_from": "other-benchmarks/tasks-hotpotqa-mini/k-2-d-2/task_16.json",
+    "sample_source": "other-benchmarks/tasks/hotpotqa/k-2-d-2/task_1227.json",
+    "original_bucket": "k-2-d-2",
+    "promotion_status": "verified",
+    "promotion_rule": "curated_hotpotqa_batch_v1",
+    "source_mapping_status": "raw_anchor_temporary"
+  }
+}

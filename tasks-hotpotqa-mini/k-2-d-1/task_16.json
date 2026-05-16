@@ -1,0 +1,58 @@
+{
+  "question": "During what years did the railroad that had a station stop in Ringling, Montana operate? Write your answer as [ANSWER].",
+  "answer": "from 1847 until 1980",
+  "nodes": {
+    "1": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a86eee85542994775f60787:Ringling, Montana",
+      "fact": "Ringling, Montana: The town was a station stop on the transcontinental main line of the Chicago, Milwaukee, St. Paul and Pacific Railroad (\"the Milwaukee Road\"); it was also the southern terminus of the White Sulphur Springs and Yellowstone Park Railway, which ran from Ringling to White Sulphur Springs.",
+      "subquestion": "Which railroad had a station stop in Ringling, Montana?",
+      "answer": "Chicago, Milwaukee, St. Paul and Pacific Railroad"
+    },
+    "2": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a86eee85542994775f60787:Chicago, Milwaukee, St. Paul and Pacific Railroad",
+      "fact": "Chicago, Milwaukee, St. Paul and Pacific Railroad: The Chicago, Milwaukee, St. Paul and Pacific Railroad (often referred to as the Milwaukee Road) (reporting mark MILW) , was a Class I railroad that operated in the Midwest and Northwest of the United States from 1847 until 1980, when its Pacific Extension (Montana, Idaho, and Washington) was abandoned following a bankruptcy.",
+      "subquestion": "During what years did the Chicago, Milwaukee, St. Paul and Pacific Railroad operate?",
+      "answer": "from 1847 until 1980"
+    }
+  },
+  "reasoning_chain": [
+    "Node 1: Which railroad had a station stop in Ringling, Montana? Evidence: Ringling, Montana: The town was a station stop on the transcontinental main line of the Chicago, Milwaukee, St. Paul and Pacific Railroad (\"the Milwaukee Road\"); it was also the southern terminus of the White Sulphur Springs and Yellowstone Park Railway, which ran from Ringling to White Sulphur Springs. -> Chicago, Milwaukee, St. Paul and Pacific Railroad",
+    "Node 2: During what years did the Chicago, Milwaukee, St. Paul and Pacific Railroad operate? Evidence: Chicago, Milwaukee, St. Paul and Pacific Railroad: The Chicago, Milwaukee, St. Paul and Pacific Railroad (often referred to as the Milwaukee Road) (reporting mark MILW) , was a Class I railroad that operated in the Midwest and Northwest of the United States from 1847 until 1980, when its Pacific Extension (Montana, Idaho, and Washington) was abandoned following a bankruptcy. -> from 1847 until 1980",
+    "Final answer: from 1847 until 1980"
+  ],
+  "datasets_used": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a86eee85542994775f60787:Ringling, Montana",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a86eee85542994775f60787:Chicago, Milwaukee, St. Paul and Pacific Railroad"
+  ],
+  "reasoning_hops": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1
+      ],
+      "reasoning": "Node 1: Which railroad had a station stop in Ringling, Montana? Evidence: Ringling, Montana: The town was a station stop on the transcontinental main line of the Chicago, Milwaukee, St. Paul and Pacific Railroad (\"the Milwaukee Road\"); it was also the southern terminus of the White Sulphur Springs and Yellowstone Park Railway, which ran from Ringling to White Sulphur Springs. -> Chicago, Milwaukee, St. Paul and Pacific Railroad",
+      "answer": "Chicago, Milwaukee, St. Paul and Pacific Railroad"
+    },
+    {
+      "hop": 2,
+      "node_ids": [
+        2
+      ],
+      "reasoning": "Node 2: During what years did the Chicago, Milwaukee, St. Paul and Pacific Railroad operate? Evidence: Chicago, Milwaukee, St. Paul and Pacific Railroad: The Chicago, Milwaukee, St. Paul and Pacific Railroad (often referred to as the Milwaukee Road) (reporting mark MILW) , was a Class I railroad that operated in the Midwest and Northwest of the United States from 1847 until 1980, when its Pacific Extension (Montana, Idaho, and Washington) was abandoned following a bankruptcy. -> from 1847 until 1980",
+      "answer": "from 1847 until 1980"
+    }
+  ],
+  "_provenance": {
+    "benchmark": "hotpotqa",
+    "split": "dev_distractor",
+    "source_id": "5a86eee85542994775f60787",
+    "type": "bridge",
+    "level": "hard",
+    "promoted_from": "other-benchmarks/tasks-hotpotqa-mini/k-2-d-2/task_21.json",
+    "sample_source": "other-benchmarks/tasks/hotpotqa/k-2-d-2/task_1830.json",
+    "original_bucket": "k-2-d-2",
+    "promotion_status": "verified",
+    "promotion_rule": "curated_hotpotqa_batch_v1",
+    "source_mapping_status": "raw_anchor_temporary"
+  }
+}

@@ -15,6 +15,7 @@ _MANAGEMENT_MODE_CHOICES = ("naive", "standard", "ideal")
 _RESULT_MODE_CHOICES = ("naive", "ideal")
 _COMPUTATION_MODE_CHOICES = ("standard", "ideal")
 _SKILLS_CHOICES = ("on", "off")
+_BENCHMARK_CHOICES = ("lakeqa", "kramabench", "hotpotqa")
 _SHORTCUT_MODE_CHOICES = ("preloaded", "ideal")
 _SANA_FEATURE_CHOICES = ("cot", "delegation", "results", "sprint")
 _SPRINT_MODE_CHOICES = ("cadence", "commitment")
@@ -74,6 +75,12 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Enable or disable the Strands AgentSkills planning/discovery skills plugin.",
     )
     common.add_argument("--compute", choices=_COMPUTATION_MODE_CHOICES, default=None)
+    common.add_argument(
+        "--benchmark",
+        choices=_BENCHMARK_CHOICES,
+        default="lakeqa",
+        help="Data-lake benchmark bucket to use for agent data tools.",
+    )
     common.add_argument(
         "--mode",
         choices=_SHORTCUT_MODE_CHOICES,
@@ -301,6 +308,8 @@ def _build_sana_command(args: argparse.Namespace, cwd: Path) -> tuple[list[str],
         command.extend(["--search-calls", str(args.search_calls)])
     if args.compute is not None:
         command.extend(["--computation_tool", args.compute])
+    if args.benchmark != "lakeqa":
+        command.extend(["--benchmark", args.benchmark])
     if args.skills is not None:
         command.extend(["--skills", args.skills])
     if args.search_free:

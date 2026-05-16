@@ -1,0 +1,50 @@
+{
+  "question": "Which band was active the longest, Spirit of the West or Big Pig? Write your answer as [ANSWER].",
+  "answer": "Spirit of the West",
+  "nodes": {
+    "1": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5add1eed5542992ae4cec485:Spirit of the West",
+      "fact": "Spirit of the West: Spirit of the West were a Canadian folk rock band from Vancouver, active from 1983 to 2016.",
+      "subquestion": "During what years was Spirit of the West active?",
+      "answer": "1983 to 2016"
+    },
+    "2": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5add1eed5542992ae4cec485:Big Pig",
+      "fact": "Big Pig: Big Pig were an Australian funk, rock and pop band that existed from 1985 to 1991.",
+      "subquestion": "During what years did Big Pig exist?",
+      "answer": "1985 to 1991"
+    }
+  },
+  "reasoning_chain": [
+    "Node 1 and Node 2: Spirit of the West was active from 1983 to 2016, while Big Pig existed from 1985 to 1991, so Spirit of the West was active longer. -> Spirit of the West",
+    "Final answer: Spirit of the West"
+  ],
+  "datasets_used": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5add1eed5542992ae4cec485:Spirit of the West",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5add1eed5542992ae4cec485:Big Pig"
+  ],
+  "reasoning_hops": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1,
+        2
+      ],
+      "reasoning": "Node 1 and Node 2: Spirit of the West was active from 1983 to 2016, while Big Pig existed from 1985 to 1991, so Spirit of the West was active longer. -> Spirit of the West",
+      "answer": "Spirit of the West"
+    }
+  ],
+  "_provenance": {
+    "benchmark": "hotpotqa",
+    "split": "dev_distractor",
+    "source_id": "5add1eed5542992ae4cec485",
+    "type": "comparison",
+    "level": "hard",
+    "promoted_from": "other-benchmarks/tasks-hotpotqa-mini/k-2-d-1/task_59.json",
+    "sample_source": "other-benchmarks/tasks/hotpotqa/k-2-d-1/task_1234.json",
+    "original_bucket": "k-2-d-1",
+    "promotion_status": "verified",
+    "promotion_rule": "curated_hotpotqa_batch_v1",
+    "source_mapping_status": "raw_anchor_temporary"
+  }
+}

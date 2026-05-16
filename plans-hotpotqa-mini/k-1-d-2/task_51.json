@@ -1,0 +1,19 @@
+{
+  "dataset_sequence": [
+    "hotpotqa-5abf12f25542997719eab667-mcfarland-usa",
+    "hotpotqa-5abf12f25542997719eab667-the-black-hole"
+  ],
+  "source_sequence": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5abf12f25542997719eab667:McFarland, USA",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5abf12f25542997719eab667:The Black Hole"
+  ],
+  "reasoning_chain_text": [
+    "1. Determine the film type or genre described for McFarland, USA and The Black Hole.",
+    "2. Compare those descriptions and return whether both are sports films."
+  ],
+  "original_final_question": "Are McFarland, USA and The Black Hole both sports films? Write your answer as [ANSWER].",
+  "original_reasoning_chain": [
+    "Compare the supported evidence: Node 1: McFarland, USA: McFarland, USA (also known as McFarland) is a 2015 American sports drama film directed by Niki Caro, produced by Mark Ciardi and Gordon Gray, written by Christopher Cleveland, Bettina Gilois and Grant Thompson with music composed by Antônio Pinto.; Node 2: The Black Hole: The Black Hole is a 1979 American science fiction film directed by Gary Nelson and produced by Walt Disney Productions.. Final answer: no",
+    "Final answer: no"
+  ]
+}

@@ -1,0 +1,50 @@
+{
+  "question": "Edward Marszewski is the editor-in-chief of Lumpen, who is the editor-in-chief of Saveur? Write your answer as [ANSWER].",
+  "answer": "Colman Andrews",
+  "nodes": {
+    "1": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ae3639b5542991a06ce99b2:Lumpen (magazine)",
+      "fact": "Lumpen (magazine): Lumpen is an American magazine published since 1991, whose editor-in-chief is Edward Marszewski.",
+      "subquestion": "Who is Lumpen's editor-in-chief?",
+      "answer": "Edward Marszewski"
+    },
+    "2": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ae3639b5542991a06ce99b2:Saveur",
+      "fact": "Saveur: The publication was co-founded by Dorothy Kalins, Michael Grossman, Christopher Hirsheimer, and Colman Andrews, who was also the editor-in-chief from 1996 to 2001.",
+      "subquestion": "Who was Saveur's editor-in-chief from 1996 to 2001?",
+      "answer": "Colman Andrews"
+    }
+  },
+  "reasoning_chain": [
+    "Node 1 and Node 2: Lumpen's editor-in-chief is Edward Marszewski, and Saveur's editor-in-chief from 1996 to 2001 was Colman Andrews. -> Colman Andrews",
+    "Final answer: Colman Andrews"
+  ],
+  "datasets_used": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ae3639b5542991a06ce99b2:Lumpen (magazine)",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ae3639b5542991a06ce99b2:Saveur"
+  ],
+  "reasoning_hops": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1,
+        2
+      ],
+      "reasoning": "Node 1 and Node 2: Lumpen's editor-in-chief is Edward Marszewski, and Saveur's editor-in-chief from 1996 to 2001 was Colman Andrews. -> Colman Andrews",
+      "answer": "Colman Andrews"
+    }
+  ],
+  "_provenance": {
+    "benchmark": "hotpotqa",
+    "split": "dev_distractor",
+    "source_id": "5ae3639b5542991a06ce99b2",
+    "type": "comparison",
+    "level": "hard",
+    "promoted_from": "other-benchmarks/tasks-hotpotqa-mini/k-2-d-1/task_66.json",
+    "sample_source": "other-benchmarks/tasks/hotpotqa/k-2-d-1/task_1425.json",
+    "original_bucket": "k-2-d-1",
+    "promotion_status": "verified",
+    "promotion_rule": "curated_hotpotqa_batch_v1",
+    "source_mapping_status": "raw_anchor_temporary"
+  }
+}

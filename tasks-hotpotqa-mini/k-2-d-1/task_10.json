@@ -1,0 +1,58 @@
+{
+  "question": "\"wild combination\" was a film about a man who was an American cellist, composer, producer and singer, who is he? Write your answer as [ANSWER].",
+  "answer": "Arthur Russell",
+  "nodes": {
+    "1": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a7f3bcd55429930675136c3:Hecuba (band)",
+      "fact": "Hecuba (band): They performed at the Los Angeles premier of \"Wild Combination\": a film about Arthur Russell (musician) performing their versions of Russell's music.",
+      "subquestion": "Who was the film Wild Combination about?",
+      "answer": "Arthur Russell (musician)"
+    },
+    "2": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a7f3bcd55429930675136c3:Arthur Russell (musician)",
+      "fact": "Arthur Russell (musician): Arthur Russell (born Charles Arthur Russell, Jr.; May 21, 1951 – April 4, 1992) was an American cellist, composer, producer, singer, and musician whose work spanned a disparate range of styles.",
+      "subquestion": "What American cellist, composer, producer, and singer is identified by that clue?",
+      "answer": "Arthur Russell"
+    }
+  },
+  "reasoning_chain": [
+    "Node 1: Who was the film Wild Combination about? Evidence: Hecuba performed at the Los Angeles premiere of Wild Combination, a film about Arthur Russell (musician). -> Arthur Russell (musician)",
+    "Node 2: What American cellist, composer, producer, and singer is identified by that clue? Evidence: Arthur Russell was an American cellist, composer, producer, singer, and musician. -> Arthur Russell",
+    "Final answer: Arthur Russell"
+  ],
+  "datasets_used": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a7f3bcd55429930675136c3:Hecuba (band)",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a7f3bcd55429930675136c3:Arthur Russell (musician)"
+  ],
+  "reasoning_hops": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1
+      ],
+      "reasoning": "Node 1: Who was the film Wild Combination about? Evidence: Hecuba performed at the Los Angeles premiere of Wild Combination, a film about Arthur Russell (musician). -> Arthur Russell (musician)",
+      "answer": "Arthur Russell (musician)"
+    },
+    {
+      "hop": 2,
+      "node_ids": [
+        2
+      ],
+      "reasoning": "Node 2: What American cellist, composer, producer, and singer is identified by that clue? Evidence: Arthur Russell was an American cellist, composer, producer, singer, and musician. -> Arthur Russell",
+      "answer": "Arthur Russell"
+    }
+  ],
+  "_provenance": {
+    "benchmark": "hotpotqa",
+    "split": "dev_distractor",
+    "source_id": "5a7f3bcd55429930675136c3",
+    "type": "bridge",
+    "level": "hard",
+    "promoted_from": "other-benchmarks/tasks-hotpotqa-mini/k-2-d-2/task_15.json",
+    "sample_source": "other-benchmarks/tasks/hotpotqa/k-2-d-2/task_1212.json",
+    "original_bucket": "k-2-d-2",
+    "promotion_status": "verified",
+    "promotion_rule": "curated_hotpotqa_batch_v1",
+    "source_mapping_status": "raw_anchor_temporary"
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "question": "Did the the Battle of Stones River occur before the Battle of Saipan? Write your answer as [ANSWER].",
+  "answer": "yes",
+  "nodes": {
+    "1": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5add39c45542995b365faac5:Battle of Saipan",
+      "fact": "Battle of Saipan: The Battle of Saipan was a battle of the Pacific campaign of World War II, fought on the island of Saipan in the Mariana Islands from 15 June to 9 July 1944.",
+      "subquestion": "When was the Battle of Saipan fought?",
+      "answer": "15 June to 9 July 1944"
+    },
+    "2": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5add39c45542995b365faac5:Battle of Stones River",
+      "fact": "Battle of Stones River: The Battle of Stones River or Second Battle of Murfreesboro, was fought from December 31, 1862, to January 2, 1863, in Middle Tennessee, as the culmination of the Stones River Campaign in the Western Theater of the American Civil War.",
+      "subquestion": "When was the Battle of Stones River fought?",
+      "answer": "December 31, 1862, to January 2, 1863"
+    }
+  },
+  "reasoning_chain": [
+    "Node 1 and Node 2: The Battle of Stones River was fought from December 31, 1862, to January 2, 1863, while the Battle of Saipan was fought from 15 June to 9 July 1944, so the Battle of Stones River occurred before the Battle of Saipan. -> yes",
+    "Final answer: yes"
+  ],
+  "datasets_used": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5add39c45542995b365faac5:Battle of Saipan",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5add39c45542995b365faac5:Battle of Stones River"
+  ],
+  "reasoning_hops": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1,
+        2
+      ],
+      "reasoning": "Node 1 and Node 2: The Battle of Stones River was fought from December 31, 1862, to January 2, 1863, while the Battle of Saipan was fought from 15 June to 9 July 1944, so the Battle of Stones River occurred before the Battle of Saipan. -> yes",
+      "answer": "yes"
+    }
+  ],
+  "_provenance": {
+    "benchmark": "hotpotqa",
+    "split": "dev_distractor",
+    "source_id": "5add39c45542995b365faac5",
+    "type": "comparison",
+    "level": "hard",
+    "promoted_from": "other-benchmarks/tasks-hotpotqa-mini/k-2-d-1/task_60.json",
+    "sample_source": "other-benchmarks/tasks/hotpotqa/k-2-d-1/task_1240.json",
+    "original_bucket": "k-2-d-1",
+    "promotion_status": "verified",
+    "promotion_rule": "curated_hotpotqa_batch_v1",
+    "source_mapping_status": "raw_anchor_temporary"
+  }
+}

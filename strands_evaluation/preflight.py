@@ -12,6 +12,12 @@ from pathlib import Path
 from typing import List, Optional, Sequence
 
 from strands_evaluation.config import RunConfig
+from strands_evaluation.tools.agent_tools import configure_benchmark
+from strands_evaluation.tools.external.ideal.benchmark_paths import (
+    artifact_paths,
+    canonical_source_uri,
+    normalize_benchmark,
+)
 
 _PROMPTS_DIR = Path("prompts")
 _PROFILES_PATH = Path("datagov_tables_profiles.jsonl")
@@ -55,7 +61,7 @@ def _check_desc_cache_for_enrichment() -> PreflightCheck:
 
     _sw._DESC_CACHE_LOADED = False
     _sw._DESC_BY_URI = {}
-    label = "table_descriptions.jsonl (ideal enrichment load)"
+    label = f"{_sw._TABLE_DESCRIPTIONS_PATH.name} (ideal enrichment load)"
     try:
         _sw._load_desc_cache()
     except Exception as exc:
@@ -68,7 +74,7 @@ def _check_snippet_cache() -> PreflightCheck:
 
     _sw._SNIPPET_CACHE_LOADED = False
     _sw._SNIPPET_BY_URI = {}
-    label = "snippet.jsonl"
+    label = _sw._SNIPPETS_PATH.name
     try:
         _sw._load_snippet_cache()
     except Exception as exc:
@@ -81,7 +87,7 @@ def _check_schemas_jsonl_load() -> PreflightCheck:
 
     _sw._SCHEMAS_CACHE_LOADED = False
     _sw._SCHEMA_BY_SLUG_FILENAME = {}
-    label = "datagov_tables_schemas_full.jsonl"
+    label = _sw._SCHEMAS_PATH.name
     try:
         _sw._load_schemas_cache()
     except Exception as exc:
@@ -93,14 +99,11 @@ def _check_schemas_jsonl_load() -> PreflightCheck:
     )
 
 
-def _canonical_source_uri(source: str) -> str:
-    raw = str(source or "").strip()
-    if raw.startswith("s3://"):
-        return raw
-    return f"s3://lakeqa-yc4103-datalake/{raw.lstrip('/')}"
-
-
-def _check_tasks_mini_source_description_coverage(task_files: Sequence[str]) -> PreflightCheck:
+def _check_tasks_mini_source_description_coverage(
+    task_files: Sequence[str],
+    *,
+    benchmark: str,
+) -> PreflightCheck:
     from strands_evaluation.tools.external.ideal import plan_store
     from strands_evaluation.tools.external.ideal import search_wrapper as _sw
 
@@ -114,7 +117,7 @@ def _check_tasks_mini_source_description_coverage(task_files: Sequence[str]) -> 
 
     for task_path in task_files:
         task_str = str(task_path)
-        if "tasks_mini/" not in task_str:
+        if "tasks_mini/" not in task_str and "tasks-mini-kramabench/" not in task_str:
             continue
         try:
             plan = plan_store.load_plan_for_task(task_str)
@@ -122,11 +125,17 @@ def _check_tasks_mini_source_description_coverage(task_files: Sequence[str]) -> 
             return PreflightCheck(label, False, f"{task_str}: {exc}")
         for source in plan.source_sequence:
             checked += 1
-            uri = _canonical_source_uri(source)
+            uri = canonical_source_uri(source, benchmark)
             if uri not in _sw._DESC_BY_URI:
                 missing.append(f"{task_str} -> {uri}")
 
     if missing:
+        if benchmark == "kramabench" and not _sw._DESC_BY_URI:
+            return PreflightCheck(
+                label,
+                True,
+                f"kramabench description artifact is a stub; skipped coverage for {checked} planned source(s)",
+            )
         preview = "; ".join(missing[:5])
         suffix = f"; +{len(missing) - 5} more" if len(missing) > 5 else ""
         return PreflightCheck(
@@ -139,7 +148,7 @@ def _check_tasks_mini_source_description_coverage(task_files: Sequence[str]) -> 
 
 
 def _check_profiles_jsonl(*, required: bool = False) -> PreflightCheck:
-    label = "datagov_tables_profiles.jsonl"
+    label = _PROFILES_PATH.name
     if not _PROFILES_PATH.exists():
         if required:
             return PreflightCheck(
@@ -254,6 +263,24 @@ def run_preflight(
     sr = (run_config.search_results_mode or "naive").strip().lower()
     pm = (run_config.plan_mode or "standard").strip().lower()
     ct = (getattr(run_config, "computation_tool_mode", None) or "standard").strip().lower()
+    benchmark = normalize_benchmark(getattr(run_config, "benchmark", None) or "lakeqa")
+    configure_benchmark(benchmark)
+
+    from strands_evaluation.tools.external.ideal import search_wrapper as _sw
+    from strands_evaluation.helper import peek_profile as _pp
+
+    paths = artifact_paths(benchmark)
+    if benchmark != "lakeqa" or _sw._TABLE_DESCRIPTIONS_PATH.name.startswith("kramabench_"):
+        _sw.configure_dependency_paths(
+            descriptions=paths.descriptions,
+            snippets=paths.snippets,
+            schemas=paths.schemas,
+        )
+    global _PROFILES_PATH
+    if benchmark != "lakeqa" or _PROFILES_PATH.name.startswith("kramabench_"):
+        _PROFILES_PATH = paths.profiles
+        _pp._PROFILES_PATH = Path(__file__).resolve().parents[1] / paths.profiles
+        _pp._PROFILES_LOADED = False
 
     checks: List[PreflightCheck] = []
 
@@ -300,7 +327,7 @@ def run_preflight(
         checks.append(_check_schemas_jsonl_load())
 
     if (st == "ideal" or sr == "ideal") and task_files:
-        checks.append(_check_tasks_mini_source_description_coverage(task_files))
+        checks.append(_check_tasks_mini_source_description_coverage(task_files, benchmark=benchmark))
 
     sana_flags = getattr(run_config, "sana_flags", None)
     if getattr(sana_flags, "results", False):

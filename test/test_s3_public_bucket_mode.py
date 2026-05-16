@@ -5,6 +5,7 @@ from unittest.mock import Mock, patch
 from botocore.exceptions import ClientError
 
 from strands_evaluation.tools import agent_tools
+from strands_evaluation.tools.external.ideal.benchmark_paths import canonical_source_uri
 
 
 class TestS3PublicBucketMode(unittest.TestCase):
@@ -63,6 +64,44 @@ class TestS3PublicBucketMode(unittest.TestCase):
         self.assertIs(client, unsigned)
         self.assertEqual(agent_tools._S3_CLIENT_MODE, "unsigned")
         signed.list_objects_v2.assert_not_called()
+
+    def test_configure_benchmark_switches_to_kramabench_bucket(self):
+        agent_tools.configure_benchmark("kramabench")
+
+        self.assertEqual(agent_tools.BUCKET, "sana-kramabench")
+        self.assertEqual(
+            canonical_source_uri(
+                "datagov/kramabench-archeology-easy-10/files/worldcities.csv",
+                "kramabench",
+            ),
+            "s3://sana-kramabench/datagov/kramabench-archeology-easy-10/files/worldcities.csv",
+        )
+        self.assertEqual(
+            agent_tools._parse_s3_reference(
+                "s3://sana-kramabench/datagov/kramabench-archeology-easy-10/files/worldcities.csv"
+            )["key"],
+            "datagov/kramabench-archeology-easy-10/files/worldcities.csv",
+        )
+
+    def test_configure_benchmark_switches_to_hotpotqa_bucket(self):
+        agent_tools.configure_benchmark("hotpotqa")
+
+        self.assertEqual(agent_tools.BUCKET, "sana-hotpotqa-2")
+        self.assertEqual(
+            agent_tools._parse_s3_reference(
+                "s3://sana-hotpotqa-2/wikipedia/hotpotqa__5a74a8fa55429929fddd8497/files/Frodingham,_Lincolnshire.txt"
+            )["key"],
+            "wikipedia/hotpotqa__5a74a8fa55429929fddd8497/files/Frodingham,_Lincolnshire.txt",
+        )
+
+    def test_configure_benchmark_defaults_to_lakeqa_bucket(self):
+        agent_tools.configure_benchmark(None)
+
+        self.assertEqual(agent_tools.BUCKET, "lakeqa-yc4103-datalake")
+        self.assertEqual(
+            canonical_source_uri("datagov/example/files/rows.csv", "lakeqa"),
+            "s3://lakeqa-yc4103-datalake/datagov/example/files/rows.csv",
+        )
 
 
 if __name__ == "__main__":

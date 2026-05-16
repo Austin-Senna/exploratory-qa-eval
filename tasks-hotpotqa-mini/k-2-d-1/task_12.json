@@ -1,0 +1,58 @@
+{
+  "question": "Felicia Pearson is a rapper who appeared in the single \"Here I Am\" by who? Write your answer as [ANSWER].",
+  "answer": "Rick Ross",
+  "nodes": {
+    "1": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a7fa97d5542994857a767a9:Felicia Pearson",
+      "fact": "Felicia Pearson: Felicia Pearson (born May 18, 1980) is an American actress, author, and rapper.",
+      "subquestion": "Which rapper named in the question is Felicia Pearson?",
+      "answer": "Felicia Pearson"
+    },
+    "2": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a7fa97d5542994857a767a9:Here I Am (Rick Ross song)",
+      "fact": "Here I Am (Rick Ross song): \"Here I Am\" is the third single from Rick Ross's second album \"Trilla\". Video appearances made are DJ Khaled, Birdman, Pitbull, Dre, Felicia Pearson, Ace Hood and others.",
+      "subquestion": "Whose single \"Here I Am\" featured a video appearance by Felicia Pearson?",
+      "answer": "Rick Ross"
+    }
+  },
+  "reasoning_chain": [
+    "Node 1: Which rapper named in the question is Felicia Pearson? Evidence: Felicia Pearson: Felicia Pearson (born May 18, 1980) is an American actress, author, and rapper. -> Felicia Pearson",
+    "Node 2: Whose single \"Here I Am\" featured a video appearance by Felicia Pearson? Evidence: Here I Am (Rick Ross song): \"Here I Am\" is the third single from Rick Ross's second album \"Trilla\". Video appearances made are DJ Khaled, Birdman, Pitbull, Dre, Felicia Pearson, Ace Hood and others. -> Rick Ross",
+    "Final answer: Rick Ross"
+  ],
+  "datasets_used": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a7fa97d5542994857a767a9:Felicia Pearson",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a7fa97d5542994857a767a9:Here I Am (Rick Ross song)"
+  ],
+  "reasoning_hops": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1
+      ],
+      "reasoning": "Node 1: Which rapper named in the question is Felicia Pearson? Evidence: Felicia Pearson: Felicia Pearson (born May 18, 1980) is an American actress, author, and rapper. -> Felicia Pearson",
+      "answer": "Felicia Pearson"
+    },
+    {
+      "hop": 2,
+      "node_ids": [
+        2
+      ],
+      "reasoning": "Node 2: Whose single \"Here I Am\" featured a video appearance by Felicia Pearson? Evidence: Here I Am (Rick Ross song): \"Here I Am\" is the third single from Rick Ross's second album \"Trilla\". Video appearances made are DJ Khaled, Birdman, Pitbull, Dre, Felicia Pearson, Ace Hood and others. -> Rick Ross",
+      "answer": "Rick Ross"
+    }
+  ],
+  "_provenance": {
+    "benchmark": "hotpotqa",
+    "split": "dev_distractor",
+    "source_id": "5a7fa97d5542994857a767a9",
+    "type": "bridge",
+    "level": "hard",
+    "promoted_from": "other-benchmarks/tasks-hotpotqa-mini/k-2-d-2/task_17.json",
+    "sample_source": "other-benchmarks/tasks/hotpotqa/k-2-d-2/task_1267.json",
+    "original_bucket": "k-2-d-2",
+    "promotion_status": "verified",
+    "promotion_rule": "curated_hotpotqa_batch_v1",
+    "source_mapping_status": "raw_anchor_temporary"
+  }
+}

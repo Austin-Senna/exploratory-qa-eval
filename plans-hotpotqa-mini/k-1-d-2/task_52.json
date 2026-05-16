@@ -1,0 +1,19 @@
+{
+  "dataset_sequence": [
+    "hotpotqa-5abff00c5542994516f45537-baghdad-er",
+    "hotpotqa-5abff00c5542994516f45537-olympia-1938-film"
+  ],
+  "source_sequence": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5abff00c5542994516f45537:Baghdad ER",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5abff00c5542994516f45537:Olympia (1938 film)"
+  ],
+  "reasoning_chain_text": [
+    "1. Determine the film genre described for Baghdad ER and Olympia.",
+    "2. Compare those descriptions and return the genre that links the two films."
+  ],
+  "original_final_question": "What film genre links Baghdad ER and Olympia? Write your answer as [ANSWER].",
+  "original_reasoning_chain": [
+    "Compare the supported evidence: Node 1: Baghdad ER: Baghdad ER is a documentary released by HBO on May 21, 2006.; Node 2: Olympia (1938 film): Olympia is a 1938 German documentary film written, directed and produced by Leni Riefenstahl, documenting the 1936 Summer Olympics, held in the Olympic Stadium in Berlin, Germany.. Final answer: documentary",
+    "Final answer: documentary"
+  ]
+}

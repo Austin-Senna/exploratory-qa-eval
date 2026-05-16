@@ -1,0 +1,20 @@
+{
+  "dataset_sequence": [
+    "hotpotqa-5adf076f5542992d7e9f9277-new-york-comptroller-election-2002",
+    "hotpotqa-5adf076f5542992d7e9f9277-john-faso"
+  ],
+  "source_sequence": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5adf076f5542992d7e9f9277:New York Comptroller election, 2002",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5adf076f5542992d7e9f9277:John Faso"
+  ],
+  "reasoning_chain_text": [
+    "1. Identify the person Alan Hevesi defeated in the 2002 New York Comptroller election.",
+    "2. Determine which New York representative and politician matches that person and return the name."
+  ],
+  "original_final_question": "What New York representative and politician was defeated by Alan Hevesi in 2002? Write your answer as [ANSWER].",
+  "original_reasoning_chain": [
+    "Node 1: Who did Alan Hevesi defeat in the 2002 New York Comptroller election? Evidence: New York Comptroller election, 2002: New York City Comptroller Alan G. Hevesi defeated former Assembly Minority Leader John Faso. -> John Faso",
+    "Node 2: Which New York representative and politician matches the person Alan Hevesi defeated? Evidence: John Faso: John James Faso Jr. (born August 25, 1952) is an American politician and the U.S. Representative for New York 's 19 congressional district since January 3, 2017. -> John Faso",
+    "Final answer: John Faso"
+  ]
+}

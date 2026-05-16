@@ -1,0 +1,20 @@
+{
+  "dataset_sequence": [
+    "hotpotqa-5a8a3e745542996c9b8d5e70-tunnels-amp-trolls",
+    "hotpotqa-5a8a3e745542996c9b8d5e70-arena-of-khazan"
+  ],
+  "source_sequence": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a8a3e745542996c9b8d5e70:Tunnels &amp; Trolls",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a8a3e745542996c9b8d5e70:Arena of Khazan"
+  ],
+  "reasoning_chain_text": [
+    "1. Identify the adventure game designed by Ken St. Andre.",
+    "2. Using that game, determine the name of its 1979 role-playing game adventure."
+  ],
+  "original_final_question": "What is the name for the adventure in \"Tunnels and Trolls\", a game designed by Ken St. Andre? Write your answer as [ANSWER].",
+  "original_reasoning_chain": [
+    "Node 1: Which fantasy role-playing game designed by Ken St. Andre is abbreviated T&T? Evidence: Tunnels &amp; Trolls: Tunnels & Trolls (abbreviated \"T&T\") is a fantasy role-playing game designed by Ken St. Andre and first published in 1975 by Flying Buffalo. -> Tunnels & Trolls",
+    "Node 2: What 1979 adventure was published for Tunnels & Trolls? Evidence: Arena of Khazan: Arena of Khazan is a 1979 role-playing game adventure for \"Tunnels & Trolls\" published by Flying Buffalo. -> Arena of Khazan",
+    "Final answer: Arena of Khazan"
+  ]
+}

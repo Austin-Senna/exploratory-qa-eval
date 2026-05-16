@@ -1,0 +1,58 @@
+{
+  "question": "In 2014, the Co-operative Bank planned to launch a train service in Wiltshire called Go-op. Where is the bank headquartered? Write your answer as [ANSWER].",
+  "answer": "Manchester",
+  "nodes": {
+    "1": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a7c220b5542990527d5545c:Go-Op (train operating company)",
+      "fact": "Go-Op (train operating company): Go-Op (full name Go! Go-Op intended to begin operating rail services in the spring of 2014, however difficulties in obtaining rolling stock and severe financial difficulties incurred by their main partner The Co-operative Bank have delayed these plans.",
+      "subquestion": "Which bank's financial difficulties delayed Go-Op's planned rail services?",
+      "answer": "The Co-operative Bank"
+    },
+    "2": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a7c220b5542990527d5545c:The Co-operative Bank",
+      "fact": "The Co-operative Bank: The Co-operative Bank plc is a retail and commercial bank in the United Kingdom, with its headquarters in Balloon Street, Manchester.",
+      "subquestion": "Where is The Co-operative Bank headquartered?",
+      "answer": "Manchester"
+    }
+  },
+  "reasoning_chain": [
+    "Node 1: Which bank's financial difficulties delayed Go-Op's planned rail services? Evidence: Go-Op's plans were delayed by financial difficulties incurred by their main partner The Co-operative Bank. -> The Co-operative Bank",
+    "Node 2: Where is The Co-operative Bank headquartered? Evidence: The Co-operative Bank has its headquarters in Balloon Street, Manchester. -> Manchester",
+    "Final answer: Manchester"
+  ],
+  "datasets_used": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a7c220b5542990527d5545c:Go-Op (train operating company)",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a7c220b5542990527d5545c:The Co-operative Bank"
+  ],
+  "reasoning_hops": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1
+      ],
+      "reasoning": "Node 1: Which bank's financial difficulties delayed Go-Op's planned rail services? Evidence: Go-Op's plans were delayed by financial difficulties incurred by their main partner The Co-operative Bank. -> The Co-operative Bank",
+      "answer": "The Co-operative Bank"
+    },
+    {
+      "hop": 2,
+      "node_ids": [
+        2
+      ],
+      "reasoning": "Node 2: Where is The Co-operative Bank headquartered? Evidence: The Co-operative Bank has its headquarters in Balloon Street, Manchester. -> Manchester",
+      "answer": "Manchester"
+    }
+  ],
+  "_provenance": {
+    "benchmark": "hotpotqa",
+    "split": "dev_distractor",
+    "source_id": "5a7c220b5542990527d5545c",
+    "type": "bridge",
+    "level": "hard",
+    "promoted_from": "other-benchmarks/tasks-hotpotqa-mini/k-2-d-2/task_14.json",
+    "sample_source": "other-benchmarks/tasks/hotpotqa/k-2-d-2/task_950.json",
+    "original_bucket": "k-2-d-2",
+    "promotion_status": "verified",
+    "promotion_rule": "curated_hotpotqa_batch_v1",
+    "source_mapping_status": "raw_anchor_temporary"
+  }
+}

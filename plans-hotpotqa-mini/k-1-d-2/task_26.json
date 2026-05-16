@@ -1,0 +1,19 @@
+{
+  "dataset_sequence": [
+    "hotpotqa-5a8549c65542997b5ce3ffe6-barry-unsworth",
+    "hotpotqa-5a8549c65542997b5ce3ffe6-p-g-wodehouse"
+  ],
+  "source_sequence": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a8549c65542997b5ce3ffe6:Barry Unsworth",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a8549c65542997b5ce3ffe6:P. G. Wodehouse"
+  ],
+  "reasoning_chain_text": [
+    "1. Determine the countries associated with Barry Unsworth and P. G. Wodehouse.",
+    "2. Compare the countries and return whether they are the same."
+  ],
+  "original_final_question": "Are both Barry Unsworth and P. G. Wodehouse from the same country? Write your answer as [ANSWER].",
+  "original_reasoning_chain": [
+    "Node 1 and Node 2: Barry Unsworth was born in England, and P. G. Wodehouse is described as an English author, so they are from the same country. -> yes",
+    "Final answer: yes"
+  ]
+}

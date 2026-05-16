@@ -13,16 +13,11 @@ import json
 from collections import Counter, defaultdict
 from pathlib import Path
 
+from analysis.discovery_metrics import resolve_task_value, resolve_trace_task_id
 
 def _resolve_gold(task_id: str, task_gold: dict) -> list:
     """Match trace task_id ('k-2-d-1/task_1') to gold entry (mirrors discovery_metrics)."""
-    if task_id in task_gold:
-        return task_gold[task_id]
-    for path_key in task_gold:
-        p = Path(path_key)
-        if f"{p.parent.name}/{p.stem}" == task_id:
-            return task_gold[path_key]
-    return []
+    return resolve_task_value(task_id, task_gold, [])
 
 
 def compute_provenance(traces: dict[str, list], task_gold: dict[str, list]) -> dict:
@@ -33,7 +28,7 @@ def compute_provenance(traces: dict[str, list], task_gold: dict[str, list]) -> d
     task_provenance: list = []
 
     for task_id, task_traces in traces.items():
-        gold_ids = set(_resolve_gold(task_id, task_gold))
+        gold_ids = set(_resolve_gold(resolve_trace_task_id(task_id, task_traces), task_gold))
         if not gold_ids:
             continue
 

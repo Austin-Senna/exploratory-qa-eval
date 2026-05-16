@@ -1,0 +1,19 @@
+{
+  "dataset_sequence": [
+    "hotpotqa-5a7c6b86554299683c1c62ff-hampton-del-ruth",
+    "hotpotqa-5a7c6b86554299683c1c62ff-ted-kotcheff"
+  ],
+  "source_sequence": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a7c6b86554299683c1c62ff:Hampton Del Ruth",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a7c6b86554299683c1c62ff:Ted Kotcheff"
+  ],
+  "reasoning_chain_text": [
+    "1. Determine the birth dates for Hampton Del Ruth and Ted Kotcheff.",
+    "2. Compare the two birth dates and return the older person."
+  ],
+  "original_final_question": "Who is older, Hampton Del Ruth or Ted Kotcheff? Write your answer as [ANSWER].",
+  "original_reasoning_chain": [
+    "Node 1 and Node 2: Hampton Del Ruth was born on September 7, 1879, while Ted Kotcheff was born on April 7, 1931, so Hampton Del Ruth is older. -> Hampton Del Ruth",
+    "Final answer: Hampton Del Ruth"
+  ]
+}

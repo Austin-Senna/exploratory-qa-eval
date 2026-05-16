@@ -52,6 +52,8 @@ def test_sana_setup_uses_plans_axis_and_skills_toggle() -> None:
                 "ideal",
                 "--skills",
                 "on",
+                "--benchmark",
+                "kramabench",
                 "--db",
                 "lance_data",
             ],
@@ -62,6 +64,7 @@ def test_sana_setup_uses_plans_axis_and_skills_toggle() -> None:
     assert command == fake_runner.command
     assert command[command.index("--plans") + 1] == "ideal"
     assert command[command.index("--skills") + 1] == "on"
+    assert command[command.index("--benchmark") + 1] == "kramabench"
 
 
 def test_sana_setup_defaults_skills_off() -> None:

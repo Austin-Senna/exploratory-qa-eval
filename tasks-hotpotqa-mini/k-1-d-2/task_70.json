@@ -1,0 +1,52 @@
+{
+  "question": "What is the name of the independent candidate in Maine's 2010 gubernatorial race who finished ahead of Libby Mitchell? Write your answer as [ANSWER].",
+  "answer": "Eliot Cutler",
+  "nodes": {
+    "1": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a70f39c5542994082a3e429:Libby Mitchell",
+      "fact": "Libby Mitchell: Mitchell was also the Democrats' 2010 candidate for the office of Governor of Maine. She finished in third place behind Republican Paul LePage and unenrolled attorney Eliot Cutler.",
+      "subquestion": "Who finished ahead of Libby Mitchell in Maine's 2010 gubernatorial race?",
+      "answer": "Eliot Cutler"
+    },
+    "2": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a70f39c5542994082a3e429:Eliot Cutler",
+      "fact": "Eliot Cutler: Eliot Cutler (born July 29, 1946) is an American lawyer who was an Independent candidate in Maine's 2010 and 2014 gubernatorial races.",
+      "subquestion": "Which independent candidate is associated with Maine's 2010 gubernatorial race?",
+      "answer": "Eliot Cutler"
+    }
+  },
+  "reasoning_chain": [
+    "Use both evidence nodes together: the Libby Mitchell evidence names Eliot Cutler as finishing ahead of her, and the Eliot Cutler evidence confirms he was an Independent candidate in Maine's 2010 gubernatorial race. -> Eliot Cutler",
+    "Final answer: Eliot Cutler"
+  ],
+  "datasets_used": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a70f39c5542994082a3e429:Libby Mitchell",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a70f39c5542994082a3e429:Eliot Cutler"
+  ],
+  "reasoning_hops": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1,
+        2
+      ],
+      "reasoning": "Use both evidence nodes together: the Libby Mitchell evidence names Eliot Cutler as finishing ahead of her, and the Eliot Cutler evidence confirms he was an Independent candidate in Maine's 2010 gubernatorial race. -> Eliot Cutler",
+      "answer": "Eliot Cutler"
+    }
+  ],
+  "_provenance": {
+    "benchmark": "hotpotqa",
+    "split": "dev_distractor",
+    "source_id": "5a70f39c5542994082a3e429",
+    "type": "bridge",
+    "level": "hard",
+    "sample_source": "other-benchmarks/tasks/hotpotqa/k-2-d-2/task_4.json",
+    "transform_run_id": "2026-05-14T04:34:33Z",
+    "verified_at": "2026-05-14T04:34:33Z",
+    "promoted_from": "other-benchmarks/tasks-hotpotqa-mini/k-2-d-2/task_4.json",
+    "original_bucket": "k-2-d-2",
+    "promotion_status": "verified",
+    "promotion_rule": "curated_hotpotqa_batch_v1",
+    "source_mapping_status": "raw_anchor_temporary"
+  }
+}

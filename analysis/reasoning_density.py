@@ -19,6 +19,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from analysis.compute_em import load_results
+from analysis.discovery_metrics import make_task_stem_key, resolve_task_value
 
 _BINS = [
     ("<=2",  lambda n: n <= 2),
@@ -43,9 +44,9 @@ def load_task_gold_counts(tasks_dir: str) -> dict[str, int]:
     for path in glob_mod.glob(str(Path(tasks_dir) / "**" / "*.json"), recursive=True):
         with open(path) as f:
             task = json.load(f)
-        p = Path(path)
-        key = f"{p.parent.name}/{p.stem}"
-        counts[key] = len(task.get("datasets_used", []))
+        value = len(task.get("datasets_used", []))
+        counts[path] = value
+        counts[make_task_stem_key(path)] = value
     return counts
 
 
@@ -67,12 +68,8 @@ def compute_reasoning_density_curve(
             continue
         cond = r.get("condition", "?")
 
-        # Resolve task_id to the "{parent}/{stem}" key
         task_id = str(r.get("task_id", ""))
-        p = Path(task_id)
-        key = f"{p.parent.name}/{p.stem}"
-
-        n_docs = task_gold_counts.get(key)
+        n_docs = resolve_task_value(task_id, task_gold_counts)
         if n_docs is None:
             continue
 

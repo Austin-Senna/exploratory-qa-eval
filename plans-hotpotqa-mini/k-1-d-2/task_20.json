@@ -1,0 +1,19 @@
+{
+  "dataset_sequence": [
+    "hotpotqa-5a80e47d55429938b6142238-k-subash",
+    "hotpotqa-5a80e47d55429938b6142238-jason-bateman"
+  ],
+  "source_sequence": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a80e47d55429938b6142238:K. Subash",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a80e47d55429938b6142238:Jason Bateman"
+  ],
+  "reasoning_chain_text": [
+    "1. Determine the countries or national industries associated with K. Subash and Jason Bateman.",
+    "2. Compare the countries and return whether they are the same."
+  ],
+  "original_final_question": "Are K. Subash and Jason Bateman from the same country? Write your answer as [ANSWER].",
+  "original_reasoning_chain": [
+    "Node 1 and Node 2: K. Subash is associated with the Indian film industry, while Jason Bateman is described as American, so they are not from the same country. -> no",
+    "Final answer: no"
+  ]
+}

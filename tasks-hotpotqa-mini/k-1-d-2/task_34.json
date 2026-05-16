@@ -1,0 +1,50 @@
+{
+  "question": "Eleventh Dream Day and The Shins are both rock bands from where? Write your answer as [ANSWER].",
+  "answer": "United States",
+  "nodes": {
+    "1": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a8d838955429941ae14dfe5:Eleventh Dream Day",
+      "fact": "Eleventh Dream Day: Eleventh Dream Day is an American alternative rock band from Chicago, Illinois, United States.",
+      "subquestion": "Where is Eleventh Dream Day from?",
+      "answer": "Chicago, Illinois, United States"
+    },
+    "2": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a8d838955429941ae14dfe5:The Shins",
+      "fact": "The Shins: The Shins are an American indie rock band from Albuquerque, New Mexico, formed in 1996. The band is based in Portland, Oregon.",
+      "subquestion": "Where are The Shins from?",
+      "answer": "United States"
+    }
+  },
+  "reasoning_chain": [
+    "Node 1 and Node 2: Eleventh Dream Day is an American rock band from Chicago, Illinois, United States, and The Shins are an American indie rock band, so both are from the United States. -> United States",
+    "Final answer: United States"
+  ],
+  "datasets_used": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a8d838955429941ae14dfe5:Eleventh Dream Day",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a8d838955429941ae14dfe5:The Shins"
+  ],
+  "reasoning_hops": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1,
+        2
+      ],
+      "reasoning": "Node 1 and Node 2: Eleventh Dream Day is an American rock band from Chicago, Illinois, United States, and The Shins are an American indie rock band, so both are from the United States. -> United States",
+      "answer": "United States"
+    }
+  ],
+  "_provenance": {
+    "benchmark": "hotpotqa",
+    "split": "dev_distractor",
+    "source_id": "5a8d838955429941ae14dfe5",
+    "type": "comparison",
+    "level": "hard",
+    "promoted_from": "other-benchmarks/tasks-hotpotqa-mini/k-2-d-1/task_34.json",
+    "sample_source": "other-benchmarks/tasks/hotpotqa/k-2-d-1/task_689.json",
+    "original_bucket": "k-2-d-1",
+    "promotion_status": "verified",
+    "promotion_rule": "curated_hotpotqa_batch_v1",
+    "source_mapping_status": "raw_anchor_temporary"
+  }
+}

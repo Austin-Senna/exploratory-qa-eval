@@ -1,0 +1,20 @@
+{
+  "dataset_sequence": [
+    "hotpotqa-5ae22670554299234fd043fc-bokor-hill-station",
+    "hotpotqa-5ae22670554299234fd043fc-r-point"
+  ],
+  "source_sequence": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ae22670554299234fd043fc:Bokor Hill Station",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ae22670554299234fd043fc:R-Point"
+  ],
+  "reasoning_chain_text": [
+    "1. Identify the 2004 film that used Bokor Hill Station as a location.",
+    "2. Determine which horror film set in 1972 Vietnam matches that film and return the title."
+  ],
+  "original_final_question": "What horror movie set in 1972 Vietnam was filmed in part in Bokor Hill Station? Write your answer as [ANSWER].",
+  "original_reasoning_chain": [
+    "Node 1: Which 2004 film used Bokor Hill Station as a location? Evidence: Bokor Hill Station: It was used as the location for the final showdown of the movie \"City of Ghosts\" (2002) and the 2004 film \"R-Point\". -> R-Point",
+    "Node 2: Which horror film set in 1972 Vietnam matches that Bokor Hill Station film? Evidence: R-Point: R-Point is a 2004 Korean horror film written and directed by Kong Su-chang. Set in 1972 Vietnam, during the Vietnam War, it stars Kam Woo-sung and Son Byong-ho as members of the South Korean military in Vietnam. -> R-Point",
+    "Final answer: R-Point"
+  ]
+}

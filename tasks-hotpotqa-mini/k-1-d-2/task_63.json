@@ -1,0 +1,50 @@
+{
+  "question": "Were both Tom Gullikson and Jürgen Melzer professional Austrian tennis players? Write your answer as [ANSWER].",
+  "answer": "no",
+  "nodes": {
+    "1": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ae0fe8855429945ae959495:Jürgen Melzer",
+      "fact": "Jürgen Melzer: Jürgen Melzer (born 22 May 1981 in Vienna) is an Austrian tennis player.",
+      "subquestion": "What relevant information is given about Jürgen Melzer?",
+      "answer": "Jürgen Melzer"
+    },
+    "2": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ae0fe8855429945ae959495:Tom Gullikson",
+      "fact": "Tom Gullikson: Tom Gullikson (born September 8, 1951) is a tennis coach and former professional tennis player from the United States.",
+      "subquestion": "What relevant information is given about Tom Gullikson?",
+      "answer": "no"
+    }
+  },
+  "reasoning_chain": [
+    "Compare the supported evidence: Node 1: Jürgen Melzer: Jürgen Melzer (born 22 May 1981 in Vienna) is an Austrian tennis player.; Node 2: Tom Gullikson: Tom Gullikson (born September 8, 1951) is a tennis coach and former professional tennis player from the United States.. Final answer: no",
+    "Final answer: no"
+  ],
+  "datasets_used": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ae0fe8855429945ae959495:Jürgen Melzer",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ae0fe8855429945ae959495:Tom Gullikson"
+  ],
+  "reasoning_hops": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1,
+        2
+      ],
+      "reasoning": "Compare the supported evidence: Node 1: Jürgen Melzer: Jürgen Melzer (born 22 May 1981 in Vienna) is an Austrian tennis player.; Node 2: Tom Gullikson: Tom Gullikson (born September 8, 1951) is a tennis coach and former professional tennis player from the United States.. Final answer: no",
+      "answer": "no"
+    }
+  ],
+  "_provenance": {
+    "benchmark": "hotpotqa",
+    "split": "dev_distractor",
+    "source_id": "5ae0fe8855429945ae959495",
+    "type": "comparison",
+    "level": "hard",
+    "promoted_from": "other-benchmarks/tasks-hotpotqa-mini/k-2-d-1/task_63.json",
+    "sample_source": "other-benchmarks/tasks/hotpotqa/k-2-d-1/task_1360.json",
+    "original_bucket": "k-2-d-1",
+    "promotion_status": "verified",
+    "promotion_rule": "curated_hotpotqa_batch_v1",
+    "source_mapping_status": "raw_anchor_temporary"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "dataset_sequence": [
+    "hotpotqa-5a75eb125542994ccc918659-kam-l-al-d-n-al-f-ris",
+    "hotpotqa-5a75eb125542994ccc918659-m-a-muqtedar-khan"
+  ],
+  "source_sequence": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a75eb125542994ccc918659:Kamāl al-Dīn al-Fārisī",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a75eb125542994ccc918659:M. A. Muqtedar Khan"
+  ],
+  "reasoning_chain_text": [
+    "1. Determine the birth years for Kamāl al-Dīn al-Fārisī and M. A. Muqtedar Khan.",
+    "2. Compare the two birth years and return the Muslim scholar born first."
+  ],
+  "original_final_question": "Which Muslim scholar was born first, Kamāl al-Dīn al-Fārisī or M. A. Muqtedar Khan? Write your answer as [ANSWER].",
+  "original_reasoning_chain": [
+    "Node 1 and Node 2: Kamāl al-Dīn al-Fārisī was born in 1267, while M. A. Muqtedar Khan was born in 1966, so Kamal al-Din Hasan ibn Ali ibn Hasan al-Farisi was born first. -> Kamal al-Din Hasan ibn Ali ibn Hasan al-Farisi",
+    "Final answer: Kamal al-Din Hasan ibn Ali ibn Hasan al-Farisi"
+  ]
+}

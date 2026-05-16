@@ -1,0 +1,19 @@
+{
+  "dataset_sequence": [
+    "hotpotqa-5a70eee85542994082a3e3f0-ida-sword",
+    "hotpotqa-5a70eee85542994082a3e3f0-yoruba-people"
+  ],
+  "source_sequence": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a70eee85542994082a3e3f0:Ida (sword)",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a70eee85542994082a3e3f0:Yoruba people"
+  ],
+  "reasoning_chain_text": [
+    "1. Determine which West African people are described as using the Ida.",
+    "2. For that group, determine whether it is described as having significant populations in Ghana, Ivory Coast, Liberia, and Sierra Leone, then return the group."
+  ],
+  "original_final_question": "Which group of people in West Africa with significant populations in Ghana, Ivory Coast, Liberia and Sierra Leone use the Ida? Write your answer as [ANSWER].",
+  "original_reasoning_chain": [
+    "Use both evidence nodes together: the Ida evidence identifies the people who use the sword as The Yoruba, and the Yoruba people evidence confirms the listed West African populations. -> The Yoruba",
+    "Final answer: The Yoruba"
+  ]
+}

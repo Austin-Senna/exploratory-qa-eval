@@ -66,6 +66,8 @@ class SetupRunTests(unittest.TestCase):
                         "assistant-v3:tools-v1",
                         "--openai-prompt-cache-retention",
                         "24h",
+                        "--benchmark",
+                        "kramabench",
                         "--verbose",
                         "--db",
                         "lance_data",
@@ -82,11 +84,12 @@ class SetupRunTests(unittest.TestCase):
             self.assertEqual(command[command.index("--db-path") + 1], "lance_data")
             self.assertEqual(command[command.index("--task-dir") + 1], "tasks_mini/k-5-d-4")
             self.assertEqual(command[command.index("--tasks-per-dir") + 1], "2")
-            self.assertEqual(command[command.index("--logs-output-dir") + 1], "test_logs")
-            self.assertEqual(command[command.index("--results-output-dir") + 1], "test_results")
+            self.assertEqual(command[command.index("--logs-output-dir") + 1], "log-kramabench")
+            self.assertEqual(command[command.index("--results-output-dir") + 1], "results-kramabench")
             self.assertEqual(command[command.index("--reasoning-effort") + 1], "xhigh")
             self.assertEqual(command[command.index("--openai-prompt-cache-key") + 1], "assistant-v3:tools-v1")
             self.assertEqual(command[command.index("--openai-prompt-cache-retention") + 1], "24h")
+            self.assertEqual(command[command.index("--benchmark") + 1], "kramabench")
             self.assertIn("--verbose", command)
             self.assertEqual(fake_runner.kwargs, {"check": True, "cwd": str(repo_root)})
             self.assertIn("Task scope: tasks_mini/k-5-d-4 (first 2 tasks)", stdout.getvalue())
@@ -124,6 +127,36 @@ class SetupRunTests(unittest.TestCase):
             self.assertEqual(command[command.index("--task-set") + 1], "tasks_mini")
             self.assertEqual(command[command.index("--logs-output-dir") + 1], "logs")
             self.assertEqual(command[command.index("--results-output-dir") + 1], "results")
+
+    def test_kramabench_full_defaults_to_kramabench_output_roots(self):
+        with TemporaryDirectory() as tmpdir:
+            repo_root = Path(tmpdir)
+            (repo_root / "lance_kramabench_base").mkdir(parents=True, exist_ok=True)
+            fake_runner = _FakeRunner()
+
+            command = setup_run.run(
+                [
+                    "full",
+                    "--search",
+                    "standard",
+                    "--results",
+                    "naive",
+                    "--plans",
+                    "standard",
+                    "--benchmark",
+                    "kramabench",
+                    "--model",
+                    "openai/gpt-5.2",
+                    "--db",
+                    "lance_kramabench_base",
+                ],
+                runner=fake_runner,
+                cwd=repo_root,
+            )
+
+            self.assertEqual(command[command.index("--db-path") + 1], "lance_kramabench_base")
+            self.assertEqual(command[command.index("--logs-output-dir") + 1], "log-kramabench")
+            self.assertEqual(command[command.index("--results-output-dir") + 1], "results-kramabench")
 
     def test_full_continue_alias_and_timeout_passthrough(self):
         with TemporaryDirectory() as tmpdir:

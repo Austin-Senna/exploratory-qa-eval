@@ -1,0 +1,50 @@
+{
+  "question": "Which author was a dentist, Zane Grey or Bhabananda Deka? Write your answer as [ANSWER].",
+  "answer": "Pearl Zane Grey",
+  "nodes": {
+    "1": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ae377415542992e3233c40a:Zane Grey",
+      "fact": "Zane Grey: Pearl Zane Grey (January 31, 1872 – October 23, 1939) was an American dentist and author best known for his popular adventure novels and stories associated with the Western genre in literature and the arts; he idealized the American frontier. \"",
+      "subquestion": "What occupations is Zane Grey described as having?",
+      "answer": "dentist and author"
+    },
+    "2": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ae377415542992e3233c40a:Bhabananda Deka",
+      "fact": "Bhabananda Deka: Prof Bhabananda Deka (Assamese:ভৱানন্দ ডেকা) (19 August 1929 – 4 December 2006) has been acknowledged as the pioneer Assam economist and author, who conducted path-breaking research for the very first time on the economy of the far eastern part of India.",
+      "subquestion": "What occupations is Bhabananda Deka described as having?",
+      "answer": "economist and author"
+    }
+  },
+  "reasoning_chain": [
+    "Node 1 and Node 2: Zane Grey is described as a dentist and author, while Bhabananda Deka is described as an economist and author, so the author who was a dentist was Pearl Zane Grey. -> Pearl Zane Grey",
+    "Final answer: Pearl Zane Grey"
+  ],
+  "datasets_used": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ae377415542992e3233c40a:Zane Grey",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ae377415542992e3233c40a:Bhabananda Deka"
+  ],
+  "reasoning_hops": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1,
+        2
+      ],
+      "reasoning": "Node 1 and Node 2: Zane Grey is described as a dentist and author, while Bhabananda Deka is described as an economist and author, so the author who was a dentist was Pearl Zane Grey. -> Pearl Zane Grey",
+      "answer": "Pearl Zane Grey"
+    }
+  ],
+  "_provenance": {
+    "benchmark": "hotpotqa",
+    "split": "dev_distractor",
+    "source_id": "5ae377415542992e3233c40a",
+    "type": "comparison",
+    "level": "hard",
+    "promoted_from": "other-benchmarks/tasks-hotpotqa-mini/k-2-d-1/task_67.json",
+    "sample_source": "other-benchmarks/tasks/hotpotqa/k-2-d-1/task_1428.json",
+    "original_bucket": "k-2-d-1",
+    "promotion_status": "verified",
+    "promotion_rule": "curated_hotpotqa_batch_v1",
+    "source_mapping_status": "raw_anchor_temporary"
+  }
+}

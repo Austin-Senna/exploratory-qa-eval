@@ -1,0 +1,19 @@
+{
+  "dataset_sequence": [
+    "hotpotqa-5ab97b27554299131ca4233c-rosario-castellanos",
+    "hotpotqa-5ab97b27554299131ca4233c-arthur-hailey"
+  ],
+  "source_sequence": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ab97b27554299131ca4233c:Rosario Castellanos",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ab97b27554299131ca4233c:Arthur Hailey"
+  ],
+  "reasoning_chain_text": [
+    "1. Determine the literary roles associated with Rosario Castellanos and Arthur Hailey.",
+    "2. Return the shared literary role or category."
+  ],
+  "original_final_question": "What literary characteristic do Rosario Castellanos and Arthur Hailey share? Write your answer as [ANSWER].",
+  "original_reasoning_chain": [
+    "Node 1 and Node 2: Rosario Castellanos is described as an author, and Arthur Hailey is described as a novelist, so both share being authors. -> authors",
+    "Final answer: authors"
+  ]
+}

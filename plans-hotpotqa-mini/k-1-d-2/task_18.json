@@ -1,0 +1,19 @@
+{
+  "dataset_sequence": [
+    "hotpotqa-5a7f677455429969796c1a37-stanley-kubrick",
+    "hotpotqa-5a7f677455429969796c1a37-elio-petri"
+  ],
+  "source_sequence": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a7f677455429969796c1a37:Stanley Kubrick",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a7f677455429969796c1a37:Elio Petri"
+  ],
+  "reasoning_chain_text": [
+    "1. Determine the countries associated with Stanley Kubrick and Elio Petri.",
+    "2. Compare the countries and return whether they are different."
+  ],
+  "original_final_question": "Were Stanley Kubrick and Elio Petri from different countries? Write your answer as [ANSWER].",
+  "original_reasoning_chain": [
+    "Node 1 and Node 2: Stanley Kubrick is described as American, while Elio Petri is described as Italian, so they were from different countries. -> yes",
+    "Final answer: yes"
+  ]
+}

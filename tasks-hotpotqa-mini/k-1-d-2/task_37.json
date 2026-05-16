@@ -1,0 +1,50 @@
+{
+  "question": "Was Vanderbilt University or Emory University founded first? Write your answer as [ANSWER].",
+  "answer": "Emory University",
+  "nodes": {
+    "1": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ab32fc355429969a97a80fa:Vanderbilt University",
+      "fact": "Vanderbilt University: Vanderbilt University is a private research university located in Nashville, Tennessee. Founded in 1873, it was named in honor of Cornelius Vanderbilt.",
+      "subquestion": "When was Vanderbilt University founded?",
+      "answer": "1873"
+    },
+    "2": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ab32fc355429969a97a80fa:Emory University",
+      "fact": "Emory University: The university was founded as Emory College in 1836 in Oxford, Georgia by the Methodist Episcopal Church.",
+      "subquestion": "When was Emory University founded?",
+      "answer": "1836"
+    }
+  },
+  "reasoning_chain": [
+    "Node 1 and Node 2: Vanderbilt University was founded in 1873, while Emory University was founded in 1836, so Emory University was founded first. -> Emory University",
+    "Final answer: Emory University"
+  ],
+  "datasets_used": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ab32fc355429969a97a80fa:Vanderbilt University",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ab32fc355429969a97a80fa:Emory University"
+  ],
+  "reasoning_hops": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1,
+        2
+      ],
+      "reasoning": "Node 1 and Node 2: Vanderbilt University was founded in 1873, while Emory University was founded in 1836, so Emory University was founded first. -> Emory University",
+      "answer": "Emory University"
+    }
+  ],
+  "_provenance": {
+    "benchmark": "hotpotqa",
+    "split": "dev_distractor",
+    "source_id": "5ab32fc355429969a97a80fa",
+    "type": "comparison",
+    "level": "hard",
+    "promoted_from": "other-benchmarks/tasks-hotpotqa-mini/k-2-d-1/task_37.json",
+    "sample_source": "other-benchmarks/tasks/hotpotqa/k-2-d-1/task_793.json",
+    "original_bucket": "k-2-d-1",
+    "promotion_status": "verified",
+    "promotion_rule": "curated_hotpotqa_batch_v1",
+    "source_mapping_status": "raw_anchor_temporary"
+  }
+}

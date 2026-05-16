@@ -1,0 +1,50 @@
+{
+  "question": "Which tennis player is older, Emilio Sánchez or Andrei Olhovskiy? Write your answer as [ANSWER].",
+  "answer": "Emilio Ángel Sánchez Vicario",
+  "nodes": {
+    "1": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a749e1855429979e28829c3:Emilio Sánchez",
+      "fact": "Emilio Sánchez: Emilio Ángel Sánchez Vicario (born 29 May 1965) is a former professional tennis player from Spain.",
+      "subquestion": "When was tennis player Emilio Sánchez born?",
+      "answer": "29 May 1965"
+    },
+    "2": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a749e1855429979e28829c3:Andrei Olhovskiy",
+      "fact": "Andrei Olhovskiy: Andrei Stanislavovich Olhovskiy (born 15 April 1966) is a former tennis player from Russia, who turned professional in 1989.",
+      "subquestion": "When was tennis player Andrei Olhovskiy born?",
+      "answer": "15 April 1966"
+    }
+  },
+  "reasoning_chain": [
+    "Node 1 and Node 2: Emilio Sánchez was born on 29 May 1965, while Andrei Olhovskiy was born on 15 April 1966, so Emilio Ángel Sánchez Vicario is older. -> Emilio Ángel Sánchez Vicario",
+    "Final answer: Emilio Ángel Sánchez Vicario"
+  ],
+  "datasets_used": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a749e1855429979e28829c3:Emilio Sánchez",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a749e1855429979e28829c3:Andrei Olhovskiy"
+  ],
+  "reasoning_hops": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1,
+        2
+      ],
+      "reasoning": "Node 1 and Node 2: Emilio Sánchez was born on 29 May 1965, while Andrei Olhovskiy was born on 15 April 1966, so Emilio Ángel Sánchez Vicario is older. -> Emilio Ángel Sánchez Vicario",
+      "answer": "Emilio Ángel Sánchez Vicario"
+    }
+  ],
+  "_provenance": {
+    "benchmark": "hotpotqa",
+    "split": "dev_distractor",
+    "source_id": "5a749e1855429979e28829c3",
+    "type": "comparison",
+    "level": "hard",
+    "promoted_from": "other-benchmarks/tasks-hotpotqa-mini/k-2-d-1/task_4.json",
+    "sample_source": "other-benchmarks/tasks/hotpotqa/k-2-d-1/task_101.json",
+    "original_bucket": "k-2-d-1",
+    "promotion_status": "verified",
+    "promotion_rule": "curated_hotpotqa_batch_v1",
+    "source_mapping_status": "raw_anchor_temporary"
+  }
+}

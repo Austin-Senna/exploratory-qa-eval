@@ -1,0 +1,19 @@
+{
+  "dataset_sequence": [
+    "hotpotqa-5a87136e5542991e771816b2-il-trovatore",
+    "hotpotqa-5a87136e5542991e771816b2-la-rondine"
+  ],
+  "source_sequence": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a87136e5542991e771816b2:Il trovatore",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a87136e5542991e771816b2:La rondine"
+  ],
+  "reasoning_chain_text": [
+    "1. Determine the number of acts in Il trovatore and La rondine.",
+    "2. Compare the act counts and return whether Il trovatore has fewer acts."
+  ],
+  "original_final_question": "Does Il trovatore have fewer acts than La rondine? Write your answer as [ANSWER].",
+  "original_reasoning_chain": [
+    "Node 1 and Node 2: Il trovatore has four acts, while La rondine has three acts, so Il trovatore does not have fewer acts than La rondine. -> no",
+    "Final answer: no"
+  ]
+}

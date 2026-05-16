@@ -1,0 +1,20 @@
+{
+  "dataset_sequence": [
+    "hotpotqa-5ab9560855429970cfb8ea73-the-public-domain-film",
+    "hotpotqa-5ab9560855429970cfb8ea73-i-35w-mississippi-river-bridge"
+  ],
+  "source_sequence": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ab9560855429970cfb8ea73:The Public Domain (film)",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ab9560855429970cfb8ea73:I-35W Mississippi River bridge"
+  ],
+  "reasoning_chain_text": [
+    "1. Identify the bridge collapse featured in The Public Domain.",
+    "2. Determine how many people were killed in that bridge collapse and return the count."
+  ],
+  "original_final_question": "How many people were killed in the collapse of the bridge featured in the drama film, The Public Domain? Write your answer as [ANSWER].",
+  "original_reasoning_chain": [
+    "Node 1: Which bridge collapse impacted characters in The Public Domain? Evidence: The Public Domain (film): The film follows characters whose lives were impacted by the collapse of the I-35W Mississippi River bridge on August 1, 2007. -> I-35W Mississippi River bridge",
+    "Node 2: How many people were killed when that bridge collapsed? Evidence: I-35W Mississippi River bridge: During the evening rush hour on August 1, 2007, it suddenly collapsed, killing 13 people and injuring 145. -> 13 people",
+    "Final answer: 13 people"
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "dataset_sequence": [
+    "hotpotqa-5a7fa97d5542994857a767a9-felicia-pearson",
+    "hotpotqa-5a7fa97d5542994857a767a9-here-i-am-rick-ross-song"
+  ],
+  "source_sequence": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a7fa97d5542994857a767a9:Felicia Pearson",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a7fa97d5542994857a767a9:Here I Am (Rick Ross song)"
+  ],
+  "reasoning_chain_text": [
+    "1. Identify the rapper named in the question.",
+    "2. Using that person, determine whose single \"Here I Am\" included her appearance and return the artist."
+  ],
+  "original_final_question": "Felicia Pearson is a rapper who appeared in the single \"Here I Am\" by who? Write your answer as [ANSWER].",
+  "original_reasoning_chain": [
+    "Node 1: Which rapper named in the question is Felicia Pearson? Evidence: Felicia Pearson: Felicia Pearson (born May 18, 1980) is an American actress, author, and rapper. -> Felicia Pearson",
+    "Node 2: Whose single \"Here I Am\" featured a video appearance by Felicia Pearson? Evidence: Here I Am (Rick Ross song): \"Here I Am\" is the third single from Rick Ross's second album \"Trilla\". Video appearances made are DJ Khaled, Birdman, Pitbull, Dre, Felicia Pearson, Ace Hood and others. -> Rick Ross",
+    "Final answer: Rick Ross"
+  ]
+}

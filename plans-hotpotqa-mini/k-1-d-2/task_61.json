@@ -1,0 +1,19 @@
+{
+  "dataset_sequence": [
+    "hotpotqa-5ae077805542993d6555eb6e-lance-king",
+    "hotpotqa-5ae077805542993d6555eb6e-han-seung-yeon"
+  ],
+  "source_sequence": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ae077805542993d6555eb6e:Lance King",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ae077805542993d6555eb6e:Han Seung-yeon"
+  ],
+  "reasoning_chain_text": [
+    "1. Determine how Lance King and Han Seung-yeon are each described as vocalists.",
+    "2. Compare those descriptions and return whether both are heavy metal vocalists."
+  ],
+  "original_final_question": "Are Lance King and Han Seung-yeon both heavy metal vocalists? Write your answer as [ANSWER].",
+  "original_reasoning_chain": [
+    "Compare the supported evidence: Node 1: Lance King: Lance King (born November 23, 1962) is an American heavy metal vocalist specializing in melodic rock progressive and power metal.; Node 2: Han Seung-yeon: She is best known as former main vocalist of the South Korean girl group Kara.. Final answer: no",
+    "Final answer: no"
+  ]
+}

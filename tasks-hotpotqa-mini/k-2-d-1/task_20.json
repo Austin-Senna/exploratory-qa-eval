@@ -1,0 +1,58 @@
+{
+  "question": "What is the name for the adventure in \"Tunnels and Trolls\", a game designed by Ken St. Andre? Write your answer as [ANSWER].",
+  "answer": "Arena of Khazan",
+  "nodes": {
+    "1": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a8a3e745542996c9b8d5e70:Tunnels &amp; Trolls",
+      "fact": "Tunnels &amp; Trolls: Tunnels & Trolls (abbreviated \"T&T\") is a fantasy role-playing game designed by Ken St. Andre and first published in 1975 by Flying Buffalo.",
+      "subquestion": "Which fantasy role-playing game designed by Ken St. Andre is abbreviated T&T?",
+      "answer": "Tunnels & Trolls"
+    },
+    "2": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a8a3e745542996c9b8d5e70:Arena of Khazan",
+      "fact": "Arena of Khazan: Arena of Khazan is a 1979 role-playing game adventure for \"Tunnels & Trolls\" published by Flying Buffalo.",
+      "subquestion": "What 1979 adventure was published for Tunnels & Trolls?",
+      "answer": "Arena of Khazan"
+    }
+  },
+  "reasoning_chain": [
+    "Node 1: Which fantasy role-playing game designed by Ken St. Andre is abbreviated T&T? Evidence: Tunnels &amp; Trolls: Tunnels & Trolls (abbreviated \"T&T\") is a fantasy role-playing game designed by Ken St. Andre and first published in 1975 by Flying Buffalo. -> Tunnels & Trolls",
+    "Node 2: What 1979 adventure was published for Tunnels & Trolls? Evidence: Arena of Khazan: Arena of Khazan is a 1979 role-playing game adventure for \"Tunnels & Trolls\" published by Flying Buffalo. -> Arena of Khazan",
+    "Final answer: Arena of Khazan"
+  ],
+  "datasets_used": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a8a3e745542996c9b8d5e70:Tunnels &amp; Trolls",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a8a3e745542996c9b8d5e70:Arena of Khazan"
+  ],
+  "reasoning_hops": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1
+      ],
+      "reasoning": "Node 1: Which fantasy role-playing game designed by Ken St. Andre is abbreviated T&T? Evidence: Tunnels &amp; Trolls: Tunnels & Trolls (abbreviated \"T&T\") is a fantasy role-playing game designed by Ken St. Andre and first published in 1975 by Flying Buffalo. -> Tunnels & Trolls",
+      "answer": "Tunnels & Trolls"
+    },
+    {
+      "hop": 2,
+      "node_ids": [
+        2
+      ],
+      "reasoning": "Node 2: What 1979 adventure was published for Tunnels & Trolls? Evidence: Arena of Khazan: Arena of Khazan is a 1979 role-playing game adventure for \"Tunnels & Trolls\" published by Flying Buffalo. -> Arena of Khazan",
+      "answer": "Arena of Khazan"
+    }
+  ],
+  "_provenance": {
+    "benchmark": "hotpotqa",
+    "split": "dev_distractor",
+    "source_id": "5a8a3e745542996c9b8d5e70",
+    "type": "bridge",
+    "level": "hard",
+    "promoted_from": "other-benchmarks/tasks-hotpotqa-mini/k-2-d-2/task_25.json",
+    "sample_source": "other-benchmarks/tasks/hotpotqa/k-2-d-2/task_2103.json",
+    "original_bucket": "k-2-d-2",
+    "promotion_status": "verified",
+    "promotion_rule": "curated_hotpotqa_batch_v1",
+    "source_mapping_status": "raw_anchor_temporary"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "dataset_sequence": [
+    "hotpotqa-5a7bb2595542995eb53be99b-george-kuchar",
+    "hotpotqa-5a7bb2595542995eb53be99b-arthur-penn"
+  ],
+  "source_sequence": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a7bb2595542995eb53be99b:George Kuchar",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a7bb2595542995eb53be99b:Arthur Penn"
+  ],
+  "reasoning_chain_text": [
+    "1. Determine the birth dates for George Kuchar and Arthur Penn.",
+    "2. Compare the two birth dates and return the person born first."
+  ],
+  "original_final_question": "Who was born first, George Kuchar or Arthur Penn? Write your answer as [ANSWER].",
+  "original_reasoning_chain": [
+    "Node 1 and Node 2: George Kuchar was born on August 31, 1942, while Arthur Penn was born on September 27, 1922, so Arthur Hiller Penn was born first. -> Arthur Hiller Penn",
+    "Final answer: Arthur Hiller Penn"
+  ]
+}

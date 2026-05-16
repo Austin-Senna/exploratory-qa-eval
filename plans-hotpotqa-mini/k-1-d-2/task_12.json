@@ -1,0 +1,19 @@
+{
+  "dataset_sequence": [
+    "hotpotqa-5a7b76225542997c3ec9719c-the-devil-came-on-horseback",
+    "hotpotqa-5a7b76225542997c3ec9719c-my-best-fiend"
+  ],
+  "source_sequence": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a7b76225542997c3ec9719c:The Devil Came on Horseback",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a7b76225542997c3ec9719c:My Best Fiend"
+  ],
+  "reasoning_chain_text": [
+    "1. Determine how many creators are credited for The Devil Came on Horseback and My Best Fiend.",
+    "2. Compare the creator counts and return the documentary with more creators."
+  ],
+  "original_final_question": "What documentary has more creators, The Devil Came on Horseback or My Best Fiend? Write your answer as [ANSWER].",
+  "original_reasoning_chain": [
+    "Node 1 and Node 2: The Devil Came on Horseback is by two creators, Ricki Stern and Anne Sundberg, while My Best Fiend was written and directed by Werner Herzog, so The Devil Came on Horseback has more creators. -> The Devil Came on Horseback",
+    "Final answer: The Devil Came on Horseback"
+  ]
+}

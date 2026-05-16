@@ -1,0 +1,20 @@
+{
+  "dataset_sequence": [
+    "hotpotqa-5a7f3bcd55429930675136c3-hecuba-band",
+    "hotpotqa-5a7f3bcd55429930675136c3-arthur-russell-musician"
+  ],
+  "source_sequence": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a7f3bcd55429930675136c3:Hecuba (band)",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a7f3bcd55429930675136c3:Arthur Russell (musician)"
+  ],
+  "reasoning_chain_text": [
+    "1. Identify the person who was the subject of the film \"Wild Combination\".",
+    "2. Using that person, determine which American cellist, composer, producer, and singer is being described and return the name."
+  ],
+  "original_final_question": "\"wild combination\" was a film about a man who was an American cellist, composer, producer and singer, who is he? Write your answer as [ANSWER].",
+  "original_reasoning_chain": [
+    "Node 1: Who was the film Wild Combination about? Evidence: Hecuba performed at the Los Angeles premiere of Wild Combination, a film about Arthur Russell (musician). -> Arthur Russell (musician)",
+    "Node 2: What American cellist, composer, producer, and singer is identified by that clue? Evidence: Arthur Russell was an American cellist, composer, producer, singer, and musician. -> Arthur Russell",
+    "Final answer: Arthur Russell"
+  ]
+}

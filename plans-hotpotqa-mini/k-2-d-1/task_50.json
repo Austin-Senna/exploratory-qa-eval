@@ -1,0 +1,20 @@
+{
+  "dataset_sequence": [
+    "hotpotqa-5addc79d5542995b365fab7b-the-clash-of-triton",
+    "hotpotqa-5addc79d5542995b365fab7b-spongebob-squarepants-season-6"
+  ],
+  "source_sequence": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5addc79d5542995b365fab7b:The Clash of Triton",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5addc79d5542995b365fab7b:SpongeBob SquarePants (season 6)"
+  ],
+  "reasoning_chain_text": [
+    "1. Determine when The Clash of Triton originally aired.",
+    "2. Compare that air date with the timing of To SquarePants or Not to SquarePants and return the episode that aired first."
+  ],
+  "original_final_question": "Which episode of SpongeBob SquarePants aired first, The Clash of Triton or To SquarePants or Not to SquarePants? Write your answer as [ANSWER].",
+  "original_reasoning_chain": [
+    "Node 1: When did The Clash of Triton originally air? Evidence: The Clash of Triton: \"The Clash of Triton\", also known as \"Neptune's Party\", is the 26th episode of the sixth season and the 126th overall episode of the American animated television series \"SpongeBob SquarePants\". It originally aired on Nickelodeon in the United States on July 5, 2010. -> July 5, 2010",
+    "Node 2: Which listed episode was broadcast as part of the 2009 tenth-anniversary celebration, before July 5, 2010? Evidence: SpongeBob SquarePants (season 6): In 2009, the show celebrated its tenth anniversary on television. SpongeBob's Truth or Square, a television film, and the special episode \"To SquarePants or Not to SquarePants\" were broadcast on Nickelodeon as part of the celebration. -> To SquarePants or Not to SquarePants",
+    "Final answer: To SquarePants or Not to SquarePants"
+  ]
+}

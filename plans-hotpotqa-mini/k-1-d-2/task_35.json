@@ -1,0 +1,19 @@
+{
+  "dataset_sequence": [
+    "hotpotqa-5a8db9b3554299068b959dde-mahratta-greyhound",
+    "hotpotqa-5a8db9b3554299068b959dde-tibetan-spaniel"
+  ],
+  "source_sequence": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a8db9b3554299068b959dde:Mahratta Greyhound",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a8db9b3554299068b959dde:Tibetan Spaniel"
+  ],
+  "reasoning_chain_text": [
+    "1. Determine what kind of animal the Mahratta Greyhound and the Tibetan Spaniel are each described as.",
+    "2. Return the shared animal type."
+  ],
+  "original_final_question": "What animal does Mahratta Greyhound and Tibetan Spaniel have in common? Write your answer as [ANSWER].",
+  "original_reasoning_chain": [
+    "Node 1 and Node 2: The Mahratta Greyhound is a dog breed, and the Tibetan Spaniel is also a dog breed, so the animal they have in common is dog. -> dog",
+    "Final answer: dog"
+  ]
+}

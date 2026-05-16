@@ -1,0 +1,58 @@
+{
+  "question": "What is the nick name of this former American professional football player who played as a linebacker for the Seattle Seahawks in the National Football League (NFL) and appeared on the American detective television \"Lawless?\"? Write your answer as [ANSWER].",
+  "answer": "The Boz",
+  "nodes": {
+    "1": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5abae3b05542996606241661:Lawless (TV series)",
+      "fact": "Lawless (TV series): Lawless is an American detective television series starring former NFL player Brian Bosworth on the Fox Broadcasting Company that performed so poorly on television it was canceled after one episode.",
+      "subquestion": "Which former NFL player starred in the detective series Lawless?",
+      "answer": "Brian Bosworth"
+    },
+    "2": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5abae3b05542996606241661:Brian Bosworth",
+      "fact": "Brian Bosworth: Brian Keith Bosworth (born March 9, 1965), nicknamed \"The Boz,\" is a former American professional football player who played as a linebacker for the Seattle Seahawks in the National Football League (NFL).",
+      "subquestion": "What nickname belongs to that former Seattle Seahawks linebacker?",
+      "answer": "The Boz"
+    }
+  },
+  "reasoning_chain": [
+    "Node 1: Which former NFL player starred in the detective series Lawless? Evidence: Lawless (TV series): Lawless is an American detective television series starring former NFL player Brian Bosworth on the Fox Broadcasting Company that performed so poorly on television it was canceled after one episode. -> Brian Bosworth",
+    "Node 2: What nickname belongs to that former Seattle Seahawks linebacker? Evidence: Brian Bosworth: Brian Keith Bosworth (born March 9, 1965), nicknamed \"The Boz,\" is a former American professional football player who played as a linebacker for the Seattle Seahawks in the National Football League (NFL). -> The Boz",
+    "Final answer: The Boz"
+  ],
+  "datasets_used": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5abae3b05542996606241661:Lawless (TV series)",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5abae3b05542996606241661:Brian Bosworth"
+  ],
+  "reasoning_hops": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1
+      ],
+      "reasoning": "Node 1: Which former NFL player starred in the detective series Lawless? Evidence: Lawless (TV series): Lawless is an American detective television series starring former NFL player Brian Bosworth on the Fox Broadcasting Company that performed so poorly on television it was canceled after one episode. -> Brian Bosworth",
+      "answer": "Brian Bosworth"
+    },
+    {
+      "hop": 2,
+      "node_ids": [
+        2
+      ],
+      "reasoning": "Node 2: What nickname belongs to that former Seattle Seahawks linebacker? Evidence: Brian Bosworth: Brian Keith Bosworth (born March 9, 1965), nicknamed \"The Boz,\" is a former American professional football player who played as a linebacker for the Seattle Seahawks in the National Football League (NFL). -> The Boz",
+      "answer": "The Boz"
+    }
+  ],
+  "_provenance": {
+    "benchmark": "hotpotqa",
+    "split": "dev_distractor",
+    "source_id": "5abae3b05542996606241661",
+    "type": "bridge",
+    "level": "hard",
+    "promoted_from": "other-benchmarks/tasks-hotpotqa-mini/k-2-d-2/task_41.json",
+    "sample_source": "other-benchmarks/tasks/hotpotqa/k-2-d-2/task_3466.json",
+    "original_bucket": "k-2-d-2",
+    "promotion_status": "verified",
+    "promotion_rule": "curated_hotpotqa_batch_v1",
+    "source_mapping_status": "raw_anchor_temporary"
+  }
+}

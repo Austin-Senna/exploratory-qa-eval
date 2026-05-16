@@ -12,6 +12,7 @@ from analysis.run_mode_analysis import (
     _parse_variant as parse_legacy_variant,
     build_summary as build_legacy_summary,
     build_variant_summary as build_legacy_variant_summary,
+    write_per_model_outputs as write_legacy_per_model_outputs,
 )
 from analysis.run_mode_analysis_semantic import (
     _compact_variant_label,
@@ -23,6 +24,7 @@ from analysis.run_mode_analysis_semantic import (
     build_summary,
     build_variant_summary,
     run_analysis,
+    write_per_model_outputs,
 )
 
 
@@ -47,6 +49,86 @@ class TestRunModeAnalysisSemantic(unittest.TestCase):
         self.assertEqual(parse_legacy_model_filters("gpt-5.2,"), ["gpt-5.2"])
         self.assertIsNone(_parse_model_filters(" , "))
         self.assertIsNone(parse_legacy_model_filters(" , "))
+
+    def test_semantic_per_model_outputs_filter_keyed_and_row_files(self):
+        with TemporaryDirectory() as tmpdir:
+            out_dir = Path(tmpdir)
+            rows = [
+                {"condition_model": "model_a/search_i_results_i_plani_k5", "model": "model_a", "variant": "search_i_results_i_plani_k5", "n": 2, "semantic_match": 0.5},
+                {"condition_model": "model_b/search_i_results_i_plani_k5", "model": "model_b", "variant": "search_i_results_i_plani_k5", "n": 4, "semantic_match": 1.0},
+            ]
+            files = {
+                "semantic_match.json": {
+                    "model_a/search_i_results_i_plani_k5": {"semantic_match": 0.5},
+                    "model_b/search_i_results_i_plani_k5": {"semantic_match": 1.0},
+                },
+                "summary.json": rows,
+                "variant_summary.json": build_variant_summary(rows),
+                "search_first_hit_condition.json": [
+                    {"model": "model_a", "variant": "search_i_results_i_plani_k5"},
+                    {"model": "model_b", "variant": "search_i_results_i_plani_k5"},
+                ],
+            }
+            csv_outputs = {
+                "per_task_semantic.csv": (
+                    [
+                        {"condition_model": "model_a/search_i_results_i_plani_k5", "model_dir": "model_a", "variant": "search_i_results_i_plani_k5"},
+                        {"condition_model": "model_b/search_i_results_i_plani_k5", "model_dir": "model_b", "variant": "search_i_results_i_plani_k5"},
+                    ],
+                    ["condition_model", "model_dir", "variant"],
+                )
+            }
+
+            write_per_model_outputs(out_dir, files, csv_outputs)
+
+            model_a_summary = json.loads((out_dir / "by_model" / "model_a" / "summary.json").read_text())
+            model_a_variant_summary = json.loads((out_dir / "by_model" / "model_a" / "variant_summary.json").read_text())
+            model_a_semantic = json.loads((out_dir / "by_model" / "model_a" / "semantic_match.json").read_text())
+            with (out_dir / "by_model" / "model_a" / "per_task_semantic.csv").open(newline="") as handle:
+                model_a_csv = list(csv.DictReader(handle))
+
+            self.assertEqual([row["model"] for row in model_a_summary], ["model_a"])
+            self.assertEqual(model_a_variant_summary[0]["models"], ["model_a"])
+            self.assertEqual(list(model_a_semantic.keys()), ["model_a/search_i_results_i_plani_k5"])
+            self.assertEqual([row["model_dir"] for row in model_a_csv], ["model_a"])
+
+    def test_legacy_per_model_outputs_filter_keyed_files_and_recompute_variant_summary(self):
+        with TemporaryDirectory() as tmpdir:
+            out_dir = Path(tmpdir)
+            rows = [
+                {"condition_model": "model_a/search_i_results_i_plani_k5", "model": "model_a", "variant": "search_i_results_i_plani_k5", "n": 2, "em": 0.5},
+                {"condition_model": "model_b/search_i_results_i_plani_k5", "model": "model_b", "variant": "search_i_results_i_plani_k5", "n": 4, "em": 1.0},
+            ]
+            files = {
+                "em_f1.json": {
+                    "model_a/search_i_results_i_plani_k5": {"em": 0.5},
+                    "model_b/search_i_results_i_plani_k5": {"em": 1.0},
+                },
+                "summary.json": rows,
+                "variant_summary.json": build_legacy_variant_summary(rows),
+            }
+            retrieval_rows = [
+                {"condition_model": "model_a/search_i_results_i_plani_k5", "model": "model_a", "variant": "search_i_results_i_plani_k5"},
+                {"condition_model": "model_b/search_i_results_i_plani_k5", "model": "model_b", "variant": "search_i_results_i_plani_k5"},
+            ]
+
+            write_legacy_per_model_outputs(
+                out_dir,
+                files,
+                retrieval_rows,
+                ["condition_model", "model", "variant"],
+            )
+
+            model_a_summary = json.loads((out_dir / "by_model" / "model_a" / "summary.json").read_text())
+            model_a_variant_summary = json.loads((out_dir / "by_model" / "model_a" / "variant_summary.json").read_text())
+            model_a_em = json.loads((out_dir / "by_model" / "model_a" / "em_f1.json").read_text())
+            with (out_dir / "by_model" / "model_a" / "per_task_retrieval.csv").open(newline="") as handle:
+                model_a_csv = list(csv.DictReader(handle))
+
+            self.assertEqual([row["model"] for row in model_a_summary], ["model_a"])
+            self.assertEqual(model_a_variant_summary[0]["models"], ["model_a"])
+            self.assertEqual(list(model_a_em.keys()), ["model_a/search_i_results_i_plani_k5"])
+            self.assertEqual([row["model"] for row in model_a_csv], ["model_a"])
 
     def test_search_depth_curve_averages_fractional_semantic_match(self):
         variant = "search_i_results_i_plani_k5"
@@ -159,6 +241,55 @@ class TestRunModeAnalysisSemantic(unittest.TestCase):
         )
 
         self.assertEqual(summary_rows[0]["peek_file_error_rate"], 0.0)
+
+    def test_build_summary_includes_exact_match_as_em(self):
+        variant = "search_i_results_i_plani_k5"
+        key = f"openai_gpt-5.2-xhigh/{variant}"
+        by_key_records = {
+            key: [
+                {
+                    "_exact_match": 1.0,
+                    "_semantic_match": 1.0,
+                    "_runtime_seconds": 1.0,
+                    "_input_tokens": 1,
+                    "_output_tokens": 1,
+                    "_total_tokens": 2,
+                    "_cost_usd": 0.0,
+                    "_ideal_subagent_cost_usd": 0.0,
+                    "_total_cost_with_ideal_subagents_usd": 0.0,
+                    "_tool_calls_total": 1,
+                    "_api_tool_calls": 1,
+                    "semantic_bucket": "semantic_correct",
+                    "log_error_bucket_display": "no_error",
+                },
+                {
+                    "_exact_match": 0.0,
+                    "_semantic_match": 1.0,
+                    "_runtime_seconds": 1.0,
+                    "_input_tokens": 1,
+                    "_output_tokens": 1,
+                    "_total_tokens": 2,
+                    "_cost_usd": 0.0,
+                    "_ideal_subagent_cost_usd": 0.0,
+                    "_total_cost_with_ideal_subagents_usd": 0.0,
+                    "_tool_calls_total": 1,
+                    "_api_tool_calls": 1,
+                    "semantic_bucket": "semantic_correct",
+                    "log_error_bucket_display": "no_error",
+                },
+            ]
+        }
+
+        summary_rows = build_summary(
+            by_key_records,
+            discovery={},
+            efficiency={},
+            tool_errors={},
+            base_by_key_records={},
+        )
+
+        self.assertEqual(summary_rows[0]["em"], 0.5)
+        self.assertEqual(summary_rows[0]["exact_match"], 0.5)
 
     def test_error_vs_semantic_plot_uses_fractional_semantic_match(self):
         class FakeBar:

@@ -1,0 +1,20 @@
+{
+  "dataset_sequence": [
+    "hotpotqa-5ae31ca155429928c4239608-lucy-pevensie",
+    "hotpotqa-5ae31ca155429928c4239608-the-chronicles-of-narnia"
+  ],
+  "source_sequence": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ae31ca155429928c4239608:Lucy Pevensie",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ae31ca155429928c4239608:The Chronicles of Narnia"
+  ],
+  "reasoning_chain_text": [
+    "1. Identify the fantasy novel series that includes Lucy Pevensie.",
+    "2. Determine how many copies that series has sold and return the stated amount."
+  ],
+  "original_final_question": "Lucy Pevensie is a character in the series of fantasy novels that have sold more than how many copies? Write your answer as [ANSWER].",
+  "original_reasoning_chain": [
+    "Node 1: Which fantasy novel series includes Lucy Pevensie? Evidence: Lucy Pevensie: Lucy Pevensie is a fictional character in C. S. Lewis's \"The Chronicles of Narnia\" series. -> The Chronicles of Narnia",
+    "Node 2: The Chronicles of Narnia has sold over how many copies? Evidence: The Chronicles of Narnia: It is considered a classic of children's literature and is the author's best-known work, having sold over 100 million copies in 47 languages. -> 100 million",
+    "Final answer: 100 million"
+  ]
+}

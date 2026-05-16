@@ -1,0 +1,50 @@
+{
+  "question": "Which writer, Karen Blixen or Woody Allen, has a broader range of artistic talents? Write your answer as [ANSWER].",
+  "answer": "\"Woody\" Allen",
+  "nodes": {
+    "1": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5aba8d4655429901930fa82b:Karen Blixen",
+      "fact": "Karen Blixen: Baroness Karen Christenze von Blixen-Finecke (née Dinesen; 17 April 1885 – 7 September 1962) was a Danish author who wrote works in Danish and English.",
+      "subquestion": "What relevant information is given about Karen Blixen?",
+      "answer": "Karen Blixen"
+    },
+    "2": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5aba8d4655429901930fa82b:Woody Allen",
+      "fact": "Woody Allen: Heywood \"Woody\" Allen (born Allan Stewart Konigsberg; December 1, 1935) is an American filmmaker, writer, actor, comedian, and musician whose career spans more than six decades.",
+      "subquestion": "What relevant information is given about Woody Allen?",
+      "answer": "\"Woody\" Allen"
+    }
+  },
+  "reasoning_chain": [
+    "Compare the supported evidence: Node 1: Karen Blixen: Baroness Karen Christenze von Blixen-Finecke (née Dinesen; 17 April 1885 – 7 September 1962) was a Danish author who wrote works in Danish and English.; Node 2: Woody Allen: Heywood \"Woody\" Allen (born Allan Stewart Konigsberg; December 1, 1935) is an American filmmaker, writer, actor, comedian, and musician whose career spans more than six decades.. Final answer: \"Woody\" Allen",
+    "Final answer: \"Woody\" Allen"
+  ],
+  "datasets_used": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5aba8d4655429901930fa82b:Karen Blixen",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5aba8d4655429901930fa82b:Woody Allen"
+  ],
+  "reasoning_hops": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1,
+        2
+      ],
+      "reasoning": "Compare the supported evidence: Node 1: Karen Blixen: Baroness Karen Christenze von Blixen-Finecke (née Dinesen; 17 April 1885 – 7 September 1962) was a Danish author who wrote works in Danish and English.; Node 2: Woody Allen: Heywood \"Woody\" Allen (born Allan Stewart Konigsberg; December 1, 1935) is an American filmmaker, writer, actor, comedian, and musician whose career spans more than six decades.. Final answer: \"Woody\" Allen",
+      "answer": "\"Woody\" Allen"
+    }
+  ],
+  "_provenance": {
+    "benchmark": "hotpotqa",
+    "split": "dev_distractor",
+    "source_id": "5aba8d4655429901930fa82b",
+    "type": "comparison",
+    "level": "hard",
+    "promoted_from": "other-benchmarks/tasks-hotpotqa-mini/k-2-d-1/task_46.json",
+    "sample_source": "other-benchmarks/tasks/hotpotqa/k-2-d-1/task_957.json",
+    "original_bucket": "k-2-d-1",
+    "promotion_status": "verified",
+    "promotion_rule": "curated_hotpotqa_batch_v1",
+    "source_mapping_status": "raw_anchor_temporary"
+  }
+}

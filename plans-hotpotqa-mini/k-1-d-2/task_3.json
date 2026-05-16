@@ -1,0 +1,19 @@
+{
+  "dataset_sequence": [
+    "hotpotqa-5a7385c45542992d56e7e359-doris-lessing",
+    "hotpotqa-5a7385c45542992d56e7e359-philip-k-dick"
+  ],
+  "source_sequence": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a7385c45542992d56e7e359:Doris Lessing",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a7385c45542992d56e7e359:Philip K. Dick"
+  ],
+  "reasoning_chain_text": [
+    "1. Determine the birth dates for Doris Lessing and Philip K. Dick.",
+    "2. Compare the two birth dates and return the writer born first."
+  ],
+  "original_final_question": "Who was born first, British novelist Doris Lessing or American writer Philip K. Dick? Write your answer as [ANSWER].",
+  "original_reasoning_chain": [
+    "Node 1 and Node 2: Doris Lessing was born on 22 October 1919, while Philip K. Dick was born on December 16, 1928, so Doris May Lessing was born first. -> Doris May Lessing",
+    "Final answer: Doris May Lessing"
+  ]
+}

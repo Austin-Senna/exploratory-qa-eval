@@ -15,10 +15,13 @@ _MANAGEMENT_MODE_CHOICES = ("naive", "standard", "ideal")
 _RESULT_MODE_CHOICES = ("naive", "ideal")
 _COMPUTATION_MODE_CHOICES = ("standard", "ideal")
 _SKILLS_CHOICES = ("on", "off")
+_BENCHMARK_CHOICES = ("lakeqa", "kramabench", "hotpotqa")
 _REASONING_EFFORT_CHOICES = ("none", "minimal", "low", "medium", "high", "xhigh")
 _DEFAULT_TASK_SET = "tasks_mini"
 _DEFAULT_SMOKE_TASK_DIR = "k-5-d-4"
 _DEFAULT_SMOKE_TASK_LIMIT = 2
+_KRAMABENCH_LOGS_OUTPUT_DIR = "log-kramabench"
+_KRAMABENCH_RESULTS_OUTPUT_DIR = "results-kramabench"
 _MODEL_ALIASES = {
     "gpt5.2": "openai/gpt-5.2",
     "gpt-5.2": "openai/gpt-5.2",
@@ -27,7 +30,7 @@ _MODEL_ALIASES = {
     "gpt5.4-nano": "openai/gpt-5.4-nano",
     "gpt-5.4-nano": "openai/gpt-5.4-nano",
 }
-_DB_HINTS = ("lance_data",)
+_DB_HINTS = ("lance_data", "lance_kramabench_base", "lance_kramabench_infused")
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -61,6 +64,12 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Enable or disable the Strands AgentSkills planning/discovery skills plugin.",
     )
     common.add_argument("--compute", choices=_COMPUTATION_MODE_CHOICES, default=None)
+    common.add_argument(
+        "--benchmark",
+        choices=_BENCHMARK_CHOICES,
+        default="lakeqa",
+        help="Data-lake benchmark bucket to use for agent data tools.",
+    )
     common.add_argument("--k", type=int, default=None)
     common.add_argument("--model", default="bedrock/claude-sonnet-4.5")
     common.add_argument(
@@ -193,6 +202,14 @@ def _display_command(command: Sequence[str]) -> str:
     return shlex.join(printable)
 
 
+def _default_output_roots(benchmark: str, *, smoke: bool) -> tuple[str, str]:
+    if benchmark == "kramabench":
+        return _KRAMABENCH_LOGS_OUTPUT_DIR, _KRAMABENCH_RESULTS_OUTPUT_DIR
+    if smoke:
+        return "test_logs", "test_results"
+    return "logs", "results"
+
+
 _LEGACY_AXIS_DEFAULTS = {
     "search": "standard",
     "results": "naive",
@@ -240,6 +257,8 @@ def _build_run_mode_command(args: argparse.Namespace, cwd: Path) -> tuple[list[s
         command.extend(["--k", str(args.k)])
     if args.compute is not None:
         command.extend(["--computation_tool", args.compute])
+    if args.benchmark != "lakeqa":
+        command.extend(["--benchmark", args.benchmark])
     if args.skills is not None:
         command.extend(["--skills", args.skills])
     if args.reasoning_effort is not None:
@@ -264,6 +283,7 @@ def _build_run_mode_command(args: argparse.Namespace, cwd: Path) -> tuple[list[s
     if args.subcommand == "smoke":
         task_dir = _resolve_smoke_task_dir(args.task_dir, cwd)
         task_dir_display = _display_path(task_dir, cwd)
+        logs_output_dir, results_output_dir = _default_output_roots(args.benchmark, smoke=True)
         command.extend(
             [
                 "--task-dir",
@@ -271,20 +291,21 @@ def _build_run_mode_command(args: argparse.Namespace, cwd: Path) -> tuple[list[s
                 "--tasks-per-dir",
                 str(_DEFAULT_SMOKE_TASK_LIMIT),
                 "--logs-output-dir",
-                "test_logs",
+                logs_output_dir,
                 "--results-output-dir",
-                "test_results",
+                results_output_dir,
             ]
         )
         metadata = {
             "db_path": db_arg,
             "task_scope": f"{task_dir_display} (first {_DEFAULT_SMOKE_TASK_LIMIT} tasks)",
-            "logs_output_dir": "test_logs",
-            "results_output_dir": "test_results",
+            "logs_output_dir": logs_output_dir,
+            "results_output_dir": results_output_dir,
         }
         return command, metadata
 
     task_continue = bool(getattr(args, "task_continue", False))
+    logs_output_dir, results_output_dir = _default_output_roots(args.benchmark, smoke=False)
     if task_continue:
         command.extend(
             [
@@ -292,9 +313,9 @@ def _build_run_mode_command(args: argparse.Namespace, cwd: Path) -> tuple[list[s
                 "--task-set",
                 _DEFAULT_TASK_SET,
                 "--logs-output-dir",
-                "logs",
+                logs_output_dir,
                 "--results-output-dir",
-                "results",
+                results_output_dir,
             ]
         )
         scope = f"resume pending tasks under {_DEFAULT_TASK_SET}"
@@ -305,17 +326,17 @@ def _build_run_mode_command(args: argparse.Namespace, cwd: Path) -> tuple[list[s
                 "--task-set",
                 _DEFAULT_TASK_SET,
                 "--logs-output-dir",
-                "logs",
+                logs_output_dir,
                 "--results-output-dir",
-                "results",
+                results_output_dir,
             ]
         )
         scope = f"all tasks under {_DEFAULT_TASK_SET}"
     metadata = {
         "db_path": db_arg,
         "task_scope": scope,
-        "logs_output_dir": "logs",
-        "results_output_dir": "results",
+        "logs_output_dir": logs_output_dir,
+        "results_output_dir": results_output_dir,
     }
     return command, metadata
 

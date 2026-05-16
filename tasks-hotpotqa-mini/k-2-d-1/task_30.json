@@ -1,0 +1,58 @@
+{
+  "question": "Until when did this region exist as an organized incorporated territory of the United States, for which Samuel Thurston served as its first delegate? Write your answer as [ANSWER].",
+  "answer": "February 14, 1859",
+  "nodes": {
+    "1": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ab431e65542991751b4d6e2:Samuel Thurston",
+      "fact": "Samuel Thurston: He was the first delegate from the Oregon Territory to the United States Congress and was instrumental in the passage of the Donation Land Claim Act.",
+      "subquestion": "Samuel Thurston was the first delegate from which territory?",
+      "answer": "Oregon Territory"
+    },
+    "2": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ab431e65542991751b4d6e2:Oregon Territory",
+      "fact": "Oregon Territory: The Territory of Oregon was an organized incorporated territory of the United States that existed from August 14, 1848, until February 14, 1859, when the southwestern portion of the territory was admitted to the Union as the State of Oregon.",
+      "subquestion": "Until what date did the Oregon Territory exist as an organized incorporated U.S. territory?",
+      "answer": "February 14, 1859"
+    }
+  },
+  "reasoning_chain": [
+    "Node 1: Samuel Thurston was the first delegate from which territory? Evidence: Samuel Thurston: He was the first delegate from the Oregon Territory to the United States Congress and was instrumental in the passage of the Donation Land Claim Act. -> Oregon Territory",
+    "Node 2: Until what date did the Oregon Territory exist as an organized incorporated U.S. territory? Evidence: Oregon Territory: The Territory of Oregon was an organized incorporated territory of the United States that existed from August 14, 1848, until February 14, 1859, when the southwestern portion of the territory was admitted to the Union as the State of Oregon. -> February 14, 1859",
+    "Final answer: February 14, 1859"
+  ],
+  "datasets_used": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ab431e65542991751b4d6e2:Samuel Thurston",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ab431e65542991751b4d6e2:Oregon Territory"
+  ],
+  "reasoning_hops": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1
+      ],
+      "reasoning": "Node 1: Samuel Thurston was the first delegate from which territory? Evidence: Samuel Thurston: He was the first delegate from the Oregon Territory to the United States Congress and was instrumental in the passage of the Donation Land Claim Act. -> Oregon Territory",
+      "answer": "Oregon Territory"
+    },
+    {
+      "hop": 2,
+      "node_ids": [
+        2
+      ],
+      "reasoning": "Node 2: Until what date did the Oregon Territory exist as an organized incorporated U.S. territory? Evidence: Oregon Territory: The Territory of Oregon was an organized incorporated territory of the United States that existed from August 14, 1848, until February 14, 1859, when the southwestern portion of the territory was admitted to the Union as the State of Oregon. -> February 14, 1859",
+      "answer": "February 14, 1859"
+    }
+  ],
+  "_provenance": {
+    "benchmark": "hotpotqa",
+    "split": "dev_distractor",
+    "source_id": "5ab431e65542991751b4d6e2",
+    "type": "bridge",
+    "level": "hard",
+    "promoted_from": "other-benchmarks/tasks-hotpotqa-mini/k-2-d-2/task_35.json",
+    "sample_source": "other-benchmarks/tasks/hotpotqa/k-2-d-2/task_2884.json",
+    "original_bucket": "k-2-d-2",
+    "promotion_status": "verified",
+    "promotion_rule": "curated_hotpotqa_batch_v1",
+    "source_mapping_status": "raw_anchor_temporary"
+  }
+}

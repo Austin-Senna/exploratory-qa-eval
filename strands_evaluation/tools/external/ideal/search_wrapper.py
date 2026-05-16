@@ -38,6 +38,34 @@ _SCHEMA_BY_SLUG_FILENAME: Dict[Tuple[str, str], Dict[str, Any]] = {}
 _TABULAR_KIND_PRIORITY = ("delimited_text", "tsv", "csv", "parquet", "json", "geojson")
 
 
+def configure_dependency_paths(
+    *,
+    descriptions: str | Path | None = None,
+    snippets: str | Path | None = None,
+    schemas: str | Path | None = None,
+) -> None:
+    """Configure ideal-search enrichment artifact paths and clear caches."""
+    global _TABLE_DESCRIPTIONS_PATH, _SNIPPETS_PATH, _SCHEMAS_PATH
+    global _DESC_CACHE_LOADED, _DESC_BY_URI, _DESC_ROW_BY_URI
+    global _SNIPPET_CACHE_LOADED, _SNIPPET_BY_URI
+    global _SCHEMAS_CACHE_LOADED, _SCHEMA_BY_SLUG_FILENAME
+
+    if descriptions is not None:
+        _TABLE_DESCRIPTIONS_PATH = Path(descriptions)
+    if snippets is not None:
+        _SNIPPETS_PATH = Path(snippets)
+    if schemas is not None:
+        _SCHEMAS_PATH = Path(schemas)
+
+    _DESC_CACHE_LOADED = False
+    _DESC_BY_URI = {}
+    _DESC_ROW_BY_URI = {}
+    _SNIPPET_CACHE_LOADED = False
+    _SNIPPET_BY_URI = {}
+    _SCHEMAS_CACHE_LOADED = False
+    _SCHEMA_BY_SLUG_FILENAME = {}
+
+
 def _dataset_id_from_uri(uri: str) -> Optional[str]:
     raw = str(uri or "")
     if "://" not in raw:

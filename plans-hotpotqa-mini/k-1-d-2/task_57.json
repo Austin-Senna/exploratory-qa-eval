@@ -1,0 +1,19 @@
+{
+  "dataset_sequence": [
+    "hotpotqa-5ac519a95542994611c8b38b-chris-cornell",
+    "hotpotqa-5ac519a95542994611c8b38b-godsmack"
+  ],
+  "source_sequence": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ac519a95542994611c8b38b:Chris Cornell",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ac519a95542994611c8b38b:Godsmack"
+  ],
+  "reasoning_chain_text": [
+    "1. Determine the relevant description of Chris Cornell as an American rock figure.",
+    "2. Determine who is identified as the founder of Godsmack and return that person."
+  ],
+  "original_final_question": "Chris Cornell and Godsmack are both American rock icons, who is the founder of Godsmack? Write your answer as [ANSWER].",
+  "original_reasoning_chain": [
+    "Node 1 and Node 2: Chris Cornell is described as an American musician, singer, and songwriter, and Godsmack is an American rock band whose founder, frontman, and songwriter is Sully Erna. -> Sully Erna",
+    "Final answer: Sully Erna"
+  ]
+}

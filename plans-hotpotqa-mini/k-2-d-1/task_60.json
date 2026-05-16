@@ -1,0 +1,20 @@
+{
+  "dataset_sequence": [
+    "hotpotqa-5ae4a0ca5542995ad6573dcb-bill-nelson",
+    "hotpotqa-5ae4a0ca5542995ad6573dcb-space-shuttle-columbia"
+  ],
+  "source_sequence": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ae4a0ca5542995ad6573dcb:Bill Nelson",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ae4a0ca5542995ad6573dcb:Space Shuttle Columbia"
+  ],
+  "reasoning_chain_text": [
+    "1. Identify the Space Shuttle that Bill Nelson flew on as a Payload Specialist.",
+    "2. Determine the year that shuttle first launched and return the year."
+  ],
+  "original_final_question": "Bill Nelson flew as a Payload Specialist on a Space Shuttle launched for the first time in what year? Write your answer as [ANSWER].",
+  "original_reasoning_chain": [
+    "Node 1: Which Space Shuttle did Bill Nelson fly on as a Payload Specialist? Evidence: Bill Nelson: He flew as a Payload Specialist on the Space Shuttle \"Columbia\". -> Space Shuttle Columbia",
+    "Node 2: In what year did Space Shuttle Columbia launch for the first time? Evidence: Space Shuttle Columbia: It launched for the first time on mission STS-1 on April 12, 1981, the first flight of the Space Shuttle program. -> 1981",
+    "Final answer: 1981"
+  ]
+}

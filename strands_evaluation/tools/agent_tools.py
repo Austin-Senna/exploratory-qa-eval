@@ -36,7 +36,13 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Configuration
-BUCKET = "lakeqa-yc4103-datalake"
+DEFAULT_BUCKET = "lakeqa-yc4103-datalake"
+BENCHMARK_BUCKETS = {
+    "lakeqa": DEFAULT_BUCKET,
+    "kramabench": "sana-kramabench",
+    "hotpotqa": "sana-hotpotqa-2",
+}
+BUCKET = os.getenv("LAKEQA_BUCKET", DEFAULT_BUCKET)
 FOLDERS = ["wikipedia", "datagov"]
 REGION = "us-east-1"
 
@@ -57,6 +63,31 @@ _S3_CLIENT_MODE: Optional[str] = None  # signed | unsigned
 
 # Slot written by submit_answer; read back by SubmitAnswerPlugin in agent.py
 _submitted_answer: Optional[Dict[str, Any]] = None
+
+
+def configure_benchmark(benchmark: Optional[str] = None) -> str:
+    """Configure the active data-lake bucket for a benchmark label."""
+    global BUCKET, _S3_SIGNED_CLIENT, _S3_UNSIGNED_CLIENT, _S3_CLIENT_MODE
+
+    explicit_benchmark = benchmark is not None
+    normalized = (benchmark or os.getenv("LAKEQA_BENCHMARK") or "lakeqa").strip().lower()
+    if normalized not in BENCHMARK_BUCKETS:
+        expected = ", ".join(sorted(BENCHMARK_BUCKETS))
+        raise ValueError(f"Unsupported benchmark '{benchmark}'. Expected one of: {expected}")
+
+    bucket = (
+        BENCHMARK_BUCKETS[normalized]
+        if explicit_benchmark
+        else os.getenv("LAKEQA_BUCKET", BENCHMARK_BUCKETS[normalized])
+    )
+    os.environ["LAKEQA_BENCHMARK"] = normalized
+    os.environ["LAKEQA_BUCKET"] = bucket
+    if bucket != BUCKET:
+        BUCKET = bucket
+        _S3_SIGNED_CLIENT = None
+        _S3_UNSIGNED_CLIENT = None
+        _S3_CLIENT_MODE = None
+    return BUCKET
 
 
 def get_submitted_answer() -> Optional[Dict[str, Any]]:
@@ -161,6 +192,14 @@ def _should_fallback_to_unsigned(exc: Exception) -> bool:
             return True
     msg = str(exc).lower()
     return "accessdenied" in msg or "explicit deny" in msg
+
+
+def _is_s3_access_denied(exc: Exception) -> bool:
+    if isinstance(exc, ClientError):
+        code = (exc.response or {}).get("Error", {}).get("Code", "")
+        return code in {"AccessDenied", "InvalidAccessKeyId", "SignatureDoesNotMatch"}
+    msg = str(exc).lower()
+    return "accessdenied" in msg or "access denied" in msg or "explicit deny" in msg
 
 
 def _get_s3_client():
@@ -316,11 +355,16 @@ def _run_tool_with_timeout(
 
 def _dataset_exists(s3, folder: str, dataset_id: str) -> bool:
     """Check whether a dataset exists under a given folder."""
-    response = s3.list_objects_v2(
-        Bucket=BUCKET,
-        Prefix=f"{folder}/{dataset_id}/",
-        MaxKeys=1
-    )
+    try:
+        response = s3.list_objects_v2(
+            Bucket=BUCKET,
+            Prefix=f"{folder}/{dataset_id}/",
+            MaxKeys=1
+        )
+    except Exception as exc:
+        if _is_s3_access_denied(exc):
+            return False
+        raise
     return "Contents" in response or "CommonPrefixes" in response
 
 
@@ -638,12 +682,17 @@ def search(prefixes: List[str], limit: int = 50) -> Dict[str, Any]:
             full_prefix = f"{folder}/{prefix}"
 
             # First try to find datasets (directories)
-            response = s3.list_objects_v2(
-                Bucket=BUCKET,
-                Prefix=full_prefix,
-                Delimiter='/',
-                MaxKeys=limit
-            )
+            try:
+                response = s3.list_objects_v2(
+                    Bucket=BUCKET,
+                    Prefix=full_prefix,
+                    Delimiter='/',
+                    MaxKeys=limit
+                )
+            except Exception as exc:
+                if _is_s3_access_denied(exc):
+                    continue
+                raise
 
             # Get dataset-level results (CommonPrefixes are "directories")
             if 'CommonPrefixes' in response:
@@ -1338,7 +1387,10 @@ def cleanup_sandbox() -> Dict[str, Any]:
 
 # Export all public functions
 __all__ = [
+    'configure_benchmark',
     'search',
+    'search_prefix',
+    'search_keyword',
     'list_files',
     'download',
     'inspect_file',

@@ -1,0 +1,50 @@
+{
+  "question": "What animal does Mahratta Greyhound and Tibetan Spaniel have in common? Write your answer as [ANSWER].",
+  "answer": "dog",
+  "nodes": {
+    "1": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a8db9b3554299068b959dde:Mahratta Greyhound",
+      "fact": "Mahratta Greyhound: The Mahratta Greyhound or Maratha Greyhound is a dog breed originating in India.",
+      "subquestion": "What kind of animal is the Mahratta Greyhound?",
+      "answer": "dog"
+    },
+    "2": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a8db9b3554299068b959dde:Tibetan Spaniel",
+      "fact": "Tibetan Spaniel: The Tibetan Spaniel is a breed of assertive, small, intelligent dogs originating over 2,500 years ago in the Himalayan mountains of Tibet.",
+      "subquestion": "What kind of animal is the Tibetan Spaniel?",
+      "answer": "dog"
+    }
+  },
+  "reasoning_chain": [
+    "Node 1 and Node 2: The Mahratta Greyhound is a dog breed, and the Tibetan Spaniel is also a dog breed, so the animal they have in common is dog. -> dog",
+    "Final answer: dog"
+  ],
+  "datasets_used": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a8db9b3554299068b959dde:Mahratta Greyhound",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a8db9b3554299068b959dde:Tibetan Spaniel"
+  ],
+  "reasoning_hops": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1,
+        2
+      ],
+      "reasoning": "Node 1 and Node 2: The Mahratta Greyhound is a dog breed, and the Tibetan Spaniel is also a dog breed, so the animal they have in common is dog. -> dog",
+      "answer": "dog"
+    }
+  ],
+  "_provenance": {
+    "benchmark": "hotpotqa",
+    "split": "dev_distractor",
+    "source_id": "5a8db9b3554299068b959dde",
+    "type": "comparison",
+    "level": "hard",
+    "promoted_from": "other-benchmarks/tasks-hotpotqa-mini/k-2-d-1/task_35.json",
+    "sample_source": "other-benchmarks/tasks/hotpotqa/k-2-d-1/task_700.json",
+    "original_bucket": "k-2-d-1",
+    "promotion_status": "verified",
+    "promotion_rule": "curated_hotpotqa_batch_v1",
+    "source_mapping_status": "raw_anchor_temporary"
+  }
+}

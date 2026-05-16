@@ -1,0 +1,50 @@
+{
+  "question": "Are both Viken Babikian and Don Manoukian American? Write your answer as [ANSWER].",
+  "answer": "yes",
+  "nodes": {
+    "1": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5abbf8bc5542993f40c73c35:Viken Babikian",
+      "fact": "Viken Babikian: Viken L. Babikian is an American doctor of Armenian origin and professor of neurology at Boston University School of Medicine.",
+      "subquestion": "What relevant information is given about Viken Babikian?",
+      "answer": "Viken Babikian"
+    },
+    "2": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5abbf8bc5542993f40c73c35:Don Manoukian",
+      "fact": "Don Manoukian: Donald J. Manoukian (June 9, 1934 – September 23, 2014) was an American football guard and professional wrestler of Armenian descent from Reno, Nevada.",
+      "subquestion": "What relevant information is given about Don Manoukian?",
+      "answer": "yes"
+    }
+  },
+  "reasoning_chain": [
+    "Compare the supported evidence: Node 1: Viken Babikian: Viken L. Babikian is an American doctor of Armenian origin and professor of neurology at Boston University School of Medicine.; Node 2: Don Manoukian: Donald J. Manoukian (June 9, 1934 – September 23, 2014) was an American football guard and professional wrestler of Armenian descent from Reno, Nevada.. Final answer: yes",
+    "Final answer: yes"
+  ],
+  "datasets_used": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5abbf8bc5542993f40c73c35:Viken Babikian",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5abbf8bc5542993f40c73c35:Don Manoukian"
+  ],
+  "reasoning_hops": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1,
+        2
+      ],
+      "reasoning": "Compare the supported evidence: Node 1: Viken Babikian: Viken L. Babikian is an American doctor of Armenian origin and professor of neurology at Boston University School of Medicine.; Node 2: Don Manoukian: Donald J. Manoukian (June 9, 1934 – September 23, 2014) was an American football guard and professional wrestler of Armenian descent from Reno, Nevada.. Final answer: yes",
+      "answer": "yes"
+    }
+  ],
+  "_provenance": {
+    "benchmark": "hotpotqa",
+    "split": "dev_distractor",
+    "source_id": "5abbf8bc5542993f40c73c35",
+    "type": "comparison",
+    "level": "hard",
+    "promoted_from": "other-benchmarks/tasks-hotpotqa-mini/k-2-d-1/task_48.json",
+    "sample_source": "other-benchmarks/tasks/hotpotqa/k-2-d-1/task_990.json",
+    "original_bucket": "k-2-d-1",
+    "promotion_status": "verified",
+    "promotion_rule": "curated_hotpotqa_batch_v1",
+    "source_mapping_status": "raw_anchor_temporary"
+  }
+}

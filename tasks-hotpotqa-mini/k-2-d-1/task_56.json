@@ -1,0 +1,58 @@
+{
+  "question": "Lenroy Thomas is the current commonwealth heavyweight champion after beating a British , professional boxer who has a record of 12 wins, 3 defeats, and how many draws? Write your answer as [ANSWER].",
+  "answer": "1",
+  "nodes": {
+    "1": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ae1e1e55542997f29b3c15e:Lenroy Thomas",
+      "fact": "Lenroy Thomas: He is the current commonwealth heavyweight champion after beating Dave Allen via a split decision victory.",
+      "subquestion": "Which boxer did Lenroy Thomas beat to become commonwealth heavyweight champion?",
+      "answer": "Dave Allen"
+    },
+    "2": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ae1e1e55542997f29b3c15e:Dave Allen (boxer)",
+      "fact": "Dave Allen (boxer): David Allen (born 21 March 1992) is British professional boxer. He has fought 16 times and his record stands at 12 wins, 3 defeats and 1 draw.",
+      "subquestion": "How many draws are in that British boxer's record of 12 wins and 3 defeats?",
+      "answer": "1"
+    }
+  },
+  "reasoning_chain": [
+    "Node 1: Which boxer did Lenroy Thomas beat to become commonwealth heavyweight champion? Evidence: Lenroy Thomas: He is the current commonwealth heavyweight champion after beating Dave Allen via a split decision victory. -> Dave Allen",
+    "Node 2: How many draws are in that British boxer's record of 12 wins and 3 defeats? Evidence: Dave Allen (boxer): David Allen (born 21 March 1992) is British professional boxer. He has fought 16 times and his record stands at 12 wins, 3 defeats and 1 draw. -> 1",
+    "Final answer: 1"
+  ],
+  "datasets_used": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ae1e1e55542997f29b3c15e:Lenroy Thomas",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ae1e1e55542997f29b3c15e:Dave Allen (boxer)"
+  ],
+  "reasoning_hops": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1
+      ],
+      "reasoning": "Node 1: Which boxer did Lenroy Thomas beat to become commonwealth heavyweight champion? Evidence: Lenroy Thomas: He is the current commonwealth heavyweight champion after beating Dave Allen via a split decision victory. -> Dave Allen",
+      "answer": "Dave Allen"
+    },
+    {
+      "hop": 2,
+      "node_ids": [
+        2
+      ],
+      "reasoning": "Node 2: How many draws are in that British boxer's record of 12 wins and 3 defeats? Evidence: Dave Allen (boxer): David Allen (born 21 March 1992) is British professional boxer. He has fought 16 times and his record stands at 12 wins, 3 defeats and 1 draw. -> 1",
+      "answer": "1"
+    }
+  ],
+  "_provenance": {
+    "benchmark": "hotpotqa",
+    "split": "dev_distractor",
+    "source_id": "5ae1e1e55542997f29b3c15e",
+    "type": "bridge",
+    "level": "hard",
+    "promoted_from": "other-benchmarks/tasks-hotpotqa-mini/k-2-d-2/task_61.json",
+    "sample_source": "other-benchmarks/tasks/hotpotqa/k-2-d-2/task_5098.json",
+    "original_bucket": "k-2-d-2",
+    "promotion_status": "verified",
+    "promotion_rule": "curated_hotpotqa_batch_v1",
+    "source_mapping_status": "raw_anchor_temporary"
+  }
+}

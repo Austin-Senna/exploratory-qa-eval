@@ -1,0 +1,58 @@
+{
+  "question": "Who hosted the ITV show Celebrities Under Pressure and All Star Family Fortunes? Write your answer as [ANSWER].",
+  "answer": "Vernon Kay",
+  "nodes": {
+    "1": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5addbf645542997dc7907014:Celebrities Under Pressure",
+      "fact": "Celebrities Under Pressure: It was first hosted by Melanie Sykes for series 1 & 2 and then hosted by Vernon Kay for series 3.",
+      "subquestion": "Who hosted series 3 of Celebrities Under Pressure?",
+      "answer": "Vernon Kay"
+    },
+    "2": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5addbf645542997dc7907014:Vernon Kay",
+      "fact": "Vernon Kay: Vernon Charles Kay (born 28 April 1974) is an English television presenter, radio DJ and former model best known for his television roles with ITV, presenting shows such as \"All Star Family Fortunes\" (2006–2015), \"Beat the Star\" (2008–2009) and \"Splash! \" (2013–2014).",
+      "subquestion": "Which ITV presenter of All Star Family Fortunes matches that host?",
+      "answer": "Vernon Kay"
+    }
+  },
+  "reasoning_chain": [
+    "Node 1: Who hosted series 3 of Celebrities Under Pressure? Evidence: Celebrities Under Pressure: It was first hosted by Melanie Sykes for series 1 & 2 and then hosted by Vernon Kay for series 3. -> Vernon Kay",
+    "Node 2: Which ITV presenter of All Star Family Fortunes matches that host? Evidence: Vernon Kay: Vernon Charles Kay (born 28 April 1974) is an English television presenter, radio DJ and former model best known for his television roles with ITV, presenting shows such as \"All Star Family Fortunes\" (2006–2015), \"Beat the Star\" (2008–2009) and \"Splash! \" (2013–2014). -> Vernon Kay",
+    "Final answer: Vernon Kay"
+  ],
+  "datasets_used": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5addbf645542997dc7907014:Celebrities Under Pressure",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5addbf645542997dc7907014:Vernon Kay"
+  ],
+  "reasoning_hops": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1
+      ],
+      "reasoning": "Node 1: Who hosted series 3 of Celebrities Under Pressure? Evidence: Celebrities Under Pressure: It was first hosted by Melanie Sykes for series 1 & 2 and then hosted by Vernon Kay for series 3. -> Vernon Kay",
+      "answer": "Vernon Kay"
+    },
+    {
+      "hop": 2,
+      "node_ids": [
+        2
+      ],
+      "reasoning": "Node 2: Which ITV presenter of All Star Family Fortunes matches that host? Evidence: Vernon Kay: Vernon Charles Kay (born 28 April 1974) is an English television presenter, radio DJ and former model best known for his television roles with ITV, presenting shows such as \"All Star Family Fortunes\" (2006–2015), \"Beat the Star\" (2008–2009) and \"Splash! \" (2013–2014). -> Vernon Kay",
+      "answer": "Vernon Kay"
+    }
+  ],
+  "_provenance": {
+    "benchmark": "hotpotqa",
+    "split": "dev_distractor",
+    "source_id": "5addbf645542997dc7907014",
+    "type": "bridge",
+    "level": "hard",
+    "promoted_from": "other-benchmarks/tasks-hotpotqa-mini/k-2-d-2/task_54.json",
+    "sample_source": "other-benchmarks/tasks/hotpotqa/k-2-d-2/task_4556.json",
+    "original_bucket": "k-2-d-2",
+    "promotion_status": "verified",
+    "promotion_rule": "curated_hotpotqa_batch_v1",
+    "source_mapping_status": "raw_anchor_temporary"
+  }
+}

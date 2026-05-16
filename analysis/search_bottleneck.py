@@ -19,7 +19,7 @@ from pathlib import Path
 from statistics import median
 from typing import Callable, Dict, Iterable, List, Optional, Tuple
 
-from analysis.discovery_metrics import make_task_stem_key
+from analysis.discovery_metrics import make_task_stem_key, resolve_task_value, resolve_trace_task_id
 
 
 SEARCH_BOTTLENECK_CUTOFFS = (1, 3, 5)
@@ -97,13 +97,7 @@ def _task_id_for_row(task_id: str) -> str:
 
 
 def _resolve_gold_ids(task_id: str, task_gold: Dict[str, List[str]]) -> set[str]:
-    if task_id in task_gold:
-        return set(task_gold[task_id])
-    task_stem = _task_id_for_row(task_id)
-    for path_key, dataset_ids in task_gold.items():
-        if make_task_stem_key(path_key) == task_stem:
-            return set(dataset_ids)
-    return set()
+    return set(resolve_task_value(task_id, task_gold, []))
 
 
 def _is_search_event(record: dict) -> bool:
@@ -204,7 +198,7 @@ def compute_search_bottleneck(
         model = str(meta.get("model", "unknown"))
 
         for task_id, task_traces in sorted(traces.items()):
-            gold_ids = _resolve_gold_ids(task_id, task_gold)
+            gold_ids = _resolve_gold_ids(resolve_trace_task_id(task_id, task_traces), task_gold)
             if not gold_ids:
                 continue
             n_gold_ids = len(gold_ids)

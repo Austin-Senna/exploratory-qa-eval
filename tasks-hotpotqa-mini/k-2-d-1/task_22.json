@@ -1,0 +1,58 @@
+{
+  "question": "What is the name of the ethnic group who settled in Canada in the 17th century that participated in a conflict with Irish Catholic immigrants in the Shiners' War? Write your answer as [ANSWER].",
+  "answer": "French Canadians",
+  "nodes": {
+    "1": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a8c65a1554299585d9e3680:Shiners' War",
+      "fact": "Shiners' War: The Shiners' War was a conflict between Irish Catholic immigrants and French Canadians in Bytown from 1835 to 1845.",
+      "subquestion": "Which group participated in the Shiners' War against Irish Catholic immigrants?",
+      "answer": "French Canadians"
+    },
+    "2": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a8c65a1554299585d9e3680:French Canadians",
+      "fact": "French Canadians: French Canadians (also referred to as Franco-Canadians or Canadiens; French: \"Canadien(ne)s français(es)\" ) are an ethnic group who trace their ancestry to French colonists who settled in Canada from the 17th century onward.",
+      "subquestion": "Which ethnic group traces ancestry to French colonists who settled in Canada from the 17th century onward?",
+      "answer": "French Canadians"
+    }
+  },
+  "reasoning_chain": [
+    "Node 1: Which group participated in the Shiners' War against Irish Catholic immigrants? Evidence: Shiners' War: The Shiners' War was a conflict between Irish Catholic immigrants and French Canadians in Bytown from 1835 to 1845. -> French Canadians",
+    "Node 2: Which ethnic group traces ancestry to French colonists who settled in Canada from the 17th century onward? Evidence: French Canadians: French Canadians (also referred to as Franco-Canadians or Canadiens; French: \"Canadien(ne)s français(es)\" ) are an ethnic group who trace their ancestry to French colonists who settled in Canada from the 17th century onward. -> French Canadians",
+    "Final answer: French Canadians"
+  ],
+  "datasets_used": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a8c65a1554299585d9e3680:Shiners' War",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a8c65a1554299585d9e3680:French Canadians"
+  ],
+  "reasoning_hops": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1
+      ],
+      "reasoning": "Node 1: Which group participated in the Shiners' War against Irish Catholic immigrants? Evidence: Shiners' War: The Shiners' War was a conflict between Irish Catholic immigrants and French Canadians in Bytown from 1835 to 1845. -> French Canadians",
+      "answer": "French Canadians"
+    },
+    {
+      "hop": 2,
+      "node_ids": [
+        2
+      ],
+      "reasoning": "Node 2: Which ethnic group traces ancestry to French colonists who settled in Canada from the 17th century onward? Evidence: French Canadians: French Canadians (also referred to as Franco-Canadians or Canadiens; French: \"Canadien(ne)s français(es)\" ) are an ethnic group who trace their ancestry to French colonists who settled in Canada from the 17th century onward. -> French Canadians",
+      "answer": "French Canadians"
+    }
+  ],
+  "_provenance": {
+    "benchmark": "hotpotqa",
+    "split": "dev_distractor",
+    "source_id": "5a8c65a1554299585d9e3680",
+    "type": "bridge",
+    "level": "hard",
+    "promoted_from": "other-benchmarks/tasks-hotpotqa-mini/k-2-d-2/task_27.json",
+    "sample_source": "other-benchmarks/tasks/hotpotqa/k-2-d-2/task_2303.json",
+    "original_bucket": "k-2-d-2",
+    "promotion_status": "verified",
+    "promotion_rule": "curated_hotpotqa_batch_v1",
+    "source_mapping_status": "raw_anchor_temporary"
+  }
+}

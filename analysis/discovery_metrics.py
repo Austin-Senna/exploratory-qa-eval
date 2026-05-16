@@ -41,6 +41,49 @@ def make_condition_model_task_key(condition: str, model: str, task_id: str) -> s
     return f"{condition}/{model}/{make_task_stem_key(task_id)}"
 
 
+def _task_path_identity(task_id: str) -> tuple[str, str, str] | None:
+    """Return (task_root, task_dir, task_name) when task_id carries a task root."""
+    parts = Path(str(task_id)).parts
+    if len(parts) < 3:
+        return None
+    task_root = parts[-3]
+    if not (task_root.startswith("tasks") or task_root == "other-benchmarks"):
+        return None
+    return (task_root, parts[-2], Path(parts[-1]).stem)
+
+
+def resolve_task_value(task_id: str, task_values: dict, default=None):
+    """Resolve a task-keyed value without crossing explicit task roots.
+
+    If task_id is explicit, e.g. tasks_mini/k-1-d-1/task_1.json, only an entry
+    with that same task root may match. Stem-only ids keep the legacy fallback.
+    """
+    explicit_identity = _task_path_identity(task_id)
+    if explicit_identity is not None:
+        for path_key, value in task_values.items():
+            if _task_path_identity(path_key) == explicit_identity:
+                return value
+        return default
+
+    if task_id in task_values:
+        return task_values[task_id]
+
+    task_stem = make_task_stem_key(task_id) if task_id.count("/") >= 3 else task_id
+    for path_key, value in task_values.items():
+        if make_task_stem_key(path_key) == task_stem:
+            return value
+    return default
+
+
+def resolve_trace_task_id(task_id: str, task_traces: list[dict]) -> str:
+    """Prefer an explicit task_id recorded inside trace rows when available."""
+    for record in task_traces:
+        record_task_id = str(record.get("task_id", "") or "")
+        if _task_path_identity(record_task_id) is not None:
+            return record_task_id
+    return task_id
+
+
 def load_traces(traces_dir: str) -> dict[str, list]:
     """Load all trace JSONL files. Returns {task_id: [trace_records]}.
 
@@ -85,7 +128,7 @@ def compute_discovery_metrics(
 
     for task_id, task_traces in traces.items():
         # Resolve task_id stem back to a full path key for gold lookup
-        gold_ids = set(_resolve_gold(task_id, task_gold))
+        gold_ids = set(_resolve_gold(resolve_trace_task_id(task_id, task_traces), task_gold))
         if not gold_ids:
             continue
 
@@ -203,17 +246,7 @@ def compute_discovery_metrics(
 
 def _resolve_gold(task_id: str, task_gold: dict[str, list]) -> list:
     """Match a trace task_id ("k-2-d-1/task_1") to a gold entry."""
-    if task_id.count("/") >= 3:
-        task_id = "/".join(task_id.split("/")[-2:])
-    # Exact match
-    if task_id in task_gold:
-        return task_gold[task_id]
-    # Match on "{parent.name}/{stem}" from full path keys
-    for path_key in task_gold:
-        p = Path(path_key)
-        if make_task_stem_key(path_key) == task_id:
-            return task_gold[path_key]
-    return []
+    return resolve_task_value(task_id, task_gold, [])
 
 
 def compute_per_folder_discovery(
@@ -268,7 +301,7 @@ def compute_tools_discovery(
     }))
 
     for task_id, task_traces in traces.items():
-        gold_ids = set(_resolve_gold(task_id, task_gold))
+        gold_ids = set(_resolve_gold(resolve_trace_task_id(task_id, task_traces), task_gold))
         if not gold_ids:
             continue
         for rec in task_traces:

@@ -1,0 +1,19 @@
+{
+  "dataset_sequence": [
+    "hotpotqa-5add39c45542995b365faac5-battle-of-saipan",
+    "hotpotqa-5add39c45542995b365faac5-battle-of-stones-river"
+  ],
+  "source_sequence": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5add39c45542995b365faac5:Battle of Saipan",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5add39c45542995b365faac5:Battle of Stones River"
+  ],
+  "reasoning_chain_text": [
+    "1. Determine when the Battle of Saipan and the Battle of Stones River occurred.",
+    "2. Compare the two time periods and return whether the Battle of Stones River occurred before the Battle of Saipan."
+  ],
+  "original_final_question": "Did the the Battle of Stones River occur before the Battle of Saipan? Write your answer as [ANSWER].",
+  "original_reasoning_chain": [
+    "Node 1 and Node 2: The Battle of Stones River was fought from December 31, 1862, to January 2, 1863, while the Battle of Saipan was fought from 15 June to 9 July 1944, so the Battle of Stones River occurred before the Battle of Saipan. -> yes",
+    "Final answer: yes"
+  ]
+}

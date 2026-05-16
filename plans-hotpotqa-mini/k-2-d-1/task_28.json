@@ -1,0 +1,20 @@
+{
+  "dataset_sequence": [
+    "hotpotqa-5a90b4fe55429916514e7525-tum-milo-toh-sahi",
+    "hotpotqa-5a90b4fe55429916514e7525-suniel-shetty"
+  ],
+  "source_sequence": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a90b4fe55429916514e7525:Tum Milo Toh Sahi",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a90b4fe55429916514e7525:Suniel Shetty"
+  ],
+  "reasoning_chain_text": [
+    "1. Identify the relevant actor starring in Tum Milo Toh Sahi.",
+    "2. Determine how many films that actor has appeared in and return the count."
+  ],
+  "original_final_question": "How many films did the star of Tum Milo Toh Sahi appear in? Write your answer as [ANSWER].",
+  "original_reasoning_chain": [
+    "Node 1: Which Tum Milo Toh Sahi star is the relevant actor? Evidence: Tum Milo Toh Sahi: It stars Nana Patekar, Dimple Kapadia, Suniel Shetty, Vidya Malvade, Rehan Khan and Anjana Sukhani in the lead roles. -> Suniel Shetty",
+    "Node 2: How many films has Suniel Shetty acted in? Evidence: Suniel Shetty: Sunil Shetty (born 11 August 1961) is an Indian film actor, producer and entrepreneur predominantly active in Bollywood who has acted in more than 110 films. -> 110",
+    "Final answer: 110"
+  ]
+}

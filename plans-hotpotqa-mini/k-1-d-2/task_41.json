@@ -1,0 +1,19 @@
+{
+  "dataset_sequence": [
+    "hotpotqa-5ab6be2f55429954757d335c-zakk-wylde",
+    "hotpotqa-5ab6be2f55429954757d335c-damon-albarn"
+  ],
+  "source_sequence": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ab6be2f55429954757d335c:Zakk Wylde",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ab6be2f55429954757d335c:Damon Albarn"
+  ],
+  "reasoning_chain_text": [
+    "1. Determine the musical roles associated with Zakk Wylde and Damon Albarn.",
+    "2. Return the roles they have in common."
+  ],
+  "original_final_question": "Zakk Wylde and Damon Albarn are both what? Write your answer as [ANSWER].",
+  "original_reasoning_chain": [
+    "Node 1 and Node 2: Zakk Wylde and Damon Albarn are both described as singers, songwriters, and multi-instrumentalists. -> singer, songwriter, and multi-instrumentalist",
+    "Final answer: singer, songwriter, and multi-instrumentalist"
+  ]
+}

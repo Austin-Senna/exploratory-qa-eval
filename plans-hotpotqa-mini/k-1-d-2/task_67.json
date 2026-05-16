@@ -1,0 +1,19 @@
+{
+  "dataset_sequence": [
+    "hotpotqa-5ae377415542992e3233c40a-zane-grey",
+    "hotpotqa-5ae377415542992e3233c40a-bhabananda-deka"
+  ],
+  "source_sequence": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ae377415542992e3233c40a:Zane Grey",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ae377415542992e3233c40a:Bhabananda Deka"
+  ],
+  "reasoning_chain_text": [
+    "1. Determine the occupations associated with Zane Grey and Bhabananda Deka.",
+    "2. Compare those occupations and return which named author was a dentist."
+  ],
+  "original_final_question": "Which author was a dentist, Zane Grey or Bhabananda Deka? Write your answer as [ANSWER].",
+  "original_reasoning_chain": [
+    "Node 1 and Node 2: Zane Grey is described as a dentist and author, while Bhabananda Deka is described as an economist and author, so the author who was a dentist was Pearl Zane Grey. -> Pearl Zane Grey",
+    "Final answer: Pearl Zane Grey"
+  ]
+}

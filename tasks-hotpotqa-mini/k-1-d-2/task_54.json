@@ -1,0 +1,50 @@
+{
+  "question": "Which game is designed by more persons, Elfenland or San Marco? Write your answer as [ANSWER].",
+  "answer": "San Marco",
+  "nodes": {
+    "1": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ac029655542992a796decb3:Elfenland",
+      "fact": "Elfenland: Elfenland is a German-style board game designed by Alan R. Moon and published by Amigo Spiele in German and Rio Grande Games in English in 1998.",
+      "subquestion": "What relevant information is given about Elfenland?",
+      "answer": "Elfenland"
+    },
+    "2": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ac029655542992a796decb3:San Marco (board game)",
+      "fact": "San Marco (board game): San Marco is a 2001 designer board game by Alan R. Moon and Aaron Weissblum.",
+      "subquestion": "What relevant information is given about San Marco (board game)?",
+      "answer": "San Marco"
+    }
+  },
+  "reasoning_chain": [
+    "Compare the supported evidence: Node 1: Elfenland: Elfenland is a German-style board game designed by Alan R. Moon and published by Amigo Spiele in German and Rio Grande Games in English in 1998.; Node 2: San Marco (board game): San Marco is a 2001 designer board game by Alan R. Moon and Aaron Weissblum.. Final answer: San Marco",
+    "Final answer: San Marco"
+  ],
+  "datasets_used": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ac029655542992a796decb3:Elfenland",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ac029655542992a796decb3:San Marco (board game)"
+  ],
+  "reasoning_hops": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1,
+        2
+      ],
+      "reasoning": "Compare the supported evidence: Node 1: Elfenland: Elfenland is a German-style board game designed by Alan R. Moon and published by Amigo Spiele in German and Rio Grande Games in English in 1998.; Node 2: San Marco (board game): San Marco is a 2001 designer board game by Alan R. Moon and Aaron Weissblum.. Final answer: San Marco",
+      "answer": "San Marco"
+    }
+  ],
+  "_provenance": {
+    "benchmark": "hotpotqa",
+    "split": "dev_distractor",
+    "source_id": "5ac029655542992a796decb3",
+    "type": "comparison",
+    "level": "hard",
+    "promoted_from": "other-benchmarks/tasks-hotpotqa-mini/k-2-d-1/task_54.json",
+    "sample_source": "other-benchmarks/tasks/hotpotqa/k-2-d-1/task_1067.json",
+    "original_bucket": "k-2-d-1",
+    "promotion_status": "verified",
+    "promotion_rule": "curated_hotpotqa_batch_v1",
+    "source_mapping_status": "raw_anchor_temporary"
+  }
+}

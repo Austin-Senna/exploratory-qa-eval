@@ -1,0 +1,20 @@
+{
+  "dataset_sequence": [
+    "hotpotqa-5ac47763554299204fd21f5b-heythrop-park",
+    "hotpotqa-5ac47763554299204fd21f5b-charles-talbot-1st-duke-of-shrewsbury"
+  ],
+  "source_sequence": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ac47763554299204fd21f5b:Heythrop Park",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ac47763554299204fd21f5b:Charles Talbot, 1st Duke of Shrewsbury"
+  ],
+  "reasoning_chain_text": [
+    "1. Identify the original owner for whom Heythrop Park was designed.",
+    "2. Determine in whose government that owner came to prominence and return the possessive form."
+  ],
+  "original_final_question": "In whose government did the original owner of Heythrop Park come to prominence? Write your answer as [ANSWER].",
+  "original_reasoning_chain": [
+    "Node 1: For whom was Heythrop Park designed? Evidence: Heythrop Park: Heythrop Park is a Grade II* listed early 18th-century country house 1 mi southeast of Heythrop in Oxfordshire. It was designed by the architect Thomas Archer in the Baroque style for Charles Talbot, 1st Duke of Shrewsbury. -> Charles Talbot, 1st Duke of Shrewsbury",
+    "Node 2: In whose government did that original Heythrop Park owner come to prominence? Evidence: Charles Talbot, 1st Duke of Shrewsbury: Charles Talbot, 1st Duke of Shrewsbury, KG, PC (24 July 1660 – 1 February 1718) was an English politician who was part of the 'Immortal Seven' group that invited William III, Prince of Orange to depose James II of England as monarch during the Glorious Revolution. He was appointed to several minor roles before the revolution, but came to prominence as a member of William's government. -> William's",
+    "Final answer: William's"
+  ]
+}

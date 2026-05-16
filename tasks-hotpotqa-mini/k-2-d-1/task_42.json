@@ -1,0 +1,58 @@
+{
+  "question": "In 2009 the OCA announced major changes to it event lists, and in what city did this multi-sport event take place? Write your answer as [ANSWER].",
+  "answer": "New Delhi, India",
+  "nodes": {
+    "1": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ac2bcf55542990b17b1546e:Asian Games sports",
+      "fact": "Asian Games sports: This is a list of sports played in the Asian Games and other major affiliated games organised by the Olympic Council of Asia. On 29 June 2009, the OCA announced major changes to the event lists in the five major events.",
+      "subquestion": "Which multi-sport event had OCA event-list changes announced in 2009?",
+      "answer": "Asian Games"
+    },
+    "2": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ac2bcf55542990b17b1546e:1951 Asian Games",
+      "fact": "1951 Asian Games: The 1951 Asian Games, officially known as the First Asian Games, was a multi-sport event celebrated in New Delhi, India from 4 to 11 March 1951.",
+      "subquestion": "In what city did the First Asian Games take place?",
+      "answer": "New Delhi, India"
+    }
+  },
+  "reasoning_chain": [
+    "Node 1: Which multi-sport event had OCA event-list changes announced in 2009? Evidence: Asian Games sports: This is a list of sports played in the Asian Games and other major affiliated games organised by the Olympic Council of Asia. On 29 June 2009, the OCA announced major changes to the event lists in the five major events. -> Asian Games",
+    "Node 2: In what city did the First Asian Games take place? Evidence: 1951 Asian Games: The 1951 Asian Games, officially known as the First Asian Games, was a multi-sport event celebrated in New Delhi, India from 4 to 11 March 1951. -> New Delhi, India",
+    "Final answer: New Delhi, India"
+  ],
+  "datasets_used": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ac2bcf55542990b17b1546e:Asian Games sports",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ac2bcf55542990b17b1546e:1951 Asian Games"
+  ],
+  "reasoning_hops": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1
+      ],
+      "reasoning": "Node 1: Which multi-sport event had OCA event-list changes announced in 2009? Evidence: Asian Games sports: This is a list of sports played in the Asian Games and other major affiliated games organised by the Olympic Council of Asia. On 29 June 2009, the OCA announced major changes to the event lists in the five major events. -> Asian Games",
+      "answer": "Asian Games"
+    },
+    {
+      "hop": 2,
+      "node_ids": [
+        2
+      ],
+      "reasoning": "Node 2: In what city did the First Asian Games take place? Evidence: 1951 Asian Games: The 1951 Asian Games, officially known as the First Asian Games, was a multi-sport event celebrated in New Delhi, India from 4 to 11 March 1951. -> New Delhi, India",
+      "answer": "New Delhi, India"
+    }
+  ],
+  "_provenance": {
+    "benchmark": "hotpotqa",
+    "split": "dev_distractor",
+    "source_id": "5ac2bcf55542990b17b1546e",
+    "type": "bridge",
+    "level": "hard",
+    "promoted_from": "other-benchmarks/tasks-hotpotqa-mini/k-2-d-2/task_47.json",
+    "sample_source": "other-benchmarks/tasks/hotpotqa/k-2-d-2/task_4102.json",
+    "original_bucket": "k-2-d-2",
+    "promotion_status": "verified",
+    "promotion_rule": "curated_hotpotqa_batch_v1",
+    "source_mapping_status": "raw_anchor_temporary"
+  }
+}

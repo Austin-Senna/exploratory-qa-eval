@@ -1,0 +1,115 @@
+
+=== Preflight (5/5 passed) ===
+  [OK  ] prompt:managed.txt — found: prompts/managed.txt
+  [OK  ] prompt:search_ideal.txt — found: prompts/search_ideal.txt
+  [OK  ] plan:tasks-mini-kramabench/k-2-d-1-s-2/task_1.json — plan loads and validates
+  [OK  ] kramabench_descriptions.jsonl (ideal enrichment load) — loaded 0 URI entries
+  [OK  ] tasks_mini plan source description coverage — kramabench description artifact is a stub; skipped coverage for 2 planned source(s)
+Preflight OK
+
+INFO | strands_evaluation.helper.logger | Logging to: log-kramabench/modes/openai_gpt-5.4-nano-none/search_i_results_n_pland_skills_off/tasks-mini-kramabench/k-2-d-1-s-2/task_1.log
+INFO | strands_evaluation.agent_with_mode | Starting task 1: What is the age of the non-excluded endometrioid or serous patient whose APP-Z s...
+INFO | strands_evaluation.agent_with_mode | ============================================================
+INFO | strands_evaluation.agent_with_mode | NEW TASK: gpt-5.4-nano
+INFO | strands_evaluation.agent_with_mode | ============================================================
+INFO | strands_evaluation.agent_with_mode | Ablation modes active: search_tool=ideal search_results=naive agent_management=standard plan_skills=off
+INFO | strands_evaluation.instrumentation.agent_plugins | 
+--- Turn 1 (elapsed: 0.0s) ---
+WARNING | strands_evaluation.instrumentation.agent_plugins | Model response #1 failed: BadRequestError: Error code: 400 - {'error': {'message': 'Function tools with reasoning_effort are not supported for gpt-5.4-nano in /v1/chat/completions. Please use /v1/responses instead.', 'type': 'invalid_request_error', 'param': 'reasoning_effort', 'code': None}}
+ERROR | strands_evaluation.agent_with_mode | Agent crashed after 0 tool starts (1.0s): BadRequestError: Error code: 400 - {'error': {'message': 'Function tools with reasoning_effort are not supported for gpt-5.4-nano in /v1/chat/completions. Please use /v1/responses instead.', 'type': 'invalid_request_error', 'param': 'reasoning_effort', 'code': None}}
+Traceback (most recent call last):
+  File "/Users/austinsenna/Documents/projects/daplab/exploratory-qa-eval/strands_evaluation/agent_with_mode.py", line 807, in run
+    outcome = invoke_with_watchdog(
+        agent,
+    ...<3 lines>...
+        submit_grace_seconds=self.run_config.submit_grace_seconds,
+    )
+  File "/Users/austinsenna/Documents/projects/daplab/exploratory-qa-eval/strands_evaluation/helper/agent_runtime.py", line 53, in invoke_with_watchdog
+    response = agent(prompt)
+  File "/Users/austinsenna/Documents/projects/daplab/exploratory-qa-eval/.venv/lib/python3.14/site-packages/strands/agent/agent.py", line 455, in __call__
+    return run_async(
+        lambda: self.invoke_async(
+    ...<5 lines>...
+        )
+    )
+  File "/Users/austinsenna/Documents/projects/daplab/exploratory-qa-eval/.venv/lib/python3.14/site-packages/strands/_async.py", line 34, in run_async
+    return future.result()
+           ~~~~~~~~~~~~~^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/concurrent/futures/_base.py", line 450, in result
+    return self.__get_result()
+           ~~~~~~~~~~~~~~~~~^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/concurrent/futures/_base.py", line 395, in __get_result
+    raise self._exception
+  File "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/concurrent/futures/thread.py", line 86, in run
+    result = ctx.run(self.task)
+  File "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/concurrent/futures/thread.py", line 73, in run
+    return fn(*args, **kwargs)
+  File "/Users/austinsenna/Documents/projects/daplab/exploratory-qa-eval/.venv/lib/python3.14/site-packages/opentelemetry/instrumentation/threading/__init__.py", line 172, in wrapped_func
+    return original_func(*func_args, **func_kwargs)
+  File "/Users/austinsenna/Documents/projects/daplab/exploratory-qa-eval/.venv/lib/python3.14/site-packages/strands/_async.py", line 29, in execute
+    return asyncio.run(execute_async())
+           ~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/asyncio/runners.py", line 204, in run
+    return runner.run(main)
+           ~~~~~~~~~~^^^^^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/asyncio/runners.py", line 127, in run
+    return self._loop.run_until_complete(task)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/asyncio/base_events.py", line 719, in run_until_complete
+    return future.result()
+           ~~~~~~~~~~~~~^^
+  File "/Users/austinsenna/Documents/projects/daplab/exploratory-qa-eval/.venv/lib/python3.14/site-packages/strands/_async.py", line 26, in execute_async
+    return await async_func()
+           ^^^^^^^^^^^^^^^^^^
+  File "/Users/austinsenna/Documents/projects/daplab/exploratory-qa-eval/.venv/lib/python3.14/site-packages/strands/agent/agent.py", line 508, in invoke_async
+    async for event in events:
+        _ = event
+  File "/Users/austinsenna/Documents/projects/daplab/exploratory-qa-eval/.venv/lib/python3.14/site-packages/strands/agent/agent.py", line 774, in stream_async
+    async for event in events:
+    ...<5 lines>...
+            yield as_dict
+  File "/Users/austinsenna/Documents/projects/daplab/exploratory-qa-eval/.venv/lib/python3.14/site-packages/strands/agent/agent.py", line 840, in _run_loop
+    async for event in events:
+    ...<14 lines>...
+        yield event
+  File "/Users/austinsenna/Documents/projects/daplab/exploratory-qa-eval/.venv/lib/python3.14/site-packages/strands/agent/agent.py", line 906, in _execute_event_loop_cycle
+    async for event in events:
+        yield event
+  File "/Users/austinsenna/Documents/projects/daplab/exploratory-qa-eval/.venv/lib/python3.14/site-packages/strands/event_loop/event_loop.py", line 155, in event_loop_cycle
+    async for model_event in model_events:
+        if not isinstance(model_event, ModelStopReason):
+            yield model_event
+  File "/Users/austinsenna/Documents/projects/daplab/exploratory-qa-eval/.venv/lib/python3.14/site-packages/strands/event_loop/event_loop.py", line 401, in _handle_model_execution
+    raise e
+  File "/Users/austinsenna/Documents/projects/daplab/exploratory-qa-eval/.venv/lib/python3.14/site-packages/strands/event_loop/event_loop.py", line 331, in _handle_model_execution
+    async for event in stream_messages(
+    ...<9 lines>...
+        yield event
+  File "/Users/austinsenna/Documents/projects/daplab/exploratory-qa-eval/.venv/lib/python3.14/site-packages/strands/event_loop/streaming.py", line 485, in stream_messages
+    async for event in process_stream(chunks, start_time, cancel_signal):
+        yield event
+  File "/Users/austinsenna/Documents/projects/daplab/exploratory-qa-eval/.venv/lib/python3.14/site-packages/strands/event_loop/streaming.py", line 401, in process_stream
+    async for chunk in chunks:
+    ...<35 lines>...
+            handle_redact_content(chunk["redactContent"], state)
+  File "/Users/austinsenna/Documents/projects/daplab/exploratory-qa-eval/.venv/lib/python3.14/site-packages/strands/models/openai.py", line 610, in stream
+    response = await client.chat.completions.create(**request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/austinsenna/Documents/projects/daplab/exploratory-qa-eval/.venv/lib/python3.14/site-packages/openai/resources/chat/completions/completions.py", line 2714, in create
+    return await self._post(
+           ^^^^^^^^^^^^^^^^^
+    ...<49 lines>...
+    )
+    ^
+  File "/Users/austinsenna/Documents/projects/daplab/exploratory-qa-eval/.venv/lib/python3.14/site-packages/openai/_base_client.py", line 1913, in post
+    return await self.request(cast_to, opts, stream=stream, stream_cls=stream_cls)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/austinsenna/Documents/projects/daplab/exploratory-qa-eval/.venv/lib/python3.14/site-packages/openai/_base_client.py", line 1698, in request
+    raise self._make_status_error_from_response(err.response) from None
+openai.BadRequestError: Error code: 400 - {'error': {'message': 'Function tools with reasoning_effort are not supported for gpt-5.4-nano in /v1/chat/completions. Please use /v1/responses instead.', 'type': 'invalid_request_error', 'param': 'reasoning_effort', 'code': None}}
+WARNING | strands_evaluation.agent_with_mode | Task 1 finished with failure: BadRequestError: Error code: 400 - {'error': {'message': 'Function tools with reasoning_effort are not supported for gpt-5.4-nano in /v1/chat/completions. Please use /v1/responses instead.', 'type': 'invalid_request_error', 'param': 'reasoning_effort', 'code': None}}
+Resolved command: python -m strands_evaluation.run_mode_eval --search_tool ideal --search_results naive --plans standard --model-name openai/gpt-5.4-nano --condition baseline --db-path lance_data --benchmark kramabench --reasoning-effort none --parallel 1 --timeout 180 --submit-grace-seconds 5 --task-dir tasks-mini-kramabench/k-2-d-1-s-2 --tasks-per-dir 2 --logs-output-dir log-kramabench --results-output-dir results-kramabench
+Lance DB: lance_data
+Task scope: tasks-mini-kramabench/k-2-d-1-s-2 (first 2 tasks)
+Logs root: log-kramabench
+Results root: results-kramabench

@@ -1,0 +1,58 @@
+{
+  "question": "Where's Officer Tuba? is a comedy film that stars which Hong Kong-based actress? Write your answer as [ANSWER].",
+  "answer": "Joey Wong Cho-Yee",
+  "nodes": {
+    "1": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ac538025542996feb3fea41:Where's Officer Tuba?",
+      "fact": "Where's Officer Tuba?: is a 1986 Hong Kong action comedy film directed by Philip Chan and Ricky Lau and starring Sammo Hung, David Chiang, Jacky Cheung and Joey Wong.",
+      "subquestion": "Which actress starred in the comedy film Where's Officer Tuba?",
+      "answer": "Joey Wong"
+    },
+    "2": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ac538025542996feb3fea41:Joey Wong",
+      "fact": "Joey Wong: Joey Wong Cho-Yee (AKA Joey Wang, Wang Tsu Hsien, or Joey Ong Jyo Han/Hen) (, born January 31, 1967) is a Hong Kong based Taiwanese-born actress.",
+      "subquestion": "What full name identifies that Hong Kong-based actress?",
+      "answer": "Joey Wong Cho-Yee"
+    }
+  },
+  "reasoning_chain": [
+    "Node 1: Which actress starred in the comedy film Where's Officer Tuba? Evidence: Where's Officer Tuba?: is a 1986 Hong Kong action comedy film directed by Philip Chan and Ricky Lau and starring Sammo Hung, David Chiang, Jacky Cheung and Joey Wong. -> Joey Wong",
+    "Node 2: What full name identifies that Hong Kong-based actress? Evidence: Joey Wong: Joey Wong Cho-Yee (AKA Joey Wang, Wang Tsu Hsien, or Joey Ong Jyo Han/Hen) (, born January 31, 1967) is a Hong Kong based Taiwanese-born actress. -> Joey Wong Cho-Yee",
+    "Final answer: Joey Wong Cho-Yee"
+  ],
+  "datasets_used": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ac538025542996feb3fea41:Where's Officer Tuba?",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ac538025542996feb3fea41:Joey Wong"
+  ],
+  "reasoning_hops": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1
+      ],
+      "reasoning": "Node 1: Which actress starred in the comedy film Where's Officer Tuba? Evidence: Where's Officer Tuba?: is a 1986 Hong Kong action comedy film directed by Philip Chan and Ricky Lau and starring Sammo Hung, David Chiang, Jacky Cheung and Joey Wong. -> Joey Wong",
+      "answer": "Joey Wong"
+    },
+    {
+      "hop": 2,
+      "node_ids": [
+        2
+      ],
+      "reasoning": "Node 2: What full name identifies that Hong Kong-based actress? Evidence: Joey Wong: Joey Wong Cho-Yee (AKA Joey Wang, Wang Tsu Hsien, or Joey Ong Jyo Han/Hen) (, born January 31, 1967) is a Hong Kong based Taiwanese-born actress. -> Joey Wong Cho-Yee",
+      "answer": "Joey Wong Cho-Yee"
+    }
+  ],
+  "_provenance": {
+    "benchmark": "hotpotqa",
+    "split": "dev_distractor",
+    "source_id": "5ac538025542996feb3fea41",
+    "type": "bridge",
+    "level": "hard",
+    "promoted_from": "other-benchmarks/tasks-hotpotqa-mini/k-2-d-2/task_51.json",
+    "sample_source": "other-benchmarks/tasks/hotpotqa/k-2-d-2/task_4311.json",
+    "original_bucket": "k-2-d-2",
+    "promotion_status": "verified",
+    "promotion_rule": "curated_hotpotqa_batch_v1",
+    "source_mapping_status": "raw_anchor_temporary"
+  }
+}

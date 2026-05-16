@@ -1,0 +1,19 @@
+{
+  "dataset_sequence": [
+    "hotpotqa-5add1eed5542992ae4cec485-spirit-of-the-west",
+    "hotpotqa-5add1eed5542992ae4cec485-big-pig"
+  ],
+  "source_sequence": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5add1eed5542992ae4cec485:Spirit of the West",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5add1eed5542992ae4cec485:Big Pig"
+  ],
+  "reasoning_chain_text": [
+    "1. Determine the active years for Spirit of the West and Big Pig.",
+    "2. Compare the durations and return the band with the longer active period."
+  ],
+  "original_final_question": "Which band was active the longest, Spirit of the West or Big Pig? Write your answer as [ANSWER].",
+  "original_reasoning_chain": [
+    "Node 1 and Node 2: Spirit of the West was active from 1983 to 2016, while Big Pig existed from 1985 to 1991, so Spirit of the West was active longer. -> Spirit of the West",
+    "Final answer: Spirit of the West"
+  ]
+}

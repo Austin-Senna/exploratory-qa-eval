@@ -1,0 +1,19 @@
+{
+  "dataset_sequence": [
+    "hotpotqa-5ae0ba15554299603e41844d-manglietia",
+    "hotpotqa-5ae0ba15554299603e41844d-abronia-plant"
+  ],
+  "source_sequence": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ae0ba15554299603e41844d:Manglietia",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ae0ba15554299603e41844d:Abronia (plant)"
+  ],
+  "reasoning_chain_text": [
+    "1. Determine the species count and native region described for Manglietia and Abronia.",
+    "2. Compare the plant descriptions and return which plant has about 40 species native to Asia."
+  ],
+  "original_final_question": "What plant has about 40 species native to Asia, Manglietia or Abronia? Write your answer as [ANSWER].",
+  "original_reasoning_chain": [
+    "Compare the supported evidence: Node 1: Manglietia: Manglietia is a genus of flowering plants in the family Magnoliaceae. There are about 40 species native to Asia.; Node 2: Abronia (plant): Abronia, the sand-verbenas or wild lantanas, is a genus of about 20 species of annual or perennial herbaceous plants in the family Nyctaginaceae.. Final answer: Manglietia",
+    "Final answer: Manglietia"
+  ]
+}

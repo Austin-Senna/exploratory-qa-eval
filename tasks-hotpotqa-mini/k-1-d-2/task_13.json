@@ -1,0 +1,50 @@
+{
+  "question": "Who was born first, George Kuchar or Arthur Penn? Write your answer as [ANSWER].",
+  "answer": "Arthur Hiller Penn",
+  "nodes": {
+    "1": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a7bb2595542995eb53be99b:George Kuchar",
+      "fact": "George Kuchar: George Kuchar (August 31, 1942 - September 6, 2011) was an American underground film director and video artist, known for his low-fi aesthetic.",
+      "subquestion": "When was George Kuchar born?",
+      "answer": "August 31, 1942"
+    },
+    "2": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a7bb2595542995eb53be99b:Arthur Penn",
+      "fact": "Arthur Penn: Arthur Hiller Penn (September 27, 1922 - September 28, 2010) was an American director and producer of film, television and theater.",
+      "subquestion": "When was Arthur Penn born?",
+      "answer": "September 27, 1922"
+    }
+  },
+  "reasoning_chain": [
+    "Node 1 and Node 2: George Kuchar was born on August 31, 1942, while Arthur Penn was born on September 27, 1922, so Arthur Hiller Penn was born first. -> Arthur Hiller Penn",
+    "Final answer: Arthur Hiller Penn"
+  ],
+  "datasets_used": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a7bb2595542995eb53be99b:George Kuchar",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a7bb2595542995eb53be99b:Arthur Penn"
+  ],
+  "reasoning_hops": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1,
+        2
+      ],
+      "reasoning": "Node 1 and Node 2: George Kuchar was born on August 31, 1942, while Arthur Penn was born on September 27, 1922, so Arthur Hiller Penn was born first. -> Arthur Hiller Penn",
+      "answer": "Arthur Hiller Penn"
+    }
+  ],
+  "_provenance": {
+    "benchmark": "hotpotqa",
+    "split": "dev_distractor",
+    "source_id": "5a7bb2595542995eb53be99b",
+    "type": "comparison",
+    "level": "hard",
+    "promoted_from": "other-benchmarks/tasks-hotpotqa-mini/k-2-d-1/task_13.json",
+    "sample_source": "other-benchmarks/tasks/hotpotqa/k-2-d-1/task_285.json",
+    "original_bucket": "k-2-d-1",
+    "promotion_status": "verified",
+    "promotion_rule": "curated_hotpotqa_batch_v1",
+    "source_mapping_status": "raw_anchor_temporary"
+  }
+}

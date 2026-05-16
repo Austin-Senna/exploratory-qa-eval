@@ -1,0 +1,20 @@
+{
+  "dataset_sequence": [
+    "hotpotqa-5ae1d1995542997283cd226c-additi-gupta",
+    "hotpotqa-5ae1d1995542997283cd226c-ishqbaaaz"
+  ],
+  "source_sequence": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ae1d1995542997283cd226c:Additi Gupta",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ae1d1995542997283cd226c:Ishqbaaaz"
+  ],
+  "reasoning_chain_text": [
+    "1. Identify the Star Plus drama associated with Additi Gupta's known negative roles.",
+    "2. Determine what country that drama series is associated with and return the country adjective."
+  ],
+  "original_final_question": "Additi Gupta is known for negative roles in the drama series that broadcasts on what country's Star Plus network? Write your answer as [ANSWER].",
+  "original_reasoning_chain": [
+    "Node 1: Which Star Plus drama is one of Additi Gupta's known negative roles? Evidence: Additi Gupta: She is also known for her negative roles in Pardes Mein Hai Mera Dil and Star Plus's Ishqbaaz. -> Star Plus's Ishqbaaz",
+    "Node 2: What country is the drama series Ishqbaaaz associated with? Evidence: Ishqbaaaz: Ishqbaaaz (English: \"Lovers\") is an Indian drama television series which is broadcast on Star Plus. -> Indian",
+    "Final answer: Indian"
+  ]
+}

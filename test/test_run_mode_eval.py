@@ -166,6 +166,11 @@ class RunModeEvalTests(unittest.TestCase):
 
         self.assertEqual(label, "search_p_results_i_pland_skills_on")
 
+    def test_benchmark_choices_include_supported_external_benchmarks(self):
+        self.assertIn("kramabench", run_mode_eval._BENCHMARK_CHOICES)
+        self.assertIn("hotpotqa", run_mode_eval._BENCHMARK_CHOICES)
+        self.assertIn("lakeqa", run_mode_eval._BENCHMARK_CHOICES)
+
     def test_skills_on_rejects_naive_plans_axis(self):
         with self.assertRaisesRegex(ValueError, "--skills on requires --plans standard or --plans ideal"):
             run_mode_eval._validate_axis_combination(agent_management="naive", skills="on")

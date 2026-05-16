@@ -1,0 +1,50 @@
+{
+  "question": "Were the films Tonka and 101 Dalmatians released in the same decade? Write your answer as [ANSWER].",
+  "answer": "no",
+  "nodes": {
+    "1": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a886211554299206df2b24a:Tonka (film)",
+      "fact": "Tonka (film): Tonka is a 1958 Walt Disney Western adventure film about the US cavalry horse that survived the Battle of the Little Big Horn.",
+      "subquestion": "When was the film Tonka released?",
+      "answer": "1958"
+    },
+    "2": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a886211554299206df2b24a:101 Dalmatians (1996 film)",
+      "fact": "101 Dalmatians (1996 film): 101 Dalmatians is a 1996 American live-action comedy adventure film based on Walt Disney's animated 1961 movie adaptation.",
+      "subquestion": "When was the live-action film 101 Dalmatians released?",
+      "answer": "1996"
+    }
+  },
+  "reasoning_chain": [
+    "Node 1 and Node 2: Tonka was released in 1958, while the live-action 101 Dalmatians was released in 1996, so they were not released in the same decade. -> no",
+    "Final answer: no"
+  ],
+  "datasets_used": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a886211554299206df2b24a:Tonka (film)",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a886211554299206df2b24a:101 Dalmatians (1996 film)"
+  ],
+  "reasoning_hops": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1,
+        2
+      ],
+      "reasoning": "Node 1 and Node 2: Tonka was released in 1958, while the live-action 101 Dalmatians was released in 1996, so they were not released in the same decade. -> no",
+      "answer": "no"
+    }
+  ],
+  "_provenance": {
+    "benchmark": "hotpotqa",
+    "split": "dev_distractor",
+    "source_id": "5a886211554299206df2b24a",
+    "type": "comparison",
+    "level": "hard",
+    "promoted_from": "other-benchmarks/tasks-hotpotqa-mini/k-2-d-1/task_29.json",
+    "sample_source": "other-benchmarks/tasks/hotpotqa/k-2-d-1/task_575.json",
+    "original_bucket": "k-2-d-1",
+    "promotion_status": "verified",
+    "promotion_rule": "curated_hotpotqa_batch_v1",
+    "source_mapping_status": "raw_anchor_temporary"
+  }
+}

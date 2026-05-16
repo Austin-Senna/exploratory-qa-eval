@@ -1,0 +1,19 @@
+{
+  "dataset_sequence": [
+    "hotpotqa-5ab42e55554299753aec5a53-san-marco-board-game",
+    "hotpotqa-5ab42e55554299753aec5a53-medina-board-game"
+  ],
+  "source_sequence": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ab42e55554299753aec5a53:San Marco (board game)",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ab42e55554299753aec5a53:Medina (board game)"
+  ],
+  "reasoning_chain_text": [
+    "1. Determine what type of game San Marco and Medina are each described as.",
+    "2. Return the shared game type."
+  ],
+  "original_final_question": "San Marco and Medina are both what type of game? Write your answer as [ANSWER].",
+  "original_reasoning_chain": [
+    "Node 1 and Node 2: San Marco is described as a designer board game, and Medina is described as a board game, so both are board games. -> board game",
+    "Final answer: board game"
+  ]
+}

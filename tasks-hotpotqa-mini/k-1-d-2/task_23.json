@@ -1,0 +1,50 @@
+{
+  "question": "Which tower is taller, 712 Fifth Avenue or Manhattan Life Insurance Building? Write your answer as [ANSWER].",
+  "answer": "712 5th Avenue",
+  "nodes": {
+    "1": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a834ed95542990548d0b1ca:712 Fifth Avenue",
+      "fact": "712 Fifth Avenue: 712 5th Avenue is a 650 ft skyscraper at 56th Street and Fifth Avenue in the Midtown neighborhood of Manhattan, New York City.",
+      "subquestion": "How tall is 712 Fifth Avenue?",
+      "answer": "650 ft"
+    },
+    "2": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a834ed95542990548d0b1ca:Manhattan Life Insurance Building",
+      "fact": "Manhattan Life Insurance Building: The Manhattan Life Insurance Building was a 348 ft tower at 64-66 Broadway in New York City.",
+      "subquestion": "How tall was the Manhattan Life Insurance Building?",
+      "answer": "348 ft"
+    }
+  },
+  "reasoning_chain": [
+    "Node 1 and Node 2: 712 Fifth Avenue is 650 ft tall, while the Manhattan Life Insurance Building was 348 ft tall, so 712 5th Avenue is taller. -> 712 5th Avenue",
+    "Final answer: 712 5th Avenue"
+  ],
+  "datasets_used": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a834ed95542990548d0b1ca:712 Fifth Avenue",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a834ed95542990548d0b1ca:Manhattan Life Insurance Building"
+  ],
+  "reasoning_hops": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1,
+        2
+      ],
+      "reasoning": "Node 1 and Node 2: 712 Fifth Avenue is 650 ft tall, while the Manhattan Life Insurance Building was 348 ft tall, so 712 5th Avenue is taller. -> 712 5th Avenue",
+      "answer": "712 5th Avenue"
+    }
+  ],
+  "_provenance": {
+    "benchmark": "hotpotqa",
+    "split": "dev_distractor",
+    "source_id": "5a834ed95542990548d0b1ca",
+    "type": "comparison",
+    "level": "hard",
+    "promoted_from": "other-benchmarks/tasks-hotpotqa-mini/k-2-d-1/task_23.json",
+    "sample_source": "other-benchmarks/tasks/hotpotqa/k-2-d-1/task_459.json",
+    "original_bucket": "k-2-d-1",
+    "promotion_status": "verified",
+    "promotion_rule": "curated_hotpotqa_batch_v1",
+    "source_mapping_status": "raw_anchor_temporary"
+  }
+}

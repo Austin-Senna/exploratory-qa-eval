@@ -1,0 +1,20 @@
+{
+  "dataset_sequence": [
+    "hotpotqa-5abd09585542996e802b469b-once-film",
+    "hotpotqa-5abd09585542996e802b469b-once-musical"
+  ],
+  "source_sequence": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5abd09585542996e802b469b:Once (film)",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5abd09585542996e802b469b:Once (musical)"
+  ],
+  "reasoning_chain_text": [
+    "1. Identify the 2007 Irish romantic musical film that the musical is based on.",
+    "2. Determine the year that the musical based on that film premiered and return the year."
+  ],
+  "original_final_question": "What year did the musical premiere that was based on the 2007 Irish romantic musical film of the same name? Write your answer as [ANSWER].",
+  "original_reasoning_chain": [
+    "Node 1: Which 2007 Irish romantic musical film by John Carney is the musical based on? Evidence: Once (film): Once is a 2007 Irish romantic musical film written and directed by John Carney. -> Once",
+    "Node 2: What year did the musical based on that film premiere? Evidence: Once (musical): Once is a musical based on the 2007 film of the same name by John Carney. The musical premiered at the New York Theatre Workshop in 2011, before transferring to Broadway in 2012. -> 2011",
+    "Final answer: 2011"
+  ]
+}

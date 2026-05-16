@@ -1,0 +1,20 @@
+{
+  "dataset_sequence": [
+    "hotpotqa-5ac538025542996feb3fea41-wheres-officer-tuba",
+    "hotpotqa-5ac538025542996feb3fea41-joey-wong"
+  ],
+  "source_sequence": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ac538025542996feb3fea41:Where's Officer Tuba?",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ac538025542996feb3fea41:Joey Wong"
+  ],
+  "reasoning_chain_text": [
+    "1. Identify the actress who starred in the comedy film named in the question.",
+    "2. Determine the full name used for that Hong Kong-based actress and return it."
+  ],
+  "original_final_question": "Where's Officer Tuba? is a comedy film that stars which Hong Kong-based actress? Write your answer as [ANSWER].",
+  "original_reasoning_chain": [
+    "Node 1: Which actress starred in the comedy film Where's Officer Tuba? Evidence: Where's Officer Tuba?: is a 1986 Hong Kong action comedy film directed by Philip Chan and Ricky Lau and starring Sammo Hung, David Chiang, Jacky Cheung and Joey Wong. -> Joey Wong",
+    "Node 2: What full name identifies that Hong Kong-based actress? Evidence: Joey Wong: Joey Wong Cho-Yee (AKA Joey Wang, Wang Tsu Hsien, or Joey Ong Jyo Han/Hen) (, born January 31, 1967) is a Hong Kong based Taiwanese-born actress. -> Joey Wong Cho-Yee",
+    "Final answer: Joey Wong Cho-Yee"
+  ]
+}

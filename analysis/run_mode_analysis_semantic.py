@@ -77,6 +77,7 @@ from analysis.search_bottleneck import (
 from analysis.search_depth import _BINS as _SEARCH_DEPTH_BINS
 from analysis.search_depth import _assign_bin as _assign_search_depth_bin
 from analysis.tool_error_analysis import _DATA_TOOLS
+from analysis.run_mode_delta_figures import generate_delta_figures
 
 
 SEMANTIC_BUCKETS = [
@@ -505,6 +506,7 @@ def _normalize_eval_row(row: dict, model: str, variant: str, csv_path: Path) -> 
     normalized["log_error_bucket_display"] = _normalize_log_error_bucket(row.get("log_error_bucket", ""))
 
     normalized["_cm_key"] = key
+    normalized["_exact_match"] = as_float(row.get("exact_match"))
     normalized["_semantic_match"] = semantic_match
     normalized["_runtime_seconds"] = as_float(row.get("runtime_seconds"))
     normalized["_input_tokens"] = as_float(row.get("input_tokens"))
@@ -1079,6 +1081,8 @@ def build_summary(
             "k": axes["k"],
             "sc": axes["sc"],
             "n": n,
+            "em": _round_or_none(_mean([record.get("_exact_match", 0.0) for record in records])),
+            "exact_match": _round_or_none(_mean([record.get("_exact_match", 0.0) for record in records])),
             "semantic_match": _round_or_none(_mean([record["_semantic_match"] for record in records])),
             "avg_runtime_seconds": _round_or_none(_mean([record["_runtime_seconds"] for record in records])),
             "avg_input_tokens": _round_or_none(_mean([record["_input_tokens"] for record in records])),
@@ -1219,6 +1223,8 @@ def build_variant_summary(summary_rows: List[dict]) -> List[dict]:
             "n_total": total_n,
             "num_model_rows": len(rows),
             "models": sorted({str(row.get("model", "")) for row in rows if row.get("model")}),
+            "em": _round_or_none(_weighted_avg(rows, "em")),
+            "exact_match": _round_or_none(_weighted_avg(rows, "exact_match")),
             "semantic_match": _round_or_none(_weighted_avg(rows, "semantic_match")),
             "D_ret": _round_or_none(_weighted_avg(rows, "D_ret")),
             "D_ret_precision": _round_or_none(_weighted_avg(rows, "D_ret_precision")),
@@ -1676,10 +1682,115 @@ def write_json(path: Path, data: object) -> None:
 
 
 def write_csv(path: Path, rows: List[dict], fieldnames: List[str]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", newline="") as handle:
-        writer = csv.DictWriter(handle, fieldnames=fieldnames)
+        writer = csv.DictWriter(handle, fieldnames=fieldnames, extrasaction="ignore")
         writer.writeheader()
         writer.writerows(rows)
+
+
+def _model_output_dirname(model: str) -> str:
+    return str(model).replace("/", "__") or "unknown"
+
+
+def _row_models(row: dict) -> List[str]:
+    model = row.get("model") or row.get("model_dir")
+    if model:
+        return [str(model)]
+    condition_model = row.get("condition_model")
+    if condition_model:
+        return [_split_cm_key(str(condition_model))[0]]
+    models = row.get("models")
+    if isinstance(models, list):
+        return [str(value) for value in models]
+    if isinstance(models, str) and models:
+        return [part.strip() for part in models.split(",") if part.strip()]
+    return []
+
+
+def _row_belongs_to_model(row: dict, model: str) -> bool:
+    models = _row_models(row)
+    return not models or model in models
+
+
+def _filter_rows_for_model(rows: List[dict], model: str) -> List[dict]:
+    out: List[dict] = []
+    for row in rows:
+        if not _row_belongs_to_model(row, model):
+            continue
+        filtered = dict(row)
+        if isinstance(filtered.get("models"), list):
+            filtered["models"] = [model]
+        elif isinstance(filtered.get("models"), str) and filtered.get("models"):
+            filtered["models"] = model
+        if "num_condition_model_rows" in filtered:
+            filtered["num_condition_model_rows"] = 1
+        out.append(filtered)
+    return out
+
+
+def _filter_json_for_model(filename: str, data: object, model: str, summary_rows: List[dict]) -> object:
+    if filename == "summary.json":
+        return summary_rows
+    if filename == "variant_summary.json":
+        return build_variant_summary(summary_rows)
+    if isinstance(data, dict):
+        filtered = {
+            key: value
+            for key, value in data.items()
+            if _split_cm_key(str(key))[0] == model
+        }
+        if filtered:
+            return filtered
+        return data
+    if isinstance(data, list):
+        return _filter_rows_for_model([row for row in data if isinstance(row, dict)], model)
+    return data
+
+
+def _models_from_outputs(files: Dict[str, object], csv_outputs: Dict[str, Tuple[List[dict], List[str]]]) -> List[str]:
+    models = set()
+    summary = files.get("summary.json")
+    if isinstance(summary, list):
+        for row in summary:
+            if isinstance(row, dict):
+                models.update(_row_models(row))
+    for rows, _fieldnames in csv_outputs.values():
+        for row in rows:
+            models.update(_row_models(row))
+    for data in files.values():
+        if isinstance(data, dict):
+            for key in data:
+                model, _variant = _split_cm_key(str(key))
+                if model != "unknown":
+                    models.add(model)
+        elif isinstance(data, list):
+            for row in data:
+                if isinstance(row, dict):
+                    models.update(_row_models(row))
+    return sorted(models)
+
+
+def write_per_model_outputs(
+    out_dir: Path,
+    files: Dict[str, object],
+    csv_outputs: Dict[str, Tuple[List[dict], List[str]]],
+) -> None:
+    models = _models_from_outputs(files, csv_outputs)
+    summary = files.get("summary.json")
+    all_summary_rows = summary if isinstance(summary, list) else []
+
+    for model in models:
+        model_dir = out_dir / "by_model" / _model_output_dirname(model)
+        model_dir.mkdir(parents=True, exist_ok=True)
+        summary_rows = _filter_rows_for_model(
+            [row for row in all_summary_rows if isinstance(row, dict)],
+            model,
+        )
+        for filename, data in files.items():
+            write_json(model_dir / filename, _filter_json_for_model(filename, data, model, summary_rows))
+        for filename, (rows, fieldnames) in csv_outputs.items():
+            write_csv(model_dir / filename, _filter_rows_for_model(rows, model), fieldnames)
 
 
 def _import_plot_libs():
@@ -2514,6 +2625,8 @@ def generate_figures(
         condition_label_formatter=lambda row: _compact_variant_label(str(row.get("variant", ""))),
     )
 
+    generate_delta_figures(summary_rows, fig_dir)
+
 
 def run_analysis(
     *,
@@ -2620,10 +2733,14 @@ def run_analysis(
     per_task_path = out_dir / "per_task_semantic.csv"
     write_csv(per_task_path, per_task_rows, per_task_fieldnames)
     print(f"  Wrote {per_task_path} ({len(per_task_rows)} rows)")
+    csv_outputs: Dict[str, Tuple[List[dict], List[str]]] = {
+        "per_task_semantic.csv": (per_task_rows, per_task_fieldnames),
+    }
 
     per_task_retrieval_path = out_dir / "per_task_retrieval.csv"
     write_csv(per_task_retrieval_path, per_task_retrieval_rows, per_task_retrieval_fieldnames)
     print(f"  Wrote {per_task_retrieval_path} ({len(per_task_retrieval_rows)} rows)")
+    csv_outputs["per_task_retrieval.csv"] = (per_task_retrieval_rows, per_task_retrieval_fieldnames)
 
     per_task_search_path = out_dir / "per_task_search_bottleneck.csv"
     per_task_search_rows = search_bottleneck.get("per_task_rows", [])
@@ -2650,6 +2767,7 @@ def run_analysis(
         per_task_search_fieldnames,
     )
     print(f"  Wrote {per_task_search_path} ({num_per_task_search_rows} rows)")
+    csv_outputs["per_task_search_bottleneck.csv"] = (per_task_search_rows, per_task_search_fieldnames)
 
     per_task_search_tool_path = out_dir / "per_task_search_tool_bottleneck.csv"
     per_task_search_tool_rows = search_bottleneck.get("per_task_tool_rows", [])
@@ -2677,133 +2795,171 @@ def run_analysis(
         per_task_search_tool_fieldnames,
     )
     print(f"  Wrote {per_task_search_tool_path} ({num_per_task_search_tool_rows} rows)")
+    csv_outputs["per_task_search_tool_bottleneck.csv"] = (
+        per_task_search_tool_rows,
+        per_task_search_tool_fieldnames,
+    )
 
     search_first_hit_condition_csv = out_dir / "search_first_hit_condition.csv"
+    search_first_hit_condition_fieldnames = [
+        "condition",
+        "variant",
+        "base_condition",
+        "cutoff",
+        "n_tasks_with_search",
+        "n_tasks_without_search",
+        "found_tasks",
+        "not_found_tasks",
+        "not_found_rate",
+        "ever_found_rate",
+        "avg_first_hit_round_found_only",
+        "median_first_hit_round_found_only",
+        "avg_wasted_rounds",
+        "max_round",
+        "models",
+        "num_condition_model_rows",
+        "round_counts",
+        "cumulative_found_counts",
+        "cumulative_found_rates",
+    ]
     write_search_bottleneck_csv(
         search_bottleneck.get("condition_summary_rows", []),
         search_first_hit_condition_csv,
-        [
-            "condition",
-            "variant",
-            "base_condition",
-            "cutoff",
-            "n_tasks_with_search",
-            "n_tasks_without_search",
-            "found_tasks",
-            "not_found_tasks",
-            "not_found_rate",
-            "ever_found_rate",
-            "avg_first_hit_round_found_only",
-            "median_first_hit_round_found_only",
-            "avg_wasted_rounds",
-            "max_round",
-            "models",
-            "num_condition_model_rows",
-            "round_counts",
-            "cumulative_found_counts",
-            "cumulative_found_rates",
-        ],
+        search_first_hit_condition_fieldnames,
     )
     print(f"  Wrote {search_first_hit_condition_csv}")
+    csv_outputs["search_first_hit_condition.csv"] = (
+        search_bottleneck.get("condition_summary_rows", []),
+        search_first_hit_condition_fieldnames,
+    )
 
     search_first_hit_tool_csv = out_dir / "search_first_hit_tool.csv"
+    search_first_hit_tool_fieldnames = [
+        "search_tool",
+        "cutoff",
+        "tasks_with_tool",
+        "found_tasks",
+        "not_found_tasks",
+        "not_found_rate",
+        "ever_found_rate",
+        "avg_first_hit_round_found_only",
+        "median_first_hit_round_found_only",
+        "avg_wasted_rounds",
+        "max_round",
+        "conditions",
+        "models",
+        "num_condition_model_rows",
+        "round_counts",
+        "cumulative_found_counts",
+        "cumulative_found_rates",
+    ]
     write_search_bottleneck_csv(
         search_bottleneck.get("tool_first_hit_rows", []),
         search_first_hit_tool_csv,
-        [
-            "search_tool",
-            "cutoff",
-            "tasks_with_tool",
-            "found_tasks",
-            "not_found_tasks",
-            "not_found_rate",
-            "ever_found_rate",
-            "avg_first_hit_round_found_only",
-            "median_first_hit_round_found_only",
-            "avg_wasted_rounds",
-            "max_round",
-            "conditions",
-            "models",
-            "num_condition_model_rows",
-            "round_counts",
-            "cumulative_found_counts",
-            "cumulative_found_rates",
-        ],
+        search_first_hit_tool_fieldnames,
     )
     print(f"  Wrote {search_first_hit_tool_csv}")
+    csv_outputs["search_first_hit_tool.csv"] = (
+        search_bottleneck.get("tool_first_hit_rows", []),
+        search_first_hit_tool_fieldnames,
+    )
 
     search_topk_miss_tool_csv = out_dir / "search_topk_miss_tool.csv"
+    search_topk_miss_tool_fieldnames = [
+        "search_tool",
+        "cutoff",
+        "n_calls",
+        "hit_calls",
+        "miss_calls",
+        "miss_rate",
+        "conditions",
+        "models",
+        "num_condition_model_rows",
+    ]
     write_search_bottleneck_csv(
         search_bottleneck.get("tool_miss_rows", []),
         search_topk_miss_tool_csv,
-        [
-            "search_tool",
-            "cutoff",
-            "n_calls",
-            "hit_calls",
-            "miss_calls",
-            "miss_rate",
-            "conditions",
-            "models",
-            "num_condition_model_rows",
-        ],
+        search_topk_miss_tool_fieldnames,
     )
     print(f"  Wrote {search_topk_miss_tool_csv}")
+    csv_outputs["search_topk_miss_tool.csv"] = (
+        search_bottleneck.get("tool_miss_rows", []),
+        search_topk_miss_tool_fieldnames,
+    )
 
     search_tool_efficiency_csv = out_dir / "search_tool_efficiency.csv"
+    search_tool_efficiency_fieldnames = [
+        "search_tool",
+        "cutoff",
+        "tasks_with_tool",
+        "ever_found_rate",
+        "avg_first_hit_round_found_only",
+        "avg_wasted_rounds",
+        "conditions",
+        "models",
+        "num_condition_model_rows",
+    ]
     write_search_bottleneck_csv(
         search_bottleneck.get("tool_efficiency_rows", []),
         search_tool_efficiency_csv,
-        [
-            "search_tool",
-            "cutoff",
-            "tasks_with_tool",
-            "ever_found_rate",
-            "avg_first_hit_round_found_only",
-            "avg_wasted_rounds",
-            "conditions",
-            "models",
-            "num_condition_model_rows",
-        ],
+        search_tool_efficiency_fieldnames,
     )
     print(f"  Wrote {search_tool_efficiency_csv}")
+    csv_outputs["search_tool_efficiency.csv"] = (
+        search_bottleneck.get("tool_efficiency_rows", []),
+        search_tool_efficiency_fieldnames,
+    )
 
     if include_turn_waste:
         turn_waste_groups_csv_path = out_dir / "turn_waste_global_groups.csv"
+        turn_waste_groups_fieldnames = [
+            "variant",
+            "turn_waste_global_group",
+            "n",
+            "pct_within_grouped_failed_rows",
+            "n_failed_rows",
+            "n_grouped_failed_rows",
+            "n_unassigned_failed_rows",
+            "n_total_rows",
+        ]
         write_csv(
             turn_waste_groups_csv_path,
             turn_waste_global_group_rows,
-            [
-                "variant",
-                "turn_waste_global_group",
-                "n",
-                "pct_within_grouped_failed_rows",
-                "n_failed_rows",
-                "n_grouped_failed_rows",
-                "n_unassigned_failed_rows",
-                "n_total_rows",
-            ],
+            turn_waste_groups_fieldnames,
         )
         print(f"  Wrote {turn_waste_groups_csv_path} ({len(turn_waste_global_group_rows)} rows)")
+        csv_outputs["turn_waste_global_groups.csv"] = (
+            turn_waste_global_group_rows,
+            turn_waste_groups_fieldnames,
+        )
 
         turn_waste_joined_path = out_dir / "turn_waste_grouped_failures_joined.csv"
+        turn_waste_joined_fieldnames = [
+            "condition_model",
+            "variant",
+            "task_id",
+            "semantic_bucket",
+            "log_error_bucket",
+            "turn_waste_global_group",
+            "turn_waste_global_group_reason",
+            "estimated_wasted_turns",
+        ]
         write_csv(
             turn_waste_joined_path,
             turn_waste_joined_failed_rows,
-            [
-                "condition_model",
-                "variant",
-                "task_id",
-                "semantic_bucket",
-                "log_error_bucket",
-                "turn_waste_global_group",
-                "turn_waste_global_group_reason",
-                "estimated_wasted_turns",
-            ],
+            turn_waste_joined_fieldnames,
         )
         print(f"  Wrote {turn_waste_joined_path} ({len(turn_waste_joined_failed_rows)} rows)")
+        csv_outputs["turn_waste_grouped_failures_joined.csv"] = (
+            turn_waste_joined_failed_rows,
+            turn_waste_joined_fieldnames,
+        )
     else:
         print("Skipping turn_waste_global_groups.csv and turn_waste_grouped_failures_joined.csv (disabled).")
+
+    print("Writing per-model outputs...")
+    write_per_model_outputs(out_dir, files, csv_outputs)
+    print(f"  Wrote per-model outputs under {out_dir / 'by_model'}")
 
     if no_figures:
         print("Skipping figures (--no-figures).")

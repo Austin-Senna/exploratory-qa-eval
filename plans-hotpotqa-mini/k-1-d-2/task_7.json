@@ -1,0 +1,19 @@
+{
+  "dataset_sequence": [
+    "hotpotqa-5a76387d554299109176e6ba-am-rong",
+    "hotpotqa-5a76387d554299109176e6ba-ava-duvernay"
+  ],
+  "source_sequence": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a76387d554299109176e6ba:Am Rong",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a76387d554299109176e6ba:Ava DuVernay"
+  ],
+  "reasoning_chain_text": [
+    "1. Determine the birth years for Am Rong and Ava DuVernay.",
+    "2. Compare the two birth years and return the person born first."
+  ],
+  "original_final_question": "Who was born first, Am Rong or Ava DuVernay? Write your answer as [ANSWER].",
+  "original_reasoning_chain": [
+    "Node 1 and Node 2: Am Rong was born in 1929, while Ava DuVernay was born on August 24, 1972, so Am Rong was born first. -> Am Rong",
+    "Final answer: Am Rong"
+  ]
+}

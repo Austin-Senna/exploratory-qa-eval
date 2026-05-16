@@ -1,0 +1,52 @@
+{
+  "question": "Which Italian-American composer and librettist wrote the English language opera, Maria Golovin? Write your answer as [ANSWER].",
+  "answer": "Gian Carlo Menotti",
+  "nodes": {
+    "1": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a70f4c45542994082a3e437:Maria Golovin",
+      "fact": "Maria Golovin: Maria Golovin is an English language opera in three acts by Gian Carlo Menotti.",
+      "subquestion": "Who wrote the English-language opera Maria Golovin?",
+      "answer": "Gian Carlo Menotti"
+    },
+    "2": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a70f4c45542994082a3e437:Gian Carlo Menotti",
+      "fact": "Gian Carlo Menotti: Gian Carlo Menotti was an Italian-American composer and librettist.",
+      "subquestion": "Which person is described as an Italian-American composer and librettist?",
+      "answer": "Gian Carlo Menotti"
+    }
+  },
+  "reasoning_chain": [
+    "Node 1 and Node 2: Maria Golovin was written by Gian Carlo Menotti, and Gian Carlo Menotti is described as an Italian-American composer and librettist. -> Gian Carlo Menotti",
+    "Final answer: Gian Carlo Menotti"
+  ],
+  "datasets_used": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a70f4c45542994082a3e437:Maria Golovin",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a70f4c45542994082a3e437:Gian Carlo Menotti"
+  ],
+  "reasoning_hops": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1,
+        2
+      ],
+      "reasoning": "Node 1 and Node 2: Maria Golovin was written by Gian Carlo Menotti, and Gian Carlo Menotti is described as an Italian-American composer and librettist. -> Gian Carlo Menotti",
+      "answer": "Gian Carlo Menotti"
+    }
+  ],
+  "_provenance": {
+    "benchmark": "hotpotqa",
+    "split": "dev_distractor",
+    "source_id": "5a70f4c45542994082a3e437",
+    "type": "bridge",
+    "level": "hard",
+    "sample_source": "other-benchmarks/tasks/hotpotqa/k-2-d-2/task_5.json",
+    "transform_run_id": "2026-05-14T04:34:33Z",
+    "verified_at": "2026-05-14T04:34:33Z",
+    "promoted_from": "other-benchmarks/tasks-hotpotqa-mini/k-2-d-2/task_5.json",
+    "original_bucket": "k-2-d-2",
+    "promotion_status": "verified",
+    "promotion_rule": "curated_hotpotqa_batch_v1",
+    "source_mapping_status": "raw_anchor_temporary"
+  }
+}

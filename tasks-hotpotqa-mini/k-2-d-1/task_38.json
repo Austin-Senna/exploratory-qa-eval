@@ -1,0 +1,58 @@
+{
+  "question": "Wrinkles is a song that was recorded by what American country and Christian country band that was founded in 1982? Write your answer as [ANSWER].",
+  "answer": "Diamond Rio",
+  "nodes": {
+    "1": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5abcf70b55429959677d6b7e:Wrinkles (song)",
+      "fact": "Wrinkles (song): \"Wrinkles\" is a song written by Neil Thrasher and Ronny Scaife, and recorded by American country music group Diamond Rio.",
+      "subquestion": "Which group recorded the song Wrinkles?",
+      "answer": "Diamond Rio"
+    },
+    "2": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5abcf70b55429959677d6b7e:Diamond Rio",
+      "fact": "Diamond Rio: Diamond Rio is an American country and Christian country music band. The band was founded in 1982 as an attraction for the Opryland USA theme park in Nashville, Tennessee, and was originally known as the Grizzly River Boys, then the Tennessee River Boys.",
+      "subquestion": "Which American country and Christian country band founded in 1982 matches that group?",
+      "answer": "Diamond Rio"
+    }
+  },
+  "reasoning_chain": [
+    "Node 1: Which group recorded the song Wrinkles? Evidence: Wrinkles (song): \"Wrinkles\" is a song written by Neil Thrasher and Ronny Scaife, and recorded by American country music group Diamond Rio. -> Diamond Rio",
+    "Node 2: Which American country and Christian country band founded in 1982 matches that group? Evidence: Diamond Rio: Diamond Rio is an American country and Christian country music band. The band was founded in 1982 as an attraction for the Opryland USA theme park in Nashville, Tennessee, and was originally known as the Grizzly River Boys, then the Tennessee River Boys. -> Diamond Rio",
+    "Final answer: Diamond Rio"
+  ],
+  "datasets_used": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5abcf70b55429959677d6b7e:Wrinkles (song)",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5abcf70b55429959677d6b7e:Diamond Rio"
+  ],
+  "reasoning_hops": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1
+      ],
+      "reasoning": "Node 1: Which group recorded the song Wrinkles? Evidence: Wrinkles (song): \"Wrinkles\" is a song written by Neil Thrasher and Ronny Scaife, and recorded by American country music group Diamond Rio. -> Diamond Rio",
+      "answer": "Diamond Rio"
+    },
+    {
+      "hop": 2,
+      "node_ids": [
+        2
+      ],
+      "reasoning": "Node 2: Which American country and Christian country band founded in 1982 matches that group? Evidence: Diamond Rio: Diamond Rio is an American country and Christian country music band. The band was founded in 1982 as an attraction for the Opryland USA theme park in Nashville, Tennessee, and was originally known as the Grizzly River Boys, then the Tennessee River Boys. -> Diamond Rio",
+      "answer": "Diamond Rio"
+    }
+  ],
+  "_provenance": {
+    "benchmark": "hotpotqa",
+    "split": "dev_distractor",
+    "source_id": "5abcf70b55429959677d6b7e",
+    "type": "bridge",
+    "level": "hard",
+    "promoted_from": "other-benchmarks/tasks-hotpotqa-mini/k-2-d-2/task_43.json",
+    "sample_source": "other-benchmarks/tasks/hotpotqa/k-2-d-2/task_3645.json",
+    "original_bucket": "k-2-d-2",
+    "promotion_status": "verified",
+    "promotion_rule": "curated_hotpotqa_batch_v1",
+    "source_mapping_status": "raw_anchor_temporary"
+  }
+}

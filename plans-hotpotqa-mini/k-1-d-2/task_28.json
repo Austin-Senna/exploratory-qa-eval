@@ -1,0 +1,19 @@
+{
+  "dataset_sequence": [
+    "hotpotqa-5a8782a25542993e715abf95-phillips-v-martin-marietta-corp",
+    "hotpotqa-5a8782a25542993e715abf95-roth-v-united-states"
+  ],
+  "source_sequence": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a8782a25542993e715abf95:Phillips v. Martin Marietta Corp.",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a8782a25542993e715abf95:Roth v. United States"
+  ],
+  "reasoning_chain_text": [
+    "1. Determine the years associated with Phillips v. Martin Marietta Corp. and Roth v. United States.",
+    "2. Compare the years and return which case occurred first."
+  ],
+  "original_final_question": "Which occurred first, Phillips v. Martin Marietta Corp. or Roth v. United States? Write your answer as [ANSWER].",
+  "original_reasoning_chain": [
+    "Node 1 and Node 2: Phillips v. Martin Marietta Corp. occurred in 1971, while Roth v. United States occurred in 1957, so Roth v. United States occurred first. -> Roth v. United States",
+    "Final answer: Roth v. United States"
+  ]
+}

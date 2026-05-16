@@ -1,0 +1,50 @@
+{
+  "question": "The Havanese and the Black Mouth Cur are both which kind of animal? Write your answer as [ANSWER].",
+  "answer": "Dogs",
+  "nodes": {
+    "1": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a74f8235542993748c89766:Havanese",
+      "fact": "Havanese: The Havanese, a breed of Bichon type, is the national dog of Cuba. Sometimes referred to as Havana Silk Dogs, this was originally another name for the Blanquito de la Habana.",
+      "subquestion": "What kind of animal is the Havanese?",
+      "answer": "dog"
+    },
+    "2": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a74f8235542993748c89766:Black Mouth Cur",
+      "fact": "Black Mouth Cur: The Black Mouth Cur is a hunting and cattle dog that has its origins in Southern United States.",
+      "subquestion": "What kind of animal is the Black Mouth Cur?",
+      "answer": "dog"
+    }
+  },
+  "reasoning_chain": [
+    "Node 1 and Node 2: The Havanese is described as a dog, and the Black Mouth Cur is described as a hunting and cattle dog, so both are dogs. -> Dogs",
+    "Final answer: Dogs"
+  ],
+  "datasets_used": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a74f8235542993748c89766:Havanese",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a74f8235542993748c89766:Black Mouth Cur"
+  ],
+  "reasoning_hops": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1,
+        2
+      ],
+      "reasoning": "Node 1 and Node 2: The Havanese is described as a dog, and the Black Mouth Cur is described as a hunting and cattle dog, so both are dogs. -> Dogs",
+      "answer": "Dogs"
+    }
+  ],
+  "_provenance": {
+    "benchmark": "hotpotqa",
+    "split": "dev_distractor",
+    "source_id": "5a74f8235542993748c89766",
+    "type": "comparison",
+    "level": "hard",
+    "promoted_from": "other-benchmarks/tasks-hotpotqa-mini/k-2-d-1/task_5.json",
+    "sample_source": "other-benchmarks/tasks/hotpotqa/k-2-d-1/task_114.json",
+    "original_bucket": "k-2-d-1",
+    "promotion_status": "verified",
+    "promotion_rule": "curated_hotpotqa_batch_v1",
+    "source_mapping_status": "raw_anchor_temporary"
+  }
+}

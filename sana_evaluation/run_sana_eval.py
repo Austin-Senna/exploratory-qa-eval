@@ -274,6 +274,12 @@ def main() -> None:
     parser.add_argument("--results-output-dir", default="results")
     parser.add_argument("--logs-output-dir", default="logs")
     parser.add_argument("--db-path", default=None)
+    parser.add_argument(
+        "--benchmark",
+        choices=["lakeqa", "kramabench", "hotpotqa"],
+        default="lakeqa",
+        help="Data-lake benchmark bucket to use for agent data tools.",
+    )
 
     # Search controls
     parser.add_argument("--k", type=int, default=None)
@@ -482,6 +488,7 @@ def main() -> None:
         plan_skills_enabled=plan_skills_enabled,
         search_free=args.search_free,
         search_lessguide=args.search_lessguide,
+        benchmark=args.benchmark,
         sana_flags=sana_flags,
         condition_config=ConditionConfig(
             condition=condition_label,

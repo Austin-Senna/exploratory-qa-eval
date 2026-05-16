@@ -1,0 +1,50 @@
+{
+  "question": "Are Donald Fagen and Lauren Laverne of the same nationality? Write your answer as [ANSWER].",
+  "answer": "no",
+  "nodes": {
+    "1": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ac2dc4b55429921a00ab083:Donald Fagen",
+      "fact": "Donald Fagen: Donald Jay Fagen (born January 10, 1948) is an American musician best known as the co-founder, lead singer and keyboardist of the band Steely Dan.",
+      "subquestion": "What nationality is Donald Fagen described as?",
+      "answer": "American"
+    },
+    "2": {
+      "source": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ac2dc4b55429921a00ab083:Lauren Laverne",
+      "fact": "Lauren Laverne: Lauren Cecilia Fisher (née Gofton, 28 April 1978), known professionally as Lauren Laverne, is an English radio DJ, model, television presenter, author, singer and comedian.",
+      "subquestion": "What nationality is Lauren Laverne described as?",
+      "answer": "English"
+    }
+  },
+  "reasoning_chain": [
+    "Node 1 and Node 2: Donald Fagen is described as American, while Lauren Laverne is described as English, so they are not of the same nationality. -> no",
+    "Final answer: no"
+  ],
+  "datasets_used": [
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ac2dc4b55429921a00ab083:Donald Fagen",
+    "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5ac2dc4b55429921a00ab083:Lauren Laverne"
+  ],
+  "reasoning_hops": [
+    {
+      "hop": 1,
+      "node_ids": [
+        1,
+        2
+      ],
+      "reasoning": "Node 1 and Node 2: Donald Fagen is described as American, while Lauren Laverne is described as English, so they are not of the same nationality. -> no",
+      "answer": "no"
+    }
+  ],
+  "_provenance": {
+    "benchmark": "hotpotqa",
+    "split": "dev_distractor",
+    "source_id": "5ac2dc4b55429921a00ab083",
+    "type": "comparison",
+    "level": "hard",
+    "promoted_from": "other-benchmarks/tasks-hotpotqa-mini/k-2-d-1/task_56.json",
+    "sample_source": "other-benchmarks/tasks/hotpotqa/k-2-d-1/task_1132.json",
+    "original_bucket": "k-2-d-1",
+    "promotion_status": "verified",
+    "promotion_rule": "curated_hotpotqa_batch_v1",
+    "source_mapping_status": "raw_anchor_temporary"
+  }
+}
