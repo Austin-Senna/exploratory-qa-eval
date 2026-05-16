@@ -7,9 +7,10 @@ model/API call, so missing or corrupt dependencies fail loudly and cheaply.
 from __future__ import annotations
 
 import sys
+import json
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Optional, Sequence
+from typing import Dict, List, Optional, Sequence
 
 from strands_evaluation.config import RunConfig
 from strands_evaluation.tools.agent_tools import configure_benchmark
@@ -34,7 +35,20 @@ class PreflightError(RuntimeError):
     """Raised when one or more preflight checks fail."""
 
 
-def _prompt_files_for_modes(search_tool_mode: str, plan_mode: str) -> List[Path]:
+def _prompt_files_for_modes(
+    search_tool_mode: str,
+    plan_mode: str,
+    *,
+    benchmark: str = "lakeqa",
+) -> List[Path]:
+    if benchmark == "kramabench":
+        base_path = _PROMPTS_DIR / "managed_kramabench.txt"
+        overlay_name = f"search_{search_tool_mode}_kramabench.txt"
+        overlay_path = _PROMPTS_DIR / overlay_name
+        if not overlay_path.is_file():
+            overlay_path = _PROMPTS_DIR / f"search_{search_tool_mode}.txt"
+        return [base_path, overlay_path]
+
     base_name = "baseline.txt" if plan_mode == "naive" else "managed.txt"
     overlay_name = f"search_{search_tool_mode}.txt"
     return [_PROMPTS_DIR / base_name, _PROMPTS_DIR / overlay_name]
@@ -145,6 +159,95 @@ def _check_tasks_mini_source_description_coverage(
         )
 
     return PreflightCheck(label, True, f"covered {checked} planned source(s)")
+
+
+def _s3_error_code(exc: Exception) -> str:
+    response = getattr(exc, "response", None)
+    if isinstance(response, dict):
+        return str(response.get("Error", {}).get("Code") or "")
+    return ""
+
+
+def _source_bucket_and_key(source: str, *, benchmark: str) -> tuple[str, str]:
+    uri = canonical_source_uri(source, benchmark)
+    remainder = uri[len("s3://") :] if uri.startswith("s3://") else uri
+    bucket, sep, key = remainder.partition("/")
+    if not bucket or not sep or not key:
+        raise ValueError(f"Invalid source URI: {uri}")
+    return bucket, key.lstrip("/")
+
+
+def _add_source(sources: Dict[str, List[str]], source: object, context: str) -> None:
+    if not isinstance(source, str) or not source.strip():
+        return
+    sources.setdefault(source.strip(), []).append(context)
+
+
+def _add_task_node_sources(task_path: str, sources: Dict[str, List[str]]) -> None:
+    path = Path(task_path)
+    if not path.is_file():
+        return
+    with path.open(encoding="utf-8") as f:
+        payload = json.load(f)
+    nodes = payload.get("nodes") if isinstance(payload, dict) else None
+    if isinstance(nodes, dict):
+        iterable = nodes.items()
+    elif isinstance(nodes, list):
+        iterable = enumerate(nodes, start=1)
+    else:
+        iterable = []
+    for node_id, node in iterable:
+        if isinstance(node, dict):
+            _add_source(sources, node.get("source"), f"{task_path}:node:{node_id}")
+
+
+def _check_kramabench_source_objects(task_files: Sequence[str]) -> PreflightCheck:
+    from strands_evaluation.tools.agent_tools import _get_s3_client
+    from strands_evaluation.tools.external.ideal import plan_store
+
+    label = "kramabench source object existence"
+    sources: Dict[str, List[str]] = {}
+    for task_path in task_files:
+        try:
+            _add_task_node_sources(task_path, sources)
+        except Exception as exc:
+            return PreflightCheck(label, False, f"{task_path}: could not read task nodes: {exc}")
+        try:
+            plan = plan_store.load_plan_for_task(str(task_path))
+        except Exception as exc:
+            return PreflightCheck(label, False, f"{task_path}: could not load plan: {exc}")
+        for index, source in enumerate(plan.source_sequence, start=1):
+            _add_source(sources, source, f"{task_path}:plan_source:{index}")
+
+    if not sources:
+        return PreflightCheck(label, True, "no Kramabench sources to check")
+
+    s3 = _get_s3_client()
+    missing: List[str] = []
+    checked = 0
+    for source, contexts in sources.items():
+        try:
+            bucket, key = _source_bucket_and_key(source, benchmark="kramabench")
+            s3.head_object(Bucket=bucket, Key=key)
+            checked += 1
+        except Exception as exc:
+            uri = canonical_source_uri(source, "kramabench")
+            context_preview = ", ".join(contexts[:2])
+            suffix = f", +{len(contexts) - 2} more" if len(contexts) > 2 else ""
+            code = _s3_error_code(exc)
+            error_label = f"{code}: " if code else ""
+            missing.append(f"{uri} ({context_preview}{suffix}) -> {error_label}{exc}")
+
+    if missing:
+        preview = "; ".join(missing[:5])
+        suffix = f"; +{len(missing) - 5} more" if len(missing) > 5 else ""
+        return PreflightCheck(
+            label,
+            False,
+            f"missing/unreadable {len(missing)}/{len(sources)} source object(s): {preview}{suffix}",
+        )
+
+    return PreflightCheck(label, True, f"head_object OK for {checked} source object(s)")
 
 
 def _check_profiles_jsonl(*, required: bool = False) -> PreflightCheck:
@@ -298,7 +401,7 @@ def run_preflight(
 
     checks: List[PreflightCheck] = []
 
-    for prompt_path in _prompt_files_for_modes(st, pm):
+    for prompt_path in _prompt_files_for_modes(st, pm, benchmark=benchmark):
         checks.append(_check_file_exists(prompt_path, f"prompt:{prompt_path.name}"))
 
     if st in {"standard", "naive"}:
@@ -342,6 +445,9 @@ def run_preflight(
 
     if (st == "ideal" or sr == "ideal") and task_files:
         checks.append(_check_tasks_mini_source_description_coverage(task_files, benchmark=benchmark))
+
+    if benchmark == "kramabench" and task_files:
+        checks.append(_check_kramabench_source_objects(task_files))
 
     sana_flags = getattr(run_config, "sana_flags", None)
     if getattr(sana_flags, "results", False):

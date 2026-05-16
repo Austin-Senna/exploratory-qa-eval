@@ -2,6 +2,7 @@ import importlib.util
 import sys
 import types
 import unittest
+from io import BytesIO
 from contextlib import ExitStack
 from pathlib import Path
 from unittest import mock
@@ -301,6 +302,43 @@ class AgentToolsV2EmptyS3Tests(unittest.TestCase):
             result = self.mod.peek_file(s3_uri=self.ref["s3_uri"])
 
         self.assertNotIn("profile", result)
+
+    def test_peek_file_previews_xlsx_without_binary_zip_text(self):
+        from openpyxl import Workbook
+
+        xlsx_ref = {
+            "dataset_id": "datagov/kramabench-biomedical-easy-9",
+            "file_path": "files/1-s2.0-S0092867420301070-mmc3.xlsx",
+            "s3_uri": "s3://sana-kramabench/datagov/kramabench-biomedical-easy-9/files/1-s2.0-S0092867420301070-mmc3.xlsx",
+            "key": "datagov/kramabench-biomedical-easy-9/files/1-s2.0-S0092867420301070-mmc3.xlsx",
+        }
+        workbook = Workbook()
+        readme = workbook.active
+        readme.title = "README"
+        readme.append(["note"])
+        readme.append(["Supplementary workbook"])
+        sheet = workbook.create_sheet("F-SS-phospho")
+        sheet.append(["Gene", "FDR.phos"])
+        sheet.append(["CBX3", 0.01])
+        sheet.append(["TP53", 0.02])
+        buffer = BytesIO()
+        workbook.save(buffer)
+        payload = buffer.getvalue()
+
+        with ExitStack() as stack:
+            stack.enter_context(mock.patch.object(self.mod, "_resolve_file_reference", return_value=xlsx_ref))
+            stack.enter_context(mock.patch.object(self.mod, "_get_s3_client", return_value=object()))
+            stack.enter_context(mock.patch.object(self.mod, "_s3_head", return_value=len(payload)))
+            stack.enter_context(mock.patch.object(self.mod, "_s3_range_get", return_value=payload))
+            result = self.mod.peek_file(s3_uri=xlsx_ref["s3_uri"], max_rows=2)
+
+        self.assertNotIn("error", result)
+        self.assertEqual(result["family"], "xlsx")
+        self.assertEqual(result["sheet_names"], ["README", "F-SS-phospho"])
+        self.assertIn("F-SS-phospho", result["preview_text"])
+        self.assertIn("Gene,FDR.phos", result["preview_text"])
+        self.assertNotIn("PK", result["preview_text"])
+        self.assertEqual(result["sheets"][1]["header_columns"], ["Gene", "FDR.phos"])
 
     def test_parse_xml_records_reports_empty_object_as_non_xml_without_range_get(self):
         with ExitStack() as stack:

@@ -56,10 +56,15 @@ def load_prompt_text(path: str | Path) -> str:
 def _compose_search_overlay_prompt(
     base_prompt_path: str | Path,
     search_tool_mode: Optional[str],
+    *,
+    benchmark: str = "lakeqa",
 ) -> str:
     mode = _normalize_mode(search_tool_mode, "naive", "search_tool")
     base_prompt = load_prompt_text(base_prompt_path).rstrip()
-    overlay = load_prompt_text(_PROMPTS_DIR / f"search_{mode}.txt").strip()
+    benchmark_name = (benchmark or "lakeqa").strip().lower()
+    benchmark_overlay = _PROMPTS_DIR / f"search_{mode}_{benchmark_name}.txt"
+    overlay_path = benchmark_overlay if benchmark_overlay.is_file() else _PROMPTS_DIR / f"search_{mode}.txt"
+    overlay = load_prompt_text(overlay_path).strip()
     return f"{base_prompt}\n\n{overlay}"
 
 
@@ -95,6 +100,17 @@ def compose_managed_prompt(search_tool_mode: Optional[str], *, include_skills: b
     prompt = _compose_search_overlay_prompt(
         _PROMPTS_DIR / "managed.txt",
         search_tool_mode,
+    )
+    if not include_skills:
+        prompt = _remove_skill_references(prompt)
+    return prompt
+
+
+def compose_kramabench_prompt(search_tool_mode: Optional[str], *, include_skills: bool = True) -> str:
+    prompt = _compose_search_overlay_prompt(
+        _PROMPTS_DIR / "managed_kramabench.txt",
+        search_tool_mode,
+        benchmark="kramabench",
     )
     if not include_skills:
         prompt = _remove_skill_references(prompt)
@@ -182,6 +198,7 @@ def inject_debug_prompt(prompt: str, debug_mode: Optional[str]) -> str:
 
 __all__ = [
     "compose_baseline_prompt",
+    "compose_kramabench_prompt",
     "compose_managed_prompt",
     "compose_preloaded_block",
     "discover_skill_path",

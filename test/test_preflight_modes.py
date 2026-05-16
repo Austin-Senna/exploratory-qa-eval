@@ -124,6 +124,17 @@ class PreflightModeTests(unittest.TestCase):
                     stack.enter_context(patch.object(search_wrapper, "_TABLE_DESCRIPTIONS_PATH", root / "kramabench_descriptions.jsonl"))
                     stack.enter_context(patch.object(search_wrapper, "_SNIPPETS_PATH", root / "kramabench_snippets.jsonl"))
                     stack.enter_context(patch.object(search_wrapper, "_SCHEMAS_PATH", root / "kramabench_tables_schemas_full.jsonl"))
+                    stack.enter_context(
+                        patch.object(
+                            preflight,
+                            "_check_kramabench_source_objects",
+                            return_value=preflight.PreflightCheck(
+                                "kramabench source object existence",
+                                True,
+                                "mocked",
+                            ),
+                        )
+                    )
                     cfg = RunConfig(
                         search_tool_mode="ideal",
                         search_results_mode="ideal",
@@ -259,7 +270,19 @@ class PreflightModeTests(unittest.TestCase):
 
             old_root = plan_store._KRAMABENCH_PLANS_ROOT
             try:
-                with patch.object(plan_store, "_KRAMABENCH_PLANS_ROOT", plans_root):
+                with ExitStack() as stack:
+                    stack.enter_context(patch.object(plan_store, "_KRAMABENCH_PLANS_ROOT", plans_root))
+                    stack.enter_context(
+                        patch.object(
+                            preflight,
+                            "_check_kramabench_source_objects",
+                            return_value=preflight.PreflightCheck(
+                                "kramabench source object existence",
+                                True,
+                                "mocked",
+                            ),
+                        )
+                    )
                     cfg = RunConfig(
                         search_tool_mode="preloaded",
                         search_results_mode="naive",
@@ -280,6 +303,61 @@ class PreflightModeTests(unittest.TestCase):
         self.assertIn("skipped", by_name["ideal_query:tasks-mini-kramabench/k-1-d-1/task_1.json"].detail)
         self.assertIn("disabled for kramabench", by_name["ideal_query:tasks-mini-kramabench/k-1-d-1/task_1.json"].detail)
         self.assertIn("ideal_code:tasks-mini-kramabench/k-1-d-1/task_1.json", by_name)
+
+    def test_kramabench_source_object_preflight_heads_task_and_plan_sources(self):
+        with TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            task_path = root / "tasks-mini-kramabench" / "k-1-d-1" / "task_1.json"
+            task_path.parent.mkdir(parents=True)
+            task_path.write_text(
+                json.dumps(
+                    {
+                        "nodes": {
+                            "1": {
+                                "source": "datagov/kramabench-demo/files/task.csv",
+                            }
+                        }
+                    }
+                )
+            )
+            plans_root = root / "plans-mini-kramabench"
+            plan_dir = plans_root / "k-1-d-1"
+            plan_dir.mkdir(parents=True)
+            (plan_dir / "task_1.json").write_text(
+                json.dumps(
+                    {
+                        "dataset_sequence": ["kramabench-demo"],
+                        "source_sequence": ["datagov/kramabench-demo/files/plan.csv"],
+                        "reasoning_chain_text": "Step 1",
+                    }
+                )
+            )
+
+            class FakeS3:
+                def __init__(self):
+                    self.keys = []
+
+                def head_object(self, Bucket, Key):
+                    self.keys.append((Bucket, Key))
+                    return {}
+
+            fake_s3 = FakeS3()
+
+            from strands_evaluation.tools.external.ideal import plan_store
+
+            with ExitStack() as stack:
+                stack.enter_context(patch.object(plan_store, "_KRAMABENCH_PLANS_ROOT", plans_root))
+                stack.enter_context(patch("strands_evaluation.tools.agent_tools._get_s3_client", return_value=fake_s3))
+                check = preflight._check_kramabench_source_objects([str(task_path)])
+
+        self.assertTrue(check.ok, check)
+        self.assertEqual(
+            sorted(fake_s3.keys),
+            [
+                ("sana-kramabench", "datagov/kramabench-demo/files/plan.csv"),
+                ("sana-kramabench", "datagov/kramabench-demo/files/task.csv"),
+            ],
+        )
 
     def test_ideal_search_preflight_checks_tasks_mini_source_description_coverage(self):
         with TemporaryDirectory() as tmpdir:

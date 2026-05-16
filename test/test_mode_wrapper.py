@@ -637,7 +637,8 @@ class TestModeWrapper(unittest.TestCase):
         self.assertNotIn("query_file", tool_names)
         self.assertNotIn("query_ideal", tool_names)
         self.assertNotIn("execute_code", tool_names)
-        self.assertIn("query_file`, `query_ideal`, and `execute_code`", bundle.system_prompt)
+        self.assertNotIn("query_file", bundle.system_prompt)
+        self.assertIn("KRAMABENCH COMPUTATION", bundle.system_prompt)
 
     def test_kramabench_standard_computation_disables_query_file(self):
         from strands import tool
@@ -686,6 +687,62 @@ class TestModeWrapper(unittest.TestCase):
         tool_names = [tool_obj.tool_spec["name"] for tool_obj in bundle.tools]
         self.assertIn("execute_code", tool_names)
         self.assertNotIn("query_file", tool_names)
+        self.assertNotIn("query_file", bundle.system_prompt)
+        self.assertIn("KRAMABENCH COMPUTATION", bundle.system_prompt)
+        self.assertIn("download the file and use `execute_code`", bundle.system_prompt)
+
+    def test_kramabench_ideal_search_and_plan_prompt_omits_query_file(self):
+        from strands import tool
+
+        @tool
+        def query_file(dataset_id: str = "", file_path: str = "", sql: str = "") -> dict:
+            return {}
+
+        @tool
+        def execute_code(code: str) -> dict:
+            return {}
+
+        with TemporaryDirectory() as tmpdir:
+            plans_root = Path(tmpdir) / "plans-mini-kramabench"
+            target = plans_root / "k-1-d-1"
+            target.mkdir(parents=True, exist_ok=True)
+            (target / "task_1.json").write_text(
+                json.dumps(
+                    {
+                        "dataset_sequence": ["kramabench-demo"],
+                        "source_sequence": ["datagov/kramabench-demo/files/rows.csv"],
+                        "reasoning_chain_text": "Step 1",
+                    }
+                )
+            )
+            from strands_evaluation.tools.external.ideal import plan_store
+
+            old_root = plan_store._KRAMABENCH_PLANS_ROOT
+            plan_store._KRAMABENCH_PLANS_ROOT = plans_root
+            try:
+                cfg = RunConfig(
+                    search_tool_mode="ideal",
+                    search_results_mode="ideal",
+                    agent_management_mode="ideal",
+                    computation_tool_mode="standard",
+                    benchmark="kramabench",
+                )
+                bundle = build_mode_bundle(
+                    cfg,
+                    data_tools=[query_file, execute_code],
+                    task_context={"task_id": "tasks-mini-kramabench/k-1-d-1/task_1.json"},
+                )
+            finally:
+                plan_store._KRAMABENCH_PLANS_ROOT = old_root
+
+        tool_names = [tool_obj.tool_spec["name"] for tool_obj in bundle.tools]
+        self.assertIn("search_ideal", tool_names)
+        self.assertIn("plan_ideal", tool_names)
+        self.assertIn("execute_code", tool_names)
+        self.assertNotIn("query_file", tool_names)
+        self.assertNotIn("query_file", bundle.system_prompt)
+        self.assertIn("KRAMABENCH COMPUTATION", bundle.system_prompt)
+        self.assertIn("download the needed files", bundle.system_prompt)
 
     def test_prompt_blocks_query_and_execute_for_non_tabular_non_json_sources(self):
         cfg = RunConfig(

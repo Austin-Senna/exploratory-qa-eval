@@ -17,6 +17,7 @@ from __future__ import annotations
 import base64
 import datetime
 import decimal
+import io
 import json
 import os
 import re
@@ -79,6 +80,8 @@ _QUERY_ROW_CAP = 200
 _SEARCH_MAX_MATCHES = 20
 _SEARCH_CONTEXT_LINES = 2
 _QUERY_MAX_FILE_BYTES = 500 * 1024 * 1024  # 500 MB — above this, download first
+_MAX_SPREADSHEET_PEEK_BYTES = 128 * 1024 * 1024
+_MAX_SPREADSHEET_PREVIEW_COLUMNS = 30
 _TOOL_RESULT_CHAR_CAP = 6_000              # ~1.5k tokens — keeps single tool results from dominating context
 
 
@@ -105,6 +108,15 @@ def _s3_peek_text(s3, key: str, size_bytes: int) -> Tuple[str, int]:
     end = min(_PEEK_BYTES - 1, size_bytes - 1)
     raw = _s3_range_get(s3, key, 0, end)
     return raw.decode("utf-8", errors="replace"), len(raw)
+
+
+def _s3_read_bounded(s3, key: str, size_bytes: int, max_bytes: int) -> bytes:
+    """Read a whole small object, failing clearly when it exceeds the cap."""
+    if size_bytes > max_bytes:
+        raise ValueError(f"file is {size_bytes} bytes, above {max_bytes} byte spreadsheet peek cap")
+    if size_bytes <= 0:
+        return b""
+    return _s3_range_get(s3, key, 0, size_bytes - 1)
 
 
 def _duckdb_connection() -> duckdb.DuckDBPyConnection:
@@ -548,6 +560,95 @@ def _select_xml_row_fields(row: Dict[str, str], fields: List[str]) -> Dict[str, 
     return {field: row.get(field, "") for field in fields}
 
 
+def _is_excel_path(file_path: str) -> bool:
+    return file_path.lower().rsplit("?", 1)[0].endswith((".xlsx", ".xlsm", ".xltx", ".xltm"))
+
+
+def _format_spreadsheet_cell(value: Any) -> str:
+    if value is None:
+        return ""
+    if isinstance(value, (datetime.date, datetime.datetime)):
+        return value.isoformat()
+    return str(value)
+
+
+def _first_nonempty_rows(worksheet, max_rows: int, max_columns: int) -> tuple[list[list[str]], int]:
+    rows: list[list[str]] = []
+    max_seen_columns = 0
+    for row in worksheet.iter_rows(values_only=True):
+        values = [_format_spreadsheet_cell(value) for value in row]
+        while values and values[-1] == "":
+            values.pop()
+        if not any(value != "" for value in values):
+            continue
+        max_seen_columns = max(max_seen_columns, len(values))
+        if len(values) > max_columns:
+            values = values[:max_columns] + [f"... {len(values) - max_columns} more columns"]
+        rows.append(values)
+        if len(rows) >= max_rows:
+            break
+    return rows, max_seen_columns
+
+
+def _build_excel_preview(raw: bytes, max_rows: int) -> Dict[str, Any]:
+    try:
+        from openpyxl import load_workbook
+    except Exception as e:
+        return {
+            "family": "xlsx",
+            "preview_text": (
+                "Excel workbook detected, but openpyxl is not installed. "
+                "Install openpyxl or use download plus an environment with Excel support."
+            ),
+            "excel_error": f"openpyxl unavailable: {e}",
+        }
+
+    try:
+        workbook = load_workbook(io.BytesIO(raw), read_only=True, data_only=True)
+    except Exception as e:
+        return {
+            "family": "xlsx",
+            "preview_text": f"Excel workbook detected, but preview failed: {e}",
+            "excel_error": str(e),
+        }
+
+    sheet_names = list(workbook.sheetnames)
+    sheet_infos: list[Dict[str, Any]] = []
+    preview_blocks = [f"Excel workbook with sheets: {', '.join(sheet_names)}"]
+    for sheet_name in sheet_names[:8]:
+        worksheet = workbook[sheet_name]
+        rows, max_seen_columns = _first_nonempty_rows(
+            worksheet,
+            max(max_rows, 1) + 1,
+            _MAX_SPREADSHEET_PREVIEW_COLUMNS,
+        )
+        info: Dict[str, Any] = {
+            "name": sheet_name,
+            "max_row": worksheet.max_row,
+            "max_column": worksheet.max_column,
+        }
+        if max_seen_columns > _MAX_SPREADSHEET_PREVIEW_COLUMNS:
+            info["preview_column_limit"] = _MAX_SPREADSHEET_PREVIEW_COLUMNS
+            info["preview_columns_truncated"] = max_seen_columns - _MAX_SPREADSHEET_PREVIEW_COLUMNS
+        if rows:
+            info["header_columns"] = rows[0]
+            info["preview_rows"] = rows[1:max_rows + 1]
+        sheet_infos.append(info)
+
+        preview_blocks.append(f"\nSheet: {sheet_name} ({worksheet.max_row} rows x {worksheet.max_column} columns)")
+        if rows:
+            preview_blocks.extend(",".join(row) for row in rows[:max_rows + 1])
+        else:
+            preview_blocks.append("(no non-empty rows found)")
+
+    return {
+        "family": "xlsx",
+        "preview_text": "\n".join(preview_blocks),
+        "sheet_names": sheet_names,
+        "sheets": sheet_infos,
+    }
+
+
 # ---------------------------------------------------------------------------
 # Tool 1: peek_file
 # ---------------------------------------------------------------------------
@@ -608,6 +709,28 @@ def peek_file(
         size_bytes = _s3_head(s3, key)
     except Exception as e:
         return {"error": f"HeadObject failed: {e}"}
+
+    if _is_excel_path(file_path):
+        try:
+            raw = _s3_read_bounded(s3, key, size_bytes, _MAX_SPREADSHEET_PEEK_BYTES)
+        except Exception as e:
+            return {"error": f"Excel preview failed: {e}"}
+
+        result: Dict[str, Any] = {
+            "dataset_id": dataset_id,
+            "file_path": file_path,
+            "s3_uri": s3_uri,
+            "size_bytes": size_bytes,
+        }
+        result.update(_build_excel_preview(raw, max_rows=max_rows))
+        try:
+            profile = load_dataset_profile(s3_uri)
+        except Exception:
+            profile = None
+        profile = select_dataset_profile_fields(profile)
+        if profile is not None:
+            result["profile"] = profile
+        return result
 
     try:
         text, sampled_bytes = _s3_peek_text(s3, key, size_bytes)

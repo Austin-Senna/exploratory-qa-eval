@@ -40,6 +40,7 @@ from strands_evaluation.instrumentation.loop_plugin import CategoryStagnationHan
 from strands_evaluation.helper.logger import configure_worker_logging
 from strands_evaluation.helper.prompting import (
     compose_baseline_prompt,
+    compose_kramabench_prompt,
     compose_managed_prompt,
     compose_preloaded_block,
     inject_debug_prompt,
@@ -209,6 +210,7 @@ def build_management(
     search_tool_mode: str,
     task_context: Optional[Dict[str, Any]],
     plan_skills_enabled: bool = False,
+    benchmark: str = "lakeqa",
 ) -> tuple[str, List[Any], bool, bool, str]:
     """Return stable system prompt, management tools, behavior toggles, and a task-specific trailer.
 
@@ -229,13 +231,22 @@ def build_management(
         trailer_sections.append(compose_preloaded_block(ideal_plan.source_sequence))
     task_trailer = ("\n\n" + "\n\n".join(trailer_sections)) if trailer_sections else ""
 
+    benchmark_name = (benchmark or "lakeqa").strip().lower()
     if management_mode == "naive":
+        if benchmark_name == "kramabench":
+            return compose_kramabench_prompt(search_tool_mode, include_skills=False), [], False, False, task_trailer
         return compose_baseline_prompt(search_tool_mode), [], False, False, task_trailer
 
-    prompt = compose_managed_prompt(
-        search_tool_mode,
-        include_skills=bool(plan_skills_enabled),
-    )
+    if benchmark_name == "kramabench":
+        prompt = compose_kramabench_prompt(
+            search_tool_mode,
+            include_skills=bool(plan_skills_enabled),
+        )
+    else:
+        prompt = compose_managed_prompt(
+            search_tool_mode,
+            include_skills=bool(plan_skills_enabled),
+        )
     if management_mode == "standard":
         return prompt, [plan], bool(plan_skills_enabled), True, task_trailer
 
@@ -294,6 +305,7 @@ def build_mode_bundle(
         search_tool_mode=search_tool_mode,
         task_context=task_context,
         plan_skills_enabled=bool(run_config.plan_skills_enabled),
+        benchmark=benchmark,
     )
     system_prompt = inject_debug_prompt(system_prompt, run_config.debug_mode)
     system_prompt = _inject_computation_file_family_prompt(
@@ -378,7 +390,7 @@ def _inject_ideal_computation_prompt(system_prompt: str, *, benchmark: str = "la
     if benchmark == "kramabench":
         section = (
             "\n\n## IDEAL COMPUTATION TOOLS\n"
-            "- `query_file`, `query_ideal`, and `execute_code` are replaced or unavailable in this Kramabench run.\n"
+            "- Use only `execute_ideal` for computation in this Kramabench run.\n"
             "- Use `execute_ideal(code, intent, dataset_id=..., file_path=... or s3_uri=...)` "
             "for computation.\n"
             "- Always write a concise intent describing the computation you are trying to perform.\n"
@@ -405,6 +417,8 @@ def _inject_computation_file_family_prompt(
         blocked_tools = "`execute_ideal`"
     elif computation_tool_mode == "ideal":
         blocked_tools = "`query_file`, `execute_code`, `query_ideal`, or `execute_ideal`"
+    elif benchmark == "kramabench":
+        blocked_tools = "`execute_code`"
     else:
         blocked_tools = "`query_file` or `execute_code`"
     section = (
@@ -415,6 +429,11 @@ def _inject_computation_file_family_prompt(
         "- For Wikipedia/content.txt, prose/plain text, HTML, PDFs, binary files, or other non-tabular sources, use `read_file`, `grep_file`, or `peek_file` and extract the fact directly.\n"
         "- Do not download a non-tabular/non-JSON source just to parse it with Python.\n"
     )
+    if computation_tool_mode != "ideal" and benchmark == "kramabench":
+        section += (
+            "- For Kramabench tabular computation, use `peek_file` to inspect structure, "
+            "then download the file and use `execute_code`.\n"
+        )
     return system_prompt.rstrip() + section
 
 

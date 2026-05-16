@@ -21,6 +21,7 @@ import shutil
 import traceback
 import multiprocessing as _mp
 import queue as _queue
+import difflib
 from io import StringIO
 from pathlib import Path
 from typing import Optional, Dict, Any, List, Callable, Tuple
@@ -51,6 +52,7 @@ SANDBOX_BASE_DIR = Path(__file__).resolve().parent.parent.parent / ".sandbox"
 
 _TOOL_RESULT_CHAR_CAP = 6_000  # ~1.5k tokens — keeps single tool results from dominating context
 _DEFAULT_TOOL_TIMEOUT_SECONDS = 150
+_DOWNLOAD_MANIFEST_NAME = ".download_manifest.json"
 
 # Global sandbox directory (created per session)
 _SANDBOX_DIR = None
@@ -63,6 +65,72 @@ _S3_CLIENT_MODE: Optional[str] = None  # signed | unsigned
 
 # Slot written by submit_answer; read back by SubmitAnswerPlugin in agent.py
 _submitted_answer: Optional[Dict[str, Any]] = None
+
+
+def _empty_download_manifest() -> Dict[str, Any]:
+    return {
+        "downloaded": [],
+        "local_paths": [],
+        "path_map": {},
+    }
+
+
+def _download_manifest_path(sandbox: Path) -> Path:
+    return sandbox / _DOWNLOAD_MANIFEST_NAME
+
+
+def _load_download_manifest(sandbox: Path) -> Dict[str, Any]:
+    manifest_path = _download_manifest_path(sandbox)
+    if not manifest_path.is_file():
+        return _empty_download_manifest()
+    try:
+        with manifest_path.open(encoding="utf-8") as f:
+            raw = json.load(f)
+    except Exception:
+        return _empty_download_manifest()
+    manifest = _empty_download_manifest()
+    if isinstance(raw, dict):
+        if isinstance(raw.get("downloaded"), list):
+            manifest["downloaded"] = raw["downloaded"]
+        if isinstance(raw.get("local_paths"), list):
+            manifest["local_paths"] = raw["local_paths"]
+        if isinstance(raw.get("path_map"), dict):
+            manifest["path_map"] = raw["path_map"]
+    return manifest
+
+
+def _manifest_key_values(dataset_id: str, file_path: str, s3_uri: str) -> List[str]:
+    keys = [
+        s3_uri,
+        f"{dataset_id}/{file_path}",
+        f"{dataset_id}:{file_path}",
+    ]
+    return [key for key in keys if key]
+
+
+def _write_download_manifest(sandbox: Path, downloaded: List[Dict[str, Any]]) -> Dict[str, Any]:
+    manifest = _load_download_manifest(sandbox)
+    by_s3_uri: Dict[str, Dict[str, Any]] = {
+        str(item.get("s3_uri")): item
+        for item in manifest["downloaded"]
+        if isinstance(item, dict) and item.get("s3_uri")
+    }
+    for item in downloaded:
+        s3_uri = str(item.get("s3_uri") or "")
+        if s3_uri:
+            by_s3_uri[s3_uri] = item
+        local_path = str(item.get("local_path") or "")
+        if local_path and local_path not in manifest["local_paths"]:
+            manifest["local_paths"].append(local_path)
+        dataset_id = str(item.get("dataset_id") or "")
+        file_path = str(item.get("file_path") or "")
+        for key in _manifest_key_values(dataset_id, file_path, s3_uri):
+            manifest["path_map"][key] = local_path
+
+    manifest["downloaded"] = list(by_s3_uri.values())
+    manifest_path = _download_manifest_path(sandbox)
+    manifest_path.write_text(json.dumps(manifest, indent=2, sort_keys=True), encoding="utf-8")
+    return manifest
 
 
 def configure_benchmark(benchmark: Optional[str] = None) -> str:
@@ -512,6 +580,81 @@ def _resolve_file_reference(
     }
 
 
+def _s3_error_code(exc: BaseException) -> str:
+    if isinstance(exc, ClientError):
+        return str(exc.response.get("Error", {}).get("Code") or "")
+    return ""
+
+
+def _is_missing_s3_key_error(exc: BaseException) -> bool:
+    code = _s3_error_code(exc)
+    if code in {"NoSuchKey", "404", "NotFound"}:
+        return True
+    text = str(exc)
+    return "NoSuchKey" in text or "Not Found" in text or "404" in text
+
+
+def _candidate_prefix_for_key(key: str) -> str:
+    parts = (key or "").split("/", 2)
+    if len(parts) >= 2 and parts[0] in FOLDERS:
+        return f"{parts[0]}/{parts[1]}/"
+    return str(Path(key).parent).strip(".") + "/" if "/" in key else ""
+
+
+def _nearby_s3_candidates(s3: Any, *, bucket: str, key: str, file_path: str) -> Dict[str, Any]:
+    prefix = _candidate_prefix_for_key(key)
+    if not prefix:
+        return {}
+    try:
+        response = s3.list_objects_v2(Bucket=bucket, Prefix=prefix, MaxKeys=1000)
+    except Exception as exc:
+        return {"candidate_error": f"Could not list nearby files under {prefix}: {exc}"}
+
+    keys = [
+        str(item.get("Key") or "")
+        for item in response.get("Contents", [])
+        if item.get("Key") and str(item.get("Key")) != prefix
+    ]
+    relative_candidates = [
+        candidate[len(prefix):]
+        for candidate in keys
+        if candidate.startswith(prefix) and candidate != prefix
+    ]
+    relative_candidates = [candidate for candidate in relative_candidates if candidate]
+    close = difflib.get_close_matches(file_path, relative_candidates, n=5, cutoff=0.55)
+    if not close:
+        close = difflib.get_close_matches(key, keys, n=5, cutoff=0.55)
+    return {
+        "candidate_prefix": prefix,
+        "did_you_mean": close,
+        "available_files_preview": relative_candidates[:20],
+    }
+
+
+def _download_error_entry(
+    exc: BaseException,
+    *,
+    s3: Any,
+    dataset_id: str,
+    file_path: str,
+    s3_key: str,
+    s3_uri: str,
+) -> Dict[str, Any]:
+    entry: Dict[str, Any] = {
+        "error": f"Failed to download: {str(exc)}",
+        "dataset_id": dataset_id,
+        "file_path": file_path,
+        "s3_uri": s3_uri,
+        "bucket": BUCKET,
+        "key": s3_key,
+    }
+    if _is_missing_s3_key_error(exc):
+        entry["error"] = f"Failed to download: object not found at s3://{BUCKET}/{s3_key}"
+        entry["s3_error_code"] = _s3_error_code(exc) or "NoSuchKey"
+        entry.update(_nearby_s3_candidates(s3, bucket=BUCKET, key=s3_key, file_path=file_path))
+    return entry
+
+
 def _guess_delimiter(line: str) -> str:
     candidates = [",", "\t", "|", ";"]
     best = ""
@@ -939,7 +1082,9 @@ def download(files: List[Dict[str, str]]) -> Dict[str, Any]:
 
     Returns:
         Dict with 'downloaded' list of successful downloads, 'download_count',
-        'sandbox_dir', and (if any failed) 'errors'.
+        'sandbox_dir', 'path_map', and 'manifest_path'. If any downloads fail,
+        includes 'errors' with the attempted bucket/key and close candidates
+        for missing S3 keys when available.
     """
     timeout_seconds = _tool_timeout_seconds()
     completed, result = _run_tool_with_timeout(_download_impl, files, timeout_seconds=timeout_seconds)
@@ -982,7 +1127,7 @@ def _download_impl(files: List[Dict[str, str]]) -> Dict[str, Any]:
     s3 = _get_s3_client()
     sandbox = _get_sandbox_dir()
 
-    downloaded = []
+    downloaded: List[Dict[str, Any]] = []
     errors = []
 
     for file_spec in files:
@@ -1024,17 +1169,30 @@ def _download_impl(files: List[Dict[str, str]]) -> Dict[str, Any]:
                 'status': 'downloaded'
             })
         except Exception as e:
-            errors.append({
-                'error': f"Failed to download: {str(e)}",
-                'dataset_id': dataset_id,
-                'file_path': file_path,
-                's3_uri': s3_uri,
-            })
+            errors.append(
+                _download_error_entry(
+                    e,
+                    s3=s3,
+                    dataset_id=dataset_id,
+                    file_path=file_path,
+                    s3_key=s3_key,
+                    s3_uri=s3_uri,
+                )
+            )
+
+    manifest = _write_download_manifest(sandbox, downloaded) if downloaded else _load_download_manifest(sandbox)
+    manifest_path = _download_manifest_path(sandbox)
 
     result = {
         'downloaded': downloaded,
         'download_count': len(downloaded),
-        'sandbox_dir': str(sandbox)
+        'sandbox_dir': str(sandbox),
+        'path_map': manifest.get('path_map', {}),
+        'manifest_path': str(manifest_path),
+        'usage_note': (
+            "Use path_map or DOWNLOAD_MANIFEST_PATH in execute_code; do not guess "
+            "sandbox paths such as /mnt/data or files/..."
+        ),
     }
 
     if errors:
@@ -1181,6 +1339,9 @@ def execute_code(code: str) -> Dict[str, Any]:
     - Variable `SANDBOX_DIR` pointing to the sandbox directory (also available
       as os.environ['SANDBOX_DIR'])
     - Variable `FILES` containing list of downloaded file paths
+    - Variable `DOWNLOAD_MANIFEST_PATH` and env var of the same name pointing
+      to `.download_manifest.json`
+    - Variable `DOWNLOAD_PATHS` containing the manifest `path_map`
 
     Write your analysis code and print() results. The printed output will be returned.
     Do not use this tool to view or extract facts from non-tabular text files;
@@ -1231,6 +1392,8 @@ def _execute_code_impl(code: str) -> Dict[str, Any]:
         return {'error': "No code provided", 'success': False}
 
     sandbox = _get_sandbox_dir()
+    manifest_path = _download_manifest_path(sandbox)
+    download_manifest = _load_download_manifest(sandbox)
 
     # Collect downloaded files
     downloaded_files = []
@@ -1245,6 +1408,8 @@ def _execute_code_impl(code: str) -> Dict[str, Any]:
         '__builtins__': __builtins__,
         'SANDBOX_DIR': str(sandbox),
         'FILES': downloaded_files,
+        'DOWNLOAD_MANIFEST_PATH': str(manifest_path),
+        'DOWNLOAD_PATHS': download_manifest.get('path_map', {}),
     }
 
     # Block all outgoing network traffic by disabling socket
@@ -1278,7 +1443,9 @@ from pathlib import Path
     # `os.environ['SANDBOX_DIR']` instead of using the injected local
     # (~14 KeyError per eval). Both forms now work.
     _prev_sandbox_env = os.environ.get('SANDBOX_DIR')
+    _prev_download_manifest_env = os.environ.get('DOWNLOAD_MANIFEST_PATH')
     os.environ['SANDBOX_DIR'] = str(sandbox)
+    os.environ['DOWNLOAD_MANIFEST_PATH'] = str(manifest_path)
 
     stdout_capture = StringIO()
     stderr_capture = StringIO()
@@ -1358,6 +1525,10 @@ from pathlib import Path
             os.environ.pop('SANDBOX_DIR', None)
         else:
             os.environ['SANDBOX_DIR'] = _prev_sandbox_env
+        if _prev_download_manifest_env is None:
+            os.environ.pop('DOWNLOAD_MANIFEST_PATH', None)
+        else:
+            os.environ['DOWNLOAD_MANIFEST_PATH'] = _prev_download_manifest_env
 
 
 # =============================================================================

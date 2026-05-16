@@ -14,7 +14,10 @@ import json
 import unittest
 import uuid
 from unittest import mock
+from pathlib import Path
+from tempfile import TemporaryDirectory
 
+import strands_evaluation.tools.agent_tools as agent_tools
 from strands_evaluation.tools.agent_tools import (
     _rewrite_execute_code_error,
     _parse_s3_reference,
@@ -746,6 +749,38 @@ class TestExecuteCodeSandboxEnvAndIjson(unittest.TestCase):
         self.assertTrue(result.get("success"), result)
         self.assertEqual(result["output"].strip(), "ijson")
 
+    def test_download_manifest_path_is_available_during_exec(self):
+        old_sandbox = agent_tools._SANDBOX_DIR
+        old_override = agent_tools._SANDBOX_OVERRIDE
+        with TemporaryDirectory() as tmpdir:
+            sandbox = Path(tmpdir)
+            manifest_path = sandbox / ".download_manifest.json"
+            manifest_path.write_text(
+                json.dumps(
+                    {
+                        "downloaded": [],
+                        "local_paths": ["/sandbox/example/files/data.csv"],
+                        "path_map": {
+                            "example/files/data.csv": "/sandbox/example/files/data.csv",
+                        },
+                    }
+                )
+            )
+            try:
+                agent_tools.set_sandbox_dir(sandbox)
+                result = agent_tools._execute_code_impl(
+                    "import os\n"
+                    "print(DOWNLOAD_MANIFEST_PATH == os.environ['DOWNLOAD_MANIFEST_PATH'])\n"
+                    "print(DOWNLOAD_PATHS['example/files/data.csv'])"
+                )
+            finally:
+                agent_tools._SANDBOX_DIR = old_sandbox
+                agent_tools._SANDBOX_OVERRIDE = old_override
+
+        self.assertTrue(result.get("success"), result)
+        self.assertIn("True", result["output"])
+        self.assertIn("/sandbox/example/files/data.csv", result["output"])
+
     def test_module_not_found_attaches_hint(self):
         # Errors should get the hint field appended via _rewrite_execute_code_error
         result = execute_code("import nonexistent_module_xyz")
@@ -780,6 +815,82 @@ class TestToolTimeoutWrappers(unittest.TestCase):
         result = query_file(dataset_id="example", file_path="files/data.txt", sql="SELECT 1")
         self.assertIn("timed out after 150s", result.get("error", ""))
         self.assertIn("download + execute_code", result.get("error", ""))
+
+
+class TestDownloadManifestAndErrors(unittest.TestCase):
+    def setUp(self):
+        self.old_sandbox = agent_tools._SANDBOX_DIR
+        self.old_override = agent_tools._SANDBOX_OVERRIDE
+        self.old_bucket = agent_tools.BUCKET
+        agent_tools.configure_benchmark("lakeqa")
+
+    def tearDown(self):
+        agent_tools._SANDBOX_DIR = self.old_sandbox
+        agent_tools._SANDBOX_OVERRIDE = self.old_override
+        agent_tools.BUCKET = self.old_bucket
+
+    def test_download_writes_manifest_and_returns_path_map(self):
+        class FakeS3:
+            def download_file(self, Bucket, Key, Filename):
+                Path(Filename).write_text("a\n1\n", encoding="utf-8")
+
+        with TemporaryDirectory() as tmpdir:
+            sandbox = Path(tmpdir)
+            agent_tools.set_sandbox_dir(sandbox)
+            with mock.patch("strands_evaluation.tools.agent_tools._get_s3_client", return_value=FakeS3()):
+                result = agent_tools._download_impl(
+                    [
+                        {
+                            "s3_uri": "s3://lakeqa-yc4103-datalake/datagov/example/files/data.csv",
+                        }
+                    ]
+                )
+            manifest_exists = Path(result["manifest_path"]).is_file()
+
+        self.assertEqual(result["download_count"], 1, result)
+        local_path = result["downloaded"][0]["local_path"]
+        self.assertEqual(
+            result["path_map"]["s3://lakeqa-yc4103-datalake/datagov/example/files/data.csv"],
+            local_path,
+        )
+        self.assertEqual(result["path_map"]["example/files/data.csv"], local_path)
+        self.assertNotIn("local_paths", result)
+        self.assertNotIn("python_snippet", result)
+        self.assertTrue(manifest_exists)
+
+    def test_download_missing_key_returns_bucket_key_and_close_candidates(self):
+        class FakeS3:
+            def download_file(self, Bucket, Key, Filename):
+                raise agent_tools.ClientError(
+                    {"Error": {"Code": "NoSuchKey", "Message": "missing"}},
+                    "GetObject",
+                )
+
+            def list_objects_v2(self, Bucket, Prefix, MaxKeys):
+                return {
+                    "Contents": [
+                        {"Key": "datagov/example/files/right-file.csv"},
+                        {"Key": "datagov/example/files/other.csv"},
+                    ]
+                }
+
+        with TemporaryDirectory() as tmpdir:
+            agent_tools.set_sandbox_dir(Path(tmpdir))
+            with mock.patch("strands_evaluation.tools.agent_tools._get_s3_client", return_value=FakeS3()):
+                result = agent_tools._download_impl(
+                    [
+                        {
+                            "s3_uri": "s3://lakeqa-yc4103-datalake/datagov/example/files/right_fiel.csv",
+                        }
+                    ]
+                )
+
+        error = result["errors"][0]
+        self.assertEqual(error["bucket"], "lakeqa-yc4103-datalake")
+        self.assertEqual(error["key"], "datagov/example/files/right_fiel.csv")
+        self.assertIn("object not found", error["error"])
+        self.assertIn("files/right-file.csv", error["available_files_preview"])
+        self.assertTrue(error["did_you_mean"], error)
 
 
 if __name__ == "__main__":

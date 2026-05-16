@@ -373,14 +373,69 @@ def compute_tools_discovery(
     return out
 
 
+def _normalize_gold_dataset_id(value: str) -> str:
+    """Normalize a dataset-relative source path to the dataset ID used in traces."""
+    text = str(value).strip()
+    if not text:
+        return ""
+
+    datagov_marker = "/datagov/"
+    if datagov_marker in text:
+        text = "datagov/" + text.split(datagov_marker, 1)[1]
+
+    if text.startswith("s3://"):
+        without_scheme = text[len("s3://"):]
+        text = without_scheme.split("/", 1)[1] if "/" in without_scheme else without_scheme
+
+    parts = [part for part in text.split("/") if part]
+    if len(parts) >= 2 and parts[0] == "datagov":
+        return parts[1]
+    if len(parts) >= 3 and parts[1] == "files":
+        return parts[0]
+    return text
+
+
+def _unique_normalized_dataset_ids(values: list) -> list[str]:
+    """Normalize IDs/sources while preserving first appearance order."""
+    out: list[str] = []
+    seen: set[str] = set()
+    for value in values:
+        normalized = _normalize_gold_dataset_id(value)
+        if normalized and normalized not in seen:
+            out.append(normalized)
+            seen.add(normalized)
+    return out
+
+
+def _node_sources(task: dict) -> list[str]:
+    nodes = task.get("nodes") or {}
+    if isinstance(nodes, dict):
+        iterable = nodes.values()
+    elif isinstance(nodes, list):
+        iterable = nodes
+    else:
+        return []
+    return [
+        node["source"]
+        for node in iterable
+        if isinstance(node, dict) and isinstance(node.get("source"), str)
+    ]
+
+
 def load_task_gold_ids(tasks_dir: str) -> dict[str, list]:
-    """Load gold dataset IDs from task files. Returns {task_path: [dataset_id]}."""
+    """Load normalized gold dataset IDs from task source paths.
+
+    Trace records store dataset IDs, not exact source paths. Prefer explicit
+    source lists when present, then node sources, and only fall back to
+    datasets_used for older tasks without source metadata.
+    """
     import glob as glob_mod
     gold: dict = {}
     for path in glob_mod.glob(str(Path(tasks_dir) / "**" / "*.json"), recursive=True):
         with open(path) as f:
             task = json.load(f)
-        gold[path] = task.get("datasets_used", [])
+        source_values = task.get("sources_used") or task.get("source_sequence") or _node_sources(task)
+        gold[path] = _unique_normalized_dataset_ids(source_values or task.get("datasets_used", []))
     return gold
 
 
