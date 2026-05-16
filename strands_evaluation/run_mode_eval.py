@@ -43,6 +43,8 @@ _LEGACY_AXIS_DEFAULTS = {
     "computation_tool": "standard",
 }
 _BENCHMARK_CHOICES = ("lakeqa", "kramabench", "hotpotqa")
+_DEFAULT_TASK_SET = "tasks_mini"
+_KRAMABENCH_TASK_SET = "tasks-mini-kramabench"
 
 
 def _variant_condition_label(
@@ -102,6 +104,12 @@ def _resolve_mode_axes(
 def _validate_axis_combination(*, agent_management: str, skills: str) -> None:
     if skills == "on" and agent_management == "naive":
         raise ValueError("--skills on requires --plans standard or --plans ideal.")
+
+
+def _default_task_set_for_benchmark(benchmark: str) -> str:
+    if benchmark == "kramabench":
+        return _KRAMABENCH_TASK_SET
+    return _DEFAULT_TASK_SET
 
 
 def _collect_task_files(args) -> list[str]:
@@ -191,8 +199,8 @@ def main() -> None:
     parser.add_argument("--all-tasks", action="store_true", help="Evaluate all k-*-d-* directories")
     parser.add_argument(
         "--task-set",
-        default="tasks_mini",
-        help="Base directory for --all-tasks (default: tasks_mini)",
+        default=None,
+        help="Base directory for --all-tasks (default: tasks_mini, or tasks-mini-kramabench for --benchmark kramabench)",
     )
     parser.add_argument("--tasks-per-dir", type=int, default=None, help="Limit tasks per directory")
     parser.add_argument(
@@ -371,6 +379,8 @@ def main() -> None:
     args = parser.parse_args()
     if args.decision_notes:
         args.debug_mode = "decision_notes"
+    if args.task_set is None:
+        args.task_set = _default_task_set_for_benchmark(args.benchmark)
 
     if args.k is not None and args.k <= 0:
         parser.error("--k must be > 0")

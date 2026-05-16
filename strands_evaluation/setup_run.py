@@ -19,6 +19,8 @@ _BENCHMARK_CHOICES = ("lakeqa", "kramabench", "hotpotqa")
 _REASONING_EFFORT_CHOICES = ("none", "minimal", "low", "medium", "high", "xhigh")
 _DEFAULT_TASK_SET = "tasks_mini"
 _DEFAULT_SMOKE_TASK_DIR = "k-5-d-4"
+_KRAMABENCH_TASK_SET = "tasks-mini-kramabench"
+_KRAMABENCH_SMOKE_TASK_DIR = "k-2-d-1-s-1"
 _DEFAULT_SMOKE_TASK_LIMIT = 2
 _KRAMABENCH_LOGS_OUTPUT_DIR = "log-kramabench"
 _KRAMABENCH_RESULTS_OUTPUT_DIR = "results-kramabench"
@@ -175,7 +177,19 @@ def _display_path(path: Path, cwd: Path) -> str:
         return str(path)
 
 
-def _resolve_smoke_task_dir(task_dir_arg: Optional[str], cwd: Path) -> Path:
+def _default_task_set(benchmark: str) -> str:
+    if benchmark == "kramabench":
+        return _KRAMABENCH_TASK_SET
+    return _DEFAULT_TASK_SET
+
+
+def _default_smoke_task_dir(benchmark: str) -> str:
+    if benchmark == "kramabench":
+        return _KRAMABENCH_SMOKE_TASK_DIR
+    return _DEFAULT_SMOKE_TASK_DIR
+
+
+def _resolve_smoke_task_dir(task_dir_arg: Optional[str], cwd: Path, *, benchmark: str) -> Path:
     if task_dir_arg:
         candidate = Path(task_dir_arg).expanduser()
         if not candidate.is_absolute():
@@ -184,10 +198,12 @@ def _resolve_smoke_task_dir(task_dir_arg: Optional[str], cwd: Path) -> Path:
             raise ValueError(f"--task-dir does not exist: {task_dir_arg}")
         return candidate
 
-    candidate = cwd / _DEFAULT_TASK_SET / _DEFAULT_SMOKE_TASK_DIR
+    task_set = _default_task_set(benchmark)
+    smoke_task_dir = _default_smoke_task_dir(benchmark)
+    candidate = cwd / task_set / smoke_task_dir
     if not candidate.is_dir():
         raise ValueError(
-            f"Default smoke task dir {_DEFAULT_TASK_SET}/{_DEFAULT_SMOKE_TASK_DIR} "
+            f"Default smoke task dir {task_set}/{smoke_task_dir} "
             "not found. Pass --task-dir explicitly."
         )
     return candidate
@@ -281,7 +297,7 @@ def _build_run_mode_command(args: argparse.Namespace, cwd: Path) -> tuple[list[s
         command.append("--verbose")
 
     if args.subcommand == "smoke":
-        task_dir = _resolve_smoke_task_dir(args.task_dir, cwd)
+        task_dir = _resolve_smoke_task_dir(args.task_dir, cwd, benchmark=args.benchmark)
         task_dir_display = _display_path(task_dir, cwd)
         logs_output_dir, results_output_dir = _default_output_roots(args.benchmark, smoke=True)
         command.extend(
@@ -306,32 +322,33 @@ def _build_run_mode_command(args: argparse.Namespace, cwd: Path) -> tuple[list[s
 
     task_continue = bool(getattr(args, "task_continue", False))
     logs_output_dir, results_output_dir = _default_output_roots(args.benchmark, smoke=False)
+    task_set = _default_task_set(args.benchmark)
     if task_continue:
         command.extend(
             [
                 "--task-continue",
                 "--task-set",
-                _DEFAULT_TASK_SET,
+                task_set,
                 "--logs-output-dir",
                 logs_output_dir,
                 "--results-output-dir",
                 results_output_dir,
             ]
         )
-        scope = f"resume pending tasks under {_DEFAULT_TASK_SET}"
+        scope = f"resume pending tasks under {task_set}"
     else:
         command.extend(
             [
                 "--all-tasks",
                 "--task-set",
-                _DEFAULT_TASK_SET,
+                task_set,
                 "--logs-output-dir",
                 logs_output_dir,
                 "--results-output-dir",
                 results_output_dir,
             ]
         )
-        scope = f"all tasks under {_DEFAULT_TASK_SET}"
+        scope = f"all tasks under {task_set}"
     metadata = {
         "db_path": db_arg,
         "task_scope": scope,

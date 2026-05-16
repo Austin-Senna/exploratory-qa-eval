@@ -191,7 +191,11 @@ def _check_plan_files(task_files: Sequence[str]) -> List[PreflightCheck]:
     return checks
 
 
-def _check_ideal_computation_records(task_files: Sequence[str]) -> List[PreflightCheck]:
+def _check_ideal_computation_records(
+    task_files: Sequence[str],
+    *,
+    benchmark: str = "lakeqa",
+) -> List[PreflightCheck]:
     from strands_evaluation.tools.external.ideal import plan_store
 
     checks: List[PreflightCheck] = []
@@ -199,34 +203,44 @@ def _check_ideal_computation_records(task_files: Sequence[str]) -> List[Prefligh
         try:
             plan = plan_store.load_plan_for_task(task_path)
         except Exception as exc:
-            checks.append(PreflightCheck(f"ideal_query:{task_path}", False, str(exc)))
+            if benchmark != "kramabench":
+                checks.append(PreflightCheck(f"ideal_query:{task_path}", False, str(exc)))
             checks.append(PreflightCheck(f"ideal_code:{task_path}", False, str(exc)))
             continue
 
-        runnable_query_records = [
-            record for record in plan.ideal_query if not getattr(record, "blocked", False)
-        ]
-        blocked_query_records = [
-            record for record in plan.ideal_query if getattr(record, "blocked", False)
-        ]
-        if runnable_query_records or blocked_query_records:
-            detail = f"loaded {len(runnable_query_records)} runnable query record(s)"
-            if blocked_query_records:
-                detail += (
-                    f"; {len(blocked_query_records)} blocked by query_file limits "
-                    "(use execute_ideal/download-style code)"
-                )
-            checks.append(
-                PreflightCheck(f"ideal_query:{task_path}", True, detail)
-            )
-        else:
+        if benchmark == "kramabench":
             checks.append(
                 PreflightCheck(
                     f"ideal_query:{task_path}",
                     True,
-                    "no authored ideal_query records; use read/grep/parse tools or execute_ideal as appropriate",
+                    "skipped: query_file/query_ideal disabled for kramabench; use execute_ideal",
                 )
             )
+        else:
+            runnable_query_records = [
+                record for record in plan.ideal_query if not getattr(record, "blocked", False)
+            ]
+            blocked_query_records = [
+                record for record in plan.ideal_query if getattr(record, "blocked", False)
+            ]
+            if runnable_query_records or blocked_query_records:
+                detail = f"loaded {len(runnable_query_records)} runnable query record(s)"
+                if blocked_query_records:
+                    detail += (
+                        f"; {len(blocked_query_records)} blocked by query_file limits "
+                        "(use execute_ideal/download-style code)"
+                    )
+                checks.append(
+                    PreflightCheck(f"ideal_query:{task_path}", True, detail)
+                )
+            else:
+                checks.append(
+                    PreflightCheck(
+                        f"ideal_query:{task_path}",
+                        True,
+                        "no authored ideal_query records; use read/grep/parse tools or execute_ideal as appropriate",
+                    )
+                )
 
         if plan.ideal_code:
             checks.append(
@@ -313,7 +327,7 @@ def run_preflight(
                 )
             )
         else:
-            checks.extend(_check_ideal_computation_records(task_files))
+            checks.extend(_check_ideal_computation_records(task_files, benchmark=benchmark))
 
     # search_tool=ideal needs descriptions for the internal selector context.
     if st == "ideal":

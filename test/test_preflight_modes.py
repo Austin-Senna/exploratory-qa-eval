@@ -102,8 +102,8 @@ class PreflightModeTests(unittest.TestCase):
             (plan_dir / "task_1.json").write_text(
                 json.dumps(
                     {
-                        "dataset_sequence": ["kramabench-demo"],
-                        "source_sequence": ["datagov/kramabench-demo/files/rows.csv"],
+                        "dataset_sequence": ["kramabench-archeology-easy-10"],
+                        "source_sequence": ["datagov/kramabench-archeology-easy-10/files/worldcities.csv"],
                         "reasoning_chain_text": ["1. Read the first source.", "2. Compute the answer."],
                     }
                 )
@@ -144,7 +144,7 @@ class PreflightModeTests(unittest.TestCase):
         self.assertIn("kramabench_tables_schemas_full.jsonl", names)
         coverage = next(check for check in checks if check.name == "tasks_mini plan source description coverage")
         self.assertTrue(coverage.ok)
-        self.assertIn("stub", coverage.detail)
+        self.assertIn("covered", coverage.detail)
 
     def test_ideal_computation_preflight_allows_missing_code_and_query_records(self):
         with TemporaryDirectory() as tmpdir:
@@ -229,6 +229,57 @@ class PreflightModeTests(unittest.TestCase):
         names = [check.name for check in checks]
         self.assertIn("ideal_query:tasks_mini/k-1-d-1/task_1.json", names)
         self.assertIn("ideal_code:tasks_mini/k-1-d-1/task_1.json", names)
+
+    def test_kramabench_ideal_computation_preflight_skips_query_requirement(self):
+        with TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            plans_root = root / "plans-mini-kramabench"
+            target = plans_root / "k-1-d-1"
+            target.mkdir(parents=True, exist_ok=True)
+            (target / "task_1.json").write_text(
+                json.dumps(
+                    {
+                        "dataset_sequence": ["kramabench-demo"],
+                        "source_sequence": ["datagov/kramabench-demo/files/rows.csv"],
+                        "reasoning_chain_text": "Step 1",
+                        "ideal_code": [
+                            {
+                                "node_id": "1",
+                                "dataset_id": "kramabench-demo",
+                                "source": "datagov/kramabench-demo/files/rows.csv",
+                                "intent": "count rows",
+                                "code": "print(3)",
+                                "answer": 3,
+                            }
+                        ],
+                    }
+                )
+            )
+            from strands_evaluation.tools.external.ideal import plan_store
+
+            old_root = plan_store._KRAMABENCH_PLANS_ROOT
+            try:
+                with patch.object(plan_store, "_KRAMABENCH_PLANS_ROOT", plans_root):
+                    cfg = RunConfig(
+                        search_tool_mode="preloaded",
+                        search_results_mode="naive",
+                        plan_mode="naive",
+                        computation_tool_mode="ideal",
+                        benchmark="kramabench",
+                    )
+                    checks = run_preflight(
+                        cfg,
+                        ["tasks-mini-kramabench/k-1-d-1/task_1.json"],
+                        stream=io.StringIO(),
+                    )
+            finally:
+                plan_store._KRAMABENCH_PLANS_ROOT = old_root
+
+        by_name = {check.name: check for check in checks}
+        self.assertIn("ideal_query:tasks-mini-kramabench/k-1-d-1/task_1.json", by_name)
+        self.assertIn("skipped", by_name["ideal_query:tasks-mini-kramabench/k-1-d-1/task_1.json"].detail)
+        self.assertIn("disabled for kramabench", by_name["ideal_query:tasks-mini-kramabench/k-1-d-1/task_1.json"].detail)
+        self.assertIn("ideal_code:tasks-mini-kramabench/k-1-d-1/task_1.json", by_name)
 
     def test_ideal_search_preflight_checks_tasks_mini_source_description_coverage(self):
         with TemporaryDirectory() as tmpdir:

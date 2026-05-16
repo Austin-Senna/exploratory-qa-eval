@@ -274,6 +274,7 @@ def build_mode_bundle(
         "agent_management",
     )
     computation_tool_mode = _normalize_computation_mode(run_config.computation_tool_mode)
+    benchmark = (getattr(run_config, "benchmark", None) or "lakeqa").strip().lower()
 
     if search_tool_mode == "ideal" or agent_management_mode == "ideal" or computation_tool_mode == "ideal":
         set_ideal_plan_task_context(task_context or {})
@@ -298,15 +299,17 @@ def build_mode_bundle(
     system_prompt = _inject_computation_file_family_prompt(
         system_prompt,
         computation_tool_mode=computation_tool_mode,
+        benchmark=benchmark,
     )
 
     data_tool_list = _apply_computation_tool_mode(
         data_tools,
         computation_tool_mode=computation_tool_mode,
         task_context=task_context,
+        benchmark=benchmark,
     )
     if computation_tool_mode == "ideal":
-        system_prompt = _inject_ideal_computation_prompt(system_prompt)
+        system_prompt = _inject_ideal_computation_prompt(system_prompt, benchmark=benchmark)
 
     tools = list(search_tools) + list(management_tools) + list(data_tool_list)
     return ModeBundle(
@@ -332,44 +335,75 @@ def _apply_computation_tool_mode(
     *,
     computation_tool_mode: str,
     task_context: Optional[Dict[str, Any]],
+    benchmark: str = "lakeqa",
 ) -> List[Any]:
+    query_disabled = benchmark == "kramabench"
     if computation_tool_mode != "ideal":
-        return list(data_tools)
+        if not query_disabled:
+            return list(data_tools)
+        return [
+            tool_obj
+            for tool_obj in data_tools
+            if _tool_name(tool_obj) != "query_file"
+        ]
 
     from strands_evaluation.tools.external.ideal import computation_ideal
 
     computation_ideal.set_task_context(task_context or {})
     out: List[Any] = []
     for tool_obj in data_tools:
-        tool_name = getattr(tool_obj, "tool_name", None)
-        if tool_name is None and hasattr(tool_obj, "tool_spec"):
-            tool_name = tool_obj.tool_spec.get("name")
+        tool_name = _tool_name(tool_obj)
         if tool_name == "query_file":
-            if not any(getattr(t, "tool_name", None) == "query_ideal" for t in out):
+            if query_disabled:
+                continue
+            if not any(_tool_name(t) == "query_ideal" for t in out):
                 out.append(computation_ideal.query_ideal)
             continue
         if tool_name == "execute_code":
-            if not any(getattr(t, "tool_name", None) == "execute_ideal" for t in out):
+            if not any(_tool_name(t) == "execute_ideal" for t in out):
                 out.append(computation_ideal.execute_ideal)
             continue
         out.append(tool_obj)
     return out
 
 
-def _inject_ideal_computation_prompt(system_prompt: str) -> str:
-    section = (
-        "\n\n## IDEAL COMPUTATION TOOLS\n"
-        "- `query_file` and `execute_code` are replaced in this run.\n"
-        "- Use `query_ideal(..., intent=...)` for SQL-style computation and "
-        "`execute_ideal(code, intent, dataset_id=..., file_path=... or s3_uri=...)` "
-        "for Python computation.\n"
-        "- Always write a concise intent describing the computation you are trying to perform.\n"
-    )
+def _tool_name(tool_obj: Any) -> Optional[str]:
+    tool_name = getattr(tool_obj, "tool_name", None)
+    if tool_name is None and hasattr(tool_obj, "tool_spec"):
+        tool_name = tool_obj.tool_spec.get("name")
+    return tool_name
+
+
+def _inject_ideal_computation_prompt(system_prompt: str, *, benchmark: str = "lakeqa") -> str:
+    if benchmark == "kramabench":
+        section = (
+            "\n\n## IDEAL COMPUTATION TOOLS\n"
+            "- `query_file`, `query_ideal`, and `execute_code` are replaced or unavailable in this Kramabench run.\n"
+            "- Use `execute_ideal(code, intent, dataset_id=..., file_path=... or s3_uri=...)` "
+            "for computation.\n"
+            "- Always write a concise intent describing the computation you are trying to perform.\n"
+        )
+    else:
+        section = (
+            "\n\n## IDEAL COMPUTATION TOOLS\n"
+            "- `query_file` and `execute_code` are replaced in this run.\n"
+            "- Use `query_ideal(..., intent=...)` for SQL-style computation and "
+            "`execute_ideal(code, intent, dataset_id=..., file_path=... or s3_uri=...)` "
+            "for Python computation.\n"
+            "- Always write a concise intent describing the computation you are trying to perform.\n"
+        )
     return system_prompt.rstrip() + section
 
 
-def _inject_computation_file_family_prompt(system_prompt: str, *, computation_tool_mode: str) -> str:
-    if computation_tool_mode == "ideal":
+def _inject_computation_file_family_prompt(
+    system_prompt: str,
+    *,
+    computation_tool_mode: str,
+    benchmark: str = "lakeqa",
+) -> str:
+    if computation_tool_mode == "ideal" and benchmark == "kramabench":
+        blocked_tools = "`execute_ideal`"
+    elif computation_tool_mode == "ideal":
         blocked_tools = "`query_file`, `execute_code`, `query_ideal`, or `execute_ideal`"
     else:
         blocked_tools = "`query_file` or `execute_code`"

@@ -171,6 +171,18 @@ class RunModeEvalTests(unittest.TestCase):
         self.assertIn("hotpotqa", run_mode_eval._BENCHMARK_CHOICES)
         self.assertIn("lakeqa", run_mode_eval._BENCHMARK_CHOICES)
 
+    def test_kramabench_defaults_to_kramabench_task_set(self):
+        self.assertEqual(
+            run_mode_eval._default_task_set_for_benchmark("kramabench"),
+            "tasks-mini-kramabench",
+        )
+
+    def test_lakeqa_defaults_to_tasks_mini_task_set(self):
+        self.assertEqual(
+            run_mode_eval._default_task_set_for_benchmark("lakeqa"),
+            "tasks_mini",
+        )
+
     def test_skills_on_rejects_naive_plans_axis(self):
         with self.assertRaisesRegex(ValueError, "--skills on requires --plans standard or --plans ideal"):
             run_mode_eval._validate_axis_combination(agent_management="naive", skills="on")
