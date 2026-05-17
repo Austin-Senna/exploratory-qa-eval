@@ -54,7 +54,7 @@ Candidate authored records:
 {candidates_json}
 
 Decide sequentially:
-1. Call select_match first. Select a candidate only if the submitted {payload_label} and/or intent are semantically equivalent to that authored record's computation for the same source. Select 0 if no authored record matches. Never select a record merely because its answer would be useful.
+1. Call select_match first. Select the candidate's `selection_index` only if the submitted {payload_label} and/or intent are semantically equivalent to that authored record's computation for the same source and expected output shape. Select 0 if no authored record matches. Never select a record merely because its answer would be useful.
 2. If and only if you selected 0, call record_intent_match. Set matches=true only if the submitted {payload_label} reasonably attempts the submitted intent. Set matches=false if the payload is unrelated, contradictory, answer-only, or only inspects schema/sample rows while the intent asks for a substantive computation. If the intent itself asks to inspect schema or sample rows, an inspection payload can match."""
 
 _QUERY_REPAIR_PROMPT_TEMPLATE = """Rewrite the SQL so it accomplishes the user's intent against table alias t.
@@ -231,14 +231,16 @@ def _is_success(result: Any) -> bool:
 
 def _plan_records_for_prompt(plan: IdealTaskPlan, records: Iterable[IdealComputationRecord]) -> str:
     rows = []
-    for record in records:
+    for index, record in enumerate(records, start=1):
         rows.append(
             {
+                "selection_index": index,
                 "node_id": record.node_id,
                 "dataset_id": record.dataset_id,
                 "source": record.source,
                 "intent": record.intent,
                 "payload": record.payload,
+                "expected_output": str(record.answer),
                 "blocked": bool(getattr(record, "blocked", False)),
             }
         )

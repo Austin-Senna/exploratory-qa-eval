@@ -8,9 +8,9 @@
     "datagov/kramabench-legal-easy-19/files/csn-data-book-2024-csv/CSVs/2024_CSN_Fraud_Reports_by_Amount_Lost.csv"
   ],
   "reasoning_chain_text": [
-    "1. Parse the fraud-loss table and recover the total number of reports with dollar loss.",
-    "2. Sum the $1 through $500 loss bins.",
-    "3. Divide the $1-$500 total by all reports with dollar loss and round to three decimals."
+    "1. Parse the 2024 fraud-loss table and recover the total count of reports with a recorded dollar loss.",
+    "2. Sum the report counts for the loss bins covering $1 through $500 inclusive.",
+    "3. Divide the $1-$500 bin total by the total reports with recorded dollar loss and round the proportion to three decimals."
   ],
   "original_final_question": "What is the proportion (round to 3 decimal places) of fraud reporters who lost between $1-$500 in 2024? Write your answer as [ANSWER].",
   "original_reasoning_chain": [

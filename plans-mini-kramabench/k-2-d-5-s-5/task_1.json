@@ -11,8 +11,8 @@
     "datagov/kramabench-environment-easy-4/files/water-body-testing-2019.csv"
   ],
   "reasoning_chain_text": [
-    "1. : For each yearly water-body testing file, count Wollaston Beach records and records marked as swimming-standard violations.",
-    "2. Convert each yearly violation count to a violation rate, average those rates, subtract from one, and round the resulting percentage of time meeting swimming standards."
+    "1. For each year from 2019 through 2023, count Wollaston Beach samples and the subset marked as swimming-standard violations.",
+    "2. Convert each year's violation count to that year's violation rate, average the yearly rates, subtract from one, convert to a percentage, and round to the nearest integer."
   ],
   "original_final_question": "What is the percentage, rounded to the nearest integer, of time from 2019 through 2023 inclusive that the water quality at Quincy's Wollaston Beach met swimming standards? Write your answer as [ANSWER].",
   "original_reasoning_chain": [

@@ -8,9 +8,9 @@
     "datagov/kramabench-wildfire-easy-1/files/noaa_wildfires_monthly_stats.csv"
   ],
   "reasoning_chain_text": [
-    "1. Loads the NOAA monthly wildfire statistics after skipping the 3 non-data rows.",
-    "2. And identifies the highest-acres consecutive 3-month window.",
-    "3. And returns the total acres burned for that window."
+    "1. Load the NOAA monthly wildfire statistics after the non-data header rows and sort the monthly records chronologically from Jan 2000 onward.",
+    "2. Scan only consecutive three-month windows and identify the window whose summed Acres Burned value is largest.",
+    "3. Return the numeric total Acres Burned for that maximum window, not the window's date range."
   ],
   "original_final_question": "Find the 3-month period with the highest total acres burned since Jan 2000, according to NOAA. What was the total acres burned in that period? Write your answer as [ANSWER].",
   "original_reasoning_chain": [
