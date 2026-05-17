@@ -35,7 +35,7 @@ ABLATIONS = [
     ("Execution Ablation", "compute", "d", EXECUTION_ABLATION, {"plan": "i", "search": "i", "results": "i"}),
 ]
 
-COMPARISON_MODELS = ["openai_gpt-5.4-nano", "openai_gpt-5-mini"]
+COMPARISON_MODELS = ["gpt-5.4-nano", "gpt-5-mini"]
 
 PAIRED_CONDITIONS = [
     (
@@ -154,6 +154,15 @@ def _model_from_row(row: dict) -> str:
     return "unknown"
 
 
+def _model_sort_key(model: str) -> Tuple[int, str]:
+    model_text = str(model)
+    lowered = model_text.lower()
+    for idx, token in enumerate(COMPARISON_MODELS):
+        if token.lower() in lowered:
+            return (idx, model_text)
+    return (len(COMPARISON_MODELS), model_text)
+
+
 def load_summary_rows(analysis_dir: Path | str) -> List[dict]:
     root = Path(analysis_dir)
     summary_path = root / "summary.json"
@@ -238,7 +247,7 @@ def build_semantic_delta_rows(summary_rows: List[dict]) -> List[dict]:
                     }
                 )
 
-        for model in sorted({model for model, _label in deltas_by_model_label}):
+        for model in sorted({model for model, _label in deltas_by_model_label}, key=_model_sort_key):
             for code, label in members:
                 entries = deltas_by_model_label.get((model, label), [])
                 if not entries:
@@ -324,7 +333,7 @@ def build_paired_mode_metric_rows(summary_rows: List[dict]) -> List[dict]:
     return sorted(
         rows,
         key=lambda item: (
-            item["model"],
+            _model_sort_key(str(item["model"])),
             condition_order.get(str(item["condition_id"]), 99),
             str(item["variant"]),
         ),
@@ -482,10 +491,7 @@ def _plot_horizontal_delta_bars(
 
 
 def _comparison_models(rows_by_model: Dict[str, List[dict]]) -> List[str]:
-    available = set(rows_by_model)
-    preferred = [model for model in COMPARISON_MODELS if model in available]
-    fallback = [model for model in sorted(available) if model not in preferred]
-    return (preferred + fallback)[:2]
+    return sorted(rows_by_model, key=_model_sort_key)[:2]
 
 
 def _paired_condition_axis_label(condition_id: str) -> str:
@@ -499,7 +505,7 @@ def _plot_semantic_delta_ablation(plt, delta_rows: List[dict], output_dir: Path)
     for row in delta_rows:
         rows_by_model[str(row["model"])].append(row)
 
-    for model, model_rows in sorted(rows_by_model.items()):
+    for model, model_rows in sorted(rows_by_model.items(), key=lambda item: _model_sort_key(item[0])):
         fig, axes = plt.subplots(3, 1, figsize=(12.5, 8.2))
         for ax, (ablation_name, _axis, _baseline_code, members, _fixed_context) in zip(axes, ABLATIONS):
             by_label = {row["label"]: row for row in model_rows if row["ablation"] == ablation_name}
@@ -526,7 +532,7 @@ def _plot_semantic_delta_ablation_comparison(plt, delta_rows: List[dict], output
     if len(models) < 2:
         return
 
-    fig, axes = plt.subplots(3, 2, figsize=(14.0, 7.0), squeeze=False)
+    fig, axes = plt.subplots(3, 2, figsize=(14.0, 5.4), squeeze=False)
     for col_idx, model in enumerate(models):
         model_rows = rows_by_model.get(model, [])
         for row_idx, (ablation_name, _axis, _baseline_code, members, _fixed_context) in enumerate(ABLATIONS):
@@ -550,7 +556,7 @@ def _plot_semantic_delta_ablation_comparison(plt, delta_rows: List[dict], output
             )
 
     fig.suptitle("Semantic Match Ablations", fontsize=14)
-    fig.subplots_adjust(left=0.13, right=0.985, bottom=0.055, top=0.88, hspace=0.36, wspace=0.08)
+    fig.subplots_adjust(left=0.13, right=0.985, bottom=0.07, top=0.90, hspace=0.22, wspace=0.08)
     fig.savefig(output_dir / "fig21a_semantic_delta_ablation_comparison.pdf")
     plt.close(fig)
 
@@ -570,7 +576,7 @@ def _plot_paired_mode_metrics(plt, paired_rows: List[dict], output_dir: Path) ->
     condition_order = {
         condition_id: idx for idx, (condition_id, _code, _label, _expected) in enumerate(PAIRED_CONDITIONS)
     }
-    for model, rows in sorted(rows_by_model.items()):
+    for model, rows in sorted(rows_by_model.items(), key=lambda item: _model_sort_key(item[0])):
         rows = sorted(rows, key=lambda row: condition_order.get(str(row.get("condition_id")), 99))
         rows_by_condition = {str(row.get("condition_id")): row for row in rows}
         fig, axes = plt.subplots(3, 1, figsize=(10.5, 7.2))
@@ -595,7 +601,7 @@ def _plot_paired_mode_metrics(plt, paired_rows: List[dict], output_dir: Path) ->
                 for condition_id, _code, _label, _expected in PAIRED_CONDITIONS
             ]
             _plot_horizontal_delta_bars(ax, labels, values, deltas, metric_label, label_fontsize=9)
-        fig.suptitle(f"Canonical Mode Metrics (Search / Plan / Compute) - {model}")
+        fig.suptitle(f"Reference Mode Metrics (Search / Plan / Compute) - {model}")
         fig.subplots_adjust(left=0.22, right=0.98, bottom=0.055, top=0.9, hspace=0.36)
         fig.savefig(output_dir / f"fig22_{_safe_slug(model)}_paired_modes_metrics.pdf")
         plt.close(fig)
@@ -620,11 +626,12 @@ def _plot_paired_mode_metrics_comparison(plt, paired_rows: List[dict], output_di
     condition_order = {
         condition_id: idx for idx, (condition_id, _code, _label, _expected) in enumerate(PAIRED_CONDITIONS)
     }
-    fig, axes = plt.subplots(3, 2, figsize=(14.2, 7.0), squeeze=False)
-    for col_idx, model in enumerate(models):
+    n_models = len(models)
+    fig, axes = plt.subplots(n_models, 3, figsize=(14.2, 1.6 + 1.3 * n_models), squeeze=False)
+    for row_idx, model in enumerate(models):
         rows = sorted(rows_by_model.get(model, []), key=lambda row: condition_order.get(str(row.get("condition_id")), 99))
         rows_by_condition = {str(row.get("condition_id")): row for row in rows}
-        for row_idx, (field, metric_label) in enumerate(fields):
+        for col_idx, (field, metric_label) in enumerate(fields):
             ax = axes[row_idx][col_idx]
             labels = [_paired_condition_axis_label(condition_id) for condition_id, _code, _label, _expected in PAIRED_CONDITIONS]
             values = [
@@ -645,19 +652,32 @@ def _plot_paired_mode_metrics_comparison(plt, paired_rows: List[dict], output_di
                 )
                 for condition_id, _code, _label, _expected in PAIRED_CONDITIONS
             ]
-            title = f"{model}\n{metric_label}" if row_idx == 0 else metric_label
+            title = metric_label if row_idx == 0 else ""
             _plot_horizontal_delta_bars(
                 ax,
                 labels,
                 values,
                 deltas,
                 title,
-                label_fontsize=8,
+                label_fontsize=9,
                 show_y_labels=col_idx == 0,
             )
 
     fig.suptitle("Canonical Mode Metrics (Search / Plan / Compute)", fontsize=14)
-    fig.subplots_adjust(left=0.12, right=0.985, bottom=0.055, top=0.88, hspace=0.36, wspace=0.08)
+    fig.subplots_adjust(left=0.14, right=0.985, bottom=0.08, top=0.84, hspace=0.18, wspace=0.08)
+    for row_idx, model in enumerate(models):
+        ax_left = axes[row_idx][0]
+        bbox = ax_left.get_position()
+        fig.text(
+            0.020,
+            bbox.y0 + bbox.height / 2,
+            model,
+            rotation=90,
+            ha="center",
+            va="center",
+            fontsize=11,
+            fontweight="bold",
+        )
     fig.savefig(output_dir / "fig22a_paired_mode_metrics_comparison.pdf")
     plt.close(fig)
 
