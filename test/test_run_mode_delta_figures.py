@@ -7,6 +7,7 @@ from tempfile import TemporaryDirectory
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from analysis.run_mode_delta_figures import (
+    _comparison_models,
     _paired_condition_axis_label,
     build_paired_mode_metric_rows,
     build_semantic_delta_rows,
@@ -20,6 +21,17 @@ class TestRunModeDeltaFigures(unittest.TestCase):
         self.assertEqual(_paired_condition_axis_label("nns"), "BM25 / No Plan / Std")
         self.assertEqual(_paired_condition_axis_label("sss"), "Pneuma / Plan / Std")
         self.assertEqual(_paired_condition_axis_label("iii"), "Ideal / Ideal / Ideal")
+
+    def test_comparison_models_orders_nano_before_mini_for_openai_model_names(self):
+        rows_by_model = {
+            "openai_gpt-5-mini": [],
+            "openai_gpt-5.4-nano": [],
+        }
+
+        self.assertEqual(
+            _comparison_models(rows_by_model),
+            ["openai_gpt-5.4-nano", "openai_gpt-5-mini"],
+        )
 
     def test_build_semantic_delta_rows_compares_one_axis_against_naive_baseline(self):
         rows = [
@@ -273,6 +285,7 @@ class TestRunModeDeltaFigures(unittest.TestCase):
             generate_delta_figures(rows, output_dir)
 
             self.assertTrue((output_dir / "fig21a_semantic_delta_ablation_comparison.pdf").exists())
+            self.assertTrue((output_dir / "fig21b_semantic_delta_ablation_compact.pdf").exists())
             self.assertTrue((output_dir / "fig22a_paired_mode_metrics_comparison.pdf").exists())
 
 

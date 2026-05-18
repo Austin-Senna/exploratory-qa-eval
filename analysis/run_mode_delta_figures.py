@@ -397,6 +397,7 @@ def _cleanup_delta_figure_pdfs(output_dir: Path) -> None:
         "fig21_*_semantic_delta_ablation.pdf",
         "fig22_*_paired_modes_metrics.pdf",
         "fig21a_*_comparison.pdf",
+        "fig21b_*_compact.pdf",
         "fig22a_*_comparison.pdf",
     ):
         for path in output_dir.glob(pattern):
@@ -416,6 +417,7 @@ def generate_delta_figures(summary_rows: List[dict], output_dir: Path) -> Dict[s
         _plot_semantic_delta_ablation(plt, delta_rows, output_dir)
         _plot_paired_mode_metrics(plt, paired_rows, output_dir)
         _plot_semantic_delta_ablation_comparison(plt, delta_rows, output_dir)
+        _plot_semantic_delta_ablation_compact(plt, delta_rows, output_dir)
         _plot_paired_mode_metrics_comparison(plt, paired_rows, output_dir)
     return {"semantic_delta_rows": delta_rows, "paired_mode_rows": paired_rows}
 
@@ -445,9 +447,11 @@ def _plot_horizontal_delta_bars(
     *,
     label_fontsize: float = 9,
     show_y_labels: bool = True,
+    value_fontsize: float = 9,
+    title_fontsize: Optional[float] = None,
 ) -> None:
     if not labels:
-        ax.set_title(title)
+        ax.set_title(title, fontsize=title_fontsize)
         ax.set_xticks([])
         ax.set_yticks([])
         ax.text(0.5, 0.5, "No data", transform=ax.transAxes, ha="center", va="center", fontsize=9)
@@ -461,7 +465,7 @@ def _plot_horizontal_delta_bars(
     if not show_y_labels:
         ax.tick_params(axis="y", length=0)
     ax.invert_yaxis()
-    ax.set_title(title)
+    ax.set_title(title, fontsize=title_fontsize)
     ax.set_xlim(0, 108)
     ax.set_xticks([])
     ax.tick_params(axis="x", length=0)
@@ -485,7 +489,7 @@ def _plot_horizontal_delta_bars(
             f"{value:.1f}% ({_delta_label(delta)})",
             ha="left",
             va="center",
-            fontsize=9,
+            fontsize=value_fontsize,
         )
     ax.set_ylim(len(labels) - 0.5, -0.5)
 
@@ -494,8 +498,26 @@ def _comparison_models(rows_by_model: Dict[str, List[dict]]) -> List[str]:
     return sorted(rows_by_model, key=_model_sort_key)[:2]
 
 
+def _compact_model_label(model: str) -> str:
+    return str(model).replace("openai_", "").replace("_", "-")
+
+
 def _paired_condition_axis_label(condition_id: str) -> str:
     return PAIRED_CONDITION_AXIS_LABELS.get(str(condition_id), str(condition_id))
+
+
+def _compact_ablation_label(label: str) -> str:
+    replacements = {
+        "Default Plan": "Default",
+        "Ideal Plan": "Ideal",
+        "BM25 Search": "BM25",
+        "PNEUMA Hybrid Search": "PNEUMA",
+        "Ideal Search": "Ideal",
+        "Preloaded Sources": "Preloaded",
+        "Standard Execution": "Standard",
+        "Ideal Execution": "Ideal",
+    }
+    return replacements.get(label, label)
 
 
 def _plot_semantic_delta_ablation(plt, delta_rows: List[dict], output_dir: Path) -> None:
@@ -558,6 +580,61 @@ def _plot_semantic_delta_ablation_comparison(plt, delta_rows: List[dict], output
     fig.suptitle("Semantic Match Ablations", fontsize=14)
     fig.subplots_adjust(left=0.13, right=0.985, bottom=0.07, top=0.90, hspace=0.22, wspace=0.08)
     fig.savefig(output_dir / "fig21a_semantic_delta_ablation_comparison.pdf")
+    plt.close(fig)
+
+
+def _plot_semantic_delta_ablation_compact(plt, delta_rows: List[dict], output_dir: Path) -> None:
+    if not delta_rows:
+        return
+    rows_by_model: Dict[str, List[dict]] = defaultdict(list)
+    for row in delta_rows:
+        rows_by_model[str(row["model"])].append(row)
+    models = _comparison_models(rows_by_model)
+    if len(models) < 2:
+        return
+
+    fig, axes = plt.subplots(len(models), len(ABLATIONS), figsize=(13.2, 4.9), squeeze=False)
+    for row_idx, model in enumerate(models):
+        model_rows = rows_by_model.get(model, [])
+        for col_idx, (ablation_name, _axis, _baseline_code, members, _fixed_context) in enumerate(ABLATIONS):
+            ax = axes[row_idx][col_idx]
+            by_label = {row["label"]: row for row in model_rows if row["ablation"] == ablation_name}
+            labels = [_compact_ablation_label(label) for _code, label in members]
+            values = [
+                float(by_label[label]["semantic_match"]) * 100.0 if label in by_label else None
+                for _code, label in members
+            ]
+            deltas = [
+                float(by_label[label]["delta"]) * 100.0 if label in by_label else None
+                for _code, label in members
+            ]
+            title = ablation_name.replace(" Ablation", "") if row_idx == 0 else ""
+            _plot_horizontal_delta_bars(
+                ax,
+                labels,
+                values,
+                deltas,
+                title,
+                label_fontsize=7.7,
+                value_fontsize=7.4,
+                title_fontsize=9.2,
+            )
+
+    fig.suptitle("Semantic Match Ablations", fontsize=12)
+    fig.subplots_adjust(left=0.095, right=0.995, bottom=0.08, top=0.84, hspace=0.24, wspace=0.34)
+    for row_idx, model in enumerate(models):
+        bbox = axes[row_idx][0].get_position()
+        fig.text(
+            0.028,
+            bbox.y0 + bbox.height / 2,
+            _compact_model_label(model),
+            rotation=90,
+            ha="center",
+            va="center",
+            fontsize=9.5,
+            fontweight="bold",
+        )
+    fig.savefig(output_dir / "fig21b_semantic_delta_ablation_compact.pdf")
     plt.close(fig)
 
 
