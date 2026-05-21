@@ -37,6 +37,7 @@ class BenchmarkDefaults:
     tasks_dir: Path
     analysis_dir: Path
     turn_waste_grouped_dir: Path
+    answer_failure_combined_dir: Path
     fig21b_name: str
 
 
@@ -49,10 +50,12 @@ class GeneratorConfig:
     tasks_dir: Path
     analysis_dir: Path
     turn_waste_grouped_dir: Path
+    answer_failure_combined_dir: Path
     model_filter: Optional[str]
     force: bool
     paper_dir: Path
     mirror_dir: Path
+    agent_analysis_dir: Path
 
 
 def _benchmark_defaults(benchmark: str) -> BenchmarkDefaults:
@@ -65,6 +68,7 @@ def _benchmark_defaults(benchmark: str) -> BenchmarkDefaults:
             tasks_dir=Path("tasks_mini"),
             analysis_dir=Path("analysis_results_mode_semantic"),
             turn_waste_grouped_dir=Path("results_semantic_turn_waste_grouped"),
+            answer_failure_combined_dir=Path("results_semantic_answer_failures_combined"),
             fig21b_name="fig21b_lakeqa_semantic_delta_ablation.pdf",
         )
     if benchmark == "kramabench":
@@ -76,6 +80,7 @@ def _benchmark_defaults(benchmark: str) -> BenchmarkDefaults:
             tasks_dir=Path("tasks-mini-kramabench"),
             analysis_dir=Path("analysis_results_mode_kramabench_semantic"),
             turn_waste_grouped_dir=Path("results-kramabench_semantic_turn_waste_grouped"),
+            answer_failure_combined_dir=Path("results-kramabench_semantic_answer_failures_combined"),
             fig21b_name="fig21b_krama_semantic_delta_ablation.pdf",
         )
     raise ValueError(f"Unsupported benchmark: {benchmark}")
@@ -86,6 +91,8 @@ def _selected_existing_figures(benchmark: str) -> list[str]:
     return [
         "fig05_turn_waste_groups_by_model.pdf",
         "fig05b_turn_waste_groups_by_condition.pdf",
+        "fig06_answer_failure_groups_by_model.pdf",
+        "fig06b_answer_failure_groups_by_condition.pdf",
         defaults.fig21b_name,
     ]
 
@@ -421,6 +428,41 @@ def export_paper_figures(
     return copied
 
 
+AGENT_ANALYSIS_EXPORT_SUFFIXES = {".csv", ".json", ".pdf", ".md"}
+AGENT_ANALYSIS_SKIP_DIRS = {"tmp", "logs", "log-kramabench", "__pycache__"}
+
+
+def _is_agent_analysis_export(path: Path, root: Path) -> bool:
+    if path.name.startswith("."):
+        return False
+    if path.suffix not in AGENT_ANALYSIS_EXPORT_SUFFIXES:
+        return False
+    rel_parts = path.relative_to(root).parts
+    if any(part in AGENT_ANALYSIS_SKIP_DIRS for part in rel_parts[:-1]):
+        return False
+    if path.suffix == ".json" and path.name.endswith("_journal.json"):
+        return False
+    return True
+
+
+def export_agent_analysis_results(*, agent_analysis_root: Path, destination: Path) -> list[Path]:
+    """Mirror paper-relevant agent_analysis summaries/results into paper_figures."""
+    if not agent_analysis_root.exists():
+        print(f"Missing agent_analysis directory: {agent_analysis_root}")
+        return []
+
+    copied: list[Path] = []
+    for source in sorted(path for path in agent_analysis_root.rglob("*") if path.is_file()):
+        if not _is_agent_analysis_export(source, agent_analysis_root):
+            continue
+        target = destination / source.relative_to(agent_analysis_root)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        if source.resolve() != target.resolve():
+            shutil.copy2(source, target)
+        copied.append(target)
+    return copied
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--benchmark", choices=["lakeqa", "kramabench"], required=True)
@@ -431,9 +473,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--tasks-dir", default=None)
     parser.add_argument("--analysis-dir", default=None)
     parser.add_argument("--turn-waste-grouped-dir", default=None)
+    parser.add_argument("--answer-failure-combined-dir", default=None)
     parser.add_argument("--model-filter", default=None)
     parser.add_argument("--paper-dir", default="sana_framework_paper/figures")
     parser.add_argument("--mirror-dir", default="paper_figures")
+    parser.add_argument("--agent-analysis-dir", default="agent_analysis")
     return parser.parse_args()
 
 
@@ -449,10 +493,14 @@ def _resolve_config(args: argparse.Namespace) -> GeneratorConfig:
         turn_waste_grouped_dir=Path(args.turn_waste_grouped_dir)
         if args.turn_waste_grouped_dir
         else defaults.turn_waste_grouped_dir,
+        answer_failure_combined_dir=Path(args.answer_failure_combined_dir)
+        if args.answer_failure_combined_dir
+        else defaults.answer_failure_combined_dir,
         model_filter=args.model_filter,
         force=bool(args.force),
         paper_dir=Path(args.paper_dir),
         mirror_dir=Path(args.mirror_dir),
+        agent_analysis_dir=Path(args.agent_analysis_dir),
     )
 
 
@@ -499,10 +547,17 @@ def main() -> None:
         analysis_dir=config.analysis_dir,
         search_figure_path=search_figure_path,
         destinations=[config.paper_dir, config.mirror_dir],
-        fallback_dirs=[config.paper_dir],
+        fallback_dirs=[config.answer_failure_combined_dir, config.paper_dir],
     )
     print("Exported paper figures:")
     for path in copied:
+        print(f"  {path}")
+    agent_copied = export_agent_analysis_results(
+        agent_analysis_root=config.agent_analysis_dir,
+        destination=config.mirror_dir / "agent_analysis",
+    )
+    print("Exported agent_analysis results:")
+    for path in agent_copied:
         print(f"  {path}")
 
 

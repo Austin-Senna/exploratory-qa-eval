@@ -10,6 +10,7 @@ from analysis.paper_figure_generator import (
     _search_variant_label,
     _selected_existing_figures,
     _turn_waste_scope_complete,
+    export_agent_analysis_results,
     export_paper_figures,
 )
 
@@ -24,12 +25,17 @@ class TestPaperFigureGenerator(unittest.TestCase):
         self.assertEqual(lakeqa.traces_dir, Path("results/traces/modes"))
         self.assertEqual(lakeqa.tasks_dir, Path("tasks_mini"))
         self.assertEqual(lakeqa.analysis_dir, Path("analysis_results_mode_semantic"))
+        self.assertEqual(lakeqa.answer_failure_combined_dir, Path("results_semantic_answer_failures_combined"))
 
         self.assertEqual(kramabench.results_dir, Path("results-kramabench_semantic/modes"))
         self.assertEqual(kramabench.base_results_dir, Path("results-kramabench/modes"))
         self.assertEqual(kramabench.traces_dir, Path("results-kramabench/traces/modes"))
         self.assertEqual(kramabench.tasks_dir, Path("tasks-mini-kramabench"))
         self.assertEqual(kramabench.analysis_dir, Path("analysis_results_mode_kramabench_semantic"))
+        self.assertEqual(
+            kramabench.answer_failure_combined_dir,
+            Path("results-kramabench_semantic_answer_failures_combined"),
+        )
 
     def test_selected_existing_figures_include_benchmark_specific_fig21b(self):
         self.assertIn(
@@ -39,6 +45,14 @@ class TestPaperFigureGenerator(unittest.TestCase):
         self.assertIn(
             "fig21b_krama_semantic_delta_ablation.pdf",
             _selected_existing_figures("kramabench"),
+        )
+        self.assertIn(
+            "fig06_answer_failure_groups_by_model.pdf",
+            _selected_existing_figures("lakeqa"),
+        )
+        self.assertIn(
+            "fig06b_answer_failure_groups_by_condition.pdf",
+            _selected_existing_figures("lakeqa"),
         )
 
     def test_search_variant_label_maps_canonical_trio(self):
@@ -130,6 +144,8 @@ class TestPaperFigureGenerator(unittest.TestCase):
             for name in [
                 "fig05_turn_waste_groups_by_model.pdf",
                 "fig05b_turn_waste_groups_by_condition.pdf",
+                "fig06_answer_failure_groups_by_model.pdf",
+                "fig06b_answer_failure_groups_by_condition.pdf",
                 "fig21b_semantic_delta_ablation_compact.pdf",
             ]:
                 (figures_dir / name).write_bytes(b"%PDF-1.4\n")
@@ -145,6 +161,7 @@ class TestPaperFigureGenerator(unittest.TestCase):
 
             self.assertIn(root / "paper" / new_figure.name, copied)
             self.assertTrue((root / "mirror" / "fig05_turn_waste_groups_by_model.pdf").exists())
+            self.assertTrue((root / "mirror" / "fig06_answer_failure_groups_by_model.pdf").exists())
             self.assertTrue((root / "paper" / "fig21b_lakeqa_semantic_delta_ablation.pdf").exists())
 
     def test_turn_waste_scope_complete_detects_partial_grouped_outputs(self):
@@ -178,6 +195,8 @@ class TestPaperFigureGenerator(unittest.TestCase):
             for name in [
                 "fig05_turn_waste_groups_by_model.pdf",
                 "fig05b_turn_waste_groups_by_condition.pdf",
+                "fig06_answer_failure_groups_by_model.pdf",
+                "fig06b_answer_failure_groups_by_condition.pdf",
                 "fig21b_lakeqa_semantic_delta_ablation.pdf",
             ]:
                 (fallback_dir / name).write_bytes(b"%PDF-1.4\n")
@@ -193,6 +212,44 @@ class TestPaperFigureGenerator(unittest.TestCase):
             )
 
             self.assertTrue((root / "mirror" / "fig05_turn_waste_groups_by_model.pdf").exists())
+            self.assertTrue((root / "mirror" / "fig06b_answer_failure_groups_by_condition.pdf").exists())
+
+    def test_export_agent_analysis_results_copies_summaries_and_skips_runtime_artifacts(self):
+        with TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            agent_root = root / "agent_analysis"
+            wanted = [
+                agent_root / "trajectory_pair_analysis" / "trajectory_pair_summary.csv",
+                agent_root / "trajectory_pair_analysis" / "trajectory_pair_summary.json",
+                agent_root / "trajectory_pair_analysis" / "trajectory_pair_label_breakdown.csv",
+                agent_root / "execution_inventory_analysis" / "execution_inventory.csv",
+                agent_root / "execution_inventory_analysis" / "execution_events.csv",
+                agent_root / "plan_default_analysis" / "figures" / "plan_default_similarity_by_benchmark_model.pdf",
+                agent_root / "follow_plan_analysis" / "summary" / "plan_following_summary.csv",
+            ]
+            skipped = [
+                agent_root / "trajectory_pair_analysis" / "trajectory_pair_journal.jsonl",
+                agent_root / "trajectory_pair_analysis" / "tmp" / "row.json",
+                agent_root / "plan_default_analysis" / "logs" / "raw.csv",
+                agent_root / ".DS_Store",
+            ]
+            for path in wanted + skipped:
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text("x", encoding="utf-8")
+
+            copied = export_agent_analysis_results(
+                agent_analysis_root=agent_root,
+                destination=root / "paper_figures" / "agent_analysis",
+            )
+
+            copied_rel = {path.relative_to(root / "paper_figures" / "agent_analysis") for path in copied}
+            self.assertIn(Path("trajectory_pair_analysis/trajectory_pair_summary.csv"), copied_rel)
+            self.assertIn(Path("execution_inventory_analysis/execution_events.csv"), copied_rel)
+            self.assertIn(Path("plan_default_analysis/figures/plan_default_similarity_by_benchmark_model.pdf"), copied_rel)
+            self.assertTrue((root / "paper_figures" / "agent_analysis" / "follow_plan_analysis/summary/plan_following_summary.csv").exists())
+            self.assertFalse((root / "paper_figures" / "agent_analysis" / "trajectory_pair_analysis/trajectory_pair_journal.jsonl").exists())
+            self.assertFalse((root / "paper_figures" / "agent_analysis" / "trajectory_pair_analysis/tmp/row.json").exists())
+            self.assertFalse((root / "paper_figures" / "agent_analysis" / ".DS_Store").exists())
 
 
 if __name__ == "__main__":
