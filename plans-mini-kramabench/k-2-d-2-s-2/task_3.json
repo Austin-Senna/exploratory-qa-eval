@@ -47,6 +47,13 @@
   ],
   "ideal_query": [
     {
+      "node_id": "2",
+      "dataset_id": "kramabench-legal-hard-8",
+      "source": "datagov/kramabench-legal-hard-8/files/csn-data-book-2024-csv/CSVs/2024_CSN_Metropolitan_Areas_Fraud_and_Other_Reports.csv",
+      "intent": "What is the Miami-Fort Lauderdale-West Palm Beach fraud-and-other report count in the national metropolitan-area file?",
+      "answer": "Cannot execute SQL: query_file cannot read this CSV because DuckDB reports invalid non-UTF-8 encoding. Download the file and use execute_ideal/download-style Python with the correct encoding."
+    },
+    {
       "node_id": "3",
       "dataset_id": "kramabench-legal-hard-8",
       "source": "datagov/kramabench-legal-hard-8/files/csn-data-book-2024-csv/CSVs/State MSA Fraud and Other data/Florida.csv",

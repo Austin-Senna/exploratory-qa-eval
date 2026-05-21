@@ -47,5 +47,14 @@
         0.787
       ]
     }
+  ],
+  "ideal_query": [
+    {
+      "node_id": "1",
+      "dataset_id": "kramabench-wildfire-hard-16",
+      "source": "datagov/kramabench-wildfire-hard-16/files/noaa_wildfires_variabledescrip.csv",
+      "intent": "Which NOAA fields needed for the seasonal cause-by-region test are described in the variable-description file?",
+      "answer": "Cannot execute SQL: query_file cannot read this CSV because DuckDB reports invalid non-UTF-8 encoding. Download the file and use execute_ideal/download-style Python with the correct encoding."
+    }
   ]
 }

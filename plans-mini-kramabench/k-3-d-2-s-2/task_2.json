@@ -55,5 +55,14 @@
       "code": "import pandas as pd\npath = 'other-benchmarks/Kramabench/data/wildfire/input/noaa_wildfires.csv'\ndf = pd.read_csv(path)\njuly = df[(df['start_day_of_year'] >= 181) & (df['start_day_of_year'] < 213)]\ncorrelation = july['wind_med'].corr(july['hec'])\nprint('Yes' if abs(correlation) >= 0.5 else 'No')\n",
       "answer": "No"
     }
+  ],
+  "ideal_query": [
+    {
+      "node_id": "1",
+      "dataset_id": "kramabench-wildfire-easy-15",
+      "source": "datagov/kramabench-wildfire-easy-15/files/noaa_wildfires_variabledescrip.csv",
+      "intent": "Which requested NOAA variable names are described in the variable-description file?",
+      "answer": "Cannot execute SQL: query_file cannot read this CSV because DuckDB reports invalid non-UTF-8 encoding. Download the file and use execute_ideal/download-style Python with the correct encoding."
+    }
   ]
 }

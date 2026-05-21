@@ -15,11 +15,18 @@ from analysis.run_mode_analysis import (
     write_per_model_outputs as write_legacy_per_model_outputs,
 )
 from analysis.run_mode_analysis_semantic import (
+    _build_turn_waste_condition_model_summary,
     _compact_variant_label,
+    _default_turn_waste_grouped_dir,
     _normalize_eval_row,
+    _enrich_trace_records_with_log_sources,
     _parse_model_filters,
     _parse_variant,
     _plot_error_vs_semantic_variant,
+    _search_call_cumulative_fieldnames,
+    _source_ids_from_payload,
+    _standard_condition_label,
+    _turn_waste_plot_rows,
     build_search_depth_curves,
     build_summary,
     build_variant_summary,
@@ -49,6 +56,75 @@ class TestRunModeAnalysisSemantic(unittest.TestCase):
         self.assertEqual(parse_legacy_model_filters("gpt-5.2,"), ["gpt-5.2"])
         self.assertIsNone(_parse_model_filters(" , "))
         self.assertIsNone(parse_legacy_model_filters(" , "))
+
+    def test_default_turn_waste_grouped_dir_matches_model_scoped_grouper_output(self):
+        inferred = _default_turn_waste_grouped_dir("results_semantic/modes")
+
+        self.assertEqual(inferred, "results_semantic_turn_waste_grouped")
+
+    def test_log_source_payload_extracts_download_files_and_results(self):
+        source_ids = _source_ids_from_payload({
+            "results": [
+                {
+                    "s3_uri": (
+                        "s3://sana-kramabench/datagov/"
+                        "kramabench-archeology-easy-10/files/worldcities.csv"
+                    )
+                }
+            ],
+            "files": [
+                {
+                    "dataset_id": "kramabench-archeology-easy-10",
+                    "file_path": "files/cities.csv",
+                }
+            ],
+            "downloaded": [
+                {
+                    "dataset_id": "kramabench-archeology-easy-10",
+                    "file_path": "files/settlements.csv",
+                }
+            ],
+        })
+
+        self.assertEqual(
+            source_ids,
+            [
+                "kramabench-archeology-easy-10/files/worldcities.csv",
+                "kramabench-archeology-easy-10/files/cities.csv",
+                "kramabench-archeology-easy-10/files/settlements.csv",
+            ],
+        )
+
+    def test_log_source_enrichment_synthesizes_legacy_download_access_record(self):
+        with TemporaryDirectory() as tmpdir:
+            log_path = Path(tmpdir) / "task_1.log"
+            log_path.write_text(
+                (
+                    'Executing: search_ideal({"query": "cities"})\n'
+                    'Tool result: {"results": [{"s3_uri": "s3://sana-kramabench/datagov/'
+                    'kramabench-archeology-easy-10/files/worldcities.csv"}]}\n'
+                    'Executing: download({"files": [{"s3_uri": "s3://sana-kramabench/datagov/'
+                    'kramabench-archeology-easy-10/files/worldcities.csv"}]})\n'
+                ),
+                encoding="utf-8",
+            )
+            records = [
+                {
+                    "task_id": "tasks-mini-kramabench/k-2-d-1-s-1/task_1.json",
+                    "tool": "search_ideal",
+                    "result_dataset_ids": ["kramabench-archeology-easy-10"],
+                }
+            ]
+
+            _enrich_trace_records_with_log_sources(records, log_path)
+
+        self.assertEqual(
+            records[0]["result_source_ids"],
+            ["kramabench-archeology-easy-10/files/worldcities.csv"],
+        )
+        self.assertEqual(len(records), 2)
+        self.assertEqual(records[1]["tool"], "download")
+        self.assertEqual(records[1]["read_source_ids"], ["kramabench-archeology-easy-10/files/worldcities.csv"])
 
     def test_semantic_per_model_outputs_filter_keyed_and_row_files(self):
         with TemporaryDirectory() as tmpdir:
@@ -290,6 +366,107 @@ class TestRunModeAnalysisSemantic(unittest.TestCase):
 
         self.assertEqual(summary_rows[0]["em"], 0.5)
         self.assertEqual(summary_rows[0]["exact_match"], 0.5)
+
+    def test_search_call_cumulative_fieldnames_include_plot_inputs(self):
+        fieldnames = _search_call_cumulative_fieldnames()
+
+        self.assertEqual(
+            fieldnames,
+            [
+                "condition_model",
+                "condition",
+                "variant",
+                "base_condition",
+                "model",
+                "task_id",
+                "search_tool",
+                "turn",
+                "search_call_index",
+                "results_returned",
+                "n_gold_datasets",
+                "cumulative_search_gold_count",
+                "cumulative_search_gold_recall",
+                "cumulative_read_gold_count",
+                "cumulative_read_gold_recall",
+                "gold_hits_top_1",
+                "gold_in_top_1",
+                "gold_recall_top_1",
+                "gold_hits_top_3",
+                "gold_in_top_3",
+                "gold_recall_top_3",
+                "gold_hits_top_5",
+                "gold_in_top_5",
+                "gold_recall_top_5",
+            ],
+        )
+
+    def test_turn_waste_plot_rows_surface_unclassified_and_standard_labels(self):
+        summary_rows = [
+            {
+                "condition_model": "openai_gpt-5-mini/search_i_results_i_plani_computei_k5_skills_off",
+                "model": "openai_gpt-5-mini",
+                "variant": "search_i_results_i_plani_computei_k5_skills_off",
+                "n": 10,
+            },
+            {
+                "condition_model": "openai_gpt-5.4-nano/search_i_results_i_plani_computei_k5_skills_off",
+                "model": "openai_gpt-5.4-nano",
+                "variant": "search_i_results_i_plani_computei_k5_skills_off",
+                "n": 10,
+            },
+        ]
+        failed_join_rows = [
+            {
+                "condition_model": "openai_gpt-5-mini/search_i_results_i_plani_computei_k5_skills_off",
+                "turn_waste_global_group": "Missing Source Search Loop",
+            },
+            {
+                "condition_model": "openai_gpt-5.4-nano/search_i_results_i_plani_computei_k5_skills_off",
+                "turn_waste_global_group": "",
+            },
+            {
+                "condition_model": "openai_gpt-5.4-nano/search_i_results_i_plani_computei_k5_skills_off",
+                "turn_waste_global_group": "Intermediate result rework",
+            },
+        ]
+
+        condition_groups = _build_turn_waste_condition_model_summary(summary_rows, failed_join_rows)
+        plot_rows = _turn_waste_plot_rows(condition_groups, summary_rows)
+
+        self.assertEqual(
+            _standard_condition_label("search_i_results_i_plani_computei_k5_skills_off"),
+            "Ideal / Ideal / Ideal",
+        )
+        self.assertEqual(
+            _standard_condition_label("search_n_results_i_plann_k5_skills_off"),
+            "BM25 / None / Standard",
+        )
+        self.assertEqual(
+            _standard_condition_label("search_d_results_i_pland_k5_skills_off"),
+            "Hybrid / Standard / Standard",
+        )
+        nano_row = next(row for row in plot_rows if row["model"] == "openai_gpt-5.4-nano")
+        self.assertEqual(nano_row["label"], "Ideal / Ideal / Ideal")
+        self.assertEqual(nano_row["assigned"], 1)
+        self.assertEqual(nano_row["unclassified"], 1)
+        self.assertEqual(nano_row["families"]["Redundant rework"], 1)
+
+        nano_groups = _build_turn_waste_condition_model_summary(
+            summary_rows,
+            [
+                {
+                    "condition_model": "openai_gpt-5.4-nano/search_i_results_i_plani_computei_k5_skills_off",
+                    "turn_waste_global_group": "Source and Query-Shape Churn",
+                },
+                {
+                    "condition_model": "openai_gpt-5.4-nano/search_i_results_i_plani_computei_k5_skills_off",
+                    "turn_waste_global_group": "Downstream Deferral and Chain Crowd-Out",
+                },
+            ],
+        )
+        nano_plot_row = next(row for row in _turn_waste_plot_rows(nano_groups, summary_rows) if row["model"] == "openai_gpt-5.4-nano")
+        self.assertEqual(nano_plot_row["families"]["Data/query loops"], 1)
+        self.assertEqual(nano_plot_row["families"]["Progress/submission failures"], 1)
 
     def test_error_vs_semantic_plot_uses_fractional_semantic_match(self):
         class FakeBar:
@@ -1396,7 +1573,6 @@ class TestRunModeAnalysisSemantic(unittest.TestCase):
                 "fig02_log_error_buckets_variant.pdf",
                 "fig03_semantic_x_error_variant.pdf",
                 "fig04_error_vs_semantic_variant.pdf",
-                "fig05_turn_waste_groups_variant.pdf",
                 "fig2a_recall_semantic_combined.pdf",
                 "fig6_cost_vs_semantic.pdf",
                 "fig8_search_tool_precision_recall_f1.pdf",

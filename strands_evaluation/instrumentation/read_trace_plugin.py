@@ -27,6 +27,7 @@ _READ_TOOLS = {
     "grep_file",
     "parse_xml_records",
     "query_file",
+    "download",
     "query_ideal",
     "execute_ideal",
 }
@@ -50,7 +51,7 @@ def _dataset_id_from_file_spec(file_spec) -> str:
 
 def _extract_read_dataset_ids(tool_name: str, tool_input: dict) -> List[str]:
     """Return normalized dataset_id(s) from a read tool's input."""
-    if tool_name == "peek_multiple":
+    if tool_name in {"peek_multiple", "download"}:
         files = tool_input.get("files", [])
         if not isinstance(files, list):
             return []
@@ -87,6 +88,16 @@ def _extract_dataset_ids_from_payload(payload: Any) -> List[str]:
     results = payload.get("results")
     if isinstance(results, list):
         for item in results:
+            ids.extend(_extract_dataset_ids_from_payload(item))
+
+    files = payload.get("files")
+    if isinstance(files, list):
+        for item in files:
+            ids.extend(_extract_dataset_ids_from_payload(item))
+
+    downloaded = payload.get("downloaded")
+    if isinstance(downloaded, list):
+        for item in downloaded:
             ids.extend(_extract_dataset_ids_from_payload(item))
 
     return _unique_ids(ids)

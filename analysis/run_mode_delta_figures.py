@@ -37,6 +37,17 @@ ABLATIONS = [
 
 COMPARISON_MODELS = ["gpt-5.4-nano", "gpt-5-mini"]
 
+SEMANTIC_DELTA_TITLE_FONTSIZE = 13.0
+SEMANTIC_DELTA_LABEL_FONTSIZE = 11.5
+SEMANTIC_DELTA_VALUE_FONTSIZE = 11.0
+SEMANTIC_DELTA_SUPTITLE_FONTSIZE = 16.0
+
+SEMANTIC_DELTA_COMPACT_TITLE_FONTSIZE = 13.4
+SEMANTIC_DELTA_COMPACT_LABEL_FONTSIZE = 11.2
+SEMANTIC_DELTA_COMPACT_VALUE_FONTSIZE = 10.8
+SEMANTIC_DELTA_COMPACT_MODEL_FONTSIZE = 13.4
+SEMANTIC_DELTA_COMPACT_SUPTITLE_FONTSIZE = 16.6
+
 PAIRED_CONDITIONS = [
     (
         "nns",
@@ -449,6 +460,7 @@ def _plot_horizontal_delta_bars(
     show_y_labels: bool = True,
     value_fontsize: float = 9,
     title_fontsize: Optional[float] = None,
+    x_limit: float = 124.0,
 ) -> None:
     if not labels:
         ax.set_title(title, fontsize=title_fontsize)
@@ -466,7 +478,7 @@ def _plot_horizontal_delta_bars(
         ax.tick_params(axis="y", length=0)
     ax.invert_yaxis()
     ax.set_title(title, fontsize=title_fontsize)
-    ax.set_xlim(0, 108)
+    ax.set_xlim(0, x_limit)
     ax.set_xticks([])
     ax.tick_params(axis="x", length=0)
     for spine in ("top", "right", "bottom"):
@@ -474,7 +486,15 @@ def _plot_horizontal_delta_bars(
 
     for y_position, value, delta in zip(y_positions, values, deltas):
         if value is None:
-            ax.text(1.2, y_position, "n/a", ha="left", va="center", fontsize=8.5, color="#5C6168")
+            ax.text(
+                1.2,
+                y_position,
+                "n/a",
+                ha="left",
+                va="center",
+                fontsize=value_fontsize,
+                color="#5C6168",
+            )
             continue
         bar = ax.barh(
             [y_position],
@@ -484,7 +504,7 @@ def _plot_horizontal_delta_bars(
             height=0.62,
         )[0]
         ax.text(
-            min(value + 1.2, 106),
+            min(value + 1.2, x_limit - 8.0),
             bar.get_y() + bar.get_height() / 2,
             f"{value:.1f}% ({_delta_label(delta)})",
             ha="left",
@@ -528,7 +548,7 @@ def _plot_semantic_delta_ablation(plt, delta_rows: List[dict], output_dir: Path)
         rows_by_model[str(row["model"])].append(row)
 
     for model, model_rows in sorted(rows_by_model.items(), key=lambda item: _model_sort_key(item[0])):
-        fig, axes = plt.subplots(3, 1, figsize=(12.5, 8.2))
+        fig, axes = plt.subplots(3, 1, figsize=(13.2, 9.2))
         for ax, (ablation_name, _axis, _baseline_code, members, _fixed_context) in zip(axes, ABLATIONS):
             by_label = {row["label"]: row for row in model_rows if row["ablation"] == ablation_name}
             labels = [label for _code, label in members]
@@ -537,9 +557,21 @@ def _plot_semantic_delta_ablation(plt, delta_rows: List[dict], output_dir: Path)
                 for label in labels
             ]
             deltas = [float(by_label[label]["delta"]) * 100.0 if label in by_label else None for label in labels]
-            _plot_horizontal_delta_bars(ax, labels, values, deltas, ablation_name, label_fontsize=8.5)
-        fig.suptitle(f"Semantic Match Ablations vs. Naive Baseline - {model}")
-        fig.subplots_adjust(left=0.20, right=0.98, bottom=0.055, top=0.91, hspace=0.36)
+            _plot_horizontal_delta_bars(
+                ax,
+                labels,
+                values,
+                deltas,
+                ablation_name,
+                label_fontsize=SEMANTIC_DELTA_LABEL_FONTSIZE,
+                value_fontsize=SEMANTIC_DELTA_VALUE_FONTSIZE,
+                title_fontsize=SEMANTIC_DELTA_TITLE_FONTSIZE,
+            )
+        fig.suptitle(
+            f"Semantic Match Ablations vs. Naive Baseline - {model}",
+            fontsize=SEMANTIC_DELTA_SUPTITLE_FONTSIZE,
+        )
+        fig.subplots_adjust(left=0.20, right=0.975, bottom=0.06, top=0.91, hspace=0.42)
         fig.savefig(output_dir / f"fig21_{_safe_slug(model)}_semantic_delta_ablation.pdf")
         plt.close(fig)
 
@@ -554,7 +586,7 @@ def _plot_semantic_delta_ablation_comparison(plt, delta_rows: List[dict], output
     if len(models) < 2:
         return
 
-    fig, axes = plt.subplots(3, 2, figsize=(14.0, 5.4), squeeze=False)
+    fig, axes = plt.subplots(3, 2, figsize=(15.6, 7.6), squeeze=False)
     for col_idx, model in enumerate(models):
         model_rows = rows_by_model.get(model, [])
         for row_idx, (ablation_name, _axis, _baseline_code, members, _fixed_context) in enumerate(ABLATIONS):
@@ -573,12 +605,14 @@ def _plot_semantic_delta_ablation_comparison(plt, delta_rows: List[dict], output
                 values,
                 deltas,
                 title,
-                label_fontsize=8.5,
+                label_fontsize=SEMANTIC_DELTA_LABEL_FONTSIZE,
                 show_y_labels=col_idx == 0,
+                value_fontsize=SEMANTIC_DELTA_VALUE_FONTSIZE,
+                title_fontsize=SEMANTIC_DELTA_TITLE_FONTSIZE,
             )
 
-    fig.suptitle("Semantic Match Ablations", fontsize=14)
-    fig.subplots_adjust(left=0.13, right=0.985, bottom=0.07, top=0.90, hspace=0.22, wspace=0.08)
+    fig.suptitle("Semantic Match Ablations", fontsize=SEMANTIC_DELTA_SUPTITLE_FONTSIZE)
+    fig.subplots_adjust(left=0.14, right=0.98, bottom=0.075, top=0.89, hspace=0.34, wspace=0.15)
     fig.savefig(output_dir / "fig21a_semantic_delta_ablation_comparison.pdf")
     plt.close(fig)
 
@@ -593,7 +627,7 @@ def _plot_semantic_delta_ablation_compact(plt, delta_rows: List[dict], output_di
     if len(models) < 2:
         return
 
-    fig, axes = plt.subplots(len(models), len(ABLATIONS), figsize=(13.2, 4.9), squeeze=False)
+    fig, axes = plt.subplots(len(models), len(ABLATIONS), figsize=(14.6, 6.4), squeeze=False)
     for row_idx, model in enumerate(models):
         model_rows = rows_by_model.get(model, [])
         for col_idx, (ablation_name, _axis, _baseline_code, members, _fixed_context) in enumerate(ABLATIONS):
@@ -615,13 +649,13 @@ def _plot_semantic_delta_ablation_compact(plt, delta_rows: List[dict], output_di
                 values,
                 deltas,
                 title,
-                label_fontsize=7.7,
-                value_fontsize=7.4,
-                title_fontsize=9.2,
+                label_fontsize=SEMANTIC_DELTA_COMPACT_LABEL_FONTSIZE,
+                value_fontsize=SEMANTIC_DELTA_COMPACT_VALUE_FONTSIZE,
+                title_fontsize=SEMANTIC_DELTA_COMPACT_TITLE_FONTSIZE,
             )
 
-    fig.suptitle("Semantic Match Ablations", fontsize=12)
-    fig.subplots_adjust(left=0.095, right=0.995, bottom=0.08, top=0.84, hspace=0.24, wspace=0.34)
+    fig.suptitle("Semantic Match Ablations", fontsize=SEMANTIC_DELTA_COMPACT_SUPTITLE_FONTSIZE)
+    fig.subplots_adjust(left=0.11, right=0.99, bottom=0.085, top=0.84, hspace=0.30, wspace=0.38)
     for row_idx, model in enumerate(models):
         bbox = axes[row_idx][0].get_position()
         fig.text(
@@ -631,7 +665,7 @@ def _plot_semantic_delta_ablation_compact(plt, delta_rows: List[dict], output_di
             rotation=90,
             ha="center",
             va="center",
-            fontsize=9.5,
+            fontsize=SEMANTIC_DELTA_COMPACT_MODEL_FONTSIZE,
             fontweight="bold",
         )
     fig.savefig(output_dir / "fig21b_semantic_delta_ablation_compact.pdf")

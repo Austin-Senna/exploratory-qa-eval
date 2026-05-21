@@ -20,6 +20,7 @@ _READ_TOOLS = {
     "grep_file",
     "parse_xml_records",
     "query_file",
+    "download",
     "query_ideal",
     "execute_ideal",
 }
@@ -128,9 +129,14 @@ def compute_discovery_metrics(
 
     for task_id, task_traces in traces.items():
         # Resolve task_id stem back to a full path key for gold lookup
-        gold_ids = set(_resolve_gold(resolve_trace_task_id(task_id, task_traces), task_gold))
+        gold_values = list(_resolve_gold(resolve_trace_task_id(task_id, task_traces), task_gold))
+        gold_ids = set(gold_values)
         if not gold_ids:
             continue
+        use_source_gold = _is_source_gold_values(gold_values)
+        use_gold_units = not use_source_gold and len(gold_values) != len(gold_ids)
+        n_gold = len(gold_values) if use_gold_units else len(gold_ids)
+        dataset_to_unique_source = _dataset_to_unique_source(gold_ids) if use_source_gold else {}
 
         # Separate search traces from read traces and submit_answer record
         search_traces = [
@@ -148,15 +154,34 @@ def compute_discovery_metrics(
         # - d_ret_precision: how much of retrieved set is gold? (mentor's "7/70 vs 7/10")
         all_result_ids: set = set()
         all_result_ids_total_count = 0
+        retrieved_gold_unit_ids: set[str] = set()
         for trace in search_traces:
             result_ids = trace.get("result_dataset_ids", [])
             all_result_ids.update(result_ids)
             all_result_ids_total_count += len(result_ids)
+            retrieved_gold_unit_ids.update(
+                _trace_gold_ids(
+                    trace,
+                    gold_ids,
+                    fallback_field="result_dataset_ids",
+                    explicit_gold_field="gold_dataset_ids_in_results",
+                    source_field="result_source_ids",
+                    dataset_to_unique_source=dataset_to_unique_source,
+                )
+            )
 
         retrieved_gold = all_result_ids & gold_ids
-        d_ret = len(retrieved_gold) / len(gold_ids) if gold_ids else 0.0
-        d_ret_hit = int(bool(retrieved_gold))
-        d_ret_precision = len(retrieved_gold) / len(all_result_ids) if all_result_ids else 0.0
+        use_source_or_unit_gold = use_source_gold or use_gold_units
+        retrieved_gold_count = min(len(retrieved_gold_unit_ids), n_gold) if use_source_or_unit_gold else len(retrieved_gold)
+        retrieved_gold_for_output = sorted(retrieved_gold_unit_ids) if use_source_or_unit_gold else sorted(retrieved_gold)
+        d_ret = retrieved_gold_count / n_gold if n_gold else 0.0
+        d_ret_hit = int(retrieved_gold_count > 0)
+        d_ret_precision_denominator = all_result_ids_total_count if use_gold_units else len(all_result_ids)
+        d_ret_precision = (
+            retrieved_gold_count / d_ret_precision_denominator
+            if d_ret_precision_denominator
+            else 0.0
+        )
         d_ret_f1 = (
             2 * d_ret_precision * d_ret / (d_ret_precision + d_ret)
             if (d_ret_precision + d_ret) > 0
@@ -171,9 +196,20 @@ def compute_discovery_metrics(
             result_ids = trace.get("result_dataset_ids", [])
             if not result_ids:
                 continue
-            hits = len(set(result_ids) & gold_ids)
+            hits = (
+                len(_trace_gold_ids(
+                    trace,
+                    gold_ids,
+                    fallback_field="result_dataset_ids",
+                    explicit_gold_field="gold_dataset_ids_in_results",
+                    source_field="result_source_ids",
+                    dataset_to_unique_source=dataset_to_unique_source,
+                ))
+                if use_source_or_unit_gold
+                else len(set(result_ids) & gold_ids)
+            )
             call_precisions.append(hits / len(result_ids))
-            call_recalls.append(hits / len(gold_ids))
+            call_recalls.append(hits / n_gold)
         precision = sum(call_precisions) / len(call_precisions) if call_precisions else 0.0
         recall = sum(call_recalls) / len(call_recalls) if call_recalls else 0.0
         f1 = (2 * precision * recall / (precision + recall)) if (precision + recall) > 0 else 0.0
@@ -186,11 +222,31 @@ def compute_discovery_metrics(
             t for t in task_traces if not _is_auxiliary_trace(t) and t.get("tool") in _READ_TOOLS
         ]
         all_read_ids: set = set()
+        all_read_ids_total_count = 0
+        read_gold_unit_ids: set[str] = set()
         for rec in read_records:
-            all_read_ids.update(rec.get("read_dataset_ids", []))
+            read_ids = rec.get("read_dataset_ids", [])
+            all_read_ids.update(read_ids)
+            all_read_ids_total_count += len(read_ids)
+            read_gold_unit_ids.update(
+                _trace_gold_ids(
+                    rec,
+                    gold_ids,
+                    fallback_field="read_dataset_ids",
+                    explicit_gold_field="gold_dataset_ids_read",
+                    source_field="read_source_ids",
+                    dataset_to_unique_source=dataset_to_unique_source,
+                )
+            )
         read_gold = all_read_ids & gold_ids
-        d_acc = len(read_gold) / len(gold_ids) if gold_ids else 0.0
-        d_acc_precision = len(read_gold) / len(all_read_ids) if all_read_ids else 0.0
+        read_gold_count = min(len(read_gold_unit_ids), n_gold) if use_source_or_unit_gold else len(read_gold)
+        d_acc = read_gold_count / n_gold if n_gold else 0.0
+        d_acc_precision_denominator = all_read_ids_total_count if use_gold_units else len(all_read_ids)
+        d_acc_precision = (
+            read_gold_count / d_acc_precision_denominator
+            if d_acc_precision_denominator
+            else 0.0
+        )
         d_acc_recall = d_acc
         d_acc_f1 = (
             2 * d_acc_precision * d_acc_recall / (d_acc_precision + d_acc_recall)
@@ -200,9 +256,9 @@ def compute_discovery_metrics(
 
         task_metrics.append({
             "task_id": task_id,
-            "gold_ids": sorted(gold_ids),
+            "gold_ids": sorted(gold_values) if use_gold_units else sorted(gold_ids),
             "retrieved_dataset_ids": sorted(all_result_ids),
-            "retrieved_gold_dataset_ids": sorted(retrieved_gold),
+            "retrieved_gold_dataset_ids": retrieved_gold_for_output,
             "d_ret": d_ret,
             "d_ret_hit": d_ret_hit,
             "d_ret_precision": d_ret_precision,
@@ -247,6 +303,54 @@ def compute_discovery_metrics(
 def _resolve_gold(task_id: str, task_gold: dict[str, list]) -> list:
     """Match a trace task_id ("k-2-d-1/task_1") to a gold entry."""
     return resolve_task_value(task_id, task_gold, [])
+
+
+def _trace_gold_ids(
+    record: dict,
+    gold_ids: set[str],
+    *,
+    fallback_field: str,
+    explicit_gold_field: str,
+    source_field: str | None = None,
+    dataset_to_unique_source: dict[str, str] | None = None,
+) -> set[str]:
+    if source_field is not None:
+        source_ids = {
+            source_id
+            for value in record.get(source_field, []) or []
+            if (source_id := _normalize_source_id(value))
+        }
+        source_hits = source_ids & gold_ids
+        if source_hits:
+            return source_hits
+
+    values = record.get(explicit_gold_field)
+    if not isinstance(values, list) or not values:
+        values = record.get(fallback_field, [])
+    if dataset_to_unique_source:
+        return {
+            dataset_to_unique_source[value]
+            for value in values
+            if value in dataset_to_unique_source and dataset_to_unique_source[value] in gold_ids
+        }
+    return {value for value in values if value in gold_ids}
+
+
+def _is_source_gold_values(values: list[str]) -> bool:
+    return any("/files/" in str(value) for value in values)
+
+
+def _dataset_to_unique_source(gold_ids: set[str]) -> dict[str, str]:
+    sources_by_dataset: dict[str, set[str]] = defaultdict(set)
+    for source_id in gold_ids:
+        dataset_id = str(source_id).split("/files/", 1)[0]
+        if dataset_id:
+            sources_by_dataset[dataset_id].add(source_id)
+    return {
+        dataset_id: next(iter(source_ids))
+        for dataset_id, source_ids in sources_by_dataset.items()
+        if len(source_ids) == 1
+    }
 
 
 def compute_per_folder_discovery(
@@ -395,12 +499,52 @@ def _normalize_gold_dataset_id(value: str) -> str:
     return text
 
 
+def _normalize_source_id(value: str, dataset_id: str | None = None, file_path: str | None = None) -> str:
+    if dataset_id and file_path:
+        path = str(file_path).strip().lstrip("/")
+        if path.startswith("files/"):
+            return f"{dataset_id}/{path}"
+        if "/files/" in path:
+            return _normalize_source_id(path)
+        return f"{dataset_id}/files/{path}"
+
+    text = str(value).strip()
+    if not text:
+        return ""
+
+    if text.startswith("s3://"):
+        without_scheme = text[len("s3://"):]
+        text = without_scheme.split("/", 1)[1] if "/" in without_scheme else without_scheme
+
+    datagov_marker = "/datagov/"
+    if datagov_marker in text:
+        text = "datagov/" + text.split(datagov_marker, 1)[1]
+
+    parts = [part for part in text.split("/") if part]
+    if len(parts) >= 4 and parts[0] == "datagov" and parts[2] == "files":
+        return f"{parts[1]}/files/{'/'.join(parts[3:])}"
+    if len(parts) >= 3 and parts[1] == "files":
+        return f"{parts[0]}/files/{'/'.join(parts[2:])}"
+    return text
+
+
 def _unique_normalized_dataset_ids(values: list) -> list[str]:
     """Normalize IDs/sources while preserving first appearance order."""
     out: list[str] = []
     seen: set[str] = set()
     for value in values:
         normalized = _normalize_gold_dataset_id(value)
+        if normalized and normalized not in seen:
+            out.append(normalized)
+            seen.add(normalized)
+    return out
+
+
+def _unique_normalized_source_ids(values: list) -> list[str]:
+    out: list[str] = []
+    seen: set[str] = set()
+    for value in values:
+        normalized = _normalize_source_id(value)
         if normalized and normalized not in seen:
             out.append(normalized)
             seen.add(normalized)
@@ -422,6 +566,51 @@ def _node_sources(task: dict) -> list[str]:
     ]
 
 
+def _gold_ids_from_task_path(path: Path) -> list[str]:
+    with path.open() as f:
+        task = json.load(f)
+    source_values = task.get("sources_used") or task.get("source_sequence") or _node_sources(task)
+    return _unique_normalized_dataset_ids(source_values or task.get("datasets_used", []))
+
+
+def _gold_unit_ids_from_task_path(path: Path) -> list[str]:
+    with path.open() as f:
+        task = json.load(f)
+    source_values = task.get("sources_used") or task.get("source_sequence") or _node_sources(task)
+    values = source_values or task.get("datasets_used", [])
+    normalized = [_normalize_gold_dataset_id(value) for value in values]
+    normalized = [value for value in normalized if value]
+    if any(value.startswith("kramabench-") for value in normalized):
+        return normalized
+    return _unique_normalized_dataset_ids(values)
+
+
+def _plan_path_for_task_path(task_path: Path, tasks_root: Path) -> Path | None:
+    try:
+        rel_path = task_path.relative_to(tasks_root)
+    except ValueError:
+        return None
+    candidates = [
+        tasks_root.parent / "plans-mini-kramabench" / rel_path,
+        tasks_root.parent / "plans_mini_kramabench" / rel_path,
+        tasks_root.parent / "plans_mini" / rel_path,
+        tasks_root.parent / "plans-mini" / rel_path,
+    ]
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate
+    return None
+
+
+def _gold_source_ids_from_plan_or_task_path(path: Path, tasks_root: Path | None = None) -> list[str]:
+    plan_path = _plan_path_for_task_path(path, tasks_root) if tasks_root is not None else None
+    source_path = plan_path or path
+    with source_path.open() as f:
+        task = json.load(f)
+    source_values = task.get("source_sequence") or task.get("sources_used") or _node_sources(task)
+    return _unique_normalized_source_ids(source_values or task.get("datasets_used", []))
+
+
 def load_task_gold_ids(tasks_dir: str) -> dict[str, list]:
     """Load normalized gold dataset IDs from task source paths.
 
@@ -432,10 +621,83 @@ def load_task_gold_ids(tasks_dir: str) -> dict[str, list]:
     import glob as glob_mod
     gold: dict = {}
     for path in glob_mod.glob(str(Path(tasks_dir) / "**" / "*.json"), recursive=True):
-        with open(path) as f:
-            task = json.load(f)
-        source_values = task.get("sources_used") or task.get("source_sequence") or _node_sources(task)
-        gold[path] = _unique_normalized_dataset_ids(source_values or task.get("datasets_used", []))
+        gold[path] = _gold_ids_from_task_path(Path(path))
+    return gold
+
+
+def load_task_gold_unit_ids(tasks_dir: str) -> dict[str, list]:
+    """Load gold IDs, preserving Kramabench source-file units as repeated IDs."""
+    import glob as glob_mod
+    gold: dict = {}
+    for path in glob_mod.glob(str(Path(tasks_dir) / "**" / "*.json"), recursive=True):
+        gold[path] = _gold_unit_ids_from_task_path(Path(path))
+    return gold
+
+
+def load_task_gold_source_ids(tasks_dir: str) -> dict[str, list]:
+    """Load unique normalized source-file IDs, preferring ideal-plan source_sequence."""
+    import glob as glob_mod
+    root = Path(tasks_dir)
+    gold: dict = {}
+    for path in glob_mod.glob(str(root / "**" / "*.json"), recursive=True):
+        gold[path] = _gold_source_ids_from_plan_or_task_path(Path(path), root)
+    return gold
+
+
+def _iter_trace_records(traces: dict) -> list[dict]:
+    records: list[dict] = []
+    for value in traces.values():
+        if isinstance(value, list):
+            records.extend(record for record in value if isinstance(record, dict))
+        elif isinstance(value, dict):
+            records.extend(_iter_trace_records(value))
+    return records
+
+
+def load_task_gold_ids_for_traces(tasks_dir: str, traces: dict) -> dict[str, list]:
+    """Load gold IDs from tasks_dir plus explicit task paths recorded in traces.
+
+    This preserves explicit task-root matching while allowing analysis reruns to
+    recover when --tasks-dir is stale but trace rows carry usable task_id paths.
+    """
+    gold = load_task_gold_ids(tasks_dir) if Path(tasks_dir).exists() else {}
+    for record in _iter_trace_records(traces):
+        task_id = str(record.get("task_id", "") or "")
+        if _task_path_identity(task_id) is None:
+            continue
+        path = Path(task_id)
+        if not path.exists() or str(path) in gold:
+            continue
+        gold[str(path)] = _gold_ids_from_task_path(path)
+    return gold
+
+
+def load_task_gold_unit_ids_for_traces(tasks_dir: str, traces: dict) -> dict[str, list]:
+    """Load gold IDs for traces, preserving Kramabench source-file units."""
+    gold = load_task_gold_unit_ids(tasks_dir) if Path(tasks_dir).exists() else {}
+    for record in _iter_trace_records(traces):
+        task_id = str(record.get("task_id", "") or "")
+        if _task_path_identity(task_id) is None:
+            continue
+        path = Path(task_id)
+        if not path.exists() or str(path) in gold:
+            continue
+        gold[str(path)] = _gold_unit_ids_from_task_path(path)
+    return gold
+
+
+def load_task_gold_source_ids_for_traces(tasks_dir: str, traces: dict) -> dict[str, list]:
+    """Load unique source-file IDs for traces, preferring ideal-plan source_sequence."""
+    root = Path(tasks_dir)
+    gold = load_task_gold_source_ids(tasks_dir) if root.exists() else {}
+    for record in _iter_trace_records(traces):
+        task_id = str(record.get("task_id", "") or "")
+        if _task_path_identity(task_id) is None:
+            continue
+        path = Path(task_id)
+        if not path.exists() or str(path) in gold:
+            continue
+        gold[str(path)] = _gold_source_ids_from_plan_or_task_path(path, root if root.exists() else None)
     return gold
 
 
@@ -446,7 +708,11 @@ def main() -> None:
     args = parser.parse_args()
 
     traces = load_traces(args.traces_dir)
-    task_gold = load_task_gold_ids(args.tasks_dir)
+    task_gold = (
+        load_task_gold_source_ids(args.tasks_dir)
+        if "kramabench" in Path(args.tasks_dir).name
+        else load_task_gold_ids(args.tasks_dir)
+    )
 
     print(f"Loaded traces for {len(traces)} tasks from {args.traces_dir}")
 

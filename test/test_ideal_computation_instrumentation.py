@@ -31,6 +31,25 @@ def test_read_trace_treats_execute_ideal_as_dataset_read() -> None:
     assert read_ids == ["school-directory"]
 
 
+def test_read_trace_treats_download_as_dataset_read() -> None:
+    assert "download" in read_trace_plugin._READ_TOOLS
+    read_ids = read_trace_plugin._extract_read_dataset_ids(
+        "download",
+        {
+            "files": [
+                {
+                    "s3_uri": (
+                        "s3://lakeqa-yc4103-datalake/datagov/"
+                        "school-directory/files/rows.txt"
+                    )
+                },
+                {"dataset_id": "datagov/teacher-directory", "file_path": "files/rows.txt"},
+            ]
+        },
+    )
+    assert read_ids == ["school-directory", "teacher-directory"]
+
+
 def test_read_trace_extracts_peek_multiple_string_and_dict_entries() -> None:
     read_ids = read_trace_plugin._extract_read_dataset_ids(
         "peek_multiple",

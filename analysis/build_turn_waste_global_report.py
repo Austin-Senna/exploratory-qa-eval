@@ -10,6 +10,9 @@ The report intentionally avoids free-form narrative synthesis. It only emits:
 
 Default scope matches the grouped outputs used in this repo:
     python analysis/build_turn_waste_global_report.py
+
+Model-scoped report:
+    python analysis/build_turn_waste_global_report.py --source-root results_semantic_turn_waste_grouped --model openai_gpt-5-mini
 """
 from __future__ import annotations
 
@@ -32,6 +35,7 @@ from analysis.turn_waste_validation import (
     row_log_path,
     validate_audit_row,
 )
+from analysis.combine_turn_waste_grouped_models import reconcile_global_group
 
 
 TURN_HEADER_RE = re.compile(r"--- Turn (\d+)")
@@ -232,15 +236,38 @@ def _validated_log_snippets(log_path: Path, evidence_text: str, max_turns: int =
     return snippets
 
 
-def _parse_grouped_failures(source_root: Path) -> tuple[list[dict], list[dict]]:
+def _repo_root_from_source_root(source_root: Path) -> Path:
+    for candidate in [source_root, *source_root.parents]:
+        if (candidate / ".git").exists() or (candidate / "tasks_mini").exists():
+            return candidate
+    return source_root.parent
+
+
+def _variants_from_grouped_path(source_root: Path, failures_path: Path) -> tuple[str, str] | None:
+    rel_path = failures_path.relative_to(source_root)
+    parts = rel_path.parts
+    if "modes" in parts:
+        modes_index = parts.index("modes")
+        after_modes = parts[modes_index + 1 :]
+        if len(after_modes) >= 3:
+            return after_modes[0], after_modes[1]
+        if len(after_modes) >= 2 and modes_index >= 1:
+            return parts[modes_index - 1], after_modes[0]
+    if len(parts) >= 4:
+        return parts[-3], parts[-2]
+    return None
+
+
+def _parse_grouped_failures(source_root: Path, *, model_filter: str | None = None) -> tuple[list[dict], list[dict]]:
     file_summaries: list[dict] = []
     rows: list[dict] = []
     for failures_path in sorted(source_root.rglob("turn_waste_global_failures.csv")):
-        rel_path = failures_path.relative_to(source_root)
-        if len(rel_path.parts) < 4:
+        variants = _variants_from_grouped_path(source_root, failures_path)
+        if variants is None:
             continue
-        model_variant = rel_path.parts[-3]
-        mode_variant = rel_path.parts[-2]
+        model_variant, mode_variant = variants
+        if model_filter and model_variant != model_filter:
+            continue
         eval_path = failures_path.parent / "eval_results.csv"
 
         with failures_path.open() as handle:
@@ -294,19 +321,158 @@ def _group_explanation_lines(group_name: str) -> list[str]:
     ]
 
 
+def _model_counts_text(counter: Counter[str]) -> str:
+    return "; ".join(f"{model}: {count}" for model, count in sorted(counter.items()))
+
+
+def _add_table(lines: list[str], headers: list[str], table_rows: list[list[str]]) -> None:
+    lines.append("| " + " | ".join(headers) + " |")
+    lines.append("| " + " | ".join("---" for _ in headers) + " |")
+    for row in table_rows:
+        lines.append("| " + " | ".join(str(cell).replace("\n", " ") for cell in row) + " |")
+    lines.append("")
+
+
+def _count_by_key(rows: list[dict], key_fn) -> list[tuple[tuple[str, ...], int, Counter[str]]]:
+    counts: dict[tuple[str, ...], Counter[str]] = defaultdict(Counter)
+    for row in rows:
+        counts[key_fn(row)][str(row.get("model_variant", ""))] += 1
+    return sorted(
+        ((key, sum(model_counts.values()), model_counts) for key, model_counts in counts.items()),
+        key=lambda item: (-item[1], item[0]),
+    )
+
+
+def _representative_link_cell(
+    row: dict,
+    *,
+    report_dir: Path,
+    repo_root: Path,
+    logs_root: Optional[Path],
+) -> str:
+    task_id = str(row.get("task_id", ""))
+    task_path = _resolve_task_path(repo_root, task_id)
+    plan_path = _resolve_plan_path(repo_root, task_id)
+    log_path = None
+    if logs_root is not None:
+        candidate = row_log_path(logs_root, str(row.get("model_variant", "")), str(row.get("mode_variant", "")), task_id)
+        log_path = candidate if candidate.exists() else None
+
+    return " / ".join(
+        [
+            _markdown_link("task", report_dir, task_path),
+            _markdown_link("plan", report_dir, plan_path),
+            _markdown_link("log", report_dir, log_path),
+        ]
+    )
+
+
+def _representative_by_key(rows: list[dict], key_fn) -> dict[tuple[str, ...], dict]:
+    grouped: dict[tuple[str, ...], list[dict]] = defaultdict(list)
+    for row in rows:
+        grouped[key_fn(row)].append(row)
+    return {key: _representative_rows(key_rows, limit=1)[0] for key, key_rows in grouped.items()}
+
+
+def _add_summary_tables(
+    lines: list[str],
+    rows: list[dict],
+    *,
+    report_dir: Path,
+    repo_root: Path,
+    logs_root: Optional[Path],
+) -> None:
+    lines.extend(["## Counts by Reconciled Global Group", ""])
+    group_rows = _count_by_key(
+        rows,
+        lambda row: (reconcile_global_group(str(row.get("turn_waste_global_group", ""))),),
+    )
+    _add_table(
+        lines,
+        ["Reconciled Global Group", "Errors", "Errors by Model"],
+        [[key[0], str(total), _model_counts_text(model_counts)] for key, total, model_counts in group_rows],
+    )
+
+    lines.extend(["## Counts by Reconciled Global Group and Subtype", ""])
+    reconciled_subtype_key = lambda row: (
+        reconcile_global_group(str(row.get("turn_waste_global_group", ""))),
+        _normalize_text(str(row.get("turn_waste_global_subtype", ""))) or "(none)",
+    )
+    subtype_rows = _count_by_key(
+        rows,
+        reconciled_subtype_key,
+    )
+    subtype_representatives = _representative_by_key(rows, reconciled_subtype_key)
+    _add_table(
+        lines,
+        ["Global Group", "Subtype", "Errors", "Errors by Model", "Representative"],
+        [
+            [
+                key[0],
+                key[1],
+                str(total),
+                _model_counts_text(model_counts),
+                _representative_link_cell(
+                    subtype_representatives[key],
+                    report_dir=report_dir,
+                    repo_root=repo_root,
+                    logs_root=logs_root,
+                ),
+            ]
+            for key, total, model_counts in subtype_rows
+        ],
+    )
+
+    lines.extend(["## Counts by Original Global Group and Subtype", ""])
+    original_subtype_key = lambda row: (
+        _normalize_text(str(row.get("turn_waste_global_group", ""))) or "unassigned",
+        _normalize_text(str(row.get("turn_waste_global_subtype", ""))) or "(none)",
+    )
+    original_subtype_rows = _count_by_key(
+        rows,
+        original_subtype_key,
+    )
+    original_subtype_representatives = _representative_by_key(rows, original_subtype_key)
+    _add_table(
+        lines,
+        ["Original Global Group", "Subtype", "Errors", "Errors by Model", "Representative"],
+        [
+            [
+                key[0],
+                key[1],
+                str(total),
+                _model_counts_text(model_counts),
+                _representative_link_cell(
+                    original_subtype_representatives[key],
+                    report_dir=report_dir,
+                    repo_root=repo_root,
+                    logs_root=logs_root,
+                ),
+            ]
+            for key, total, model_counts in original_subtype_rows
+        ],
+    )
+
+
 def build_turn_waste_global_report(
     source_root: str | Path = "results-ec2_semantic_turn_waste_grouped",
     *,
     output_path: str | Path | None = None,
     logs_dir: str | Path | None = None,
+    model: str | None = None,
     representative_limit: int = 5,
 ) -> dict:
     source_root = Path(source_root)
-    report_path = Path(output_path) if output_path else source_root / "turn_waste_global_report.md"
+    if output_path:
+        report_path = Path(output_path)
+    elif model and source_root.name != model:
+        report_path = source_root / model / "turn_waste_global_report.md"
+    else:
+        report_path = source_root / "turn_waste_global_report.md"
     logs_root = Path(logs_dir) if logs_dir else None
-    repo_root = source_root.parent
+    repo_root = _repo_root_from_source_root(source_root)
 
-    file_summaries, rows = _parse_grouped_failures(source_root)
+    file_summaries, rows = _parse_grouped_failures(source_root, model_filter=model)
     grouped_rows: dict[str, list[dict]] = defaultdict(list)
     for row in rows:
         group_name = _normalize_text(str(row.get("turn_waste_global_group", ""))) or "unassigned"
@@ -319,6 +485,7 @@ def build_turn_waste_global_report(
         "",
         f"- Source root: `{source_root}`",
         f"- Output root: `{source_root}`",
+        f"- Model filter: `{model}`" if model else "- Model filter: all models",
         f"- Processed files: {len(file_summaries)}",
         f"- Total grouped runtime-failure rows: {len(rows)}",
         (
@@ -342,9 +509,11 @@ def build_turn_waste_global_report(
             f"- {eval_link}: {summary['row_count']} grouped runtime-failure rows; failures table: {failures_link}"
         )
 
+    lines.append("")
+    _add_summary_tables(lines, rows, report_dir=report_path.parent, repo_root=repo_root, logs_root=logs_root)
+
     lines.extend(
         [
-            "",
             "## Canonical Groups",
             "",
             "_Narrative claims below are limited to grouped counts, direct `turn_waste_evidence`, and optional validated log snippets._",
@@ -455,6 +624,7 @@ def main() -> None:
     parser.add_argument("--source-root", default="results-ec2_semantic_turn_waste_grouped")
     parser.add_argument("--output-path", default=None)
     parser.add_argument("--logs-dir", default=None)
+    parser.add_argument("--model", default=None)
     parser.add_argument("--representative-limit", type=int, default=5)
     args = parser.parse_args()
 
@@ -462,6 +632,7 @@ def main() -> None:
         source_root=args.source_root,
         output_path=args.output_path,
         logs_dir=args.logs_dir,
+        model=args.model,
         representative_limit=args.representative_limit,
     )
     print(f"Wrote {outputs['report_path']}")

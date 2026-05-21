@@ -43,6 +43,8 @@ SUPPORTING_FIGURES = {
     "fig03_semantic_x_error_variant.pdf": "results_semantic_x_error_variant.pdf",
     "fig01_semantic_buckets_variant.pdf": "results_semantic_buckets_variant.pdf",
     "fig2a_recall_semantic_combined.pdf": "results_recall_semantic_combined.pdf",
+    "fig05_turn_waste_groups_by_model.pdf": "fig05_turn_waste_groups_by_model.pdf",
+    "fig05b_turn_waste_groups_by_condition.pdf": "fig05b_turn_waste_groups_by_condition.pdf",
 }
 
 

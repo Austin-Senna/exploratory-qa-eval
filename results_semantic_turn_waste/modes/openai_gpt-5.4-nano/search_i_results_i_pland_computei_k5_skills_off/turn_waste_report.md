@@ -1,37 +1,66 @@
 # Turn Waste Report
 
 - Source file: `/Users/austinsenna/Documents/projects/daplab/exploratory-qa-eval/results_semantic/modes/openai_gpt-5.4-nano/search_i_results_i_pland_computei_k5_skills_off/eval_results.csv`
-- Mirrored eval file: `/Users/austinsenna/Documents/projects/daplab/exploratory-qa-eval/results_semantic_turn_waste/modes/openai_gpt-5.4-nano/search_i_results_i_pland_computei_k5_skills_off/eval_results.csv`
-- Audited row count: 4
-- Total estimated wasted turns: 48
-- Average estimated wasted turns: 12.0
-- Deterministic validation: 4 valid, 0 invalid
-- Model validation: 3 pass, 1 repaired_pass, 0 untrusted
+- Mirrored file: `/Users/austinsenna/Documents/projects/daplab/exploratory-qa-eval/results_semantic_turn_waste/modes/openai_gpt-5.4-nano/search_i_results_i_pland_computei_k5_skills_off/eval_results.csv`
+- Audited rows: 29
+- Deterministic validation: 29 valid, 0 valid_with_warnings, 0 invalid/missing-log
+- Model validation: 26 pass, 3 repaired_pass, 0 invalid_untrusted
+- Estimated wasted turns: total 172, average 5.9
 
 ## Discovered File-Local Groups
 
-### Upstream rework crowded out downstream completion
-- Count: 3
-- Estimated wasted turns: 44
-- Description: Runs made a meaningful upstream discovery, then spent the remaining budget repeating or repairing earlier-hop work instead of advancing to the later required counts or lookups.
-- Distinguishing signals: A usable intermediate answer was already found or nearly settled; Later turns repeated schema checks, count queries, parsing, or candidate-selection work around the same upstream target; The final required hops or terminal counts were not completed before timeout or tool exhaustion
-- Representative task ids: tasks_mini/k-4-d-2/task_7.json; tasks_mini/k-4-d-4/task_10.json; tasks_mini/k-5-d-3/task_5.json
+### Repair-loop placeholders (11 rows)
 
-### Blocked query path retry loop
-- Count: 1
-- Estimated wasted turns: 4
-- Description: The run discovered that its chosen ideal-query route could not handle the target file, but continued spending turns on failed or placeholder ideal computations instead of switching to a workable data-reduction path.
-- Distinguishing signals: The tool path was visibly failing or unsupported; Repeated execute_ideal/query_ideal attempts stayed close to the same blocked approach; The run did not reach a usable subset, alternative workflow, or final count
-- Representative task ids: tasks_mini/k-4-d-1/task_3.json
+Runs kept retrying near-duplicate query_ideal or execute_ideal computations after repair/status failures, then submitted null, zero, blank, unknown, or unable-to-determine answers.
 
-## Global Summary
-Across the accepted summaries, wasted turns mostly came from staying on an already-solved or already-blocked intermediate step. Three of four rows show upstream rework crowding out downstream completion; one row shows a blocked large-file ideal-query path being retried instead of replaced.
+- Estimated wasted turns: total 50, average 4.5
+- Distinguishing signals: SQL repair JSONDecodeError or status/path errors; progress stopped on one dataset or subproblem; final placeholder-style submission after repeated failed computations
+- Representative task ids: `tasks_mini/k-3-d-4/task_5.json`, `tasks_mini/k-5-d-4/task_7.json`, `tasks_mini/k-3-d-2/task_9.json`
+
+### Missing-data schema loops (3 rows)
+
+Runs found candidate sources but got stuck rechecking schema, catalog files, or missing data instead of finding a usable data path.
+
+- Estimated wasted turns: total 17, average 5.7
+- Distinguishing signals: repeated schema/count/catalog probes; same missing or unusable dataset revisited; placeholder answer after unresolved data access
+- Representative task ids: `tasks_mini/k-3-d-2/task_8.json`, `tasks_mini/k-3-d-2/task_6.json`, `tasks_mini/k-4-d-4/task_11.json`
+
+### Overworked first hop (10 rows)
+
+Runs kept recomputing first-hop rankings, filters, or counts after enough evidence existed, leaving downstream hops unfinished.
+
+- Estimated wasted turns: total 80, average 8.0
+- Distinguishing signals: duplicate ranking or count queries; known first-hop result not converted into next-hop work; downstream bridge, biography, location, or final-count hops never reached
+- Representative task ids: `tasks_mini/k-5-d-3/task_5.json`, `tasks_mini/k-3-d-4/task_3.json`, `tasks_mini/k-5-d-4/task_1.json`
+
+### Format workaround churn (4 rows)
+
+Runs stalled on large, GeoJSON, XML, KML, or otherwise awkward file access patterns and spent turns on mismatched parsing workarounds.
+
+- Estimated wasted turns: total 21, average 5.2
+- Distinguishing signals: large-file, GeoJSON, XML, or KML access issues; Binder errors or incompatible field extraction; repeated low-yield parsing/query variations
+- Representative task ids: `tasks_mini/k-4-d-4/task_10.json`, `tasks_mini/k-3-d-4/task_6.json`, `tasks_mini/k-4-d-1/task_3.json`
+
+### Unresolved mapping searches (1 rows)
+
+Runs completed a numeric or dataset subproblem but then wasted turns on repeated search or lookup attempts for an entity mapping needed for the next hop.
+
+- Estimated wasted turns: total 4, average 4.0
+- Distinguishing signals: repeated search_ideal reformulations; mapping target remained unresolved; null submission after empty or failed lookup attempts
+- Representative task ids: `tasks_mini/k-7-d-4/task_1.json`
 
 ## Global Findings
-- The dominant local pattern is failure to transition from intermediate evidence to the next required hop.
-- Repeated count/query reformulations were especially costly when the run already had enough information to advance.
-- The most distinct outlier is the large-file case, where the wasted tail was persistence with a visibly unsupported execution path.
-- Estimated wasted turns are concentrated in the upstream-rework group: 44 of 48 total estimated wasted turns.
+
+- 11 of 29 rows primarily wasted turns retrying failed ideal computations or repair paths on the same subproblem.
+- 10 of 29 rows over-invested in first-hop rankings, counts, or filters and did not pivot to downstream reasoning hops.
+- Format-specific access problems involving large files, GeoJSON, XML, or KML caused a smaller but distinct cluster of wasted workaround turns.
+- Many error_unknown rows hide concrete patterns: placeholder submission after known missing data, repair-loop stagnation, or budget exhaustion after repeated low-yield tool use.
 
 ## Unresolved Or Mixed Cases
-- None. All audited rows passed deterministic validation and model validation after one conservative repair.
+
+- No invalid, missing-log, or untrusted model-validation rows remain.
+- Singleton unresolved mapping pattern retained as its own local group: `tasks_mini/k-7-d-4/task_1.json`.
+
+## Notes
+
+- The previous usage-limit model-validation blocker has been cleared for this file; all accepted rows now have `pass` or `repaired_pass` model-validation status.

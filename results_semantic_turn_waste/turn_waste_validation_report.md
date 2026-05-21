@@ -2,10 +2,11 @@
 
 - Source root: `results_semantic_turn_waste`
 - Logs root: `logs/modes`
-- Audited rows checked: 52
+- Audited rows checked: 172
 - Invalid or missing-log rows: 0
 
 ## Status Counts
 
-- `not_audited`: 1163
-- `valid`: 52
+- `not_audited`: 2258
+- `valid`: 170
+- `valid_with_warnings`: 2

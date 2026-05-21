@@ -102,6 +102,14 @@ class TestBuildTurnWasteGlobalReport(unittest.TestCase):
             )
 
             report_text = outputs["report_path"].read_text()
+            self.assertIn("## Counts by Reconciled Global Group and Subtype", report_text)
+            self.assertIn(
+                "| Answer-Ready Overshoot | late verification tail | 1 | openai_gpt-5.2-xhigh: 1 | "
+                "[task](../tasks_mini/k-4-d-4/task_8.json) / [plan](../plans_mini/k-4-d-4/task_8.json) / "
+                "[log](../logs-ec2/modes/openai_gpt-5.2-xhigh/search_i_results_i_plani_k5/tasks_mini/k-4-d-4/task_8.log) |",
+                report_text,
+            )
+            self.assertIn("## Counts by Original Global Group and Subtype", report_text)
             self.assertIn("Answer-Ready Overshoot", report_text)
             self.assertIn("late verification tail (1)", report_text)
             self.assertIn("The answer path is already mostly established", report_text)

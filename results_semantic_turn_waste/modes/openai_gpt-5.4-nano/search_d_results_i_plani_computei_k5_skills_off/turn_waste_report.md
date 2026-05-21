@@ -1,32 +1,36 @@
 # Turn Waste Report
 
-- Source file: `/Users/austinsenna/Documents/projects/daplab/exploratory-qa-eval/results_semantic/modes/openai_gpt-5.4-nano/search_d_results_i_plani_computei_k5_skills_off/eval_results.csv`
-- Mirrored eval file: `/Users/austinsenna/Documents/projects/daplab/exploratory-qa-eval/results_semantic_turn_waste/modes/openai_gpt-5.4-nano/search_d_results_i_plani_computei_k5_skills_off/eval_results.csv`
+- Source file: `results_semantic/modes/openai_gpt-5.4-nano/search_d_results_i_plani_computei_k5_skills_off/eval_results.csv`
 - Audited row count: 1
-- Total estimated wasted turns: 7
-- Average estimated wasted turns: 7.0
-- Deterministic validation: 1 valid, 0 invalid
-- Model validation: 1 pass, 0 repaired_pass, 0 untrusted
+- Trusted audited rows summarized: 1
+- Total estimated wasted turns: 8
+- Average estimated wasted turns: 8.00
 
 ## Discovered File-Local Groups
 
-### Repeated Dataset Probing After Useful Retrieval
-- Count: 1
-- Estimated wasted turns: 7
-- Description: The run spent its wasted turns re-querying and grepping the already-located population dataset instead of advancing to the next required lookup.
-- Distinguishing signals: repeated query_ideal calls against the same population dataset after no authored match; repeated grep_file regex attempts over the same file; useful county rows had already been retrieved; hard timeout occurred before the school-enrollment step.
-- Representative task ids: tasks_mini/k-4-d-2/task_15.json
+### Repeated low-yield probing of an already-found intermediate dataset (1)
+
+The run located the relevant population source and extracted useful county rows, but then spent the remaining budget retrying and elaborating population-file queries instead of moving to the downstream school district enrollment lookup.
+
+Distinguishing signals:
+- Repeated query_ideal calls against the same population file after the dataset was already found
+- Repeated grep_file probes over county population rows
+- Progress stopped before the final required source lookup
+- Hard timeout occurred during another population-file grep
+
+Representative task ids:
+- `tasks_mini/k-4-d-2/task_15.json`
 
 ## Global Summary
 
-One accepted failed row was grouped. Its wasted-turn pattern was repeated probing of a located population dataset after partial progress, exhausting the budget before the city/enrollment lookup.
+One accepted failed row was grouped. The file-local pattern is repeated low-yield work on an intermediate population source after locating it, ending in a hard timeout before the run reached the final enrollment evidence needed for submission.
 
 ## Global Findings
 
-- The main waste was staying too long on an already-identified source, not broad exploration.
-- The run had meaningful progress by locating the Washington population dataset and target county rows.
-- The final failure point was an over-specific Clark County grep that ran until hard timeout.
+- The main waste pattern was not failure to find an initial source, but over-investment in the first-hop population dataset.
+- The run made intermittent productive progress, including finding the dataset and retrieving county rows, but spent an estimated 8 turns on repeated or low-yield population queries and greps.
+- The final failure was a hard timeout during another complex grep_file call, before the 2017-18 school district enrollment lookup was attempted.
 
 ## Unresolved Or Mixed Cases
 
-- None. The audited row passed deterministic validation and model validation.
+- None. Deterministic validation status: `valid`; model validation status: `pass`.

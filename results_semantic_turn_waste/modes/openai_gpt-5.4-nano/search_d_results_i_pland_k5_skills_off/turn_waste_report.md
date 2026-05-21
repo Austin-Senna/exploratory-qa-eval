@@ -1,54 +1,52 @@
-# Turn Waste Audit Report
+# Turn Waste Report
 
-Source file: `/Users/austinsenna/Documents/projects/daplab/exploratory-qa-eval/results_semantic/modes/openai_gpt-5.4-nano/search_d_results_i_pland_k5_skills_off/eval_results.csv`
+- Source file: `results_semantic/modes/openai_gpt-5.4-nano/search_d_results_i_pland_k5_skills_off/eval_results.csv`
+- Mirrored file: `results_semantic_turn_waste/modes/openai_gpt-5.4-nano/search_d_results_i_pland_k5_skills_off/eval_results.csv`
+- Audited runtime-failure rows: 17
+- Deterministic validation: 0 invalid/missing rows; 1 valid-with-warnings
+- Model validation: 14 pass; 3 repaired_pass
+- Total estimated wasted turns: 89
+- Average estimated wasted turns: 5.2
 
-## Summary
+## File-local Groups
 
-- Audited runtime-failure rows: 8
-- Trusted audited rows: 8
-- Total estimated wasted turns: 44
-- Average estimated wasted turns: 5.5
-- Deterministic validation: all audited rows valid after rewrite
-- Model validation: 7 pass, 1 repaired_pass
+### File access and data-shape mismatch loops (6)
+Runs repeatedly used low-yield query/read/download patterns against files whose shape was already known to be unsuitable, such as metadata-like files, oversized CSVs, GeoJSON FeatureCollections, or top-level JSON wrappers.
 
-## File-Local Groups
+Representative task ids: `tasks_mini/k-3-d-3/task_2.json`, `tasks_mini/k-4-d-2/task_6.json`, `tasks_mini/k-4-d-3/task_5.json`
 
-### Over-narrow candidate verification blocked downstream lookup
+### Repeated tabular parsing or filter refinement (5)
+Runs stayed on the same tabular or semi-tabular computation with repeated malformed SQL, parsing errors, empty filters, or narrow rechecks after enough evidence existed to change strategy.
 
-The run narrowed to plausible candidate records, but spent late turns repeating similar filters or candidate checks rather than pivoting to the remaining linked lookup steps.
+Representative task ids: `tasks_mini/k-4-d-1/task_1.json`, `tasks_mini/k-4-d-2/task_8.json`, `tasks_mini/k-4-d-3/task_7.json`
 
-- Rows: 2
-- Estimated wasted turns: 10
-- Representative task ids: tasks_mini/k-4-d-4/task_13.json, tasks_mini/k-4-d-4/task_2.json
+### Redundant validation or detours after useful candidate evidence (4)
+Runs had already found useful candidate values, rankings, or identifiers, but spent late turns rechecking the same evidence or exploring a detour instead of advancing to the remaining hops.
 
-### Redundant dataset discovery before core aggregation
+Representative task ids: `tasks_mini/k-4-d-3/task_2.json`, `tasks_mini/k-4-d-3/task_6.json`, `tasks_mini/k-4-d-4/task_2.json`
 
-The run found the relevant datasets and inspected enough context to proceed, but continued broad discovery or re-opened known datasets instead of running the decisive aggregation or annual computation.
+### Premature submission after recoverable blocker (2)
+Runs encountered a recoverable failed query, cancellation, or unresolved denominator lookup and then submitted a non-answer or placeholder rather than repairing the immediate blocker.
 
-- Rows: 2
-- Estimated wasted turns: 9
-- Representative task ids: tasks_mini/k-3-d-4/task_5.json, tasks_mini/k-4-d-1/task_1.json
-
-### Source access and parsing thrash after dataset found
-
-The run located the relevant dataset or file family, but spent late turns retrying schema checks, wrong-file probes, malformed queries, or parser/code attempts instead of extracting the needed rows and completing the next reasoning step.
-
-- Rows: 4
-- Estimated wasted turns: 25
-- Representative task ids: tasks_mini/k-3-d-3/task_2.json, tasks_mini/k-4-d-3/task_6.json, tasks_mini/k-4-d-3/task_7.json, tasks_mini/k-4-d-5/task_2.json
+Representative task ids: `tasks_mini/k-3-d-4/task_5.json`, `tasks_mini/k-4-d-2/task_5.json`
 
 ## Global Findings
 
-- All rows show meaningful early progress before failure; the waste is concentrated in late turns after the likely data path was known.
-- The largest group is source access and parsing thrash, covering 4 of 8 rows and 25 estimated wasted turns.
-- Repeated discovery and reinspection accounted for 2 rows where the core aggregation was never executed or completed.
-- Two rows stalled on over-narrow candidate verification, where similar filters were retried instead of pivoting to downstream lookups.
-- The file-local pattern suggests budget failures were less about initial source discovery and more about failing to batch decisive extraction or aggregation once sources were found.
+Across 17 accepted rows, the dominant wasted-turn pattern was repeated low-yield data access or parsing after the file shape, schema, or candidate evidence was already visible. The rows account for 89 estimated wasted turns in total, averaging about 5.2 wasted turns per failed run. Most failures were not pure reasoning failures; they were execution-path failures where the agent did not pivot after tool feedback, duplicate evidence, empty filters, or known missing downstream hops.
+
+- The largest umbrella group is file access and data-shape mismatch loops, covering 6 rows where metadata-like files, oversized files, GeoJSON, or FeatureCollection structures were handled with unsuitable repeated reads or queries.
+- A second recurring pattern is repeated tabular parsing or filter refinement, covering 5 rows where malformed SQL, parsing assumptions, or overly narrow filters consumed turns without unlocking the next hop.
+- Four rows show redundant validation or detours after useful candidate evidence was already available; these failures left later hops unfinished despite partial progress.
+- Two rows had short wasted tails but failed by prematurely submitting after a recoverable blocker, cancellation, or unresolved denominator lookup.
+- High-waste examples often combine a local data-access problem with failure to advance the multi-hop chain, so the wasted turns are concentrated around one stuck intermediate hop rather than spread evenly across the whole task.
 
 ## Unresolved Or Mixed Cases
 
-- None.
+- None. All audited rows passed deterministic validation and model validation after repairs.
 
-## Invalid, Missing, Or Untrusted Rows
+## Validation Notes
 
-- None.
+- `tasks_mini/k-4-d-1/task_1.json`: deterministic `valid_with_warnings` (estimated_wasted_turns=10 but wasted_turn_ranges covers 13 turns); model `pass` (The log shows the run located the arrest-data-from-2010-to-2019 and crime-data-from-2020-to-present datasets.; Turn 21 read the arrest rows header with Arrest Date, Area ID, Area Name, and Charge Group Description.; Turn 30 grep found rows containing Moving Traffic Violations in the arrest dataset.)
+- `tasks_mini/k-4-d-3/task_2.json`: deterministic `valid` (no notes); model `repaired_pass` (Repaired: Turn 31 evidence truncates and misquotes the submitted reasoning instead of using an exact log fragment.; Productive ranges over-include Turn 31, which is the forced final submission after the tool-limit stop.)
+- `tasks_mini/k-4-d-3/task_6.json`: deterministic `valid` (no notes); model `repaired_pass` (Repaired: Some evidence strings add quote wrappers around Executing fragments that are not exact log text.; extracted_error_evidence is grounded but should use the Turn 22 tool-limit fragment.)
+- `tasks_mini/k-4-d-3/task_7.json`: deterministic `valid` (no notes); model `repaired_pass` (Repaired: Original row overstates a hard tool-call limit; the log shows final submission after missing data, with execute-stagnation cancellation and parse/query errors rather than a visible hard tool-limit stop.)

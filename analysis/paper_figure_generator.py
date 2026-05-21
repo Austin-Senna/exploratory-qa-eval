@@ -1,0 +1,510 @@
+#!/usr/bin/env python3
+"""Generate and export paper figures for semantic mode analyses."""
+
+from __future__ import annotations
+
+import argparse
+import csv
+import json
+import math
+import shutil
+import sys
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Iterable, Optional
+
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
+from analysis.run_mode_analysis_semantic import run_analysis
+
+
+SEARCH_VARIANTS = {
+    "search_n_results_i_plani_computei_k5_skills_off": ("NII", "BM25"),
+    "search_d_results_i_plani_computei_k5_skills_off": ("DII", "Pneuma"),
+    "search_i_results_i_plani_computei_k5_skills_off": ("III", "Ideal"),
+}
+SEARCH_ORDER = ["NII", "DII", "III"]
+SEARCH_COLORS = {"NII": "#4C78A8", "DII": "#F58518", "III": "#54A24B"}
+SEARCH_LABEL_OFFSETS = {"NII": (8, -16), "DII": (8, 0), "III": (8, 12)}
+
+
+@dataclass(frozen=True)
+class BenchmarkDefaults:
+    benchmark: str
+    results_dir: Path
+    base_results_dir: Path
+    traces_dir: Path
+    tasks_dir: Path
+    analysis_dir: Path
+    turn_waste_grouped_dir: Path
+    fig21b_name: str
+
+
+@dataclass(frozen=True)
+class GeneratorConfig:
+    benchmark: str
+    results_dir: Path
+    base_results_dir: Path
+    traces_dir: Path
+    tasks_dir: Path
+    analysis_dir: Path
+    turn_waste_grouped_dir: Path
+    model_filter: Optional[str]
+    force: bool
+    paper_dir: Path
+    mirror_dir: Path
+
+
+def _benchmark_defaults(benchmark: str) -> BenchmarkDefaults:
+    if benchmark == "lakeqa":
+        return BenchmarkDefaults(
+            benchmark="lakeqa",
+            results_dir=Path("results_semantic/modes"),
+            base_results_dir=Path("results/modes"),
+            traces_dir=Path("results/traces/modes"),
+            tasks_dir=Path("tasks_mini"),
+            analysis_dir=Path("analysis_results_mode_semantic"),
+            turn_waste_grouped_dir=Path("results_semantic_turn_waste_grouped"),
+            fig21b_name="fig21b_lakeqa_semantic_delta_ablation.pdf",
+        )
+    if benchmark == "kramabench":
+        return BenchmarkDefaults(
+            benchmark="kramabench",
+            results_dir=Path("results-kramabench_semantic/modes"),
+            base_results_dir=Path("results-kramabench/modes"),
+            traces_dir=Path("results-kramabench/traces/modes"),
+            tasks_dir=Path("tasks-mini-kramabench"),
+            analysis_dir=Path("analysis_results_mode_kramabench_semantic"),
+            turn_waste_grouped_dir=Path("results-kramabench_semantic_turn_waste_grouped"),
+            fig21b_name="fig21b_krama_semantic_delta_ablation.pdf",
+        )
+    raise ValueError(f"Unsupported benchmark: {benchmark}")
+
+
+def _selected_existing_figures(benchmark: str) -> list[str]:
+    defaults = _benchmark_defaults(benchmark)
+    return [
+        "fig05_turn_waste_groups_by_model.pdf",
+        "fig05b_turn_waste_groups_by_condition.pdf",
+        defaults.fig21b_name,
+    ]
+
+
+def _search_variant_label(variant: str) -> Optional[str]:
+    payload = SEARCH_VARIANTS.get(str(variant))
+    return payload[0] if payload else None
+
+
+def _parse_model_filters(model_filter: Optional[str]) -> Optional[list[str]]:
+    if not model_filter:
+        return None
+    filters = [token.strip().lower() for token in model_filter.split(",") if token.strip()]
+    return filters or None
+
+
+def _keep_model(model: str, model_filters: Optional[list[str]]) -> bool:
+    if not model_filters:
+        return True
+    lowered = model.lower()
+    return any(token in lowered for token in model_filters)
+
+
+def _condition_keys_from_eval_results(root: Path, model_filter: Optional[str]) -> set[str]:
+    model_filters = _parse_model_filters(model_filter)
+    keys: set[str] = set()
+    if not root.exists():
+        return keys
+    for csv_path in root.rglob("eval_results.csv"):
+        rel = csv_path.relative_to(root)
+        parts = rel.parts
+        if len(parts) < 3:
+            continue
+        model = parts[-3]
+        variant = parts[-2]
+        if _keep_model(model, model_filters):
+            keys.add(f"{model}/{variant}")
+    return keys
+
+
+def _turn_waste_scope_complete(
+    results_dir: Path,
+    turn_waste_grouped_dir: Path,
+    model_filter: Optional[str],
+) -> bool:
+    expected = _condition_keys_from_eval_results(results_dir, model_filter)
+    if not expected:
+        return False
+    available = _condition_keys_from_eval_results(turn_waste_grouped_dir, model_filter)
+    return expected.issubset(available)
+
+
+def _as_float(value: object) -> Optional[float]:
+    if value in (None, ""):
+        return None
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return None
+    if math.isnan(number):
+        return None
+    return number
+
+
+def _model_sort_key(model: str) -> tuple[int, str]:
+    lowered = model.lower()
+    if "gpt-5-mini" in lowered:
+        return (0, model)
+    if "gpt-5.4-nano" in lowered:
+        return (1, model)
+    return (2, model)
+
+
+def _pretty_model(model: str) -> str:
+    return str(model).replace("openai_", "").replace("openai/", "")
+
+
+def _load_json_rows(path: Path) -> list[dict]:
+    with path.open() as handle:
+        rows = json.load(handle)
+    if not isinstance(rows, list):
+        raise ValueError(f"Expected {path} to contain a list")
+    return [dict(row) for row in rows]
+
+
+def _load_search_figure_data(analysis_dir: Path) -> dict:
+    summary_path = analysis_dir / "summary.json"
+    if not summary_path.exists():
+        raise FileNotFoundError(summary_path)
+
+    summary_by_model: dict[str, list[dict]] = {}
+    for row in _load_json_rows(summary_path):
+        label = _search_variant_label(str(row.get("variant", "")))
+        if label is None:
+            continue
+        model = str(row.get("model", "unknown"))
+        avg_search_calls = _as_float(row.get("avg_search_calls"))
+        d_ret = _as_float(row.get("D_ret"))
+        d_acc = _as_float(row.get("D_acc_recall", row.get("D_acc")))
+        if avg_search_calls is None or d_ret is None or d_acc is None:
+            continue
+        summary_by_model.setdefault(model, []).append(
+            {
+                "label": label,
+                "variant": str(row.get("variant", "")),
+                "avg_search_calls": avg_search_calls,
+                "d_ret": d_ret,
+                "d_acc": d_acc,
+            }
+        )
+
+    for rows in summary_by_model.values():
+        rows.sort(key=lambda row: SEARCH_ORDER.index(str(row["label"])))
+
+    per_task_calls: dict[tuple[str, str, str], dict[int, float]] = {}
+    call_csv = analysis_dir / "search_call_cumulative_retrieval.csv"
+    if call_csv.exists():
+        with call_csv.open(newline="") as handle:
+            for row in csv.DictReader(handle):
+                label = _search_variant_label(str(row.get("variant", "")))
+                if label is None:
+                    continue
+                model = str(row.get("model", "unknown"))
+                task_id = str(row.get("task_id", ""))
+                recall = _as_float(row.get("cumulative_search_gold_recall"))
+                if not task_id or recall is None:
+                    continue
+                try:
+                    call_index = int(float(row.get("search_call_index")))
+                except (TypeError, ValueError):
+                    continue
+                per_task_calls.setdefault((model, label, task_id), {})[call_index] = recall
+
+    curves: dict[tuple[str, str], dict[int, float]] = {}
+    tasks_by_model_label: dict[tuple[str, str], list[dict[int, float]]] = {}
+    for (model, label, _task_id), calls in per_task_calls.items():
+        tasks_by_model_label.setdefault((model, label), []).append(calls)
+
+    for key, task_calls in tasks_by_model_label.items():
+        max_call = max((max(calls.keys()) for calls in task_calls if calls), default=0)
+        if max_call <= 0:
+            continue
+        dense_curve: dict[int, float] = {}
+        for call_index in range(1, max_call + 1):
+            values: list[float] = []
+            for calls in task_calls:
+                last_value = 0.0
+                for candidate in range(1, call_index + 1):
+                    if candidate in calls:
+                        last_value = calls[candidate]
+                values.append(last_value)
+            dense_curve[call_index] = sum(values) / len(values) if values else 0.0
+        curves[key] = dense_curve
+
+    return {"summary_by_model": summary_by_model, "curves": curves}
+
+
+def _import_plot_libs():
+    try:
+        import matplotlib
+
+        matplotlib.use("Agg")
+        import matplotlib.pyplot as plt
+
+        return plt
+    except Exception as exc:
+        raise RuntimeError("matplotlib is required to render paper figures") from exc
+
+
+def _padded_limits(
+    values: Iterable[float],
+    *,
+    lower_bound: float,
+    upper_bound: float,
+    pad_fraction: float = 0.18,
+    min_span: float = 8.0,
+) -> tuple[float, float]:
+    values = [float(value) for value in values]
+    if not values:
+        return lower_bound, upper_bound
+    low = min(values)
+    high = max(values)
+    span = max(high - low, min_span)
+    center = (low + high) / 2.0
+    low = center - span / 2.0
+    high = center + span / 2.0
+    pad = span * pad_fraction
+    return max(lower_bound, low - pad), min(upper_bound, high + pad)
+
+
+def render_search_efficiency_figure(analysis_dir: Path, benchmark: str, output_path: Path) -> Path:
+    data = _load_search_figure_data(analysis_dir)
+    summary_by_model: dict[str, list[dict]] = data["summary_by_model"]
+    curves: dict[tuple[str, str], dict[int, float]] = data["curves"]
+    models = [model for model in sorted(summary_by_model, key=_model_sort_key) if summary_by_model[model]]
+    if not models:
+        raise ValueError(f"No canonical NII/DII/III rows found in {analysis_dir / 'summary.json'}")
+
+    plt = _import_plot_libs()
+    fig, axes = plt.subplots(
+        nrows=len(models),
+        ncols=2,
+        figsize=(11.5, max(3.6, 3.1 * len(models))),
+        squeeze=False,
+        gridspec_kw={"width_ratios": [1.0, 1.35]},
+    )
+    for row_index, model in enumerate(models):
+        scatter_ax = axes[row_index][0]
+        curve_ax = axes[row_index][1]
+        rows = summary_by_model[model]
+        scatter_x_values = [float(item["avg_search_calls"]) for item in rows]
+        scatter_y_values = [float(item["d_ret"]) * 100.0 for item in rows]
+        model_curve_values: list[float] = []
+        model_curve_calls: list[int] = []
+
+        for item in rows:
+            label = str(item["label"])
+            color = SEARCH_COLORS[label]
+            x = float(item["avg_search_calls"])
+            d_ret_pct = float(item["d_ret"]) * 100.0
+            d_acc_pct = float(item["d_acc"]) * 100.0
+            ring_size = 320.0 + 1600.0 * max(0.0, min(1.0, float(item["d_acc"])))
+            scatter_ax.scatter([x], [d_ret_pct], s=90, color=color, zorder=4)
+            scatter_ax.scatter(
+                [x],
+                [d_ret_pct],
+                s=ring_size,
+                facecolors="none",
+                edgecolors=color,
+                linewidths=1.8,
+                alpha=0.45,
+                zorder=3,
+            )
+            scatter_ax.annotate(
+                f"{label}\nD_acc {d_acc_pct:.0f}%",
+                (x, d_ret_pct),
+                textcoords="offset points",
+                xytext=SEARCH_LABEL_OFFSETS.get(label, (7, 7)),
+                fontsize=8,
+                ha="left",
+            )
+
+        for label in SEARCH_ORDER:
+            curve = curves.get((model, label), {})
+            if not curve:
+                continue
+            xs = sorted(curve)
+            ys = [curve[x] * 100.0 for x in xs]
+            model_curve_calls.extend(xs)
+            model_curve_values.extend(ys)
+            curve_ax.plot(xs, ys, marker="o", linewidth=2.0, markersize=4, color=SEARCH_COLORS[label], label=label)
+
+        scatter_xlim = _padded_limits(
+            scatter_x_values,
+            lower_bound=0.0,
+            upper_bound=max(10.0, max(scatter_x_values, default=1.0) + 5.0),
+            pad_fraction=0.22,
+            min_span=3.0,
+        )
+        scatter_ylim = _padded_limits(
+            scatter_y_values,
+            lower_bound=0.0,
+            upper_bound=100.0,
+            pad_fraction=0.22,
+            min_span=14.0,
+        )
+        scatter_ax.set_xlim(*scatter_xlim)
+        scatter_ax.set_ylim(*scatter_ylim)
+        scatter_ax.grid(True, alpha=0.25, linewidth=0.6)
+        scatter_ax.set_title(f"{_pretty_model(model)}: Retrieval Efficiency", fontsize=11)
+        scatter_ax.set_xlabel("Avg search calls / task")
+        scatter_ax.set_ylabel("Avg D_ret (%)")
+
+        curve_xmax = max(model_curve_calls, default=1)
+        curve_ax.set_xlim(1, max(1.0, float(curve_xmax)))
+        curve_ax.set_ylim(
+            *_padded_limits(
+                model_curve_values,
+                lower_bound=0.0,
+                upper_bound=100.0,
+                pad_fraction=0.16,
+                min_span=20.0,
+            )
+        )
+        curve_ax.grid(True, alpha=0.25, linewidth=0.6)
+        curve_ax.set_title(f"{_pretty_model(model)}: Cumulative D_ret", fontsize=11)
+        curve_ax.set_xlabel("Search call")
+        curve_ax.set_ylabel("Mean cumulative D_ret (%)")
+        curve_ax.legend(loc="lower right", fontsize=8, frameon=True)
+
+    display_name = "LakeQA" if benchmark == "lakeqa" else "Kramabench"
+    fig.suptitle(f"{display_name} Search Efficiency and Cumulative Retrieval", fontsize=14)
+    fig.tight_layout(rect=(0, 0, 1, 0.95))
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(output_path)
+    plt.close(fig)
+    return output_path
+
+
+def export_paper_figures(
+    *,
+    benchmark: str,
+    analysis_dir: Path,
+    search_figure_path: Path,
+    destinations: Iterable[Path],
+    fallback_dirs: Iterable[Path] = (),
+) -> list[Path]:
+    if not search_figure_path.exists():
+        raise FileNotFoundError(search_figure_path)
+
+    copied: list[Path] = []
+    source_specs: list[tuple[Path, str]] = [(search_figure_path, search_figure_path.name)]
+    figure_dir = analysis_dir / "figures"
+    fallback_dirs = list(fallback_dirs)
+    for filename in _selected_existing_figures(benchmark):
+        candidates = [figure_dir / filename]
+        if filename.startswith("fig21b_"):
+            candidates.append(figure_dir / "fig21b_semantic_delta_ablation_compact.pdf")
+        candidates.extend(fallback_dir / filename for fallback_dir in fallback_dirs)
+        source = next((path for path in candidates if path.exists()), None)
+        if source is not None:
+            source_specs.append((source, filename))
+            continue
+        print(f"Missing optional figure: {candidates[0]}")
+
+    for destination in destinations:
+        destination.mkdir(parents=True, exist_ok=True)
+        for source, target_name in source_specs:
+            target = destination / target_name
+            if source.resolve() != target.resolve():
+                shutil.copy2(source, target)
+            copied.append(target)
+    return copied
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--benchmark", choices=["lakeqa", "kramabench"], required=True)
+    parser.add_argument("--force", action="store_true")
+    parser.add_argument("--results-dir", default=None)
+    parser.add_argument("--base-results-dir", default=None)
+    parser.add_argument("--traces-dir", default=None)
+    parser.add_argument("--tasks-dir", default=None)
+    parser.add_argument("--analysis-dir", default=None)
+    parser.add_argument("--turn-waste-grouped-dir", default=None)
+    parser.add_argument("--model-filter", default=None)
+    parser.add_argument("--paper-dir", default="sana_framework_paper/figures")
+    parser.add_argument("--mirror-dir", default="paper_figures")
+    return parser.parse_args()
+
+
+def _resolve_config(args: argparse.Namespace) -> GeneratorConfig:
+    defaults = _benchmark_defaults(args.benchmark)
+    return GeneratorConfig(
+        benchmark=args.benchmark,
+        results_dir=Path(args.results_dir) if args.results_dir else defaults.results_dir,
+        base_results_dir=Path(args.base_results_dir) if args.base_results_dir else defaults.base_results_dir,
+        traces_dir=Path(args.traces_dir) if args.traces_dir else defaults.traces_dir,
+        tasks_dir=Path(args.tasks_dir) if args.tasks_dir else defaults.tasks_dir,
+        analysis_dir=Path(args.analysis_dir) if args.analysis_dir else defaults.analysis_dir,
+        turn_waste_grouped_dir=Path(args.turn_waste_grouped_dir)
+        if args.turn_waste_grouped_dir
+        else defaults.turn_waste_grouped_dir,
+        model_filter=args.model_filter,
+        force=bool(args.force),
+        paper_dir=Path(args.paper_dir),
+        mirror_dir=Path(args.mirror_dir),
+    )
+
+
+def ensure_analysis_outputs(config: GeneratorConfig) -> None:
+    summary_path = config.analysis_dir / "summary.json"
+    cumulative_path = config.analysis_dir / "search_call_cumulative_retrieval.csv"
+    should_run = config.force or not summary_path.exists() or not cumulative_path.exists()
+    if not should_run:
+        print(f"Reusing existing analysis output: {config.analysis_dir}")
+        return
+
+    print(f"Running semantic mode analysis for {config.benchmark}...")
+    turn_waste_grouped_dir = None
+    if config.turn_waste_grouped_dir.exists() and _turn_waste_scope_complete(
+        config.results_dir,
+        config.turn_waste_grouped_dir,
+        config.model_filter,
+    ):
+        turn_waste_grouped_dir = str(config.turn_waste_grouped_dir)
+    if turn_waste_grouped_dir is None:
+        print(f"Grouped turn-waste scope incomplete; skipping turn-waste join: {config.turn_waste_grouped_dir}")
+    run_analysis(
+        results_dir=str(config.results_dir),
+        base_results_dir=str(config.base_results_dir),
+        turn_waste_grouped_dir=turn_waste_grouped_dir,
+        traces_dir=str(config.traces_dir),
+        tasks_dir=str(config.tasks_dir),
+        output_dir=str(config.analysis_dir),
+        model_filter=config.model_filter,
+        no_figures=summary_path.exists() and not config.force,
+    )
+
+
+def main() -> None:
+    config = _resolve_config(parse_args())
+    ensure_analysis_outputs(config)
+    search_figure_path = (
+        config.analysis_dir
+        / f"search_efficiency_cumulative_retrieval_{config.benchmark}.pdf"
+    )
+    render_search_efficiency_figure(config.analysis_dir, config.benchmark, search_figure_path)
+    copied = export_paper_figures(
+        benchmark=config.benchmark,
+        analysis_dir=config.analysis_dir,
+        search_figure_path=search_figure_path,
+        destinations=[config.paper_dir, config.mirror_dir],
+        fallback_dirs=[config.paper_dir],
+    )
+    print("Exported paper figures:")
+    for path in copied:
+        print(f"  {path}")
+
+
+if __name__ == "__main__":
+    main()

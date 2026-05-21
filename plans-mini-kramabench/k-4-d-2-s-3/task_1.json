@@ -64,5 +64,28 @@
       "code": "import pandas as pd\npath = 'other-benchmarks/Kramabench/data/legal/input/csn-data-book-2024-csv/CSVs/State MSA Identity Theft data/California.csv'\ndf = pd.read_csv(path, skiprows=2).dropna()\ndf['# of Reports'] = df['# of Reports'].apply(lambda x: x.replace(',', '') if isinstance(x, str) else x).astype(int)\nrow = df.loc[df['# of Reports'].idxmax()]\nprint(str(row['Metropolitan Area']).replace(',', ''))\n",
       "answer": "Los Angeles-Long Beach-Anaheim CA Metropolitan Statistical Area"
     }
+  ],
+  "ideal_query": [
+    {
+      "node_id": "1",
+      "dataset_id": "kramabench-legal-hard-24",
+      "source": "datagov/kramabench-legal-hard-24/files/csn-data-book-2024-csv/CSVs/2024_CSN_State_Rankings_Identity_Theft_Reports.csv",
+      "intent": "How many states or territories are in the identity-theft state rankings table?",
+      "answer": "Cannot execute SQL: query_file cannot read this CSV because DuckDB reports invalid non-UTF-8 encoding. Download the file and use execute_ideal/download-style Python with the correct encoding."
+    },
+    {
+      "node_id": "2",
+      "dataset_id": "kramabench-legal-hard-24",
+      "source": "datagov/kramabench-legal-hard-24/files/csn-data-book-2024-csv/CSVs/2024_CSN_State_Rankings_Fraud_and_Other_Reports.csv",
+      "intent": "How many states or territories are in the fraud-and-other state rankings table?",
+      "answer": "Cannot execute SQL: query_file cannot read this CSV because DuckDB reports invalid non-UTF-8 encoding. Download the file and use execute_ideal/download-style Python with the correct encoding."
+    },
+    {
+      "node_id": "3",
+      "dataset_id": "kramabench-legal-hard-24",
+      "source": "datagov/kramabench-legal-hard-24/files/csn-data-book-2024-csv/CSVs/2024_CSN_State_Rankings_Identity_Theft_Reports.csv",
+      "intent": "Which state has the highest combined identity-theft plus fraud-and-other report count, and what is that total?",
+      "answer": "Cannot execute SQL: query_file cannot read this CSV because DuckDB reports invalid non-UTF-8 encoding. Download the file and use execute_ideal/download-style Python with the correct encoding."
+    }
   ]
 }

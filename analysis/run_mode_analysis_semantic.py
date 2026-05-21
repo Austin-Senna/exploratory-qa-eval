@@ -52,6 +52,7 @@ import argparse
 import csv
 import json
 import math
+import re
 import sys
 from collections import Counter, defaultdict
 from pathlib import Path
@@ -62,8 +63,14 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from analysis.discovery_metrics import (
     compute_discovery_metrics,
     compute_tools_discovery,
+    load_task_gold_ids_for_traces,
     load_task_gold_ids,
+    load_task_gold_source_ids_for_traces,
+    load_task_gold_source_ids,
+    load_task_gold_unit_ids_for_traces,
+    load_task_gold_unit_ids,
     make_task_stem_key,
+    _normalize_source_id,
 )
 from analysis.reasoning_density import _BINS as _REASONING_DENSITY_BINS
 from analysis.reasoning_density import _assign_bin as _assign_reasoning_density_bin
@@ -78,6 +85,7 @@ from analysis.search_depth import _BINS as _SEARCH_DEPTH_BINS
 from analysis.search_depth import _assign_bin as _assign_search_depth_bin
 from analysis.tool_error_analysis import _DATA_TOOLS
 from analysis.run_mode_delta_figures import generate_delta_figures
+from analysis.combine_turn_waste_grouped_models import reconcile_global_group
 
 
 SEMANTIC_BUCKETS = [
@@ -164,6 +172,90 @@ LOG_ERROR_BUCKET_DISPLAY = {
     "error_event_loop": "Event Loop",
     "error_unknown": "Unknown",
 }
+
+TURN_WASTE_FAMILY_DISPLAY = {
+    "data_query_loops": "Data/query loops",
+    "redundant_rework": "Redundant rework",
+    "search_path_drift": "Search/path drift",
+    "progress_submission_failures": "Progress/submission failures",
+    "other_mixed": "Other/mixed",
+}
+
+TURN_WASTE_FAMILY_COLORS = {
+    "data_query_loops": "#4C78A8",
+    "redundant_rework": "#72B7B2",
+    "search_path_drift": "#F58518",
+    "progress_submission_failures": "#E45756",
+    "other_mixed": "#9D755D",
+}
+
+TURN_WASTE_CANONICAL_GROUP_TO_FAMILY = {
+    "Data/source access and repair loops": "data_query_loops",
+    "Redundant same-hop work after evidence": "redundant_rework",
+    "Wrong-source and lookup fixation": "search_path_drift",
+    "Final-hop retrieval/finalization failure": "progress_submission_failures",
+    "Runtime/blocker fallback": "progress_submission_failures",
+    "Structured Data Extraction Loop": "data_query_loops",
+    "Source and query recovery churn": "data_query_loops",
+    "Source and Query-Shape Churn": "data_query_loops",
+    "Intermediate result rework": "redundant_rework",
+    "Redundant Revalidation After Progress": "redundant_rework",
+    "Redundant final verification": "redundant_rework",
+    "Redundant Intermediate Re-querying": "redundant_rework",
+    "Candidate Overconfirmation": "redundant_rework",
+    "Post-Answer Verification Churn": "redundant_rework",
+    "Missing Source Search Loop": "search_path_drift",
+    "Wrong-Branch Or Off-Path Drift": "search_path_drift",
+    "Late low-yield detour": "search_path_drift",
+    "Post-Answer Or Source Non-Submission": "progress_submission_failures",
+    "Partial Component Stall": "progress_submission_failures",
+    "Downstream Deferral and Chain Crowd-Out": "progress_submission_failures",
+}
+
+TURN_WASTE_UNCLASSIFIED_DISPLAY = "Unclassified"
+TURN_WASTE_UNCLASSIFIED_COLOR = "#B8B8B8"
+TURN_WASTE_MODEL_COLORS = {
+    "gpt-5-mini": "#4C78A8",
+    "openai_gpt-5-mini": "#4C78A8",
+    "gpt-5.4-nano": "#F58518",
+    "openai_gpt-5.4-nano": "#F58518",
+}
+TURN_WASTE_GROUP_COLORS = {
+    "Data/source access and repair loops": "#4C78A8",
+    "Redundant same-hop work after evidence": "#72B7B2",
+    "Wrong-source and lookup fixation": "#F58518",
+    "Final-hop retrieval/finalization failure": "#E45756",
+}
+TURN_WASTE_FIGURE_EXCLUDED_GROUPS = {"Runtime/blocker fallback"}
+TURN_WASTE_CONDITION_FIGURE_ORDER = [
+    ("No Plan", "search_i_results_i_plann_computei_k5_skills_off"),
+    ("Standard Plan", "search_i_results_i_pland_computei_k5_skills_off"),
+    ("BM25", "search_n_results_i_plani_computei_k5_skills_off"),
+    ("Pneuma Hybrid", "search_d_results_i_plani_computei_k5_skills_off"),
+    ("Standard Computation", "search_i_results_i_plani_k5_skills_off"),
+    ("Ideal", "search_i_results_i_plani_computei_k5_skills_off"),
+]
+TURN_WASTE_CONDITION_FIGURE_MODEL_ORDER = ["openai_gpt-5.4-nano", "openai_gpt-5-mini", "gpt-5.4-nano", "gpt-5-mini"]
+TURN_WASTE_CONDITION_FIGURE_MODEL_LABELS = {
+    "openai_gpt-5.4-nano": "5.4\nnano",
+    "gpt-5.4-nano": "5.4\nnano",
+    "openai_gpt-5-mini": "5\nmini",
+    "gpt-5-mini": "5\nmini",
+}
+TURN_WASTE_CONDITION_FIGURE_LABELS = {
+    "No Plan": "No\nPlan",
+    "Standard Plan": "Standard\nPlan",
+    "BM25": "BM25",
+    "Pneuma Hybrid": "Pneuma\nHybrid",
+    "Standard Computation": "Standard\nComputation",
+    "Ideal": "Ideal",
+}
+TURN_WASTE_PREFERRED_GROUP_ORDER = [
+    "Data/source access and repair loops",
+    "Redundant same-hop work after evidence",
+    "Wrong-source and lookup fixation",
+    "Final-hop retrieval/finalization failure",
+]
 
 _LETTER_TO_MODE = {"n": "naive", "d": "standard", "i": "ideal", "p": "preloaded"}
 _MODE_PRIORITY = {"ideal": 0, "standard": 1, "naive": 2, None: 3}
@@ -305,6 +397,29 @@ def _compact_variant_label(variant: str, *, multiline: bool = False) -> str:
     return ("\n" if multiline else " | ").join(parts)
 
 
+def _standard_condition_label(variant: str) -> str:
+    axes = _parse_variant(variant)
+    search_display = {
+        "naive": "BM25",
+        "standard": "Hybrid",
+        "ideal": "Ideal",
+        "preloaded": "Preloaded",
+    }
+    plan_display = {
+        "naive": "None",
+        "standard": "Standard",
+        "ideal": "Ideal",
+    }
+    execution_display = {
+        "standard": "Standard",
+        "ideal": "Ideal",
+    }
+    search = search_display.get(str(axes.get("search_tool") or "unknown"), "Unknown")
+    plan = plan_display.get(str(axes.get("agent_management") or "unknown"), "Unknown")
+    execution = execution_display.get(str(axes.get("computation_tool") or "standard"), "Standard")
+    return f"{search} / {plan} / {execution}"
+
+
 def _variant_sort_key(variant: str) -> tuple:
     axes = _parse_variant(variant)
     search_tool = axes.get("search_tool")
@@ -374,10 +489,11 @@ def _default_base_results_dir(results_dir: str) -> Optional[str]:
 
 def _default_turn_waste_grouped_dir(results_dir: str) -> Optional[str]:
     """Infer the optional grouped turn-waste tree next to semantic results."""
-    results_str = str(results_dir)
-    candidate = results_str.replace("_semantic/modes", "_semantic_turn_waste_grouped/modes", 1)
-    if candidate != results_str:
-        return candidate
+    results_path = Path(results_dir)
+    if results_path.name == "modes":
+        results_path = results_path.parent
+
+    results_str = str(results_path)
     candidate = results_str.replace("_semantic", "_semantic_turn_waste_grouped", 1)
     if candidate != results_str:
         return candidate
@@ -407,6 +523,161 @@ def _parse_trace_jsonl_path(path: Path, traces_root: Path) -> Tuple[str, str, st
         task_id = f"{parts[-2]}/{Path(parts[-1]).stem}"
         return parts[-4], parts[-3], task_id
     raise ValueError(f"Expected <traces>/<model>/<variant>/<task_dir>/<task>.jsonl layout, got {path}")
+
+
+_READ_SOURCE_TOOLS = {
+    "read_file",
+    "peek_file",
+    "peek_multiple",
+    "grep_file",
+    "parse_xml_records",
+    "query_file",
+    "download",
+    "query_ideal",
+    "execute_ideal",
+}
+
+
+def _infer_log_path_for_trace(jsonl_path: Path, traces_root: Path, records: List[dict]) -> Optional[Path]:
+    root_parts = list(traces_root.parts)
+    if "results-kramabench" not in root_parts:
+        return None
+    index = root_parts.index("results-kramabench")
+    log_root = Path(*root_parts[:index], "log-kramabench", "modes")
+    model, variant, task_id = _parse_trace_jsonl_path(jsonl_path, traces_root)
+    task_root = "tasks-mini-kramabench"
+    for record in records:
+        record_task_id = str(record.get("task_id", "") or "")
+        parts = Path(record_task_id).parts
+        if len(parts) >= 3 and parts[-3].startswith("tasks"):
+            task_root = parts[-3]
+            break
+    task_dir, task_name = task_id.split("/", 1)
+    return log_root / model / variant / task_root / task_dir / f"{task_name}.log"
+
+
+def _extract_json_object(text: str) -> Optional[dict]:
+    start = text.find("{")
+    if start < 0:
+        return None
+    try:
+        value, _end = json.JSONDecoder().raw_decode(text[start:])
+    except json.JSONDecodeError:
+        return None
+    return value if isinstance(value, dict) else None
+
+
+def _source_ids_from_payload(payload: dict) -> list[str]:
+    source_ids: list[str] = []
+
+    def add(value: str) -> None:
+        source_id = _normalize_source_id(value)
+        if source_id and source_id not in source_ids:
+            source_ids.append(source_id)
+
+    if isinstance(payload.get("s3_uri"), str):
+        add(str(payload["s3_uri"]))
+    for value in payload.get("s3_uris") or []:
+        if isinstance(value, str):
+            add(value)
+    dataset_id = payload.get("dataset_id")
+    file_path = payload.get("file_path")
+    if isinstance(dataset_id, str) and isinstance(file_path, str):
+        add(_normalize_source_id("", dataset_id=dataset_id, file_path=file_path))
+    def collect_from_items(items) -> None:
+        for item in items or []:
+            if isinstance(item, str):
+                add(item)
+                continue
+            if not isinstance(item, dict):
+                continue
+            if isinstance(item.get("s3_uri"), str):
+                add(str(item["s3_uri"]))
+            dataset_id = item.get("dataset_id")
+            file_path = item.get("file_path")
+            if isinstance(dataset_id, str) and isinstance(file_path, str):
+                add(_normalize_source_id("", dataset_id=dataset_id, file_path=file_path))
+
+    collect_from_items(payload.get("results"))
+    collect_from_items(payload.get("files"))
+    collect_from_items(payload.get("downloaded"))
+    return source_ids
+
+
+def _parse_log_source_events(log_path: Path) -> tuple[list[list[str]], list[dict]]:
+    if not log_path.exists():
+        return [], []
+    search_events: list[list[str]] = []
+    read_events: list[dict] = []
+    execute_re = re.compile(r"Executing:\s*([A-Za-z_][A-Za-z0-9_]*)\(")
+    with log_path.open(errors="replace") as handle:
+        for line in handle:
+            if "Executing:" in line:
+                match = execute_re.search(line)
+                tool = match.group(1) if match else ""
+                if tool in _READ_SOURCE_TOOLS:
+                    payload = _extract_json_object(line)
+                    if payload:
+                        source_ids = _source_ids_from_payload(payload)
+                        if source_ids:
+                            read_events.append({"tool": tool, "source_ids": source_ids})
+                continue
+            if "Tool result:" not in line:
+                continue
+            payload = _extract_json_object(line.split("Tool result:", 1)[1])
+            if not payload:
+                continue
+            if isinstance(payload.get("results"), list):
+                source_ids = _source_ids_from_payload(payload)
+                if source_ids:
+                    search_events.append(source_ids)
+    return search_events, read_events
+
+
+def _enrich_trace_records_with_log_sources(records: List[dict], log_path: Optional[Path]) -> None:
+    if log_path is None:
+        return
+    search_events, read_events = _parse_log_source_events(log_path)
+    search_index = 0
+    used_read_events: set[int] = set()
+    for record in records:
+        tool = str(record.get("tool", "") or "")
+        if tool.startswith("search") and record.get("result_dataset_ids") is not None:
+            if search_index < len(search_events):
+                record["result_source_ids"] = search_events[search_index]
+            search_index += 1
+        elif tool in _READ_SOURCE_TOOLS and record.get("read_dataset_ids") is not None:
+            match_index = next(
+                (
+                    index
+                    for index, event in enumerate(read_events)
+                    if index not in used_read_events and event.get("tool") == tool
+                ),
+                None,
+            )
+            if match_index is None:
+                match_index = next(
+                    (index for index, _event in enumerate(read_events) if index not in used_read_events),
+                    None,
+                )
+            if match_index is not None:
+                record["read_source_ids"] = read_events[match_index]["source_ids"]
+                used_read_events.add(match_index)
+
+    task_id = next((str(record.get("task_id")) for record in records if record.get("task_id")), "")
+    for index, event in enumerate(read_events):
+        if index in used_read_events or event.get("tool") != "download":
+            continue
+        records.append({
+            "task_id": task_id,
+            "tool": "download",
+            "status": "success",
+            "attempted_read_dataset_ids": [],
+            "read_dataset_ids": [],
+            "read_source_ids": event["source_ids"],
+            "gold_dataset_ids_read": [],
+            "log_enriched": True,
+        })
 
 
 def _validate_required_fields(fieldnames: List[str] | None, path: Path) -> None:
@@ -661,11 +932,14 @@ def load_traces_grouped(
         if not keep_model(model):
             continue
         key = _cm_key(model, variant)
+        records: list[dict] = []
         with jsonl_path.open() as handle:
             for line in handle:
                 line = line.strip()
                 if line:
-                    grouped[key][task_id].append(json.loads(line))
+                    records.append(json.loads(line))
+        _enrich_trace_records_with_log_sources(records, _infer_log_path_for_trace(jsonl_path, root, records))
+        grouped[key][task_id].extend(records)
     return {key: dict(value) for key, value in grouped.items()}
 
 
@@ -684,10 +958,16 @@ def build_search_bottleneck_meta(grouped_traces: Dict[str, dict]) -> Dict[str, d
 
 def run_discovery(grouped_traces: Dict[str, dict], tasks_dir: str) -> Tuple[dict, Dict[str, Dict[str, dict]]]:
     tasks_root = Path(tasks_dir)
-    if not grouped_traces or not tasks_root.exists():
+    if not grouped_traces:
         return {}, {}
 
-    task_gold = load_task_gold_ids(tasks_dir)
+    task_gold = (
+        load_task_gold_source_ids_for_traces(tasks_dir, grouped_traces)
+        if "kramabench" in tasks_root.name
+        else load_task_gold_ids_for_traces(tasks_dir, grouped_traces)
+    )
+    if not task_gold and not tasks_root.exists():
+        return {}, {}
     aggregates: dict = {}
     task_metrics_by_key: Dict[str, Dict[str, dict]] = {}
 
@@ -1812,6 +2092,34 @@ def _cleanup_figure_dir(fig_dir: Path) -> None:
         path.unlink()
 
 
+def _search_call_cumulative_fieldnames() -> List[str]:
+    return [
+        "condition_model",
+        "condition",
+        "variant",
+        "base_condition",
+        "model",
+        "task_id",
+        "search_tool",
+        "turn",
+        "search_call_index",
+        "results_returned",
+        "n_gold_datasets",
+        "cumulative_search_gold_count",
+        "cumulative_search_gold_recall",
+        "cumulative_read_gold_count",
+        "cumulative_read_gold_recall",
+    ] + [
+        field
+        for cutoff in SEARCH_BOTTLENECK_CUTOFFS
+        for field in (
+            f"gold_hits_top_{cutoff}",
+            f"gold_in_top_{cutoff}",
+            f"gold_recall_top_{cutoff}",
+        )
+    ]
+
+
 def _pretty_model(model_name: str) -> str:
     label = model_name.split("/")[-1]
     label = label.replace("bedrock_", "").replace("openai_", "")
@@ -2364,6 +2672,139 @@ def _turn_waste_group_sort_key(group_name: str, total_counts: Counter) -> tuple:
     return (1 if is_mixed else 0, -int(total_counts.get(group_name, 0)), group_name)
 
 
+def _turn_waste_family(group_name: str) -> str:
+    if group_name in TURN_WASTE_CANONICAL_GROUP_TO_FAMILY:
+        return TURN_WASTE_CANONICAL_GROUP_TO_FAMILY[group_name]
+    normalized = group_name.lower()
+    if not normalized or "mixed" in normalized or "unclear" in normalized:
+        return "other_mixed"
+    if (
+        "structured data" in normalized
+        or "source and query" in normalized
+        or "query recovery" in normalized
+        or "extraction loop" in normalized
+    ):
+        return "data_query_loops"
+    if (
+        "intermediate result" in normalized
+        or "redundant revalidation" in normalized
+        or "final verification" in normalized
+        or "low-yield detour" in normalized
+        or "rework" in normalized
+    ):
+        return "redundant_rework"
+    if "missing source" in normalized or "wrong-branch" in normalized or "off-path" in normalized:
+        return "search_path_drift"
+    if "post-answer" in normalized or "non-submission" in normalized or "partial component stall" in normalized:
+        return "progress_submission_failures"
+    return "other_mixed"
+
+
+def _build_turn_waste_condition_model_summary(summary_rows: List[dict], failed_join_rows: List[dict]) -> dict:
+    summary_by_key = {str(row.get("condition_model", "")): row for row in summary_rows}
+    out = {
+        key: {
+            "condition_model": key,
+            "model": str(row.get("model", "")),
+            "variant": str(row.get("variant", "")),
+            "n_total_rows": int(row.get("n", 0) or 0),
+            "n_failed_rows": 0,
+            "n_grouped_failed_rows": 0,
+            "n_unassigned_failed_rows": 0,
+            "families": {family: {"n": 0} for family in TURN_WASTE_FAMILY_DISPLAY},
+            "groups": {},
+        }
+        for key, row in summary_by_key.items()
+    }
+
+    for row in failed_join_rows:
+        key = str(row.get("condition_model", ""))
+        entry = out.setdefault(
+            key,
+            {
+                "condition_model": key,
+                "model": _split_cm_key(key)[0],
+                "variant": _split_cm_key(key)[1],
+                "n_total_rows": 0,
+                "n_failed_rows": 0,
+                "n_grouped_failed_rows": 0,
+                "n_unassigned_failed_rows": 0,
+                "families": {family: {"n": 0} for family in TURN_WASTE_FAMILY_DISPLAY},
+                "groups": {},
+            },
+        )
+        entry["n_failed_rows"] += 1
+        group_name = str(row.get("turn_waste_global_group", "") or "").strip()
+        if group_name:
+            reconciled_group_name = reconcile_global_group(group_name)
+            entry["n_grouped_failed_rows"] += 1
+            entry.setdefault("groups", {})
+            entry["groups"].setdefault(reconciled_group_name, {"n": 0})
+            entry["groups"][reconciled_group_name]["n"] += 1
+            family = _turn_waste_family(reconciled_group_name)
+            entry["families"].setdefault(family, {"n": 0})
+            entry["families"][family]["n"] += 1
+        else:
+            entry["n_unassigned_failed_rows"] += 1
+
+    for entry in out.values():
+        grouped_total = int(entry.get("n_grouped_failed_rows", 0) or 0)
+        for payload in entry.get("families", {}).values():
+            count = int(payload.get("n", 0) or 0)
+            payload["pct_within_grouped_failed_rows"] = round(count / grouped_total, 4) if grouped_total else 0.0
+    return out
+
+
+def _turn_waste_plot_rows(condition_groups: dict, summary_rows: List[dict]) -> List[dict]:
+    rows: List[dict] = []
+    for row in sorted(summary_rows, key=lambda item: _condition_model_sort_key(str(item.get("condition_model", "")))):
+        key = str(row.get("condition_model", ""))
+        entry = condition_groups.get(key)
+        if not entry:
+            continue
+        failed = int(entry.get("n_failed_rows", 0) or 0)
+        if failed <= 0:
+            continue
+        variant = str(row.get("variant", entry.get("variant", "")))
+        families = {
+            display: int(entry.get("families", {}).get(family, {}).get("n", 0) or 0)
+            for family, display in TURN_WASTE_FAMILY_DISPLAY.items()
+        }
+        assigned = int(entry.get("n_grouped_failed_rows", 0) or 0)
+        unclassified = int(entry.get("n_unassigned_failed_rows", 0) or 0)
+        rows.append(
+            {
+                "condition_model": key,
+                "model": str(row.get("model", entry.get("model", ""))),
+                "variant": variant,
+                "label": _standard_condition_label(variant),
+                "failed": failed,
+                "assigned": assigned,
+                "unclassified": unclassified,
+                "families": families,
+            }
+        )
+    return rows
+
+
+def _is_turn_waste_figure_group(group_name: str) -> bool:
+    return str(group_name or "").strip() not in TURN_WASTE_FIGURE_EXCLUDED_GROUPS
+
+
+def _ordered_turn_waste_groups(group_totals: Counter) -> List[str]:
+    preferred = [
+        group
+        for group in TURN_WASTE_PREFERRED_GROUP_ORDER
+        if int(group_totals.get(group, 0) or 0) > 0 and _is_turn_waste_figure_group(group)
+    ]
+    extras = sorted(
+        group
+        for group, count in group_totals.items()
+        if int(count or 0) > 0 and group not in preferred and _is_turn_waste_figure_group(group)
+    )
+    return preferred + extras
+
+
 def _plot_turn_waste_groups_variant(plt, turn_waste_groups: dict, variant_rows: List[dict], output_path: Path) -> None:
     if not variant_rows or not turn_waste_groups:
         return
@@ -2459,6 +2900,430 @@ def _plot_turn_waste_groups_variant(plt, turn_waste_groups: dict, variant_rows: 
     plt.close(fig)
 
 
+def _plot_turn_waste_families_by_condition_model(plt, condition_groups: dict, summary_rows: List[dict], output_path: Path) -> None:
+    rows = _turn_waste_plot_rows(condition_groups, summary_rows)
+    if not rows:
+        fig, ax = plt.subplots(figsize=(8, 2.8))
+        ax.axis("off")
+        ax.text(
+            0.5,
+            0.5,
+            "No failed rows available for turn-waste grouping.",
+            ha="center",
+            va="center",
+            fontsize=10,
+        )
+        fig.suptitle("Turn-Waste Audit Coverage and Assigned Failure Patterns", fontsize=13)
+        fig.tight_layout()
+        fig.savefig(output_path)
+        plt.close(fig)
+        return
+
+    fig, axes = plt.subplots(
+        1,
+        2,
+        figsize=(12.5, max(4.8, 0.43 * len(rows) + 1.7)),
+        sharey=True,
+        squeeze=False,
+    )
+    coverage_ax, family_ax = axes[0]
+    y_positions = list(range(len(rows)))
+    y_labels = [
+        f"{_pretty_model(str(row.get('model', '')))}\n{row.get('label', '')}"
+        for row in rows
+    ]
+
+    classified_color = "#5C6670"
+    coverage_specs = [
+        ("Classified", classified_color, [int(row.get("assigned", 0) or 0) for row in rows]),
+        (TURN_WASTE_UNCLASSIFIED_DISPLAY, TURN_WASTE_UNCLASSIFIED_COLOR, [int(row.get("unclassified", 0) or 0) for row in rows]),
+    ]
+    lefts = [0.0 for _ in rows]
+    coverage_handles = []
+    coverage_labels = []
+    for display, color, counts in coverage_specs:
+        widths = [
+            (count / int(row.get("failed", 0) or 0)) * 100.0 if int(row.get("failed", 0) or 0) else 0.0
+            for row, count in zip(rows, counts)
+        ]
+        bars = coverage_ax.barh(y_positions, widths, left=lefts, height=0.72, color=color, label=display)
+        coverage_handles.append(bars[0])
+        coverage_labels.append(display)
+        label_color = _label_text_color(color)
+        for bar, width, count, left in zip(bars, widths, counts, lefts):
+            if count <= 0 or width < 7.0:
+                continue
+            coverage_ax.text(
+                left + width / 2,
+                bar.get_y() + bar.get_height() / 2,
+                str(count),
+                ha="center",
+                va="center",
+                fontsize=8,
+                color=label_color,
+            )
+        lefts = [left + width for left, width in zip(lefts, widths)]
+
+    coverage_ax.set_yticks(y_positions)
+    coverage_ax.set_yticklabels(y_labels, fontsize=8)
+    coverage_ax.invert_yaxis()
+    coverage_ax.set_xlim(0, 100)
+    coverage_ax.set_xlabel("Share of failed rows (%)")
+    coverage_ax.set_title("Audit coverage")
+    coverage_ax.grid(axis="x", alpha=0.2, linestyle="--", linewidth=0.7)
+    for y_pos, row in zip(y_positions, rows):
+        coverage_ax.text(101.0, y_pos, f"n={int(row.get('failed', 0) or 0)}", ha="left", va="center", fontsize=8)
+
+    family_display_to_color = {
+        display: TURN_WASTE_FAMILY_COLORS[family]
+        for family, display in TURN_WASTE_FAMILY_DISPLAY.items()
+    }
+    family_lefts = [0.0 for _ in rows]
+    family_handles = []
+    family_labels = []
+    active_families = [
+        display
+        for display in TURN_WASTE_FAMILY_DISPLAY.values()
+        if any(int(row.get("families", {}).get(display, 0) or 0) > 0 for row in rows)
+    ]
+    for display in active_families:
+        counts = [int(row.get("families", {}).get(display, 0) or 0) for row in rows]
+        widths = [
+            (count / int(row.get("assigned", 0) or 0)) * 100.0 if int(row.get("assigned", 0) or 0) else 0.0
+            for row, count in zip(rows, counts)
+        ]
+        color = family_display_to_color[display]
+        bars = family_ax.barh(y_positions, widths, left=family_lefts, height=0.72, color=color, label=display)
+        family_handles.append(bars[0])
+        family_labels.append(display)
+        label_color = _label_text_color(color)
+        for bar, width, count, left in zip(bars, widths, counts, family_lefts):
+            if count <= 0 or width < 8.0:
+                continue
+            family_ax.text(
+                left + width / 2,
+                bar.get_y() + bar.get_height() / 2,
+                str(count),
+                ha="center",
+                va="center",
+                fontsize=8,
+                color=label_color,
+            )
+        family_lefts = [left + width for left, width in zip(family_lefts, widths)]
+
+    family_ax.set_xlim(0, 100)
+    family_ax.set_xlabel("Share of classified rows (%)")
+    family_ax.set_title("Assigned failure family")
+    family_ax.grid(axis="x", alpha=0.2, linestyle="--", linewidth=0.7)
+
+    fig.legend(
+        handles=coverage_handles + family_handles,
+        labels=coverage_labels + family_labels,
+        loc="lower center",
+        ncol=3,
+        frameon=False,
+        fontsize=8,
+    )
+
+    fig.suptitle("Turn-Waste Audit Coverage and Assigned Failure Patterns", fontsize=13)
+    fig.tight_layout(rect=(0, 0.07, 1, 0.94), w_pad=3.0)
+    fig.savefig(output_path)
+    plt.close(fig)
+
+
+def _plot_turn_waste_families_for_model(plt, rows: List[dict], model: str, output_path: Path) -> None:
+    model_rows = [row for row in rows if str(row.get("model", "")) == model and int(row.get("assigned", 0) or 0) > 0]
+    if not model_rows:
+        return
+
+    y_positions = list(range(len(model_rows)))
+    height = max(2.8, 0.42 * len(model_rows) + 1.25)
+    fig, ax = plt.subplots(figsize=(9.8, height))
+    lefts = [0 for _ in model_rows]
+    handles = []
+    labels = []
+    active_families = [
+        (family, display)
+        for family, display in TURN_WASTE_FAMILY_DISPLAY.items()
+        if any(int(row.get("families", {}).get(display, 0) or 0) > 0 for row in model_rows)
+    ]
+
+    for family, display in active_families:
+        values = [int(row.get("families", {}).get(display, 0) or 0) for row in model_rows]
+        color = TURN_WASTE_FAMILY_COLORS[family]
+        bars = ax.barh(y_positions, values, left=lefts, height=0.72, color=color, label=display)
+        handles.append(bars[0])
+        labels.append(display)
+        label_color = _label_text_color(color)
+        for bar, value, left in zip(bars, values, lefts):
+            if value <= 0:
+                continue
+            current_total = max(sum(int(row.get("families", {}).get(label, 0) or 0) for label in TURN_WASTE_FAMILY_DISPLAY.values()) for row in model_rows)
+            if value < max(1.5, current_total * 0.08):
+                continue
+            ax.text(
+                left + value / 2,
+                bar.get_y() + bar.get_height() / 2,
+                str(value),
+                ha="center",
+                va="center",
+                fontsize=8,
+                color=label_color,
+            )
+        lefts = [left + value for left, value in zip(lefts, values)]
+
+    ax.set_yticks(y_positions)
+    ax.set_yticklabels([str(row.get("label", "")) for row in model_rows], fontsize=8)
+    ax.set_ylabel("Search / Plan / Execution")
+    ax.invert_yaxis()
+    ax.set_xlabel("Classified failed rows")
+    ax.set_title(f"Turn-Waste Families: {_pretty_model(model)}")
+    ax.grid(axis="x", alpha=0.2, linestyle="--", linewidth=0.7)
+    xmax = max(max(lefts, default=0), 1)
+    ax.set_xlim(0, xmax + max(7, xmax * 0.7))
+    for y_pos, row, assigned_total in zip(y_positions, model_rows, lefts):
+        ax.text(
+            assigned_total + max(0.12, xmax * 0.02),
+            y_pos,
+            f"n={assigned_total}",
+            ha="left",
+            va="center",
+            fontsize=8,
+        )
+
+    if handles:
+        ax.legend(handles, labels, loc="lower right", frameon=True, framealpha=0.95, fontsize=8)
+    fig.tight_layout()
+    fig.savefig(output_path)
+    plt.close(fig)
+
+
+def _plot_turn_waste_families_by_model(plt, condition_groups: dict, summary_rows: List[dict], output_dir: Path) -> None:
+    rows = _turn_waste_plot_rows(condition_groups, summary_rows)
+    models = []
+    for row in rows:
+        model = str(row.get("model", ""))
+        if model and model not in models:
+            models.append(model)
+    for model in models:
+        _plot_turn_waste_families_for_model(
+            plt,
+            rows,
+            model,
+            output_dir / f"fig05_turn_waste_groups_{_safe_slug(_pretty_model(model))}.pdf",
+        )
+
+
+def _plot_turn_waste_reconciled_groups_by_model(
+    plt,
+    condition_groups: dict,
+    output_path: Path,
+) -> None:
+    counts_by_group_model: Dict[str, Counter] = defaultdict(Counter)
+    for entry in condition_groups.values():
+        model = str(entry.get("model", ""))
+        for group_name, payload in entry.get("groups", {}).items():
+            if not _is_turn_waste_figure_group(str(group_name)):
+                continue
+            count = int(payload.get("n", 0) or 0)
+            if count > 0:
+                counts_by_group_model[str(group_name)][model] += count
+
+    if not counts_by_group_model:
+        return
+
+    ordered_groups = sorted(
+        counts_by_group_model.keys(),
+        key=lambda group: (-sum(counts_by_group_model[group].values()), group),
+    )
+    preferred_models = ["openai_gpt-5.4-nano", "openai_gpt-5-mini", "gpt-5.4-nano", "gpt-5-mini"]
+    observed_models = []
+    for model in preferred_models:
+        if any(counts_by_group_model[group].get(model, 0) for group in ordered_groups) and model not in observed_models:
+            observed_models.append(model)
+    for group_counts in counts_by_group_model.values():
+        for model in sorted(group_counts):
+            if model not in observed_models:
+                observed_models.append(model)
+
+    y_positions = list(range(len(ordered_groups)))
+    bar_height = 0.34 if len(observed_models) <= 2 else max(0.18, 0.72 / max(1, len(observed_models)))
+    fig, ax = plt.subplots(figsize=(10.5, max(3.3, 0.62 * len(ordered_groups) + 1.3)))
+
+    max_count = max(max(counts.values(), default=0) for counts in counts_by_group_model.values())
+    for model_idx, model in enumerate(observed_models):
+        offset = (model_idx - (len(observed_models) - 1) / 2) * bar_height
+        values = [int(counts_by_group_model[group].get(model, 0) or 0) for group in ordered_groups]
+        color = TURN_WASTE_MODEL_COLORS.get(model, "#6F6F6F")
+        bars = ax.barh(
+            [y + offset for y in y_positions],
+            values,
+            height=bar_height * 0.88,
+            color=color,
+            label=_pretty_model(model),
+        )
+        for bar, value in zip(bars, values):
+            if value <= 0:
+                continue
+            ax.text(
+                value + max(0.15, max_count * 0.012),
+                bar.get_y() + bar.get_height() / 2,
+                str(value),
+                ha="left",
+                va="center",
+                fontsize=8,
+            )
+
+    ax.set_yticks(y_positions)
+    ax.set_yticklabels(ordered_groups, fontsize=9)
+    ax.invert_yaxis()
+    ax.set_xlabel("Grouped failed rows")
+    ax.set_title("Reconciled Turn-Waste Error Groups by Model")
+    ax.grid(axis="x", alpha=0.22, linestyle="--", linewidth=0.7)
+    ax.set_xlim(0, max(1, max_count + max(4, max_count * 0.16)))
+    ax.legend(loc="lower right", frameon=True, framealpha=0.95, fontsize=9)
+    fig.tight_layout()
+    fig.savefig(output_path)
+    plt.close(fig)
+
+
+def _plot_turn_waste_reconciled_groups_by_condition(
+    plt,
+    condition_groups: dict,
+    output_path: Path,
+) -> None:
+    counts_by_variant_model_group: Dict[Tuple[str, str], Counter] = defaultdict(Counter)
+    group_totals: Counter = Counter()
+    condition_variants = {variant for _, variant in TURN_WASTE_CONDITION_FIGURE_ORDER}
+
+    for entry in condition_groups.values():
+        variant = str(entry.get("variant", ""))
+        model = str(entry.get("model", ""))
+        if variant not in condition_variants:
+            continue
+        for group_name, payload in entry.get("groups", {}).items():
+            group_name = str(group_name)
+            if not _is_turn_waste_figure_group(group_name):
+                continue
+            count = int(payload.get("n", 0) or 0)
+            if count <= 0:
+                continue
+            counts_by_variant_model_group[(variant, model)][group_name] += count
+            group_totals[group_name] += count
+
+    ordered_groups = _ordered_turn_waste_groups(group_totals)
+    active_conditions = [
+        (label, variant)
+        for label, variant in TURN_WASTE_CONDITION_FIGURE_ORDER
+        if any(sum(counts.values()) > 0 for (observed_variant, _), counts in counts_by_variant_model_group.items() if observed_variant == variant)
+    ]
+    if not active_conditions or not ordered_groups:
+        return
+
+    observed_by_variant: Dict[str, set] = defaultdict(set)
+    observed_models = set()
+    for variant, model in counts_by_variant_model_group:
+        observed_models.add(model)
+        if sum(counts_by_variant_model_group[(variant, model)].values()) > 0:
+            observed_by_variant[variant].add(model)
+    model_order: List[str] = []
+    for model in TURN_WASTE_CONDITION_FIGURE_MODEL_ORDER:
+        if model in observed_models and model not in model_order:
+            model_order.append(model)
+    for model in sorted(observed_models):
+        if model not in model_order:
+            model_order.append(model)
+    condition_models: List[Tuple[str, str, str]] = []
+    for label, variant in active_conditions:
+        for model in model_order:
+            condition_models.append((label, variant, model))
+    if not condition_models:
+        return
+
+    gap = 1.55
+    x_positions: List[float] = []
+    current_x = 0.0
+    previous_variant = None
+    for _, variant, _ in condition_models:
+        if previous_variant is not None and variant != previous_variant:
+            current_x += gap
+        x_positions.append(current_x)
+        current_x += 1.0
+        previous_variant = variant
+    totals = [
+        sum(counts_by_variant_model_group.get((variant, model), Counter()).values())
+        for _, variant, model in condition_models
+    ]
+    ymax = max(totals, default=0)
+    fig, ax = plt.subplots(figsize=(15.6, 7.2))
+    bottoms = [0 for _ in condition_models]
+
+    for group_name in ordered_groups:
+        values = [
+            int(counts_by_variant_model_group.get((variant, model), Counter()).get(group_name, 0) or 0)
+            for _, variant, model in condition_models
+        ]
+        color = TURN_WASTE_GROUP_COLORS.get(group_name, "#7F7F7F")
+        bars = ax.bar(x_positions, values, bottom=bottoms, color=color, label=group_name, width=0.72)
+        label_color = _label_text_color(color)
+        for bar, value, bottom in zip(bars, values, bottoms):
+            if value <= 0:
+                continue
+            if value >= max(2, ymax * 0.08):
+                ax.text(
+                    bar.get_x() + bar.get_width() / 2,
+                    bottom + value / 2,
+                    str(value),
+                    ha="center",
+                    va="center",
+                    fontsize=12,
+                    color=label_color,
+                )
+        bottoms = [bottom + value for bottom, value in zip(bottoms, values)]
+
+    for x_pos, total in zip(x_positions, totals):
+        ax.text(
+            x_pos,
+            total + max(0.25, ymax * 0.025),
+            str(total),
+            ha="center",
+            va="bottom",
+            fontsize=13,
+        )
+
+    ax.set_xticks(x_positions)
+    ax.set_xticklabels(
+        [
+            TURN_WASTE_CONDITION_FIGURE_MODEL_LABELS.get(model, _pretty_model(model).replace("gpt-", "gpt\n"))
+            for _, _, model in condition_models
+        ],
+        fontsize=12,
+    )
+    for label, variant in active_conditions:
+        variant_positions = [x for x, (_, observed_variant, _) in zip(x_positions, condition_models) if observed_variant == variant]
+        if not variant_positions:
+            continue
+        center = sum(variant_positions) / len(variant_positions)
+        ax.text(
+            center,
+            -0.135,
+            TURN_WASTE_CONDITION_FIGURE_LABELS.get(label, label),
+            ha="center",
+            va="top",
+            fontsize=15,
+            transform=ax.get_xaxis_transform(),
+        )
+    ax.set_ylabel("Grouped failed rows", fontsize=15)
+    ax.set_title("Turn-Waste Error Groups by SANA Condition and Model", fontsize=20, pad=12)
+    ax.grid(axis="y", alpha=0.22, linestyle="--", linewidth=0.7)
+    ax.set_ylim(0, max(1, ymax + max(3, ymax * 0.18)))
+    ax.tick_params(axis="y", labelsize=13)
+    ax.legend(loc="upper right", frameon=True, framealpha=0.94, fontsize=13)
+    fig.tight_layout(rect=(0, 0.085, 1, 1))
+    fig.savefig(output_path, bbox_inches="tight", pad_inches=0.04)
+    plt.close(fig)
+
+
 def generate_figures(
     summary_rows: List[dict],
     variant_rows: List[dict],
@@ -2468,6 +3333,7 @@ def generate_figures(
     base_by_key_records: Dict[str, List[dict]],
     crosstab_rows: List[dict],
     turn_waste_global_groups: dict,
+    turn_waste_condition_model_groups: dict,
     search_bottleneck: dict,
     search_depth_curve: dict,
     search_depth_curve_by_cm: dict,
@@ -2475,12 +3341,12 @@ def generate_figures(
     reasoning_density_curve_by_cm: dict,
     output_dir: Path,
 ) -> None:
+    fig_dir = output_dir / "figures"
+    _cleanup_figure_dir(fig_dir)
+
     plt = _import_plot_libs()
     if plt is None:
         return
-
-    fig_dir = output_dir / "figures"
-    _cleanup_figure_dir(fig_dir)
 
     _plot_stacked_buckets_on_ax  # keep referenced for lint happiness
 
@@ -2539,11 +3405,15 @@ def generate_figures(
         variant_rows,
         fig_dir / "fig04_error_vs_semantic_variant.pdf",
     )
-    _plot_turn_waste_groups_variant(
+    _plot_turn_waste_reconciled_groups_by_model(
         plt,
-        turn_waste_global_groups,
-        variant_rows,
-        fig_dir / "fig05_turn_waste_groups_variant.pdf",
+        turn_waste_condition_model_groups,
+        fig_dir / "fig05_turn_waste_groups_by_model.pdf",
+    )
+    _plot_turn_waste_reconciled_groups_by_condition(
+        plt,
+        turn_waste_condition_model_groups,
+        fig_dir / "fig05b_turn_waste_groups_by_condition.pdf",
     )
 
     _plot_discovery_semantic_combined(
@@ -2674,7 +3544,12 @@ def run_analysis(
     search_depth_buckets = build_search_depth_buckets(by_key_records, task_metrics_by_key)
     reasoning_density_buckets = build_reasoning_density_buckets(by_key_records, tasks_dir)
     search_bottleneck_meta = build_search_bottleneck_meta(grouped_traces)
-    search_bottleneck = compute_search_bottleneck(grouped_traces, search_bottleneck_meta, load_task_gold_ids(tasks_dir))
+    search_task_gold = (
+        load_task_gold_source_ids(tasks_dir)
+        if "kramabench" in Path(tasks_dir).name
+        else load_task_gold_ids(tasks_dir)
+    )
+    search_bottleneck = compute_search_bottleneck(grouped_traces, search_bottleneck_meta, search_task_gold)
 
     print("Building summary tables...")
     summary_rows = build_summary(
@@ -2694,8 +3569,13 @@ def run_analysis(
             grouped_turn_waste_by_key,
             variant_rows,
         )
+        turn_waste_condition_model_groups = _build_turn_waste_condition_model_summary(
+            summary_rows,
+            turn_waste_joined_failed_rows,
+        )
     else:
         turn_waste_global_groups, turn_waste_global_group_rows, turn_waste_joined_failed_rows = {}, [], []
+        turn_waste_condition_model_groups = {}
     per_task_rows, per_task_fieldnames = build_per_task_rows(by_key_records, task_metrics_by_key, source_field_order)
     per_task_retrieval_rows, per_task_retrieval_fieldnames = build_per_task_retrieval_rows(task_metrics_by_key)
 
@@ -2724,6 +3604,7 @@ def run_analysis(
 
     if include_turn_waste:
         files["turn_waste_global_groups.json"] = turn_waste_global_groups
+        files["turn_waste_global_groups_by_condition_model.json"] = turn_waste_condition_model_groups
 
     for filename, data in files.items():
         path = out_dir / filename
@@ -2910,6 +3791,20 @@ def run_analysis(
         search_tool_efficiency_fieldnames,
     )
 
+    search_call_cumulative_csv = out_dir / "search_call_cumulative_retrieval.csv"
+    search_call_cumulative_rows = search_bottleneck.get("per_call_rows", [])
+    search_call_cumulative_fieldnames = _search_call_cumulative_fieldnames()
+    write_search_bottleneck_csv(
+        search_call_cumulative_rows,
+        search_call_cumulative_csv,
+        search_call_cumulative_fieldnames,
+    )
+    print(f"  Wrote {search_call_cumulative_csv} ({len(search_call_cumulative_rows)} rows)")
+    csv_outputs["search_call_cumulative_retrieval.csv"] = (
+        search_call_cumulative_rows,
+        search_call_cumulative_fieldnames,
+    )
+
     if include_turn_waste:
         turn_waste_groups_csv_path = out_dir / "turn_waste_global_groups.csv"
         turn_waste_groups_fieldnames = [
@@ -2931,6 +3826,50 @@ def run_analysis(
         csv_outputs["turn_waste_global_groups.csv"] = (
             turn_waste_global_group_rows,
             turn_waste_groups_fieldnames,
+        )
+
+        turn_waste_condition_rows = []
+        for key in sorted(turn_waste_condition_model_groups.keys(), key=_condition_model_sort_key):
+            entry = turn_waste_condition_model_groups[key]
+            for family, display in TURN_WASTE_FAMILY_DISPLAY.items():
+                payload = entry.get("families", {}).get(family, {})
+                count = int(payload.get("n", 0) or 0)
+                if count <= 0:
+                    continue
+                turn_waste_condition_rows.append(
+                    {
+                        "condition_model": key,
+                        "model": entry.get("model", ""),
+                        "variant": entry.get("variant", ""),
+                        "turn_waste_family": family,
+                        "turn_waste_family_display": display,
+                        "n": count,
+                        "pct_within_grouped_failed_rows": payload.get("pct_within_grouped_failed_rows", 0.0),
+                        "n_failed_rows": entry.get("n_failed_rows", 0),
+                        "n_grouped_failed_rows": entry.get("n_grouped_failed_rows", 0),
+                        "n_unassigned_failed_rows": entry.get("n_unassigned_failed_rows", 0),
+                        "n_total_rows": entry.get("n_total_rows", 0),
+                    }
+                )
+        turn_waste_condition_path = out_dir / "turn_waste_global_groups_by_condition_model.csv"
+        turn_waste_condition_fieldnames = [
+            "condition_model",
+            "model",
+            "variant",
+            "turn_waste_family",
+            "turn_waste_family_display",
+            "n",
+            "pct_within_grouped_failed_rows",
+            "n_failed_rows",
+            "n_grouped_failed_rows",
+            "n_unassigned_failed_rows",
+            "n_total_rows",
+        ]
+        write_csv(turn_waste_condition_path, turn_waste_condition_rows, turn_waste_condition_fieldnames)
+        print(f"  Wrote {turn_waste_condition_path} ({len(turn_waste_condition_rows)} rows)")
+        csv_outputs["turn_waste_global_groups_by_condition_model.csv"] = (
+            turn_waste_condition_rows,
+            turn_waste_condition_fieldnames,
         )
 
         turn_waste_joined_path = out_dir / "turn_waste_grouped_failures_joined.csv"
@@ -2974,6 +3913,7 @@ def run_analysis(
             base_by_key_records,
             crosstab_rows,
             turn_waste_global_groups,
+            turn_waste_condition_model_groups,
             search_bottleneck,
             search_depth_curve,
             search_depth_curve_by_cm,
@@ -3006,6 +3946,7 @@ def run_analysis(
         "semantic_buckets": semantic_buckets,
         "log_error_buckets": log_error_buckets,
         "turn_waste_global_groups": turn_waste_global_groups,
+        "turn_waste_global_groups_by_condition_model": turn_waste_condition_model_groups,
         "turn_waste_global_group_rows": turn_waste_global_group_rows,
         "turn_waste_joined_failed_rows": turn_waste_joined_failed_rows,
         "search_bottleneck": search_bottleneck,

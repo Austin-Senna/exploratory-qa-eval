@@ -53,6 +53,7 @@ from analysis.compute_em import compute_stats
 from analysis.build_semantic_results import semantic_record
 from analysis.discovery_metrics import (
     load_task_gold_ids,
+    load_task_gold_ids_for_traces,
     compute_discovery_metrics,
     compute_per_folder_discovery,
     compute_tools_discovery,
@@ -268,10 +269,12 @@ def run_em(records: List[dict]) -> dict:
 
 
 def run_discovery(grouped_traces: Dict[str, dict], tasks_dir: str) -> dict:
-    task_gold = load_task_gold_ids(tasks_dir)
+    task_gold = load_task_gold_ids_for_traces(tasks_dir, grouped_traces)
     out = {}
     for key, traces in sorted(grouped_traces.items()):
         metrics = compute_discovery_metrics(traces, task_gold)
+        if not metrics["aggregate"]:
+            continue
         out[key] = metrics["aggregate"]
         out[key]["task_metrics"] = metrics["task_metrics"]
         out[key]["per_folder"] = compute_per_folder_discovery(traces, task_gold)

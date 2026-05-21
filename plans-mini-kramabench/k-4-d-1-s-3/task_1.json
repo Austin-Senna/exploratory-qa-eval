@@ -55,5 +55,14 @@
       "code": "import numpy as np\nimport pandas as pd\ncount_path = 'other-benchmarks/Kramabench/data/legal/input/csn-data-book-2024-csv/CSVs/2024_CSN_Report_Count.csv'\ncat_path = 'other-benchmarks/Kramabench/data/legal/input/csn-data-book-2024-csv/CSVs/2024_CSN_Report_Categories.csv'\nage_path = 'other-benchmarks/Kramabench/data/legal/input/csn-data-book-2024-csv/CSVs/2024_CSN_Identity_Theft_Reports_by_Age.csv'\ndf = pd.read_csv(count_path, skiprows=2).dropna()\ndf['Year'] = df['Year'].astype(int)\ndf['# of Reports'] = df['# of Reports'].str.replace(',', '').astype(int)\ntotal_2007_reports = df[df['Year'] == 2007]['# of Reports'].iloc[0]\ncat_df = pd.read_csv(cat_path, skiprows=2, encoding='unicode_escape').dropna()\nidentity_theft_percentage = cat_df[cat_df['Category'] == 'Identity Theft']['Percentage'].iloc[0]\nidentity_theft_percentage = float(identity_theft_percentage.strip('%')) / 100\nage_df = pd.read_csv(age_path, skiprows=2).dropna()\nage_df['# of Reports'] = age_df['# of Reports'].str.replace(',', '').astype(int)\nage_df['Percentage of reports'] = age_df['# of Reports'] / age_df['# of Reports'].sum()\nid_theft_over_40 = age_df[age_df['Age Range'] > '40']['Percentage of reports'].sum()\nprint(int(np.round(total_2007_reports * identity_theft_percentage * id_theft_over_40, -3)))\n",
       "answer": 91000
     }
+  ],
+  "ideal_query": [
+    {
+      "node_id": "2",
+      "dataset_id": "kramabench-legal-hard-18",
+      "source": "datagov/kramabench-legal-hard-18/files/csn-data-book-2024-csv/CSVs/2024_CSN_Report_Categories.csv",
+      "intent": "What is the 2024 Identity Theft report-category proportion?",
+      "answer": "Cannot execute SQL: query_file cannot read this CSV because DuckDB reports invalid non-UTF-8 encoding. Download the file and use execute_ideal/download-style Python with the correct encoding."
+    }
   ]
 }

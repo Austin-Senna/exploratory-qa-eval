@@ -19,7 +19,14 @@ from pathlib import Path
 from statistics import median
 from typing import Callable, Dict, Iterable, List, Optional, Tuple
 
-from analysis.discovery_metrics import make_task_stem_key, resolve_task_value, resolve_trace_task_id
+from analysis.discovery_metrics import (
+    _dataset_to_unique_source,
+    _is_source_gold_values,
+    _normalize_source_id,
+    make_task_stem_key,
+    resolve_task_value,
+    resolve_trace_task_id,
+)
 
 
 SEARCH_BOTTLENECK_CUTOFFS = (1, 3, 5)
@@ -37,7 +44,17 @@ SEARCH_TOOL_COLORS = {
     "search_prefix": "#C44E52",
     "search_schema": "#7F7F7F",
 }
-READ_TOOLS = {"read_file", "grep_file", "query_file"}
+READ_TOOLS = {
+    "read_file",
+    "peek_file",
+    "peek_multiple",
+    "grep_file",
+    "parse_xml_records",
+    "query_file",
+    "download",
+    "query_ideal",
+    "execute_ideal",
+}
 
 
 def _split_cm_key(key: str) -> Tuple[str, str, str]:
@@ -96,8 +113,43 @@ def _task_id_for_row(task_id: str) -> str:
     return f"{p.parent.name}/{p.stem}"
 
 
-def _resolve_gold_ids(task_id: str, task_gold: Dict[str, List[str]]) -> set[str]:
-    return set(resolve_task_value(task_id, task_gold, []))
+def _resolve_gold_values(task_id: str, task_gold: Dict[str, List[str]]) -> List[str]:
+    return list(resolve_task_value(task_id, task_gold, []))
+
+
+def _gold_ids_in_values(values: List[str], gold_ids: set[str]) -> set[str]:
+    return {value for value in values if value in gold_ids}
+
+
+def _event_gold_ids(
+    record: dict,
+    gold_ids: set[str],
+    *,
+    fallback_field: str,
+    explicit_gold_field: str,
+    source_field: str | None = None,
+    dataset_to_unique_source: dict[str, str] | None = None,
+) -> set[str]:
+    if source_field is not None:
+        source_ids = {
+            source_id
+            for value in record.get(source_field, []) or []
+            if (source_id := _normalize_source_id(value))
+        }
+        source_hits = source_ids & gold_ids
+        if source_hits:
+            return source_hits
+
+    values = record.get(explicit_gold_field)
+    if not isinstance(values, list) or not values:
+        values = record.get(fallback_field, [])
+    if dataset_to_unique_source:
+        return {
+            dataset_to_unique_source[value]
+            for value in values
+            if value in dataset_to_unique_source and dataset_to_unique_source[value] in gold_ids
+        }
+    return _gold_ids_in_values(list(values or []), gold_ids)
 
 
 def _is_search_event(record: dict) -> bool:
@@ -198,10 +250,14 @@ def compute_search_bottleneck(
         model = str(meta.get("model", "unknown"))
 
         for task_id, task_traces in sorted(traces.items()):
-            gold_ids = _resolve_gold_ids(resolve_trace_task_id(task_id, task_traces), task_gold)
+            gold_values = _resolve_gold_values(resolve_trace_task_id(task_id, task_traces), task_gold)
+            gold_ids = set(gold_values)
             if not gold_ids:
                 continue
-            n_gold_ids = len(gold_ids)
+            use_source_gold = _is_source_gold_values(gold_values)
+            use_gold_units = not use_source_gold and len(gold_values) != len(gold_ids)
+            n_gold_ids = len(gold_values) if use_gold_units else len(gold_ids)
+            dataset_to_unique_source = _dataset_to_unique_source(gold_ids) if use_source_gold else {}
 
             cm_task_counts[key]["tasks_seen"] += 1
             condition_task_counts[condition_label]["tasks_seen"] += 1
@@ -217,6 +273,18 @@ def compute_search_bottleneck(
                                 "event_type": "read",
                                 "tool": str(record.get("tool", "") or ""),
                                 "read_ids": list(record.get("read_dataset_ids") or []),
+                                "read_gold_ids": (
+                                    _event_gold_ids(
+                                        record,
+                                        gold_ids,
+                                        fallback_field="read_dataset_ids",
+                                        explicit_gold_field="gold_dataset_ids_read",
+                                        source_field="read_source_ids",
+                                        dataset_to_unique_source=dataset_to_unique_source,
+                                    )
+                                    if use_source_gold or use_gold_units
+                                    else len(set(record.get("read_dataset_ids") or []) & gold_ids)
+                                ),
                                 "parsed_turn": parsed_turn,
                                 "line_index": line_index,
                                 "task_id": str(record.get("task_id", "") or task_id),
@@ -227,7 +295,20 @@ def compute_search_bottleneck(
                 result_ids = list(record.get("result_dataset_ids") or [])
                 result_gold_ids = sorted(set(result_ids) & gold_ids)
                 cutoff_hit_counts = {
-                    cutoff: len(set(result_ids[:cutoff]) & gold_ids)
+                    cutoff: (
+                        len(
+                            _event_gold_ids(
+                                {**record, "result_dataset_ids": result_ids[:cutoff]},
+                                gold_ids,
+                                fallback_field="result_dataset_ids",
+                                explicit_gold_field="gold_dataset_ids_in_results",
+                                source_field="result_source_ids",
+                                dataset_to_unique_source=dataset_to_unique_source,
+                            )
+                        )
+                        if use_source_gold or use_gold_units
+                        else len(set(result_ids[:cutoff]) & gold_ids)
+                    )
                     for cutoff in SEARCH_BOTTLENECK_CUTOFFS
                 }
                 cutoff_hits = {
@@ -239,6 +320,18 @@ def compute_search_bottleneck(
                     "tool": tool_name,
                     "result_ids": result_ids,
                     "result_gold_ids": result_gold_ids,
+                    "result_gold_unit_ids": (
+                        _event_gold_ids(
+                            record,
+                            gold_ids,
+                            fallback_field="result_dataset_ids",
+                            explicit_gold_field="gold_dataset_ids_in_results",
+                            source_field="result_source_ids",
+                            dataset_to_unique_source=dataset_to_unique_source,
+                        )
+                        if use_source_gold or use_gold_units
+                        else len(result_gold_ids)
+                    ),
                     "cutoff_hit_counts": cutoff_hit_counts,
                     "cutoff_hits": cutoff_hits,
                     "parsed_turn": parsed_turn,
@@ -270,16 +363,25 @@ def compute_search_bottleneck(
             current_search_call_row: Optional[dict] = None
             for event in ordered_trajectory:
                 if str(event.get("event_type", "")) == "read":
-                    cumulative_read_gold.update(set(event.get("read_ids") or []) & gold_ids)
+                    if use_source_gold or use_gold_units:
+                        cumulative_read_gold.update(set(event.get("read_gold_ids") or []))
+                    else:
+                        cumulative_read_gold.update(set(event.get("read_ids") or []) & gold_ids)
+                    cumulative_read_gold_units = min(len(cumulative_read_gold), n_gold_ids)
                     if current_search_call_row is not None:
-                        current_search_call_row["cumulative_read_gold_count"] = len(cumulative_read_gold)
+                        current_search_call_row["cumulative_read_gold_count"] = cumulative_read_gold_units
                         current_search_call_row["cumulative_read_gold_recall"] = (
-                            round(len(cumulative_read_gold) / n_gold_ids, 4) if n_gold_ids else 0.0
+                            round(cumulative_read_gold_units / n_gold_ids, 4) if n_gold_ids else 0.0
                         )
                     continue
 
                 current_search_call_index += 1
-                cumulative_retrieved_gold.update(set(event.get("result_gold_ids") or []))
+                if use_source_gold or use_gold_units:
+                    cumulative_retrieved_gold.update(set(event.get("result_gold_unit_ids") or []))
+                else:
+                    cumulative_retrieved_gold.update(set(event.get("result_gold_ids") or []))
+                cumulative_retrieved_gold_units = min(len(cumulative_retrieved_gold), n_gold_ids)
+                cumulative_read_gold_units = min(len(cumulative_read_gold), n_gold_ids)
                 per_call_row = {
                     "condition_model": key,
                     "condition": condition_label,
@@ -292,12 +394,12 @@ def compute_search_bottleneck(
                     "search_call_index": current_search_call_index,
                     "results_returned": len(list(event.get("result_ids") or [])),
                     "n_gold_datasets": n_gold_ids,
-                    "cumulative_search_gold_count": len(cumulative_retrieved_gold),
-                    "cumulative_search_gold_recall": round(len(cumulative_retrieved_gold) / n_gold_ids, 4)
+                    "cumulative_search_gold_count": cumulative_retrieved_gold_units,
+                    "cumulative_search_gold_recall": round(cumulative_retrieved_gold_units / n_gold_ids, 4)
                     if n_gold_ids
                     else 0.0,
-                    "cumulative_read_gold_count": len(cumulative_read_gold),
-                    "cumulative_read_gold_recall": round(len(cumulative_read_gold) / n_gold_ids, 4)
+                    "cumulative_read_gold_count": cumulative_read_gold_units,
+                    "cumulative_read_gold_recall": round(cumulative_read_gold_units / n_gold_ids, 4)
                     if n_gold_ids
                     else 0.0,
                 }
