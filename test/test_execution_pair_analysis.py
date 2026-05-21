@@ -231,10 +231,11 @@ def test_judge_pending_rows_retries_invalid_json_until_valid(tmp_path: Path, mon
         ]
     )
 
-    monkeypatch.setattr("analysis.execution_pair_analysis.call_openai", lambda *_args, **_kwargs: next(responses))
+    monkeypatch.setattr("analysis.execution_pair_analysis.call_judge_model", lambda *_args, **_kwargs: next(responses))
 
     judged = judge_pending_rows(
         [row],
+        backend="codex",
         output_dir=tmp_path / "out",
         repo_root=tmp_path,
         model="gpt-5.4-mini",

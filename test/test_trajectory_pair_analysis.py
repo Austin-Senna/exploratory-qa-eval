@@ -208,8 +208,8 @@ def test_judge_pending_rows_writes_prompt_response_json_and_journal(tmp_path: Pa
         "audit_status": "pending",
     }
 
-    def fake_call_openai(*_args, **_kwargs):
-        return """{
+    def fake_call_judge_model(*_args, **kwargs):
+        text = """{
           "trajectory_similarity": "closely_resembles",
           "divergence_type": "minor_detour",
           "comparison_trajectory_summary": "comparison",
@@ -220,11 +220,14 @@ def test_judge_pending_rows_writes_prompt_response_json_and_journal(tmp_path: Pa
           "evidence": "lines",
           "audit_status": "complete"
         }"""
+        kwargs["last_message_path"].write_text(text, encoding="utf-8")
+        return text
 
-    monkeypatch.setattr("analysis.trajectory_pair_analysis.call_openai", fake_call_openai)
+    monkeypatch.setattr("analysis.trajectory_pair_analysis.call_judge_model", fake_call_judge_model)
 
     judged = judge_pending_rows(
         [row],
+        backend="codex",
         output_dir=tmp_path / "out",
         repo_root=tmp_path,
         model="gpt-5.4-mini",
@@ -457,10 +460,11 @@ def test_judge_pending_rows_retries_invalid_json_until_valid(tmp_path: Path, mon
         ]
     )
 
-    monkeypatch.setattr("analysis.trajectory_pair_analysis.call_openai", lambda *_args, **_kwargs: next(responses))
+    monkeypatch.setattr("analysis.trajectory_pair_analysis.call_judge_model", lambda *_args, **_kwargs: next(responses))
 
     judged = judge_pending_rows(
         [row],
+        backend="codex",
         output_dir=tmp_path / "out",
         repo_root=tmp_path,
         model="gpt-5.4-mini",

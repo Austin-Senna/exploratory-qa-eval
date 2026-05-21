@@ -27,7 +27,7 @@ from analysis.trajectory_pair_analysis import (  # noqa: E402
     _parse_json_object,
     _strip_log_prefix,
     _truncate,
-    call_openai,
+    call_judge_model,
     resolve_judge_limit,
 )
 
@@ -523,6 +523,7 @@ III EXECUTION:
 def judge_pending_rows(
     rows: list[dict[str, str]],
     *,
+    backend: str,
     output_dir: Path,
     repo_root: Path,
     model: str,
@@ -545,6 +546,7 @@ def judge_pending_rows(
         out_path.parent.mkdir(parents=True, exist_ok=True)
         prompt_path = stem.with_suffix(".prompt.txt")
         last_message_path = stem.with_suffix(".last_message.txt")
+        stdout_path = stem.with_suffix(f".{backend}_stdout.log")
         attempt_prompt = prompt
         parsed: dict[str, Any] | None = None
         text = ""
@@ -553,11 +555,14 @@ def judge_pending_rows(
             prompt_path.write_text(attempt_prompt, encoding="utf-8")
             stem.with_suffix(f".attempt{attempt}.prompt.txt").write_text(attempt_prompt, encoding="utf-8")
             try:
-                text = call_openai(
+                text = call_judge_model(
                     attempt_prompt,
+                    backend=backend,
                     repo_root=repo_root,
                     model=model,
                     reasoning_effort=reasoning_effort,
+                    last_message_path=last_message_path,
+                    stdout_path=stdout_path,
                     timeout=timeout,
                 )
             except Exception as exc:
@@ -572,10 +577,10 @@ def judge_pending_rows(
                         "model_variant": row["model_variant"],
                         "task_id": row["task_id"],
                         "prompt_path": str(prompt_path),
+                        "stdout_path": str(stdout_path),
                     },
                 )
                 raise
-            last_message_path.write_text(text, encoding="utf-8")
             stem.with_suffix(f".attempt{attempt}.last_message.txt").write_text(text, encoding="utf-8")
             try:
                 parsed = _parse_json_object(text)
@@ -597,6 +602,7 @@ def judge_pending_rows(
                     "task_id": row["task_id"],
                     "prompt_path": str(prompt_path),
                     "last_message_path": str(last_message_path),
+                    "stdout_path": str(stdout_path),
                 },
             )
             if attempt > max_retries:
@@ -605,7 +611,6 @@ def judge_pending_rows(
                     + "; ".join(validation_errors)
                 )
             attempt_prompt = build_repair_prompt(prompt, text, validation_errors)
-        stem.with_suffix(".openai_stdout.log").write_text("", encoding="utf-8")
         assert parsed is not None
         label = str(parsed.get("execution_similarity", "not_comparable"))
         row.update(
@@ -629,10 +634,12 @@ def judge_pending_rows(
                 "model_variant": row["model_variant"],
                 "task_id": row["task_id"],
             },
+            "backend": backend,
             "judge_model": model,
             "reasoning_effort": reasoning_effort,
             "prompt_path": str(prompt_path),
             "last_message_path": str(last_message_path),
+            "stdout_path": str(stdout_path),
             "parsed": parsed,
             "row_update": {key: row[key] for key in AUDIT_UPDATE_COLUMNS},
         }
@@ -649,6 +656,7 @@ def judge_pending_rows(
                 "audit_json_path": str(out_path),
                 "prompt_path": str(prompt_path),
                 "last_message_path": str(last_message_path),
+                "stdout_path": str(stdout_path),
             },
         )
         judged += 1
@@ -708,7 +716,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--pair", choices=list(PAIR_MODES), default="iid_vs_iii")
     parser.add_argument("--model", default="", help="Optional model folder, e.g. openai_gpt-5-mini.")
     parser.add_argument("--task", default="", help="Optional task-id substring filter.")
-    parser.add_argument("--judge", action="store_true", help="Judge pending pairs with the OpenAI Responses API.")
+    parser.add_argument("--judge", action="store_true", help="Judge pending pairs.")
+    parser.add_argument("--backend", choices=["codex", "openai"], default="codex", help="Judge backend; defaults to codex exec.")
     parser.add_argument("--judge-model", default="gpt-5.4-mini")
     parser.add_argument("--reasoning-effort", default="low")
     parser.add_argument(
@@ -745,6 +754,7 @@ def main() -> int:
         journal_path = Path(args.journal_path).resolve() if args.journal_path else output_dir / "execution_pair_journal.jsonl"
         print(f"Temp judge dir: {tmp_root}")
         print(f"JSONL journal: {journal_path}")
+        print(f"Judge backend: {args.backend}")
         rows_to_judge = [row for row in rows if row_matches_filters(row, args)]
         pending_count = sum(1 for row in rows_to_judge if row.get("audit_status") == "pending")
         judge_limit = resolve_judge_limit(
@@ -760,6 +770,7 @@ def main() -> int:
             return 0
         judged = judge_pending_rows(
             rows_to_judge,
+            backend=args.backend,
             output_dir=output_dir,
             repo_root=Path(args.input_root).resolve(),
             model=args.judge_model,

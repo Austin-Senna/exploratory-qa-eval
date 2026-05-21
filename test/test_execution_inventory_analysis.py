@@ -385,11 +385,12 @@ def test_judge_pending_events_retries_invalid_until_valid(tmp_path: Path, monkey
             }""",
         ]
     )
-    monkeypatch.setattr("analysis.execution_inventory_analysis.call_openai", lambda *_args, **_kwargs: next(responses))
+    monkeypatch.setattr("analysis.execution_inventory_analysis.call_judge_model", lambda *_args, **_kwargs: next(responses))
 
     judged = judge_pending_events(
         [event],
         contexts,
+        backend="codex",
         output_dir=tmp_path / "out",
         repo_root=tmp_path,
         model="gpt-5.4-mini",

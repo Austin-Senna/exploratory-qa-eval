@@ -9,11 +9,11 @@ lakeqa,openai_gpt-5-mini,dii,search_i_results_i_pland_computei_k5_skills_off,not
 lakeqa,openai_gpt-5-mini,dii,search_i_results_i_pland_computei_k5_skills_off,pending,134,134/135,99.3,134/134,100.0
 lakeqa,openai_gpt-5-mini,iii,search_i_results_i_plani_computei_k5_skills_off,pending,135,135/135,100.0,135/135,100.0
 lakeqa,openai_gpt-5-mini,nii,search_i_results_i_plann_computei_k5_skills_off,did_not_follow,2,2/135,1.5,2/135,1.5
-lakeqa,openai_gpt-5-mini,nii,search_i_results_i_plann_computei_k5_skills_off,followed,17,17/135,12.6,17/135,12.6
-lakeqa,openai_gpt-5-mini,nii,search_i_results_i_plann_computei_k5_skills_off,missed_crucial_steps,19,19/135,14.1,19/135,14.1
+lakeqa,openai_gpt-5-mini,nii,search_i_results_i_plann_computei_k5_skills_off,followed,18,18/135,13.3,18/135,13.3
+lakeqa,openai_gpt-5-mini,nii,search_i_results_i_plann_computei_k5_skills_off,missed_crucial_steps,20,20/135,14.8,20/135,14.8
 lakeqa,openai_gpt-5-mini,nii,search_i_results_i_plann_computei_k5_skills_off,mostly_followed,20,20/135,14.8,20/135,14.8
-lakeqa,openai_gpt-5-mini,nii,search_i_results_i_plann_computei_k5_skills_off,partially_followed,20,20/135,14.8,20/135,14.8
-lakeqa,openai_gpt-5-mini,nii,search_i_results_i_plann_computei_k5_skills_off,pending,57,57/135,42.2,57/135,42.2
+lakeqa,openai_gpt-5-mini,nii,search_i_results_i_plann_computei_k5_skills_off,partially_followed,22,22/135,16.3,22/135,16.3
+lakeqa,openai_gpt-5-mini,nii,search_i_results_i_plann_computei_k5_skills_off,pending,53,53/135,39.3,53/135,39.3
 lakeqa,openai_gpt-5.4-nano,dii,search_i_results_i_pland_computei_k5_skills_off,pending,135,135/135,100.0,135/135,100.0
 lakeqa,openai_gpt-5.4-nano,iii,search_i_results_i_plani_computei_k5_skills_off,pending,135,135/135,100.0,135/135,100.0
 lakeqa,openai_gpt-5.4-nano,nii,search_i_results_i_plann_computei_k5_skills_off,pending,135,135/135,100.0,135/135,100.0

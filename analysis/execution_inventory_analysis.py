@@ -8,6 +8,7 @@ import csv
 import hashlib
 import json
 import re
+import subprocess
 import sys
 import time
 from collections import Counter, defaultdict
@@ -606,6 +607,73 @@ def build_repair_prompt(original_prompt: str, previous_text: str, errors: list[s
     )
 
 
+def call_codex(
+    prompt: str,
+    *,
+    repo_root: Path,
+    model: str,
+    reasoning_effort: str,
+    last_message_path: Path,
+    stdout_path: Path,
+    timeout: int,
+) -> str:
+    last_message_path.parent.mkdir(parents=True, exist_ok=True)
+    stdout_path.parent.mkdir(parents=True, exist_ok=True)
+    cmd = [
+        "codex",
+        "exec",
+        "-m",
+        model,
+        "-c",
+        f'model_reasoning_effort="{reasoning_effort}"',
+        "-C",
+        str(repo_root),
+        "-s",
+        "workspace-write",
+        "--output-last-message",
+        str(last_message_path),
+        prompt,
+    ]
+    proc = subprocess.run(cmd, text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=timeout)
+    stdout_path.write_text(proc.stdout, encoding="utf-8")
+    if proc.returncode != 0:
+        raise RuntimeError(f"codex exec failed with exit code {proc.returncode}; see {stdout_path}")
+    if last_message_path.exists():
+        return last_message_path.read_text(encoding="utf-8")
+    return proc.stdout
+
+
+def call_judge_model(
+    prompt: str,
+    *,
+    backend: str,
+    repo_root: Path,
+    model: str,
+    reasoning_effort: str,
+    last_message_path: Path,
+    stdout_path: Path,
+    timeout: int,
+) -> str:
+    if backend == "codex":
+        return call_codex(
+            prompt,
+            repo_root=repo_root,
+            model=model,
+            reasoning_effort=reasoning_effort,
+            last_message_path=last_message_path,
+            stdout_path=stdout_path,
+            timeout=timeout,
+        )
+    if backend == "openai":
+        text = call_openai(prompt, repo_root=repo_root, model=model, reasoning_effort=reasoning_effort, timeout=timeout)
+        last_message_path.parent.mkdir(parents=True, exist_ok=True)
+        stdout_path.parent.mkdir(parents=True, exist_ok=True)
+        last_message_path.write_text(text, encoding="utf-8")
+        stdout_path.write_text("", encoding="utf-8")
+        return text
+    raise ValueError(f"Unsupported judge backend: {backend}")
+
+
 def build_judge_prompt(event: dict[str, str], context: dict[str, Any]) -> str:
     command = _safe_json_loads(event["command_json"]) or {}
     bound_sources = _safe_json_loads(event.get("bound_sources", "")) or []
@@ -656,6 +724,7 @@ def judge_pending_events(
     events: list[dict[str, str]],
     contexts: dict[str, dict[str, Any]],
     *,
+    backend: str,
     output_dir: Path,
     repo_root: Path,
     model: str,
@@ -680,6 +749,7 @@ def judge_pending_events(
         out_path.parent.mkdir(parents=True, exist_ok=True)
         prompt_path = stem.with_suffix(".prompt.txt")
         last_message_path = stem.with_suffix(".last_message.txt")
+        stdout_path = stem.with_suffix(f".{backend}_stdout.log")
         attempt_prompt = prompt
         parsed: dict[str, Any] | None = None
         text = ""
@@ -688,11 +758,14 @@ def judge_pending_events(
             prompt_path.write_text(attempt_prompt, encoding="utf-8")
             stem.with_suffix(f".attempt{attempt}.prompt.txt").write_text(attempt_prompt, encoding="utf-8")
             try:
-                text = call_openai(
+                text = call_judge_model(
                     attempt_prompt,
+                    backend=backend,
                     repo_root=repo_root,
                     model=model,
                     reasoning_effort=reasoning_effort,
+                    last_message_path=last_message_path,
+                    stdout_path=stdout_path,
                     timeout=timeout,
                 )
             except Exception as exc:
@@ -704,10 +777,10 @@ def judge_pending_events(
                         "attempt": attempt,
                         "event_id": event["event_id"],
                         "prompt_path": str(prompt_path),
+                        "stdout_path": str(stdout_path),
                     },
                 )
                 raise
-            last_message_path.write_text(text, encoding="utf-8")
             stem.with_suffix(f".attempt{attempt}.last_message.txt").write_text(text, encoding="utf-8")
             try:
                 parsed = _parse_json_object(text)
@@ -726,6 +799,7 @@ def judge_pending_events(
                     "event_id": event["event_id"],
                     "prompt_path": str(prompt_path),
                     "last_message_path": str(last_message_path),
+                    "stdout_path": str(stdout_path),
                 },
             )
             if attempt > max_retries:
@@ -753,10 +827,12 @@ def judge_pending_events(
         command = _safe_json_loads(event.get("command_json", "")) or {}
         audit_payload = {
             "event_key": {"event_id": event["event_id"], "command_hash": str(command.get("command_hash", ""))},
+            "backend": backend,
             "judge_model": model,
             "reasoning_effort": reasoning_effort,
             "prompt_path": str(prompt_path),
             "last_message_path": str(last_message_path),
+            "stdout_path": str(stdout_path),
             "parsed": parsed,
             "event_update": {column: event[column] for column in AUDIT_UPDATE_COLUMNS},
         }
@@ -770,6 +846,7 @@ def judge_pending_events(
                 "audit_json_path": str(out_path),
                 "prompt_path": str(prompt_path),
                 "last_message_path": str(last_message_path),
+                "stdout_path": str(stdout_path),
             },
         )
         judged += 1
@@ -879,7 +956,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--model", default="", help="Optional model folder, e.g. openai_gpt-5-mini.")
     parser.add_argument("--mode", default="", help="Optional mode folder, e.g. search_i_results_i_plani_k5_skills_off.")
     parser.add_argument("--task", default="", help="Optional task-id substring filter.")
-    parser.add_argument("--judge", action="store_true", help="Judge pending execution commands with OpenAI.")
+    parser.add_argument("--judge", action="store_true", help="Judge pending execution commands.")
+    parser.add_argument("--backend", choices=["codex", "openai"], default="codex", help="Judge backend; defaults to codex exec.")
     parser.add_argument("--judge-model", default="gpt-5.4-mini")
     parser.add_argument("--reasoning-effort", default="low")
     parser.add_argument(
@@ -915,6 +993,7 @@ def main() -> int:
         journal_path = Path(args.journal_path).resolve() if args.journal_path else output_dir / "execution_inventory_journal.jsonl"
         print(f"Temp judge dir: {tmp_root}")
         print(f"JSONL journal: {journal_path}")
+        print(f"Judge backend: {args.backend}")
         pending_count = sum(1 for event in command_events if event.get("audit_status") == "pending")
         judge_limit = resolve_judge_limit(
             requested_limit=args.limit,
@@ -930,6 +1009,7 @@ def main() -> int:
         judged = judge_pending_events(
             command_events,
             contexts,
+            backend=args.backend,
             output_dir=output_dir,
             repo_root=Path(args.input_root).resolve(),
             model=args.judge_model,
