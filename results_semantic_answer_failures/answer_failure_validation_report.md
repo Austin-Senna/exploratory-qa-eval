@@ -2,13 +2,13 @@
 
 - Source root: `/Users/austinsenna/Documents/projects/daplab/exploratory-qa-eval/results_semantic_answer_failures`
 - Logs root: `/Users/austinsenna/Documents/projects/daplab/exploratory-qa-eval/logs/modes`
-- Non-correct rows checked: 504
-- Invalid or missing-log rows: 25
+- Non-correct rows checked: 943
+- Invalid or missing-log rows: 55
 
 ## Status Counts
 
-- `invalid`: 25
-- `valid`: 479
+- `invalid`: 55
+- `valid`: 888
 
 ## Invalid Rows
 
