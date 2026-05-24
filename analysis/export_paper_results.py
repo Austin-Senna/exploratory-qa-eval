@@ -17,6 +17,11 @@ MODEL_SPECS = [
     ("gpt-5-mini", ("gpt-5-mini", "openai_gpt-5-mini", "openai/gpt-5-mini")),
 ]
 
+TOOL_CALL_CAPTION_NOTE = (
+    "Ret Tool Call and Acc Tool Call are average calls per task; "
+    "Acc Tool Call excludes auxiliary ideal repair bookkeeping traces."
+)
+
 PLANNED_CONDITIONS = [
     ("N-I-I-I", "naive", "ideal", "ideal", "ideal"),
     ("S-I-I-I", "standard", "ideal", "ideal", "ideal"),
@@ -548,7 +553,7 @@ def render_main_ablation_table(rows: list[Mapping[str, str]], *, benchmark: str,
         n_text = f" (${n_tasks}$ tasks per cell)"
     caption = (
         f"{display} SANA per-axis ablation matrix{n_text}. "
-        "Ret Tool Call and Acc Tool Call are average calls per task."
+        + TOOL_CALL_CAPTION_NOTE
     )
     if benchmark == "kramabench":
         caption += " Same column conventions as Table~\\ref{tab:sana-lakeqa}."
@@ -628,7 +633,7 @@ def render_canonical_modes_table(rows: list[Mapping[str, str]], *, benchmark: st
         "  \\scriptsize",
         "  \\setlength{\\tabcolsep}{2.5pt}",
         "  \\renewcommand{\\arraystretch}{0.9}",
-        f"  \\caption{{{display} end-to-end mode comparison{n_text}. Deltas are relative to each model's Baseline. Ret Tool Call and Acc Tool Call are average calls per task.}}",
+        f"  \\caption{{{display} end-to-end mode comparison{n_text}. Deltas are relative to each model's Baseline. {TOOL_CALL_CAPTION_NOTE}}}",
         f"  \\label{{{meta['label']}}}",
         "  \\begin{tabular}{@{}llrrrrr@{}}",
         "    \\toprule",

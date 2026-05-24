@@ -99,3 +99,23 @@ def test_discovery_metrics_ignore_ideal_subagent_cost_traces() -> None:
     row = metrics["task_metrics"][0]
     assert row["num_search_calls"] == 1
     assert row["num_read_calls"] == 2
+
+
+def test_discovery_metrics_ignore_ideal_repair_bookkeeping_traces() -> None:
+    metrics = compute_discovery_metrics(
+        {
+            "k-1-d-1/task_1": [
+                {"tool": "search_ideal", "result_dataset_ids": ["ds_a"]},
+                {"tool": "query_ideal", "read_dataset_ids": ["ds_a"]},
+                {"tool": "execute_ideal", "read_dataset_ids": ["ds_a"]},
+                {"event": "repair_agent_invoked", "tool": "query_ideal"},
+                {"event": "repair_agent_completed", "tool": "query_ideal"},
+                {"event": "repair_agent_failed", "tool": "execute_ideal"},
+            ]
+        },
+        {"k-1-d-1/task_1": ["ds_a"]},
+    )
+
+    row = metrics["task_metrics"][0]
+    assert row["num_search_calls"] == 1
+    assert row["num_read_calls"] == 2

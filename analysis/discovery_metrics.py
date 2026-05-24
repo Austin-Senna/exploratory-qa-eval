@@ -29,7 +29,12 @@ _RETRIEVAL_ACCESS_TOOLS = {
     "peek_multiple",
     "peek_files",
 }
-_AUXILIARY_TRACE_EVENTS = {"ideal_subagent_cost"}
+_AUXILIARY_TRACE_EVENTS = {
+    "ideal_subagent_cost",
+    "repair_agent_invoked",
+    "repair_agent_completed",
+    "repair_agent_failed",
+}
 
 
 def _is_auxiliary_trace(record: dict) -> bool:

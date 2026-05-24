@@ -121,6 +121,7 @@ class ExportPaperResultsTests(unittest.TestCase):
         self.assertIn("\\textbf{Acc}", latex)
         self.assertIn("\\shortstack[l]{\\texttt{gpt-5.4-}\\\\\\texttt{nano}}", latex)
         self.assertIn("Ret Tool Call and Acc Tool Call are average calls per task", latex)
+        self.assertIn("Acc Tool Call excludes auxiliary ideal repair bookkeeping traces", latex)
 
     def test_main_ablation_table_rows_include_ret_and_acc_tool_calls(self):
         summary_rows = [
