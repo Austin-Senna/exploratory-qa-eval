@@ -55,6 +55,8 @@ LABELS = [
 ]
 FOLLOWED_STRICT = {"followed"}
 FOLLOWED_BROAD = {"followed", "mostly_followed"}
+DEFAULT_OUTPUT_STEM = "trajectory_ideal_context"
+DEFAULT_TMP_ROOT = Path("agent_analysis/trajectory_ideal_context_analysis/tmp")
 OUTPUT_COLUMNS = [
     "benchmark",
     "mode_label",
@@ -98,6 +100,24 @@ AUDIT_UPDATE_COLUMNS = [
     "auditor_model",
     "audit_status",
 ]
+
+
+def _run_id_slug(run_id: str) -> str:
+    return re.sub(r"[^A-Za-z0-9_.-]+", "_", run_id.strip()).strip("_")
+
+
+def output_stem(run_id: str = "") -> str:
+    slug = _run_id_slug(run_id)
+    return f"{DEFAULT_OUTPUT_STEM}_{slug}" if slug else DEFAULT_OUTPUT_STEM
+
+
+def default_journal_path(output_dir: Path, run_id: str = "") -> Path:
+    return output_dir / f"{output_stem(run_id)}_journal.jsonl"
+
+
+def default_tmp_root(output_dir: Path, run_id: str = "") -> Path:
+    slug = _run_id_slug(run_id)
+    return output_dir / "tmp" / slug if slug else DEFAULT_TMP_ROOT
 
 
 def _truncate(text: str, limit: int) -> str:
@@ -456,12 +476,13 @@ def summarize_rows(rows: Iterable[dict[str, str]]) -> tuple[list[dict[str, Any]]
     return summary_rows, breakdown_rows
 
 
-def write_outputs(output_dir: Path, rows: list[dict[str, str]]) -> list[Path]:
+def write_outputs(output_dir: Path, rows: list[dict[str, str]], *, run_id: str = "") -> list[Path]:
     output_dir.mkdir(parents=True, exist_ok=True)
-    audit_path = output_dir / "trajectory_ideal_context_audit.csv"
-    summary_path = output_dir / "trajectory_ideal_context_summary.csv"
-    breakdown_path = output_dir / "trajectory_ideal_context_label_breakdown.csv"
-    json_path = output_dir / "trajectory_ideal_context_summary.json"
+    stem = output_stem(run_id)
+    audit_path = output_dir / f"{stem}_audit.csv"
+    summary_path = output_dir / f"{stem}_summary.csv"
+    breakdown_path = output_dir / f"{stem}_label_breakdown.csv"
+    json_path = output_dir / f"{stem}_summary.json"
     summary_rows, breakdown_rows = summarize_rows(rows)
     write_csv(audit_path, rows, OUTPUT_COLUMNS)
     write_csv(summary_path, summary_rows)
@@ -606,6 +627,7 @@ def judge_pending_rows(
     tmp_root: Path,
     journal_path: Path,
     max_retries: int,
+    run_id: str = "",
 ) -> int:
     judged = 0
     for row in rows:
@@ -613,6 +635,12 @@ def judge_pending_rows(
             continue
         if limit and judged >= limit:
             break
+        print(
+            "Judging trajectory ideal-context "
+            f"#{judged + 1}: benchmark={row['benchmark']} model={row['model_variant']} "
+            f"mode={row['mode_label']} task={row['task_id']}",
+            flush=True,
+        )
         prompt = build_judge_prompt(row)
         out_path = _audit_json_path(tmp_root, row)
         stem = out_path.with_suffix("")
@@ -627,6 +655,10 @@ def judge_pending_rows(
         for attempt in range(1, max_retries + 2):
             prompt_path.write_text(attempt_prompt, encoding="utf-8")
             stem.with_suffix(f".attempt{attempt}.prompt.txt").write_text(attempt_prompt, encoding="utf-8")
+            print(
+                f"  attempt {attempt}: spawning {backend} judge for task={row['task_id']} mode={row['mode_label']}",
+                flush=True,
+            )
             try:
                 text = call_judge_model(
                     attempt_prompt,
@@ -732,7 +764,7 @@ def judge_pending_rows(
             },
         )
         judged += 1
-        write_outputs(output_dir, rows)
+        write_outputs(output_dir, rows, run_id=run_id)
         time.sleep(0.1)
     return judged
 
@@ -800,6 +832,14 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--input-root", default=".", help="Repository/input root containing logs and task JSON.")
     parser.add_argument("--output-dir", default="agent_analysis/trajectory_ideal_context_analysis")
+    parser.add_argument(
+        "--run-id",
+        default="",
+        help=(
+            "Optional run id used to suffix output files and the default judge temp directory, "
+            "e.g. --run-id run2 writes trajectory_ideal_context_run2_*.csv."
+        ),
+    )
     parser.add_argument("--benchmark", choices=["all", *BENCHMARK_LOG_ROOTS.keys()], default="all")
     parser.add_argument("--mode", choices=["all", *TARGET_MODES.keys()], default="all")
     parser.add_argument("--model", default="", help="Optional model folder, e.g. openai_gpt-5-mini.")
@@ -818,13 +858,19 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--max-retries", type=int, default=2, help="Retry invalid judge JSON this many times.")
     parser.add_argument(
         "--tmp-root",
-        default="agent_analysis/trajectory_ideal_context_analysis/tmp",
-        help="Directory for per-row prompt, raw response, and parsed judge JSON files.",
+        default="",
+        help=(
+            "Directory for per-row prompt, raw response, and parsed judge JSON files. "
+            "Defaults to the legacy temp dir without --run-id, or <output-dir>/tmp/<run-id> with --run-id."
+        ),
     )
     parser.add_argument(
         "--journal-path",
         default="",
-        help="Optional JSONL journal path. Defaults to <output-dir>/trajectory_ideal_context_journal.jsonl.",
+        help=(
+            "Optional JSONL journal path. Defaults to <output-dir>/trajectory_ideal_context_journal.jsonl "
+            "without --run-id, or <output-dir>/trajectory_ideal_context_<run-id>_journal.jsonl with --run-id."
+        ),
     )
     return parser.parse_args()
 
@@ -832,17 +878,17 @@ def parse_args() -> argparse.Namespace:
 def main() -> int:
     args = parse_args()
     output_dir = Path(args.output_dir)
-    audit_path = output_dir / "trajectory_ideal_context_audit.csv"
-    tmp_root = Path(args.tmp_root).resolve()
+    audit_path = output_dir / f"{output_stem(args.run_id)}_audit.csv"
+    tmp_root = Path(args.tmp_root).resolve() if args.tmp_root else default_tmp_root(output_dir, args.run_id).resolve()
     rows = build_all_rows(full_build_args(args))
     merge_existing_audits(rows, load_existing_audits(audit_path))
     merge_existing_audits(rows, load_tmp_audits(tmp_root))
-    written = write_outputs(output_dir, rows)
+    written = write_outputs(output_dir, rows, run_id=args.run_id)
     if args.judge:
         journal_path = (
             Path(args.journal_path).resolve()
             if args.journal_path
-            else output_dir / "trajectory_ideal_context_journal.jsonl"
+            else default_journal_path(output_dir, args.run_id)
         )
         print(f"Temp judge dir: {tmp_root}")
         print(f"JSONL journal: {journal_path}")
@@ -872,12 +918,13 @@ def main() -> int:
             tmp_root=tmp_root,
             journal_path=journal_path,
             max_retries=args.max_retries,
+            run_id=args.run_id,
         )
         print(f"Judged {judged} pending row(s).")
         rows = build_all_rows(full_build_args(args))
         merge_existing_audits(rows, load_existing_audits(audit_path))
         merge_existing_audits(rows, load_tmp_audits(tmp_root))
-        written = write_outputs(output_dir, rows)
+        written = write_outputs(output_dir, rows, run_id=args.run_id)
     print_summary(rows)
     for path in written:
         print(f"Wrote {path}")

@@ -5,8 +5,11 @@ from analysis.trajectory_ideal_context_analysis import (
     TARGET_MODES,
     build_judge_prompt,
     build_trajectory_rows,
+    default_journal_path,
+    default_tmp_root,
     parse_log_run_status,
     summarize_rows,
+    write_outputs,
 )
 
 
@@ -249,3 +252,51 @@ def test_summarize_rows_counts_followed_broadly_and_not_comparable() -> None:
         "mostly_followed",
         "not_comparable",
     }
+
+
+def test_run_id_suffixes_outputs_journal_and_tmp_root(tmp_path: Path) -> None:
+    rows = [
+        {
+            "benchmark": "lakeqa",
+            "mode_label": "nii",
+            "model_variant": "openai_gpt-test",
+            "runner_model": "gpt-test",
+            "task_id": "tasks_mini/k/task.json",
+            "mode": TARGET_MODES["nii"],
+            "log_path": "task.log",
+            "start_line": "0",
+            "trajectory_event_count": "1",
+            "run_status": "answered",
+            "limit_reached": "false",
+            "log_max_turn": "1",
+            "task_path": "tasks_mini/k/task.json",
+            "plan_path": "plans_mini/k/task.json",
+            "question": "Which value should be returned?",
+            "ideal_answer": "A",
+            "ideal_reasoning_chain": "Node 1: Find the relevant value -> A.",
+            "node_sequence": "Node 1 | source=datagov/example/files/rows.txt",
+            "plan_dataset_sequence": "example",
+            "plan_source_sequence": "datagov/example/files/rows.txt",
+            "plan_reasoning_text": "Look up the relevant value.",
+            "trajectory_alignment": "followed",
+            "divergence_type": "none",
+            "trajectory_summary": "",
+            "followed_steps": "",
+            "missed_or_divergent_steps": "",
+            "alignment_reason": "",
+            "evidence": "",
+            "auditor_model": "gpt-5.4-mini",
+            "audit_status": "complete",
+        }
+    ]
+
+    outputs = write_outputs(tmp_path, rows, run_id="second pass")
+
+    assert {path.name for path in outputs} == {
+        "trajectory_ideal_context_second_pass_audit.csv",
+        "trajectory_ideal_context_second_pass_summary.csv",
+        "trajectory_ideal_context_second_pass_label_breakdown.csv",
+        "trajectory_ideal_context_second_pass_summary.json",
+    }
+    assert default_journal_path(tmp_path, "second pass").name == "trajectory_ideal_context_second_pass_journal.jsonl"
+    assert default_tmp_root(tmp_path, "second pass") == tmp_path / "tmp" / "second_pass"

@@ -561,9 +561,16 @@ def call_codex(
         "workspace-write",
         "--output-last-message",
         str(last_message_path),
-        prompt,
+        "-",
     ]
-    proc = subprocess.run(cmd, text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=timeout)
+    proc = subprocess.run(
+        cmd,
+        input=prompt,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        timeout=timeout,
+    )
     stdout_path.write_text(proc.stdout, encoding="utf-8")
     if proc.returncode != 0:
         raise RuntimeError(f"codex exec failed with exit code {proc.returncode}; see {stdout_path}")
@@ -753,6 +760,12 @@ def judge_pending_rows(
             continue
         if limit and judged >= limit:
             break
+        print(
+            "Judging trajectory pair "
+            f"#{judged + 1}: benchmark={row['benchmark']} model={row['model_variant']} "
+            f"pair={row['pair_label']} task={row['task_id']}",
+            flush=True,
+        )
         prompt = build_judge_prompt(row)
         out_path = _audit_json_path(tmp_root, row)
         stem = out_path.with_suffix("")
@@ -767,6 +780,10 @@ def judge_pending_rows(
         for attempt in range(1, max_retries + 2):
             prompt_path.write_text(attempt_prompt, encoding="utf-8")
             stem.with_suffix(f".attempt{attempt}.prompt.txt").write_text(attempt_prompt, encoding="utf-8")
+            print(
+                f"  attempt {attempt}: spawning {backend} judge for task={row['task_id']} pair={row['pair_label']}",
+                flush=True,
+            )
             try:
                 text = call_judge_model(
                     attempt_prompt,

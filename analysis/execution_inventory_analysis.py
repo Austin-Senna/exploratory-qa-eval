@@ -41,10 +41,11 @@ EVENT_TYPES = {
     "mismatched_execution",
     "wrong_file_execution",
     "schema_metadata_inspection",
+    "execution_failure",
     "missing_execution",
     "wasted_schema_inspection",
 }
-JUDGE_EVENT_TYPES = {"matched_execution", "mismatched_execution", "schema_metadata_inspection"}
+JUDGE_EVENT_TYPES = {"matched_execution", "mismatched_execution", "schema_metadata_inspection", "execution_failure"}
 ERROR_TYPES = {
     "none",
     "wrong_file",
@@ -96,6 +97,7 @@ INVENTORY_COLUMNS = [
     "n_mismatched_execution",
     "n_wrong_file_execution",
     "n_schema_metadata_inspection",
+    "n_execution_failure",
     "n_missing_execution",
     "n_wasted_schema_inspection",
     "source_sequence_json",
@@ -256,12 +258,17 @@ def extract_execution_commands(log_path: Path) -> list[dict[str, Any]]:
     except OSError:
         return []
     commands: list[dict[str, Any]] = []
+    active_result_command: dict[str, Any] | None = None
     for line_number, line in enumerate(lines, start=1):
         if "Executing:" not in line:
+            if active_result_command is not None and "Tool result:" in line:
+                active_result_command["result_text"] = _truncate(_strip_log_prefix(line), 2500)
+                active_result_command = None
             continue
         match = EXECUTING_RE.search(line)
         tool = match.group(1) if match else ""
         if tool not in EXECUTION_TOOLS:
+            active_result_command = None
             continue
         stripped = _strip_log_prefix(line)
         args = _extract_json_arg(stripped, tool)
@@ -271,9 +278,12 @@ def extract_execution_commands(log_path: Path) -> list[dict[str, Any]]:
             "tool": tool,
             "args": args,
             "text": _truncate(stripped, 2500),
+            "result_text": "",
         }
-        command["command_hash"] = hashlib.sha1(_json_dumps(command).encode("utf-8")).hexdigest()[:16]
+        hash_basis = {key: value for key, value in command.items() if key != "result_text"}
+        command["command_hash"] = hashlib.sha1(_json_dumps(hash_basis).encode("utf-8")).hexdigest()[:16]
         commands.append(command)
+        active_result_command = command
     return commands
 
 
@@ -592,6 +602,8 @@ def validate_judge_payload(payload: dict[str, Any], ideal_record_keys: set[str])
             errors.append(f"matched_ideal_record_keys contains unknown keys: {unknown}")
     if event_type == "matched_execution" and not matched:
         errors.append("matched_execution requires at least one matched_ideal_record_key")
+    if event_type != "matched_execution" and matched:
+        errors.append("only matched_execution may include matched_ideal_record_keys")
     return errors
 
 
@@ -632,9 +644,16 @@ def call_codex(
         "workspace-write",
         "--output-last-message",
         str(last_message_path),
-        prompt,
+        "-",
     ]
-    proc = subprocess.run(cmd, text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=timeout)
+    proc = subprocess.run(
+        cmd,
+        input=prompt,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        timeout=timeout,
+    )
     stdout_path.write_text(proc.stdout, encoding="utf-8")
     if proc.returncode != 0:
         raise RuntimeError(f"codex exec failed with exit code {proc.returncode}; see {stdout_path}")
@@ -687,7 +706,7 @@ The task plan context includes source_sequence and ideal_code/ideal_query record
 
 Return JSON only:
 {{
-  "event_type": "matched_execution|mismatched_execution|schema_metadata_inspection",
+  "event_type": "matched_execution|mismatched_execution|schema_metadata_inspection|execution_failure",
   "matched_ideal_record_keys": ["one or more ideal_record_key values when event_type is matched_execution, otherwise []"],
   "error_type": "none|operation_binding|filter_binding|schema_error|parse_error|schema_metadata_inspection|not_executed|other",
   "reason": "short evidence-grounded reason",
@@ -695,7 +714,9 @@ Return JSON only:
   "audit_status": "complete"
 }}
 
+Return matched_ideal_record_keys as [] for every event_type except matched_execution.
 Use schema_metadata_inspection when the command primarily inspects columns, headers, shape, sample rows, table names, file metadata, or parse structure rather than performing the intended computation.
+Use execution_failure when the command attempts a substantive execution but the tool result shows a runtime, parse, schema, timeout, path, file, or data-access failure before producing a usable result.
 Use mismatched_execution when it is a substantive execution on a needed source but does not match the intended ideal operation/filter/computation.
 Use matched_execution when it performs the same intended operation as one or more ideal records, even if the implementation differs.
 
@@ -741,6 +762,13 @@ def judge_pending_events(
             continue
         if limit and judged >= limit:
             break
+        print(
+            "Judging execution event "
+            f"#{judged + 1}: benchmark={event['benchmark']} model={event['model_variant']} "
+            f"mode={event['mode']} task={event['task_id']} "
+            f"command={event['command_index']} tool={event['tool']} line={event['line_number']}",
+            flush=True,
+        )
         context = contexts[_context_key(event)]
         ideal_keys = {str(record.get("ideal_record_key")) for record in context["ideal_records"]}
         prompt = build_judge_prompt(event, context)
@@ -757,6 +785,11 @@ def judge_pending_events(
         for attempt in range(1, max_retries + 2):
             prompt_path.write_text(attempt_prompt, encoding="utf-8")
             stem.with_suffix(f".attempt{attempt}.prompt.txt").write_text(attempt_prompt, encoding="utf-8")
+            print(
+                f"  attempt {attempt}: spawning {backend} judge for task={event['task_id']} "
+                f"command={event['command_index']} tool={event['tool']}",
+                flush=True,
+            )
             try:
                 text = call_judge_model(
                     attempt_prompt,
@@ -890,6 +923,7 @@ def assemble_outputs(
                 "n_mismatched_execution": str(counts.get("mismatched_execution", 0)),
                 "n_wrong_file_execution": str(counts.get("wrong_file_execution", 0)),
                 "n_schema_metadata_inspection": str(counts.get("schema_metadata_inspection", 0)),
+                "n_execution_failure": str(counts.get("execution_failure", 0)),
                 "n_missing_execution": str(counts.get("missing_execution", 0)),
                 "n_wasted_schema_inspection": str(counts.get("wasted_schema_inspection", 0)),
                 "source_sequence_json": _json_dumps(context["source_sequence"]),
@@ -931,6 +965,7 @@ def print_summary(inventory_rows: list[dict[str, str]]) -> None:
             "n_mismatched_execution",
             "n_wrong_file_execution",
             "n_schema_metadata_inspection",
+            "n_execution_failure",
             "n_missing_execution",
             "n_wasted_schema_inspection",
         ]:
@@ -943,6 +978,7 @@ def print_summary(inventory_rows: list[dict[str, str]]) -> None:
             f"logs={counts['n_logs']} commands={counts['n_execution_commands']} "
             f"matched={counts['n_matched_execution']} mismatched={counts['n_mismatched_execution']} "
             f"wrong_file={counts['n_wrong_file_execution']} schema={counts['n_schema_metadata_inspection']} "
+            f"failure={counts['n_execution_failure']} "
             f"missing={counts['n_missing_execution']} wasted_schema={counts['n_wasted_schema_inspection']} "
             f"pending={counts['n_pending_events']}"
         )

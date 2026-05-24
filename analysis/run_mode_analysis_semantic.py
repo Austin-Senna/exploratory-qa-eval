@@ -50,6 +50,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import datetime as dt
 import json
 import math
 import re
@@ -540,12 +541,17 @@ _READ_SOURCE_TOOLS = {
 
 def _infer_log_path_for_trace(jsonl_path: Path, traces_root: Path, records: List[dict]) -> Optional[Path]:
     root_parts = list(traces_root.parts)
-    if "results-kramabench" not in root_parts:
+    if "results-kramabench" in root_parts:
+        index = root_parts.index("results-kramabench")
+        log_root = Path(*root_parts[:index], "log-kramabench", "modes")
+        task_root = "tasks-mini-kramabench"
+    elif "results" in root_parts:
+        index = root_parts.index("results")
+        log_root = Path(*root_parts[:index], "logs", "modes")
+        task_root = "tasks_mini"
+    else:
         return None
-    index = root_parts.index("results-kramabench")
-    log_root = Path(*root_parts[:index], "log-kramabench", "modes")
     model, variant, task_id = _parse_trace_jsonl_path(jsonl_path, traces_root)
-    task_root = "tasks-mini-kramabench"
     for record in records:
         record_task_id = str(record.get("task_id", "") or "")
         parts = Path(record_task_id).parts
@@ -594,7 +600,7 @@ def _source_ids_from_payload(payload: dict) -> list[str]:
             if isinstance(item.get("s3_uri"), str):
                 add(str(item["s3_uri"]))
             dataset_id = item.get("dataset_id")
-            file_path = item.get("file_path")
+            file_path = item.get("file_path") or item.get("path")
             if isinstance(dataset_id, str) and isinstance(file_path, str):
                 add(_normalize_source_id("", dataset_id=dataset_id, file_path=file_path))
 
@@ -604,47 +610,162 @@ def _source_ids_from_payload(payload: dict) -> list[str]:
     return source_ids
 
 
-def _parse_log_source_events(log_path: Path) -> tuple[list[list[str]], list[dict]]:
+def _dataset_ids_from_payload(payload: dict) -> list[str]:
+    dataset_ids: list[str] = []
+
+    def add(value: str) -> None:
+        dataset_id = str(value or "").strip()
+        if dataset_id and dataset_id not in dataset_ids:
+            dataset_ids.append(dataset_id)
+
+    for value in payload.get("dataset_ids") or []:
+        if isinstance(value, str):
+            add(value)
+    dataset_id = payload.get("dataset_id")
+    if isinstance(dataset_id, str):
+        add(dataset_id)
+
+    def collect_from_items(items) -> None:
+        for item in items or []:
+            if not isinstance(item, dict):
+                continue
+            dataset_id = item.get("dataset_id")
+            if isinstance(dataset_id, str):
+                add(dataset_id)
+
+    collect_from_items(payload.get("results"))
+    collect_from_items(payload.get("files"))
+    collect_from_items(payload.get("downloaded"))
+    return dataset_ids
+
+
+def _source_ids_from_text(text: str) -> list[str]:
+    source_ids: list[str] = []
+    for match in re.finditer(r's3://[^"\\\s,}]+', text):
+        source_id = _normalize_source_id(match.group(0))
+        if source_id and source_id not in source_ids:
+            source_ids.append(source_id)
+    return source_ids
+
+
+def _dataset_ids_from_text(text: str) -> list[str]:
+    dataset_ids: list[str] = []
+    for match in re.finditer(r'"dataset_id"\s*:\s*"([^"]+)"', text):
+        dataset_id = match.group(1).strip()
+        if dataset_id and dataset_id not in dataset_ids:
+            dataset_ids.append(dataset_id)
+    return dataset_ids
+
+
+def _parse_log_timestamp_ms(line: str) -> int | None:
+    match = re.match(r"^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})", line)
+    if not match:
+        return None
+    try:
+        timestamp = dt.datetime.strptime(match.group(1), "%Y-%m-%d %H:%M:%S")
+    except ValueError:
+        return None
+    return int(timestamp.replace(tzinfo=dt.timezone.utc).timestamp() * 1000)
+
+
+def _trace_time_window(records: List[dict], *, pad_ms: int = 60_000) -> tuple[int, int] | None:
+    timestamps = [
+        int(record["timestamp_ms"])
+        for record in records
+        if isinstance(record.get("timestamp_ms"), (int, float))
+    ]
+    if not timestamps:
+        return None
+    return min(timestamps) - pad_ms, max(timestamps) + pad_ms
+
+
+def _filter_events_to_window(events: list, window: tuple[int, int] | None) -> list:
+    if window is None:
+        return events
+    start_ms, end_ms = window
+    filtered = [
+        event
+        for event in events
+        if event.get("timestamp_ms") is None
+        or start_ms <= int(event["timestamp_ms"]) <= end_ms
+    ]
+    return filtered or events
+
+
+def _parse_log_source_events(log_path: Path) -> tuple[list[dict], list[dict], list[dict]]:
     if not log_path.exists():
-        return [], []
-    search_events: list[list[str]] = []
+        return [], [], []
+    search_events: list[dict] = []
     read_events: list[dict] = []
+    list_events: list[dict] = []
+    pending_tool = ""
     execute_re = re.compile(r"Executing:\s*([A-Za-z_][A-Za-z0-9_]*)\(")
     with log_path.open(errors="replace") as handle:
         for line in handle:
+            timestamp_ms = _parse_log_timestamp_ms(line)
             if "Executing:" in line:
                 match = execute_re.search(line)
                 tool = match.group(1) if match else ""
+                pending_tool = tool
                 if tool in _READ_SOURCE_TOOLS:
                     payload = _extract_json_object(line)
                     if payload:
                         source_ids = _source_ids_from_payload(payload)
                         if source_ids:
-                            read_events.append({"tool": tool, "source_ids": source_ids})
+                            read_events.append({"tool": tool, "source_ids": source_ids, "timestamp_ms": timestamp_ms})
                 continue
             if "Tool result:" not in line:
                 continue
             payload = _extract_json_object(line.split("Tool result:", 1)[1])
-            if not payload:
+            result_text = line.split("Tool result:", 1)[1]
+            if not payload and pending_tool == "list_files":
+                source_ids = _source_ids_from_text(result_text)
+                dataset_ids = _dataset_ids_from_text(result_text)
+                if source_ids or dataset_ids:
+                    list_events.append({
+                        "tool": "list_files",
+                        "source_ids": source_ids,
+                        "dataset_ids": dataset_ids,
+                        "timestamp_ms": timestamp_ms,
+                    })
+                pending_tool = ""
                 continue
-            if isinstance(payload.get("results"), list):
+            if not payload:
+                pending_tool = ""
+                continue
+            if pending_tool == "list_files":
+                source_ids = _source_ids_from_payload(payload)
+                dataset_ids = _dataset_ids_from_payload(payload)
+                if source_ids or dataset_ids:
+                    list_events.append({
+                        "tool": "list_files",
+                        "source_ids": source_ids,
+                        "dataset_ids": dataset_ids,
+                        "timestamp_ms": timestamp_ms,
+                    })
+            elif isinstance(payload.get("results"), list):
                 source_ids = _source_ids_from_payload(payload)
                 if source_ids:
-                    search_events.append(source_ids)
-    return search_events, read_events
+                    search_events.append({"source_ids": source_ids, "timestamp_ms": timestamp_ms})
+            pending_tool = ""
+    return search_events, read_events, list_events
 
 
 def _enrich_trace_records_with_log_sources(records: List[dict], log_path: Optional[Path]) -> None:
     if log_path is None:
         return
-    search_events, read_events = _parse_log_source_events(log_path)
+    search_events, read_events, list_events = _parse_log_source_events(log_path)
+    time_window = _trace_time_window(records)
+    search_events = _filter_events_to_window(search_events, time_window)
+    read_events = _filter_events_to_window(read_events, time_window)
+    list_events = _filter_events_to_window(list_events, time_window)
     search_index = 0
     used_read_events: set[int] = set()
     for record in records:
         tool = str(record.get("tool", "") or "")
         if tool.startswith("search") and record.get("result_dataset_ids") is not None:
             if search_index < len(search_events):
-                record["result_source_ids"] = search_events[search_index]
+                record["result_source_ids"] = search_events[search_index]["source_ids"]
             search_index += 1
         elif tool in _READ_SOURCE_TOOLS and record.get("read_dataset_ids") is not None:
             match_index = next(
@@ -676,6 +797,16 @@ def _enrich_trace_records_with_log_sources(records: List[dict], log_path: Option
             "read_dataset_ids": [],
             "read_source_ids": event["source_ids"],
             "gold_dataset_ids_read": [],
+            "log_enriched": True,
+        })
+    for event in list_events:
+        records.append({
+            "task_id": task_id,
+            "tool": "list_files",
+            "status": "success",
+            "result_dataset_ids": event.get("dataset_ids", []),
+            "result_source_ids": event.get("source_ids", []),
+            "gold_dataset_ids_in_results": [],
             "log_enriched": True,
         })
 

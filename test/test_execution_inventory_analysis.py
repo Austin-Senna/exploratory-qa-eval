@@ -6,6 +6,7 @@ from analysis.execution_inventory_analysis import (
     assemble_outputs,
     bind_command_sources,
     build_command_event,
+    build_judge_prompt,
     build_rows,
     derive_missing_and_wasted_events,
     derive_missing_events_without_commands,
@@ -106,6 +107,25 @@ def test_extract_execution_commands_keeps_execution_tools(tmp_path: Path) -> Non
     ]
     assert commands[0]["args"]["dataset_id"] == "ds"
     assert commands[0]["command_hash"]
+
+
+def test_extract_execution_commands_attaches_following_tool_result(tmp_path: Path) -> None:
+    log = tmp_path / "task.log"
+    log.write_text(
+        "\n".join(
+            [
+                '2026 | INFO | x | Executing: execute_code({"code": "raise FileNotFoundError(\\"missing.csv\\")"})',
+                "2026 | INFO | x | Tool result: Traceback (most recent call last): FileNotFoundError: missing.csv",
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    commands = extract_execution_commands(log)
+
+    assert len(commands) == 1
+    assert "FileNotFoundError" in commands[0]["result_text"]
 
 
 def test_bind_command_sources_direct_and_text_matching(tmp_path: Path) -> None:
@@ -322,6 +342,74 @@ def test_validate_judge_payload() -> None:
     )
     assert any("matched_execution requires" in error for error in bad)
     assert any("audit_status" in error for error in bad)
+
+
+def test_validate_judge_payload_accepts_execution_failure() -> None:
+    errors = validate_judge_payload(
+        {
+            "event_type": "execution_failure",
+            "matched_ideal_record_keys": [],
+            "error_type": "schema_error",
+            "reason": "The query failed before producing a result.",
+            "evidence": "Tool result: Binder Error",
+            "audit_status": "complete",
+        },
+        {"k"},
+    )
+
+    assert errors == []
+
+
+def test_validate_judge_payload_rejects_matched_keys_for_non_matches() -> None:
+    errors = validate_judge_payload(
+        {
+            "event_type": "execution_failure",
+            "matched_ideal_record_keys": ["k"],
+            "error_type": "schema_error",
+            "reason": "The query failed before producing a result.",
+            "evidence": "Tool result: Binder Error",
+            "audit_status": "complete",
+        },
+        {"k"},
+    )
+
+    assert any("only matched_execution may include matched_ideal_record_keys" in error for error in errors)
+
+
+def test_build_judge_prompt_includes_execution_failure_guidance_and_result() -> None:
+    event = {
+        "benchmark": "lakeqa",
+        "model_variant": "openai_gpt-test",
+        "mode": "mode",
+        "task_id": "task.json",
+        "log_path": "task.log",
+        "line_number": "10",
+        "tool": "execute_code",
+        "bound_sources": "[]",
+        "command_json": json.dumps(
+            {
+                "command_hash": "abc",
+                "tool": "execute_code",
+                "args": {"code": "raise FileNotFoundError('missing.csv')"},
+                "result_text": "Tool result: FileNotFoundError: missing.csv",
+            }
+        ),
+    }
+    context = {
+        "source_sequence": ["datagov/ds/files/rows.txt"],
+        "ideal_records": [
+            {
+                "ideal_record_key": "1:datagov/ds/files/rows.txt",
+                "source": "datagov/ds/files/rows.txt",
+                "intent": "Compute average x.",
+            }
+        ],
+    }
+
+    prompt = build_judge_prompt(event, context)
+
+    assert "execution_failure" in prompt
+    assert "FileNotFoundError" in prompt
 
 
 def test_judge_pending_events_retries_invalid_until_valid(tmp_path: Path, monkeypatch) -> None:

@@ -2,29 +2,28 @@
 
 Source root: `results_semantic_answer_failures`
 Combined CSV: `combined_answer_failure_events.csv`
-Total answer-failure events: 1833
+Total answer-failure events: 1828
 
 ## Counts by Model
 
 | Model | Events |
 | --- | --- |
-| gpt-5-mini | 587 |
-| gpt-5.4-nano | 1246 |
+| gpt-5-mini | 586 |
+| gpt-5.4-nano | 1242 |
 
 ## Counts by Figure Group
 
 | Figure Group | Events | Events by Model |
 | --- | --- | --- |
 | Source/scope errors | 396 | gpt-5-mini: 149; gpt-5.4-nano: 247 |
-| Answer/finalization failures | 392 | gpt-5-mini: 132; gpt-5.4-nano: 260 |
+| Answer/finalization failures | 299 | gpt-5-mini: 110; gpt-5.4-nano: 189 |
 | Tool/data blockers | 252 | gpt-5-mini: 73; gpt-5.4-nano: 179 |
 | Turn-waste loops | 249 | gpt-5-mini: 45; gpt-5.4-nano: 204 |
 | Incomplete evidence | 216 | gpt-5-mini: 56; gpt-5.4-nano: 160 |
+| Planning/trajectory mismatch | 167 | gpt-5-mini: 35; gpt-5.4-nano: 132 |
 | Computation errors | 149 | gpt-5-mini: 72; gpt-5.4-nano: 77 |
 | Execution/extraction errors | 86 | gpt-5-mini: 40; gpt-5.4-nano: 46 |
-| Planning/trajectory mismatch | 79 | gpt-5-mini: 14; gpt-5.4-nano: 65 |
-| Benchmark/eval issue | 8 | gpt-5-mini: 4; gpt-5.4-nano: 4 |
-| Other/unclear | 6 | gpt-5-mini: 2; gpt-5.4-nano: 4 |
+| Other/unclear | 14 | gpt-5-mini: 6; gpt-5.4-nano: 8 |
 
 ## Counts by Failure Type
 
@@ -37,14 +36,13 @@ Total answer-failure events: 1833
 | Turn-waste loops | query_execution_error_loop | 146 | gpt-5-mini: 32; gpt-5.4-nano: 114 |
 | Incomplete evidence | incomplete_evidence_early_answer | 109 | gpt-5-mini: 5; gpt-5.4-nano: 104 |
 | Incomplete evidence | incomplete_evidence_not_enough_turns | 107 | gpt-5-mini: 51; gpt-5.4-nano: 56 |
-| Answer/finalization failures | question_or_constraint_misread | 93 | gpt-5-mini: 22; gpt-5.4-nano: 71 |
+| Planning/trajectory mismatch | question_or_constraint_misread | 93 | gpt-5-mini: 22; gpt-5.4-nano: 71 |
 | Execution/extraction errors | extraction_or_parsing_error | 86 | gpt-5-mini: 40; gpt-5.4-nano: 46 |
 | Planning/trajectory mismatch | planning_decomposition_mismatch | 74 | gpt-5-mini: 13; gpt-5.4-nano: 61 |
 | Turn-waste loops | low_yield_search_loop | 52 | gpt-5-mini: 8; gpt-5.4-nano: 44 |
 | Turn-waste loops | schema_or_shape_inspection_loop | 51 | gpt-5-mini: 5; gpt-5.4-nano: 46 |
-| Benchmark/eval issue | semantic_or_gold_label_issue | 8 | gpt-5-mini: 4; gpt-5.4-nano: 4 |
+| Other/unclear | semantic_or_gold_label_issue | 8 | gpt-5-mini: 4; gpt-5.4-nano: 4 |
 | Other/unclear | other_or_unclear | 6 | gpt-5-mini: 2; gpt-5.4-nano: 4 |
-| Planning/trajectory mismatch | same_hop_repetition | 5 | gpt-5-mini: 1; gpt-5.4-nano: 4 |
 
 ## Counts by Failure Type and Subtype
 
@@ -341,107 +339,6 @@ Total answer-failure events: 1833
 | Answer/finalization failures | evidence_available_answer_error | wrong_year_selected_from_source | 1 | gpt-5-mini: 1 |
 | Answer/finalization failures | evidence_available_answer_error | wrong_year_selection | 1 | gpt-5-mini: 1 |
 | Answer/finalization failures | evidence_available_answer_error | year_confusion_at_submission | 1 | gpt-5.4-nano: 1 |
-| Answer/finalization failures | question_or_constraint_misread | annual_filter_scope_misread | 1 | gpt-5.4-nano: 1 |
-| Answer/finalization failures | question_or_constraint_misread | answer_shape_and_intermediate_field | 1 | gpt-5-mini: 1 |
-| Answer/finalization failures | question_or_constraint_misread | answer_target_inversion | 1 | gpt-5.4-nano: 1 |
-| Answer/finalization failures | question_or_constraint_misread | answered_bachelors_degree_year_instead_of_university_founding_year | 1 | gpt-5.4-nano: 1 |
-| Answer/finalization failures | question_or_constraint_misread | answered_degree_year_instead_of_foundation_year | 1 | gpt-5.4-nano: 1 |
-| Answer/finalization failures | question_or_constraint_misread | at_least_three_years_treated_as_all_four_years | 1 | gpt-5.4-nano: 1 |
-| Answer/finalization failures | question_or_constraint_misread | based_in_constraint_ignored | 1 | gpt-5.4-nano: 1 |
-| Answer/finalization failures | question_or_constraint_misread | based_in_vs_birthplace_confusion | 1 | gpt-5.4-nano: 1 |
-| Answer/finalization failures | question_or_constraint_misread | birthplace county/state misread | 1 | gpt-5.4-nano: 1 |
-| Answer/finalization failures | question_or_constraint_misread | birthplace_vs_namesake_confusion | 1 | gpt-5.4-nano: 1 |
-| Answer/finalization failures | question_or_constraint_misread | borough_misidentified | 1 | gpt-5.4-nano: 1 |
-| Answer/finalization failures | question_or_constraint_misread | branch_as_neighborhood | 1 | gpt-5.4-nano: 1 |
-| Answer/finalization failures | question_or_constraint_misread | broadened narcotic-drug-law filter into generic drug-related arrests | 1 | gpt-5-mini: 1 |
-| Answer/finalization failures | question_or_constraint_misread | carried_forward_intermediate_ward_filter | 1 | gpt-5-mini: 1 |
-| Answer/finalization failures | question_or_constraint_misread | chased_wrong_entity_chain | 1 | gpt-5.4-nano: 1 |
-| Answer/finalization failures | question_or_constraint_misread | city_referent_misread | 1 | gpt-5.4-nano: 1 |
-| Answer/finalization failures | question_or_constraint_misread | cohort_category_confusion | 1 | gpt-5.4-nano: 1 |
-| Answer/finalization failures | question_or_constraint_misread | comparison_ratio_misread | 1 | gpt-5.4-nano: 1 |
-| Answer/finalization failures | question_or_constraint_misread | conflated_target_person_with_first_officeholder | 1 | gpt-5.4-nano: 1 |
-| Answer/finalization failures | question_or_constraint_misread | constraint_ignored | 1 | gpt-5.4-nano: 1 |
-| Answer/finalization failures | question_or_constraint_misread | coreference_misread | 1 | gpt-5.4-nano: 1 |
-| Answer/finalization failures | question_or_constraint_misread | county_seat_condition_misread | 1 | gpt-5.4-nano: 1 |
-| Answer/finalization failures | question_or_constraint_misread | county_seat_vs_county_population_confusion | 1 | gpt-5-mini: 1 |
-| Answer/finalization failures | question_or_constraint_misread | county_year_confused | 1 | gpt-5.4-nano: 1 |
-| Answer/finalization failures | question_or_constraint_misread | dropped city-level constraint on the public-school count | 1 | gpt-5-mini: 1 |
-| Answer/finalization failures | question_or_constraint_misread | dropped district/member filter | 1 | gpt-5.4-nano: 1 |
-| Answer/finalization failures | question_or_constraint_misread | dropped the required city constraint and used county-only scope | 1 | gpt-5-mini: 1 |
-| Answer/finalization failures | question_or_constraint_misread | dropped_all_grades_or_exact_subject_constraint | 1 | gpt-5-mini: 1 |
-| Answer/finalization failures | question_or_constraint_misread | extra_precinct_filter_and_broadened_location_predicate | 1 | gpt-5-mini: 1 |
-| Answer/finalization failures | question_or_constraint_misread | extra_precinct_filter_in_final_count | 1 | gpt-5-mini: 1 |
-| Answer/finalization failures | question_or_constraint_misread | final_hop_relation_misread | 1 | gpt-5.4-nano: 1 |
-| Answer/finalization failures | question_or_constraint_misread | fiscal_year_treated_as_calendar_year_and_scope_widened | 1 | gpt-5-mini: 1 |
-| Answer/finalization failures | question_or_constraint_misread | grouping_key_and_topk_misread | 1 | gpt-5.4-nano: 1 |
-| Answer/finalization failures | question_or_constraint_misread | historical_year_confusion | 1 | gpt-5.4-nano: 1 |
-| Answer/finalization failures | question_or_constraint_misread | ignored the intended top-five-average scope for the CV comparison | 1 | gpt-5.4-nano: 1 |
-| Answer/finalization failures | question_or_constraint_misread | ignored_exclusion_constraint | 1 | gpt-5-mini: 1 |
-| Answer/finalization failures | question_or_constraint_misread | ignored_original_23_exclusion | 1 | gpt-5-mini: 1 |
-| Answer/finalization failures | question_or_constraint_misread | ignored_single_answer_format | 1 | gpt-5.4-nano: 1 |
-| Answer/finalization failures | question_or_constraint_misread | incorrect set-intersection across hops | 1 | gpt-5.4-nano: 1 |
-| Answer/finalization failures | question_or_constraint_misread | incorrect_entity_classification_and_comparison | 1 | gpt-5.4-nano: 1 |
-| Answer/finalization failures | question_or_constraint_misread | intersection_constraint_misread | 1 | gpt-5.4-nano: 1 |
-| Answer/finalization failures | question_or_constraint_misread | intersection_requirement_misread | 1 | gpt-5-mini: 1 |
-| Answer/finalization failures | question_or_constraint_misread | location clue treated as school-name clue | 1 | gpt-5.4-nano: 1 |
-| Answer/finalization failures | question_or_constraint_misread | misidentified_named_king | 1 | gpt-5.4-nano: 1 |
-| Answer/finalization failures | question_or_constraint_misread | missed_original_23_exclusion | 1 | gpt-5.4-nano: 1 |
-| Answer/finalization failures | question_or_constraint_misread | multi_hop_constraint_misread | 1 | gpt-5.4-nano: 1 |
-| Answer/finalization failures | question_or_constraint_misread | omitted_required_filter_and_cross_cycle_intersection | 1 | gpt-5.4-nano: 1 |
-| Answer/finalization failures | question_or_constraint_misread | original_23_counties_misread | 1 | gpt-5.4-nano: 1 |
-| Answer/finalization failures | question_or_constraint_misread | output_format_and_answer_scope | 1 | gpt-5.4-nano: 1 |
-| Answer/finalization failures | question_or_constraint_misread | percentage_change_instead_of_percentage_of_baseline | 1 | gpt-5.4-nano: 1 |
-| Answer/finalization failures | question_or_constraint_misread | percentage_of_incidents_interpreted_as_percent_change | 1 | gpt-5.4-nano: 1 |
-| Answer/finalization failures | question_or_constraint_misread | picked highest-release county instead of newest county-seat county | 1 | gpt-5.4-nano: 1 |
-| Answer/finalization failures | question_or_constraint_misread | province_neighborhood_confusion | 1 | gpt-5.4-nano: 1 |
-| Answer/finalization failures | question_or_constraint_misread | release_year_confusion | 1 | gpt-5.4-nano: 1 |
-| Answer/finalization failures | question_or_constraint_misread | release_year_semantics | 1 | gpt-5.4-nano: 1 |
-| Answer/finalization failures | question_or_constraint_misread | release_year_vs_data_year | 1 | gpt-5.4-nano: 1 |
-| Answer/finalization failures | question_or_constraint_misread | returned_category_instead_of_count | 1 | gpt-5.4-nano: 1 |
-| Answer/finalization failures | question_or_constraint_misread | returned_intermediate_metric_instead_of_final_population | 1 | gpt-5.4-nano: 1 |
-| Answer/finalization failures | question_or_constraint_misread | returned_person_instead_of_university | 1 | gpt-5.4-nano: 1 |
-| Answer/finalization failures | question_or_constraint_misread | reversed_incorporation_comparison | 1 | gpt-5.4-nano: 1 |
-| Answer/finalization failures | question_or_constraint_misread | school_day_vs_open_date_misread | 1 | gpt-5-mini: 1 |
-| Answer/finalization failures | question_or_constraint_misread | scientist_chain_misread | 1 | gpt-5.4-nano: 1 |
-| Answer/finalization failures | question_or_constraint_misread | scope_and_filter_misread | 1 | gpt-5.4-nano: 1 |
-| Answer/finalization failures | question_or_constraint_misread | state_fips_misread | 1 | gpt-5.4-nano: 1 |
-| Answer/finalization failures | question_or_constraint_misread | state_fips_or_geography_confusion | 1 | gpt-5.4-nano: 1 |
-| Answer/finalization failures | question_or_constraint_misread | state_year_mixup | 1 | gpt-5.4-nano: 1 |
-| Answer/finalization failures | question_or_constraint_misread | target_person_misidentified | 1 | gpt-5.4-nano: 1 |
-| Answer/finalization failures | question_or_constraint_misread | top-2 rank misread | 1 | gpt-5-mini: 1 |
-| Answer/finalization failures | question_or_constraint_misread | treated_2006_as_noncomparable | 1 | gpt-5.4-nano: 1 |
-| Answer/finalization failures | question_or_constraint_misread | treated_open_date_as_school_day | 1 | gpt-5-mini: 1 |
-| Answer/finalization failures | question_or_constraint_misread | treated_shooting_location_desc_as_requested_location_position_category | 1 | gpt-5.4-nano: 1 |
-| Answer/finalization failures | question_or_constraint_misread | used county-seat city population as the final comparator | 1 | gpt-5-mini: 1 |
-| Answer/finalization failures | question_or_constraint_misread | violent_crime_and_founding_year_recast_as_bridge_proxies | 1 | gpt-5.4-nano: 1 |
-| Answer/finalization failures | question_or_constraint_misread | ward_misread | 1 | gpt-5.4-nano: 1 |
-| Answer/finalization failures | question_or_constraint_misread | weapon_filtered_use_of_force_subset | 1 | gpt-5.4-nano: 1 |
-| Answer/finalization failures | question_or_constraint_misread | wrong_branch_identity | 1 | gpt-5.4-nano: 1 |
-| Answer/finalization failures | question_or_constraint_misread | wrong_city_and_year_constraints | 1 | gpt-5.4-nano: 1 |
-| Answer/finalization failures | question_or_constraint_misread | wrong_city_pair_and_metric | 1 | gpt-5.4-nano: 1 |
-| Answer/finalization failures | question_or_constraint_misread | wrong_comparison_city_set | 1 | gpt-5.4-nano: 1 |
-| Answer/finalization failures | question_or_constraint_misread | wrong_comparison_entities | 1 | gpt-5-mini: 1 |
-| Answer/finalization failures | question_or_constraint_misread | wrong_county_seat_branch | 1 | gpt-5.4-nano: 1 |
-| Answer/finalization failures | question_or_constraint_misread | wrong_district_propagation_and_estimate | 1 | gpt-5-mini: 1 |
-| Answer/finalization failures | question_or_constraint_misread | wrong_entity_chain | 1 | gpt-5.4-nano: 1 |
-| Answer/finalization failures | question_or_constraint_misread | wrong_final_county | 1 | gpt-5.4-nano: 1 |
-| Answer/finalization failures | question_or_constraint_misread | wrong_metric | 1 | gpt-5.4-nano: 1 |
-| Answer/finalization failures | question_or_constraint_misread | wrong_person_identity | 1 | gpt-5.4-nano: 1 |
-| Answer/finalization failures | question_or_constraint_misread | wrong_quantity_scope | 1 | gpt-5.4-nano: 1 |
-| Answer/finalization failures | question_or_constraint_misread | wrong_status_filter | 1 | gpt-5-mini: 1 |
-| Answer/finalization failures | question_or_constraint_misread | wrong_terminus_city | 1 | gpt-5-mini: 1 |
-| Answer/finalization failures | question_or_constraint_misread | wrong_year_filter | 1 | gpt-5-mini: 1 |
-| Answer/finalization failures | question_or_constraint_misread | wrong_year_window_and_top5_set | 1 | gpt-5.4-nano: 1 |
-| Answer/finalization failures | question_or_constraint_misread | year_and_field_proxy_mismatch | 1 | gpt-5.4-nano: 1 |
-| Answer/finalization failures | question_or_constraint_misread | year_field_mismatch | 1 | gpt-5.4-nano: 1 |
-| Benchmark/eval issue | semantic_or_gold_label_issue | benchmark_answer_conflict | 1 | gpt-5.4-nano: 1 |
-| Benchmark/eval issue | semantic_or_gold_label_issue | benchmark_label_mismatch | 1 | gpt-5-mini: 1 |
-| Benchmark/eval issue | semantic_or_gold_label_issue | expected_answer_conflicts_with_logged_count | 1 | gpt-5-mini: 1 |
-| Benchmark/eval issue | semantic_or_gold_label_issue | gold_answer_conflict_with_source | 1 | gpt-5.4-nano: 1 |
-| Benchmark/eval issue | semantic_or_gold_label_issue | inconsistent_gold_answer | 1 | gpt-5-mini: 1 |
-| Benchmark/eval issue | semantic_or_gold_label_issue | possible_benchmark_task_mismatch | 1 | gpt-5.4-nano: 1 |
-| Benchmark/eval issue | semantic_or_gold_label_issue | possible_gold_answer_mismatch | 1 | gpt-5-mini: 1 |
-| Benchmark/eval issue | semantic_or_gold_label_issue | task_gold_conflict | 1 | gpt-5.4-nano: 1 |
 | Computation errors | computation_or_aggregation_error | approximate_final_value | 1 | gpt-5-mini: 1 |
 | Computation errors | computation_or_aggregation_error | arithmetic_off_by_100 | 1 | gpt-5-mini: 1 |
 | Computation errors | computation_or_aggregation_error | averaged_release_counts_as_intake | 1 | gpt-5.4-nano: 1 |
@@ -768,6 +665,14 @@ Total answer-failure events: 1833
 | Other/unclear | other_or_unclear | null_submission_after_failed_extraction | 1 | gpt-5.4-nano: 1 |
 | Other/unclear | other_or_unclear | unsupported_final_year_guess | 1 | gpt-5-mini: 1 |
 | Other/unclear | other_or_unclear | unsupported_hate_crime_estimate | 1 | gpt-5-mini: 1 |
+| Other/unclear | semantic_or_gold_label_issue | benchmark_answer_conflict | 1 | gpt-5.4-nano: 1 |
+| Other/unclear | semantic_or_gold_label_issue | benchmark_label_mismatch | 1 | gpt-5-mini: 1 |
+| Other/unclear | semantic_or_gold_label_issue | expected_answer_conflicts_with_logged_count | 1 | gpt-5-mini: 1 |
+| Other/unclear | semantic_or_gold_label_issue | gold_answer_conflict_with_source | 1 | gpt-5.4-nano: 1 |
+| Other/unclear | semantic_or_gold_label_issue | inconsistent_gold_answer | 1 | gpt-5-mini: 1 |
+| Other/unclear | semantic_or_gold_label_issue | possible_benchmark_task_mismatch | 1 | gpt-5.4-nano: 1 |
+| Other/unclear | semantic_or_gold_label_issue | possible_gold_answer_mismatch | 1 | gpt-5-mini: 1 |
+| Other/unclear | semantic_or_gold_label_issue | task_gold_conflict | 1 | gpt-5.4-nano: 1 |
 | Planning/trajectory mismatch | planning_decomposition_mismatch | ad_hoc_candidate_lookup | 1 | gpt-5.4-nano: 1 |
 | Planning/trajectory mismatch | planning_decomposition_mismatch | carried_precinct_filter_into_final_hop | 1 | gpt-5-mini: 1 |
 | Planning/trajectory mismatch | planning_decomposition_mismatch | collapsed_to_single_school_branch | 1 | gpt-5.4-nano: 1 |
@@ -833,11 +738,99 @@ Total answer-failure events: 1833
 | Planning/trajectory mismatch | planning_decomposition_mismatch | wrong_entity_chain | 1 | gpt-5.4-nano: 1 |
 | Planning/trajectory mismatch | planning_decomposition_mismatch | wrong_final_branch | 1 | gpt-5-mini: 1 |
 | Planning/trajectory mismatch | planning_decomposition_mismatch | year_window_and_aggregation_scope_confusion | 1 | gpt-5.4-nano: 1 |
-| Planning/trajectory mismatch | same_hop_repetition | redundant_candidate_rechecks | 1 | gpt-5-mini: 1 |
-| Planning/trajectory mismatch | same_hop_repetition | redundant_rank_validation_loop | 1 | gpt-5.4-nano: 1 |
-| Planning/trajectory mismatch | same_hop_repetition | redundant_visitor_queries | 1 | gpt-5.4-nano: 1 |
-| Planning/trajectory mismatch | same_hop_repetition | repeated_police_title_probe | 1 | gpt-5.4-nano: 1 |
-| Planning/trajectory mismatch | same_hop_repetition | repeated_ward_count_requery | 1 | gpt-5.4-nano: 1 |
+| Planning/trajectory mismatch | question_or_constraint_misread | annual_filter_scope_misread | 1 | gpt-5.4-nano: 1 |
+| Planning/trajectory mismatch | question_or_constraint_misread | answer_shape_and_intermediate_field | 1 | gpt-5-mini: 1 |
+| Planning/trajectory mismatch | question_or_constraint_misread | answer_target_inversion | 1 | gpt-5.4-nano: 1 |
+| Planning/trajectory mismatch | question_or_constraint_misread | answered_bachelors_degree_year_instead_of_university_founding_year | 1 | gpt-5.4-nano: 1 |
+| Planning/trajectory mismatch | question_or_constraint_misread | answered_degree_year_instead_of_foundation_year | 1 | gpt-5.4-nano: 1 |
+| Planning/trajectory mismatch | question_or_constraint_misread | at_least_three_years_treated_as_all_four_years | 1 | gpt-5.4-nano: 1 |
+| Planning/trajectory mismatch | question_or_constraint_misread | based_in_constraint_ignored | 1 | gpt-5.4-nano: 1 |
+| Planning/trajectory mismatch | question_or_constraint_misread | based_in_vs_birthplace_confusion | 1 | gpt-5.4-nano: 1 |
+| Planning/trajectory mismatch | question_or_constraint_misread | birthplace county/state misread | 1 | gpt-5.4-nano: 1 |
+| Planning/trajectory mismatch | question_or_constraint_misread | birthplace_vs_namesake_confusion | 1 | gpt-5.4-nano: 1 |
+| Planning/trajectory mismatch | question_or_constraint_misread | borough_misidentified | 1 | gpt-5.4-nano: 1 |
+| Planning/trajectory mismatch | question_or_constraint_misread | branch_as_neighborhood | 1 | gpt-5.4-nano: 1 |
+| Planning/trajectory mismatch | question_or_constraint_misread | broadened narcotic-drug-law filter into generic drug-related arrests | 1 | gpt-5-mini: 1 |
+| Planning/trajectory mismatch | question_or_constraint_misread | carried_forward_intermediate_ward_filter | 1 | gpt-5-mini: 1 |
+| Planning/trajectory mismatch | question_or_constraint_misread | chased_wrong_entity_chain | 1 | gpt-5.4-nano: 1 |
+| Planning/trajectory mismatch | question_or_constraint_misread | city_referent_misread | 1 | gpt-5.4-nano: 1 |
+| Planning/trajectory mismatch | question_or_constraint_misread | cohort_category_confusion | 1 | gpt-5.4-nano: 1 |
+| Planning/trajectory mismatch | question_or_constraint_misread | comparison_ratio_misread | 1 | gpt-5.4-nano: 1 |
+| Planning/trajectory mismatch | question_or_constraint_misread | conflated_target_person_with_first_officeholder | 1 | gpt-5.4-nano: 1 |
+| Planning/trajectory mismatch | question_or_constraint_misread | constraint_ignored | 1 | gpt-5.4-nano: 1 |
+| Planning/trajectory mismatch | question_or_constraint_misread | coreference_misread | 1 | gpt-5.4-nano: 1 |
+| Planning/trajectory mismatch | question_or_constraint_misread | county_seat_condition_misread | 1 | gpt-5.4-nano: 1 |
+| Planning/trajectory mismatch | question_or_constraint_misread | county_seat_vs_county_population_confusion | 1 | gpt-5-mini: 1 |
+| Planning/trajectory mismatch | question_or_constraint_misread | county_year_confused | 1 | gpt-5.4-nano: 1 |
+| Planning/trajectory mismatch | question_or_constraint_misread | dropped city-level constraint on the public-school count | 1 | gpt-5-mini: 1 |
+| Planning/trajectory mismatch | question_or_constraint_misread | dropped district/member filter | 1 | gpt-5.4-nano: 1 |
+| Planning/trajectory mismatch | question_or_constraint_misread | dropped the required city constraint and used county-only scope | 1 | gpt-5-mini: 1 |
+| Planning/trajectory mismatch | question_or_constraint_misread | dropped_all_grades_or_exact_subject_constraint | 1 | gpt-5-mini: 1 |
+| Planning/trajectory mismatch | question_or_constraint_misread | extra_precinct_filter_and_broadened_location_predicate | 1 | gpt-5-mini: 1 |
+| Planning/trajectory mismatch | question_or_constraint_misread | extra_precinct_filter_in_final_count | 1 | gpt-5-mini: 1 |
+| Planning/trajectory mismatch | question_or_constraint_misread | final_hop_relation_misread | 1 | gpt-5.4-nano: 1 |
+| Planning/trajectory mismatch | question_or_constraint_misread | fiscal_year_treated_as_calendar_year_and_scope_widened | 1 | gpt-5-mini: 1 |
+| Planning/trajectory mismatch | question_or_constraint_misread | grouping_key_and_topk_misread | 1 | gpt-5.4-nano: 1 |
+| Planning/trajectory mismatch | question_or_constraint_misread | historical_year_confusion | 1 | gpt-5.4-nano: 1 |
+| Planning/trajectory mismatch | question_or_constraint_misread | ignored the intended top-five-average scope for the CV comparison | 1 | gpt-5.4-nano: 1 |
+| Planning/trajectory mismatch | question_or_constraint_misread | ignored_exclusion_constraint | 1 | gpt-5-mini: 1 |
+| Planning/trajectory mismatch | question_or_constraint_misread | ignored_original_23_exclusion | 1 | gpt-5-mini: 1 |
+| Planning/trajectory mismatch | question_or_constraint_misread | ignored_single_answer_format | 1 | gpt-5.4-nano: 1 |
+| Planning/trajectory mismatch | question_or_constraint_misread | incorrect set-intersection across hops | 1 | gpt-5.4-nano: 1 |
+| Planning/trajectory mismatch | question_or_constraint_misread | incorrect_entity_classification_and_comparison | 1 | gpt-5.4-nano: 1 |
+| Planning/trajectory mismatch | question_or_constraint_misread | intersection_constraint_misread | 1 | gpt-5.4-nano: 1 |
+| Planning/trajectory mismatch | question_or_constraint_misread | intersection_requirement_misread | 1 | gpt-5-mini: 1 |
+| Planning/trajectory mismatch | question_or_constraint_misread | location clue treated as school-name clue | 1 | gpt-5.4-nano: 1 |
+| Planning/trajectory mismatch | question_or_constraint_misread | misidentified_named_king | 1 | gpt-5.4-nano: 1 |
+| Planning/trajectory mismatch | question_or_constraint_misread | missed_original_23_exclusion | 1 | gpt-5.4-nano: 1 |
+| Planning/trajectory mismatch | question_or_constraint_misread | multi_hop_constraint_misread | 1 | gpt-5.4-nano: 1 |
+| Planning/trajectory mismatch | question_or_constraint_misread | omitted_required_filter_and_cross_cycle_intersection | 1 | gpt-5.4-nano: 1 |
+| Planning/trajectory mismatch | question_or_constraint_misread | original_23_counties_misread | 1 | gpt-5.4-nano: 1 |
+| Planning/trajectory mismatch | question_or_constraint_misread | output_format_and_answer_scope | 1 | gpt-5.4-nano: 1 |
+| Planning/trajectory mismatch | question_or_constraint_misread | percentage_change_instead_of_percentage_of_baseline | 1 | gpt-5.4-nano: 1 |
+| Planning/trajectory mismatch | question_or_constraint_misread | percentage_of_incidents_interpreted_as_percent_change | 1 | gpt-5.4-nano: 1 |
+| Planning/trajectory mismatch | question_or_constraint_misread | picked highest-release county instead of newest county-seat county | 1 | gpt-5.4-nano: 1 |
+| Planning/trajectory mismatch | question_or_constraint_misread | province_neighborhood_confusion | 1 | gpt-5.4-nano: 1 |
+| Planning/trajectory mismatch | question_or_constraint_misread | release_year_confusion | 1 | gpt-5.4-nano: 1 |
+| Planning/trajectory mismatch | question_or_constraint_misread | release_year_semantics | 1 | gpt-5.4-nano: 1 |
+| Planning/trajectory mismatch | question_or_constraint_misread | release_year_vs_data_year | 1 | gpt-5.4-nano: 1 |
+| Planning/trajectory mismatch | question_or_constraint_misread | returned_category_instead_of_count | 1 | gpt-5.4-nano: 1 |
+| Planning/trajectory mismatch | question_or_constraint_misread | returned_intermediate_metric_instead_of_final_population | 1 | gpt-5.4-nano: 1 |
+| Planning/trajectory mismatch | question_or_constraint_misread | returned_person_instead_of_university | 1 | gpt-5.4-nano: 1 |
+| Planning/trajectory mismatch | question_or_constraint_misread | reversed_incorporation_comparison | 1 | gpt-5.4-nano: 1 |
+| Planning/trajectory mismatch | question_or_constraint_misread | school_day_vs_open_date_misread | 1 | gpt-5-mini: 1 |
+| Planning/trajectory mismatch | question_or_constraint_misread | scientist_chain_misread | 1 | gpt-5.4-nano: 1 |
+| Planning/trajectory mismatch | question_or_constraint_misread | scope_and_filter_misread | 1 | gpt-5.4-nano: 1 |
+| Planning/trajectory mismatch | question_or_constraint_misread | state_fips_misread | 1 | gpt-5.4-nano: 1 |
+| Planning/trajectory mismatch | question_or_constraint_misread | state_fips_or_geography_confusion | 1 | gpt-5.4-nano: 1 |
+| Planning/trajectory mismatch | question_or_constraint_misread | state_year_mixup | 1 | gpt-5.4-nano: 1 |
+| Planning/trajectory mismatch | question_or_constraint_misread | target_person_misidentified | 1 | gpt-5.4-nano: 1 |
+| Planning/trajectory mismatch | question_or_constraint_misread | top-2 rank misread | 1 | gpt-5-mini: 1 |
+| Planning/trajectory mismatch | question_or_constraint_misread | treated_2006_as_noncomparable | 1 | gpt-5.4-nano: 1 |
+| Planning/trajectory mismatch | question_or_constraint_misread | treated_open_date_as_school_day | 1 | gpt-5-mini: 1 |
+| Planning/trajectory mismatch | question_or_constraint_misread | treated_shooting_location_desc_as_requested_location_position_category | 1 | gpt-5.4-nano: 1 |
+| Planning/trajectory mismatch | question_or_constraint_misread | used county-seat city population as the final comparator | 1 | gpt-5-mini: 1 |
+| Planning/trajectory mismatch | question_or_constraint_misread | violent_crime_and_founding_year_recast_as_bridge_proxies | 1 | gpt-5.4-nano: 1 |
+| Planning/trajectory mismatch | question_or_constraint_misread | ward_misread | 1 | gpt-5.4-nano: 1 |
+| Planning/trajectory mismatch | question_or_constraint_misread | weapon_filtered_use_of_force_subset | 1 | gpt-5.4-nano: 1 |
+| Planning/trajectory mismatch | question_or_constraint_misread | wrong_branch_identity | 1 | gpt-5.4-nano: 1 |
+| Planning/trajectory mismatch | question_or_constraint_misread | wrong_city_and_year_constraints | 1 | gpt-5.4-nano: 1 |
+| Planning/trajectory mismatch | question_or_constraint_misread | wrong_city_pair_and_metric | 1 | gpt-5.4-nano: 1 |
+| Planning/trajectory mismatch | question_or_constraint_misread | wrong_comparison_city_set | 1 | gpt-5.4-nano: 1 |
+| Planning/trajectory mismatch | question_or_constraint_misread | wrong_comparison_entities | 1 | gpt-5-mini: 1 |
+| Planning/trajectory mismatch | question_or_constraint_misread | wrong_county_seat_branch | 1 | gpt-5.4-nano: 1 |
+| Planning/trajectory mismatch | question_or_constraint_misread | wrong_district_propagation_and_estimate | 1 | gpt-5-mini: 1 |
+| Planning/trajectory mismatch | question_or_constraint_misread | wrong_entity_chain | 1 | gpt-5.4-nano: 1 |
+| Planning/trajectory mismatch | question_or_constraint_misread | wrong_final_county | 1 | gpt-5.4-nano: 1 |
+| Planning/trajectory mismatch | question_or_constraint_misread | wrong_metric | 1 | gpt-5.4-nano: 1 |
+| Planning/trajectory mismatch | question_or_constraint_misread | wrong_person_identity | 1 | gpt-5.4-nano: 1 |
+| Planning/trajectory mismatch | question_or_constraint_misread | wrong_quantity_scope | 1 | gpt-5.4-nano: 1 |
+| Planning/trajectory mismatch | question_or_constraint_misread | wrong_status_filter | 1 | gpt-5-mini: 1 |
+| Planning/trajectory mismatch | question_or_constraint_misread | wrong_terminus_city | 1 | gpt-5-mini: 1 |
+| Planning/trajectory mismatch | question_or_constraint_misread | wrong_year_filter | 1 | gpt-5-mini: 1 |
+| Planning/trajectory mismatch | question_or_constraint_misread | wrong_year_window_and_top5_set | 1 | gpt-5.4-nano: 1 |
+| Planning/trajectory mismatch | question_or_constraint_misread | year_and_field_proxy_mismatch | 1 | gpt-5.4-nano: 1 |
+| Planning/trajectory mismatch | question_or_constraint_misread | year_field_mismatch | 1 | gpt-5.4-nano: 1 |
 | Source/scope errors | wrong_source_or_scope | aggregate source instead of drug-level source | 1 | gpt-5.4-nano: 1 |
 | Source/scope errors | wrong_source_or_scope | ambiguous_or_missing_dataset_lookup | 1 | gpt-5-mini: 1 |
 | Source/scope errors | wrong_source_or_scope | arrest_vs_crime_dataset_confusion | 1 | gpt-5.4-nano: 1 |

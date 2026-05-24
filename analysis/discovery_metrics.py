@@ -2,7 +2,7 @@
 """
 Compute discovery metrics D_ret, D_acc, precision/recall/F1 from trace JSONL files.
 
-D_ret: retrieval gold coverage per task = |retrieved_gold ∩ gold| / |gold|
+D_ret: retrieval-evidence gold coverage per task = |retrieved_gold ∩ gold| / |gold|
 D_acc: access gold recall per task = |read_gold ∩ gold| / |gold|
 
 Usage:
@@ -23,6 +23,11 @@ _READ_TOOLS = {
     "download",
     "query_ideal",
     "execute_ideal",
+}
+_RETRIEVAL_ACCESS_TOOLS = {
+    "peek_file",
+    "peek_multiple",
+    "peek_files",
 }
 _AUXILIARY_TRACE_EVENTS = {"ideal_subagent_cost"}
 
@@ -138,37 +143,42 @@ def compute_discovery_metrics(
         n_gold = len(gold_values) if use_gold_units else len(gold_ids)
         dataset_to_unique_source = _dataset_to_unique_source(gold_ids) if use_source_gold else {}
 
-        # Separate search traces from read traces and submit_answer record
+        # Separate search traces from read traces and submit_answer record.
+        # D_ret uses retrieval evidence: search/list results plus lightweight
+        # file peeks, which can reveal the correct source before full analysis.
         search_traces = [
             t
             for t in task_traces
             if not _is_auxiliary_trace(t)
             and t.get("tool") not in _READ_TOOLS
+            and t.get("tool") != "list_files"
             and t.get("tool") != "submit_answer"
+        ]
+        retrieval_traces = [
+            t
+            for t in task_traces
+            if not _is_auxiliary_trace(t)
+            and t.get("tool") != "submit_answer"
+            and (
+                t.get("tool") == "list_files"
+                or t.get("tool") not in _READ_TOOLS
+                or t.get("tool") in _RETRIEVAL_ACCESS_TOOLS
+            )
         ]
         submit_record = next((t for t in task_traces if t.get("tool") == "submit_answer"), None)
 
-        # D_ret coverage: how much of the gold set was retrieved by search results?
+        # D_ret coverage: how much of the gold set was discovered by retrieval evidence?
         # Also keep hit/precision-style companions:
         # - d_ret_hit: was any gold retrieved at all? (legacy binary)
         # - d_ret_precision: how much of retrieved set is gold? (mentor's "7/70 vs 7/10")
         all_result_ids: set = set()
         all_result_ids_total_count = 0
         retrieved_gold_unit_ids: set[str] = set()
-        for trace in search_traces:
-            result_ids = trace.get("result_dataset_ids", [])
+        for trace in retrieval_traces:
+            result_ids = _retrieval_dataset_ids(trace)
             all_result_ids.update(result_ids)
             all_result_ids_total_count += len(result_ids)
-            retrieved_gold_unit_ids.update(
-                _trace_gold_ids(
-                    trace,
-                    gold_ids,
-                    fallback_field="result_dataset_ids",
-                    explicit_gold_field="gold_dataset_ids_in_results",
-                    source_field="result_source_ids",
-                    dataset_to_unique_source=dataset_to_unique_source,
-                )
-            )
+            retrieved_gold_unit_ids.update(_retrieval_gold_ids(trace, gold_ids, dataset_to_unique_source))
 
         retrieved_gold = all_result_ids & gold_ids
         use_source_or_unit_gold = use_source_gold or use_gold_units
@@ -192,19 +202,12 @@ def compute_discovery_metrics(
         # Compute P/R for each individual search call, then average across calls.
         call_precisions = []
         call_recalls = []
-        for trace in search_traces:
-            result_ids = trace.get("result_dataset_ids", [])
+        for trace in retrieval_traces:
+            result_ids = _retrieval_dataset_ids(trace)
             if not result_ids:
                 continue
             hits = (
-                len(_trace_gold_ids(
-                    trace,
-                    gold_ids,
-                    fallback_field="result_dataset_ids",
-                    explicit_gold_field="gold_dataset_ids_in_results",
-                    source_field="result_source_ids",
-                    dataset_to_unique_source=dataset_to_unique_source,
-                ))
+                len(_retrieval_gold_ids(trace, gold_ids, dataset_to_unique_source))
                 if use_source_or_unit_gold
                 else len(set(result_ids) & gold_ids)
             )
@@ -334,6 +337,36 @@ def _trace_gold_ids(
             if value in dataset_to_unique_source and dataset_to_unique_source[value] in gold_ids
         }
     return {value for value in values if value in gold_ids}
+
+
+def _retrieval_dataset_ids(record: dict) -> list:
+    if record.get("tool") in _RETRIEVAL_ACCESS_TOOLS:
+        return record.get("read_dataset_ids", []) or []
+    return record.get("result_dataset_ids", []) or []
+
+
+def _retrieval_gold_ids(
+    record: dict,
+    gold_ids: set[str],
+    dataset_to_unique_source: dict[str, str],
+) -> set[str]:
+    if record.get("tool") in _RETRIEVAL_ACCESS_TOOLS:
+        return _trace_gold_ids(
+            record,
+            gold_ids,
+            fallback_field="read_dataset_ids",
+            explicit_gold_field="gold_dataset_ids_read",
+            source_field="read_source_ids",
+            dataset_to_unique_source=dataset_to_unique_source,
+        )
+    return _trace_gold_ids(
+        record,
+        gold_ids,
+        fallback_field="result_dataset_ids",
+        explicit_gold_field="gold_dataset_ids_in_results",
+        source_field="result_source_ids",
+        dataset_to_unique_source=dataset_to_unique_source,
+    )
 
 
 def _is_source_gold_values(values: list[str]) -> bool:

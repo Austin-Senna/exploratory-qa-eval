@@ -25,14 +25,14 @@ SEARCH_ABLATION = [
 ]
 
 EXECUTION_ABLATION = [
-    ("d", "Standard Execution"),
-    ("i", "Ideal Execution"),
+    ("d", "Standard Data Analysis"),
+    ("i", "Ideal Data Analysis"),
 ]
 
 ABLATIONS = [
     ("Plan Ablation", "plan", "n", PLAN_ABLATION, {"search": "i", "results": "i", "compute": "i"}),
     ("Search Ablation", "search", "n", SEARCH_ABLATION, {"plan": "i", "results": "i", "compute": "i"}),
-    ("Execution Ablation", "compute", "d", EXECUTION_ABLATION, {"plan": "i", "search": "i", "results": "i"}),
+    ("Data Analysis Ablation", "compute", "d", EXECUTION_ABLATION, {"plan": "i", "search": "i", "results": "i"}),
 ]
 
 COMPARISON_MODELS = ["gpt-5.4-nano", "gpt-5-mini"]
@@ -51,27 +51,27 @@ SEMANTIC_DELTA_COMPACT_SUPTITLE_FONTSIZE = 16.6
 PAIRED_CONDITIONS = [
     (
         "nns",
-        "BM25 Search, No Plan, Standard Compute",
-        "BM25 Search, No Plan, Standard Compute",
+        "BM25 Search, No Plan, Standard Data Analysis",
+        "BM25 Search, No Plan, Standard Data Analysis",
         {"plan": "n", "search": "n", "results": "i", "compute": "d"},
     ),
     (
         "sss",
-        "Pneuma Search, Plan, Standard Compute",
-        "Pneuma Search, Plan, Standard Compute",
+        "Pneuma Search, Plan, Standard Data Analysis",
+        "Pneuma Search, Plan, Standard Data Analysis",
         {"plan": "d", "search": "d", "results": "i", "compute": "d"},
     ),
     (
         "iii",
-        "Ideal Search, Ideal Plan, Ideal Compute",
-        "Ideal Search, Ideal Plan, Ideal Compute",
+        "Ideal Search, Ideal Plan, Ideal Data Analysis",
+        "Ideal Search, Ideal Plan, Ideal Data Analysis",
         {"plan": "i", "search": "i", "results": "i", "compute": "i"},
     ),
 ]
 
 PAIRED_CONDITION_AXIS_LABELS = {
-    "nns": "BM25 / No Plan / Std",
-    "sss": "Pneuma / Plan / Std",
+    "nns": "BM25 / No Plan / Std DA",
+    "sss": "Pneuma / Plan / Std DA",
     "iii": "Ideal / Ideal / Ideal",
 }
 
@@ -534,8 +534,8 @@ def _compact_ablation_label(label: str) -> str:
         "PNEUMA Hybrid Search": "PNEUMA",
         "Ideal Search": "Ideal",
         "Preloaded Sources": "Preloaded",
-        "Standard Execution": "Standard",
-        "Ideal Execution": "Ideal",
+        "Standard Data Analysis": "Standard",
+        "Ideal Data Analysis": "Ideal",
     }
     return replacements.get(label, label)
 
@@ -712,7 +712,7 @@ def _plot_paired_mode_metrics(plt, paired_rows: List[dict], output_dir: Path) ->
                 for condition_id, _code, _label, _expected in PAIRED_CONDITIONS
             ]
             _plot_horizontal_delta_bars(ax, labels, values, deltas, metric_label, label_fontsize=9)
-        fig.suptitle(f"Reference Mode Metrics (Search / Plan / Compute) - {model}")
+        fig.suptitle(f"Reference Mode Metrics (Search / Plan / Data Analysis) - {model}")
         fig.subplots_adjust(left=0.22, right=0.98, bottom=0.055, top=0.9, hspace=0.36)
         fig.savefig(output_dir / f"fig22_{_safe_slug(model)}_paired_modes_metrics.pdf")
         plt.close(fig)
@@ -774,7 +774,7 @@ def _plot_paired_mode_metrics_comparison(plt, paired_rows: List[dict], output_di
                 show_y_labels=col_idx == 0,
             )
 
-    fig.suptitle("Canonical Mode Metrics (Search / Plan / Compute)", fontsize=14)
+    fig.suptitle("Canonical Mode Metrics (Search / Plan / Data Analysis)", fontsize=14)
     fig.subplots_adjust(left=0.14, right=0.985, bottom=0.08, top=0.84, hspace=0.18, wspace=0.08)
     for row_idx, model in enumerate(models):
         ax_left = axes[row_idx][0]

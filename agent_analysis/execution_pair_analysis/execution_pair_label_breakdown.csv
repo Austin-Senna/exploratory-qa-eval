@@ -1,8 +1,0 @@
-benchmark,model_variant,pair_label,execution_similarity,n,fraction_all,pct_all,fraction_comparable,pct_comparable
-kramabench,openai_gpt-5-mini,iid_vs_iii,not_comparable,23,23/83,27.7,,
-kramabench,openai_gpt-5-mini,iid_vs_iii,pending,60,60/83,72.3,60/60,100.0
-kramabench,openai_gpt-5.4-nano,iid_vs_iii,not_comparable,1,1/83,1.2,,
-kramabench,openai_gpt-5.4-nano,iid_vs_iii,pending,82,82/83,98.8,82/82,100.0
-lakeqa,openai_gpt-5-mini,iid_vs_iii,not_comparable,19,19/135,14.1,,
-lakeqa,openai_gpt-5-mini,iid_vs_iii,pending,116,116/135,85.9,116/116,100.0
-lakeqa,openai_gpt-5.4-nano,iid_vs_iii,pending,135,135/135,100.0,135/135,100.0

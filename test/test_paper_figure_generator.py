@@ -3,6 +3,7 @@ import json
 import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from unittest.mock import patch
 
 from analysis.paper_figure_generator import (
     _benchmark_defaults,
@@ -12,10 +13,154 @@ from analysis.paper_figure_generator import (
     _turn_waste_scope_complete,
     export_agent_analysis_results,
     export_paper_figures,
+    render_search_efficiency_figure,
 )
 
 
 class TestPaperFigureGenerator(unittest.TestCase):
+    def test_render_search_efficiency_figure_uses_single_row_scatter_only_layout(self):
+        class FakeAxis:
+            def __init__(self):
+                self.titles = []
+                self.annotations = []
+                self.plots = []
+                self.scatters = []
+                self.xlims = []
+                self.ylims = []
+
+            def scatter(self, *args, **kwargs):
+                self.scatters.append((args, kwargs))
+                return None
+
+            def annotate(self, text, *args, **kwargs):
+                self.annotations.append(text)
+
+            def plot(self, *args, **kwargs):
+                self.plots.append((args, kwargs))
+
+            def set_xlim(self, *args, **kwargs):
+                self.xlims.append(args)
+                return None
+
+            def set_ylim(self, *args, **kwargs):
+                self.ylims.append(args)
+                return None
+
+            def grid(self, *args, **kwargs):
+                return None
+
+            def set_title(self, title, *args, **kwargs):
+                self.titles.append(title)
+
+            def set_xlabel(self, *args, **kwargs):
+                return None
+
+            def set_ylabel(self, *args, **kwargs):
+                return None
+
+            def legend(self, *args, **kwargs):
+                return None
+
+        class FakeFig:
+            def __init__(self):
+                self.saved_path = None
+                self.suptitles = []
+
+            def suptitle(self, title, *args, **kwargs):
+                self.suptitles.append(title)
+                return None
+
+            def tight_layout(self, *args, **kwargs):
+                return None
+
+            def savefig(self, path):
+                self.saved_path = path
+
+        class FakePlot:
+            def __init__(self):
+                self.subplots_kwargs = None
+                self.axes = [[FakeAxis(), FakeAxis()], [FakeAxis(), FakeAxis()]]
+                self.fig = FakeFig()
+
+            def subplots(self, **kwargs):
+                self.subplots_kwargs = kwargs
+                return self.fig, self.axes
+
+            def close(self, fig):
+                return None
+
+        with TemporaryDirectory() as tmpdir:
+            analysis_dir = Path(tmpdir)
+            summary_rows = []
+            for model, points in [
+                (
+                    "openai_gpt-5-mini",
+                    [
+                        ("search_n_results_i_plani_computei_k5_skills_off", 0.5, 0.4, 5.7),
+                        ("search_d_results_i_plani_computei_k5_skills_off", 0.6, 0.5, 5.8),
+                        ("search_i_results_i_plani_computei_k5_skills_off", 0.7, 0.6, 5.9),
+                    ],
+                ),
+                (
+                    "openai_gpt-5.4-nano",
+                    [
+                        ("search_n_results_i_plani_computei_k5_skills_off", 0.5, 0.4, 4.0),
+                        ("search_d_results_i_plani_computei_k5_skills_off", 0.6, 0.5, 5.0),
+                        ("search_i_results_i_plani_computei_k5_skills_off", 0.7, 0.6, 3.0),
+                    ],
+                ),
+            ]:
+                for variant, d_ret, d_acc, search_calls in points:
+                    summary_rows.append(
+                        {
+                            "model": model,
+                            "variant": variant,
+                            "avg_search_calls": search_calls,
+                            "D_ret": d_ret,
+                            "D_acc_recall": d_acc,
+                        }
+                    )
+            (analysis_dir / "summary.json").write_text(json.dumps(summary_rows), encoding="utf-8")
+            with (analysis_dir / "search_call_cumulative_retrieval.csv").open("w", newline="") as handle:
+                writer = csv.DictWriter(
+                    handle,
+                    fieldnames=[
+                        "model",
+                        "variant",
+                        "task_id",
+                        "search_call_index",
+                        "cumulative_search_gold_recall",
+                    ],
+                )
+                writer.writeheader()
+                writer.writerow(
+                    {
+                        "model": "openai_gpt-5-mini",
+                        "variant": "search_n_results_i_plani_computei_k5_skills_off",
+                        "task_id": "k-1/task_1",
+                        "search_call_index": "1",
+                        "cumulative_search_gold_recall": "0.5",
+                    }
+                )
+
+            fake_plot = FakePlot()
+            with patch("analysis.paper_figure_generator._import_plot_libs", return_value=fake_plot):
+                render_search_efficiency_figure(analysis_dir, "lakeqa", analysis_dir / "figure.pdf")
+
+            self.assertEqual(fake_plot.subplots_kwargs["nrows"], 1)
+            self.assertEqual(fake_plot.subplots_kwargs["ncols"], 2)
+            all_titles = [title for row in fake_plot.axes for axis in row for title in axis.titles]
+            self.assertNotIn("Cumulative", " ".join(all_titles))
+            self.assertNotIn("Cumulative", " ".join(fake_plot.fig.suptitles))
+            all_annotations = [text for row in fake_plot.axes for axis in row for text in axis.annotations]
+            self.assertTrue(any("BM25" in text and "D_ret 50%" in text and "D_acc 40%" in text for text in all_annotations))
+            self.assertFalse(any("NII" in text or "DII" in text or "III" in text for text in all_annotations))
+            all_scatter_kwargs = [kwargs for row in fake_plot.axes for axis in row for _args, kwargs in axis.scatters]
+            self.assertTrue(any(kwargs.get("facecolors") == "none" and kwargs.get("s", 0) > 90 for kwargs in all_scatter_kwargs))
+            mini_xlim = fake_plot.axes[0][0].xlims[-1]
+            nano_xlim = fake_plot.axes[0][1].xlims[-1]
+            self.assertLess(mini_xlim[1] - mini_xlim[0], nano_xlim[1] - nano_xlim[0])
+
     def test_benchmark_defaults_choose_expected_roots(self):
         lakeqa = _benchmark_defaults("lakeqa")
         kramabench = _benchmark_defaults("kramabench")

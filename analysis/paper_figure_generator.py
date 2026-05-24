@@ -25,6 +25,7 @@ SEARCH_VARIANTS = {
 }
 SEARCH_ORDER = ["NII", "DII", "III"]
 SEARCH_COLORS = {"NII": "#4C78A8", "DII": "#F58518", "III": "#54A24B"}
+SEARCH_DISPLAY_LABELS = {"NII": "BM25", "DII": "PNEUMA", "III": "Ideal"}
 SEARCH_LABEL_OFFSETS = {"NII": (8, -16), "DII": (8, 0), "III": (8, 12)}
 
 
@@ -170,6 +171,18 @@ def _pretty_model(model: str) -> str:
     return str(model).replace("openai_", "").replace("openai/", "")
 
 
+def _search_panel_xlim(model: str, values: list[float], fallback: tuple[float, float]) -> tuple[float, float]:
+    if "gpt-5-mini" not in model.lower():
+        return fallback
+    return _padded_limits(
+        values,
+        lower_bound=0.0,
+        upper_bound=max(10.0, max(values, default=1.0) + 5.0),
+        pad_fraction=0.35,
+        min_span=1.2,
+    )
+
+
 def _load_json_rows(path: Path) -> list[dict]:
     with path.open() as handle:
         rows = json.load(handle)
@@ -286,36 +299,56 @@ def _padded_limits(
 def render_search_efficiency_figure(analysis_dir: Path, benchmark: str, output_path: Path) -> Path:
     data = _load_search_figure_data(analysis_dir)
     summary_by_model: dict[str, list[dict]] = data["summary_by_model"]
-    curves: dict[tuple[str, str], dict[int, float]] = data["curves"]
+    # curves: dict[tuple[str, str], dict[int, float]] = data["curves"]
     models = [model for model in sorted(summary_by_model, key=_model_sort_key) if summary_by_model[model]]
     if not models:
         raise ValueError(f"No canonical NII/DII/III rows found in {analysis_dir / 'summary.json'}")
 
     plt = _import_plot_libs()
-    fig, axes = plt.subplots(
-        nrows=len(models),
-        ncols=2,
-        figsize=(11.5, max(3.6, 3.1 * len(models))),
-        squeeze=False,
-        gridspec_kw={"width_ratios": [1.0, 1.35]},
+    all_x_values = [
+        float(item["avg_search_calls"])
+        for model in models
+        for item in summary_by_model[model]
+    ]
+    all_y_values = [
+        float(item["d_ret"]) * 100.0
+        for model in models
+        for item in summary_by_model[model]
+    ]
+    scatter_xlim = _padded_limits(
+        all_x_values,
+        lower_bound=0.0,
+        upper_bound=max(10.0, max(all_x_values, default=1.0) + 5.0),
+        pad_fraction=0.22,
+        min_span=3.0,
     )
-    for row_index, model in enumerate(models):
-        scatter_ax = axes[row_index][0]
-        curve_ax = axes[row_index][1]
+    scatter_ylim = _padded_limits(
+        all_y_values,
+        lower_bound=0.0,
+        upper_bound=100.0,
+        pad_fraction=0.22,
+        min_span=14.0,
+    )
+    fig, axes = plt.subplots(
+        nrows=1,
+        ncols=len(models),
+        figsize=(5.2 * len(models), 3.8),
+        squeeze=False,
+    )
+    for col_index, model in enumerate(models):
+        scatter_ax = axes[0][col_index]
         rows = summary_by_model[model]
         scatter_x_values = [float(item["avg_search_calls"]) for item in rows]
-        scatter_y_values = [float(item["d_ret"]) * 100.0 for item in rows]
-        model_curve_values: list[float] = []
-        model_curve_calls: list[int] = []
 
         for item in rows:
             label = str(item["label"])
+            display_label = SEARCH_DISPLAY_LABELS.get(label, label)
             color = SEARCH_COLORS[label]
             x = float(item["avg_search_calls"])
             d_ret_pct = float(item["d_ret"]) * 100.0
             d_acc_pct = float(item["d_acc"]) * 100.0
             ring_size = 320.0 + 1600.0 * max(0.0, min(1.0, float(item["d_acc"])))
-            scatter_ax.scatter([x], [d_ret_pct], s=90, color=color, zorder=4)
+            scatter_ax.scatter([x], [d_ret_pct], s=110, color=color, zorder=4)
             scatter_ax.scatter(
                 [x],
                 [d_ret_pct],
@@ -327,7 +360,7 @@ def render_search_efficiency_figure(analysis_dir: Path, benchmark: str, output_p
                 zorder=3,
             )
             scatter_ax.annotate(
-                f"{label}\nD_acc {d_acc_pct:.0f}%",
+                f"{display_label}\nD_ret {d_ret_pct:.0f}%\nD_acc {d_acc_pct:.0f}%",
                 (x, d_ret_pct),
                 textcoords="offset points",
                 xytext=SEARCH_LABEL_OFFSETS.get(label, (7, 7)),
@@ -335,56 +368,46 @@ def render_search_efficiency_figure(analysis_dir: Path, benchmark: str, output_p
                 ha="left",
             )
 
-        for label in SEARCH_ORDER:
-            curve = curves.get((model, label), {})
-            if not curve:
-                continue
-            xs = sorted(curve)
-            ys = [curve[x] * 100.0 for x in xs]
-            model_curve_calls.extend(xs)
-            model_curve_values.extend(ys)
-            curve_ax.plot(xs, ys, marker="o", linewidth=2.0, markersize=4, color=SEARCH_COLORS[label], label=label)
+        # Cumulative recall panel intentionally disabled. The previous version
+        # forward-filled each task after its final search call, which made the
+        # curve depend on an interpretation that is not needed for this figure.
+        # for label in SEARCH_ORDER:
+        #     curve = curves.get((model, label), {})
+        #     if not curve:
+        #         continue
+        #     xs = sorted(curve)
+        #     ys = [curve[x] * 100.0 for x in xs]
+        #     model_curve_calls.extend(xs)
+        #     model_curve_values.extend(ys)
+        #     curve_ax.plot(xs, ys, marker="o", linewidth=2.0, markersize=4, color=SEARCH_COLORS[label], label=label)
 
-        scatter_xlim = _padded_limits(
-            scatter_x_values,
-            lower_bound=0.0,
-            upper_bound=max(10.0, max(scatter_x_values, default=1.0) + 5.0),
-            pad_fraction=0.22,
-            min_span=3.0,
-        )
-        scatter_ylim = _padded_limits(
-            scatter_y_values,
-            lower_bound=0.0,
-            upper_bound=100.0,
-            pad_fraction=0.22,
-            min_span=14.0,
-        )
-        scatter_ax.set_xlim(*scatter_xlim)
+        scatter_ax.set_xlim(*_search_panel_xlim(model, scatter_x_values, scatter_xlim))
         scatter_ax.set_ylim(*scatter_ylim)
         scatter_ax.grid(True, alpha=0.25, linewidth=0.6)
-        scatter_ax.set_title(f"{_pretty_model(model)}: Retrieval Efficiency", fontsize=11)
+        scatter_ax.set_title(f"{_pretty_model(model)}: Retrieval Coverage", fontsize=11)
         scatter_ax.set_xlabel("Avg search calls / task")
         scatter_ax.set_ylabel("Avg D_ret (%)")
 
-        curve_xmax = max(model_curve_calls, default=1)
-        curve_ax.set_xlim(1, max(1.0, float(curve_xmax)))
-        curve_ax.set_ylim(
-            *_padded_limits(
-                model_curve_values,
-                lower_bound=0.0,
-                upper_bound=100.0,
-                pad_fraction=0.16,
-                min_span=20.0,
-            )
-        )
-        curve_ax.grid(True, alpha=0.25, linewidth=0.6)
-        curve_ax.set_title(f"{_pretty_model(model)}: Cumulative D_ret", fontsize=11)
-        curve_ax.set_xlabel("Search call")
-        curve_ax.set_ylabel("Mean cumulative D_ret (%)")
-        curve_ax.legend(loc="lower right", fontsize=8, frameon=True)
+        # Cumulative recall axis setup intentionally disabled with the plot.
+        # curve_xmax = max(model_curve_calls, default=1)
+        # curve_ax.set_xlim(1, max(1.0, float(curve_xmax)))
+        # curve_ax.set_ylim(
+        #     *_padded_limits(
+        #         model_curve_values,
+        #         lower_bound=0.0,
+        #         upper_bound=100.0,
+        #         pad_fraction=0.16,
+        #         min_span=20.0,
+        #     )
+        # )
+        # curve_ax.grid(True, alpha=0.25, linewidth=0.6)
+        # curve_ax.set_title(f"{_pretty_model(model)}: Cumulative D_ret", fontsize=11)
+        # curve_ax.set_xlabel("Search call")
+        # curve_ax.set_ylabel("Mean cumulative D_ret (%)")
+        # curve_ax.legend(loc="lower right", fontsize=8, frameon=True)
 
     display_name = "LakeQA" if benchmark == "lakeqa" else "Kramabench"
-    fig.suptitle(f"{display_name} Search Efficiency and Cumulative Retrieval", fontsize=14)
+    fig.suptitle(f"{display_name} Search Calls, Retrieval, and Access", fontsize=14)
     fig.tight_layout(rect=(0, 0, 1, 0.95))
     output_path.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(output_path)

@@ -38,7 +38,6 @@ GROUP_COLORS = {
     "Answer/finalization failures": "#54A24B",
     "Tool/data blockers": "#E45756",
     "Planning/trajectory mismatch": "#8E6C8A",
-    "Benchmark/eval issue": "#9D755D",
     "Other/unclear": "#7F7F7F",
 }
 PREFERRED_GROUP_ORDER = [
@@ -50,7 +49,6 @@ PREFERRED_GROUP_ORDER = [
     "Answer/finalization failures",
     "Tool/data blockers",
     "Planning/trajectory mismatch",
-    "Benchmark/eval issue",
     "Other/unclear",
 ]
 ANSWER_FAILURE_GROUPS = {
@@ -63,12 +61,14 @@ ANSWER_FAILURE_GROUPS = {
     "extraction_or_parsing_error": "Execution/extraction errors",
     "computation_or_aggregation_error": "Computation errors",
     "evidence_available_answer_error": "Answer/finalization failures",
-    "question_or_constraint_misread": "Answer/finalization failures",
+    "question_or_constraint_misread": "Planning/trajectory mismatch",
     "tool_or_data_blocker": "Tool/data blockers",
     "planning_decomposition_mismatch": "Planning/trajectory mismatch",
-    "same_hop_repetition": "Planning/trajectory mismatch",
-    "semantic_or_gold_label_issue": "Benchmark/eval issue",
+    "semantic_or_gold_label_issue": "Other/unclear",
     "other_or_unclear": "Other/unclear",
+}
+OMITTED_ANSWER_FAILURE_TYPES = {
+    "same_hop_repetition",
 }
 CONDITION_FIGURE_ORDER = [
     ("No Plan", "search_i_results_i_plann_computei_k5_skills_off"),
@@ -169,6 +169,8 @@ def read_combined_rows(sources: Iterable[SourceFile], source_root: Path, *, trus
                     source_columns.append(column)
                     seen_columns.add(column)
             answer_failure_type = clean_label(event.get("answer_failure_type"))
+            if answer_failure_type in OMITTED_ANSWER_FAILURE_TYPES:
+                continue
             combined = {
                 "model_variant": clean_label(event.get("model_variant"), source.model_variant),
                 "mode_variant": clean_label(event.get("mode_variant"), source.mode_variant),

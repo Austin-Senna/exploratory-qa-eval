@@ -18,8 +18,8 @@ from analysis.run_mode_delta_figures import (
 
 class TestRunModeDeltaFigures(unittest.TestCase):
     def test_paired_condition_axis_labels_are_compact_for_plotting(self):
-        self.assertEqual(_paired_condition_axis_label("nns"), "BM25 / No Plan / Std")
-        self.assertEqual(_paired_condition_axis_label("sss"), "Pneuma / Plan / Std")
+        self.assertEqual(_paired_condition_axis_label("nns"), "BM25 / No Plan / Std DA")
+        self.assertEqual(_paired_condition_axis_label("sss"), "Pneuma / Plan / Std DA")
         self.assertEqual(_paired_condition_axis_label("iii"), "Ideal / Ideal / Ideal")
 
     def test_comparison_models_orders_nano_before_mini_for_openai_model_names(self):
@@ -93,9 +93,9 @@ class TestRunModeDeltaFigures(unittest.TestCase):
         self.assertEqual(by_key[("Search Ablation", "PNEUMA Hybrid Search")]["delta"], 0.30)
         self.assertEqual(by_key[("Search Ablation", "Preloaded Sources")]["delta"], 0.50)
         self.assertEqual(by_key[("Search Ablation", "PNEUMA Hybrid Search")]["semantic_match"], 0.50)
-        self.assertEqual(by_key[("Execution Ablation", "Standard Execution")]["delta"], 0.0)
-        self.assertEqual(by_key[("Execution Ablation", "Ideal Execution")]["delta"], 0.20)
-        self.assertEqual(by_key[("Execution Ablation", "Standard Execution")]["semantic_match"], 0.60)
+        self.assertEqual(by_key[("Data Analysis Ablation", "Standard Data Analysis")]["delta"], 0.0)
+        self.assertEqual(by_key[("Data Analysis Ablation", "Ideal Data Analysis")]["delta"], 0.20)
+        self.assertEqual(by_key[("Data Analysis Ablation", "Standard Data Analysis")]["semantic_match"], 0.60)
         self.assertEqual(by_key[("Plan Ablation", "Ideal Plan")]["semantic_match"], 0.80)
 
     def test_build_paired_mode_metric_rows_uses_canonical_condition_columns(self):
@@ -147,12 +147,12 @@ class TestRunModeDeltaFigures(unittest.TestCase):
         self.assertEqual(
             [row["condition_code"] for row in model_a_rows],
             [
-                "BM25 Search, No Plan, Standard Compute",
-                "Pneuma Search, Plan, Standard Compute",
-                "Ideal Search, Ideal Plan, Ideal Compute",
+                "BM25 Search, No Plan, Standard Data Analysis",
+                "Pneuma Search, Plan, Standard Data Analysis",
+                "Ideal Search, Ideal Plan, Ideal Data Analysis",
             ],
         )
-        self.assertEqual(paired_rows[0]["condition_label"], "BM25 Search, No Plan, Standard Compute")
+        self.assertEqual(paired_rows[0]["condition_label"], "BM25 Search, No Plan, Standard Data Analysis")
         self.assertEqual(paired_rows[0]["model"], "model_a")
         self.assertEqual(paired_rows[0]["semantic_match"], 0.11)
         self.assertEqual(paired_rows[0]["em"], 0.1)

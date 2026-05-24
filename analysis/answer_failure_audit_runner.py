@@ -783,9 +783,16 @@ def _call_codex(
         "workspace-write",
         "--output-last-message",
         str(last_message_path),
-        prompt,
+        "-",
     ]
-    proc = subprocess.run(cmd, text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=timeout)
+    proc = subprocess.run(
+        cmd,
+        input=prompt,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        timeout=timeout,
+    )
     stdout_path.write_text(proc.stdout)
     if proc.returncode != 0:
         raise RuntimeError(f"codex exec failed with exit code {proc.returncode}; see {stdout_path}")
@@ -894,15 +901,26 @@ def run_row_audit(
     task_id = str(source_row.get("task_id", ""))
     out_path = _audit_json_path(tmp_root, layout, task_id)
     if out_path.exists() and not force:
+        print(f"row audit cache hit: task={task_id}", flush=True)
         return task_id, json.loads(out_path.read_text())
 
     log_path = row_log_path(layout.logs_root, layout.model_variant, layout.mode_variant, task_id)
     if not log_path.exists():
+        print(f"row audit missing log: task={task_id} log={log_path}", flush=True)
         audit = _missing_log_audit(task_id)
         out_path.parent.mkdir(parents=True, exist_ok=True)
         out_path.write_text(json.dumps(audit, indent=2) + "\n")
         return task_id, audit
 
+    print(
+        f"row audit start: task={task_id} model={layout.model_variant} "
+        f"mode={layout.mode_variant} backend={backend}",
+        flush=True,
+    )
+    if backend == "codex":
+        print(f"  spawning codex row-audit subagent for task={task_id}", flush=True)
+    else:
+        print(f"  calling {backend} row-audit judge for task={task_id}", flush=True)
     prompt = _build_row_prompt(
         layout=layout,
         source_row=source_row,
@@ -1046,6 +1064,19 @@ def run_batch_auditor(
         backend=backend,
     )
     batch_dir = _temp_dir_for_layout(tmp_root, layout)
+    print(
+        f"batch auditor start: model={layout.model_variant} mode={layout.mode_variant} "
+        f"backend={backend} rows={len(audits_by_task)}",
+        flush=True,
+    )
+    if backend == "codex":
+        print(
+            f"  spawning codex batch-auditor subagent for model={layout.model_variant} "
+            f"mode={layout.mode_variant}",
+            flush=True,
+        )
+    else:
+        print(f"  calling {backend} batch auditor for model={layout.model_variant}", flush=True)
     text = _call_model(
         prompt,
         backend=backend,
