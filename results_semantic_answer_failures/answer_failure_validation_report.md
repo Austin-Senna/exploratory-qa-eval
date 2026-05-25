@@ -1,14 +1,14 @@
 # Answer Failure Validation Report
 
-- Source root: `results_semantic_answer_failures`
-- Logs root: `logs/modes`
+- Source root: `/Users/austinsenna/Documents/projects/daplab/exploratory-qa-eval/results_semantic_answer_failures`
+- Logs root: `/Users/austinsenna/Documents/projects/daplab/exploratory-qa-eval/logs/modes`
 - Non-correct rows checked: 943
-- Invalid or missing-log rows: 225
+- Invalid or missing-log rows: 245
 
 ## Status Counts
 
-- `invalid`: 225
-- `valid`: 718
+- `invalid`: 245
+- `valid`: 698
 
 ## Invalid Rows
 

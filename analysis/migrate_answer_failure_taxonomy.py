@@ -14,11 +14,7 @@ if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from analysis.answer_failure_taxonomy import ANSWER_FAILURE_TYPES
-from analysis.answer_failure_validation import (
-    MODEL_VALIDATION_NOTES_FIELD,
-    MODEL_VALIDATION_STATUS_FIELD,
-    validate_answer_failure_root,
-)
+from analysis.answer_failure_validation import validate_answer_failure_root
 from analysis.build_answer_failure_report import build_answer_failure_report
 from analysis.combine_answer_failure_grouped_models import combine_answer_failures
 
@@ -414,8 +410,6 @@ def _rewrite_eval_summary(events_path: Path) -> bool:
         "answer_failure_subtypes",
         "answer_failure_event_count",
         "answer_failure_evidence",
-        MODEL_VALIDATION_STATUS_FIELD,
-        MODEL_VALIDATION_NOTES_FIELD,
     ]
     for field in needed_fields:
         if field not in fieldnames:
@@ -431,10 +425,6 @@ def _rewrite_eval_summary(events_path: Path) -> bool:
             if row.get(field, "") != value:
                 row[field] = value
                 changed = True
-        if row.get(MODEL_VALIDATION_STATUS_FIELD) or row.get(MODEL_VALIDATION_NOTES_FIELD):
-            row[MODEL_VALIDATION_STATUS_FIELD] = ""
-            row[MODEL_VALIDATION_NOTES_FIELD] = ""
-            changed = True
 
     if changed:
         _write_csv(eval_path, fieldnames, eval_rows)
