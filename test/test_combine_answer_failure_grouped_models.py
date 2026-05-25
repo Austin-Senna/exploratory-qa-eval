@@ -60,8 +60,8 @@ class TestCombineAnswerFailureGroupedModels(unittest.TestCase):
 
     def test_figure_group_for_type_maps_expected_buckets(self):
         self.assertEqual(
-            figure_group_for_type("wrong_source_or_scope"),
-            "Source/scope errors",
+            figure_group_for_type("wrong_source_or_dataset"),
+            "Source/dataset errors",
         )
         self.assertEqual(
             figure_group_for_type("query_execution_error_loop"),
@@ -72,8 +72,12 @@ class TestCombineAnswerFailureGroupedModels(unittest.TestCase):
             "Turn-waste loops",
         )
         self.assertEqual(
+            figure_group_for_type("wrong_scope_or_filter"),
+            "Scope/filter errors",
+        )
+        self.assertEqual(
             figure_group_for_type("computation_or_aggregation_error"),
-            "Computation errors",
+            "Computation/aggregation errors",
         )
         self.assertEqual(figure_group_for_type("new_label"), "new_label")
 
@@ -108,7 +112,7 @@ class TestCombineAnswerFailureGroupedModels(unittest.TestCase):
                         "model_variant": "openai_gpt-5-mini",
                         "mode_variant": "search_i_results_i_plani_computei_k5_skills_off",
                         "event_index": "1",
-                        "answer_failure_type": "wrong_source_or_scope",
+                        "answer_failure_type": "wrong_source_or_dataset",
                         "answer_failure_subtype": "wrong_dataset",
                         "failure_stage": "retrieval",
                         "failure_summary": "wrong source",
@@ -162,13 +166,13 @@ class TestCombineAnswerFailureGroupedModels(unittest.TestCase):
             with outputs["csv_path"].open(newline="") as handle:
                 rows = list(csv.DictReader(handle))
             self.assertEqual(len(rows), 2)
-            self.assertEqual(rows[0]["answer_failure_figure_group"], "Source/scope errors")
+            self.assertEqual(rows[0]["answer_failure_figure_group"], "Source/dataset errors")
             active_conditions, ordered_groups, counts = condition_group_counts(rows)
             self.assertIn(("Pneuma Hybrid", "search_d_results_i_plani_computei_k5_skills_off"), active_conditions)
-            self.assertIn("Computation errors", ordered_groups)
+            self.assertIn("Computation/aggregation errors", ordered_groups)
             self.assertEqual(
                 counts[("search_d_results_i_plani_computei_k5_skills_off", "openai_gpt-5.4-nano")][
-                    "Computation errors"
+                    "Computation/aggregation errors"
                 ],
                 1,
             )
@@ -187,7 +191,7 @@ class TestCombineAnswerFailureGroupedModels(unittest.TestCase):
                         "model_variant": "openai_gpt-5-mini",
                         "mode_variant": "search_i_results_i_plani_computei_k5_skills_off",
                         "event_index": "1",
-                        "answer_failure_type": "wrong_source_or_scope",
+                        "answer_failure_type": "wrong_source_or_dataset",
                         "answer_failure_subtype": "wrong_dataset",
                         "failure_stage": "retrieval",
                         "failure_summary": "wrong source",

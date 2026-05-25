@@ -117,7 +117,7 @@ class TestAnswerFailureAuditor(unittest.TestCase):
                         "model_variant": model,
                         "mode_variant": mode,
                         "event_index": "1",
-                        "answer_failure_type": "wrong_source_or_scope",
+                        "answer_failure_type": "wrong_source_or_dataset",
                         "answer_failure_subtype": "wrong_dataset",
                         "failure_stage": "source_selection",
                         "failure_summary": "The run queried a wrong dataset.",
@@ -155,7 +155,7 @@ class TestAnswerFailureAuditor(unittest.TestCase):
                 rows = list(csv.DictReader(handle))
 
             self.assertEqual(rows[0]["answer_failure_event_count"], "2")
-            self.assertEqual(rows[0]["answer_failure_types"], "wrong_source_or_scope; computation_or_aggregation_error")
+            self.assertEqual(rows[0]["answer_failure_types"], "wrong_source_or_dataset; computation_or_aggregation_error")
             self.assertEqual(rows[0][VALIDATION_STATUS_FIELD], "invalid")
             self.assertIn("answer_failure_event_count=1", rows[0][VALIDATION_NOTES_FIELD])
             self.assertTrue(
@@ -234,7 +234,7 @@ class TestAnswerFailureAuditor(unittest.TestCase):
                         "model_variant": model,
                         "mode_variant": mode,
                         "event_index": "1",
-                        "answer_failure_type": "wrong_source_or_scope",
+                        "answer_failure_type": "wrong_scope_or_filter",
                         "answer_failure_subtype": "wrong_year",
                         "failure_stage": "source_selection",
                         "failure_summary": "Used the wrong year.",
@@ -263,9 +263,9 @@ class TestAnswerFailureAuditor(unittest.TestCase):
             )
             report_text = (file_dir / "answer_failure_report.md").read_text()
 
-            self.assertIn("wrong_source_or_scope", report_text)
+            self.assertIn("wrong_scope_or_filter", report_text)
             self.assertIn("evidence_available_answer_error", report_text)
-            self.assertIn("evidence_available_answer_error; wrong_source_or_scope", report_text)
+            self.assertIn("evidence_available_answer_error; wrong_scope_or_filter", report_text)
             self.assertEqual(outputs["event_count"], 2)
 
     def test_report_links_kramabench_plan_paths(self):
@@ -322,7 +322,7 @@ class TestAnswerFailureAuditor(unittest.TestCase):
                         "model_variant": model,
                         "mode_variant": mode,
                         "event_index": "1",
-                        "answer_failure_type": "wrong_source_or_scope",
+                        "answer_failure_type": "wrong_source_or_dataset",
                         "answer_failure_subtype": "wrong_table",
                         "failure_stage": "source_selection",
                         "failure_summary": "Used the wrong table.",
@@ -361,7 +361,7 @@ class TestAnswerFailureAuditor(unittest.TestCase):
                     'Turn 4 | Executing: submit_answer({"answer": "unable to determine"})',
                 ),
                 (
-                    "incomplete_evidence_not_enough_turns",
+                    "incomplete_evidence_budget_exhausted",
                     "Turn 9 | Tool result: Tool call cancelled. Tool limit reached (30/30 calls used).",
                 ),
             ]:

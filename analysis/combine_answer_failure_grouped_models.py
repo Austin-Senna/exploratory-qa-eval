@@ -14,6 +14,10 @@ from typing import Iterable
 if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+from analysis.answer_failure_taxonomy import (
+    ANSWER_FAILURE_FIGURE_GROUPS as ANSWER_FAILURE_GROUPS,
+    OMITTED_ANSWER_FAILURE_TYPES,
+)
 from analysis.build_answer_failure_report import _load_rows_for_events_file, _trusted_events
 
 
@@ -30,46 +34,33 @@ MODEL_COLORS = {
     "gpt-5.4-nano": "#F58518",
 }
 GROUP_COLORS = {
-    "Source/scope errors": "#4C78A8",
+    "Source/dataset errors": "#4C78A8",
+    "Scope/filter errors": "#B279A2",
+    "Computation/aggregation errors": "#9D755D",
     "Incomplete evidence": "#72B7B2",
     "Turn-waste loops": "#F58518",
-    "Execution/extraction errors": "#ECA82C",
-    "Computation errors": "#B279A2",
+    "Extraction/parsing errors": "#ECA82C",
     "Answer/finalization failures": "#54A24B",
     "Tool/data blockers": "#E45756",
-    "Planning/trajectory mismatch": "#8E6C8A",
+    "Task interpretation / planning": "#8E6C8A",
+    "Evaluation/gold issues": "#7F7F7F",
+    "Ungroundable": "#BAB0AC",
     "Other/unclear": "#7F7F7F",
 }
 PREFERRED_GROUP_ORDER = [
-    "Source/scope errors",
+    "Task interpretation / planning",
+    "Source/dataset errors",
+    "Scope/filter errors",
+    "Computation/aggregation errors",
     "Incomplete evidence",
     "Turn-waste loops",
-    "Execution/extraction errors",
-    "Computation errors",
+    "Extraction/parsing errors",
     "Answer/finalization failures",
     "Tool/data blockers",
-    "Planning/trajectory mismatch",
+    "Evaluation/gold issues",
+    "Ungroundable",
     "Other/unclear",
 ]
-ANSWER_FAILURE_GROUPS = {
-    "wrong_source_or_scope": "Source/scope errors",
-    "incomplete_evidence_not_enough_turns": "Incomplete evidence",
-    "incomplete_evidence_early_answer": "Incomplete evidence",
-    "query_execution_error_loop": "Turn-waste loops",
-    "low_yield_search_loop": "Turn-waste loops",
-    "schema_or_shape_inspection_loop": "Turn-waste loops",
-    "extraction_or_parsing_error": "Execution/extraction errors",
-    "computation_or_aggregation_error": "Computation errors",
-    "evidence_available_answer_error": "Answer/finalization failures",
-    "question_or_constraint_misread": "Planning/trajectory mismatch",
-    "tool_or_data_blocker": "Tool/data blockers",
-    "planning_decomposition_mismatch": "Planning/trajectory mismatch",
-    "semantic_or_gold_label_issue": "Other/unclear",
-    "other_or_unclear": "Other/unclear",
-}
-OMITTED_ANSWER_FAILURE_TYPES = {
-    "same_hop_repetition",
-}
 CONDITION_FIGURE_ORDER = [
     ("No Plan", "search_i_results_i_plann_computei_k5_skills_off"),
     ("Standard Plan", "search_i_results_i_pland_computei_k5_skills_off"),

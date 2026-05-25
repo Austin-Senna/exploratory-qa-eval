@@ -8,37 +8,8 @@ from collections import Counter, defaultdict
 from pathlib import Path
 from typing import Optional
 
+from analysis.answer_failure_taxonomy import ANSWER_FAILURE_TYPES, FAILURE_STAGES
 
-ANSWER_FAILURE_TYPES = {
-    "question_or_constraint_misread",
-    "planning_decomposition_mismatch",
-    "wrong_source_or_scope",
-    "low_yield_search_loop",
-    "schema_or_shape_inspection_loop",
-    "query_execution_error_loop",
-    "same_hop_repetition",
-    "incomplete_evidence_early_answer",
-    "incomplete_evidence_not_enough_turns",
-    "tool_or_data_blocker",
-    "extraction_or_parsing_error",
-    "computation_or_aggregation_error",
-    "evidence_available_answer_error",
-    "semantic_or_gold_label_issue",
-    "other_or_unclear",
-    "ungroundable",
-}
-
-FAILURE_STAGES = {
-    "task_understanding",
-    "source_selection",
-    "data_access",
-    "evidence_gathering",
-    "computation",
-    "extraction",
-    "finalization",
-    "submission",
-    "validation",
-}
 
 CONFIDENCE_VALUES = {"high", "medium", "low"}
 
@@ -263,6 +234,9 @@ def validate_answer_failure_row(row: dict, events: list[dict], log_path: Path | 
             issues.append(f"event {index}: invalid confidence `{confidence}`")
 
         evidence = str(event.get("failure_evidence", ""))
+        normalized_evidence = _normalize_text(evidence)
+        if normalized_evidence and not re.match(r"^Turn\s+\d+\s+\|", normalized_evidence):
+            issues.append(f"event {index}: failure_evidence must start with `Turn N |` for rows with existing raw logs")
         turn_refs = parse_turn_refs(evidence)
         if turn_refs and max(turn_refs) > log_max_turn:
             issues.append(f"event {index}: failure_evidence references turns beyond log max turn {log_max_turn}")
