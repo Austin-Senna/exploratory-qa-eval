@@ -15,8 +15,8 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT))
 
-from sana_analysis.export_paper_results import export_paper_results
-from sana_analysis.paper_figure_generator import _benchmark_defaults
+from sana_analysis.report_generator.export_paper_results import export_paper_results
+from sana_analysis.report_generator.paper_figure_generator import _benchmark_defaults
 from sana_analysis.run_mode_analysis_semantic import run_analysis
 
 

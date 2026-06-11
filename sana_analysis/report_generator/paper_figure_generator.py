@@ -16,7 +16,7 @@ from typing import Iterable, Optional
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from sana_analysis.run_mode_analysis_semantic import run_analysis
-from sana_analysis.combine_answer_failure_grouped_models import (
+from sana_analysis.report_generator.combine_answer_failure_grouped_models import (
     COMBINED_CSV_NAME,
     COMBINED_CONDITION_FIGURE_NAME,
     COMBINED_FIGURE_NAME,

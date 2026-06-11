@@ -58,7 +58,7 @@ from typing import Dict, Iterable, List, Optional, Tuple
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from sana_analysis.discovery_metrics import (
+from sana_analysis.running_analysis.discovery_metrics import (
     compute_discovery_metrics,
     compute_tools_discovery,
     load_task_gold_ids_for_traces,
@@ -70,19 +70,19 @@ from sana_analysis.discovery_metrics import (
     make_task_stem_key,
     _normalize_source_id,
 )
-from sana_analysis.reasoning_density import _BINS as _REASONING_DENSITY_BINS
-from sana_analysis.reasoning_density import _assign_bin as _assign_reasoning_density_bin
-from sana_analysis.reasoning_density import load_task_gold_counts
-from sana_analysis.search_bottleneck import (
+from sana_analysis.running_analysis.reasoning_density import _BINS as _REASONING_DENSITY_BINS
+from sana_analysis.running_analysis.reasoning_density import _assign_bin as _assign_reasoning_density_bin
+from sana_analysis.running_analysis.reasoning_density import load_task_gold_counts
+from sana_analysis.running_analysis.search_bottleneck import (
     SEARCH_BOTTLENECK_CUTOFFS,
     compute_search_bottleneck,
     generate_search_bottleneck_figures,
     write_search_bottleneck_csv,
 )
-from sana_analysis.search_depth import _BINS as _SEARCH_DEPTH_BINS
-from sana_analysis.search_depth import _assign_bin as _assign_search_depth_bin
-from sana_analysis.tool_error_analysis import _DATA_TOOLS
-from sana_analysis.run_mode_delta_figures import generate_delta_figures
+from sana_analysis.running_analysis.search_depth import _BINS as _SEARCH_DEPTH_BINS
+from sana_analysis.running_analysis.search_depth import _assign_bin as _assign_search_depth_bin
+from sana_analysis.running_analysis.tool_error_analysis import _DATA_TOOLS
+from sana_analysis.report_generator.run_mode_delta_figures import generate_delta_figures
 
 
 SEMANTIC_BUCKETS = [

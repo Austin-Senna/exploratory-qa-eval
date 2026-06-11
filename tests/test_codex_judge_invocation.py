@@ -6,7 +6,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from sana_analysis import answer_failure_audit_runner
-from sana_analysis import trajectory_pair_analysis
+from sana_analysis.running_analysis import trajectory_pair_analysis
 
 
 def _assert_codex_prompt_is_sent_on_stdin(cmd, *, input=None, **kwargs):

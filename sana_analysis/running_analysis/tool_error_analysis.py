@@ -8,7 +8,7 @@ success_count per tool per task) and computes error rates per condition × model
 Output: analysis_results/tool_errors.json
 
 Usage:
-    python -m sana_analysis.tool_error_analysis [--results-dir results] [--tasks-dir tasks_mini]
+    python -m sana_analysis.running_analysis.tool_error_analysis [--results-dir results] [--tasks-dir tasks_mini]
 """
 import argparse
 import json
@@ -178,7 +178,7 @@ def main() -> None:
     error_rates = compute_tool_error_rates(records)
 
     try:
-        from sana_analysis.reasoning_density import load_task_gold_counts
+        from sana_analysis.running_analysis.reasoning_density import load_task_gold_counts
         task_gold_counts = load_task_gold_counts(args.tasks_dir)
         by_difficulty = compute_tool_error_rates_by_task_difficulty(records, task_gold_counts)
     except Exception:

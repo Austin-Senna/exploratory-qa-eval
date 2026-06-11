@@ -38,9 +38,9 @@ from sana_analysis.answer_failure_audit_runner import (
     run_model_validators,
     write_mirrored_outputs,
 )
-from sana_analysis.answer_failure_taxonomy import ANSWER_FAILURE_FIGURE_GROUPS
-from sana_analysis.answer_failure_validation import validate_answer_failure_row
-from sana_analysis.combine_answer_failure_grouped_models import ANSWER_FAILURE_GROUPS
+from sana_analysis.running_analysis.answer_failure_taxonomy import ANSWER_FAILURE_FIGURE_GROUPS
+from sana_analysis.running_analysis.answer_failure_validation import validate_answer_failure_row
+from sana_analysis.report_generator.combine_answer_failure_grouped_models import ANSWER_FAILURE_GROUPS
 
 
 def _write_csv(path: Path, fieldnames: list[str], rows: list[dict]) -> None:

@@ -55,7 +55,7 @@ def test_format_artifact_report_includes_run_and_analysis_commands(tmp_path):
         "benchmarks/kramabench/tasks-mini/artifacts/descriptions.jsonl",
         "benchmarks/kramabench/tasks-mini/artifacts/snippets.jsonl",
         "benchmarks/kramabench/tasks-mini/artifacts/table_schemas_full.jsonl",
-        "prompts",
+        "sana_evaluation/prompts",
         "results-kramabench",
         "results-kramabench_semantic",
     ):

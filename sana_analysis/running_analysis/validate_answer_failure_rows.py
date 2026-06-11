@@ -9,7 +9,7 @@ from pathlib import Path
 if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from sana_analysis.answer_failure_validation import validate_answer_failure_root
+from sana_analysis.running_analysis.answer_failure_validation import validate_answer_failure_root
 
 
 def main() -> None:
