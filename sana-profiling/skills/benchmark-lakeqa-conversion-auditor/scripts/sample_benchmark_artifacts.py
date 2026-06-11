@@ -82,6 +82,19 @@ def _signature(value: Any) -> str:
     return f"root:{type(value).__name__}"
 
 
+def _metadata_key(value: Any) -> str:
+    if not isinstance(value, dict):
+        return ""
+    provenance = value.get("_provenance")
+    if not isinstance(provenance, dict):
+        return ""
+    parts = []
+    for key in ("benchmark", "split", "type", "level", "domain", "difficulty"):
+        if key in provenance:
+            parts.append(f"{key}:{provenance[key]}")
+    return "|".join(parts)
+
+
 def sample(root: Path, limit: int) -> dict[str, Any]:
     candidates: list[dict[str, Any]] = []
     for path in sorted(root.rglob("*")):
@@ -94,19 +107,37 @@ def sample(root: Path, limit: int) -> dict[str, Any]:
             {
                 "path": str(path),
                 "relative_path": str(path.relative_to(root)),
+                "bucket": str(path.parent.relative_to(root)),
+                "metadata_key": _metadata_key(payload),
                 "signature": _signature(payload),
             }
         )
 
     selected: list[dict[str, Any]] = []
-    seen: set[str] = set()
+    seen_signatures: set[str] = set()
+    seen_diversity: set[str] = set()
     for candidate in candidates:
-        if candidate["signature"] in seen:
+        if candidate["signature"] in seen_signatures:
             continue
         selected.append(candidate)
-        seen.add(candidate["signature"])
+        seen_signatures.add(candidate["signature"])
+        seen_diversity.add(
+            f"{candidate['signature']}|{candidate['bucket']}|{candidate['metadata_key']}"
+        )
         if len(selected) >= limit:
             break
+
+    if len(selected) < limit:
+        for candidate in candidates:
+            diversity_key = (
+                f"{candidate['signature']}|{candidate['bucket']}|{candidate['metadata_key']}"
+            )
+            if candidate in selected or diversity_key in seen_diversity:
+                continue
+            selected.append(candidate)
+            seen_diversity.add(diversity_key)
+            if len(selected) >= limit:
+                break
 
     if len(selected) < limit:
         for candidate in candidates:
@@ -119,7 +150,10 @@ def sample(root: Path, limit: int) -> dict[str, Any]:
     return {
         "benchmark_root": str(root),
         "candidate_count": len(candidates),
-        "sampling_rule": "structural diversity first, deterministic path order fallback",
+        "sampling_rule": (
+            "structural diversity first, bucket/provenance diversity second, "
+            "deterministic path order fallback"
+        ),
         "samples": selected,
     }
 

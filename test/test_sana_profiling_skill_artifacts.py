@@ -119,6 +119,42 @@ def test_sample_benchmark_artifacts_includes_common_tabular_and_jsonl_formats(tm
     assert payload["candidate_count"] == 4
 
 
+def test_sample_benchmark_artifacts_prefers_bucket_and_provenance_diversity(tmp_path):
+    root = tmp_path / "benchmark"
+    first_bucket = root / "k-2-d-1"
+    second_bucket = root / "k-2-d-2"
+    first_bucket.mkdir(parents=True)
+    second_bucket.mkdir(parents=True)
+    base = {
+        "question": "q",
+        "answer": "a",
+        "nodes": {"n1": {"answer": "a"}},
+        "reasoning_hops": [{"node_ids": ["n1"]}],
+    }
+    first = dict(base, _provenance={"benchmark": "hotpotqa", "type": "comparison"})
+    second = dict(base, _provenance={"benchmark": "hotpotqa", "type": "bridge"})
+    (first_bucket / "task_1.json").write_text(json.dumps(first), encoding="utf-8")
+    (second_bucket / "task_1.json").write_text(json.dumps(second), encoding="utf-8")
+
+    script = AUDITOR / "scripts" / "sample_benchmark_artifacts.py"
+    result = subprocess.run(
+        [sys.executable, str(script), str(root), "--limit", "2"],
+        check=True,
+        text=True,
+        capture_output=True,
+    )
+    payload = json.loads(result.stdout)
+
+    assert {sample["bucket"] for sample in payload["samples"]} == {
+        "k-2-d-1",
+        "k-2-d-2",
+    }
+    assert {sample["metadata_key"] for sample in payload["samples"]} == {
+        "benchmark:hotpotqa|type:comparison",
+        "benchmark:hotpotqa|type:bridge",
+    }
+
+
 def test_sample_benchmark_artifacts_rejects_non_positive_limit(tmp_path):
     root = tmp_path / "benchmark"
     root.mkdir()
