@@ -1,3 +1,6 @@
+import json
+import subprocess
+import sys
 from pathlib import Path
 
 
@@ -42,3 +45,32 @@ def test_conversion_auditor_skill_contract():
         "Recommended benchmark-specific transform skill structure",
     ]:
         assert f"## {heading}" in template_text
+
+
+def test_sample_benchmark_artifacts_prefers_structural_diversity(tmp_path):
+    root = tmp_path / "benchmark"
+    root.mkdir()
+    (root / "one.json").write_text(
+        json.dumps({"question": "q1", "answer": "a1", "evidence": ["doc1"]}),
+        encoding="utf-8",
+    )
+    (root / "two.json").write_text(
+        json.dumps({"question": "q2", "answer": "a2", "evidence": ["doc1", "doc2"]}),
+        encoding="utf-8",
+    )
+    (root / "notes.txt").write_text("not json", encoding="utf-8")
+
+    script = AUDITOR / "scripts" / "sample_benchmark_artifacts.py"
+    result = subprocess.run(
+        [sys.executable, str(script), str(root), "--limit", "2"],
+        check=True,
+        text=True,
+        capture_output=True,
+    )
+    payload = json.loads(result.stdout)
+
+    assert payload["benchmark_root"] == str(root)
+    assert len(payload["samples"]) == 2
+    signatures = {sample["signature"] for sample in payload["samples"]}
+    assert any("evidence:list:1" in signature for signature in signatures)
+    assert any("evidence:list:2" in signature for signature in signatures)
