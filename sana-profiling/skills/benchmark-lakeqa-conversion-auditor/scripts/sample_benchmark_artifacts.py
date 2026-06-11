@@ -33,7 +33,7 @@ def _load_jsonl_summary(path: Path) -> dict[str, Any] | None:
         ]
     except Exception:
         return None
-    return {"format": "jsonl", "rows": rows[:5], "row_count": len(rows)}
+    return {"format": path.suffix.lower().lstrip("."), "rows": rows[:5], "row_count": len(rows)}
 
 
 def _load_csv_summary(path: Path) -> dict[str, Any] | None:
@@ -56,10 +56,12 @@ def _load_artifact(path: Path) -> Any | None:
     suffix = path.suffix.lower()
     if suffix == ".json":
         return _load_json(path)
-    if suffix == ".jsonl":
+    if suffix in {".jsonl", ".ndjson"}:
         return _load_jsonl_summary(path)
     if suffix in {".csv", ".tsv"}:
         return _load_csv_summary(path)
+    if suffix in {".parquet", ".pq"}:
+        return {"format": suffix.lstrip("."), "size_bytes": path.stat().st_size}
     return None
 
 

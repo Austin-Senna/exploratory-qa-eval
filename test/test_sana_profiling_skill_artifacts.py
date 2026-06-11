@@ -94,10 +94,15 @@ def test_sample_benchmark_artifacts_includes_common_tabular_and_jsonl_formats(tm
         "question,answer,split\nq3,a3,dev\nq4,a4,test\n",
         encoding="utf-8",
     )
+    (root / "events.ndjson").write_text(
+        json.dumps({"question": "q5", "answer": "a5"}) + "\n",
+        encoding="utf-8",
+    )
+    (root / "table.parquet").write_bytes(b"PAR1")
 
     script = AUDITOR / "scripts" / "sample_benchmark_artifacts.py"
     result = subprocess.run(
-        [sys.executable, str(script), str(root), "--limit", "4"],
+        [sys.executable, str(script), str(root), "--limit", "6"],
         check=True,
         text=True,
         capture_output=True,
@@ -107,7 +112,9 @@ def test_sample_benchmark_artifacts_includes_common_tabular_and_jsonl_formats(tm
     relative_paths = {sample["relative_path"] for sample in payload["samples"]}
     assert "tasks.jsonl" in relative_paths
     assert "metadata.csv" in relative_paths
-    assert payload["candidate_count"] == 2
+    assert "events.ndjson" in relative_paths
+    assert "table.parquet" in relative_paths
+    assert payload["candidate_count"] == 4
 
 
 def test_sample_benchmark_artifacts_rejects_non_positive_limit(tmp_path):
