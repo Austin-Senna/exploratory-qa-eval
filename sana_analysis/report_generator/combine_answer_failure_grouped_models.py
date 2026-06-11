@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Combine answer-failure audit events into paper-ready fig06 artifacts."""
+"""Combine answer-failure audit events into paper-ready artifacts."""
 
 from __future__ import annotations
 
@@ -23,8 +23,8 @@ from sana_analysis.report_generator.build_answer_failure_report import _load_row
 
 COMBINED_CSV_NAME = "combined_answer_failure_events.csv"
 COMBINED_REPORT_NAME = "combined_answer_failure_report.md"
-COMBINED_FIGURE_NAME = "fig06_answer_failure_groups_by_model.pdf"
-COMBINED_CONDITION_FIGURE_NAME = "fig06b_answer_failure_groups_by_condition.pdf"
+COMBINED_FIGURE_NAME = "answer_failure_groups_by_model.pdf"
+COMBINED_CONDITION_FIGURE_NAME = "answer_failure_groups_by_condition.pdf"
 
 PREFIX_COLUMNS = ["model_variant", "mode_variant", "source_file", "answer_failure_figure_group"]
 MODEL_COLORS = {

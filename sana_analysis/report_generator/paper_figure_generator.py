@@ -58,7 +58,7 @@ class BenchmarkDefaults:
     analysis_dir: Path
     turn_waste_grouped_dir: Path
     answer_failure_combined_dir: Path
-    fig21b_name: str
+    semantic_delta_name: str
 
 
 @dataclass(frozen=True)
@@ -89,7 +89,7 @@ def _benchmark_defaults(benchmark: str) -> BenchmarkDefaults:
             analysis_dir=Path("analysis_results_mode_semantic"),
             turn_waste_grouped_dir=Path("results_semantic_turn_waste_grouped"),
             answer_failure_combined_dir=Path("results_semantic_answer_failures_combined"),
-            fig21b_name="fig21b_lakeqa_semantic_delta_ablation.pdf",
+            semantic_delta_name="lakeqa_semantic_delta_ablation.pdf",
         )
     if benchmark == "kramabench":
         return BenchmarkDefaults(
@@ -101,7 +101,7 @@ def _benchmark_defaults(benchmark: str) -> BenchmarkDefaults:
             analysis_dir=Path("analysis_results_mode_kramabench_semantic"),
             turn_waste_grouped_dir=Path("results-kramabench_semantic_turn_waste_grouped"),
             answer_failure_combined_dir=Path("results-kramabench_semantic_answer_failures_combined"),
-            fig21b_name="fig21b_krama_semantic_delta_ablation.pdf",
+            semantic_delta_name="kramabench_semantic_delta_ablation.pdf",
         )
     raise ValueError(f"Unsupported benchmark: {benchmark}")
 
@@ -109,10 +109,26 @@ def _benchmark_defaults(benchmark: str) -> BenchmarkDefaults:
 def _selected_existing_figures(benchmark: str) -> list[str]:
     defaults = _benchmark_defaults(benchmark)
     return [
-        "fig06_answer_failure_groups_by_model.pdf",
-        "fig06b_answer_failure_groups_by_condition.pdf",
-        defaults.fig21b_name,
+        "answer_failure_groups_by_model.pdf",
+        "answer_failure_groups_by_condition.pdf",
+        defaults.semantic_delta_name,
     ]
+
+
+LEGACY_FIGURE_FALLBACKS = {
+    "answer_failure_groups_by_model.pdf": ["fig06_answer_failure_groups_by_model.pdf"],
+    "answer_failure_groups_by_condition.pdf": ["fig06b_answer_failure_groups_by_condition.pdf"],
+    "lakeqa_semantic_delta_ablation.pdf": [
+        "fig21b_lakeqa_semantic_delta_ablation.pdf",
+        "fig21b_semantic_delta_ablation_compact.pdf",
+        "semantic_delta_ablation_compact.pdf",
+    ],
+    "kramabench_semantic_delta_ablation.pdf": [
+        "fig21b_krama_semantic_delta_ablation.pdf",
+        "fig21b_semantic_delta_ablation_compact.pdf",
+        "semantic_delta_ablation_compact.pdf",
+    ],
+}
 
 
 def _search_variant_label(variant: str) -> Optional[str]:
@@ -471,9 +487,10 @@ def export_paper_figures(
     fallback_dirs = list(fallback_dirs)
     for filename in _selected_existing_figures(benchmark):
         candidates = [figure_dir / filename]
-        if filename.startswith("fig21b_"):
-            candidates.append(figure_dir / "fig21b_semantic_delta_ablation_compact.pdf")
+        candidates.extend(figure_dir / legacy_name for legacy_name in LEGACY_FIGURE_FALLBACKS.get(filename, []))
         candidates.extend(fallback_dir / filename for fallback_dir in fallback_dirs)
+        for fallback_dir in fallback_dirs:
+            candidates.extend(fallback_dir / legacy_name for legacy_name in LEGACY_FIGURE_FALLBACKS.get(filename, []))
         source = next((path for path in candidates if path.exists()), None)
         if source is not None:
             source_specs.append((source, filename))

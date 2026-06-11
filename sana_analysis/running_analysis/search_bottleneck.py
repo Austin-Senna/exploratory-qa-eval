@@ -1064,7 +1064,7 @@ def generate_search_bottleneck_figures(
     _plot_cumulative_gold_recall_condition(
         plt,
         search_bottleneck.get("per_call_rows", []),
-        fig_dir / "fig15_search_cumulative_retrieval_recall_condition.pdf",
+        fig_dir / "search_cumulative_retrieval_recall_by_condition.pdf",
         recall_field="cumulative_search_gold_recall",
         title="Cumulative Gold Retrieval Recall by Search Call and Variant",
         label_formatter=condition_label_formatter,
@@ -1072,7 +1072,7 @@ def generate_search_bottleneck_figures(
     _plot_cumulative_gold_recall_condition(
         plt,
         search_bottleneck.get("per_call_rows", []),
-        fig_dir / "fig16_search_cumulative_access_recall_condition.pdf",
+        fig_dir / "search_cumulative_access_recall_by_condition.pdf",
         recall_field="cumulative_read_gold_recall",
         title="Cumulative Gold Access Recall by Search Call and Variant",
         label_formatter=condition_label_formatter,
@@ -1080,23 +1080,23 @@ def generate_search_bottleneck_figures(
     _plot_topk_miss_by_tool(
         plt,
         search_bottleneck.get("tool_miss_rows", []),
-        fig_dir / "fig17_search_topk_miss_by_tool.pdf",
+        fig_dir / "search_topk_miss_by_tool.pdf",
     )
     _plot_search_tool_coverage_waste(
         plt,
         search_bottleneck.get("tool_efficiency_rows", []),
-        fig_dir / "fig18_search_tool_coverage_waste.pdf",
+        fig_dir / "search_tool_coverage_waste.pdf",
     )
     if include_condition_breakouts:
         _plot_topk_miss_by_condition(
             plt,
             search_bottleneck.get("condition_summary_rows", []),
-            fig_dir / "fig19_search_topk_miss_by_condition.pdf",
+            fig_dir / "search_topk_miss_by_condition.pdf",
             label_formatter=condition_label_formatter,
         )
         _plot_search_condition_coverage_waste(
             plt,
             search_bottleneck.get("condition_summary_rows", []),
-            fig_dir / "fig20_search_condition_coverage_waste.pdf",
+            fig_dir / "search_condition_coverage_waste.pdf",
             label_formatter=condition_label_formatter,
         )

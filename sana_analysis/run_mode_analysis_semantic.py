@@ -3237,7 +3237,7 @@ def _plot_turn_waste_families_by_model(plt, condition_groups: dict, summary_rows
             plt,
             rows,
             model,
-            output_dir / f"fig05_turn_waste_groups_{_safe_slug(_pretty_model(model))}.pdf",
+            output_dir / f"turn_waste_groups_{_safe_slug(_pretty_model(model))}.pdf",
         )
 
 
@@ -3507,7 +3507,7 @@ def generate_figures(
         lambda row: _pretty_variant_tick_label(str(row.get("variant", "")), int(row.get("n_total", 0) or 0)),
         "n_total",
         "Semantic Bucket Distribution by Variant",
-        fig_dir / "fig01_semantic_buckets_variant.pdf",
+        fig_dir / "semantic_buckets_by_variant.pdf",
         label_min_pct=0.0,
     )
     _plot_stacked_buckets(
@@ -3517,7 +3517,7 @@ def generate_figures(
         lambda row: _compact_variant_label(str(row.get("variant", "")), multiline=True),
         "n_total",
         "Log Error Bucket Distribution by Variant",
-        fig_dir / "fig02_log_error_buckets_variant.pdf",
+        fig_dir / "log_error_buckets_by_variant.pdf",
         rate_field_suffix="_rate",
         annotate_counts=False,
     )
@@ -3525,46 +3525,46 @@ def generate_figures(
         plt,
         crosstab_rows,
         variant_rows,
-        fig_dir / "fig03_semantic_x_error_variant.pdf",
+        fig_dir / "semantic_error_crosstab_by_variant.pdf",
     )
     _plot_error_vs_semantic_variant(
         plt,
         variant_rows,
-        fig_dir / "fig04_error_vs_semantic_variant.pdf",
+        fig_dir / "error_vs_semantic_by_variant.pdf",
     )
     _plot_turn_waste_reconciled_groups_by_model(
         plt,
         turn_waste_condition_model_groups,
-        fig_dir / "fig05_turn_waste_groups_by_model.pdf",
+        fig_dir / "turn_waste_groups_by_model.pdf",
     )
     _plot_turn_waste_reconciled_groups_by_condition(
         plt,
         turn_waste_condition_model_groups,
-        fig_dir / "fig05b_turn_waste_groups_by_condition.pdf",
+        fig_dir / "turn_waste_groups_by_condition.pdf",
     )
 
     _plot_discovery_semantic_combined(
         plt,
         summary_rows,
-        fig_dir / "fig2a_recall_semantic_combined.pdf",
+        fig_dir / "retrieval_vs_semantic_combined.pdf",
     )
 
     _plot_cost_vs_semantic(
         plt,
         summary_rows,
-        fig_dir / "fig6_cost_vs_semantic.pdf",
+        fig_dir / "cost_vs_semantic.pdf",
     )
 
     _plot_tool_precision_recall_f1(
         plt,
         tools_discovery,
-        fig_dir / "fig8_search_tool_precision_recall_f1.pdf",
+        fig_dir / "search_tool_precision_recall_f1.pdf",
     )
 
     _plot_search_calls(
         plt,
         summary_rows,
-        fig_dir / "fig9_search_calls.pdf",
+        fig_dir / "search_calls_by_variant.pdf",
     )
 
     _plot_curve_by_variant(
@@ -3573,15 +3573,15 @@ def generate_figures(
         title="Search Depth Curve — Semantic Match vs. Search Call Budget Used",
         y_label="Mean Semantic Match (%)",
         x_label="Search Calls per Task",
-        output_path=fig_dir / "fig10_search_depth_curve.pdf",
+        output_path=fig_dir / "search_depth_curve.pdf",
     )
     _plot_curve_by_model(
         plt,
         search_depth_curve_by_cm,
         x_label="Search Calls per Task",
         title_prefix="Search Depth Curve",
-        output_prefix="fig10b",
-        output_suffix="search_depth",
+        output_prefix="search_depth",
+        output_suffix="curve",
         output_dir=fig_dir,
     )
 
@@ -3591,28 +3591,28 @@ def generate_figures(
         title="Semantic Match vs. Reasoning Density",
         y_label="Mean Semantic Match (%)",
         x_label="Number of Gold Documents per Task",
-        output_path=fig_dir / "fig12_reasoning_density.pdf",
+        output_path=fig_dir / "reasoning_density_curve.pdf",
     )
     _plot_curve_by_model(
         plt,
         reasoning_density_curve_by_cm,
         x_label="Number of Gold Documents per Task",
         title_prefix="Semantic Match vs. Reasoning Density",
-        output_prefix="fig12b",
-        output_suffix="reasoning_density",
+        output_prefix="reasoning_density",
+        output_suffix="curve",
         output_dir=fig_dir,
     )
 
     _plot_tool_error_heatmap(
         plt,
         tool_errors,
-        fig_dir / "fig13_tool_error_rates.pdf",
+        fig_dir / "tool_error_rates.pdf",
     )
 
     _plot_tool_call_heatmap(
         plt,
         base_by_key_records,
-        fig_dir / "fig14_tool_call_counts.pdf",
+        fig_dir / "tool_call_counts.pdf",
     )
 
     generate_search_bottleneck_figures(

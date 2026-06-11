@@ -405,6 +405,11 @@ def _import_plot_libs():
 
 def _cleanup_delta_figure_pdfs(output_dir: Path) -> None:
     for pattern in (
+        "semantic_delta_ablation_*.pdf",
+        "paired_mode_metrics_*.pdf",
+        "semantic_delta_ablation_comparison.pdf",
+        "semantic_delta_ablation_compact.pdf",
+        "paired_mode_metrics_comparison.pdf",
         "fig21_*_semantic_delta_ablation.pdf",
         "fig22_*_paired_modes_metrics.pdf",
         "fig21a_*_comparison.pdf",
@@ -584,7 +589,7 @@ def _plot_semantic_delta_ablation(plt, delta_rows: List[dict], output_dir: Path)
             fontsize=SEMANTIC_DELTA_SUPTITLE_FONTSIZE,
         )
         fig.subplots_adjust(left=0.20, right=0.975, bottom=0.06, top=0.91, hspace=0.42)
-        fig.savefig(output_dir / f"fig21_{_safe_slug(model)}_semantic_delta_ablation.pdf")
+        fig.savefig(output_dir / f"semantic_delta_ablation_{_safe_slug(model)}.pdf")
         plt.close(fig)
 
 
@@ -625,7 +630,7 @@ def _plot_semantic_delta_ablation_comparison(plt, delta_rows: List[dict], output
 
     fig.suptitle("Semantic Match Ablations", fontsize=SEMANTIC_DELTA_SUPTITLE_FONTSIZE)
     fig.subplots_adjust(left=0.14, right=0.98, bottom=0.075, top=0.89, hspace=0.34, wspace=0.15)
-    fig.savefig(output_dir / "fig21a_semantic_delta_ablation_comparison.pdf")
+    fig.savefig(output_dir / "semantic_delta_ablation_comparison.pdf")
     plt.close(fig)
 
 
@@ -681,7 +686,7 @@ def _plot_semantic_delta_ablation_compact(plt, delta_rows: List[dict], output_di
             fontsize=SEMANTIC_DELTA_COMPACT_MODEL_FONTSIZE,
             fontweight="bold",
         )
-    fig.savefig(output_dir / "fig21b_semantic_delta_ablation_compact.pdf", bbox_inches="tight", pad_inches=0.04)
+    fig.savefig(output_dir / "semantic_delta_ablation_compact.pdf", bbox_inches="tight", pad_inches=0.04)
     plt.close(fig)
 
 
@@ -727,7 +732,7 @@ def _plot_paired_mode_metrics(plt, paired_rows: List[dict], output_dir: Path) ->
             _plot_horizontal_delta_bars(ax, labels, values, deltas, metric_label, label_fontsize=9)
         fig.suptitle(f"Reference Mode Metrics (Search / Plan / Data Analysis) - {model}")
         fig.subplots_adjust(left=0.22, right=0.98, bottom=0.055, top=0.9, hspace=0.36)
-        fig.savefig(output_dir / f"fig22_{_safe_slug(model)}_paired_modes_metrics.pdf")
+        fig.savefig(output_dir / f"paired_mode_metrics_{_safe_slug(model)}.pdf")
         plt.close(fig)
 
 
@@ -802,7 +807,7 @@ def _plot_paired_mode_metrics_comparison(plt, paired_rows: List[dict], output_di
             fontsize=11,
             fontweight="bold",
         )
-    fig.savefig(output_dir / "fig22a_paired_mode_metrics_comparison.pdf")
+    fig.savefig(output_dir / "paired_mode_metrics_comparison.pdf")
     plt.close(fig)
 
 

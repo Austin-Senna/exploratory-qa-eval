@@ -69,12 +69,12 @@ BENCHMARK_TABLE_META = {
     "lakeqa": {
         "display": "LakeQA",
         "label": "tab:lakeqa-canonical-modes",
-        "filename": "tab_lakeqa_canonical_modes.tex",
+        "filename": "lakeqa_canonical_modes.tex",
     },
     "kramabench": {
-        "display": "KramaBench",
-        "label": "tab:krama-canonical-modes",
-        "filename": "tab_krama_canonical_modes.tex",
+        "display": "Kramabench",
+        "label": "tab:kramabench-canonical-modes",
+        "filename": "kramabench_canonical_modes.tex",
     },
 }
 
@@ -88,10 +88,19 @@ MODE_DISPLAY = {
 LETTER_TO_MODE = {"n": "naive", "d": "standard", "s": "standard", "i": "ideal", "p": "preloaded"}
 
 SUPPORTING_FIGURES = {
-    "fig6_cost_vs_semantic.pdf": "results_cost_vs_semantic.pdf",
-    "fig03_semantic_x_error_variant.pdf": "results_semantic_x_error_variant.pdf",
-    "fig01_semantic_buckets_variant.pdf": "results_semantic_buckets_variant.pdf",
-    "fig2a_recall_semantic_combined.pdf": "results_recall_semantic_combined.pdf",
+    "results_cost_vs_semantic.pdf": ("cost_vs_semantic.pdf", "fig6_cost_vs_semantic.pdf"),
+    "results_semantic_x_error_variant.pdf": (
+        "semantic_error_crosstab_by_variant.pdf",
+        "fig03_semantic_x_error_variant.pdf",
+    ),
+    "results_semantic_buckets_variant.pdf": (
+        "semantic_buckets_by_variant.pdf",
+        "fig01_semantic_buckets_variant.pdf",
+    ),
+    "results_recall_semantic_combined.pdf": (
+        "retrieval_vs_semantic_combined.pdf",
+        "fig2a_recall_semantic_combined.pdf",
+    ),
 }
 
 
@@ -545,7 +554,7 @@ def render_results_table(rows: list[Mapping[str, str]]) -> str:
 
 def render_main_ablation_table(rows: list[Mapping[str, str]], *, benchmark: str, n_tasks: int | None = None) -> str:
     display = BENCHMARK_TABLE_META[benchmark]["display"]
-    label = "tab:sana-lakeqa" if benchmark == "lakeqa" else "tab:sana-krama"
+    label = "tab:sana-lakeqa" if benchmark == "lakeqa" else "tab:sana-kramabench"
     n_text = f" (${n_tasks}$ tasks)" if n_tasks is not None and benchmark == "lakeqa" else ""
     if benchmark == "kramabench" and n_tasks is not None:
         n_text = f" (${n_tasks}$ tasks per cell)"
@@ -723,9 +732,9 @@ def copy_supporting_figures(analysis_dir: Path, paper_figures_dir: Path) -> list
     copied: list[Path] = []
     source_dir = analysis_dir / "figures"
     paper_figures_dir.mkdir(parents=True, exist_ok=True)
-    for source_name, target_name in SUPPORTING_FIGURES.items():
-        source = source_dir / source_name
-        if source.exists():
+    for target_name, source_names in SUPPORTING_FIGURES.items():
+        source = next((source_dir / source_name for source_name in source_names if (source_dir / source_name).exists()), None)
+        if source is not None:
             target = paper_figures_dir / target_name
             shutil.copyfile(source, target)
             copied.append(target)
@@ -776,7 +785,7 @@ def export_paper_results(
 
     main_ablation_rows = build_main_ablation_table_rows(summary_rows)
     main_ablation_tex = paper_dir / "subsections" / (
-        "tab_lakeqa_main_results.tex" if benchmark == "lakeqa" else "tab_krama_main_results.tex"
+        "lakeqa_main_results.tex" if benchmark == "lakeqa" else "kramabench_main_results.tex"
     )
     main_ablation_tex.write_text(
         render_main_ablation_table(main_ablation_rows, benchmark=benchmark, n_tasks=_canonical_n_tasks(main_ablation_rows)),

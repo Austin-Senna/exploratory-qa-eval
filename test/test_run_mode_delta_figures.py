@@ -261,8 +261,8 @@ class TestRunModeDeltaFigures(unittest.TestCase):
         ]
         with TemporaryDirectory() as tmpdir:
             output_dir = Path(tmpdir)
-            stale_delta = output_dir / "fig21_model_b_semantic_delta_ablation.pdf"
-            stale_paired = output_dir / "fig22_model_b_paired_modes_metrics.pdf"
+            stale_delta = output_dir / "semantic_delta_ablation_model_b.pdf"
+            stale_paired = output_dir / "paired_mode_metrics_model_b.pdf"
             stale_delta.write_text("stale")
             stale_paired.write_text("stale")
 
@@ -302,9 +302,9 @@ class TestRunModeDeltaFigures(unittest.TestCase):
 
             generate_delta_figures(rows, output_dir)
 
-            self.assertTrue((output_dir / "fig21a_semantic_delta_ablation_comparison.pdf").exists())
-            self.assertTrue((output_dir / "fig21b_semantic_delta_ablation_compact.pdf").exists())
-            self.assertTrue((output_dir / "fig22a_paired_mode_metrics_comparison.pdf").exists())
+            self.assertTrue((output_dir / "semantic_delta_ablation_comparison.pdf").exists())
+            self.assertTrue((output_dir / "semantic_delta_ablation_compact.pdf").exists())
+            self.assertTrue((output_dir / "paired_mode_metrics_comparison.pdf").exists())
 
 
 if __name__ == "__main__":

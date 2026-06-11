@@ -184,21 +184,21 @@ class TestPaperFigureGenerator(unittest.TestCase):
             Path("results-kramabench_semantic_answer_failures_combined"),
         )
 
-    def test_selected_existing_figures_include_benchmark_specific_fig21b(self):
+    def test_selected_existing_figures_include_benchmark_specific_semantic_delta(self):
         self.assertIn(
-            "fig21b_lakeqa_semantic_delta_ablation.pdf",
+            "lakeqa_semantic_delta_ablation.pdf",
             _selected_existing_figures("lakeqa"),
         )
         self.assertIn(
-            "fig21b_krama_semantic_delta_ablation.pdf",
+            "kramabench_semantic_delta_ablation.pdf",
             _selected_existing_figures("kramabench"),
         )
         self.assertIn(
-            "fig06_answer_failure_groups_by_model.pdf",
+            "answer_failure_groups_by_model.pdf",
             _selected_existing_figures("lakeqa"),
         )
         self.assertIn(
-            "fig06b_answer_failure_groups_by_condition.pdf",
+            "answer_failure_groups_by_condition.pdf",
             _selected_existing_figures("lakeqa"),
         )
 
@@ -289,9 +289,9 @@ class TestPaperFigureGenerator(unittest.TestCase):
             figures_dir = analysis_dir / "figures"
             figures_dir.mkdir(parents=True)
             for name in [
-                "fig06_answer_failure_groups_by_model.pdf",
-                "fig06b_answer_failure_groups_by_condition.pdf",
-                "fig21b_semantic_delta_ablation_compact.pdf",
+                "answer_failure_groups_by_model.pdf",
+                "answer_failure_groups_by_condition.pdf",
+                "semantic_delta_ablation_compact.pdf",
             ]:
                 (figures_dir / name).write_bytes(b"%PDF-1.4\n")
             new_figure = analysis_dir / "search_efficiency_cumulative_retrieval_lakeqa.pdf"
@@ -305,8 +305,8 @@ class TestPaperFigureGenerator(unittest.TestCase):
             )
 
             self.assertIn(root / "paper" / new_figure.name, copied)
-            self.assertTrue((root / "mirror" / "fig06_answer_failure_groups_by_model.pdf").exists())
-            self.assertTrue((root / "paper" / "fig21b_lakeqa_semantic_delta_ablation.pdf").exists())
+            self.assertTrue((root / "mirror" / "answer_failure_groups_by_model.pdf").exists())
+            self.assertTrue((root / "paper" / "lakeqa_semantic_delta_ablation.pdf").exists())
 
     def test_export_paper_figures_uses_fallback_dir_for_optional_figures(self):
         with TemporaryDirectory() as tmpdir:
@@ -316,9 +316,9 @@ class TestPaperFigureGenerator(unittest.TestCase):
             fallback_dir = root / "existing_paper"
             fallback_dir.mkdir()
             for name in [
-                "fig06_answer_failure_groups_by_model.pdf",
-                "fig06b_answer_failure_groups_by_condition.pdf",
-                "fig21b_lakeqa_semantic_delta_ablation.pdf",
+                "answer_failure_groups_by_model.pdf",
+                "answer_failure_groups_by_condition.pdf",
+                "lakeqa_semantic_delta_ablation.pdf",
             ]:
                 (fallback_dir / name).write_bytes(b"%PDF-1.4\n")
             new_figure = analysis_dir / "search_efficiency_cumulative_retrieval_lakeqa.pdf"
@@ -332,7 +332,7 @@ class TestPaperFigureGenerator(unittest.TestCase):
                 fallback_dirs=[fallback_dir],
             )
 
-            self.assertTrue((root / "mirror" / "fig06b_answer_failure_groups_by_condition.pdf").exists())
+            self.assertTrue((root / "mirror" / "answer_failure_groups_by_condition.pdf").exists())
 
     def test_export_agent_analysis_results_copies_summaries_and_skips_runtime_artifacts(self):
         with TemporaryDirectory() as tmpdir:
