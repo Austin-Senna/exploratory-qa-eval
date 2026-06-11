@@ -8,7 +8,7 @@ from tempfile import TemporaryDirectory
 
 def _load_setup_run_module():
     repo_root = Path(__file__).resolve().parents[1]
-    module_path = repo_root / "strands_evaluation" / "setup_run.py"
+    module_path = repo_root / "sana_evaluation" / "setup_run.py"
     spec = importlib.util.spec_from_file_location("_test_setup_run_module", module_path)
     module = importlib.util.module_from_spec(spec)
     assert spec and spec.loader
@@ -34,14 +34,14 @@ class SetupRunTests(unittest.TestCase):
     def _write_smoke_fixture(self, repo_root: Path) -> None:
         (repo_root / "lance_data").mkdir(parents=True, exist_ok=True)
         for task_dir in ("k-1-d-1", "k-5-d-4"):
-            target = repo_root / "tasks_mini" / task_dir
+            target = repo_root / "benchmarks" / "lakeqa" / "tasks-mini" / "tasks" / task_dir
             target.mkdir(parents=True, exist_ok=True)
             (target / "task_1.json").write_text("{}")
             (target / "task_2.json").write_text("{}")
 
     def _write_kramabench_smoke_fixture(self, repo_root: Path) -> None:
         (repo_root / "lance_data").mkdir(parents=True, exist_ok=True)
-        target = repo_root / "tasks-mini-kramabench" / "k-2-d-1-s-1"
+        target = repo_root / "benchmarks" / "kramabench" / "tasks-mini" / "tasks" / "k-2-d-1-s-1"
         target.mkdir(parents=True, exist_ok=True)
         (target / "task_1.json").write_text("{}")
         (target / "task_2.json").write_text("{}")
@@ -85,14 +85,14 @@ class SetupRunTests(unittest.TestCase):
                 )
 
             self.assertEqual(command, fake_runner.command)
-            self.assertEqual(command[1:3], ["-m", "strands_evaluation.run_mode_eval"])
+            self.assertEqual(command[1:3], ["-m", "sana_evaluation.run_mode_eval"])
             self.assertIn("--search_tool", command)
             self.assertIn("ideal", command)
             self.assertEqual(command[command.index("--model-name") + 1], "openai/gpt-5.2")
             self.assertEqual(command[command.index("--db-path") + 1], "lance_data")
             self.assertEqual(
                 command[command.index("--task-dir") + 1],
-                "tasks-mini-kramabench/k-2-d-1-s-1",
+                "benchmarks/kramabench/tasks-mini/tasks/k-2-d-1-s-1",
             )
             self.assertEqual(command[command.index("--tasks-per-dir") + 1], "2")
             self.assertEqual(command[command.index("--logs-output-dir") + 1], "log-kramabench")
@@ -104,7 +104,7 @@ class SetupRunTests(unittest.TestCase):
             self.assertIn("--verbose", command)
             self.assertEqual(fake_runner.kwargs, {"check": True, "cwd": str(repo_root)})
             self.assertIn(
-                "Task scope: tasks-mini-kramabench/k-2-d-1-s-1 (first 2 tasks)",
+                "Task scope: benchmarks/kramabench/tasks-mini/tasks/k-2-d-1-s-1 (first 2 tasks)",
                 stdout.getvalue(),
             )
 
@@ -138,10 +138,10 @@ class SetupRunTests(unittest.TestCase):
 
             self.assertEqual(
                 command[command.index("--task-dir") + 1],
-                "tasks-mini-kramabench/k-2-d-1-s-1",
+                "benchmarks/kramabench/tasks-mini/tasks/k-2-d-1-s-1",
             )
             self.assertIn(
-                "Task scope: tasks-mini-kramabench/k-2-d-1-s-1 (first 2 tasks)",
+                "Task scope: benchmarks/kramabench/tasks-mini/tasks/k-2-d-1-s-1 (first 2 tasks)",
                 stdout.getvalue(),
             )
 
@@ -173,9 +173,9 @@ class SetupRunTests(unittest.TestCase):
                     cwd=repo_root,
                 )
 
-            self.assertEqual(command[1:3], ["-m", "strands_evaluation.run_mode_eval"])
+            self.assertEqual(command[1:3], ["-m", "sana_evaluation.run_mode_eval"])
             self.assertIn("--all-tasks", command)
-            self.assertEqual(command[command.index("--task-set") + 1], "tasks_mini")
+            self.assertEqual(command[command.index("--task-set") + 1], "benchmarks/lakeqa/tasks-mini/tasks")
             self.assertEqual(command[command.index("--logs-output-dir") + 1], "logs")
             self.assertEqual(command[command.index("--results-output-dir") + 1], "results")
 
@@ -237,8 +237,8 @@ class SetupRunTests(unittest.TestCase):
                     cwd=repo_root,
                 )
 
-            self.assertEqual(command[command.index("--task-set") + 1], "tasks-mini-kramabench")
-            self.assertIn("Task scope: all tasks under tasks-mini-kramabench", stdout.getvalue())
+            self.assertEqual(command[command.index("--task-set") + 1], "benchmarks/kramabench/tasks-mini/tasks")
+            self.assertIn("Task scope: all tasks under benchmarks/kramabench/tasks-mini/tasks", stdout.getvalue())
 
     def test_full_continue_alias_and_timeout_passthrough(self):
         with TemporaryDirectory() as tmpdir:
