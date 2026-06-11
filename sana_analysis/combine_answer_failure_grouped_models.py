@@ -14,11 +14,11 @@ from typing import Iterable
 if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from analysis.answer_failure_taxonomy import (
+from sana_analysis.answer_failure_taxonomy import (
     ANSWER_FAILURE_FIGURE_GROUPS as ANSWER_FAILURE_GROUPS,
     OMITTED_ANSWER_FAILURE_TYPES,
 )
-from analysis.build_answer_failure_report import _load_rows_for_events_file, _trusted_events
+from sana_analysis.build_answer_failure_report import _load_rows_for_events_file, _trusted_events
 
 
 COMBINED_CSV_NAME = "combined_answer_failure_events.csv"

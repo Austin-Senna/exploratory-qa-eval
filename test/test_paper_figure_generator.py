@@ -5,12 +5,11 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest.mock import patch
 
-from analysis.paper_figure_generator import (
+from sana_analysis.paper_figure_generator import (
     _benchmark_defaults,
     _load_search_figure_data,
     _search_variant_label,
     _selected_existing_figures,
-    _turn_waste_scope_complete,
     export_agent_analysis_results,
     export_paper_figures,
     render_search_efficiency_figure,
@@ -56,6 +55,9 @@ class TestPaperFigureGenerator(unittest.TestCase):
                 return None
 
             def set_ylabel(self, *args, **kwargs):
+                return None
+
+            def tick_params(self, *args, **kwargs):
                 return None
 
             def legend(self, *args, **kwargs):
@@ -144,7 +146,7 @@ class TestPaperFigureGenerator(unittest.TestCase):
                 )
 
             fake_plot = FakePlot()
-            with patch("analysis.paper_figure_generator._import_plot_libs", return_value=fake_plot):
+            with patch("sana_analysis.paper_figure_generator._import_plot_libs", return_value=fake_plot):
                 render_search_efficiency_figure(analysis_dir, "lakeqa", analysis_dir / "figure.pdf")
 
             self.assertEqual(fake_plot.subplots_kwargs["nrows"], 1)
@@ -287,8 +289,6 @@ class TestPaperFigureGenerator(unittest.TestCase):
             figures_dir = analysis_dir / "figures"
             figures_dir.mkdir(parents=True)
             for name in [
-                "fig05_turn_waste_groups_by_model.pdf",
-                "fig05b_turn_waste_groups_by_condition.pdf",
                 "fig06_answer_failure_groups_by_model.pdf",
                 "fig06b_answer_failure_groups_by_condition.pdf",
                 "fig21b_semantic_delta_ablation_compact.pdf",
@@ -305,30 +305,8 @@ class TestPaperFigureGenerator(unittest.TestCase):
             )
 
             self.assertIn(root / "paper" / new_figure.name, copied)
-            self.assertTrue((root / "mirror" / "fig05_turn_waste_groups_by_model.pdf").exists())
             self.assertTrue((root / "mirror" / "fig06_answer_failure_groups_by_model.pdf").exists())
             self.assertTrue((root / "paper" / "fig21b_lakeqa_semantic_delta_ablation.pdf").exists())
-
-    def test_turn_waste_scope_complete_detects_partial_grouped_outputs(self):
-        with TemporaryDirectory() as tmpdir:
-            root = Path(tmpdir)
-            results_dir = root / "results_semantic" / "modes"
-            grouped_dir = root / "results_semantic_turn_waste_grouped"
-            for variant in ["variant_a", "variant_b"]:
-                path = results_dir / "model_a" / variant / "eval_results.csv"
-                path.parent.mkdir(parents=True, exist_ok=True)
-                path.write_text("task_id,semantic_match\n")
-            grouped_path = grouped_dir / "model_a" / "variant_a" / "eval_results.csv"
-            grouped_path.parent.mkdir(parents=True, exist_ok=True)
-            grouped_path.write_text("task_id,turn_waste_global_group,turn_waste_global_group_reason\n")
-
-            self.assertFalse(_turn_waste_scope_complete(results_dir, grouped_dir, None))
-
-            grouped_path = grouped_dir / "model_a" / "variant_b" / "eval_results.csv"
-            grouped_path.parent.mkdir(parents=True, exist_ok=True)
-            grouped_path.write_text("task_id,turn_waste_global_group,turn_waste_global_group_reason\n")
-
-            self.assertTrue(_turn_waste_scope_complete(results_dir, grouped_dir, None))
 
     def test_export_paper_figures_uses_fallback_dir_for_optional_figures(self):
         with TemporaryDirectory() as tmpdir:
@@ -338,8 +316,6 @@ class TestPaperFigureGenerator(unittest.TestCase):
             fallback_dir = root / "existing_paper"
             fallback_dir.mkdir()
             for name in [
-                "fig05_turn_waste_groups_by_model.pdf",
-                "fig05b_turn_waste_groups_by_condition.pdf",
                 "fig06_answer_failure_groups_by_model.pdf",
                 "fig06b_answer_failure_groups_by_condition.pdf",
                 "fig21b_lakeqa_semantic_delta_ablation.pdf",
@@ -356,7 +332,6 @@ class TestPaperFigureGenerator(unittest.TestCase):
                 fallback_dirs=[fallback_dir],
             )
 
-            self.assertTrue((root / "mirror" / "fig05_turn_waste_groups_by_model.pdf").exists())
             self.assertTrue((root / "mirror" / "fig06b_answer_failure_groups_by_condition.pdf").exists())
 
     def test_export_agent_analysis_results_copies_summaries_and_skips_runtime_artifacts(self):
@@ -367,8 +342,6 @@ class TestPaperFigureGenerator(unittest.TestCase):
                 agent_root / "trajectory_pair_analysis" / "trajectory_pair_summary.csv",
                 agent_root / "trajectory_pair_analysis" / "trajectory_pair_summary.json",
                 agent_root / "trajectory_pair_analysis" / "trajectory_pair_label_breakdown.csv",
-                agent_root / "execution_inventory_analysis" / "execution_inventory.csv",
-                agent_root / "execution_inventory_analysis" / "execution_events.csv",
                 agent_root / "plan_default_analysis" / "figures" / "plan_default_similarity_by_benchmark_model.pdf",
                 agent_root / "follow_plan_analysis" / "summary" / "plan_following_summary.csv",
             ]
@@ -389,7 +362,6 @@ class TestPaperFigureGenerator(unittest.TestCase):
 
             copied_rel = {path.relative_to(root / "paper_figures" / "agent_analysis") for path in copied}
             self.assertIn(Path("trajectory_pair_analysis/trajectory_pair_summary.csv"), copied_rel)
-            self.assertIn(Path("execution_inventory_analysis/execution_events.csv"), copied_rel)
             self.assertIn(Path("plan_default_analysis/figures/plan_default_similarity_by_benchmark_model.pdf"), copied_rel)
             self.assertTrue((root / "paper_figures" / "agent_analysis" / "follow_plan_analysis/summary/plan_following_summary.csv").exists())
             self.assertFalse((root / "paper_figures" / "agent_analysis" / "trajectory_pair_analysis/trajectory_pair_journal.jsonl").exists())

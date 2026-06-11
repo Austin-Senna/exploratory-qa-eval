@@ -15,8 +15,8 @@ from typing import Iterable, Optional
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from analysis.run_mode_analysis_semantic import run_analysis
-from analysis.combine_answer_failure_grouped_models import (
+from sana_analysis.run_mode_analysis_semantic import run_analysis
+from sana_analysis.combine_answer_failure_grouped_models import (
     COMBINED_CSV_NAME,
     COMBINED_CONDITION_FIGURE_NAME,
     COMBINED_FIGURE_NAME,
@@ -576,8 +576,7 @@ def _resolve_config(args: argparse.Namespace) -> GeneratorConfig:
 
 def ensure_analysis_outputs(config: GeneratorConfig) -> None:
     summary_path = config.analysis_dir / "summary.json"
-    cumulative_path = config.analysis_dir / "search_call_cumulative_retrieval.csv"
-    should_run = config.force or not summary_path.exists() or not cumulative_path.exists()
+    should_run = config.force or not summary_path.exists()
     if not should_run:
         print(f"Reusing existing analysis output: {config.analysis_dir}")
         return
@@ -602,7 +601,18 @@ def main() -> None:
         config.analysis_dir
         / f"search_efficiency_cumulative_retrieval_{config.benchmark}.pdf"
     )
-    render_search_efficiency_figure(config.analysis_dir, config.benchmark, search_figure_path)
+    try:
+        render_search_efficiency_figure(config.analysis_dir, config.benchmark, search_figure_path)
+    except ValueError as exc:
+        fallback_search_figure = (
+            Path("paper_figures")
+            / f"search_efficiency_cumulative_retrieval_{config.benchmark}.pdf"
+        )
+        if not fallback_search_figure.exists():
+            raise
+        print(f"Skipping search-efficiency render: {exc}")
+        print(f"Using existing search-efficiency figure: {fallback_search_figure}")
+        search_figure_path = fallback_search_figure
     refreshed = refresh_answer_failure_figures(config.answer_failure_combined_dir)
     if refreshed:
         print("Refreshed answer-failure figures:")

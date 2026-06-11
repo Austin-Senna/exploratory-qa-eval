@@ -20,13 +20,13 @@ from typing import Any, Optional
 if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from analysis.answer_failure_taxonomy import (
+from sana_analysis.answer_failure_taxonomy import (
     format_answer_failure_type_definitions,
     format_blocker_subtypes,
     format_boundary_rules,
     format_failure_stages,
 )
-from analysis.answer_failure_validation import (
+from sana_analysis.answer_failure_validation import (
     EVENT_COLUMNS,
     MODEL_VALIDATION_NOTES_FIELD,
     MODEL_VALIDATION_STATUS_FIELD,
@@ -37,7 +37,7 @@ from analysis.answer_failure_validation import (
     row_log_path,
     validate_answer_failure_root,
 )
-from analysis.build_answer_failure_report import build_answer_failure_report
+from sana_analysis.build_answer_failure_report import build_answer_failure_report
 
 
 SOURCE_ROOTS = {

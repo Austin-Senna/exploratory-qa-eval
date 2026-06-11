@@ -23,6 +23,7 @@ legacy*/
 old_semantic/
 *.pem
 paper/
+paper_figure_review/
 lance_table_descriptions
 analysis_results_*
 test_logs

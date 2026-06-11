@@ -15,9 +15,9 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT))
 
-from analysis.export_paper_results import export_paper_results
-from analysis.paper_figure_generator import _benchmark_defaults
-from analysis.run_mode_analysis_semantic import run_analysis
+from sana_analysis.export_paper_results import export_paper_results
+from sana_analysis.paper_figure_generator import _benchmark_defaults
+from sana_analysis.run_mode_analysis_semantic import run_analysis
 
 
 def regenerate_benchmark(benchmark: str, *, include_figures: bool) -> None:

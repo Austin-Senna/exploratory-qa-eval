@@ -13,10 +13,10 @@ from typing import Any
 if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from analysis.answer_failure_taxonomy import ANSWER_FAILURE_TYPES
-from analysis.answer_failure_validation import validate_answer_failure_root
-from analysis.build_answer_failure_report import build_answer_failure_report
-from analysis.combine_answer_failure_grouped_models import combine_answer_failures
+from sana_analysis.answer_failure_taxonomy import ANSWER_FAILURE_TYPES
+from sana_analysis.answer_failure_validation import validate_answer_failure_root
+from sana_analysis.build_answer_failure_report import build_answer_failure_report
+from sana_analysis.combine_answer_failure_grouped_models import combine_answer_failures
 
 
 AMBIGUOUS_OLD_TYPES = {

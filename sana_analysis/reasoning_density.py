@@ -14,7 +14,7 @@ import argparse
 import json
 from collections import defaultdict
 from pathlib import Path
-from analysis.discovery_metrics import make_task_stem_key, resolve_task_value
+from sana_analysis.discovery_metrics import make_task_stem_key, resolve_task_value
 
 _BINS = [
     ("<=2",  lambda n: n <= 2),

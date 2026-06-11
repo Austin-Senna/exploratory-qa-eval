@@ -9,9 +9,8 @@ ablate search, planning, and data-analysis tools under a fixed agent runtime.
 
 - `sana_evaluation/`: runtime package for runners, preflight checks, agent
   configuration, tools, instrumentation, and model adapters.
-- `sana_analysis/`: canonical import package for analysis and evaluation
-  scripts. During the incremental migration it exposes the implementation still
-  stored under `analysis/`.
+- `sana_analysis/`: canonical import package for analysis and paper-result
+  generation scripts.
 - `benchmarks/{benchmark}/{task-set}/tasks/`: benchmark task JSON files.
 - `benchmarks/{benchmark}/{task-set}/runtime-profiles/`: SANA runtime profiles
   used by ideal planning, search, and execution.

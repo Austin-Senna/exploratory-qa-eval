@@ -16,7 +16,7 @@ from typing import Any, Iterable
 if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from analysis.trajectory_pair_analysis import (
+from sana_analysis.trajectory_pair_analysis import (
     _append_journal_record,
     _extract_runner_model,
     _first_executing_line,
