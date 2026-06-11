@@ -9,6 +9,13 @@ from pathlib import Path
 from typing import Any
 
 
+def _positive_int(raw: str) -> int:
+    value = int(raw)
+    if value <= 0:
+        raise argparse.ArgumentTypeError("must be a positive integer")
+    return value
+
+
 def _load_json(path: Path) -> Any | None:
     try:
         return json.loads(path.read_text(encoding="utf-8"))
@@ -68,7 +75,7 @@ def sample(root: Path, limit: int) -> dict[str, Any]:
     return {
         "benchmark_root": str(root),
         "candidate_count": len(candidates),
-        "sampling_rule": "structural diversity first, metadata diversity second",
+        "sampling_rule": "structural diversity first, deterministic path order fallback",
         "samples": selected,
     }
 
@@ -76,7 +83,7 @@ def sample(root: Path, limit: int) -> dict[str, Any]:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("benchmark_root")
-    parser.add_argument("--limit", type=int, default=8)
+    parser.add_argument("--limit", type=_positive_int, default=8)
     args = parser.parse_args()
 
     root = Path(args.benchmark_root).expanduser().resolve()

@@ -74,3 +74,20 @@ def test_sample_benchmark_artifacts_prefers_structural_diversity(tmp_path):
     signatures = {sample["signature"] for sample in payload["samples"]}
     assert any("evidence:list:1" in signature for signature in signatures)
     assert any("evidence:list:2" in signature for signature in signatures)
+
+
+def test_sample_benchmark_artifacts_rejects_non_positive_limit(tmp_path):
+    root = tmp_path / "benchmark"
+    root.mkdir()
+    (root / "one.json").write_text(json.dumps({"question": "q1"}), encoding="utf-8")
+
+    script = AUDITOR / "scripts" / "sample_benchmark_artifacts.py"
+    result = subprocess.run(
+        [sys.executable, str(script), str(root), "--limit", "0"],
+        check=False,
+        text=True,
+        capture_output=True,
+    )
+
+    assert result.returncode != 0
+    assert "must be a positive integer" in result.stderr
