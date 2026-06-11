@@ -19,6 +19,7 @@ def test_sana_profiling_folder_has_public_index():
 
 
 AUDITOR = SANA_PROFILING / "skills" / "benchmark-lakeqa-conversion-auditor"
+SCAFFOLDER = SANA_PROFILING / "skills" / "benchmark-lakeqa-skill-scaffolder"
 
 
 def test_conversion_auditor_skill_contract():
@@ -91,3 +92,62 @@ def test_sample_benchmark_artifacts_rejects_non_positive_limit(tmp_path):
 
     assert result.returncode != 0
     assert "must be a positive integer" in result.stderr
+
+
+def test_scaffolder_skill_contract():
+    skill = SCAFFOLDER / "SKILL.md"
+
+    assert skill.is_file()
+    text = skill.read_text(encoding="utf-8")
+    assert "name: benchmark-lakeqa-skill-scaffolder" in text
+    assert "approved conversion report" in text
+    assert "must not invent" in text
+
+
+def test_scaffold_benchmark_skill_creates_transform_skill(tmp_path):
+    report = tmp_path / "demo-report.md"
+    report.write_text(
+        "\n".join(
+            [
+                "# Demo LakeQA Conversion Report",
+                "",
+                "## Benchmark artifact inventory",
+                "",
+                "Demo inventory.",
+                "",
+                "## Recommended benchmark-specific transform skill structure",
+                "",
+                "Demo transform structure.",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    script = SCAFFOLDER / "scripts" / "scaffold_benchmark_skill.py"
+    output_root = tmp_path / "skills"
+    subprocess.run(
+        [
+            sys.executable,
+            str(script),
+            str(report),
+            "--benchmark",
+            "demo",
+            "--output-root",
+            str(output_root),
+        ],
+        check=True,
+        text=True,
+        capture_output=True,
+    )
+
+    generated_root = output_root / "demo-lakeqa-transform"
+    skill = generated_root / "SKILL.md"
+    copied_report = generated_root / "references" / "conversion-report.md"
+
+    assert skill.is_file()
+    assert copied_report.is_file()
+    assert copied_report.read_text(encoding="utf-8") == report.read_text(encoding="utf-8")
+    skill_text = skill.read_text(encoding="utf-8")
+    assert "name: demo-lakeqa-transform" in skill_text
+    assert "Do not re-infer the conversion method" in skill_text
