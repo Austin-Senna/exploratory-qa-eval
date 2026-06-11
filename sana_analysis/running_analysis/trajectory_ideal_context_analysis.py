@@ -55,7 +55,7 @@ LABELS = [
 FOLLOWED_STRICT = {"followed"}
 FOLLOWED_BROAD = {"followed", "mostly_followed"}
 DEFAULT_OUTPUT_STEM = "trajectory_ideal_context"
-DEFAULT_TMP_ROOT = Path("analysis/trajectory_ideal_context_analysis/tmp")
+DEFAULT_TMP_ROOT = Path("agent_analysis/trajectory_ideal_context_analysis/tmp")
 OUTPUT_COLUMNS = [
     "benchmark",
     "mode_label",
@@ -830,7 +830,7 @@ def print_summary(rows: list[dict[str, str]]) -> None:
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--input-root", default=".", help="Repository/input root containing logs and task JSON.")
-    parser.add_argument("--output-dir", default="analysis/trajectory_ideal_context_analysis")
+    parser.add_argument("--output-dir", default="agent_analysis/trajectory_ideal_context_analysis")
     parser.add_argument(
         "--run-id",
         default="",

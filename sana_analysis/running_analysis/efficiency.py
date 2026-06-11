@@ -3,7 +3,7 @@
 Efficiency analysis: cost/runtime/latency distributions, latency vs query length scatter.
 
 Usage:
-    python analysis/efficiency.py [--results-dir results] [--sidecar-dir results/sidecar]
+    python -m sana_analysis.running_analysis.efficiency [--results-dir results] [--sidecar-dir results/sidecar]
 """
 import argparse
 import json

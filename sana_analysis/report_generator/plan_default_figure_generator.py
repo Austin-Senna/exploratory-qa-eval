@@ -15,8 +15,8 @@ CANONICAL_PLAN_D_MODE = "search_i_results_i_pland_computei_k5_skills_off"
 CANONICAL_PLAN_I_MODE = "search_i_results_i_plani_computei_k5_skills_off"
 
 BENCHMARK_ROOTS = {
-    "lakeqa": Path("analysis/plan_default_analysis/logs"),
-    "kramabench": Path("analysis/plan_default_analysis/log-kramabench"),
+    "lakeqa": Path("agent_analysis/plan_default_analysis/logs"),
+    "kramabench": Path("agent_analysis/plan_default_analysis/log-kramabench"),
 }
 MODEL_ORDER = ["openai_gpt-5.4-nano", "openai_gpt-5-mini"]
 BENCHMARK_ORDER = ["lakeqa", "kramabench"]
@@ -237,7 +237,7 @@ def export_figure(source_path: Path, destinations: Iterable[Path]) -> list[Path]
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--input-root", default=".")
-    parser.add_argument("--output", default="analysis/plan_default_analysis/figures/plan_default_similarity_by_benchmark_model.pdf")
+    parser.add_argument("--output", default="agent_analysis/plan_default_analysis/figures/plan_default_similarity_by_benchmark_model.pdf")
     parser.add_argument("--paper-dir", default="sana_framework_paper/figures")
     parser.add_argument("--mirror-dir", default="paper_figures")
     return parser.parse_args()

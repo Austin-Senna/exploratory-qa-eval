@@ -8,7 +8,7 @@ of gold documents required per task (len(datasets_used)), per condition.
 Bins: <=2, 3-4, 5-7, 8-10, >10
 
 Usage:
-    python analysis/reasoning_density.py [--results-dir results] [--tasks-dir tasks_mini]
+    python -m sana_analysis.running_analysis.reasoning_density [--results-dir results] [--tasks-dir tasks_mini]
 """
 import argparse
 import json

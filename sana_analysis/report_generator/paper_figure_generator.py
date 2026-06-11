@@ -547,7 +547,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--model-filter", default=None)
     parser.add_argument("--paper-dir", default="sana_framework_paper/figures")
     parser.add_argument("--mirror-dir", default="paper_figures")
-    parser.add_argument("--agent-analysis-dir", default="analysis")
+    parser.add_argument("--agent-analysis-dir", default="agent_analysis")
     return parser.parse_args()
 
 

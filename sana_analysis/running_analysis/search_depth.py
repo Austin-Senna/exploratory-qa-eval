@@ -6,7 +6,7 @@ Bins tasks by total search calls used (derived from tool_counts in agent_results
 and computes mean EM per bin to reveal the saturation point.
 
 Usage:
-    python analysis/search_depth.py [--results-dir results]
+    python -m sana_analysis.running_analysis.search_depth [--results-dir results]
 """
 import argparse
 import json
