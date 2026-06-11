@@ -12,9 +12,9 @@ from sana_evaluation.config import AgentConfig
 from sana_evaluation.instrumentation.agent_plugins import LoggingPlugin
 from sana_evaluation.instrumentation.ideal_subagent_costs import record_subagent_call
 from sana_evaluation.llm.llm_factory import build_model
-from sana_evaluation.tools.external.ideal.plan_store import (
-    load_plan_for_context,
-    set_plans_root as _set_plans_root_shared,
+from sana_evaluation.tools.external.ideal.runtime_profile_store import (
+    load_runtime_profile_for_context,
+    set_runtime_profiles_root as _set_runtime_profiles_root_shared,
     set_task_context as _set_task_context_shared,
 )
 from sana_evaluation.tools.external.ideal.benchmark_paths import canonical_source_uri
@@ -43,9 +43,9 @@ def set_db_path(path: str) -> None:
     _ = path
 
 
-def set_plans_root(path: str | Path) -> None:
-    """Override plans root (mainly for tests)."""
-    _set_plans_root_shared(path)
+def set_runtime_profiles_root(path: str | Path) -> None:
+    """Override runtime profiles root (mainly for tests)."""
+    _set_runtime_profiles_root_shared(path)
     _CANDIDATES.clear()
     _USED_S3_URIS.clear()
 
@@ -57,14 +57,14 @@ def set_lessguide(enabled: bool) -> None:
 
 
 def set_task_context(task_context: Dict[str, Any]) -> None:
-    """Load the active task plan and materialize the candidate pool."""
+    """Load the active task runtime profile and materialize the candidate pool."""
     task_context = dict(task_context or {})
     _set_task_context_shared(task_context)
-    plan = load_plan_for_context(task_context)
+    profile = load_runtime_profile_for_context(task_context)
     _CANDIDATES.clear()
     _CANDIDATES.extend(
         (_canonical_uri(source_path), _dataset_id_from_source(source_path))
-        for source_path in plan.source_sequence
+        for source_path in profile.source_sequence
     )
     _USED_S3_URIS.clear()
 
@@ -166,7 +166,7 @@ def search_ideal(query: str, top_k: int = 100) -> dict:
     _ = top_k
 
     if not _CANDIDATES:
-        return {"error": "search_ideal called before set_task_context; no plan loaded."}
+        return {"error": "search_ideal called before set_task_context; no runtime profile loaded."}
 
     remaining = [(uri, dsid) for uri, dsid in _CANDIDATES if uri not in _USED_S3_URIS]
     if not remaining:

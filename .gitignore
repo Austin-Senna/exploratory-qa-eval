@@ -30,7 +30,7 @@ test_logs
 test_results
 .agents
 ec2setup.md
-datagov_tables_schemas_full.jsonl
+table_schemas_full.jsonl
 table_descriptions.parquet
 results-ec2
 logs-ec2

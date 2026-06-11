@@ -664,7 +664,7 @@ def peek_file(
     Inspect a SINGLE file via a budget range-GET. Returns the content family
     (csv/json/xml/text), column headers or XML tags/schema hints, and a
     preview — no full download. When available, also returns a compact
-    `profile` field from datagov_tables_profiles.jsonl.
+    `profile` field from the benchmark table_profiles.jsonl artifact.
 
     USE THIS for one file at a time. For multiple files in one call, use
     `peek_multiple` instead (different signature: takes a `files` list).

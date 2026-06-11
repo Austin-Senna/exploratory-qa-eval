@@ -1,4 +1,4 @@
-"""Ideal computation tools backed by authored plan records."""
+"""Ideal computation tools backed by authored runtime profile records."""
 
 from __future__ import annotations
 
@@ -17,10 +17,10 @@ from sana_evaluation.llm.llm_factory import build_model
 from sana_evaluation.tools.agent_tools import _get_sandbox_dir, execute_code as _execute_code_tool
 from sana_evaluation.tools.agent_tools_v2 import peek_file as _peek_file_tool
 from sana_evaluation.tools.agent_tools_v2 import query_file as _query_file_tool
-from sana_evaluation.tools.external.ideal.plan_store import (
+from sana_evaluation.tools.external.ideal.runtime_profile_store import (
     IdealComputationRecord,
-    IdealTaskPlan,
-    load_plan_for_context,
+    IdealRuntimeProfile,
+    load_runtime_profile_for_context,
     set_task_context as _set_task_context_shared,
 )
 from sana_evaluation.tools.external.ideal.benchmark_paths import (
@@ -69,8 +69,8 @@ Original SQL:
 Previous error:
 {previous_error}
 
-Plan records:
-{plan_records}
+Runtime profile records:
+{profile_records}
 
 Target dataset context:
 {target_dataset_context}"""
@@ -87,8 +87,8 @@ Original code:
 Previous error:
 {previous_error}
 
-Plan records:
-{plan_records}
+Runtime profile records:
+{profile_records}
 
 Target dataset context:
 {target_dataset_context}
@@ -97,7 +97,7 @@ Sandbox context:
 {sandbox_context}"""
 
 _TASK_CONTEXT: Dict[str, Any] = {}
-_ACTIVE_PLAN: Optional[IdealTaskPlan] = None
+_ACTIVE_PROFILE: Optional[IdealRuntimeProfile] = None
 _STATS: Dict[str, int] = {
     "execute_ideal_agent_repair_calls": 0,
     "query_ideal_agent_repair_calls": 0,
@@ -117,18 +117,18 @@ class _SemanticDecision:
 
 def set_task_context(task_context: Dict[str, Any]) -> None:
     """Load the active task's ideal computation records."""
-    global _TASK_CONTEXT, _ACTIVE_PLAN
+    global _TASK_CONTEXT, _ACTIVE_PROFILE
     _TASK_CONTEXT = dict(task_context or {})
     _set_task_context_shared(_TASK_CONTEXT)
-    _ACTIVE_PLAN = load_plan_for_context(_TASK_CONTEXT)
+    _ACTIVE_PROFILE = load_runtime_profile_for_context(_TASK_CONTEXT)
     reset_stats()
 
 
 def reset_state() -> None:
     """Reset in-process ideal computation state."""
-    global _TASK_CONTEXT, _ACTIVE_PLAN
+    global _TASK_CONTEXT, _ACTIVE_PROFILE
     _TASK_CONTEXT = {}
-    _ACTIVE_PLAN = None
+    _ACTIVE_PROFILE = None
     _set_task_context_shared({})
     reset_stats()
 
@@ -152,10 +152,10 @@ def _record_repair_event(tool_name: str, event: str, **fields: Any) -> None:
     write_trace_record({"tool": tool_name, "event": event, **fields})
 
 
-def _active_plan() -> IdealTaskPlan:
-    if _ACTIVE_PLAN is not None:
-        return _ACTIVE_PLAN
-    return load_plan_for_context(_TASK_CONTEXT)
+def _active_profile() -> IdealRuntimeProfile:
+    if _ACTIVE_PROFILE is not None:
+        return _ACTIVE_PROFILE
+    return load_runtime_profile_for_context(_TASK_CONTEXT)
 
 
 def _dataset_id_from_source(value: Any) -> str:
@@ -229,7 +229,7 @@ def _is_success(result: Any) -> bool:
     return "error" not in result
 
 
-def _plan_records_for_prompt(plan: IdealTaskPlan, records: Iterable[IdealComputationRecord]) -> str:
+def _profile_records_for_prompt(profile: IdealRuntimeProfile, records: Iterable[IdealComputationRecord]) -> str:
     rows = []
     for index, record in enumerate(records, start=1):
         rows.append(
@@ -246,8 +246,8 @@ def _plan_records_for_prompt(plan: IdealTaskPlan, records: Iterable[IdealComputa
         )
     return json.dumps(
         {
-            "task_id": plan.task_id,
-            "plan_path": str(plan.plan_path),
+            "task_id": profile.task_id,
+            "profile_path": str(profile.profile_path),
             "records": rows,
         },
         ensure_ascii=False,
@@ -428,7 +428,7 @@ def _coerce_bool(value: Any) -> bool:
 
 def _semantic_decision(
     *,
-    plan: IdealTaskPlan,
+    profile: IdealRuntimeProfile,
     tool_name: str,
     payload_label: str,
     payload: str,
@@ -462,7 +462,7 @@ def _semantic_decision(
         state["intent_reason"] = str(reason or "")
         return "intent match recorded"
 
-    candidates_json = _plan_records_for_prompt(plan, records)
+    candidates_json = _profile_records_for_prompt(profile, records)
     prompt = _SEMANTIC_JUDGE_PROMPT_TEMPLATE.format(
         tool_name=tool_name,
         intent=intent,
@@ -537,7 +537,7 @@ def _semantic_decision(
 
 def _semantic_record_match(
     *,
-    plan: IdealTaskPlan,
+    profile: IdealRuntimeProfile,
     tool_name: str,
     payload_label: str,
     payload: str,
@@ -545,7 +545,7 @@ def _semantic_record_match(
     candidates: Iterable[IdealComputationRecord],
 ) -> Optional[IdealComputationRecord]:
     return _semantic_decision(
-        plan=plan,
+        profile=profile,
         tool_name=tool_name,
         payload_label=payload_label,
         payload=payload,
@@ -556,7 +556,7 @@ def _semantic_record_match(
 
 def _repair_query(
     *,
-    plan: IdealTaskPlan,
+    profile: IdealRuntimeProfile,
     sql: str,
     intent: str,
     records: Optional[Iterable[IdealComputationRecord]] = None,
@@ -572,14 +572,14 @@ def _repair_query(
         state["reason"] = reason
         return "repaired SQL recorded"
 
-    prompt_records = list(records) if records is not None else list(plan.ideal_query)
+    prompt_records = list(records) if records is not None else list(profile.ideal_query)
     if not prompt_records:
-        prompt_records = list(plan.ideal_query)
+        prompt_records = list(profile.ideal_query)
     prompt = _QUERY_REPAIR_PROMPT_TEMPLATE.format(
         intent=intent,
         sql=sql,
         previous_error=previous_error,
-        plan_records=_plan_records_for_prompt(plan, prompt_records),
+        profile_records=_profile_records_for_prompt(profile, prompt_records),
         target_dataset_context=_target_dataset_context(prompt_records),
     )
     repair_agent = Agent(
@@ -616,7 +616,7 @@ def _repair_query(
 
 def _repair_code(
     *,
-    plan: IdealTaskPlan,
+    profile: IdealRuntimeProfile,
     code: str,
     intent: str,
     records: Optional[Iterable[IdealComputationRecord]] = None,
@@ -632,14 +632,14 @@ def _repair_code(
         state["reason"] = reason
         return "repaired code recorded"
 
-    prompt_records = list(records) if records is not None else list(plan.ideal_code)
+    prompt_records = list(records) if records is not None else list(profile.ideal_code)
     if not prompt_records:
-        prompt_records = list(plan.ideal_code)
+        prompt_records = list(profile.ideal_code)
     prompt = _CODE_REPAIR_PROMPT_TEMPLATE.format(
         intent=intent,
         code=code,
         previous_error=previous_error,
-        plan_records=_plan_records_for_prompt(plan, prompt_records),
+        profile_records=_profile_records_for_prompt(profile, prompt_records),
         target_dataset_context=_target_dataset_context(prompt_records),
         sandbox_context=_sandbox_context(),
     )
@@ -689,12 +689,12 @@ def query_ideal(
     Wikipedia/content.txt, prose/plain text, XML/KML, HTML, PDFs, or binary files.
     For XML/KML structured records, use parse_xml_records instead.
     """
-    plan = _active_plan()
+    profile = _active_profile()
     dataset_id = dataset_id or ""
     file_path = file_path or ""
     s3_uri = s3_uri or ""
     candidate_records = _records_for_target(
-        plan.ideal_query,
+        profile.ideal_query,
         dataset_id=dataset_id,
         file_path=file_path,
         s3_uri=s3_uri,
@@ -703,8 +703,15 @@ def query_ideal(
     runnable_records = [
         record for record in candidate_records if not getattr(record, "blocked", False)
     ]
+    blocked_record = next(
+        (record for record in candidate_records if getattr(record, "blocked", False)),
+        None,
+    )
+    if not runnable_records and blocked_record is not None:
+        return _blocked_query_payload(blocked_record)
+
     decision = _semantic_decision(
-        plan=plan,
+        profile=profile,
         tool_name="query_ideal",
         payload_label="SQL",
         payload=sql,
@@ -715,10 +722,6 @@ def query_ideal(
     if record is not None:
         return _query_answer_payload(record)
 
-    blocked_record = next(
-        (record for record in candidate_records if getattr(record, "blocked", False)),
-        None,
-    )
     if blocked_record is not None:
         return _blocked_query_payload(blocked_record)
 
@@ -749,10 +752,10 @@ def query_ideal(
         )
         try:
             repaired = _repair_query(
-                plan=plan,
+                profile=profile,
                 sql=sql,
                 intent=intent,
-                records=candidate_records or plan.ideal_query,
+                records=candidate_records or profile.ideal_query,
                 previous_error=previous_error,
                 attempt=attempt,
             )
@@ -806,19 +809,19 @@ def execute_ideal(
     Wikipedia/content.txt, prose/plain text, XML/KML, HTML, PDFs, or binary files.
     For XML/KML structured records, use parse_xml_records instead.
     """
-    plan = _active_plan()
+    profile = _active_profile()
     dataset_id = dataset_id or ""
     file_path = file_path or ""
     s3_uri = s3_uri or ""
     candidate_records = _records_for_target(
-        plan.ideal_code,
+        profile.ideal_code,
         dataset_id=dataset_id,
         file_path=file_path,
         s3_uri=s3_uri,
         fallback_all=True,
     )
     decision = _semantic_decision(
-        plan=plan,
+        profile=profile,
         tool_name="execute_ideal",
         payload_label="Python code",
         payload=code,
@@ -851,10 +854,10 @@ def execute_ideal(
         )
         try:
             repaired = _repair_code(
-                plan=plan,
+                profile=profile,
                 code=code,
                 intent=intent,
-                records=candidate_records or plan.ideal_code,
+                records=candidate_records or profile.ideal_code,
                 previous_error=previous_error,
                 attempt=attempt,
             )

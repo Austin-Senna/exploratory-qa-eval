@@ -10,8 +10,8 @@ from strands import tool
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-import strands_evaluation.tools.external.ideal.search_wrapper as search_wrapper
-from strands_evaluation.tools.external.ideal.search_wrapper import (
+import sana_evaluation.tools.external.ideal.search_wrapper as search_wrapper
+from sana_evaluation.tools.external.ideal.search_wrapper import (
     reshape_search_payload,
     search_tool_names_in,
 )
@@ -43,13 +43,13 @@ class TestSearchWrapperPayload(unittest.TestCase):
         schema_kind: str = "csv",
         columns: list[str] | None = None,
     ) -> ExitStack:
-        desc_path = root / "table_descriptions.jsonl"
+        desc_path = root / "descriptions.jsonl"
         desc_path.write_text(json.dumps({"dataset_uri": uri, "description": desc}) + "\n")
 
-        snippet_path = root / "snippet.jsonl"
+        snippet_path = root / "snippets.jsonl"
         snippet_path.write_text(json.dumps({"dataset_uri": uri, "dataset_snippet": snippet}) + "\n")
 
-        schema_path = root / "datagov_tables_schemas_full.jsonl"
+        schema_path = root / "table_schemas_full.jsonl"
         schema_path.write_text(
             json.dumps(
                 {
@@ -96,7 +96,7 @@ class TestSearchWrapperPayload(unittest.TestCase):
     def test_naive_mode_preserves_unrelated_payload_keys(self):
         payload = {
             "ideal_source_driven": True,
-            "task_id": "tasks_mini/k-1-d-1/task_1.json",
+            "task_id": "runtime profiles/k-1-d-1/task_1.json",
             "results": [
                 {
                     "dataset_id": "foo",
@@ -114,7 +114,7 @@ class TestSearchWrapperPayload(unittest.TestCase):
             },
         )
         self.assertTrue(out["ideal_source_driven"])
-        self.assertEqual(out["task_id"], "tasks_mini/k-1-d-1/task_1.json")
+        self.assertEqual(out["task_id"], "runtime profiles/k-1-d-1/task_1.json")
 
     def test_ideal_mode_enriches_results_from_sidecar_files(self):
         uri = "s3://lakeqa-yc4103-datalake/datagov/foo/files/rows.txt"
@@ -146,7 +146,7 @@ class TestSearchWrapperPayload(unittest.TestCase):
         uri = "s3://lakeqa-yc4103-datalake/datagov/foo/files/rows.txt"
         with TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
-            table_desc_path = root / "table_descriptions.jsonl"
+            table_desc_path = root / "descriptions.jsonl"
             table_desc_path.write_text(
                 json.dumps(
                     {
@@ -156,9 +156,9 @@ class TestSearchWrapperPayload(unittest.TestCase):
                 )
                 + "\n"
             )
-            snippet_path = root / "snippet.jsonl"
+            snippet_path = root / "snippets.jsonl"
             snippet_path.write_text(json.dumps({"dataset_uri": uri, "dataset_snippet": "snippet"}) + "\n")
-            schema_path = root / "datagov_tables_schemas_full.jsonl"
+            schema_path = root / "table_schemas_full.jsonl"
             schema_path.write_text(
                 json.dumps(
                     {
@@ -186,17 +186,17 @@ class TestSearchWrapperPayload(unittest.TestCase):
 
         self.assertEqual(out["results"][0]["llm_desc"], "Merged task-specific description")
 
-    def test_ideal_mode_rejects_tasks_mini_manifest_fallback_descriptions(self):
+    def test_ideal_mode_rejects_task_manifest_fallback_descriptions(self):
         uri = "s3://lakeqa-yc4103-datalake/datagov/foo/files/rows.txt"
         with TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
-            table_desc_path = root / "table_descriptions.jsonl"
+            table_desc_path = root / "descriptions.jsonl"
             table_desc_path.write_text(
                 json.dumps(
                     {
                         "dataset_uri": uri,
                         "description": "fake fallback",
-                        "description_source": "tasks_mini_manifest_fallback",
+                        "description_source": "task_manifest_fallback",
                     }
                 )
                 + "\n"
@@ -204,7 +204,7 @@ class TestSearchWrapperPayload(unittest.TestCase):
 
             with ExitStack() as stack:
                 stack.enter_context(patch.object(search_wrapper, "_TABLE_DESCRIPTIONS_PATH", table_desc_path))
-                with self.assertRaisesRegex(ValueError, "tasks_mini_manifest_fallback"):
+                with self.assertRaisesRegex(ValueError, "task_manifest_fallback"):
                     search_wrapper._load_desc_cache()
 
     def test_ideal_mode_uses_type_when_schema_has_no_columns(self):
@@ -271,8 +271,8 @@ class TestSearchWrapperPayload(unittest.TestCase):
                 root,
                 uri=uri,
             ):
-                (root / "snippet.jsonl").write_text("")
-                (root / "table_descriptions.jsonl").write_text(
+                (root / "snippets.jsonl").write_text("")
+                (root / "descriptions.jsonl").write_text(
                     json.dumps(
                         {
                             "dataset_uri": uri,
@@ -296,7 +296,7 @@ class TestSearchWrapperPayload(unittest.TestCase):
         with TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
             with self._patch_support_files(root, uri=uri):
-                (root / "snippet.jsonl").write_text("")
+                (root / "snippets.jsonl").write_text("")
                 search_wrapper._SNIPPET_CACHE_LOADED = False
                 search_wrapper._SNIPPET_BY_URI = {}
                 payload = {

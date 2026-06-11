@@ -192,7 +192,7 @@ def main() -> None:
     parser.add_argument(
         "--task-set",
         default=None,
-        help="Base directory for --all-tasks (default: tasks_mini, or tasks-mini-kramabench for --benchmark kramabench)",
+        help="Base directory for --all-tasks (default: maintained benchmark task set for --benchmark)",
     )
     parser.add_argument("--tasks-per-dir", type=int, default=None, help="Limit tasks per directory")
     parser.add_argument(

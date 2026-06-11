@@ -13,7 +13,7 @@ _REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
-from strands_evaluation.tools.external.description_rows import (  # noqa: E402
+from sana_evaluation.tools.external.description_rows import (  # noqa: E402
     DESCRIPTION_FIELDS,
     description_uri,
     has_valid_description,
@@ -21,25 +21,24 @@ from strands_evaluation.tools.external.description_rows import (  # noqa: E402
 )
 
 DEFAULT_SEED_DESCRIPTION_PATHS = (
-    Path("table_descriptions.jsonl"),
-    Path("extras/tasks_core_quality_file_manifest_descriptions.jsonl"),
+    Path("benchmarks/lakeqa/tasks-mini/artifacts/descriptions.jsonl"),
 )
 DEFAULT_GENERATED_DESCRIPTION_PATHS = (
-    Path("extras/tasks_mini_missing_descriptions_generated.jsonl"),
+    Path("benchmarks/lakeqa/tasks-mini/artifacts/missing_descriptions_generated.jsonl"),
 )
 
 
 def _parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--manifest", default="tasks_mini_file_manifest.jsonl")
+    artifact_root = Path("benchmarks/lakeqa/tasks-mini/artifacts")
+    parser.add_argument("--manifest", default=str(artifact_root / "task_file_manifest.jsonl"))
     parser.add_argument(
         "--seed-description",
         action="append",
         default=None,
         help=(
             "Existing trusted description JSONL. Repeat to layer sources. "
-            "Defaults to table_descriptions.jsonl then "
-            "extras/tasks_core_quality_file_manifest_descriptions.jsonl."
+            "Defaults to the benchmark artifact descriptions JSONL."
         ),
     )
     parser.add_argument(
@@ -53,17 +52,17 @@ def _parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     )
     parser.add_argument(
         "--missing-output",
-        default="extras/tasks_mini_missing_descriptions.jsonl",
+        default=str(artifact_root / "missing_descriptions.jsonl"),
         help="Manifest rows still missing seed descriptions.",
     )
     parser.add_argument(
         "--unresolved-output",
-        default="extras/tasks_mini_unresolved_descriptions.jsonl",
+        default=str(artifact_root / "unresolved_descriptions.jsonl"),
         help="Manifest rows still unresolved during merge.",
     )
     parser.add_argument(
         "--output",
-        default="extras/tasks_mini_file_manifest_descriptions.jsonl",
+        default=str(artifact_root / "task_file_manifest_descriptions.jsonl"),
         help="Canonical merged description JSONL.",
     )
     parser.add_argument(

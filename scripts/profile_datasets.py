@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build datagov_tables_profiles.jsonl from canonical description/profile inputs."""
+"""Build table_profiles.jsonl from canonical description/profile inputs."""
 
 from __future__ import annotations
 
@@ -29,15 +29,15 @@ except Exception:  # pragma: no cover
     def tqdm(iterable=None, **_kwargs):
         return iterable if iterable is not None else _NullTqdm()
 
-from strands_evaluation.tools.agent_tools import BUCKET, REGION, _build_s3_client
-from strands_evaluation.tools.agent_tools_v2 import (
+from sana_evaluation.tools.agent_tools import BUCKET, REGION, _build_s3_client
+from sana_evaluation.tools.agent_tools_v2 import (
     _build_xml_preview,
     _local_xml_name,
     _normalize_xml_record_tag,
     _xml_record_to_row,
 )
-from strands_evaluation.tools.external.description_rows import reject_forbidden_description_row
-from strands_evaluation.tools.helper.detect import detect_family
+from sana_evaluation.tools.external.description_rows import reject_forbidden_description_row
+from sana_evaluation.tools.helper.detect import detect_family
 
 load_dotenv()
 
@@ -63,9 +63,10 @@ class _UnusableSchemaError(ValueError):
     """Raised when DuckDB can parse bytes but the inferred schema is not useful."""
 
 
-_DESC_PATH = Path("table_descriptions.jsonl")
+_ARTIFACT_ROOT = Path("benchmarks/lakeqa/tasks-mini/artifacts")
+_DESC_PATH = _ARTIFACT_ROOT / "descriptions.jsonl"
 _URI_LIST_PATH = Path("table_profiles_needed.txt")
-_SNIPPET_PATH = Path("snippet.jsonl")
+_SNIPPET_PATH = _ARTIFACT_ROOT / "snippets.jsonl"
 _SNIFF_BYTES = 8 * 1024
 _SNIPPET_FALLBACK_BYTES = 2 * 1024
 _MAX_CELL_CHARS = 80
@@ -125,7 +126,7 @@ def _parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
         choices=("auto", "schemas", "manifest", "uri-list", "descriptions"),
         default="auto",
     )
-    parser.add_argument("--output", default="datagov_tables_profiles.jsonl")
+    parser.add_argument("--output", default=str(_ARTIFACT_ROOT / "table_profiles.jsonl"))
     parser.add_argument("--descriptions", default=str(_DESC_PATH))
     parser.add_argument("--snippets", default=str(_SNIPPET_PATH))
     parser.add_argument("--parallel", type=int, default=4)

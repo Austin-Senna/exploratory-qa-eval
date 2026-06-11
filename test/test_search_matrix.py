@@ -9,7 +9,7 @@ Usage (from the repo root):
 
     PYTHONPATH=. python test/test_search_matrix.py
     PYTHONPATH=. python test/test_search_matrix.py --query "biological materials" --k 3
-    PYTHONPATH=. python test/test_search_matrix.py --task-file tasks_mini/k-2-d-3/task_1.json
+    PYTHONPATH=. python test/test_search_matrix.py --task-file benchmarks/lakeqa/tasks-mini/tasks/k-2-d-3/task_1.json
 
 A combination that raises (e.g. because a heavy dependency like
 ``sentence_transformers`` is not installed for ``search_tool=standard``) is
@@ -53,7 +53,7 @@ def _build_base_tools(search_tool_mode: str, db_path: str, task_file: Optional[s
     if search_tool_mode == "ideal":
         if not task_file:
             raise ValueError("search_tool=ideal requires --task-file")
-        ideal_search.set_plans_root("plans_mini")
+        ideal_search.set_runtime_profiles_root("benchmarks/lakeqa/tasks-mini/runtime-profiles")
         ideal_search.reset_state()
         ideal_search.set_task_context({"task_id": task_file})
         return [ideal_search.search_ideal]
@@ -142,7 +142,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--db", default="lance_data", help="Lance DB root for non-ideal search tools.")
     parser.add_argument("--query", default="traffic events", help="Query fed to every search_value/search_schema call.")
-    parser.add_argument("--task-file", default="tasks_mini/k-5-d-4/task_1.json", help="Task id used to set search_ideal context.")
+    parser.add_argument("--task-file", default="benchmarks/lakeqa/tasks-mini/tasks/k-5-d-4/task_1.json", help="Task id used to set search_ideal context.")
     parser.add_argument("--k", type=int, default=3, help="Fixed result limit (passed as fixed_k to build_search_tools).")
     parser.add_argument("--out", default=None, help="Optional explicit output log path; defaults to test_logs/search_matrix_<ts>.log")
     parser.add_argument("--search-tool", action="append", choices=list(SEARCH_TOOL_MODES), help="Restrict outer search_tool modes; repeat to pass multiple. Defaults to all three.")

@@ -1,11 +1,11 @@
 from pathlib import Path
 from types import SimpleNamespace
 
-from strands_evaluation.tools.external.ideal import computation_ideal
+from sana_evaluation.tools.external.ideal import computation_ideal
 
 
-def test_plan_records_prompt_includes_selection_index_and_expected_output():
-    plan = SimpleNamespace(task_id="task", plan_path=Path("plans/task.json"))
+def test_profile_records_prompt_includes_selection_index_and_expected_output():
+    profile = SimpleNamespace(task_id="task", profile_path=Path("runtime-profiles/task.json"))
     records = [
         SimpleNamespace(
             node_id="2",
@@ -27,7 +27,7 @@ def test_plan_records_prompt_includes_selection_index_and_expected_output():
         ),
     ]
 
-    prompt_json = computation_ideal._plan_records_for_prompt(plan, records)
+    prompt_json = computation_ideal._profile_records_for_prompt(profile, records)
 
     assert '"selection_index": 1' in prompt_json
     assert '"selection_index": 2' in prompt_json

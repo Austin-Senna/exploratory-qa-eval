@@ -128,8 +128,8 @@ def _load_desc_cache() -> None:
 
     if not _TABLE_DESCRIPTIONS_PATH.exists():
         raise FileNotFoundError(
-            "Required dependency 'table_descriptions.jsonl' not found. "
-            "search_results=ideal requires the canonical descriptions JSONL at the repo root."
+            f"Required dependency '{_TABLE_DESCRIPTIONS_PATH}' not found. "
+            "search_results=ideal requires the benchmark artifact descriptions JSONL."
         )
 
     uri_map: Dict[str, str] = {}
@@ -165,7 +165,7 @@ def _load_snippet_cache() -> None:
     if not _SNIPPETS_PATH.exists():
         raise FileNotFoundError(
             f"Required dependency '{_SNIPPETS_PATH}' not found. "
-            "Run the snippet builder first to create snippet.jsonl."
+            "Run the snippet builder first to create the benchmark snippets artifact."
         )
 
     _SNIPPET_CACHE_LOADED = True
@@ -236,7 +236,7 @@ def _load_schemas_cache() -> None:
     if not _SCHEMAS_PATH.exists():
         raise FileNotFoundError(
             f"Required dependency '{_SCHEMAS_PATH}' not found. "
-            "search_results=ideal requires datagov_tables_schemas_full.jsonl at the repo root."
+            "search_results=ideal requires table_schemas_full.jsonl at the repo root."
         )
 
     chosen: Dict[Tuple[str, str], Tuple[int, Dict[str, Any]]] = {}

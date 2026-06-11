@@ -21,7 +21,7 @@ except Exception:  # pragma: no cover
     def tqdm(iterable=None, **_kwargs):
         return iterable if iterable is not None else _NullTqdm()
 
-from strands_evaluation.tools.agent_tools import BUCKET, FOLDERS, _build_s3_client
+from sana_evaluation.tools.agent_tools import BUCKET, FOLDERS, _build_s3_client
 
 load_dotenv()
 
@@ -45,8 +45,8 @@ class _NullTqdm:
 
 def _parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--task-root", default="tasks_mini")
-    parser.add_argument("--output", default="tasks_mini_file_manifest.jsonl")
+    parser.add_argument("--task-root", default="benchmarks/lakeqa/tasks-mini/tasks")
+    parser.add_argument("--output", default="benchmarks/lakeqa/tasks-mini/artifacts/task_file_manifest.jsonl")
     parser.add_argument("--bucket", default=BUCKET)
     return parser.parse_args(argv)
 

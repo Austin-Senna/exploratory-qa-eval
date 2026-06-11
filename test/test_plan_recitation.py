@@ -21,7 +21,7 @@ Usage (from repo root):
     PYTHONPATH=. python test/test_plan_recitation.py --mode standard \\
         --model-name openai/gpt-5-mini
     PYTHONPATH=. python test/test_plan_recitation.py --mode ideal \\
-        --task-file tasks_mini/k-2-d-3/task_1.json
+        --task-file benchmarks/lakeqa/tasks-mini/tasks/k-2-d-3/task_1.json
 """
 
 from __future__ import annotations
@@ -39,7 +39,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from sana_evaluation.agent_with_mode import DataLakeAgent
 from sana_evaluation.config import AgentConfig, ConditionConfig, RunConfig
 from sana_evaluation.preflight import run_preflight
-from sana_evaluation.tools.external.ideal import plan_store
+from sana_evaluation.tools.external.ideal import runtime_profile_store
 
 _IDEAL_PROMPT = (
     "This is a diagnostic. Do NOT attempt to answer the underlying research "
@@ -98,7 +98,7 @@ def _build_run_config(
 
 def _expected_chain(task_file: str) -> Optional[str]:
     try:
-        plan = plan_store.load_plan_for_task(task_file)
+        plan = runtime_profile_store.load_runtime_profile_for_task(task_file)
     except Exception:
         return None
     return plan.reasoning_chain_text
@@ -137,7 +137,7 @@ def run_recitation(
 
         expected = _expected_chain(task_file) if mode == "ideal" else None
         if mode == "ideal":
-            _dump(log, "EXPECTED REASONING CHAIN (from plans_mini)", expected or "<NONE>")
+            _dump(log, "EXPECTED REASONING CHAIN (from runtime-profiles)", expected or "<NONE>")
 
         trace_dir = Path("test_results/diagnostic_plan_recitation/traces") / mode
         results_dir = Path("test_results/diagnostic_plan_recitation/results") / mode
@@ -197,7 +197,7 @@ def run_recitation(
 def main(argv: Optional[List[str]] = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--mode", choices=("ideal", "standard"), default="ideal")
-    parser.add_argument("--task-file", default="tasks_mini/k-5-d-4/task_1.json")
+    parser.add_argument("--task-file", default="benchmarks/lakeqa/tasks-mini/tasks/k-5-d-4/task_1.json")
     parser.add_argument("--model-name", default="bedrock/claude-sonnet-4.5")
     parser.add_argument("--db", default="lance_data")
     parser.add_argument("--out", default=None)

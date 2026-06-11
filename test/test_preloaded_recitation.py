@@ -28,7 +28,7 @@ from sana_evaluation.agent_with_mode import DataLakeAgent, build_mode_bundle
 from sana_evaluation.config import AgentConfig, ConditionConfig, RunConfig
 from sana_evaluation.helper.prompting import compose_preloaded_block, skill_paths_for_modes
 from sana_evaluation.preflight import run_preflight
-from sana_evaluation.tools.external.ideal.plan_store import load_plan_for_task
+from sana_evaluation.tools.external.ideal.runtime_profile_store import load_runtime_profile_for_task
 
 _RECITATION_PROMPT = (
     "This is a diagnostic. Do NOT solve the underlying benchmark question. "
@@ -110,7 +110,7 @@ def run_recitation(
     with log_path.open("w") as log:
         task = _load_task(task_file)
         task_id = task["_task_id"]
-        ideal_plan = load_plan_for_task(task_file)
+        ideal_plan = load_runtime_profile_for_task(task_file)
         preloaded_block = compose_preloaded_block(ideal_plan.source_sequence)
         expected_chain = ideal_plan.reasoning_chain_text if management_mode == "ideal" else None
         skill_paths = skill_paths_for_modes("preloaded", management_mode)
@@ -191,7 +191,7 @@ def run_recitation(
 
 def main(argv: Optional[List[str]] = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("--task-file", default="tasks_core_quality/k-1-d-1/task_2.json")
+    parser.add_argument("--task-file", default="benchmarks/lakeqa/tasks-mini/tasks/k-1-d-1/task_2.json")
     parser.add_argument("--management", choices=("standard", "ideal"), default="ideal")
     parser.add_argument("--model-name", default="openai/gpt-5-mini")
     parser.add_argument("--db", default="lance_data")

@@ -6,15 +6,15 @@ from tempfile import TemporaryDirectory
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from strands_evaluation.tools.external.ideal.plan_ideal import (
+from sana_evaluation.tools.external.ideal.plan_ideal import (
     inject_reasoning_chain_prompt,
     plan_ideal,
 )
-import strands_evaluation.tools.external.ideal.plan_store as plan_store
-from strands_evaluation.tools.external.ideal.plan_store import (
-    load_plan_for_context,
-    load_plan_for_task,
-    set_plans_root,
+import sana_evaluation.tools.external.ideal.runtime_profile_store as runtime_profile_store
+from sana_evaluation.tools.external.ideal.runtime_profile_store import (
+    load_runtime_profile_for_context,
+    load_runtime_profile_for_task,
+    set_runtime_profiles_root,
     set_task_context,
 )
 
@@ -31,9 +31,8 @@ class _FakeToolContext:
 
 class TestPlanIdealFileBacked(unittest.TestCase):
     def tearDown(self) -> None:
-        set_plans_root("plans_mini")
-        plan_store._KRAMABENCH_PLANS_ROOT = Path("plans-mini-kramabench")
-        plan_store._QUALITY_PLANS_ROOT = Path("plans_core_quality")
+        set_runtime_profiles_root("runtime-profiles")
+        runtime_profile_store._KRAMABENCH_RUNTIME_PROFILES_ROOT = Path("runtime-profiles")
         set_task_context({})
 
     def _write_computation_plan(self, target: Path) -> None:
@@ -68,8 +67,8 @@ class TestPlanIdealFileBacked(unittest.TestCase):
 
     def test_inject_reasoning_chain_prompt_uses_file_backed_reasoning_chain(self):
         with TemporaryDirectory() as tmpdir:
-            plans_root = Path(tmpdir) / "plans_mini"
-            target = plans_root / "k-1-d-1"
+            runtime_profiles_root = Path(tmpdir) / "runtime-profiles"
+            target = runtime_profiles_root / "k-1-d-1"
             target.mkdir(parents=True, exist_ok=True)
             (target / "task_2.json").write_text(
                 json.dumps(
@@ -84,10 +83,10 @@ class TestPlanIdealFileBacked(unittest.TestCase):
                 )
             )
 
-            set_plans_root(plans_root)
-            set_task_context({"task_id": "tasks_mini/k-1-d-1/task_2.json"})
+            set_runtime_profiles_root(runtime_profiles_root)
+            set_task_context({"task_id": "benchmarks/lakeqa/tasks-mini/tasks/k-1-d-1/task_2.json"})
 
-            plan = load_plan_for_context()
+            plan = load_runtime_profile_for_context()
             prompt = inject_reasoning_chain_prompt("BASE", plan.reasoning_chain_text)
 
             self.assertIn("## GOLD REASONING CHAIN", prompt)
@@ -99,8 +98,8 @@ class TestPlanIdealFileBacked(unittest.TestCase):
 
     def test_inject_reasoning_chain_prompt_joins_list_backed_reasoning_chain(self):
         with TemporaryDirectory() as tmpdir:
-            plans_root = Path(tmpdir) / "plans_mini"
-            target = plans_root / "k-1-d-1"
+            runtime_profiles_root = Path(tmpdir) / "runtime-profiles"
+            target = runtime_profiles_root / "k-1-d-1"
             target.mkdir(parents=True, exist_ok=True)
             (target / "task_3.json").write_text(
                 json.dumps(
@@ -118,18 +117,18 @@ class TestPlanIdealFileBacked(unittest.TestCase):
                 )
             )
 
-            set_plans_root(plans_root)
-            set_task_context({"task_id": "tasks_mini/k-1-d-1/task_3.json"})
+            set_runtime_profiles_root(runtime_profiles_root)
+            set_task_context({"task_id": "benchmarks/lakeqa/tasks-mini/tasks/k-1-d-1/task_3.json"})
 
-            plan = load_plan_for_context()
+            plan = load_runtime_profile_for_context()
             prompt = inject_reasoning_chain_prompt("BASE", plan.reasoning_chain_text)
 
             self.assertIn("1. First file-backed step.\n2. Second file-backed step.", prompt)
 
-    def test_load_plan_accepts_ideal_query_and_code_records(self):
+    def test_load_profile_accepts_ideal_query_and_code_records(self):
         with TemporaryDirectory() as tmpdir:
-            plans_root = Path(tmpdir) / "plans_mini"
-            target = plans_root / "k-1-d-1"
+            runtime_profiles_root = Path(tmpdir) / "runtime-profiles"
+            target = runtime_profiles_root / "k-1-d-1"
             target.mkdir(parents=True, exist_ok=True)
             (target / "task_4.json").write_text(
                 json.dumps(
@@ -159,8 +158,8 @@ class TestPlanIdealFileBacked(unittest.TestCase):
                 )
             )
 
-            set_plans_root(plans_root)
-            plan = load_plan_for_task("tasks_mini/k-1-d-1/task_4.json")
+            set_runtime_profiles_root(runtime_profiles_root)
+            plan = load_runtime_profile_for_task("benchmarks/lakeqa/tasks-mini/tasks/k-1-d-1/task_4.json")
 
             self.assertEqual(len(plan.ideal_query), 1)
             self.assertEqual(plan.ideal_query[0].tool, "query")
@@ -173,52 +172,52 @@ class TestPlanIdealFileBacked(unittest.TestCase):
             self.assertEqual(plan.ideal_code[0].dataset_id, "ds_a")
             self.assertEqual(plan.ideal_code[0].payload, "print(3 + 4)")
 
-    def test_load_plan_maps_tasks_core_to_nested_plans_root_records(self):
+    def test_load_profile_maps_relative_task_ids_to_runtime_profiles_root_records(self):
         with TemporaryDirectory() as tmpdir:
-            plans_root = Path(tmpdir) / "plans_mini"
+            runtime_profiles_root = Path(tmpdir) / "runtime-profiles"
             self._write_computation_plan(
-                plans_root / "tasks_core" / "k-1-d-1" / "task_6.json"
+                runtime_profiles_root / "custom" / "k-1-d-1" / "task_6.json"
             )
 
-            set_plans_root(plans_root)
-            plan = load_plan_for_task("tasks_core/k-1-d-1/task_6.json")
+            set_runtime_profiles_root(runtime_profiles_root)
+            profile = load_runtime_profile_for_task("custom/k-1-d-1/task_6.json")
 
-            self.assertEqual(plan.plan_path, plans_root / "tasks_core" / "k-1-d-1" / "task_6.json")
-            self.assertEqual(plan.ideal_query[0].answer, 7)
-            self.assertEqual(plan.ideal_code[0].payload, "print(3 + 4)")
+            self.assertEqual(profile.profile_path, runtime_profiles_root / "custom" / "k-1-d-1" / "task_6.json")
+            self.assertEqual(profile.ideal_query[0].answer, 7)
+            self.assertEqual(profile.ideal_code[0].payload, "print(3 + 4)")
 
-    def test_load_plan_maps_tasks_core_quality_to_quality_plan_records(self):
+    def test_load_profile_maps_canonical_lakeqa_task_to_runtime_profile_records(self):
         with TemporaryDirectory() as tmpdir:
-            quality_root = Path(tmpdir) / "plans_core_quality"
-            self._write_computation_plan(quality_root / "k-1-d-1" / "task_7.json")
+            runtime_profiles_root = Path(tmpdir) / "runtime-profiles"
+            self._write_computation_plan(runtime_profiles_root / "k-1-d-1" / "task_7.json")
 
-            plan_store._QUALITY_PLANS_ROOT = quality_root
-            plan = load_plan_for_task("tasks_core_quality/k-1-d-1/task_7.json")
+            set_runtime_profiles_root(runtime_profiles_root)
+            profile = load_runtime_profile_for_task("benchmarks/lakeqa/tasks-mini/tasks/k-1-d-1/task_7.json")
 
-            self.assertEqual(plan.plan_path, quality_root / "k-1-d-1" / "task_7.json")
-            self.assertEqual(plan.ideal_query[0].dataset_id, "ds_a")
-            self.assertEqual(plan.ideal_code[0].source, "datagov/ds_a/files/rows.txt")
+            self.assertEqual(profile.profile_path, runtime_profiles_root / "k-1-d-1" / "task_7.json")
+            self.assertEqual(profile.ideal_query[0].dataset_id, "ds_a")
+            self.assertEqual(profile.ideal_code[0].source, "datagov/ds_a/files/rows.txt")
 
-    def test_load_plan_maps_tasks_mini_kramabench_to_kramabench_plan_records(self):
+    def test_load_profile_maps_kramabench_to_kramabench_profile_records(self):
         with TemporaryDirectory() as tmpdir:
-            kramabench_root = Path(tmpdir) / "plans-mini-kramabench"
+            kramabench_root = Path(tmpdir) / "runtime-profiles"
             self._write_computation_plan(
                 kramabench_root / "k-2-d-2-s-1" / "task_1.json"
             )
 
-            plan_store._KRAMABENCH_PLANS_ROOT = kramabench_root
-            plan = load_plan_for_task("tasks-mini-kramabench/k-2-d-2-s-1/task_1.json")
+            runtime_profile_store._KRAMABENCH_RUNTIME_PROFILES_ROOT = kramabench_root
+            profile = load_runtime_profile_for_task("benchmarks/kramabench/tasks-mini/tasks/k-2-d-2-s-1/task_1.json")
 
             self.assertEqual(
-                plan.plan_path,
+                profile.profile_path,
                 kramabench_root / "k-2-d-2-s-1" / "task_1.json",
             )
-            self.assertEqual(plan.ideal_query[0].answer, 7)
+            self.assertEqual(profile.ideal_query[0].answer, 7)
 
-    def test_load_plan_rejects_malformed_ideal_query_record(self):
+    def test_load_profile_rejects_malformed_ideal_query_record(self):
         with TemporaryDirectory() as tmpdir:
-            plans_root = Path(tmpdir) / "plans_mini"
-            target = plans_root / "k-1-d-1"
+            runtime_profiles_root = Path(tmpdir) / "runtime-profiles"
+            target = runtime_profiles_root / "k-1-d-1"
             target.mkdir(parents=True, exist_ok=True)
             (target / "task_5.json").write_text(
                 json.dumps(
@@ -238,14 +237,14 @@ class TestPlanIdealFileBacked(unittest.TestCase):
                 )
             )
 
-            set_plans_root(plans_root)
+            set_runtime_profiles_root(runtime_profiles_root)
             with self.assertRaisesRegex(ValueError, "ideal_query\\[0\\].*sql"):
-                load_plan_for_task("tasks_mini/k-1-d-1/task_5.json")
+                load_runtime_profile_for_task("benchmarks/lakeqa/tasks-mini/tasks/k-1-d-1/task_5.json")
 
-    def test_load_plan_accepts_unsupported_query_blocker_record(self):
+    def test_load_profile_accepts_unsupported_query_blocker_record(self):
         with TemporaryDirectory() as tmpdir:
-            plans_root = Path(tmpdir) / "plans_mini"
-            target = plans_root / "k-1-d-1"
+            runtime_profiles_root = Path(tmpdir) / "runtime-profiles"
+            target = runtime_profiles_root / "k-1-d-1"
             target.mkdir(parents=True, exist_ok=True)
             (target / "task_8.json").write_text(
                 json.dumps(
@@ -274,18 +273,18 @@ class TestPlanIdealFileBacked(unittest.TestCase):
                 )
             )
 
-            set_plans_root(plans_root)
-            plan = load_plan_for_task("tasks_mini/k-1-d-1/task_8.json")
+            set_runtime_profiles_root(runtime_profiles_root)
+            plan = load_runtime_profile_for_task("benchmarks/lakeqa/tasks-mini/tasks/k-1-d-1/task_8.json")
 
             self.assertEqual(len(plan.ideal_query), 1)
             self.assertTrue(plan.ideal_query[0].blocked)
             self.assertEqual(plan.ideal_query[0].payload, "")
             self.assertIn("Cannot execute SQL", plan.ideal_query[0].answer)
 
-    def test_load_plan_accepts_legacy_query_file_xml_blocker_record(self):
+    def test_load_profile_accepts_legacy_query_file_xml_blocker_record(self):
         with TemporaryDirectory() as tmpdir:
-            plans_root = Path(tmpdir) / "plans_mini"
-            target = plans_root / "k-1-d-1"
+            runtime_profiles_root = Path(tmpdir) / "runtime-profiles"
+            target = runtime_profiles_root / "k-1-d-1"
             target.mkdir(parents=True, exist_ok=True)
             (target / "task_9.json").write_text(
                 json.dumps(
@@ -314,8 +313,8 @@ class TestPlanIdealFileBacked(unittest.TestCase):
                 )
             )
 
-            set_plans_root(plans_root)
-            plan = load_plan_for_task("tasks_mini/k-1-d-1/task_9.json")
+            set_runtime_profiles_root(runtime_profiles_root)
+            plan = load_runtime_profile_for_task("benchmarks/lakeqa/tasks-mini/tasks/k-1-d-1/task_9.json")
 
             self.assertEqual(len(plan.ideal_query), 1)
             self.assertTrue(plan.ideal_query[0].blocked)

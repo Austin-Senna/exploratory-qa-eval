@@ -1,8 +1,8 @@
-"""Search tool wrappers for search-ablation experiments.
+"""Search tool wrappers for search mode experiments.
 
 Supports:
 1. Hard-coding result limit (`k`) by removing user-controlled limit params.
-2. Returning enriched table descriptions from table_descriptions.jsonl.
+2. Returning enriched table descriptions from benchmark descriptions.jsonl.
 """
 
 from __future__ import annotations
@@ -52,8 +52,8 @@ def _load_description_cache() -> None:
 
     if not _TABLE_DESCRIPTIONS_PATH.exists():
         raise FileNotFoundError(
-            "Required dependency 'table_descriptions.jsonl' not found. "
-            "search description mode requires the canonical descriptions JSONL at the repo root."
+            f"Required dependency '{_TABLE_DESCRIPTIONS_PATH}' not found. "
+            "search description mode requires the benchmark artifact descriptions JSONL."
         )
 
     _DESC_CACHE_LOADED = True
@@ -144,7 +144,7 @@ def _compose_description(base_description: str, *, fixed_k: Optional[int], mode:
         notes.append(f"Result limit is fixed at {fixed_k}; callers cannot change it.")
     if mode == "description":
         notes.append(
-            "Each result may include an added `description` field from table_descriptions.jsonl."
+            "Each result may include an added `description` field from benchmark descriptions.jsonl."
         )
     if not notes:
         return description

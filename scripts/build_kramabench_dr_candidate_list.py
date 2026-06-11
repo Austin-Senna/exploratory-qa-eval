@@ -18,7 +18,7 @@ KRAMA_ROOT = REPO / "other-benchmarks" / "Kramabench"
 WORKLOAD_ROOT = KRAMA_ROOT / "workload"
 DR_INPUT_ROOT = KRAMA_ROOT / "dr-input"
 SOLUTIONS_ROOT = KRAMA_ROOT / "solutions"
-DEFAULT_OUTPUT_ROOT = REPO / "tasks-mini-kramabench"
+DEFAULT_OUTPUT_ROOT = REPO / "benchmarks/kramabench/tasks-mini/tasks"
 DOMAINS = ("archeology", "astronomy", "biomedical", "environment", "legal", "wildfire")
 GLOB_CHARS = set("*?[")
 

@@ -19,11 +19,11 @@ import sana_evaluation.tools.external.ideal.search_ideal as search_ideal
 import sana_evaluation.tools.external.ideal.search_wrapper as search_wrapper
 
 _TASK_ROOT = "k-1-d-1"
-_TASK_ID_TEMPLATE = f"tasks_mini/{_TASK_ROOT}/{{task_name}}"
+_TASK_ID_TEMPLATE = f"benchmarks/lakeqa/tasks-mini/tasks/{_TASK_ROOT}/{{task_name}}"
 _LIVE_LOG_PATH = Path("test_logs/search_ideal_judge_samples.jsonl")
 _MATRIX_LOG_PATH = Path("test_logs/search_ideal_flag_matrix.jsonl")
 _LIVE_MATRIX_LOG_PATH = Path("test_logs/search_ideal_gpt54_nano_matrix.jsonl")
-_CORE_QUALITY_TASK_ID = "tasks_core_quality/k-1-d-1/task_2.json"
+_CORE_QUALITY_TASK_ID = "benchmarks/lakeqa/tasks-mini/tasks/k-1-d-1/task_2.json"
 _CORE_QUALITY_QUERY = "provisional drug overdose death counts by state and year"
 _CORE_QUALITY_SOURCE = "datagov/vsrr-provisional-drug-overdose-death-counts/files/rows.txt"
 _LIVE_SOURCE_SEQUENCE = [
@@ -64,8 +64,8 @@ def _task_id(task_name: str) -> str:
     return _TASK_ID_TEMPLATE.format(task_name=task_name)
 
 
-def _write_plan(plans_root: Path, *, task_name: str, source_sequence: list[str]) -> str:
-    target = plans_root / _TASK_ROOT
+def _write_plan(runtime_profiles_root: Path, *, task_name: str, source_sequence: list[str]) -> str:
+    target = runtime_profiles_root / _TASK_ROOT
     target.mkdir(parents=True, exist_ok=True)
     (target / task_name).write_text(
         json.dumps(
@@ -79,9 +79,9 @@ def _write_plan(plans_root: Path, *, task_name: str, source_sequence: list[str])
     return _task_id(task_name)
 
 
-def _set_task_context(plans_root: Path, *, task_name: str, source_sequence: list[str]) -> tuple[str, list[str]]:
-    task_id = _write_plan(plans_root, task_name=task_name, source_sequence=source_sequence)
-    search_ideal.set_plans_root(plans_root)
+def _set_task_context(runtime_profiles_root: Path, *, task_name: str, source_sequence: list[str]) -> tuple[str, list[str]]:
+    task_id = _write_plan(runtime_profiles_root, task_name=task_name, source_sequence=source_sequence)
+    search_ideal.set_runtime_profiles_root(runtime_profiles_root)
     search_ideal.reset_state()
     search_ideal.set_task_context({"task_id": task_id})
     return task_id, [search_ideal._canonical_uri(source) for source in source_sequence]
@@ -162,7 +162,7 @@ class _FakeAgentResult:
 
 class TestSearchIdealJudge(unittest.TestCase):
     def tearDown(self) -> None:
-        search_ideal.set_plans_root("plans_mini")
+        search_ideal.set_runtime_profiles_root("runtime-profiles")
         search_ideal.reset_state()
         ideal_subagent_costs.reset_stats()
         _reset_wrapper_caches()
@@ -178,13 +178,13 @@ class TestSearchIdealJudge(unittest.TestCase):
         schema_kind: str = "csv",
         columns: list[str] | None = None,
     ) -> ExitStack:
-        desc_path = root / "table_descriptions.jsonl"
+        desc_path = root / "descriptions.jsonl"
         desc_path.write_text(json.dumps({"dataset_uri": uri, "description": desc}) + "\n")
 
-        snippet_path = root / "snippet.jsonl"
+        snippet_path = root / "snippets.jsonl"
         snippet_path.write_text(json.dumps({"dataset_uri": uri, "dataset_snippet": snippet}) + "\n")
 
-        schema_path = root / "datagov_tables_schemas_full.jsonl"
+        schema_path = root / "table_schemas_full.jsonl"
         schema_path.write_text(
             json.dumps(
                 {
@@ -209,8 +209,8 @@ class TestSearchIdealJudge(unittest.TestCase):
 
     def test_set_task_context_hard_fails_when_source_sequence_missing(self):
         with TemporaryDirectory() as tmpdir:
-            plans_root = Path(tmpdir) / "plans_mini"
-            target = plans_root / _TASK_ROOT
+            runtime_profiles_root = Path(tmpdir) / "runtime-profiles"
+            target = runtime_profiles_root / _TASK_ROOT
             target.mkdir(parents=True, exist_ok=True)
             (target / "task_1.json").write_text(
                 json.dumps(
@@ -221,7 +221,7 @@ class TestSearchIdealJudge(unittest.TestCase):
                 )
             )
 
-            search_ideal.set_plans_root(plans_root)
+            search_ideal.set_runtime_profiles_root(runtime_profiles_root)
             with self.assertRaisesRegex(ValueError, "source_sequence"):
                 search_ideal.set_task_context({"task_id": _task_id("task_1.json")})
 
@@ -249,9 +249,9 @@ class TestSearchIdealJudge(unittest.TestCase):
 
     def test_no_pick_returns_dataset_not_found_without_consuming_source(self):
         with TemporaryDirectory() as tmpdir:
-            plans_root = Path(tmpdir) / "plans_mini"
+            runtime_profiles_root = Path(tmpdir) / "runtime-profiles"
             _, uris = _set_task_context(
-                plans_root,
+                runtime_profiles_root,
                 task_name="task_1.json",
                 source_sequence=[
                     "datagov/chicago-crime-2017/files/rows.txt",
@@ -285,9 +285,9 @@ class TestSearchIdealJudge(unittest.TestCase):
 
     def test_empty_pick_returns_dataset_not_found_without_consuming_source(self):
         with TemporaryDirectory() as tmpdir:
-            plans_root = Path(tmpdir) / "plans_mini"
+            runtime_profiles_root = Path(tmpdir) / "runtime-profiles"
             _task_id_value, uris = _set_task_context(
-                plans_root,
+                runtime_profiles_root,
                 task_name="task_1.json",
                 source_sequence=[
                     "datagov/chicago-crime-2017/files/rows.txt",
@@ -323,9 +323,9 @@ class TestSearchIdealJudge(unittest.TestCase):
 
         with TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
-            plans_root = root / "plans_mini"
+            runtime_profiles_root = root / "runtime-profiles"
             task_id, uris = _set_task_context(
-                plans_root,
+                runtime_profiles_root,
                 task_name="task_1.json",
                 source_sequence=source_sequence,
             )
@@ -385,11 +385,11 @@ class TestSearchIdealJudge(unittest.TestCase):
             prompt,
         )
 
-    def test_judge_prompt_includes_merged_tasks_mini_descriptions(self):
+    def test_judge_prompt_includes_merged_runtime_profile_descriptions(self):
         with TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
             uri = "s3://lakeqa-yc4103-datalake/datagov/chicago-crime-2017/files/rows.txt"
-            desc_path = root / "table_descriptions.jsonl"
+            desc_path = root / "descriptions.jsonl"
             desc_path.write_text(
                 json.dumps(
                     {
@@ -423,9 +423,9 @@ class TestSearchIdealJudge(unittest.TestCase):
 
     def test_set_task_context_resets_used(self):
         with TemporaryDirectory() as tmpdir:
-            plans_root = Path(tmpdir) / "plans_mini"
+            runtime_profiles_root = Path(tmpdir) / "runtime-profiles"
             _, uris = _set_task_context(
-                plans_root,
+                runtime_profiles_root,
                 task_name="task_1.json",
                 source_sequence=[
                     "datagov/chicago-crime-2017/files/rows.txt",
@@ -441,9 +441,9 @@ class TestSearchIdealJudge(unittest.TestCase):
 
     def test_plan_exhausted_returns_empty(self):
         with TemporaryDirectory() as tmpdir:
-            plans_root = Path(tmpdir) / "plans_mini"
+            runtime_profiles_root = Path(tmpdir) / "runtime-profiles"
             _, uris = _set_task_context(
-                plans_root,
+                runtime_profiles_root,
                 task_name="task_1.json",
                 source_sequence=[
                     "datagov/chicago-crime-2017/files/rows.txt",
@@ -474,9 +474,9 @@ class TestSearchIdealJudge(unittest.TestCase):
 
     def test_lessguide_omits_plan_exhausted_from_search_ideal_payloads(self):
         with TemporaryDirectory() as tmpdir:
-            plans_root = Path(tmpdir) / "plans_mini"
+            runtime_profiles_root = Path(tmpdir) / "runtime-profiles"
             _, uris = _set_task_context(
-                plans_root,
+                runtime_profiles_root,
                 task_name="task_1.json",
                 source_sequence=["datagov/chicago-crime-2017/files/rows.txt"],
             )
@@ -509,9 +509,9 @@ class TestSearchIdealJudge(unittest.TestCase):
 
     def test_wrapper_applies_naive_vs_ideal_shaping(self):
         with TemporaryDirectory() as tmpdir:
-            plans_root = Path(tmpdir) / "plans_mini"
+            runtime_profiles_root = Path(tmpdir) / "runtime-profiles"
             _, uris = _set_task_context(
-                plans_root,
+                runtime_profiles_root,
                 task_name="task_1.json",
                 source_sequence=["datagov/chicago-crime-2017/files/rows.txt"],
             )
@@ -538,7 +538,7 @@ class TestSearchIdealJudge(unittest.TestCase):
                     naive = naive_tool(query="crime 2017")
 
                     search_ideal.reset_state()
-                    search_ideal.set_plans_root(plans_root)
+                    search_ideal.set_runtime_profiles_root(runtime_profiles_root)
                     search_ideal.set_task_context({"task_id": _task_id("task_1.json")})
 
                     ideal_tool = search_wrapper.build_search_tools(
@@ -571,7 +571,7 @@ class TestSearchIdealJudge(unittest.TestCase):
 
 class TestSearchIdealFlagMatrix(unittest.TestCase):
     def tearDown(self) -> None:
-        search_ideal.set_plans_root("plans_mini")
+        search_ideal.set_runtime_profiles_root("runtime-profiles")
         search_ideal.reset_state()
         _reset_wrapper_caches()
         try:
@@ -588,7 +588,7 @@ class TestSearchIdealFlagMatrix(unittest.TestCase):
         uri: str,
         dataset_slug: str,
     ) -> ExitStack:
-        desc_path = root / "table_descriptions.jsonl"
+        desc_path = root / "descriptions.jsonl"
         desc_path.write_text(
             json.dumps(
                 {
@@ -599,7 +599,7 @@ class TestSearchIdealFlagMatrix(unittest.TestCase):
             + "\n"
         )
 
-        snippet_path = root / "snippet.jsonl"
+        snippet_path = root / "snippets.jsonl"
         snippet_path.write_text(
             json.dumps(
                 {
@@ -610,7 +610,7 @@ class TestSearchIdealFlagMatrix(unittest.TestCase):
             + "\n"
         )
 
-        schema_path = root / "datagov_tables_schemas_full.jsonl"
+        schema_path = root / "table_schemas_full.jsonl"
         schema_path.write_text(
             json.dumps(
                 {
@@ -639,9 +639,9 @@ class TestSearchIdealFlagMatrix(unittest.TestCase):
 
         with TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
-            plans_root = root / "plans_mini"
+            runtime_profiles_root = root / "runtime-profiles"
             task_id = _write_plan(
-                plans_root,
+                runtime_profiles_root,
                 task_name="task_matrix.json",
                 source_sequence=source_sequence,
             )
@@ -661,7 +661,7 @@ class TestSearchIdealFlagMatrix(unittest.TestCase):
                         (False, True),
                     ):
                         search_ideal.reset_state()
-                        search_ideal.set_plans_root(plans_root)
+                        search_ideal.set_runtime_profiles_root(runtime_profiles_root)
                         _reset_wrapper_caches()
                         cfg = RunConfig(
                             search_tool_mode="ideal",
@@ -693,7 +693,7 @@ class TestSearchIdealFlagMatrix(unittest.TestCase):
                         self.assertEqual(bundle.search_tool_names, ("search_ideal",))
                         self.assertEqual(bundle.modes["search_tool"], "ideal")
                         self.assertEqual(bundle.modes["search_results"], search_results_mode)
-                        self.assertEqual(bundle.modes["plan"], "naive")
+                        self.assertEqual(bundle.modes["profile"], "naive")
                         self.assertEqual(bundle.modes["computation_tool"], "standard")
                         if search_lessguide:
                             self.assertNotIn("plan_exhausted", result)
@@ -705,7 +705,7 @@ class TestSearchIdealFlagMatrix(unittest.TestCase):
                             {
                                 "search_tool": "ideal",
                                 "search_results": search_results_mode,
-                                "plan": "naive",
+                                "profile": "naive",
                                 "computation_tool": "standard",
                                 "search_free": False,
                                 "search_lessguide": search_lessguide,
@@ -743,7 +743,7 @@ class TestSearchIdealFlagMatrix(unittest.TestCase):
             (False, True),
         ):
             search_ideal.reset_state()
-            search_ideal.set_plans_root("plans_mini")
+            search_ideal.set_runtime_profiles_root("runtime-profiles")
             _reset_wrapper_caches()
             cfg = RunConfig(
                 search_tool_mode="ideal",
@@ -818,14 +818,14 @@ def _capture_builder_calls(captured_calls: list[dict]):
 @unittest.skipUnless(os.getenv("OPENAI_API_KEY"), "OPENAI_API_KEY not set")
 class TestSearchIdealJudgeLive(unittest.TestCase):
     def tearDown(self) -> None:
-        search_ideal.set_plans_root("plans_mini")
+        search_ideal.set_runtime_profiles_root("runtime-profiles")
         search_ideal.reset_state()
 
     def test_live_single_match(self):
         with TemporaryDirectory() as tmpdir:
-            plans_root = Path(tmpdir) / "plans_mini"
+            runtime_profiles_root = Path(tmpdir) / "runtime-profiles"
             _set_task_context(
-                plans_root,
+                runtime_profiles_root,
                 task_name="task_live_single.json",
                 source_sequence=_LIVE_SOURCE_SEQUENCE,
             )
@@ -848,9 +848,9 @@ class TestSearchIdealJudgeLive(unittest.TestCase):
 
     def test_live_aggregation_multi_pick(self):
         with TemporaryDirectory() as tmpdir:
-            plans_root = Path(tmpdir) / "plans_mini"
+            runtime_profiles_root = Path(tmpdir) / "runtime-profiles"
             _set_task_context(
-                plans_root,
+                runtime_profiles_root,
                 task_name="task_live_aggregate.json",
                 source_sequence=_LIVE_SOURCE_SEQUENCE,
             )
@@ -873,9 +873,9 @@ class TestSearchIdealJudgeLive(unittest.TestCase):
 
     def test_live_dedup_across_calls(self):
         with TemporaryDirectory() as tmpdir:
-            plans_root = Path(tmpdir) / "plans_mini"
+            runtime_profiles_root = Path(tmpdir) / "runtime-profiles"
             _set_task_context(
-                plans_root,
+                runtime_profiles_root,
                 task_name="task_live_dedup.json",
                 source_sequence=_LIVE_SOURCE_SEQUENCE,
             )
@@ -916,9 +916,9 @@ class TestSearchIdealJudgeLive(unittest.TestCase):
 
     def test_live_specific_query_ignores_aggregate(self):
         with TemporaryDirectory() as tmpdir:
-            plans_root = Path(tmpdir) / "plans_mini"
+            runtime_profiles_root = Path(tmpdir) / "runtime-profiles"
             _set_task_context(
-                plans_root,
+                runtime_profiles_root,
                 task_name="task_live_specific.json",
                 source_sequence=_LIVE_SOURCE_SEQUENCE,
             )

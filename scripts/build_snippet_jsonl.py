@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build snippet.jsonl from datalake_silver.parquet.
+"""Build snippets.jsonl from datalake_silver.parquet.
 
 Each output line has:
     {"dataset_uri": "...", "dataset_snippet": "..."}
@@ -52,7 +52,7 @@ def build_snippets(parquet_path: Path, output_path: Path, *, max_words: int) -> 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("input", help="Path to datalake_silver.parquet")
-    parser.add_argument("--output", default="snippet.jsonl")
+    parser.add_argument("--output", default="benchmarks/lakeqa/tasks-mini/artifacts/snippets.jsonl")
     parser.add_argument("--max-words", type=int, default=100)
     return parser.parse_args()
 

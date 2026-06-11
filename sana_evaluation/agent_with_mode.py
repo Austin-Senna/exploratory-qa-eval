@@ -82,9 +82,9 @@ from sana_evaluation.tools.external.ideal.plan_ideal import (
     inject_reasoning_chain_prompt,
     plan_ideal,
 )
-from sana_evaluation.tools.external.ideal.plan_store import (
-    load_plan_for_context as load_ideal_plan_for_context,
-    set_task_context as set_ideal_plan_task_context,
+from sana_evaluation.tools.external.ideal.runtime_profile_store import (
+    load_runtime_profile_for_context as load_ideal_profile_for_context,
+    set_task_context as set_ideal_profile_task_context,
 )
 from sana_evaluation.tools.external.ideal.search_wrapper import (
     build_search_tools as build_search_tools_by_mode,
@@ -221,14 +221,14 @@ def build_management(
 
     trailer_sections: List[str] = []
     if management_mode == "ideal":
-        set_ideal_plan_task_context(task_context or {})
-        ideal_plan = load_ideal_plan_for_context(task_context)
-        reasoning_trailer = inject_reasoning_chain_prompt("", ideal_plan.reasoning_chain_text).lstrip()
+        set_ideal_profile_task_context(task_context or {})
+        ideal_profile = load_ideal_profile_for_context(task_context)
+        reasoning_trailer = inject_reasoning_chain_prompt("", ideal_profile.reasoning_chain_text).lstrip()
         if reasoning_trailer:
             trailer_sections.append(reasoning_trailer)
     if search_tool_mode == "preloaded":
-        ideal_plan = load_ideal_plan_for_context(task_context)
-        trailer_sections.append(compose_preloaded_block(ideal_plan.source_sequence))
+        ideal_profile = load_ideal_profile_for_context(task_context)
+        trailer_sections.append(compose_preloaded_block(ideal_profile.source_sequence))
     task_trailer = ("\n\n" + "\n\n".join(trailer_sections)) if trailer_sections else ""
 
     benchmark_name = (benchmark or "lakeqa").strip().lower()
@@ -288,7 +288,7 @@ def build_mode_bundle(
     benchmark = (getattr(run_config, "benchmark", None) or "lakeqa").strip().lower()
 
     if search_tool_mode == "ideal" or profile_mode == "ideal" or computation_tool_mode == "ideal":
-        set_ideal_plan_task_context(task_context or {})
+        set_ideal_profile_task_context(task_context or {})
 
     raw_search_tools = build_search(
         search_tool_mode,
@@ -333,7 +333,6 @@ def build_mode_bundle(
         modes={
             "search_tool": search_tool_mode,
             "search_results": search_results_mode,
-            "plan": profile_mode,
             "profile": profile_mode,
             "computation_tool": computation_tool_mode,
             "profile_skills": "on" if run_config.profile_skills_enabled else "off",

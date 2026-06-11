@@ -6,18 +6,18 @@ from tempfile import TemporaryDirectory
 
 from sana_evaluation.config import RunConfig
 from sana_evaluation.preflight import run_preflight
-from sana_evaluation.tools.external.ideal.plan_store import set_plans_root, set_task_context
+from sana_evaluation.tools.external.ideal.runtime_profile_store import set_runtime_profiles_root, set_task_context
 
 
 class IdealComputationPreflightTests(unittest.TestCase):
     def tearDown(self) -> None:
-        set_plans_root("plans_mini")
+        set_runtime_profiles_root("runtime-profiles")
         set_task_context({})
 
     def test_text_only_plan_with_no_computation_records_passes(self):
         with TemporaryDirectory() as tmpdir:
-            plans_root = Path(tmpdir) / "plans_mini"
-            target = plans_root / "k-1-d-1"
+            runtime_profiles_root = Path(tmpdir) / "runtime-profiles"
+            target = runtime_profiles_root / "k-1-d-1"
             target.mkdir(parents=True, exist_ok=True)
             (target / "task_text.json").write_text(
                 json.dumps(
@@ -30,7 +30,7 @@ class IdealComputationPreflightTests(unittest.TestCase):
                     }
                 )
             )
-            set_plans_root(plans_root)
+            set_runtime_profiles_root(runtime_profiles_root)
 
             stream = io.StringIO()
             checks = run_preflight(
@@ -40,7 +40,7 @@ class IdealComputationPreflightTests(unittest.TestCase):
                     profile_mode="naive",
                     computation_tool_mode="ideal",
                 ),
-                ["tasks_mini/k-1-d-1/task_text.json"],
+                ["benchmarks/lakeqa/tasks-mini/tasks/k-1-d-1/task_text.json"],
                 stream=stream,
             )
 

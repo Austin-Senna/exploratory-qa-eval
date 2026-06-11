@@ -13,7 +13,7 @@ _REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
-from strands_evaluation.tools.external.description_rows import (  # noqa: E402
+from sana_evaluation.tools.external.description_rows import (  # noqa: E402
     DESCRIPTION_FIELDS,
     description_uri,
     has_valid_description,
@@ -22,9 +22,8 @@ from strands_evaluation.tools.external.description_rows import (  # noqa: E402
 
 
 DEFAULT_DESCRIPTION_PATHS = (
-    Path("table_descriptions.jsonl"),
-    Path("extras/tasks_core_quality_file_manifest_descriptions.jsonl"),
-    Path("extras/tasks_mini_file_manifest_descriptions.jsonl"),
+    Path("benchmarks/lakeqa/tasks-mini/artifacts/descriptions.jsonl"),
+    Path("benchmarks/lakeqa/tasks-mini/artifacts/task_file_manifest_descriptions.jsonl"),
 )
 
 
@@ -36,18 +35,18 @@ def _parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
         default=None,
         help=(
             "Description JSONL to merge. Repeat in precedence order; later files "
-            "override earlier rows for the same dataset_uri. Defaults to broad "
-            "table_descriptions, tasks_core_quality, then tasks_mini."
+            "override earlier rows for the same dataset_uri. Defaults to "
+            "the benchmark artifact description files."
         ),
     )
     parser.add_argument(
         "--output",
-        default="table_descriptions.jsonl",
+        default="benchmarks/lakeqa/tasks-mini/artifacts/descriptions.jsonl",
         help="Canonical merged description JSONL to write.",
     )
     parser.add_argument(
         "--uri-output",
-        default="table_profiles_needed.txt",
+        default="benchmarks/lakeqa/tasks-mini/artifacts/table_profiles_needed.txt",
         help="Plain-text URI list derived from the merged descriptions.",
     )
     return parser.parse_args(argv)

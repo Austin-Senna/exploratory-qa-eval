@@ -1,10 +1,8 @@
-"""Shared loader/state for ideal-mode task plans.
+"""Shared loader/state for ideal-mode runtime profiles.
 
 Default mappings:
 - benchmarks/lakeqa/tasks-mini/tasks/... -> benchmarks/lakeqa/tasks-mini/runtime-profiles/...
 - benchmarks/kramabench/tasks-mini/tasks/... -> benchmarks/kramabench/tasks-mini/runtime-profiles/...
-- tasks_core/... -> benchmarks/lakeqa/tasks-mini/runtime-profiles/tasks_core/...
-- tasks_core_quality/... -> plans_core_quality/...
 """
 
 from __future__ import annotations
@@ -14,9 +12,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-_PLANS_ROOT = Path("benchmarks/lakeqa/tasks-mini/runtime-profiles")
-_KRAMABENCH_PLANS_ROOT = Path("benchmarks/kramabench/tasks-mini/runtime-profiles")
-_QUALITY_PLANS_ROOT = Path("plans_core_quality")
+_RUNTIME_PROFILES_ROOT = Path("benchmarks/lakeqa/tasks-mini/runtime-profiles")
+_KRAMABENCH_RUNTIME_PROFILES_ROOT = Path("benchmarks/kramabench/tasks-mini/runtime-profiles")
 _TASK_CONTEXT: Dict[str, Any] = {}
 
 
@@ -33,9 +30,9 @@ class IdealComputationRecord:
 
 
 @dataclass(frozen=True)
-class IdealTaskPlan:
+class IdealRuntimeProfile:
     task_id: str
-    plan_path: Path
+    profile_path: Path
     dataset_sequence: List[str]
     source_sequence: List[str]
     reasoning_chain_text: str
@@ -43,13 +40,13 @@ class IdealTaskPlan:
     ideal_code: List[IdealComputationRecord]
 
 
-def set_plans_root(path: str | Path) -> None:
-    global _PLANS_ROOT
-    _PLANS_ROOT = Path(path)
+def set_runtime_profiles_root(path: str | Path) -> None:
+    global _RUNTIME_PROFILES_ROOT
+    _RUNTIME_PROFILES_ROOT = Path(path)
 
 
-def plans_root() -> Path:
-    return _PLANS_ROOT
+def runtime_profiles_root() -> Path:
+    return _RUNTIME_PROFILES_ROOT
 
 
 def set_task_context(task_context: Optional[Dict[str, Any]]) -> None:
@@ -65,134 +62,138 @@ def task_id_from_context(task_context: Optional[Dict[str, Any]]) -> str:
     return str((task_context or {}).get("task_id") or "").strip()
 
 
-def _plan_location_from_task(task_id: str) -> tuple[Path, Path]:
+def _profile_location_from_task(task_id: str) -> tuple[Path, Path]:
     raw = str(task_id or "").strip()
     if not raw:
-        raise ValueError("Missing task_id for ideal plan lookup.")
+        raise ValueError("Missing task_id for ideal runtime profile lookup.")
 
     p = Path(raw)
     parts = p.parts
+
+    def _benchmark_suffix(benchmark: str) -> Optional[tuple[Path, Path]]:
+        marker = ("benchmarks", benchmark, "tasks-mini", "tasks")
+        for idx in range(0, max(len(parts) - len(marker) + 1, 0)):
+            if parts[idx : idx + len(marker)] == marker:
+                suffix = parts[idx + len(marker) :]
+                if not suffix:
+                    raise ValueError(f"Could not derive relative profile path from task_id '{task_id}'.")
+                root = (
+                    _RUNTIME_PROFILES_ROOT
+                    if benchmark == "lakeqa"
+                    else _KRAMABENCH_RUNTIME_PROFILES_ROOT
+                )
+                return (root, Path(*suffix))
+        return None
+
+    lakeqa_location = _benchmark_suffix("lakeqa")
+    if lakeqa_location is not None:
+        return lakeqa_location
+
+    kramabench_location = _benchmark_suffix("kramabench")
+    if kramabench_location is not None:
+        return kramabench_location
+
     if parts[:4] == ("benchmarks", "lakeqa", "tasks-mini", "tasks"):
         suffix = parts[4:]
         if not suffix:
             raise ValueError(f"Could not derive relative profile path from task_id '{task_id}'.")
-        return (_PLANS_ROOT, Path(*suffix))
+        return (_RUNTIME_PROFILES_ROOT, Path(*suffix))
     if parts[:4] == ("benchmarks", "kramabench", "tasks-mini", "tasks"):
         suffix = parts[4:]
         if not suffix:
             raise ValueError(f"Could not derive relative profile path from task_id '{task_id}'.")
-        return (_KRAMABENCH_PLANS_ROOT, Path(*suffix))
-    if "tasks-mini-kramabench" in parts:
-        idx = parts.index("tasks-mini-kramabench")
-        suffix = parts[idx + 1 :]
-        if not suffix:
-            raise ValueError(f"Could not derive relative plan path from task_id '{task_id}'.")
-        return (_KRAMABENCH_PLANS_ROOT, Path(*suffix))
-
-    for task_root in ("tasks_core_quality", "tasks_core", "tasks_mini"):
-        if task_root not in parts:
-            continue
-        idx = parts.index(task_root)
-        suffix = parts[idx + 1 :]
-        if not suffix:
-            raise ValueError(f"Could not derive relative plan path from task_id '{task_id}'.")
-        if task_root == "tasks_core_quality":
-            return (_QUALITY_PLANS_ROOT, Path(*suffix))
-        if task_root == "tasks_core":
-            return (plans_root(), Path(task_root) / Path(*suffix))
-        return (plans_root(), Path(*suffix))
-
+        return (_KRAMABENCH_RUNTIME_PROFILES_ROOT, Path(*suffix))
     if p.is_absolute():
-        return (plans_root(), Path(p.name))
-    return (plans_root(), p)
+        return (runtime_profiles_root(), Path(p.name))
+    return (runtime_profiles_root(), p)
 
 
-def plan_path_for_task(task_id: str) -> Path:
-    root, relpath = _plan_location_from_task(task_id)
+def runtime_profile_path_for_task(task_id: str) -> Path:
+    root, relpath = _profile_location_from_task(task_id)
     return root / relpath
 
 
-def _validate_dataset_sequence(raw: Any, *, plan_path: Path) -> List[str]:
+def _validate_dataset_sequence(raw: Any, *, profile_path: Path) -> List[str]:
     if not isinstance(raw, list):
-        raise ValueError(f"Invalid plan at '{plan_path}': dataset_sequence must be a list.")
+        raise ValueError(f"Invalid runtime profile at '{profile_path}': dataset_sequence must be a list.")
 
     out: List[str] = []
     for i, item in enumerate(raw):
         if not isinstance(item, str):
             raise ValueError(
-                f"Invalid plan at '{plan_path}': dataset_sequence[{i}] must be a string."
+                f"Invalid runtime profile at '{profile_path}': dataset_sequence[{i}] must be a string."
             )
         dataset_id = item.strip()
         if not dataset_id:
             raise ValueError(
-                f"Invalid plan at '{plan_path}': dataset_sequence[{i}] cannot be empty."
+                f"Invalid runtime profile at '{profile_path}': dataset_sequence[{i}] cannot be empty."
             )
         if "/" in dataset_id or "://" in dataset_id:
             raise ValueError(
-                f"Invalid plan at '{plan_path}': dataset_sequence[{i}] must be a bare dataset ID, got '{dataset_id}'."
+                f"Invalid runtime profile at '{profile_path}': dataset_sequence[{i}] must be a bare dataset ID, got '{dataset_id}'."
             )
         out.append(dataset_id)
     return out
 
 
-def _validate_source_sequence(raw: Any, *, plan_path: Path) -> List[str]:
+def _validate_source_sequence(raw: Any, *, profile_path: Path) -> List[str]:
     if not isinstance(raw, list):
-        raise ValueError(f"Invalid plan at '{plan_path}': source_sequence must be a list.")
+        raise ValueError(f"Invalid runtime profile at '{profile_path}': source_sequence must be a list.")
 
     out: List[str] = []
     for i, item in enumerate(raw):
         if not isinstance(item, str):
             raise ValueError(
-                f"Invalid plan at '{plan_path}': source_sequence[{i}] must be a string."
+                f"Invalid runtime profile at '{profile_path}': source_sequence[{i}] must be a string."
             )
         source = item.strip()
         if not source:
             raise ValueError(
-                f"Invalid plan at '{plan_path}': source_sequence[{i}] cannot be empty."
+                f"Invalid runtime profile at '{profile_path}': source_sequence[{i}] cannot be empty."
             )
         if "/" not in source:
             raise ValueError(
-                f"Invalid plan at '{plan_path}': source_sequence[{i}] must be a dataset-relative file path, got '{source}'."
+                f"Invalid runtime profile at '{profile_path}': source_sequence[{i}] must be a dataset-relative file path, got '{source}'."
             )
         if "://" in source:
             raise ValueError(
-                f"Invalid plan at '{plan_path}': source_sequence[{i}] must be a dataset-relative file path, got '{source}'."
+                f"Invalid runtime profile at '{profile_path}': source_sequence[{i}] must be a dataset-relative file path, got '{source}'."
             )
         out.append(source)
     if not out:
-        raise ValueError(f"Invalid plan at '{plan_path}': source_sequence cannot be empty.")
+        raise ValueError(f"Invalid runtime profile at '{profile_path}': source_sequence cannot be empty.")
     return out
 
 
-def _validate_reasoning_text(raw: Any, *, plan_path: Path) -> str:
+def _validate_reasoning_text(raw: Any, *, profile_path: Path) -> str:
     if isinstance(raw, str):
         text = raw.strip()
         if "\\n" in text and "\n" not in text:
             text = text.replace("\\n", "\n")
         if not text:
-            raise ValueError(f"Invalid plan at '{plan_path}': reasoning_chain_text cannot be empty.")
+            raise ValueError(f"Invalid runtime profile at '{profile_path}': reasoning_chain_text cannot be empty.")
         return text
 
     if isinstance(raw, list):
         if not raw:
-            raise ValueError(f"Invalid plan at '{plan_path}': reasoning_chain_text cannot be an empty list.")
+            raise ValueError(f"Invalid runtime profile at '{profile_path}': reasoning_chain_text cannot be an empty list.")
 
         lines: List[str] = []
         for i, item in enumerate(raw):
             if not isinstance(item, str):
                 raise ValueError(
-                    f"Invalid plan at '{plan_path}': reasoning_chain_text[{i}] must be a string."
+                    f"Invalid runtime profile at '{profile_path}': reasoning_chain_text[{i}] must be a string."
                 )
             text = item.strip()
             if not text:
                 raise ValueError(
-                    f"Invalid plan at '{plan_path}': reasoning_chain_text[{i}] cannot be empty."
+                    f"Invalid runtime profile at '{profile_path}': reasoning_chain_text[{i}] cannot be empty."
                 )
             lines.append(text)
         return "\n".join(lines)
 
     raise ValueError(
-        f"Invalid plan at '{plan_path}': reasoning_chain_text must be a string or a list of strings."
+        f"Invalid runtime profile at '{profile_path}': reasoning_chain_text must be a string or a list of strings."
     )
 
 
@@ -235,22 +236,22 @@ def _validate_computation_records(
     tool: str,
     payload_key: str,
     source_sequence: List[str],
-    plan_path: Path,
+    profile_path: Path,
 ) -> List[IdealComputationRecord]:
     if raw is None:
         return []
     if not isinstance(raw, list):
-        raise ValueError(f"Invalid plan at '{plan_path}': {key} must be a list when present.")
+        raise ValueError(f"Invalid runtime profile at '{profile_path}': {key} must be a list when present.")
 
     out: List[IdealComputationRecord] = []
     for i, item in enumerate(raw):
         label = f"{key}[{i}]"
         if not isinstance(item, dict):
-            raise ValueError(f"Invalid plan at '{plan_path}': {label} must be an object.")
+            raise ValueError(f"Invalid runtime profile at '{profile_path}': {label} must be an object.")
 
         node_id = str(item.get("node_id") or item.get("node") or "").strip()
         if not node_id:
-            raise ValueError(f"Invalid plan at '{plan_path}': {label}.node_id is required.")
+            raise ValueError(f"Invalid runtime profile at '{profile_path}': {label}.node_id is required.")
 
         dataset_id = str(item.get("dataset_id") or "").strip()
         source = str(item.get("source") or item.get("s3_uri") or item.get("uri") or "").strip()
@@ -260,26 +261,26 @@ def _validate_computation_records(
             source = _source_for_dataset(dataset_id, source_sequence)
         if not dataset_id:
             raise ValueError(
-                f"Invalid plan at '{plan_path}': {label} requires dataset_id or source."
+                f"Invalid runtime profile at '{profile_path}': {label} requires dataset_id or source."
             )
         if not source:
             raise ValueError(
-                f"Invalid plan at '{plan_path}': {label} could not map dataset_id '{dataset_id}' to a source."
+                f"Invalid runtime profile at '{profile_path}': {label} could not map dataset_id '{dataset_id}' to a source."
             )
 
         intent = str(item.get("intent") or item.get("subquestion") or "").strip()
         if not intent:
-            raise ValueError(f"Invalid plan at '{plan_path}': {label}.intent is required.")
+            raise ValueError(f"Invalid runtime profile at '{profile_path}': {label}.intent is required.")
 
         if "answer" not in item:
-            raise ValueError(f"Invalid plan at '{plan_path}': {label}.answer is required.")
+            raise ValueError(f"Invalid runtime profile at '{profile_path}': {label}.answer is required.")
 
         payload = str(item.get(payload_key) or "").strip()
         blocked = False
         if not payload:
             blocked = key == "ideal_query" and _is_blocked_ideal_query_answer(item.get("answer"))
             if not blocked:
-                raise ValueError(f"Invalid plan at '{plan_path}': {label}.{payload_key} is required.")
+                raise ValueError(f"Invalid runtime profile at '{profile_path}': {label}.{payload_key} is required.")
 
         out.append(
             IdealComputationRecord(
@@ -297,32 +298,32 @@ def _validate_computation_records(
     return out
 
 
-def load_plan_for_task(task_id: str) -> IdealTaskPlan:
-    plan_path = plan_path_for_task(task_id)
-    if not plan_path.exists():
+def load_runtime_profile_for_task(task_id: str) -> IdealRuntimeProfile:
+    profile_path = runtime_profile_path_for_task(task_id)
+    if not profile_path.exists():
         raise FileNotFoundError(
-            f"Missing ideal plan file for task '{task_id}': expected '{plan_path}'."
+            f"Missing ideal runtime profile file for task '{task_id}': expected '{profile_path}'."
         )
 
     try:
-        payload = json.loads(plan_path.read_text())
+        payload = json.loads(profile_path.read_text())
     except json.JSONDecodeError as exc:
-        raise ValueError(f"Invalid JSON in ideal plan file '{plan_path}': {exc}") from exc
+        raise ValueError(f"Invalid JSON in ideal runtime profile file '{profile_path}': {exc}") from exc
 
     if not isinstance(payload, dict):
-        raise ValueError(f"Invalid plan at '{plan_path}': root JSON value must be an object.")
+        raise ValueError(f"Invalid runtime profile at '{profile_path}': root JSON value must be an object.")
 
     dataset_sequence = _validate_dataset_sequence(
         payload.get("dataset_sequence"),
-        plan_path=plan_path,
+        profile_path=profile_path,
     )
     source_sequence = _validate_source_sequence(
         payload.get("source_sequence"),
-        plan_path=plan_path,
+        profile_path=profile_path,
     )
     reasoning_chain_text = _validate_reasoning_text(
         payload.get("reasoning_chain_text"),
-        plan_path=plan_path,
+        profile_path=profile_path,
     )
     ideal_query = _validate_computation_records(
         payload.get("ideal_query"),
@@ -330,7 +331,7 @@ def load_plan_for_task(task_id: str) -> IdealTaskPlan:
         tool="query",
         payload_key="sql",
         source_sequence=source_sequence,
-        plan_path=plan_path,
+        profile_path=profile_path,
     )
     ideal_code = _validate_computation_records(
         payload.get("ideal_code"),
@@ -338,12 +339,12 @@ def load_plan_for_task(task_id: str) -> IdealTaskPlan:
         tool="code",
         payload_key="code",
         source_sequence=source_sequence,
-        plan_path=plan_path,
+        profile_path=profile_path,
     )
 
-    return IdealTaskPlan(
+    return IdealRuntimeProfile(
         task_id=str(task_id),
-        plan_path=plan_path,
+        profile_path=profile_path,
         dataset_sequence=dataset_sequence,
         source_sequence=source_sequence,
         reasoning_chain_text=reasoning_chain_text,
@@ -352,21 +353,21 @@ def load_plan_for_task(task_id: str) -> IdealTaskPlan:
     )
 
 
-def load_plan_for_context(task_context: Optional[Dict[str, Any]] = None) -> IdealTaskPlan:
+def load_runtime_profile_for_context(task_context: Optional[Dict[str, Any]] = None) -> IdealRuntimeProfile:
     ctx = task_context if task_context is not None else get_task_context()
     task_id = task_id_from_context(ctx)
-    return load_plan_for_task(task_id)
+    return load_runtime_profile_for_task(task_id)
 
 
 __all__ = [
     "IdealComputationRecord",
-    "IdealTaskPlan",
-    "set_plans_root",
-    "plans_root",
+    "IdealRuntimeProfile",
+    "set_runtime_profiles_root",
+    "runtime_profiles_root",
     "set_task_context",
     "get_task_context",
     "task_id_from_context",
-    "plan_path_for_task",
-    "load_plan_for_task",
-    "load_plan_for_context",
+    "runtime_profile_path_for_task",
+    "load_runtime_profile_for_task",
+    "load_runtime_profile_for_context",
 ]

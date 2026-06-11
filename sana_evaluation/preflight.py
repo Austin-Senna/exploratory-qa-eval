@@ -113,12 +113,12 @@ def _check_schemas_jsonl_load() -> PreflightCheck:
     )
 
 
-def _check_tasks_mini_source_description_coverage(
+def _check_runtime_profile_source_description_coverage(
     task_files: Sequence[str],
     *,
     benchmark: str,
 ) -> PreflightCheck:
-    from sana_evaluation.tools.external.ideal import plan_store
+    from sana_evaluation.tools.external.ideal import runtime_profile_store
     from sana_evaluation.tools.external.ideal import search_wrapper as _sw
 
     label = "runtime profile source description coverage"
@@ -134,15 +134,13 @@ def _check_tasks_mini_source_description_coverage(
         if (
             "benchmarks/lakeqa/tasks-mini/tasks/" not in task_str
             and "benchmarks/kramabench/tasks-mini/tasks/" not in task_str
-            and "tasks_mini/" not in task_str
-            and "tasks-mini-kramabench/" not in task_str
         ):
             continue
         try:
-            plan = plan_store.load_plan_for_task(task_str)
+            profile = runtime_profile_store.load_runtime_profile_for_task(task_str)
         except Exception as exc:
             return PreflightCheck(label, False, f"{task_str}: {exc}")
-        for source in plan.source_sequence:
+        for source in profile.source_sequence:
             checked += 1
             uri = canonical_source_uri(source, benchmark)
             if uri not in _sw._DESC_BY_URI:
@@ -153,17 +151,17 @@ def _check_tasks_mini_source_description_coverage(
             return PreflightCheck(
                 label,
                 True,
-                f"kramabench description artifact is a stub; skipped coverage for {checked} planned source(s)",
+                f"kramabench description artifact is a stub; skipped coverage for {checked} runtime-profile source(s)",
             )
         preview = "; ".join(missing[:5])
         suffix = f"; +{len(missing) - 5} more" if len(missing) > 5 else ""
         return PreflightCheck(
             label,
             False,
-            f"missing descriptions for {len(missing)}/{checked} planned source(s): {preview}{suffix}",
+            f"missing descriptions for {len(missing)}/{checked} runtime-profile source(s): {preview}{suffix}",
         )
 
-    return PreflightCheck(label, True, f"covered {checked} planned source(s)")
+    return PreflightCheck(label, True, f"covered {checked} runtime-profile source(s)")
 
 
 def _s3_error_code(exc: Exception) -> str:
@@ -208,7 +206,7 @@ def _add_task_node_sources(task_path: str, sources: Dict[str, List[str]]) -> Non
 
 def _check_kramabench_source_objects(task_files: Sequence[str]) -> PreflightCheck:
     from sana_evaluation.tools.agent_tools import _get_s3_client
-    from sana_evaluation.tools.external.ideal import plan_store
+    from sana_evaluation.tools.external.ideal import runtime_profile_store
 
     label = "kramabench source object existence"
     sources: Dict[str, List[str]] = {}
@@ -218,11 +216,11 @@ def _check_kramabench_source_objects(task_files: Sequence[str]) -> PreflightChec
         except Exception as exc:
             return PreflightCheck(label, False, f"{task_path}: could not read task nodes: {exc}")
         try:
-            plan = plan_store.load_plan_for_task(str(task_path))
+            profile = runtime_profile_store.load_runtime_profile_for_task(str(task_path))
         except Exception as exc:
-            return PreflightCheck(label, False, f"{task_path}: could not load plan: {exc}")
-        for index, source in enumerate(plan.source_sequence, start=1):
-            _add_source(sources, source, f"{task_path}:plan_source:{index}")
+            return PreflightCheck(label, False, f"{task_path}: could not load runtime profile: {exc}")
+        for index, source in enumerate(profile.source_sequence, start=1):
+            _add_source(sources, source, f"{task_path}:profile_source:{index}")
 
     if not sources:
         return PreflightCheck(label, True, "no Kramabench sources to check")
@@ -284,18 +282,18 @@ def _check_profiles_jsonl(*, required: bool = False) -> PreflightCheck:
     return PreflightCheck(label, True, f"found: {count} entries{suffix}")
 
 
-def _check_plan_files(task_files: Sequence[str]) -> List[PreflightCheck]:
-    from sana_evaluation.tools.external.ideal import plan_store
+def _check_runtime_profile_files(task_files: Sequence[str]) -> List[PreflightCheck]:
+    from sana_evaluation.tools.external.ideal import runtime_profile_store
 
     checks: List[PreflightCheck] = []
     for task_path in task_files:
-        label = f"plan:{task_path}"
+        label = f"runtime_profile:{task_path}"
         try:
-            plan_store.load_plan_for_task(task_path)
+            runtime_profile_store.load_runtime_profile_for_task(task_path)
         except Exception as exc:
             checks.append(PreflightCheck(label, False, str(exc)))
             continue
-        checks.append(PreflightCheck(label, True, "plan loads and validates"))
+        checks.append(PreflightCheck(label, True, "runtime profile loads and validates"))
     return checks
 
 
@@ -304,12 +302,12 @@ def _check_ideal_computation_records(
     *,
     benchmark: str = "lakeqa",
 ) -> List[PreflightCheck]:
-    from sana_evaluation.tools.external.ideal import plan_store
+    from sana_evaluation.tools.external.ideal import runtime_profile_store
 
     checks: List[PreflightCheck] = []
     for task_path in task_files:
         try:
-            plan = plan_store.load_plan_for_task(task_path)
+            profile = runtime_profile_store.load_runtime_profile_for_task(task_path)
         except Exception as exc:
             if benchmark != "kramabench":
                 checks.append(PreflightCheck(f"ideal_query:{task_path}", False, str(exc)))
@@ -326,10 +324,10 @@ def _check_ideal_computation_records(
             )
         else:
             runnable_query_records = [
-                record for record in plan.ideal_query if not getattr(record, "blocked", False)
+                record for record in profile.ideal_query if not getattr(record, "blocked", False)
             ]
             blocked_query_records = [
-                record for record in plan.ideal_query if getattr(record, "blocked", False)
+                record for record in profile.ideal_query if getattr(record, "blocked", False)
             ]
             if runnable_query_records or blocked_query_records:
                 detail = f"loaded {len(runnable_query_records)} runnable query record(s)"
@@ -350,12 +348,12 @@ def _check_ideal_computation_records(
                     )
                 )
 
-        if plan.ideal_code:
+        if profile.ideal_code:
             checks.append(
                 PreflightCheck(
                     f"ideal_code:{task_path}",
                     True,
-                    f"loaded {len(plan.ideal_code)} code record(s)",
+                    f"loaded {len(profile.ideal_code)} code record(s)",
                 )
             )
         else:
@@ -392,17 +390,16 @@ def run_preflight(
     from sana_evaluation.helper import peek_profile as _pp
 
     paths = artifact_paths(benchmark)
-    if benchmark != "lakeqa" or _sw._TABLE_DESCRIPTIONS_PATH.name.startswith("kramabench_"):
+    if not _sw._TABLE_DESCRIPTIONS_PATH.is_absolute():
         _sw.configure_dependency_paths(
             descriptions=paths.descriptions,
             snippets=paths.snippets,
             schemas=paths.schemas,
         )
     global _PROFILES_PATH
-    if benchmark != "lakeqa" or _PROFILES_PATH.name.startswith("kramabench_"):
-        _PROFILES_PATH = paths.profiles
-        _pp._PROFILES_PATH = Path(__file__).resolve().parents[1] / paths.profiles
-        _pp._PROFILES_LOADED = False
+    _PROFILES_PATH = paths.profiles
+    _pp._PROFILES_PATH = Path(__file__).resolve().parents[1] / paths.profiles
+    _pp._PROFILES_LOADED = False
 
     checks: List[PreflightCheck] = []
 
@@ -417,13 +414,13 @@ def run_preflight(
         if not task_files:
             checks.append(
                 PreflightCheck(
-                    "plan_files",
+                    "runtime_profile_files",
                     False,
-                    "ideal mode requires resolvable task files at preflight time.",
+                    "ideal mode requires resolvable task files and runtime profiles at preflight time.",
                 )
             )
         else:
-            checks.extend(_check_plan_files(task_files))
+            checks.extend(_check_runtime_profile_files(task_files))
 
     if ct == "ideal":
         if not task_files:
@@ -448,8 +445,8 @@ def run_preflight(
         checks.append(_check_snippet_cache())
         checks.append(_check_schemas_jsonl_load())
 
-    if (st == "ideal" or sr == "ideal") and task_files:
-        checks.append(_check_tasks_mini_source_description_coverage(task_files, benchmark=benchmark))
+    if (st == "ideal" or (sr == "ideal" and st != "preloaded")) and task_files:
+        checks.append(_check_runtime_profile_source_description_coverage(task_files, benchmark=benchmark))
 
     if benchmark == "kramabench" and task_files:
         checks.append(_check_kramabench_source_objects(task_files))

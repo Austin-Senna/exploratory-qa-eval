@@ -23,15 +23,15 @@ from sana_evaluation.instrumentation.agent_plugins import LoggingPlugin
 from sana_evaluation.tools.agent_tools import execute_code
 from sana_evaluation.tools.agent_tools_v2 import query_file
 from sana_evaluation.tools.external.ideal import computation_ideal
-from sana_evaluation.tools.external.ideal.plan_store import (
-    load_plan_for_task,
-    set_plans_root,
+from sana_evaluation.tools.external.ideal.runtime_profile_store import (
+    load_runtime_profile_for_task,
+    set_runtime_profiles_root,
     set_task_context,
 )
 
 _COMPUTATION_LOG_PATH = Path("test_logs/ideal_computation_tools.jsonl")
 _COMPUTATION_TRANSCRIPT_LOG_PATH = Path("test_logs/ideal_computation_tool_transcript.log")
-_CORE_QUALITY_TASK_ID = "tasks_core_quality/k-1-d-1/task_2.json"
+_CORE_QUALITY_TASK_ID = "benchmarks/lakeqa/tasks-mini/tasks/k-1-d-1/task_1.json"
 
 
 class _FakeMetrics:
@@ -53,8 +53,8 @@ class _FakeAgentResult:
 class IdealComputationToolTests(unittest.TestCase):
     def setUp(self) -> None:
         self._tmp = TemporaryDirectory()
-        self._plans_root = Path(self._tmp.name) / "plans_mini"
-        target = self._plans_root / "k-1-d-1"
+        self._runtime_profiles_root = Path(self._tmp.name) / "runtime-profiles"
+        target = self._runtime_profiles_root / "k-1-d-1"
         target.mkdir(parents=True, exist_ok=True)
         (target / "task_1.json").write_text(
             json.dumps(
@@ -83,10 +83,10 @@ class IdealComputationToolTests(unittest.TestCase):
                 }
             )
         )
-        set_plans_root(self._plans_root)
+        set_runtime_profiles_root(self._runtime_profiles_root)
         computation_ideal.reset_state()
         ideal_subagent_costs.reset_stats()
-        computation_ideal.set_task_context({"task_id": "tasks_mini/k-1-d-1/task_1.json"})
+        computation_ideal.set_task_context({"task_id": "benchmarks/lakeqa/tasks-mini/tasks/k-1-d-1/task_1.json"})
 
     @staticmethod
     def _first_semantic_candidate(*, candidates, **_kwargs):
@@ -104,7 +104,7 @@ class IdealComputationToolTests(unittest.TestCase):
     def tearDown(self) -> None:
         computation_ideal.reset_state()
         ideal_subagent_costs.reset_stats()
-        set_plans_root("plans_mini")
+        set_runtime_profiles_root("runtime-profiles")
         set_task_context({})
         self._tmp.cleanup()
 
@@ -160,7 +160,7 @@ class IdealComputationToolTests(unittest.TestCase):
         semantic.assert_called_once()
 
     def test_semantic_record_match_uses_nano_judge_selection(self):
-        plan = load_plan_for_task("tasks_mini/k-1-d-1/task_1.json")
+        plan = load_runtime_profile_for_task("benchmarks/lakeqa/tasks-mini/tasks/k-1-d-1/task_1.json")
         captured: dict[str, str] = {}
 
         class _JudgeAgent:
@@ -180,7 +180,7 @@ class IdealComputationToolTests(unittest.TestCase):
             return_value="fake-nano-model",
         ):
             record = computation_ideal._semantic_record_match(
-                plan=plan,
+                profile=plan,
                 tool_name="execute_ideal",
                 payload_label="Python code",
                 payload="print(3 + 4)",
@@ -195,20 +195,20 @@ class IdealComputationToolTests(unittest.TestCase):
         self.assertIn("Never select a record merely because its answer would be useful", captured["prompt"])
         self.assertNotIn('"answer"', captured["prompt"])
 
-    def test_plan_records_prompt_does_not_include_authored_answers(self):
-        plan = load_plan_for_task("tasks_mini/k-1-d-1/task_1.json")
+    def test_profile_records_prompt_does_not_include_authored_answers(self):
+        plan = load_runtime_profile_for_task("benchmarks/lakeqa/tasks-mini/tasks/k-1-d-1/task_1.json")
 
         payload = json.loads(
-            computation_ideal._plan_records_for_prompt(plan, plan.ideal_code)
+            computation_ideal._profile_records_for_prompt(plan, plan.ideal_code)
         )
 
         self.assertEqual(payload["records"][0]["payload"], "print(3 + 4)")
         self.assertNotIn("answer", payload["records"][0])
 
     def test_semantic_record_match_traces_cost(self):
-        plan = load_plan_for_task("tasks_mini/k-1-d-1/task_1.json")
+        plan = load_runtime_profile_for_task("benchmarks/lakeqa/tasks-mini/tasks/k-1-d-1/task_1.json")
         trace_root = Path(self._tmp.name) / "semantic_traces"
-        set_trace_context("tasks_mini/k-1-d-1/task_1.json", [], str(trace_root))
+        set_trace_context("benchmarks/lakeqa/tasks-mini/tasks/k-1-d-1/task_1.json", [], str(trace_root))
         ideal_subagent_costs.reset_stats()
 
         class _JudgeAgent:
@@ -226,7 +226,7 @@ class IdealComputationToolTests(unittest.TestCase):
             return_value="fake-nano-model",
         ):
             record = computation_ideal._semantic_record_match(
-                plan=plan,
+                profile=plan,
                 tool_name="query_ideal",
                 payload_label="SQL",
                 payload="SELECT COUNT(*) AS n FROM t",
@@ -254,7 +254,7 @@ class IdealComputationToolTests(unittest.TestCase):
         self.assertEqual(ideal_subagent_costs.get_stats()["query_ideal_subagent_calls"], 1)
 
     def test_execute_ideal_filters_semantic_candidates_by_s3_uri(self):
-        target = self._plans_root / "k-1-d-1"
+        target = self._runtime_profiles_root / "k-1-d-1"
         (target / "task_sources.json").write_text(
             json.dumps(
                 {
@@ -286,7 +286,7 @@ class IdealComputationToolTests(unittest.TestCase):
                 }
             )
         )
-        computation_ideal.set_task_context({"task_id": "tasks_mini/k-1-d-1/task_sources.json"})
+        computation_ideal.set_task_context({"task_id": "benchmarks/lakeqa/tasks-mini/tasks/k-1-d-1/task_sources.json"})
         captured: dict[str, list[str]] = {}
 
         def semantic(*, candidates, **_kwargs):
@@ -453,7 +453,7 @@ class IdealComputationToolTests(unittest.TestCase):
         self.assertEqual(base.call_args.kwargs["sql"], "SELECT 7 AS n")
 
     def test_query_ideal_blocked_record_returns_tool_error_without_repair(self):
-        target = self._plans_root / "k-1-d-1"
+        target = self._runtime_profiles_root / "k-1-d-1"
         (target / "task_blocked.json").write_text(
             json.dumps(
                 {
@@ -480,7 +480,7 @@ class IdealComputationToolTests(unittest.TestCase):
                 }
             )
         )
-        computation_ideal.set_task_context({"task_id": "tasks_mini/k-1-d-1/task_blocked.json"})
+        computation_ideal.set_task_context({"task_id": "benchmarks/lakeqa/tasks-mini/tasks/k-1-d-1/task_blocked.json"})
 
         with patch.object(computation_ideal, "_repair_query") as repair:
             result = computation_ideal.query_ideal._tool_func(
@@ -598,7 +598,7 @@ class IdealComputationToolTests(unittest.TestCase):
     def test_repair_agent_calls_are_counted_and_traced(self):
         trace_root = Path(self._tmp.name) / "traces"
         set_trace_context(
-            "tasks_mini/k-1-d-1/task_1.json",
+            "benchmarks/lakeqa/tasks-mini/tasks/k-1-d-1/task_1.json",
             [],
             str(trace_root),
         )
@@ -666,7 +666,7 @@ class IdealComputationToolTests(unittest.TestCase):
 
     def test_query_repair_agent_traces_cost(self):
         trace_root = Path(self._tmp.name) / "query_repair_traces"
-        set_trace_context("tasks_mini/k-1-d-1/task_1.json", [], str(trace_root))
+        set_trace_context("benchmarks/lakeqa/tasks-mini/tasks/k-1-d-1/task_1.json", [], str(trace_root))
         ideal_subagent_costs.reset_stats()
 
         class _RepairAgent:
@@ -739,7 +739,7 @@ class IdealComputationToolTests(unittest.TestCase):
             )
 
         self.assertEqual(computation_ideal.get_stats()["execute_ideal_agent_repair_calls"], 1)
-        computation_ideal.set_task_context({"task_id": "tasks_mini/k-1-d-1/task_1.json"})
+        computation_ideal.set_task_context({"task_id": "benchmarks/lakeqa/tasks-mini/tasks/k-1-d-1/task_1.json"})
         self.assertEqual(
             computation_ideal.get_stats(),
             {
@@ -835,7 +835,7 @@ class IdealComputationToolTests(unittest.TestCase):
         self.assertNotIn('"answer"', captured["prompt"])
 
     def test_ideal_computation_tools_log_results(self):
-        plan = load_plan_for_task(_CORE_QUALITY_TASK_ID)
+        plan = load_runtime_profile_for_task(_CORE_QUALITY_TASK_ID)
         query_record = plan.ideal_query[0]
         code_record = plan.ideal_code[0]
         query_file_path = query_record.source.split(f"/{query_record.dataset_id}/", 1)[-1]
@@ -962,7 +962,7 @@ class IdealComputationToolTests(unittest.TestCase):
         row = {
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "task_id": _CORE_QUALITY_TASK_ID,
-            "plan_path": str(plan.plan_path),
+            "profile_path": str(plan.profile_path),
             "modes": dict(bundle.modes),
             "tool_names": sorted(tool_by_name),
             "results": {

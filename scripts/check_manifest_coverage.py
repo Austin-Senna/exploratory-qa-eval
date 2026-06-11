@@ -13,7 +13,7 @@ _REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
-from strands_evaluation.tools.external.description_rows import (  # noqa: E402
+from sana_evaluation.tools.external.description_rows import (  # noqa: E402
     description_uri,
     has_valid_description,
     reject_forbidden_description_row,
@@ -22,18 +22,19 @@ from strands_evaluation.tools.external.description_rows import (  # noqa: E402
 
 def _parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--manifest", default="tasks_mini_file_manifest.jsonl")
+    artifact_root = Path("benchmarks/lakeqa/tasks-mini/artifacts")
+    parser.add_argument("--manifest", default=str(artifact_root / "task_file_manifest.jsonl"))
     parser.add_argument(
         "--descriptions",
         action="append",
         default=None,
         help=(
             "Description JSONL to check. Repeat to union multiple files. "
-            "Defaults to canonical table_descriptions.jsonl."
+            "Defaults to canonical descriptions.jsonl."
         ),
     )
-    parser.add_argument("--snippets", default="snippet.jsonl")
-    parser.add_argument("--profiles", default="datagov_tables_profiles.jsonl")
+    parser.add_argument("--snippets", default=str(artifact_root / "snippets.jsonl"))
+    parser.add_argument("--profiles", default=str(artifact_root / "table_profiles.jsonl"))
     parser.add_argument(
         "--output-prefix",
         default=None,
@@ -103,7 +104,9 @@ def _write_rows(path: Path, rows: Iterable[dict]) -> None:
 
 
 def default_description_paths(args: argparse.Namespace) -> list[Path]:
-    return [Path(path) for path in args.descriptions] if args.descriptions else [Path("table_descriptions.jsonl")]
+    if args.descriptions:
+        return [Path(path) for path in args.descriptions]
+    return [Path("benchmarks/lakeqa/tasks-mini/artifacts/descriptions.jsonl")]
 
 
 def audit_manifest_coverage(

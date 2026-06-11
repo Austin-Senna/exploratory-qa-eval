@@ -18,9 +18,9 @@ from sana_evaluation.helper.prompting import (
     normalize_debug_mode,
     skill_paths_for_modes,
 )
-from sana_evaluation.tools.external.ideal.plan_store import (
+from sana_evaluation.tools.external.ideal.runtime_profile_store import (
     get_task_context,
-    set_plans_root,
+    set_runtime_profiles_root,
     set_task_context,
 )
 
@@ -28,12 +28,12 @@ from sana_evaluation.tools.external.ideal.plan_store import (
 class TestModeWrapper(unittest.TestCase):
     def _write_valid_plan(
         self,
-        plans_root: Path,
+        runtime_profiles_root: Path,
         *,
         task_name: str = "task_1.json",
         reasoning_chain_text: str = "1. Gold reasoning step.",
     ) -> None:
-        target = plans_root / "k-1-d-1"
+        target = runtime_profiles_root / "k-1-d-1"
         target.mkdir(parents=True, exist_ok=True)
         (target / task_name).write_text(
             json.dumps(
@@ -46,7 +46,7 @@ class TestModeWrapper(unittest.TestCase):
         )
 
     def tearDown(self) -> None:
-        set_plans_root("plans_mini")
+        set_runtime_profiles_root("runtime-profiles")
         set_task_context({})
 
     def test_naive_modes_disable_skills(self):
@@ -160,9 +160,9 @@ class TestModeWrapper(unittest.TestCase):
 
     def test_ideal_management_uses_managed_stack_with_plan_swap(self):
         with TemporaryDirectory() as tmpdir:
-            plans_root = Path(tmpdir) / "plans_mini"
-            self._write_valid_plan(plans_root)
-            set_plans_root(plans_root)
+            runtime_profiles_root = Path(tmpdir) / "runtime-profiles"
+            self._write_valid_plan(runtime_profiles_root)
+            set_runtime_profiles_root(runtime_profiles_root)
 
             cfg = RunConfig(
                 search_tool_mode="ideal",
@@ -172,7 +172,7 @@ class TestModeWrapper(unittest.TestCase):
             bundle = build_mode_bundle(
                 cfg,
                 data_tools=[],
-                task_context={"task_id": "tasks_mini/k-1-d-1/task_1.json"},
+                task_context={"task_id": "benchmarks/lakeqa/tasks-mini/tasks/k-1-d-1/task_1.json"},
             )
             tool_names = [tool_obj.tool_spec["name"] for tool_obj in bundle.tools]
             self.assertIn("plan_ideal", tool_names)
@@ -236,9 +236,9 @@ class TestModeWrapper(unittest.TestCase):
 
     def test_ideal_management_stores_task_context_for_plan_loading(self):
         with TemporaryDirectory() as tmpdir:
-            plans_root = Path(tmpdir) / "plans_mini"
-            self._write_valid_plan(plans_root, task_name="task_6.json")
-            set_plans_root(plans_root)
+            runtime_profiles_root = Path(tmpdir) / "runtime-profiles"
+            self._write_valid_plan(runtime_profiles_root, task_name="task_6.json")
+            set_runtime_profiles_root(runtime_profiles_root)
 
             cfg = RunConfig(
                 search_tool_mode="ideal",
@@ -248,21 +248,21 @@ class TestModeWrapper(unittest.TestCase):
             build_mode_bundle(
                 cfg,
                 data_tools=[],
-                task_context={"task_id": "tasks_mini/k-1-d-1/task_6.json"},
+                task_context={"task_id": "benchmarks/lakeqa/tasks-mini/tasks/k-1-d-1/task_6.json"},
             )
             self.assertEqual(
                 get_task_context().get("task_id"),
-                "tasks_mini/k-1-d-1/task_6.json",
+                "benchmarks/lakeqa/tasks-mini/tasks/k-1-d-1/task_6.json",
             )
 
     def test_ideal_management_preloads_gold_reasoning_chain_into_prompt(self):
         with TemporaryDirectory() as tmpdir:
-            plans_root = Path(tmpdir) / "plans_mini"
+            runtime_profiles_root = Path(tmpdir) / "runtime-profiles"
             self._write_valid_plan(
-                plans_root,
+                runtime_profiles_root,
                 reasoning_chain_text="1. Gold reasoning step.\n2. Gold reasoning step two.",
             )
-            set_plans_root(plans_root)
+            set_runtime_profiles_root(runtime_profiles_root)
 
             cfg = RunConfig(
                 search_tool_mode="ideal",
@@ -272,7 +272,7 @@ class TestModeWrapper(unittest.TestCase):
             bundle = build_mode_bundle(
                 cfg,
                 data_tools=[],
-                task_context={"task_id": "tasks_mini/k-1-d-1/task_1.json"},
+                task_context={"task_id": "benchmarks/lakeqa/tasks-mini/tasks/k-1-d-1/task_1.json"},
             )
 
             # Task-specific content now lives in task_trailer so the stable system_prompt
@@ -297,13 +297,13 @@ class TestModeWrapper(unittest.TestCase):
 
     def test_standard_management_prompt_matches_ideal_search_tools(self):
         with TemporaryDirectory() as tmpdir:
-            plans_root = Path(tmpdir) / "plans_mini"
-            target = plans_root / "k-1-d-1"
+            runtime_profiles_root = Path(tmpdir) / "runtime-profiles"
+            target = runtime_profiles_root / "k-1-d-1"
             target.mkdir(parents=True, exist_ok=True)
             (target / "task_1.json").write_text(
                 '{"dataset_sequence":["ds_one"],"source_sequence":["datagov/ds_one/files/rows.txt"],"reasoning_chain_text":"Step 1"}'
             )
-            set_plans_root(plans_root)
+            set_runtime_profiles_root(runtime_profiles_root)
 
             cfg = RunConfig(
                 search_tool_mode="ideal",
@@ -313,7 +313,7 @@ class TestModeWrapper(unittest.TestCase):
             bundle = build_mode_bundle(
                 cfg,
                 data_tools=[],
-                task_context={"task_id": "tasks_mini/k-1-d-1/task_1.json"},
+                task_context={"task_id": "benchmarks/lakeqa/tasks-mini/tasks/k-1-d-1/task_1.json"},
             )
             self.assertIn("search_ideal", bundle.system_prompt)
             self.assertNotIn("search_reranked", bundle.system_prompt)
@@ -332,13 +332,13 @@ class TestModeWrapper(unittest.TestCase):
 
     def test_naive_management_prompt_matches_ideal_search_tools(self):
         with TemporaryDirectory() as tmpdir:
-            plans_root = Path(tmpdir) / "plans_mini"
-            target = plans_root / "k-1-d-1"
+            runtime_profiles_root = Path(tmpdir) / "runtime-profiles"
+            target = runtime_profiles_root / "k-1-d-1"
             target.mkdir(parents=True, exist_ok=True)
             (target / "task_1.json").write_text(
                 '{"dataset_sequence":["ds_one"],"source_sequence":["datagov/ds_one/files/rows.txt"],"reasoning_chain_text":"Step 1"}'
             )
-            set_plans_root(plans_root)
+            set_runtime_profiles_root(runtime_profiles_root)
 
             cfg = RunConfig(
                 search_tool_mode="ideal",
@@ -348,7 +348,7 @@ class TestModeWrapper(unittest.TestCase):
             bundle = build_mode_bundle(
                 cfg,
                 data_tools=[],
-                task_context={"task_id": "tasks_mini/k-1-d-1/task_1.json"},
+                task_context={"task_id": "benchmarks/lakeqa/tasks-mini/tasks/k-1-d-1/task_1.json"},
             )
             self.assertIn("search_ideal", bundle.system_prompt)
             self.assertNotIn("search_reranked", bundle.system_prompt)
@@ -412,9 +412,9 @@ class TestModeWrapper(unittest.TestCase):
 
     def test_ideal_management_fails_fast_without_plan_file(self):
         with TemporaryDirectory() as tmpdir:
-            plans_root = Path(tmpdir) / "plans_mini"
-            plans_root.mkdir(parents=True, exist_ok=True)
-            set_plans_root(plans_root)
+            runtime_profiles_root = Path(tmpdir) / "runtime-profiles"
+            runtime_profiles_root.mkdir(parents=True, exist_ok=True)
+            set_runtime_profiles_root(runtime_profiles_root)
 
             cfg = RunConfig(
                 search_tool_mode="ideal",
@@ -425,13 +425,13 @@ class TestModeWrapper(unittest.TestCase):
                 build_mode_bundle(
                     cfg,
                     data_tools=[],
-                    task_context={"task_id": "tasks_mini/k-1-d-1/task_missing.json"},
+                    task_context={"task_id": "benchmarks/lakeqa/tasks-mini/tasks/k-1-d-1/task_missing.json"},
                 )
 
     def test_ideal_management_fails_fast_with_invalid_plan_file(self):
         with TemporaryDirectory() as tmpdir:
-            plans_root = Path(tmpdir) / "plans_mini"
-            target = plans_root / "k-1-d-1"
+            runtime_profiles_root = Path(tmpdir) / "runtime-profiles"
+            target = runtime_profiles_root / "k-1-d-1"
             target.mkdir(parents=True, exist_ok=True)
             (target / "task_1.json").write_text(
                 json.dumps(
@@ -441,7 +441,7 @@ class TestModeWrapper(unittest.TestCase):
                     }
                 )
             )
-            set_plans_root(plans_root)
+            set_runtime_profiles_root(runtime_profiles_root)
 
             cfg = RunConfig(
                 search_tool_mode="ideal",
@@ -452,14 +452,14 @@ class TestModeWrapper(unittest.TestCase):
                 build_mode_bundle(
                     cfg,
                     data_tools=[],
-                    task_context={"task_id": "tasks_mini/k-1-d-1/task_1.json"},
+                    task_context={"task_id": "benchmarks/lakeqa/tasks-mini/tasks/k-1-d-1/task_1.json"},
                 )
 
     def test_preloaded_mode_disables_search_tools_and_injects_authoritative_sources(self):
         with TemporaryDirectory() as tmpdir:
-            plans_root = Path(tmpdir) / "plans_mini"
-            self._write_valid_plan(plans_root)
-            set_plans_root(plans_root)
+            runtime_profiles_root = Path(tmpdir) / "runtime-profiles"
+            self._write_valid_plan(runtime_profiles_root)
+            set_runtime_profiles_root(runtime_profiles_root)
 
             cfg = RunConfig(
                 search_tool_mode="preloaded",
@@ -469,7 +469,7 @@ class TestModeWrapper(unittest.TestCase):
             bundle = build_mode_bundle(
                 cfg,
                 data_tools=[],
-                task_context={"task_id": "tasks_mini/k-1-d-1/task_1.json"},
+                task_context={"task_id": "benchmarks/lakeqa/tasks-mini/tasks/k-1-d-1/task_1.json"},
             )
 
             tool_names = [tool_obj.tool_spec["name"] for tool_obj in bundle.tools]
@@ -484,9 +484,9 @@ class TestModeWrapper(unittest.TestCase):
 
     def test_preloaded_mode_fails_fast_without_plan_file(self):
         with TemporaryDirectory() as tmpdir:
-            plans_root = Path(tmpdir) / "plans_mini"
-            plans_root.mkdir(parents=True, exist_ok=True)
-            set_plans_root(plans_root)
+            runtime_profiles_root = Path(tmpdir) / "runtime-profiles"
+            runtime_profiles_root.mkdir(parents=True, exist_ok=True)
+            set_runtime_profiles_root(runtime_profiles_root)
 
             cfg = RunConfig(
                 search_tool_mode="preloaded",
@@ -497,13 +497,13 @@ class TestModeWrapper(unittest.TestCase):
                 build_mode_bundle(
                     cfg,
                     data_tools=[],
-                    task_context={"task_id": "tasks_mini/k-1-d-1/task_missing.json"},
+                    task_context={"task_id": "benchmarks/lakeqa/tasks-mini/tasks/k-1-d-1/task_missing.json"},
                 )
 
     def test_preloaded_mode_fails_fast_with_empty_source_sequence(self):
         with TemporaryDirectory() as tmpdir:
-            plans_root = Path(tmpdir) / "plans_mini"
-            target = plans_root / "k-1-d-1"
+            runtime_profiles_root = Path(tmpdir) / "runtime-profiles"
+            target = runtime_profiles_root / "k-1-d-1"
             target.mkdir(parents=True, exist_ok=True)
             (target / "task_1.json").write_text(
                 json.dumps(
@@ -514,7 +514,7 @@ class TestModeWrapper(unittest.TestCase):
                     }
                 )
             )
-            set_plans_root(plans_root)
+            set_runtime_profiles_root(runtime_profiles_root)
 
             cfg = RunConfig(
                 search_tool_mode="preloaded",
@@ -525,7 +525,7 @@ class TestModeWrapper(unittest.TestCase):
                 build_mode_bundle(
                     cfg,
                     data_tools=[],
-                    task_context={"task_id": "tasks_mini/k-1-d-1/task_1.json"},
+                    task_context={"task_id": "benchmarks/lakeqa/tasks-mini/tasks/k-1-d-1/task_1.json"},
                 )
 
     def test_ideal_computation_mode_replaces_query_and_execute_tools(self):
@@ -548,9 +548,9 @@ class TestModeWrapper(unittest.TestCase):
             return {}
 
         with TemporaryDirectory() as tmpdir:
-            plans_root = Path(tmpdir) / "plans_mini"
-            self._write_valid_plan(plans_root)
-            set_plans_root(plans_root)
+            runtime_profiles_root = Path(tmpdir) / "runtime-profiles"
+            self._write_valid_plan(runtime_profiles_root)
+            set_runtime_profiles_root(runtime_profiles_root)
 
             cfg = RunConfig(
                 search_tool_mode="preloaded",
@@ -561,7 +561,7 @@ class TestModeWrapper(unittest.TestCase):
             bundle = build_mode_bundle(
                 cfg,
                 data_tools=[peek_file, read_file, query_file, execute_code],
-                task_context={"task_id": "tasks_mini/k-1-d-1/task_1.json"},
+                task_context={"task_id": "benchmarks/lakeqa/tasks-mini/tasks/k-1-d-1/task_1.json"},
             )
 
         tool_names = [tool_obj.tool_spec["name"] for tool_obj in bundle.tools]
@@ -589,8 +589,8 @@ class TestModeWrapper(unittest.TestCase):
             return {}
 
         with TemporaryDirectory() as tmpdir:
-            plans_root = Path(tmpdir) / "plans-mini-kramabench"
-            target = plans_root / "k-1-d-1"
+            runtime_profiles_root = Path(tmpdir) / "runtime-profiles"
+            target = runtime_profiles_root / "k-1-d-1"
             target.mkdir(parents=True, exist_ok=True)
             (target / "task_1.json").write_text(
                 json.dumps(
@@ -611,10 +611,10 @@ class TestModeWrapper(unittest.TestCase):
                     }
                 )
             )
-            from sana_evaluation.tools.external.ideal import plan_store
+            from sana_evaluation.tools.external.ideal import runtime_profile_store
 
-            old_root = plan_store._KRAMABENCH_PLANS_ROOT
-            plan_store._KRAMABENCH_PLANS_ROOT = plans_root
+            old_root = runtime_profile_store._KRAMABENCH_RUNTIME_PROFILES_ROOT
+            runtime_profile_store._KRAMABENCH_RUNTIME_PROFILES_ROOT = runtime_profiles_root
             try:
                 cfg = RunConfig(
                     search_tool_mode="preloaded",
@@ -626,10 +626,10 @@ class TestModeWrapper(unittest.TestCase):
                 bundle = build_mode_bundle(
                     cfg,
                     data_tools=[read_file, query_file, execute_code],
-                    task_context={"task_id": "tasks-mini-kramabench/k-1-d-1/task_1.json"},
+                    task_context={"task_id": "benchmarks/kramabench/tasks-mini/tasks/k-1-d-1/task_1.json"},
                 )
             finally:
-                plan_store._KRAMABENCH_PLANS_ROOT = old_root
+                runtime_profile_store._KRAMABENCH_RUNTIME_PROFILES_ROOT = old_root
 
         tool_names = [tool_obj.tool_spec["name"] for tool_obj in bundle.tools]
         self.assertIn("read_file", tool_names)
@@ -652,8 +652,8 @@ class TestModeWrapper(unittest.TestCase):
             return {}
 
         with TemporaryDirectory() as tmpdir:
-            plans_root = Path(tmpdir) / "plans-mini-kramabench"
-            target = plans_root / "k-1-d-1"
+            runtime_profiles_root = Path(tmpdir) / "runtime-profiles"
+            target = runtime_profiles_root / "k-1-d-1"
             target.mkdir(parents=True, exist_ok=True)
             (target / "task_1.json").write_text(
                 json.dumps(
@@ -664,10 +664,10 @@ class TestModeWrapper(unittest.TestCase):
                     }
                 )
             )
-            from sana_evaluation.tools.external.ideal import plan_store
+            from sana_evaluation.tools.external.ideal import runtime_profile_store
 
-            old_root = plan_store._KRAMABENCH_PLANS_ROOT
-            plan_store._KRAMABENCH_PLANS_ROOT = plans_root
+            old_root = runtime_profile_store._KRAMABENCH_RUNTIME_PROFILES_ROOT
+            runtime_profile_store._KRAMABENCH_RUNTIME_PROFILES_ROOT = runtime_profiles_root
             try:
                 cfg = RunConfig(
                     search_tool_mode="preloaded",
@@ -679,10 +679,10 @@ class TestModeWrapper(unittest.TestCase):
                 bundle = build_mode_bundle(
                     cfg,
                     data_tools=[query_file, execute_code],
-                    task_context={"task_id": "tasks-mini-kramabench/k-1-d-1/task_1.json"},
+                    task_context={"task_id": "benchmarks/kramabench/tasks-mini/tasks/k-1-d-1/task_1.json"},
                 )
             finally:
-                plan_store._KRAMABENCH_PLANS_ROOT = old_root
+                runtime_profile_store._KRAMABENCH_RUNTIME_PROFILES_ROOT = old_root
 
         tool_names = [tool_obj.tool_spec["name"] for tool_obj in bundle.tools]
         self.assertIn("execute_code", tool_names)
@@ -703,8 +703,8 @@ class TestModeWrapper(unittest.TestCase):
             return {}
 
         with TemporaryDirectory() as tmpdir:
-            plans_root = Path(tmpdir) / "plans-mini-kramabench"
-            target = plans_root / "k-1-d-1"
+            runtime_profiles_root = Path(tmpdir) / "runtime-profiles"
+            target = runtime_profiles_root / "k-1-d-1"
             target.mkdir(parents=True, exist_ok=True)
             (target / "task_1.json").write_text(
                 json.dumps(
@@ -715,10 +715,10 @@ class TestModeWrapper(unittest.TestCase):
                     }
                 )
             )
-            from sana_evaluation.tools.external.ideal import plan_store
+            from sana_evaluation.tools.external.ideal import runtime_profile_store
 
-            old_root = plan_store._KRAMABENCH_PLANS_ROOT
-            plan_store._KRAMABENCH_PLANS_ROOT = plans_root
+            old_root = runtime_profile_store._KRAMABENCH_RUNTIME_PROFILES_ROOT
+            runtime_profile_store._KRAMABENCH_RUNTIME_PROFILES_ROOT = runtime_profiles_root
             try:
                 cfg = RunConfig(
                     search_tool_mode="ideal",
@@ -730,10 +730,10 @@ class TestModeWrapper(unittest.TestCase):
                 bundle = build_mode_bundle(
                     cfg,
                     data_tools=[query_file, execute_code],
-                    task_context={"task_id": "tasks-mini-kramabench/k-1-d-1/task_1.json"},
+                    task_context={"task_id": "benchmarks/kramabench/tasks-mini/tasks/k-1-d-1/task_1.json"},
                 )
             finally:
-                plan_store._KRAMABENCH_PLANS_ROOT = old_root
+                runtime_profile_store._KRAMABENCH_RUNTIME_PROFILES_ROOT = old_root
 
         tool_names = [tool_obj.tool_spec["name"] for tool_obj in bundle.tools]
         self.assertIn("search_ideal", tool_names)
@@ -745,17 +745,22 @@ class TestModeWrapper(unittest.TestCase):
         self.assertIn("download the needed files", bundle.system_prompt)
 
     def test_prompt_blocks_query_and_execute_for_non_tabular_non_json_sources(self):
-        cfg = RunConfig(
-            search_tool_mode="preloaded",
-            search_results_mode="naive",
-            profile_mode="naive",
-            computation_tool_mode="standard",
-        )
-        bundle = build_mode_bundle(
-            cfg,
-            data_tools=[],
-            task_context={"task_id": "tasks_mini/k-1-d-1/task_1.json"},
-        )
+        with TemporaryDirectory() as tmpdir:
+            runtime_profiles_root = Path(tmpdir) / "runtime-profiles"
+            self._write_valid_plan(runtime_profiles_root)
+            set_runtime_profiles_root(runtime_profiles_root)
+
+            cfg = RunConfig(
+                search_tool_mode="preloaded",
+                search_results_mode="naive",
+                profile_mode="naive",
+                computation_tool_mode="standard",
+            )
+            bundle = build_mode_bundle(
+                cfg,
+                data_tools=[],
+                task_context={"task_id": "benchmarks/lakeqa/tasks-mini/tasks/k-1-d-1/task_1.json"},
+            )
 
         self.assertIn("## COMPUTATION FILE FAMILY RULE", bundle.system_prompt)
         self.assertIn("Do not use `query_file` or `execute_code`", bundle.system_prompt)
@@ -775,9 +780,9 @@ class TestModeWrapper(unittest.TestCase):
             return {}
 
         with TemporaryDirectory() as tmpdir:
-            plans_root = Path(tmpdir) / "plans_mini"
-            self._write_valid_plan(plans_root)
-            set_plans_root(plans_root)
+            runtime_profiles_root = Path(tmpdir) / "runtime-profiles"
+            self._write_valid_plan(runtime_profiles_root)
+            set_runtime_profiles_root(runtime_profiles_root)
 
             cfg = RunConfig(
                 search_tool_mode="preloaded",
@@ -788,7 +793,7 @@ class TestModeWrapper(unittest.TestCase):
             bundle = build_mode_bundle(
                 cfg,
                 data_tools=[query_file, execute_code],
-                task_context={"task_id": "tasks_mini/k-1-d-1/task_1.json"},
+                task_context={"task_id": "benchmarks/lakeqa/tasks-mini/tasks/k-1-d-1/task_1.json"},
             )
 
         self.assertIn("## COMPUTATION FILE FAMILY RULE", bundle.system_prompt)

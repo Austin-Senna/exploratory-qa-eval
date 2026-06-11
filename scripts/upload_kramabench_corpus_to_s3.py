@@ -13,7 +13,7 @@ from urllib.parse import urlparse
 
 
 REPO = Path(__file__).resolve().parents[1]
-DEFAULT_CANDIDATES_DIR = REPO / "tasks-mini-kramabench" / "candidates"
+DEFAULT_CANDIDATES_DIR = REPO / "benchmarks/kramabench/tasks-mini/tasks/candidates"
 DEFAULT_STAGING_DIR = REPO / "other-benchmarks" / "data-imports" / "kramabench" / "_s3_corpus_staging"
 
 
@@ -165,7 +165,7 @@ def _build_parser() -> argparse.ArgumentParser:
         "--candidates-dir",
         type=Path,
         default=DEFAULT_CANDIDATES_DIR,
-        help="Directory containing tasks-mini-kramabench/candidates/*.json.",
+        help="Directory containing benchmarks/kramabench/tasks-mini/tasks/candidates/*.json.",
     )
     parser.add_argument(
         "--source-id",
