@@ -15,15 +15,15 @@ from strands.hooks.events import (
     BeforeToolCallEvent,
 )
 
-from strands_evaluation.agent_with_mode import build_mode_bundle
-from strands_evaluation.config import RunConfig
-from strands_evaluation.instrumentation import ideal_subagent_costs
-from strands_evaluation.instrumentation.trace_plugin import set_trace_context
-from strands_evaluation.instrumentation.agent_plugins import LoggingPlugin
-from strands_evaluation.tools.agent_tools import execute_code
-from strands_evaluation.tools.agent_tools_v2 import query_file
-from strands_evaluation.tools.external.ideal import computation_ideal
-from strands_evaluation.tools.external.ideal.plan_store import (
+from sana_evaluation.agent_with_mode import build_mode_bundle
+from sana_evaluation.config import RunConfig
+from sana_evaluation.instrumentation import ideal_subagent_costs
+from sana_evaluation.instrumentation.trace_plugin import set_trace_context
+from sana_evaluation.instrumentation.agent_plugins import LoggingPlugin
+from sana_evaluation.tools.agent_tools import execute_code
+from sana_evaluation.tools.agent_tools_v2 import query_file
+from sana_evaluation.tools.external.ideal import computation_ideal
+from sana_evaluation.tools.external.ideal.plan_store import (
     load_plan_for_task,
     set_plans_root,
     set_task_context,
@@ -843,7 +843,7 @@ class IdealComputationToolTests(unittest.TestCase):
         cfg = RunConfig(
             search_tool_mode="preloaded",
             search_results_mode="naive",
-            plan_mode="naive",
+            profile_mode="naive",
             computation_tool_mode="ideal",
         )
         bundle = build_mode_bundle(
@@ -859,7 +859,7 @@ class IdealComputationToolTests(unittest.TestCase):
 
         plugin = LoggingPlugin()
         agent = SimpleNamespace()
-        log_logger = logging.getLogger("strands_evaluation.instrumentation.agent_plugins")
+        log_logger = logging.getLogger("sana_evaluation.instrumentation.agent_plugins")
         previous_level = log_logger.level
         _COMPUTATION_TRANSCRIPT_LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
         handler = logging.FileHandler(_COMPUTATION_TRANSCRIPT_LOG_PATH, mode="w", encoding="utf-8")

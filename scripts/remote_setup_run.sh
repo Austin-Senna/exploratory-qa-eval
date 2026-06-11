@@ -22,7 +22,7 @@ Options:
 
 Examples:
 	  scripts/remote_setup_run.sh full --search ideal --results ideal \
-	    --plans standard --k 5 --parallel 4 --model openai/gpt-5.4-nano --db lance_data \
+	    --profile standard --k 5 --parallel 4 --model openai/gpt-5.4-nano --db lance_data \
     --openai-prompt-cache-retention 24h --verbose --continue --timeout 600 \
     --submit-grace-seconds 30
 

@@ -11,12 +11,12 @@ from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from strands_evaluation.agent_with_mode import build_mode_bundle, _tool_limit_exclusions_for_run
-from strands_evaluation.config import RunConfig
-from strands_evaluation.instrumentation import ideal_subagent_costs
-from strands_evaluation.instrumentation.trace_plugin import set_trace_context
-import strands_evaluation.tools.external.ideal.search_ideal as search_ideal
-import strands_evaluation.tools.external.ideal.search_wrapper as search_wrapper
+from sana_evaluation.agent_with_mode import build_mode_bundle, _tool_limit_exclusions_for_run
+from sana_evaluation.config import RunConfig
+from sana_evaluation.instrumentation import ideal_subagent_costs
+from sana_evaluation.instrumentation.trace_plugin import set_trace_context
+import sana_evaluation.tools.external.ideal.search_ideal as search_ideal
+import sana_evaluation.tools.external.ideal.search_wrapper as search_wrapper
 
 _TASK_ROOT = "k-1-d-1"
 _TASK_ID_TEMPLATE = f"tasks_mini/{_TASK_ROOT}/{{task_name}}"
@@ -575,7 +575,7 @@ class TestSearchIdealFlagMatrix(unittest.TestCase):
         search_ideal.reset_state()
         _reset_wrapper_caches()
         try:
-            from strands_evaluation.tools.external.ideal import computation_ideal
+            from sana_evaluation.tools.external.ideal import computation_ideal
 
             computation_ideal.reset_state()
         except Exception:
@@ -666,7 +666,7 @@ class TestSearchIdealFlagMatrix(unittest.TestCase):
                         cfg = RunConfig(
                             search_tool_mode="ideal",
                             search_results_mode=search_results_mode,
-                            plan_mode="naive",
+                            profile_mode="naive",
                             computation_tool_mode="standard",
                             search_free=False,
                             search_lessguide=search_lessguide,
@@ -748,7 +748,7 @@ class TestSearchIdealFlagMatrix(unittest.TestCase):
             cfg = RunConfig(
                 search_tool_mode="ideal",
                 search_results_mode=search_results_mode,
-                plan_mode="naive",
+                profile_mode="naive",
                 computation_tool_mode="standard",
                 search_free=False,
                 search_lessguide=search_lessguide,

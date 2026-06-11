@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Run multi-axis ablation evaluation with independent mode controls.
+"""Run multi-axis evaluation with independent mode controls.
 
-This runner extends search-ablation controls with four orthogonal axes:
+This runner controls four orthogonal axes:
   - search_tool quality
   - search_results richness
-  - agent_management style
+  - profile style
   - computation_tool behavior
 """
 
@@ -29,17 +29,10 @@ logger = logging.getLogger(__name__)
 # Reuse run_eval orchestration while swapping only the runner implementation.
 base_eval.BatchRunner = ModeBatchRunner
 
-_MODE_LETTERS = {
-    "naive": "n",
-    "preloaded": "p",
-    "standard": "d",
-    "ideal": "i",
-}
-
-_LEGACY_AXIS_DEFAULTS = {
+_AXIS_DEFAULTS = {
     "search_tool": "standard",
     "search_results": "naive",
-    "agent_management": "standard",
+    "profile": "standard",
     "computation_tool": "standard",
 }
 _BENCHMARK_CHOICES = ("lakeqa", "kramabench")
@@ -51,21 +44,20 @@ def _variant_condition_label(
     *,
     search_tool: str,
     search_results: str,
-    agent_management: str,
+    profile: str,
     computation_tool: str = "standard",
     k: Optional[int] = None,
     search_calls: Optional[int] = None,
     search_free: bool = False,
     search_lessguide: bool = False,
-    plan_skills_enabled: bool = False,
+    profile_skills_enabled: bool = False,
 ) -> str:
     parts = [
-        f"search_{_MODE_LETTERS[search_tool]}",
-        f"results_{_MODE_LETTERS[search_results]}",
-        f"plan{_MODE_LETTERS[agent_management]}",
+        f"search_{search_tool}",
+        f"results_{search_results}",
+        f"profile_{profile}",
+        f"compute_{computation_tool}",
     ]
-    if computation_tool != "standard":
-        parts.append(f"compute{_MODE_LETTERS[computation_tool]}")
     if k is not None:
         parts.append(f"k{k}")
     if search_calls is not None:
@@ -74,8 +66,8 @@ def _variant_condition_label(
         parts.append("free")
     if search_lessguide:
         parts.append("lessguide")
-    parts.append("skills_on" if plan_skills_enabled else "skills_off")
-    return "_".join(parts)
+    parts.append("skills_on" if profile_skills_enabled else "skills_off")
+    return "__".join(parts)
 
 
 def _with_debug_suffix(label: str, debug_mode: Optional[str]) -> str:
@@ -89,21 +81,21 @@ def _resolve_mode_axes(
     *,
     search_tool: Optional[str],
     search_results: Optional[str],
-    agent_management: Optional[str],
+    profile: Optional[str],
     computation_tool: Optional[str] = None,
 ) -> tuple[str, str, str, str]:
-    defaults = _LEGACY_AXIS_DEFAULTS
+    defaults = _AXIS_DEFAULTS
     return (
         search_tool or defaults["search_tool"],
         search_results or defaults["search_results"],
-        agent_management or defaults["agent_management"],
+        profile or defaults["profile"],
         computation_tool or defaults["computation_tool"],
     )
 
 
-def _validate_axis_combination(*, agent_management: str, skills: str) -> None:
-    if skills == "on" and agent_management == "naive":
-        raise ValueError("--skills on requires --plans standard or --plans ideal.")
+def _validate_axis_combination(*, profile: str, skills: str) -> None:
+    if skills == "on" and profile == "naive":
+        raise ValueError("--skills on requires --profile standard or --profile ideal.")
 
 
 def _default_task_set_for_benchmark(benchmark: str) -> str:
@@ -192,7 +184,7 @@ def _run_continue(args, agent_config: AgentConfig, run_config: RunConfig) -> Non
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Run multi-axis ablation evaluation on benchmark tasks")
+    parser = argparse.ArgumentParser(description="Run multi-axis evaluation on benchmark tasks")
 
     # Task selection
     parser.add_argument("--task-dir", "-d", help="Single task directory to evaluate")
@@ -283,7 +275,7 @@ def main() -> None:
     # Base condition + storage
     parser.add_argument(
         "--condition",
-        choices=["baseline", "a", "b"],
+        choices=["baseline"],
         default="baseline",
         help="Base condition label used in output path nesting.",
     )
@@ -336,7 +328,7 @@ def main() -> None:
         help="Hide search_ideal plan_exhausted guidance fields from tool payloads.",
     )
 
-    # New ablation axes
+    # Mode axes
     parser.add_argument(
         "--search_tool",
         choices=["naive", "preloaded", "standard", "ideal"],
@@ -350,13 +342,11 @@ def main() -> None:
         help="Search result richness axis.",
     )
     parser.add_argument(
-        "--plans",
-        "--agent-management",
-        "--agent_management",
-        dest="agent_management",
+        "--profile",
+        dest="profile",
         choices=["naive", "standard", "ideal"],
         default=None,
-        help="Plan-management axis.",
+        help="Profile axis.",
     )
     parser.add_argument(
         "--computation_tool",
@@ -399,27 +389,27 @@ def main() -> None:
         openai_prompt_cache_retention=args.openai_prompt_cache_retention,
         extra_model_kwargs=extra_model_kwargs,
     )
-    search_tool_mode, search_results_mode, agent_management_mode, computation_tool_mode = _resolve_mode_axes(
+    search_tool_mode, search_results_mode, profile_mode, computation_tool_mode = _resolve_mode_axes(
         search_tool=args.search_tool,
         search_results=args.search_results,
-        agent_management=args.agent_management,
+        profile=args.profile,
         computation_tool=args.computation_tool,
     )
     try:
-        _validate_axis_combination(agent_management=agent_management_mode, skills=args.skills)
+        _validate_axis_combination(profile=profile_mode, skills=args.skills)
     except ValueError as exc:
         parser.error(str(exc))
     safe_model_name = base_eval._display_name(agent_config)
     variant_condition = _variant_condition_label(
         search_tool=search_tool_mode,
         search_results=search_results_mode,
-        agent_management=agent_management_mode,
+        profile=profile_mode,
         computation_tool=computation_tool_mode,
         k=args.k,
         search_calls=args.search_calls,
         search_free=args.search_free,
         search_lessguide=args.search_lessguide,
-        plan_skills_enabled=args.skills == "on",
+        profile_skills_enabled=args.skills == "on",
     )
     variant_condition = _with_debug_suffix(variant_condition, args.debug_mode)
     condition_label = f"modes/{safe_model_name}/{variant_condition}"
@@ -445,9 +435,9 @@ def main() -> None:
         search_db_path=args.db_path,
         search_tool_mode=search_tool_mode,
         search_results_mode=search_results_mode,
-        agent_management_mode=agent_management_mode,
+        profile_mode=profile_mode,
         computation_tool_mode=computation_tool_mode,
-        plan_skills_enabled=args.skills == "on",
+        profile_skills_enabled=args.skills == "on",
         search_free=args.search_free,
         search_lessguide=args.search_lessguide,
         benchmark=args.benchmark,
@@ -460,12 +450,12 @@ def main() -> None:
     )
 
     logger.info(
-        "Ablation variant: %s (base=%s, st=%s, sr=%s, am=%s, ct=%s, plan_skills=%s, k=%s, search_calls=%s, search_free=%s, search_lessguide=%s, db_path=%s)",
+        "Mode variant: %s (base=%s, search=%s, results=%s, profile=%s, compute=%s, profile_skills=%s, k=%s, search_calls=%s, search_free=%s, search_lessguide=%s, db_path=%s)",
         condition_label,
         args.condition,
         search_tool_mode,
         search_results_mode,
-        agent_management_mode,
+        profile_mode,
         computation_tool_mode,
         args.skills,
         args.k,

@@ -209,7 +209,7 @@ def build_management(
     *,
     search_tool_mode: str,
     task_context: Optional[Dict[str, Any]],
-    plan_skills_enabled: bool = False,
+    profile_skills_enabled: bool = False,
     benchmark: str = "lakeqa",
 ) -> tuple[str, List[Any], bool, bool, str]:
     """Return stable system prompt, management tools, behavior toggles, and a task-specific trailer.
@@ -217,7 +217,7 @@ def build_management(
     The trailer (gold reasoning chain, preloaded dataset URIs) is task-specific and must be
     appended AFTER all variant-stable injections so the cacheable prefix stays intact across tasks.
     """
-    management_mode = _normalize_mode(mode, "standard", "agent_management")
+    management_mode = _normalize_mode(mode, "standard", "profile")
 
     trailer_sections: List[str] = []
     if management_mode == "ideal":
@@ -240,17 +240,17 @@ def build_management(
     if benchmark_name == "kramabench":
         prompt = compose_kramabench_prompt(
             search_tool_mode,
-            include_skills=bool(plan_skills_enabled),
+            include_skills=bool(profile_skills_enabled),
         )
     else:
         prompt = compose_managed_prompt(
             search_tool_mode,
-            include_skills=bool(plan_skills_enabled),
+            include_skills=bool(profile_skills_enabled),
         )
     if management_mode == "standard":
-        return prompt, [plan], bool(plan_skills_enabled), True, task_trailer
+        return prompt, [plan], bool(profile_skills_enabled), True, task_trailer
 
-    return prompt, [plan_ideal], bool(plan_skills_enabled), True, task_trailer
+    return prompt, [plan_ideal], bool(profile_skills_enabled), True, task_trailer
 
 
 def build_results(
@@ -276,18 +276,18 @@ def build_mode_bundle(
     data_tools: Sequence[Any],
     task_context: Optional[Dict[str, Any]] = None,
 ) -> ModeBundle:
-    """Build final tools/prompt/plugin toggles from multi-axis ablation modes."""
+    """Build final tools/prompt/plugin toggles from multi-axis modes."""
     search_tool_mode = _normalize_mode(run_config.search_tool_mode, "standard", "search_tool")
     search_results_mode = _normalize_result_mode(run_config.search_results_mode, "naive", "search_results")
-    agent_management_mode = _normalize_mode(
-        run_config.agent_management_mode or run_config.plan_mode,
+    profile_mode = _normalize_mode(
+        run_config.profile_mode or run_config.profile_mode,
         "standard",
-        "agent_management",
+        "profile",
     )
     computation_tool_mode = _normalize_computation_mode(run_config.computation_tool_mode)
     benchmark = (getattr(run_config, "benchmark", None) or "lakeqa").strip().lower()
 
-    if search_tool_mode == "ideal" or agent_management_mode == "ideal" or computation_tool_mode == "ideal":
+    if search_tool_mode == "ideal" or profile_mode == "ideal" or computation_tool_mode == "ideal":
         set_ideal_plan_task_context(task_context or {})
 
     raw_search_tools = build_search(
@@ -301,10 +301,10 @@ def build_mode_bundle(
         fixed_k=run_config.search_k,
     )
     system_prompt, management_tools, enable_skills, enable_stagnation, task_trailer = build_management(
-        agent_management_mode,
+        profile_mode,
         search_tool_mode=search_tool_mode,
         task_context=task_context,
-        plan_skills_enabled=bool(run_config.plan_skills_enabled),
+        profile_skills_enabled=bool(run_config.profile_skills_enabled),
         benchmark=benchmark,
     )
     system_prompt = inject_debug_prompt(system_prompt, run_config.debug_mode)
@@ -333,10 +333,10 @@ def build_mode_bundle(
         modes={
             "search_tool": search_tool_mode,
             "search_results": search_results_mode,
-            "plan": agent_management_mode,
-            "agent_management": agent_management_mode,
+            "plan": profile_mode,
+            "profile": profile_mode,
             "computation_tool": computation_tool_mode,
-            "plan_skills": "on" if run_config.plan_skills_enabled else "off",
+            "profile_skills": "on" if run_config.profile_skills_enabled else "off",
         },
         task_trailer=task_trailer,
     )
@@ -453,7 +453,7 @@ def _base_condition(condition_label: str) -> str:
 
 
 def _resolve_condition(cond_cfg: ConditionConfig) -> str:
-    """Resolve the actual experiment condition (baseline/b)."""
+    """Resolve the base experiment condition label."""
     if getattr(cond_cfg, "base_condition", None):
         return str(cond_cfg.base_condition)
     return _base_condition(cond_cfg.condition)
@@ -530,7 +530,7 @@ class DataLakeAgent:
         self,
         *,
         search_tool_mode: Optional[str],
-        agent_management_mode: Optional[str],
+        profile_mode: Optional[str],
     ) -> None:
         """Hook for runtime toggles that must run before the Agent is constructed."""
         return None
@@ -539,7 +539,7 @@ class DataLakeAgent:
         self,
         *,
         search_tool_mode: Optional[str],
-        agent_management_mode: Optional[str],
+        profile_mode: Optional[str],
     ) -> str:
         """Return additional prompt text appended after the search-budget block but before the task trailer."""
         return ""
@@ -549,7 +549,7 @@ class DataLakeAgent:
         *,
         system_prompt: str,
         search_tool_mode: Optional[str],
-        agent_management_mode: Optional[str],
+        profile_mode: Optional[str],
         task_context: Optional[Dict[str, Any]] = None,
     ) -> Optional[str]:
         """Return a full replacement system prompt, or None to keep the composed prompt."""
@@ -559,7 +559,7 @@ class DataLakeAgent:
         self,
         *,
         search_tool_mode: Optional[str],
-        agent_management_mode: Optional[str],
+        profile_mode: Optional[str],
     ) -> List[Any]:
         """Return additional plugins to append before the Agent is constructed."""
         return []
@@ -568,7 +568,7 @@ class DataLakeAgent:
         self,
         *,
         search_tool_mode: Optional[str],
-        agent_management_mode: Optional[str],
+        profile_mode: Optional[str],
     ) -> Optional[Any]:
         """Return a custom ConversationManager, or None to use the default."""
         return None
@@ -578,7 +578,7 @@ class DataLakeAgent:
         tools: List[Any],
         *,
         search_tool_mode: Optional[str],
-        agent_management_mode: Optional[str],
+        profile_mode: Optional[str],
         task_context: Optional[Dict[str, Any]] = None,
     ) -> List[Any]:
         """Return a (possibly modified) tools list. Default: identity."""
@@ -589,7 +589,7 @@ class DataLakeAgent:
         plugins: List[Any],
         *,
         search_tool_mode: Optional[str],
-        agent_management_mode: Optional[str],
+        profile_mode: Optional[str],
     ) -> List[Any]:
         """Return a (possibly modified) plugin list. Default: identity."""
         return plugins
@@ -598,7 +598,7 @@ class DataLakeAgent:
         self,
         *,
         search_tool_mode: Optional[str],
-        agent_management_mode: Optional[str],
+        profile_mode: Optional[str],
     ) -> Sequence[str]:
         """Return tool names excluded from the global tool-limit counter."""
         return ("skills", "plan", "plan_ideal")
@@ -616,13 +616,13 @@ class DataLakeAgent:
             [
                 self.run_config.search_tool_mode,
                 self.run_config.search_results_mode,
-                self.run_config.agent_management_mode,
+                self.run_config.profile_mode,
                 self.run_config.computation_tool_mode,
             ]
         )
 
         if not mode_overrides_enabled:
-            if condition in {"baseline", "b"} and not _NAIVE_SEARCH_TOOLS_AVAILABLE:
+            if not _NAIVE_SEARCH_TOOLS_AVAILABLE:
                 raise RuntimeError("Naive sparse search tools are unavailable (import failed).")
 
         # Core data-manipulation tools shared across all conditions
@@ -647,62 +647,43 @@ class DataLakeAgent:
             enable_stagnation = mode_bundle.enable_stagnation
             skill_paths = skill_paths_for_modes(
                 mode_bundle.modes["search_tool"],
-                mode_bundle.modes["agent_management"],
+                mode_bundle.modes["profile"],
             )
             logger.info(
-                "Ablation modes active: search_tool=%s search_results=%s agent_management=%s plan_skills=%s",
+                "Mode axes active: search_tool=%s search_results=%s profile=%s profile_skills=%s",
                 mode_bundle.modes["search_tool"],
                 mode_bundle.modes["search_results"],
-                mode_bundle.modes["agent_management"],
-                mode_bundle.modes["plan_skills"],
+                mode_bundle.modes["profile"],
+                mode_bundle.modes["profile_skills"],
             )
         else:
-            if condition == "b" and _NAIVE_SEARCH_TOOLS_AVAILABLE:
-                # Legacy managed path: sparse search + prefix + plan tool + skills.
-                raw_search_tools = [search_value_naive, search_schema_naive, search_prefix]
-                system_prompt = compose_managed_prompt(
-                    "naive",
-                    include_skills=bool(self.run_config.plan_skills_enabled),
-                )
-                search_tools = build_search_tools(
-                    raw_search_tools,
-                    fixed_k=self.run_config.search_k,
-                    search_descriptions=self.run_config.search_descriptions,
-                )
-                tools = search_tools + [plan] + _data_tools
-                enable_skills = bool(self.run_config.plan_skills_enabled)
-                enable_stagnation = True
-                skill_paths = skill_paths_for_modes("naive", "standard")
-
-            else:
-                # Baseline: Naive sparse search tools (BM25 + schema + prefix) without any context tools
-                raw_search_tools = [search_value_naive, search_schema_naive, search_prefix]
-                system_prompt = compose_baseline_prompt("naive")
-                search_tools = build_search_tools(
-                    raw_search_tools,
-                    fixed_k=self.run_config.search_k,
-                    search_descriptions=self.run_config.search_descriptions,
-                )
-                tools = search_tools + _data_tools
-                enable_skills = False
-                enable_stagnation = False
-                skill_paths = skill_paths_for_modes("naive", "naive")
+            raw_search_tools = [search_value_naive, search_schema_naive, search_prefix]
+            system_prompt = compose_baseline_prompt("naive")
+            search_tools = build_search_tools(
+                raw_search_tools,
+                fixed_k=self.run_config.search_k,
+                search_descriptions=self.run_config.search_descriptions,
+            )
+            tools = search_tools + _data_tools
+            enable_skills = False
+            enable_stagnation = False
+            skill_paths = skill_paths_for_modes("naive", "naive")
 
             search_tool_names = search_tool_names_in_legacy(search_tools)
 
         # Resolve the active modes (None on the legacy path) for hook calls.
         _hook_search_tool_mode: Optional[str]
-        _hook_agent_management_mode: Optional[str]
+        _hook_profile_mode: Optional[str]
         if mode_overrides_enabled:
             _hook_search_tool_mode = mode_bundle.modes.get("search_tool")
-            _hook_agent_management_mode = mode_bundle.modes.get("agent_management")
+            _hook_profile_mode = mode_bundle.modes.get("profile")
         else:
             _hook_search_tool_mode = None
-            _hook_agent_management_mode = None
+            _hook_profile_mode = None
 
         self._pre_build_setup(
             search_tool_mode=_hook_search_tool_mode,
-            agent_management_mode=_hook_agent_management_mode,
+            profile_mode=_hook_profile_mode,
         )
 
         system_prompt = _inject_search_budget_prompt(
@@ -716,7 +697,7 @@ class DataLakeAgent:
         prompt_override = self._system_prompt_override(
             system_prompt=system_prompt,
             search_tool_mode=_hook_search_tool_mode,
-            agent_management_mode=_hook_agent_management_mode,
+            profile_mode=_hook_profile_mode,
             task_context=task_context,
         )
         if prompt_override is not None:
@@ -724,7 +705,7 @@ class DataLakeAgent:
 
         extra_prompt = self._extra_prompt_text(
             search_tool_mode=_hook_search_tool_mode,
-            agent_management_mode=_hook_agent_management_mode,
+            profile_mode=_hook_profile_mode,
         )
         if extra_prompt:
             system_prompt = system_prompt.rstrip() + extra_prompt
@@ -734,7 +715,7 @@ class DataLakeAgent:
 
         conv_manager = self._conversation_manager(
             search_tool_mode=_hook_search_tool_mode,
-            agent_management_mode=_hook_agent_management_mode,
+            profile_mode=_hook_profile_mode,
         )
         if conv_manager is None:
             conv_manager = build_conversation_manager(self.run_config)
@@ -751,7 +732,7 @@ class DataLakeAgent:
             excluded_tools=_tool_limit_exclusions_for_run(
                 base_excluded=self._tool_limit_excluded_tools(
                     search_tool_mode=_hook_search_tool_mode,
-                    agent_management_mode=_hook_agent_management_mode,
+                    profile_mode=_hook_profile_mode,
                 ),
                 search_free=bool(self.run_config.search_free),
                 search_tool_names=search_tool_names,
@@ -792,19 +773,19 @@ class DataLakeAgent:
         plugins.extend(
             self._extra_plugins(
                 search_tool_mode=_hook_search_tool_mode,
-                agent_management_mode=_hook_agent_management_mode,
+                profile_mode=_hook_profile_mode,
             )
         )
         plugins = self._decorate_plugins(
             plugins,
             search_tool_mode=_hook_search_tool_mode,
-            agent_management_mode=_hook_agent_management_mode,
+            profile_mode=_hook_profile_mode,
         )
 
         tools = self._decorate_tools(
             list(tools),
             search_tool_mode=_hook_search_tool_mode,
-            agent_management_mode=_hook_agent_management_mode,
+            profile_mode=_hook_profile_mode,
             task_context=task_context,
         )
 
@@ -989,7 +970,7 @@ def _run_task_worker(
     )
 
     # Eagerly load search backend state once per worker process.
-    # For ablation runs, mode overrides drive setup. For legacy runs, condition drives setup.
+    # For mode runs, explicit axes drive setup. Otherwise the baseline path drives setup.
     mode_search_tool = (run_config.search_tool_mode or "").strip().lower() or None
     if mode_search_tool is None:
         mode_search_tool = "naive"

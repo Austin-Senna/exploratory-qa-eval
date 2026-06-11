@@ -24,11 +24,11 @@ from typing import Any, Dict, List, Optional
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from strands_evaluation.agent_with_mode import DataLakeAgent, build_mode_bundle
-from strands_evaluation.config import AgentConfig, ConditionConfig, RunConfig
-from strands_evaluation.helper.prompting import compose_preloaded_block, skill_paths_for_modes
-from strands_evaluation.preflight import run_preflight
-from strands_evaluation.tools.external.ideal.plan_store import load_plan_for_task
+from sana_evaluation.agent_with_mode import DataLakeAgent, build_mode_bundle
+from sana_evaluation.config import AgentConfig, ConditionConfig, RunConfig
+from sana_evaluation.helper.prompting import compose_preloaded_block, skill_paths_for_modes
+from sana_evaluation.preflight import run_preflight
+from sana_evaluation.tools.external.ideal.plan_store import load_plan_for_task
 
 _RECITATION_PROMPT = (
     "This is a diagnostic. Do NOT solve the underlying benchmark question. "
@@ -89,7 +89,7 @@ def _build_run_config(
         search_db_path=db_path,
         search_tool_mode="preloaded",
         search_results_mode="ideal",
-        plan_mode=management_mode,
+        profile_mode=management_mode,
         condition_config=ConditionConfig(
             condition=f"diagnostic/preloaded_recitation_{management_mode}",
             base_condition="baseline",

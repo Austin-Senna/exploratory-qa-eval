@@ -4,13 +4,13 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest.mock import MagicMock, patch
 
-from strands_evaluation.config import AgentConfig, RunConfig
-from strands_evaluation.agent_with_mode import (
+from sana_evaluation.config import AgentConfig, RunConfig
+from sana_evaluation.agent_with_mode import (
     DataLakeAgent,
     build_mode_bundle,
     _tool_limit_exclusions_for_run,
 )
-from strands_evaluation.helper.prompting import (
+from sana_evaluation.helper.prompting import (
     compose_baseline_prompt,
     compose_managed_prompt,
     compose_preloaded_block,
@@ -18,7 +18,7 @@ from strands_evaluation.helper.prompting import (
     normalize_debug_mode,
     skill_paths_for_modes,
 )
-from strands_evaluation.tools.external.ideal.plan_store import (
+from sana_evaluation.tools.external.ideal.plan_store import (
     get_task_context,
     set_plans_root,
     set_task_context,
@@ -53,12 +53,12 @@ class TestModeWrapper(unittest.TestCase):
         cfg = RunConfig(
             search_tool_mode="naive",
             search_results_mode="naive",
-            agent_management_mode="naive",
+            profile_mode="naive",
         )
         bundle = build_mode_bundle(cfg, data_tools=[])
         self.assertEqual(bundle.modes["search_tool"], "naive")
         self.assertEqual(bundle.modes["search_results"], "naive")
-        self.assertEqual(bundle.modes["agent_management"], "naive")
+        self.assertEqual(bundle.modes["profile"], "naive")
         self.assertFalse(bundle.enable_skills)
         self.assertFalse(bundle.enable_stagnation)
         self.assertIn("search_value", bundle.search_tool_names)
@@ -67,7 +67,7 @@ class TestModeWrapper(unittest.TestCase):
         cfg = RunConfig(
             search_tool_mode="standard",
             search_results_mode="naive",
-            agent_management_mode="naive",
+            profile_mode="naive",
         )
         bundle = build_mode_bundle(cfg, data_tools=[])
         self.assertIn("search_value", bundle.search_tool_names)
@@ -150,12 +150,12 @@ class TestModeWrapper(unittest.TestCase):
         standard_paths = skill_paths_for_modes("standard", "standard")
         ideal_paths = skill_paths_for_modes("ideal", "ideal")
         preloaded_paths = skill_paths_for_modes("preloaded", "standard")
-        self.assertIn("strands_evaluation/tools/skills/plan-agent", standard_paths)
-        self.assertIn("strands_evaluation/tools/skills/discover-data-standard", standard_paths)
-        self.assertIn("strands_evaluation/tools/skills/plan-ideal", ideal_paths)
-        self.assertIn("strands_evaluation/tools/skills/discover-data-ideal", ideal_paths)
-        self.assertIn("strands_evaluation/tools/skills/plan-agent", preloaded_paths)
-        self.assertIn("strands_evaluation/tools/skills/query-data", preloaded_paths)
+        self.assertIn("sana_evaluation/tools/skills/plan-agent", standard_paths)
+        self.assertIn("sana_evaluation/tools/skills/discover-data-standard", standard_paths)
+        self.assertIn("sana_evaluation/tools/skills/plan-ideal", ideal_paths)
+        self.assertIn("sana_evaluation/tools/skills/discover-data-ideal", ideal_paths)
+        self.assertIn("sana_evaluation/tools/skills/plan-agent", preloaded_paths)
+        self.assertIn("sana_evaluation/tools/skills/query-data", preloaded_paths)
         self.assertFalse(any("discover-data" in path for path in preloaded_paths))
 
     def test_ideal_management_uses_managed_stack_with_plan_swap(self):
@@ -167,7 +167,7 @@ class TestModeWrapper(unittest.TestCase):
             cfg = RunConfig(
                 search_tool_mode="ideal",
                 search_results_mode="ideal",
-                agent_management_mode="ideal",
+                profile_mode="ideal",
             )
             bundle = build_mode_bundle(
                 cfg,
@@ -181,22 +181,22 @@ class TestModeWrapper(unittest.TestCase):
             self.assertFalse(bundle.enable_skills)
             self.assertTrue(bundle.enable_stagnation)
 
-    def test_plan_skills_flag_enables_skills_for_managed_modes(self):
+    def test_profile_skills_flag_enables_skills_for_managed_modes(self):
         cfg = RunConfig(
             search_tool_mode="standard",
             search_results_mode="naive",
-            agent_management_mode="standard",
-            plan_skills_enabled=True,
+            profile_mode="standard",
+            profile_skills_enabled=True,
         )
         bundle = build_mode_bundle(cfg, data_tools=[])
         tool_names = [tool_obj.tool_spec["name"] for tool_obj in bundle.tools]
         self.assertIn("plan", tool_names)
         self.assertTrue(bundle.enable_skills)
         self.assertTrue(bundle.enable_stagnation)
-        self.assertEqual(bundle.modes["plan_skills"], "on")
+        self.assertEqual(bundle.modes["profile_skills"], "on")
 
     def test_base_agent_does_not_expose_sandbox_admin_tools(self):
-        import strands_evaluation.agent_with_mode as agent_with_mode
+        import sana_evaluation.agent_with_mode as agent_with_mode
 
         captured = {}
 
@@ -208,7 +208,7 @@ class TestModeWrapper(unittest.TestCase):
         cfg = RunConfig(
             search_tool_mode="standard",
             search_results_mode="naive",
-            agent_management_mode="standard",
+            profile_mode="standard",
         )
 
         with patch.object(agent_with_mode, "build_model", return_value=object()):
@@ -224,8 +224,8 @@ class TestModeWrapper(unittest.TestCase):
         cfg = RunConfig(
             search_tool_mode="standard",
             search_results_mode="naive",
-            agent_management_mode="standard",
-            plan_skills_enabled=False,
+            profile_mode="standard",
+            profile_skills_enabled=False,
         )
         bundle = build_mode_bundle(cfg, data_tools=[])
 
@@ -243,7 +243,7 @@ class TestModeWrapper(unittest.TestCase):
             cfg = RunConfig(
                 search_tool_mode="ideal",
                 search_results_mode="ideal",
-                agent_management_mode="ideal",
+                profile_mode="ideal",
             )
             build_mode_bundle(
                 cfg,
@@ -267,7 +267,7 @@ class TestModeWrapper(unittest.TestCase):
             cfg = RunConfig(
                 search_tool_mode="ideal",
                 search_results_mode="ideal",
-                agent_management_mode="ideal",
+                profile_mode="ideal",
             )
             bundle = build_mode_bundle(
                 cfg,
@@ -288,7 +288,7 @@ class TestModeWrapper(unittest.TestCase):
         cfg = RunConfig(
             search_tool_mode="standard",
             search_results_mode="naive",
-            agent_management_mode="standard",
+            profile_mode="standard",
         )
         bundle = build_mode_bundle(cfg, data_tools=[])
         self.assertIn("search_value", bundle.system_prompt)
@@ -308,7 +308,7 @@ class TestModeWrapper(unittest.TestCase):
             cfg = RunConfig(
                 search_tool_mode="ideal",
                 search_results_mode="ideal",
-                agent_management_mode="standard",
+                profile_mode="standard",
             )
             bundle = build_mode_bundle(
                 cfg,
@@ -323,7 +323,7 @@ class TestModeWrapper(unittest.TestCase):
         cfg = RunConfig(
             search_tool_mode="standard",
             search_results_mode="naive",
-            agent_management_mode="naive",
+            profile_mode="naive",
         )
         bundle = build_mode_bundle(cfg, data_tools=[])
         self.assertIn("search_value", bundle.system_prompt)
@@ -343,7 +343,7 @@ class TestModeWrapper(unittest.TestCase):
             cfg = RunConfig(
                 search_tool_mode="ideal",
                 search_results_mode="ideal",
-                agent_management_mode="naive",
+                profile_mode="naive",
             )
             bundle = build_mode_bundle(
                 cfg,
@@ -358,7 +358,7 @@ class TestModeWrapper(unittest.TestCase):
         cfg = RunConfig(
             search_tool_mode="standard",
             search_results_mode="naive",
-            agent_management_mode="naive",
+            profile_mode="naive",
             debug_mode="decision_notes",
         )
         bundle = build_mode_bundle(cfg, data_tools=[])
@@ -394,7 +394,7 @@ class TestModeWrapper(unittest.TestCase):
                 DataLakeAgent._tool_limit_excluded_tools(
                     None,
                     search_tool_mode="ideal",
-                    agent_management_mode="ideal",
+                    profile_mode="ideal",
                 )
             ),
             ("skills", "plan", "plan_ideal"),
@@ -419,7 +419,7 @@ class TestModeWrapper(unittest.TestCase):
             cfg = RunConfig(
                 search_tool_mode="ideal",
                 search_results_mode="ideal",
-                agent_management_mode="ideal",
+                profile_mode="ideal",
             )
             with self.assertRaises(FileNotFoundError):
                 build_mode_bundle(
@@ -446,7 +446,7 @@ class TestModeWrapper(unittest.TestCase):
             cfg = RunConfig(
                 search_tool_mode="ideal",
                 search_results_mode="ideal",
-                agent_management_mode="ideal",
+                profile_mode="ideal",
             )
             with self.assertRaises(ValueError):
                 build_mode_bundle(
@@ -464,7 +464,7 @@ class TestModeWrapper(unittest.TestCase):
             cfg = RunConfig(
                 search_tool_mode="preloaded",
                 search_results_mode="ideal",
-                agent_management_mode="standard",
+                profile_mode="standard",
             )
             bundle = build_mode_bundle(
                 cfg,
@@ -491,7 +491,7 @@ class TestModeWrapper(unittest.TestCase):
             cfg = RunConfig(
                 search_tool_mode="preloaded",
                 search_results_mode="naive",
-                agent_management_mode="naive",
+                profile_mode="naive",
             )
             with self.assertRaises(FileNotFoundError):
                 build_mode_bundle(
@@ -519,7 +519,7 @@ class TestModeWrapper(unittest.TestCase):
             cfg = RunConfig(
                 search_tool_mode="preloaded",
                 search_results_mode="naive",
-                agent_management_mode="standard",
+                profile_mode="standard",
             )
             with self.assertRaises(ValueError):
                 build_mode_bundle(
@@ -555,7 +555,7 @@ class TestModeWrapper(unittest.TestCase):
             cfg = RunConfig(
                 search_tool_mode="preloaded",
                 search_results_mode="naive",
-                agent_management_mode="naive",
+                profile_mode="naive",
                 computation_tool_mode="ideal",
             )
             bundle = build_mode_bundle(
@@ -611,7 +611,7 @@ class TestModeWrapper(unittest.TestCase):
                     }
                 )
             )
-            from strands_evaluation.tools.external.ideal import plan_store
+            from sana_evaluation.tools.external.ideal import plan_store
 
             old_root = plan_store._KRAMABENCH_PLANS_ROOT
             plan_store._KRAMABENCH_PLANS_ROOT = plans_root
@@ -619,7 +619,7 @@ class TestModeWrapper(unittest.TestCase):
                 cfg = RunConfig(
                     search_tool_mode="preloaded",
                     search_results_mode="naive",
-                    agent_management_mode="naive",
+                    profile_mode="naive",
                     computation_tool_mode="ideal",
                     benchmark="kramabench",
                 )
@@ -664,7 +664,7 @@ class TestModeWrapper(unittest.TestCase):
                     }
                 )
             )
-            from strands_evaluation.tools.external.ideal import plan_store
+            from sana_evaluation.tools.external.ideal import plan_store
 
             old_root = plan_store._KRAMABENCH_PLANS_ROOT
             plan_store._KRAMABENCH_PLANS_ROOT = plans_root
@@ -672,7 +672,7 @@ class TestModeWrapper(unittest.TestCase):
                 cfg = RunConfig(
                     search_tool_mode="preloaded",
                     search_results_mode="naive",
-                    agent_management_mode="standard",
+                    profile_mode="standard",
                     computation_tool_mode="standard",
                     benchmark="kramabench",
                 )
@@ -715,7 +715,7 @@ class TestModeWrapper(unittest.TestCase):
                     }
                 )
             )
-            from strands_evaluation.tools.external.ideal import plan_store
+            from sana_evaluation.tools.external.ideal import plan_store
 
             old_root = plan_store._KRAMABENCH_PLANS_ROOT
             plan_store._KRAMABENCH_PLANS_ROOT = plans_root
@@ -723,7 +723,7 @@ class TestModeWrapper(unittest.TestCase):
                 cfg = RunConfig(
                     search_tool_mode="ideal",
                     search_results_mode="ideal",
-                    agent_management_mode="ideal",
+                    profile_mode="ideal",
                     computation_tool_mode="standard",
                     benchmark="kramabench",
                 )
@@ -748,7 +748,7 @@ class TestModeWrapper(unittest.TestCase):
         cfg = RunConfig(
             search_tool_mode="preloaded",
             search_results_mode="naive",
-            agent_management_mode="naive",
+            profile_mode="naive",
             computation_tool_mode="standard",
         )
         bundle = build_mode_bundle(
@@ -782,7 +782,7 @@ class TestModeWrapper(unittest.TestCase):
             cfg = RunConfig(
                 search_tool_mode="preloaded",
                 search_results_mode="naive",
-                agent_management_mode="naive",
+                profile_mode="naive",
                 computation_tool_mode="ideal",
             )
             bundle = build_mode_bundle(

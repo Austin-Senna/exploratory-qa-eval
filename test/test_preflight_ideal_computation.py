@@ -4,9 +4,9 @@ import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from strands_evaluation.config import RunConfig
-from strands_evaluation.preflight import run_preflight
-from strands_evaluation.tools.external.ideal.plan_store import set_plans_root, set_task_context
+from sana_evaluation.config import RunConfig
+from sana_evaluation.preflight import run_preflight
+from sana_evaluation.tools.external.ideal.plan_store import set_plans_root, set_task_context
 
 
 class IdealComputationPreflightTests(unittest.TestCase):
@@ -37,7 +37,7 @@ class IdealComputationPreflightTests(unittest.TestCase):
                 RunConfig(
                     search_tool_mode="preloaded",
                     search_results_mode="naive",
-                    plan_mode="naive",
+                    profile_mode="naive",
                     computation_tool_mode="ideal",
                 ),
                 ["tasks_mini/k-1-d-1/task_text.json"],

@@ -149,12 +149,12 @@ def format_artifact_report(
 
     smoke_command = (
         f"python -m sana_evaluation.setup_run smoke --benchmark {artifacts.name} "
-        "--search ideal --results ideal --plans ideal --compute ideal "
+        "--search ideal --results ideal --profile ideal --compute ideal "
         "--k 5 --db lance_data --model openai/gpt-5.4-nano"
     )
     full_command = (
         f"python -m sana_evaluation.setup_run full --benchmark {artifacts.name} "
-        "--search ideal --results ideal --plans ideal --compute ideal "
+        "--search ideal --results ideal --profile ideal --compute ideal "
         "--k 5 --db lance_data --model openai/gpt-5.4-nano --continue"
     )
     analysis_command = (

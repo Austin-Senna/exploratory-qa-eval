@@ -6,11 +6,11 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest.mock import patch
 
-from strands_evaluation.config import RunConfig
-import strands_evaluation.preflight as preflight
-from strands_evaluation.preflight import run_preflight
-from strands_evaluation.tools.external.ideal import search_wrapper
-from strands_evaluation.tools.external.ideal.plan_store import set_plans_root
+from sana_evaluation.config import RunConfig
+import sana_evaluation.preflight as preflight
+from sana_evaluation.preflight import run_preflight
+from sana_evaluation.tools.external.ideal import search_wrapper
+from sana_evaluation.tools.external.ideal.plan_store import set_plans_root
 
 
 class PreflightModeTests(unittest.TestCase):
@@ -30,7 +30,7 @@ class PreflightModeTests(unittest.TestCase):
         cfg = RunConfig(
             search_tool_mode="preloaded",
             search_results_mode="ideal",
-            plan_mode="ideal",
+            profile_mode="ideal",
         )
         output = io.StringIO()
         checks = run_preflight(
@@ -77,7 +77,7 @@ class PreflightModeTests(unittest.TestCase):
             cfg = RunConfig(
                 search_tool_mode="standard",
                 search_results_mode="ideal",
-                plan_mode="naive",
+                profile_mode="naive",
                 search_db_path=str(db_path),
             )
 
@@ -115,7 +115,7 @@ class PreflightModeTests(unittest.TestCase):
             ]:
                 (root / name).write_text("")
 
-            from strands_evaluation.tools.external.ideal import plan_store
+            from sana_evaluation.tools.external.ideal import plan_store
 
             old_root = plan_store._KRAMABENCH_PLANS_ROOT
             try:
@@ -138,7 +138,7 @@ class PreflightModeTests(unittest.TestCase):
                     cfg = RunConfig(
                         search_tool_mode="ideal",
                         search_results_mode="ideal",
-                        plan_mode="ideal",
+                        profile_mode="ideal",
                         benchmark="kramabench",
                     )
                     checks = run_preflight(
@@ -175,7 +175,7 @@ class PreflightModeTests(unittest.TestCase):
             cfg = RunConfig(
                 search_tool_mode="preloaded",
                 search_results_mode="naive",
-                plan_mode="naive",
+                profile_mode="naive",
                 computation_tool_mode="ideal",
             )
 
@@ -227,7 +227,7 @@ class PreflightModeTests(unittest.TestCase):
             cfg = RunConfig(
                 search_tool_mode="preloaded",
                 search_results_mode="naive",
-                plan_mode="naive",
+                profile_mode="naive",
                 computation_tool_mode="ideal",
             )
 
@@ -266,7 +266,7 @@ class PreflightModeTests(unittest.TestCase):
                     }
                 )
             )
-            from strands_evaluation.tools.external.ideal import plan_store
+            from sana_evaluation.tools.external.ideal import plan_store
 
             old_root = plan_store._KRAMABENCH_PLANS_ROOT
             try:
@@ -286,7 +286,7 @@ class PreflightModeTests(unittest.TestCase):
                     cfg = RunConfig(
                         search_tool_mode="preloaded",
                         search_results_mode="naive",
-                        plan_mode="naive",
+                        profile_mode="naive",
                         computation_tool_mode="ideal",
                         benchmark="kramabench",
                     )
@@ -343,11 +343,11 @@ class PreflightModeTests(unittest.TestCase):
 
             fake_s3 = FakeS3()
 
-            from strands_evaluation.tools.external.ideal import plan_store
+            from sana_evaluation.tools.external.ideal import plan_store
 
             with ExitStack() as stack:
                 stack.enter_context(patch.object(plan_store, "_KRAMABENCH_PLANS_ROOT", plans_root))
-                stack.enter_context(patch("strands_evaluation.tools.agent_tools._get_s3_client", return_value=fake_s3))
+                stack.enter_context(patch("sana_evaluation.tools.agent_tools._get_s3_client", return_value=fake_s3))
                 check = preflight._check_kramabench_source_objects([str(task_path)])
 
         self.assertTrue(check.ok, check)
@@ -388,7 +388,7 @@ class PreflightModeTests(unittest.TestCase):
             cfg = RunConfig(
                 search_tool_mode="ideal",
                 search_results_mode="naive",
-                plan_mode="naive",
+                profile_mode="naive",
             )
 
             with patch.object(search_wrapper, "_TABLE_DESCRIPTIONS_PATH", table_desc_path):

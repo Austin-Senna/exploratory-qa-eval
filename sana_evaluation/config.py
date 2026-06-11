@@ -27,7 +27,7 @@ def resolve_model(model_name: str) -> Tuple[str, str]:
 
 @dataclass
 class ConditionConfig:
-    condition: str = "baseline"          # "b" or "baseline"
+    condition: str = "baseline"
     base_condition: Optional[str] = None # optional explicit base condition for variant labels
     sparse_backend: str = "bm25"         # "bm25" or "splade"
     trace_output_dir: str = "results/traces"
@@ -55,11 +55,10 @@ class RunConfig:
     search_db_path: Optional[str] = None
     search_tool_mode: Optional[str] = None
     search_results_mode: Optional[str] = None
-    agent_management_mode: Optional[str] = None
-    plan_mode: Optional[str] = None
+    profile_mode: Optional[str] = None
     skills_enabled: bool = False
     computation_tool_mode: Optional[str] = None
-    plan_skills_enabled: bool = False
+    profile_skills_enabled: bool = False
     search_free: bool = False
     search_lessguide: bool = False
     benchmark: Optional[str] = None

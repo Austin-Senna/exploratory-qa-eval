@@ -91,12 +91,12 @@ run_mode_eval = _load_run_mode_eval_module()
 
 
 class RunModeEvalTests(unittest.TestCase):
-    def test_resolve_mode_axes_uses_legacy_defaults(self):
+    def test_resolve_mode_axes_uses_defaults(self):
         self.assertEqual(
             run_mode_eval._resolve_mode_axes(
                 search_tool=None,
                 search_results=None,
-                agent_management=None,
+                profile=None,
             ),
             ("standard", "naive", "standard", "standard"),
         )
@@ -106,65 +106,71 @@ class RunModeEvalTests(unittest.TestCase):
             run_mode_eval._resolve_mode_axes(
                 search_tool="naive",
                 search_results=None,
-                agent_management=None,
+                profile=None,
             ),
             ("naive", "naive", "standard", "standard"),
         )
 
-    def test_variant_condition_label_uses_compact_mode_letters(self):
+    def test_variant_condition_label_uses_explicit_mode_names(self):
         label = run_mode_eval._variant_condition_label(
             search_tool="ideal",
             search_results="naive",
-            agent_management="naive",
+            profile="naive",
             k=5,
             search_calls=2,
         )
 
-        self.assertEqual(label, "search_i_results_n_plann_k5_sc2_skills_off")
+        self.assertEqual(
+            label,
+            "search_ideal__results_naive__profile_naive__compute_standard__k5__sc2__skills_off",
+        )
 
-    def test_variant_condition_label_uses_preloaded_letter(self):
+    def test_variant_condition_label_uses_preloaded_mode_name(self):
         label = run_mode_eval._variant_condition_label(
             search_tool="preloaded",
             search_results="ideal",
-            agent_management="standard",
+            profile="standard",
             k=None,
             search_calls=None,
         )
 
-        self.assertEqual(label, "search_p_results_i_pland_skills_off")
+        self.assertEqual(label, "search_preloaded__results_ideal__profile_standard__compute_standard__skills_off")
 
     def test_variant_condition_label_appends_search_flags(self):
         label = run_mode_eval._variant_condition_label(
             search_tool="ideal",
             search_results="ideal",
-            agent_management="standard",
+            profile="standard",
             k=None,
             search_calls=None,
             search_free=True,
             search_lessguide=True,
         )
 
-        self.assertEqual(label, "search_i_results_i_pland_free_lessguide_skills_off")
+        self.assertEqual(
+            label,
+            "search_ideal__results_ideal__profile_standard__compute_standard__free__lessguide__skills_off",
+        )
 
     def test_variant_condition_label_appends_ideal_computation_axis(self):
         label = run_mode_eval._variant_condition_label(
             search_tool="preloaded",
             search_results="ideal",
-            agent_management="standard",
+            profile="standard",
             computation_tool="ideal",
         )
 
-        self.assertEqual(label, "search_p_results_i_pland_computei_skills_off")
+        self.assertEqual(label, "search_preloaded__results_ideal__profile_standard__compute_ideal__skills_off")
 
-    def test_variant_condition_label_appends_plan_skills_when_enabled(self):
+    def test_variant_condition_label_appends_profile_skills_when_enabled(self):
         label = run_mode_eval._variant_condition_label(
             search_tool="preloaded",
             search_results="ideal",
-            agent_management="standard",
-            plan_skills_enabled=True,
+            profile="standard",
+            profile_skills_enabled=True,
         )
 
-        self.assertEqual(label, "search_p_results_i_pland_skills_on")
+        self.assertEqual(label, "search_preloaded__results_ideal__profile_standard__compute_standard__skills_on")
 
     def test_benchmark_choices_include_supported_external_benchmarks(self):
         self.assertIn("kramabench", run_mode_eval._BENCHMARK_CHOICES)
@@ -182,9 +188,9 @@ class RunModeEvalTests(unittest.TestCase):
             "benchmarks/lakeqa/tasks-mini/tasks",
         )
 
-    def test_skills_on_rejects_naive_plans_axis(self):
-        with self.assertRaisesRegex(ValueError, "--skills on requires --plans standard or --plans ideal"):
-            run_mode_eval._validate_axis_combination(agent_management="naive", skills="on")
+    def test_skills_on_rejects_naive_profile_axis(self):
+        with self.assertRaisesRegex(ValueError, "--skills on requires --profile standard or --profile ideal"):
+            run_mode_eval._validate_axis_combination(profile="naive", skills="on")
 
     def test_mode_results_dir_does_not_append_model_twice(self):
         agent_config = types.SimpleNamespace(
@@ -195,13 +201,13 @@ class RunModeEvalTests(unittest.TestCase):
         run_config = types.SimpleNamespace(
             results_output_dir="results",
             condition_config=types.SimpleNamespace(
-                condition="modes/openai_gpt-5.2-xhigh/search_i_results_i_plani_k5",
+                condition="modes/openai_gpt-5.2-xhigh/search_ideal__results_ideal__profile_ideal__compute_standard__k5",
             ),
         )
 
         self.assertEqual(
             run_eval._results_dir(run_config, agent_config).replace("\\", "/"),
-            "results/modes/openai_gpt-5.2-xhigh/search_i_results_i_plani_k5",
+            "results/modes/openai_gpt-5.2-xhigh/search_ideal__results_ideal__profile_ideal__compute_standard__k5",
         )
 
     def test_standard_results_dir_layout_is_unchanged(self):

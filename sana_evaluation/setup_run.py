@@ -45,19 +45,11 @@ def _build_parser() -> argparse.ArgumentParser:
     common.add_argument("--search", choices=_SEARCH_MODE_CHOICES, default=None)
     common.add_argument("--results", choices=_RESULT_MODE_CHOICES, default=None)
     common.add_argument(
-        "--plans",
-        "--agent-management",
-        "--agent_management",
-        dest="agent_management",
+        "--profile",
+        dest="profile",
         choices=_MANAGEMENT_MODE_CHOICES,
         default=None,
-        help="Plan-management axis: naive, standard, or ideal.",
-    )
-    common.add_argument(
-        "--plan",
-        dest="agent_management",
-        choices=_MANAGEMENT_MODE_CHOICES,
-        help=argparse.SUPPRESS,
+        help="Profile axis: naive, standard, or ideal.",
     )
     common.add_argument(
         "--skills",
@@ -84,7 +76,7 @@ def _build_parser() -> argparse.ArgumentParser:
     common.add_argument("--db", default=None, help="Lance DB root, required on every run.")
     common.add_argument(
         "--condition",
-        choices=("baseline", "b"),
+        choices=("baseline",),
         default="baseline",
     )
     common.add_argument("--parallel", type=int, default=None)
@@ -229,7 +221,7 @@ def _default_output_roots(benchmark: str, *, smoke: bool) -> tuple[str, str]:
 _LEGACY_AXIS_DEFAULTS = {
     "search": "standard",
     "results": "naive",
-    "agent_management": "standard",
+    "profile": "standard",
 }
 
 
@@ -241,8 +233,8 @@ def _resolve_axes(args: argparse.Namespace) -> None:
 
 
 def _validate_axis_combination(args: argparse.Namespace) -> None:
-    if args.skills == "on" and args.agent_management == "naive":
-        raise ValueError("--skills on requires --plans standard or --plans ideal.")
+    if args.skills == "on" and args.profile == "naive":
+        raise ValueError("--skills on requires --profile standard or --profile ideal.")
 
 
 def _build_run_mode_command(args: argparse.Namespace, cwd: Path) -> tuple[list[str], dict[str, str]]:
@@ -259,8 +251,8 @@ def _build_run_mode_command(args: argparse.Namespace, cwd: Path) -> tuple[list[s
         args.search,
         "--search_results",
         args.results,
-        "--plans",
-        args.agent_management,
+        "--profile",
+        args.profile,
         "--model-name",
         model_name,
         "--condition",

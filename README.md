@@ -43,7 +43,7 @@ python -m sana_evaluation.setup_run smoke \
   --benchmark lakeqa \
   --search ideal \
   --results ideal \
-  --plans ideal \
+  --profile ideal \
   --compute ideal \
   --k 5 \
   --db lance_data \
@@ -57,7 +57,7 @@ python -m sana_evaluation.setup_run smoke \
   --benchmark kramabench \
   --search ideal \
   --results ideal \
-  --plans ideal \
+  --profile ideal \
   --compute ideal \
   --k 5 \
   --db lance_data \

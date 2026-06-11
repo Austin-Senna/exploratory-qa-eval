@@ -97,7 +97,7 @@ class SanaPreflightTests(unittest.TestCase):
         run_config = RunConfig(
             search_tool_mode="standard",
             search_results_mode="naive",
-            plan_mode="standard",
+            profile_mode="standard",
             search_db_path=str(self._db_path),
         )
         run_config.sana_flags = SimpleNamespace(results=True)

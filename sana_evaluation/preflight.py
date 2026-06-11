@@ -37,7 +37,7 @@ class PreflightError(RuntimeError):
 
 def _prompt_files_for_modes(
     search_tool_mode: str,
-    plan_mode: str,
+    profile_mode: str,
     *,
     benchmark: str = "lakeqa",
 ) -> List[Path]:
@@ -49,7 +49,7 @@ def _prompt_files_for_modes(
             overlay_path = _PROMPTS_DIR / f"search_{search_tool_mode}.txt"
         return [base_path, overlay_path]
 
-    base_name = "baseline.txt" if plan_mode == "naive" else "managed.txt"
+    base_name = "baseline.txt" if profile_mode == "naive" else "managed.txt"
     overlay_name = f"search_{search_tool_mode}.txt"
     return [_PROMPTS_DIR / base_name, _PROMPTS_DIR / overlay_name]
 
@@ -383,7 +383,7 @@ def run_preflight(
 
     st = (run_config.search_tool_mode or "standard").strip().lower()
     sr = (run_config.search_results_mode or "naive").strip().lower()
-    pm = (run_config.plan_mode or "standard").strip().lower()
+    pm = (run_config.profile_mode or "standard").strip().lower()
     ct = (getattr(run_config, "computation_tool_mode", None) or "standard").strip().lower()
     benchmark = normalize_benchmark(getattr(run_config, "benchmark", None) or "lakeqa")
     configure_benchmark(benchmark)
