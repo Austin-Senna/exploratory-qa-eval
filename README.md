@@ -1,10 +1,35 @@
-# <img src="assets/images/daplab-logo-horizontal.png" alt="DAPLab logo" height="34" align="center"> SANA
+# SANA
+
+![DAPLab logo](assets/images/daplab-logo-horizontal-white-bg.png)
 
 SANA is a diagnostic ablation framework for exploratory QA over data lakes. It
 turns benchmark tasks into runtime profiles containing gold source sequences,
 sanitized subquestions, and execution records, then uses those profiles to
 ablate search, profile guidance, and data-analysis tools under a fixed agent
 runtime.
+
+## How SANA Works
+
+When an LLM agent fails at exploratory QA over a data lake, SANA asks which
+part of the runtime is responsible. The agent normally has to decompose the
+question, find the right sources, and compute the answer from those sources.
+SANA replaces one stage at a time with an oracle built from the task's ground
+truth. The accuracy gain from each replacement pinpoints the bottleneck.
+
+The three stages are:
+
+- Question decomposition: break the user question into ordered subquestions.
+- Search: retrieve only the datasets or sources each subquestion needs.
+- Data analysis: execute SQL or Python that matches the intended computation.
+
+<img src="assets/images/fig1-sana-vertical-white-bg.png" alt="SANA bottleneck overview" width="720">
+
+SANA profiles are the mechanism that makes those oracle swaps reproducible.
+Each profile mirrors a task into source order, answer-safe subquestions, and
+execution records. In a diagnostic run, the runtime can expose those profile
+fields directly, hide them, or use them only inside ideal tools.
+
+<img src="assets/images/task-to-profile-mirror-white-bg.png" alt="SANA task-to-profile mirror" width="720">
 
 ```mermaid
 flowchart LR
@@ -135,7 +160,7 @@ Maintained benchmark examples live under:
 retrieved results, profile guidance, optional skills, and computation. Use
 `smoke` while checking installation and `full` for the maintained task set.
 
-<img src="assets/images/fig3-sana-runtime-operators.png" alt="SANA runtime operators" width="720">
+<img src="assets/images/fig3-sana-runtime-operators-white-bg.png" alt="SANA runtime operators" width="720">
 
 ```mermaid
 flowchart LR
