@@ -20,7 +20,7 @@ from sana_evaluation.tools.external.ideal.benchmark_paths import (
     normalize_benchmark,
 )
 
-_PROMPTS_DIR = Path("prompts")
+_PROMPTS_DIR = Path("sana_evaluation/prompts")
 _PROFILES_PATH = Path("benchmarks/lakeqa/tasks-mini/artifacts/table_profiles.jsonl")
 
 

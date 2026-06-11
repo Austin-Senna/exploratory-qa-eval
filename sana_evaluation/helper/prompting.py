@@ -9,7 +9,7 @@ from sana_evaluation.instrumentation.trace_plugin import _normalize_dataset_id
 logger = logging.getLogger(__name__)
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
-_PROMPTS_DIR = _REPO_ROOT / "prompts"
+_PROMPTS_DIR = _REPO_ROOT / "sana_evaluation" / "prompts"
 _MODES = {"naive", "standard", "ideal", "preloaded"}
 _DEBUG_MODES = {"decision_notes"}
 
@@ -48,7 +48,7 @@ def load_prompt_text(path: str | Path) -> str:
     if not prompt_path.is_file():
         raise FileNotFoundError(
             f"Required prompt file missing: {prompt_path}. "
-            "Run preflight to confirm your prompts/ directory is complete."
+            "Run preflight to confirm your sana_evaluation/prompts/ directory is complete."
         )
     return prompt_path.read_text()
 
