@@ -12,6 +12,7 @@ from sana_evaluation.config import AgentConfig
 from sana_evaluation.instrumentation.agent_plugins import LoggingPlugin
 from sana_evaluation.instrumentation.ideal_subagent_costs import record_subagent_call
 from sana_evaluation.llm.llm_factory import build_model
+from sana_evaluation.tools.external.ideal.subagent_models import search_model_name
 from sana_evaluation.tools.external.ideal.runtime_profile_store import (
     load_runtime_profile_for_context,
     set_runtime_profiles_root as _set_runtime_profiles_root_shared,
@@ -108,7 +109,7 @@ def _format_judge_prompt(query: str, remaining: list[tuple[str, str]]) -> str:
 
 
 def _judge_model():
-    return build_model(AgentConfig(model_name="openai/gpt-5.4-nano"))
+    return build_model(AgentConfig(model_name=search_model_name()))
 
 
 def _build_judge(remaining: list[tuple[str, str]]) -> tuple[Agent, Dict[str, Any]]:
@@ -179,7 +180,7 @@ def search_ideal(query: str, top_k: int = 100) -> dict:
         record_subagent_call(
             tool="search_ideal",
             subagent_kind="judge",
-            model_name="openai/gpt-5.4-nano",
+            model_name=search_model_name(),
             agent_result=None,
             success=False,
             candidate_count=len(remaining),
@@ -189,7 +190,7 @@ def search_ideal(query: str, top_k: int = 100) -> dict:
     record_subagent_call(
         tool="search_ideal",
         subagent_kind="judge",
-        model_name="openai/gpt-5.4-nano",
+        model_name=search_model_name(),
         agent_result=judge_result,
         success=True,
         candidate_count=len(remaining),

@@ -10,6 +10,8 @@ import sys
 from pathlib import Path
 from typing import Callable, Optional, Sequence
 
+from sana_evaluation.env import load_repo_dotenv
+
 _SEARCH_MODE_CHOICES = ("naive", "preloaded", "standard", "ideal")
 _MANAGEMENT_MODE_CHOICES = ("naive", "standard", "ideal")
 _RESULT_MODE_CHOICES = ("naive", "ideal")
@@ -89,6 +91,16 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     common.add_argument("--openai-prompt-cache-key", default=None)
     common.add_argument("--openai-prompt-cache-retention", default=None)
+    common.add_argument(
+        "--selector-model",
+        default=None,
+        help="Model for selector-style ideal helper agents. Defaults to --model.",
+    )
+    common.add_argument(
+        "--repair-model",
+        default=None,
+        help="Model for ideal query/execute repair helper agents. Defaults to --model.",
+    )
     common.add_argument("--db", default=None, help="Lance DB root, required on every run.")
     common.add_argument(
         "--condition",
@@ -306,6 +318,10 @@ def _build_run_mode_command(args: argparse.Namespace, cwd: Path) -> tuple[list[s
         command.extend(["--openai-prompt-cache-key", args.openai_prompt_cache_key])
     if args.openai_prompt_cache_retention is not None:
         command.extend(["--openai-prompt-cache-retention", args.openai_prompt_cache_retention])
+    if args.selector_model is not None:
+        command.extend(["--selector-model", _normalize_model_name(args.selector_model)])
+    if args.repair_model is not None:
+        command.extend(["--repair-model", _normalize_model_name(args.repair_model)])
     if args.parallel is not None:
         command.extend(["--parallel", str(args.parallel)])
     if args.timeout is not None:
@@ -390,6 +406,7 @@ def run(
     parser = _build_parser()
     args = parser.parse_args(argv)
     repo_root = Path.cwd() if cwd is None else Path(cwd)
+    load_repo_dotenv(repo_root)
 
     if args.k is not None and args.k <= 0:
         parser.error("--k must be > 0")

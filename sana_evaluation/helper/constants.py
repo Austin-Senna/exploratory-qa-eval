@@ -50,6 +50,9 @@ MODEL_REGISTRY: Dict[str, Tuple[str, str]] = {
     "openai/gpt-5.4":              ("openai", "gpt-5.4"),
     "openai/gpt-5.4-nano":         ("openai", "gpt-5.4-nano"),
 
+    # Google Gemini API
+    "gemini/gemini-3.1-flash-lite": ("gemini", "gemini-3.1-flash-lite"),
+
     # Anthropic direct API
     "anthropic/claude-opus-4.6":   ("anthropic", "claude-opus-4-6-20251101"),
     "anthropic/claude-sonnet-4.5": ("anthropic", "claude-sonnet-4-5-20251001"),
@@ -70,6 +73,9 @@ MODEL_PRICING = {
         "openai/gpt-5-mini": {"input": 0.25, "cache_read_input": 0.025, "output": 2.00},
         "openai/gpt-5.4": {"input": 2.50, "cache_read_input": 0.25, "output": 15.00},
         "openai/gpt-5.4-nano": {"input": 0.20, "cache_read_input": 0.02, "output": 1.25},
+
+        # Google Gemini API
+        "gemini/gemini-3.1-flash-lite": {"input": 0.25, "output": 1.50},
 
         # AWS Bedrock Claude models
         "bedrock/claude-opus-4.5": {"input": 5.00, "output": 25.00},

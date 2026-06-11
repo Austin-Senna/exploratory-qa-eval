@@ -14,6 +14,10 @@ from sana_evaluation.config import AgentConfig
 from sana_evaluation.instrumentation.agent_plugins import LoggingPlugin
 from sana_evaluation.instrumentation.ideal_subagent_costs import record_subagent_call
 from sana_evaluation.llm.llm_factory import build_model
+from sana_evaluation.tools.external.ideal.subagent_models import (
+    repair_model_name,
+    semantic_model_name,
+)
 from sana_evaluation.tools.agent_tools import _get_sandbox_dir, execute_code as _execute_code_tool
 from sana_evaluation.tools.agent_tools_v2 import peek_file as _peek_file_tool
 from sana_evaluation.tools.agent_tools_v2 import query_file as _query_file_tool
@@ -31,8 +35,6 @@ from sana_evaluation.tools.external.ideal.benchmark_paths import (
 logger = logging.getLogger(__name__)
 
 _MAX_REPAIR_ATTEMPTS = 2
-_REPAIR_MODEL_NAME = "openai/gpt-5.4"
-_SEMANTIC_MODEL_NAME = "openai/gpt-5.4-nano"
 _MAX_ENHANCED_CONTEXT_CHARS = 10_000
 _MAX_TARGET_CONTEXT_CHARS = 12_000
 
@@ -322,14 +324,14 @@ def _sandbox_context() -> str:
 def _repair_model():
     return build_model(
         AgentConfig(
-            model_name=_REPAIR_MODEL_NAME,
+            model_name=repair_model_name(),
             max_tokens=4096,
         )
     )
 
 
 def _semantic_model():
-    return build_model(AgentConfig(model_name=_SEMANTIC_MODEL_NAME))
+    return build_model(AgentConfig(model_name=semantic_model_name()))
 
 
 def _normalized_file_path(value: Any) -> str:
@@ -483,7 +485,7 @@ def _semantic_decision(
         record_subagent_call(
             tool=tool_name,
             subagent_kind="semantic_judge",
-            model_name=_SEMANTIC_MODEL_NAME,
+            model_name=semantic_model_name(),
             agent_result=None,
             success=False,
             candidate_count=len(records),
@@ -493,7 +495,7 @@ def _semantic_decision(
     record_subagent_call(
         tool=tool_name,
         subagent_kind="semantic_judge",
-        model_name=_SEMANTIC_MODEL_NAME,
+        model_name=semantic_model_name(),
         agent_result=judge_result,
         success=True,
         candidate_count=len(records),
@@ -595,7 +597,7 @@ def _repair_query(
         record_subagent_call(
             tool="query_ideal",
             subagent_kind="repair_agent",
-            model_name=_REPAIR_MODEL_NAME,
+            model_name=repair_model_name(),
             agent_result=None,
             attempt=attempt,
             success=False,
@@ -605,7 +607,7 @@ def _repair_query(
     record_subagent_call(
         tool="query_ideal",
         subagent_kind="repair_agent",
-        model_name=_REPAIR_MODEL_NAME,
+        model_name=repair_model_name(),
         agent_result=repair_result,
         attempt=attempt,
         success=True,
@@ -656,7 +658,7 @@ def _repair_code(
         record_subagent_call(
             tool="execute_ideal",
             subagent_kind="repair_agent",
-            model_name=_REPAIR_MODEL_NAME,
+            model_name=repair_model_name(),
             agent_result=None,
             attempt=attempt,
             success=False,
@@ -666,7 +668,7 @@ def _repair_code(
     record_subagent_call(
         tool="execute_ideal",
         subagent_kind="repair_agent",
-        model_name=_REPAIR_MODEL_NAME,
+        model_name=repair_model_name(),
         agent_result=repair_result,
         attempt=attempt,
         success=True,

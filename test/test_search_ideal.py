@@ -165,11 +165,20 @@ class _FakeAgentResult:
 
 
 class TestSearchIdealJudge(unittest.TestCase):
+    def setUp(self) -> None:
+        self._model_env_patch = patch.dict(
+            "os.environ",
+            {"SANA_SEARCH_IDEAL_SUBAGENT_MODEL": "openai/gpt-5.4-nano"},
+            clear=False,
+        )
+        self._model_env_patch.start()
+
     def tearDown(self) -> None:
         search_ideal.set_runtime_profiles_root("runtime-profiles")
         search_ideal.reset_state()
         ideal_subagent_costs.reset_stats()
         _reset_wrapper_caches()
+        self._model_env_patch.stop()
 
     def _patch_support_files(
         self,
@@ -352,6 +361,10 @@ class TestSearchIdealJudge(unittest.TestCase):
                     search_ideal,
                     "_judge_model",
                     return_value="fake-model",
+                ), patch.dict(
+                    "os.environ",
+                    {"SANA_SEARCH_IDEAL_SUBAGENT_MODEL": "openai/gpt-5.4-nano"},
+                    clear=False,
                 ):
                     result = search_ideal.search_ideal("crime data in Chicago 2017")
 
@@ -574,10 +587,19 @@ class TestSearchIdealJudge(unittest.TestCase):
 
 
 class TestSearchIdealFlagMatrix(unittest.TestCase):
+    def setUp(self) -> None:
+        self._model_env_patch = patch.dict(
+            "os.environ",
+            {"SANA_SEARCH_IDEAL_SUBAGENT_MODEL": "openai/gpt-5.4-nano"},
+            clear=False,
+        )
+        self._model_env_patch.start()
+
     def tearDown(self) -> None:
         search_ideal.set_runtime_profiles_root("runtime-profiles")
         search_ideal.reset_state()
         _reset_wrapper_caches()
+        self._model_env_patch.stop()
         try:
             from sana_evaluation.tools.external.ideal import computation_ideal
 

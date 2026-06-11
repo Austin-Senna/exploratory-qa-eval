@@ -1,8 +1,10 @@
 import importlib.util
+import os
 import sys
 import types
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 def _load_run_eval_module():
     repo_root = Path(__file__).resolve().parents[1]
@@ -191,6 +193,33 @@ class RunModeEvalTests(unittest.TestCase):
     def test_skills_on_rejects_naive_profile_axis(self):
         with self.assertRaisesRegex(ValueError, "--skills on requires --profile standard or --profile ideal"):
             run_mode_eval._validate_axis_combination(profile="naive", skills="on")
+
+    def test_configure_ideal_subagent_models_defaults_to_main_model(self):
+        with patch.dict(os.environ, {}, clear=True):
+            run_mode_eval._configure_ideal_subagent_models(
+                main_model_name="gemini/gemini-3.1-flash-lite",
+                selector_model=None,
+                repair_model=None,
+            )
+
+            self.assertEqual(os.environ["SANA_MAIN_MODEL"], "gemini/gemini-3.1-flash-lite")
+            self.assertEqual(os.environ["SANA_IDEAL_SUBAGENT_MODEL"], "gemini/gemini-3.1-flash-lite")
+            self.assertNotIn("SANA_SEARCH_IDEAL_SUBAGENT_MODEL", os.environ)
+            self.assertNotIn("SANA_SEMANTIC_IDEAL_SUBAGENT_MODEL", os.environ)
+            self.assertNotIn("SANA_REPAIR_IDEAL_SUBAGENT_MODEL", os.environ)
+
+    def test_configure_ideal_subagent_models_honors_selector_and_repair_overrides(self):
+        with patch.dict(os.environ, {}, clear=True):
+            run_mode_eval._configure_ideal_subagent_models(
+                main_model_name="gemini/gemini-3.1-flash-lite",
+                selector_model="openai/gpt-5-mini",
+                repair_model="openai/gpt-5.4",
+            )
+
+            self.assertEqual(os.environ["SANA_IDEAL_SUBAGENT_MODEL"], "gemini/gemini-3.1-flash-lite")
+            self.assertEqual(os.environ["SANA_SEARCH_IDEAL_SUBAGENT_MODEL"], "openai/gpt-5-mini")
+            self.assertEqual(os.environ["SANA_SEMANTIC_IDEAL_SUBAGENT_MODEL"], "openai/gpt-5-mini")
+            self.assertEqual(os.environ["SANA_REPAIR_IDEAL_SUBAGENT_MODEL"], "openai/gpt-5.4")
 
     def test_mode_results_dir_does_not_append_model_twice(self):
         agent_config = types.SimpleNamespace(

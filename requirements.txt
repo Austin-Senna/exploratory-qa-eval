@@ -1,8 +1,10 @@
 strands-agents==1.30.0
 strands-agents-evals==0.1.10
+google-genai>=1.0.0
 openai>=1.109
 boto3>=1.40.46,<1.40.62
 aioboto3==15.5.0
+aiohttp>=3.14.1
 pandas==3.0.1
 networkx==3.6.1
 duckdb==1.5.0

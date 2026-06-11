@@ -52,6 +52,15 @@ class _FakeAgentResult:
 
 class IdealComputationToolTests(unittest.TestCase):
     def setUp(self) -> None:
+        self._model_env_patch = patch.dict(
+            "os.environ",
+            {
+                "SANA_SEMANTIC_IDEAL_SUBAGENT_MODEL": "openai/gpt-5.4-nano",
+                "SANA_REPAIR_IDEAL_SUBAGENT_MODEL": "openai/gpt-5.4",
+            },
+            clear=False,
+        )
+        self._model_env_patch.start()
         self._tmp = TemporaryDirectory()
         self._runtime_profiles_root = Path(self._tmp.name) / "runtime-profiles"
         target = self._runtime_profiles_root / "k-1-d-1"
@@ -107,6 +116,7 @@ class IdealComputationToolTests(unittest.TestCase):
         set_runtime_profiles_root("runtime-profiles")
         set_task_context({})
         self._tmp.cleanup()
+        self._model_env_patch.stop()
 
     def test_query_ideal_returns_plan_answer_on_match(self):
         with patch.object(

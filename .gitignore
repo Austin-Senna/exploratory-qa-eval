@@ -40,3 +40,4 @@ sana-results*
 reference_papers
 other-benchmarks
 extras/
+pytest*

@@ -243,10 +243,8 @@ Common feature flags:
 | `--parallel` | positive integer | mode default | Number of parallel worker processes. |
 | `--model` | model name | `bedrock/claude-sonnet-4.5` | Model adapter name, for example `openai/gpt-5-mini`. |
 | `--reasoning-effort` | `none`, `minimal`, `low`, `medium`, `high`, `xhigh` | unset | Reasoning-effort metadata for supported model adapters. |
-| `--ideal-subagent-model` | model name | `--model` | Default hidden helper model for ideal-mode tools. |
-| `--search-ideal-subagent-model` | model name | unset | Helper model for `search_ideal` selection. |
-| `--semantic-ideal-subagent-model` | model name | unset | Helper model for semantic checks in ideal computation tools. |
-| `--repair-ideal-subagent-model` | model name | unset | Helper model for ideal computation repair attempts. |
+| `--selector-model` | model name | `--model` | Optional weaker model for selector-style ideal helper calls. |
+| `--repair-model` | model name | `--model` | Optional stronger model for ideal computation repair calls. |
 | `--openai-prompt-cache-key` | string | unset | Prompt-cache key for OpenAI-backed adapters. |
 | `--openai-prompt-cache-retention` | string | unset | Prompt-cache retention policy for OpenAI-backed adapters. |
 | `--db` | path | required | LanceDB root, for example `lance_data` or `lance_kramabench_infused`. |

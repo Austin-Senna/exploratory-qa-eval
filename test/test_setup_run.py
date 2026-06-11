@@ -1,9 +1,11 @@
 import contextlib
 import importlib.util
 import io
+import os
 import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from unittest.mock import patch
 
 
 def _load_setup_run_module():
@@ -23,10 +25,12 @@ class _FakeRunner:
     def __init__(self) -> None:
         self.command = None
         self.kwargs = None
+        self.gemini_api_key = None
 
     def __call__(self, command, **kwargs):
         self.command = command
         self.kwargs = kwargs
+        self.gemini_api_key = os.environ.get("GEMINI_API_KEY")
         return None
 
 
@@ -144,6 +148,28 @@ class SetupRunTests(unittest.TestCase):
                 "Task scope: benchmarks/kramabench/tasks-mini/tasks/k-2-d-1-s-1 (first 2 tasks)",
                 stdout.getvalue(),
             )
+
+    def test_setup_run_loads_dotenv_from_repo_root_before_spawning_runner(self):
+        with TemporaryDirectory() as tmpdir:
+            repo_root = Path(tmpdir)
+            self._write_smoke_fixture(repo_root)
+            (repo_root / ".env").write_text("GEMINI_API_KEY=temp-gemini-key\n")
+            fake_runner = _FakeRunner()
+
+            with patch.dict(os.environ, {}, clear=True):
+                setup_run.run(
+                    [
+                        "smoke",
+                        "--model",
+                        "gemini/gemini-3.1-flash-lite",
+                        "--db",
+                        "lance_data",
+                    ],
+                    runner=fake_runner,
+                    cwd=repo_root,
+                )
+
+            self.assertEqual(fake_runner.gemini_api_key, "temp-gemini-key")
 
     def test_full_builds_expected_command(self):
         with TemporaryDirectory() as tmpdir:
@@ -373,6 +399,42 @@ class SetupRunTests(unittest.TestCase):
             self.assertEqual(command[command.index("--profile") + 1], "ideal")
             self.assertEqual(command[command.index("--computation_tool") + 1], "ideal")
             self.assertIn("--verbose", command)
+
+    def test_smoke_passes_selector_and_repair_model_options(self):
+        with TemporaryDirectory() as tmpdir:
+            repo_root = Path(tmpdir)
+            self._write_kramabench_smoke_fixture(repo_root)
+
+            command = setup_run.run(
+                [
+                    "smoke",
+                    "--benchmark",
+                    "kramabench",
+                    "--model",
+                    "gemini/gemini-3.1-flash-lite",
+                    "--selector-model",
+                    "openai/gpt-5-mini",
+                    "--repair-model",
+                    "openai/gpt-5.4",
+                    "--db",
+                    "lance_data",
+                ],
+                runner=_FakeRunner(),
+                cwd=repo_root,
+            )
+
+            self.assertEqual(
+                command[command.index("--selector-model") + 1],
+                "openai/gpt-5-mini",
+            )
+            self.assertEqual(
+                command[command.index("--repair-model") + 1],
+                "openai/gpt-5.4",
+            )
+            self.assertNotIn("--ideal-subagent-model", command)
+            self.assertNotIn("--search-ideal-subagent-model", command)
+            self.assertNotIn("--semantic-ideal-subagent-model", command)
+            self.assertNotIn("--repair-ideal-subagent-model", command)
 
     def test_smoke_normalizes_new_openai_model_alias(self):
         with TemporaryDirectory() as tmpdir:

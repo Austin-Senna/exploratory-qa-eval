@@ -21,8 +21,16 @@ from typing import Optional
 from sana_evaluation import run_eval as base_eval
 from sana_evaluation.agent_with_mode import BatchRunner as ModeBatchRunner
 from sana_evaluation.config import AgentConfig, ConditionConfig, RunConfig
+from sana_evaluation.env import load_repo_dotenv
 from sana_evaluation.helper.prompting import normalize_debug_mode
 from sana_evaluation.preflight import PreflightError, run_preflight
+from sana_evaluation.tools.external.ideal.subagent_models import (
+    IDEAL_SUBAGENT_MODEL_ENV,
+    MAIN_MODEL_ENV,
+    REPAIR_IDEAL_SUBAGENT_MODEL_ENV,
+    SEARCH_IDEAL_SUBAGENT_MODEL_ENV,
+    SEMANTIC_IDEAL_SUBAGENT_MODEL_ENV,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -96,6 +104,26 @@ def _resolve_mode_axes(
 def _validate_axis_combination(*, profile: str, skills: str) -> None:
     if skills == "on" and profile == "naive":
         raise ValueError("--skills on requires --profile standard or --profile ideal.")
+
+
+def _set_or_clear_env(name: str, value: Optional[str]) -> None:
+    if value:
+        os.environ[name] = value
+    else:
+        os.environ.pop(name, None)
+
+
+def _configure_ideal_subagent_models(
+    *,
+    main_model_name: str,
+    selector_model: Optional[str],
+    repair_model: Optional[str],
+) -> None:
+    os.environ[MAIN_MODEL_ENV] = main_model_name
+    os.environ[IDEAL_SUBAGENT_MODEL_ENV] = main_model_name
+    _set_or_clear_env(SEARCH_IDEAL_SUBAGENT_MODEL_ENV, selector_model)
+    _set_or_clear_env(SEMANTIC_IDEAL_SUBAGENT_MODEL_ENV, selector_model)
+    _set_or_clear_env(REPAIR_IDEAL_SUBAGENT_MODEL_ENV, repair_model)
 
 
 def _default_task_set_for_benchmark(benchmark: str) -> str:
@@ -184,6 +212,7 @@ def _run_continue(args, agent_config: AgentConfig, run_config: RunConfig) -> Non
 
 
 def main() -> None:
+    load_repo_dotenv()
     parser = argparse.ArgumentParser(description="Run multi-axis evaluation on benchmark tasks")
 
     # Task selection
@@ -224,6 +253,16 @@ def main() -> None:
         "--openai-prompt-cache-retention",
         default=None,
         help="Optional OpenAI prompt_cache_retention value such as 24h.",
+    )
+    parser.add_argument(
+        "--selector-model",
+        default=None,
+        help="Model for selector-style ideal helper agents. Defaults to --model-name.",
+    )
+    parser.add_argument(
+        "--repair-model",
+        default=None,
+        help="Model for ideal query/execute repair helper agents. Defaults to --model-name.",
     )
     parser.add_argument(
         "--debug-mode",
@@ -388,6 +427,11 @@ def main() -> None:
         openai_prompt_cache_key=args.openai_prompt_cache_key,
         openai_prompt_cache_retention=args.openai_prompt_cache_retention,
         extra_model_kwargs=extra_model_kwargs,
+    )
+    _configure_ideal_subagent_models(
+        main_model_name=args.model_name,
+        selector_model=args.selector_model,
+        repair_model=args.repair_model,
     )
     search_tool_mode, search_results_mode, profile_mode, computation_tool_mode = _resolve_mode_axes(
         search_tool=args.search_tool,
