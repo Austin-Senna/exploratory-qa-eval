@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import csv
 import json
 from pathlib import Path
 from typing import Any
@@ -21,6 +22,45 @@ def _load_json(path: Path) -> Any | None:
         return json.loads(path.read_text(encoding="utf-8"))
     except Exception:
         return None
+
+
+def _load_jsonl_summary(path: Path) -> dict[str, Any] | None:
+    try:
+        rows = [
+            json.loads(line)
+            for line in path.read_text(encoding="utf-8").splitlines()
+            if line.strip()
+        ]
+    except Exception:
+        return None
+    return {"format": "jsonl", "rows": rows[:5], "row_count": len(rows)}
+
+
+def _load_csv_summary(path: Path) -> dict[str, Any] | None:
+    try:
+        with path.open(encoding="utf-8", newline="") as handle:
+            delimiter = "\t" if path.suffix.lower() == ".tsv" else ","
+            reader = csv.DictReader(handle, delimiter=delimiter)
+            rows = list(reader)
+    except Exception:
+        return None
+    return {
+        "format": path.suffix.lower().lstrip("."),
+        "columns": reader.fieldnames or [],
+        "rows": rows[:5],
+        "row_count": len(rows),
+    }
+
+
+def _load_artifact(path: Path) -> Any | None:
+    suffix = path.suffix.lower()
+    if suffix == ".json":
+        return _load_json(path)
+    if suffix == ".jsonl":
+        return _load_jsonl_summary(path)
+    if suffix in {".csv", ".tsv"}:
+        return _load_csv_summary(path)
+    return None
 
 
 def _signature(value: Any) -> str:
@@ -42,8 +82,10 @@ def _signature(value: Any) -> str:
 
 def sample(root: Path, limit: int) -> dict[str, Any]:
     candidates: list[dict[str, Any]] = []
-    for path in sorted(root.rglob("*.json")):
-        payload = _load_json(path)
+    for path in sorted(root.rglob("*")):
+        if not path.is_file():
+            continue
+        payload = _load_artifact(path)
         if payload is None:
             continue
         candidates.append(

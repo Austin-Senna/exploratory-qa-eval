@@ -29,7 +29,8 @@ def _load_report(path: Path) -> str:
 
 
 def _validate_report(text: str) -> None:
-    missing = [heading for heading in REQUIRED_HEADINGS if heading not in text]
+    headings = {line.strip() for line in text.splitlines() if line.startswith("## ")}
+    missing = [heading for heading in REQUIRED_HEADINGS if heading not in headings]
     if missing:
         joined = ", ".join(missing)
         raise SystemExit(f"Report is missing required heading(s): {joined}")
@@ -72,12 +73,14 @@ those workflows inside this transform skill.
 """
 
 
-def scaffold(report: Path, benchmark: str, output_root: Path) -> Path:
+def scaffold(report: Path, benchmark: str, output_root: Path, *, force: bool = False) -> Path:
     text = _load_report(report)
     _validate_report(text)
 
     slug = _slugify(benchmark)
     skill_root = output_root / f"{slug}-lakeqa-transform"
+    if skill_root.exists() and not force:
+        raise SystemExit(f"Skill directory already exists: {skill_root}")
     references = skill_root / "references"
     references.mkdir(parents=True, exist_ok=True)
 
@@ -91,11 +94,16 @@ def main() -> None:
     parser.add_argument("report")
     parser.add_argument("--benchmark", required=True, type=_slugify)
     parser.add_argument("--output-root", default="sana-profiling/skills")
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="overwrite an existing generated skill directory",
+    )
     args = parser.parse_args()
 
     report = Path(args.report).expanduser().resolve()
     output_root = Path(args.output_root).expanduser()
-    scaffold(report, args.benchmark, output_root)
+    scaffold(report, args.benchmark, output_root, force=args.force)
 
 
 if __name__ == "__main__":

@@ -77,6 +77,39 @@ def test_sample_benchmark_artifacts_prefers_structural_diversity(tmp_path):
     assert any("evidence:list:2" in signature for signature in signatures)
 
 
+def test_sample_benchmark_artifacts_includes_common_tabular_and_jsonl_formats(tmp_path):
+    root = tmp_path / "benchmark"
+    root.mkdir()
+    (root / "tasks.jsonl").write_text(
+        "\n".join(
+            [
+                json.dumps({"question": "q1", "answer": "a1"}),
+                json.dumps({"question": "q2", "answer": "a2", "evidence": ["doc"]}),
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    (root / "metadata.csv").write_text(
+        "question,answer,split\nq3,a3,dev\nq4,a4,test\n",
+        encoding="utf-8",
+    )
+
+    script = AUDITOR / "scripts" / "sample_benchmark_artifacts.py"
+    result = subprocess.run(
+        [sys.executable, str(script), str(root), "--limit", "4"],
+        check=True,
+        text=True,
+        capture_output=True,
+    )
+    payload = json.loads(result.stdout)
+
+    relative_paths = {sample["relative_path"] for sample in payload["samples"]}
+    assert "tasks.jsonl" in relative_paths
+    assert "metadata.csv" in relative_paths
+    assert payload["candidate_count"] == 2
+
+
 def test_sample_benchmark_artifacts_rejects_non_positive_limit(tmp_path):
     root = tmp_path / "benchmark"
     root.mkdir()
@@ -132,7 +165,7 @@ def test_scaffold_benchmark_skill_creates_transform_skill(tmp_path):
             str(script),
             str(report),
             "--benchmark",
-            "demo",
+            "Demo Benchmark!",
             "--output-root",
             str(output_root),
         ],
@@ -141,7 +174,7 @@ def test_scaffold_benchmark_skill_creates_transform_skill(tmp_path):
         capture_output=True,
     )
 
-    generated_root = output_root / "demo-lakeqa-transform"
+    generated_root = output_root / "demo-benchmark-lakeqa-transform"
     skill = generated_root / "SKILL.md"
     copied_report = generated_root / "references" / "conversion-report.md"
 
@@ -149,5 +182,65 @@ def test_scaffold_benchmark_skill_creates_transform_skill(tmp_path):
     assert copied_report.is_file()
     assert copied_report.read_text(encoding="utf-8") == report.read_text(encoding="utf-8")
     skill_text = skill.read_text(encoding="utf-8")
-    assert "name: demo-lakeqa-transform" in skill_text
+    assert "name: demo-benchmark-lakeqa-transform" in skill_text
     assert "Do not re-infer the conversion method" in skill_text
+
+
+def test_scaffold_benchmark_skill_rejects_missing_headings(tmp_path):
+    report = tmp_path / "demo-report.md"
+    report.write_text(
+        "# Demo LakeQA Conversion Report\n\n"
+        "This mentions ## Benchmark artifact inventory in prose only.\n",
+        encoding="utf-8",
+    )
+
+    script = SCAFFOLDER / "scripts" / "scaffold_benchmark_skill.py"
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(script),
+            str(report),
+            "--benchmark",
+            "demo",
+            "--output-root",
+            str(tmp_path / "skills"),
+        ],
+        check=False,
+        text=True,
+        capture_output=True,
+    )
+
+    assert result.returncode != 0
+    assert "Report is missing required heading" in result.stderr
+
+
+def test_scaffold_benchmark_skill_refuses_existing_destination(tmp_path):
+    report = tmp_path / "demo-report.md"
+    report.write_text(
+        "# Demo LakeQA Conversion Report\n\n"
+        "## Benchmark artifact inventory\n\n"
+        "## Recommended benchmark-specific transform skill structure\n\n",
+        encoding="utf-8",
+    )
+    output_root = tmp_path / "skills"
+    existing = output_root / "demo-lakeqa-transform"
+    existing.mkdir(parents=True)
+
+    script = SCAFFOLDER / "scripts" / "scaffold_benchmark_skill.py"
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(script),
+            str(report),
+            "--benchmark",
+            "demo",
+            "--output-root",
+            str(output_root),
+        ],
+        check=False,
+        text=True,
+        capture_output=True,
+    )
+
+    assert result.returncode != 0
+    assert "Skill directory already exists" in result.stderr
