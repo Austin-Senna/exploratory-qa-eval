@@ -41,7 +41,6 @@ DEFAULT_BUCKET = "lakeqa-yc4103-datalake"
 BENCHMARK_BUCKETS = {
     "lakeqa": DEFAULT_BUCKET,
     "kramabench": "sana-kramabench",
-    "hotpotqa": "sana-hotpotqa-2",
 }
 BUCKET = os.getenv("LAKEQA_BUCKET", DEFAULT_BUCKET)
 FOLDERS = ["wikipedia", "datagov"]

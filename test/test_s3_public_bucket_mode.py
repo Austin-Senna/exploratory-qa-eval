@@ -83,17 +83,6 @@ class TestS3PublicBucketMode(unittest.TestCase):
             "datagov/kramabench-archeology-easy-10/files/worldcities.csv",
         )
 
-    def test_configure_benchmark_switches_to_hotpotqa_bucket(self):
-        agent_tools.configure_benchmark("hotpotqa")
-
-        self.assertEqual(agent_tools.BUCKET, "sana-hotpotqa-2")
-        self.assertEqual(
-            agent_tools._parse_s3_reference(
-                "s3://sana-hotpotqa-2/wikipedia/hotpotqa__5a74a8fa55429929fddd8497/files/Frodingham,_Lincolnshire.txt"
-            )["key"],
-            "wikipedia/hotpotqa__5a74a8fa55429929fddd8497/files/Frodingham,_Lincolnshire.txt",
-        )
-
     def test_configure_benchmark_defaults_to_lakeqa_bucket(self):
         agent_tools.configure_benchmark(None)
 

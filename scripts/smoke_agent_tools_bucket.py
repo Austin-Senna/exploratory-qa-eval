@@ -34,7 +34,6 @@ if str(REPO_ROOT) not in sys.path:
 BUCKETS = {
     "lakeqa": "lakeqa-yc4103-datalake",
     "kramabench": "sana-kramabench",
-    "hotpotqa": "sana-hotpotqa-2",
 }
 
 DEFAULT_TARGETS = {
@@ -61,15 +60,6 @@ DEFAULT_TARGETS = {
         "search_prefix": "index-crimes",
         "keyword": "crime",
         "regex_pattern": "county",
-        "query_sql": "SELECT * FROM t LIMIT 5",
-    },
-    "hotpotqa": {
-        "dataset_id": "Barack_Obama",
-        "file_path": "content.txt",
-        "folder": "wikipedia",
-        "search_prefix": "Barack",
-        "keyword": "Barack Obama",
-        "regex_pattern": "Obama",
         "query_sql": "SELECT * FROM t LIMIT 5",
     },
 }

@@ -168,7 +168,6 @@ class RunModeEvalTests(unittest.TestCase):
 
     def test_benchmark_choices_include_supported_external_benchmarks(self):
         self.assertIn("kramabench", run_mode_eval._BENCHMARK_CHOICES)
-        self.assertIn("hotpotqa", run_mode_eval._BENCHMARK_CHOICES)
         self.assertIn("lakeqa", run_mode_eval._BENCHMARK_CHOICES)
 
     def test_kramabench_defaults_to_kramabench_task_set(self):

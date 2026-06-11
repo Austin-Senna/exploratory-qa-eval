@@ -103,7 +103,6 @@ def plan_path_for_task(task_id: str) -> Path:
     plan_roots = {
         "tasks_mini": "plans_mini",
         "tasks-mini-kramabench": "plans-mini-kramabench",
-        "tasks-hotpotqa-mini": "plans-hotpotqa-mini",
     }
     return Path(plan_roots.get(path.parts[0], path.parts[0]), *path.parts[1:])
 

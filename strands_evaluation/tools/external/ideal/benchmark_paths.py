@@ -30,12 +30,6 @@ _ARTIFACTS = {
         schemas=Path("kramabench_tables_schemas_full.jsonl"),
         profiles=Path("kramabench_tables_profiles.jsonl"),
     ),
-    "hotpotqa": IdealArtifactPaths(
-        descriptions=Path("table_descriptions.jsonl"),
-        snippets=Path("snippet.jsonl"),
-        schemas=Path("datagov_tables_schemas_full.jsonl"),
-        profiles=Path("datagov_tables_profiles.jsonl"),
-    ),
 }
 
 

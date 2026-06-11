@@ -42,7 +42,7 @@ _LEGACY_AXIS_DEFAULTS = {
     "agent_management": "standard",
     "computation_tool": "standard",
 }
-_BENCHMARK_CHOICES = ("lakeqa", "kramabench", "hotpotqa")
+_BENCHMARK_CHOICES = ("lakeqa", "kramabench")
 _DEFAULT_TASK_SET = "tasks_mini"
 _KRAMABENCH_TASK_SET = "tasks-mini-kramabench"
 

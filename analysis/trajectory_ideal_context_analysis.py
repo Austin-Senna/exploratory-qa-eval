@@ -42,7 +42,6 @@ BENCHMARK_LOG_ROOTS = {
 TASK_ROOT_TO_PLAN_ROOT = {
     "tasks_mini": "plans_mini",
     "tasks_core": "plans_mini/tasks_core",
-    "tasks-hotpotqa-mini": "plans-hotpotqa-mini",
     "tasks-mini-kramabench": "plans-mini-kramabench",
 }
 LABELS = [

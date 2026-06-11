@@ -51,7 +51,6 @@ PLAN_ROOTS = {
     "tasks_mini": "plans_mini",
     "tasks_mini_core": "plans_mini_core",
     "tasks-mini-kramabench": "plans-mini-kramabench",
-    "tasks-hotpotqa-mini": "plans-hotpotqa-mini",
     "tasks_core_quality": "plans_core_quality",
 }
 
