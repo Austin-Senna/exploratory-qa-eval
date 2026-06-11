@@ -1,7 +1,7 @@
 import csv
 from pathlib import Path
 
-from analysis.plan_following_summary import (
+from sana_analysis.plan_following_summary import (
     load_follow_plan_rows,
     summarize_follow_plan,
     write_outputs,

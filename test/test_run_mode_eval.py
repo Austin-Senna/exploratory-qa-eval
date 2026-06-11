@@ -6,27 +6,27 @@ from pathlib import Path
 
 def _load_run_eval_module():
     repo_root = Path(__file__).resolve().parents[1]
-    module_path = repo_root / "strands_evaluation" / "run_eval.py"
+    module_path = repo_root / "sana_evaluation" / "run_eval.py"
 
-    fake_pkg = types.ModuleType("strands_evaluation")
+    fake_pkg = types.ModuleType("sana_evaluation")
     fake_pkg.__path__ = [str(module_path.parent)]
 
-    fake_agent = types.ModuleType("strands_evaluation.agent")
+    fake_agent = types.ModuleType("sana_evaluation.agent")
     fake_agent.BatchRunner = object
 
-    fake_config = types.ModuleType("strands_evaluation.config")
+    fake_config = types.ModuleType("sana_evaluation.config")
     fake_config.AgentConfig = object
     fake_config.ConditionConfig = object
     fake_config.RunConfig = object
 
     saved = {
-        "strands_evaluation": sys.modules.get("strands_evaluation"),
-        "strands_evaluation.agent": sys.modules.get("strands_evaluation.agent"),
-        "strands_evaluation.config": sys.modules.get("strands_evaluation.config"),
+        "sana_evaluation": sys.modules.get("sana_evaluation"),
+        "sana_evaluation.agent": sys.modules.get("sana_evaluation.agent"),
+        "sana_evaluation.config": sys.modules.get("sana_evaluation.config"),
     }
-    sys.modules["strands_evaluation"] = fake_pkg
-    sys.modules["strands_evaluation.agent"] = fake_agent
-    sys.modules["strands_evaluation.config"] = fake_config
+    sys.modules["sana_evaluation"] = fake_pkg
+    sys.modules["sana_evaluation.agent"] = fake_agent
+    sys.modules["sana_evaluation.config"] = fake_config
     try:
         spec = importlib.util.spec_from_file_location("_test_run_eval_module", module_path)
         module = importlib.util.module_from_spec(spec)
@@ -43,35 +43,35 @@ def _load_run_eval_module():
 
 def _load_run_mode_eval_module():
     repo_root = Path(__file__).resolve().parents[1]
-    module_path = repo_root / "strands_evaluation" / "run_mode_eval.py"
+    module_path = repo_root / "sana_evaluation" / "run_mode_eval.py"
 
-    fake_pkg = types.ModuleType("strands_evaluation")
+    fake_pkg = types.ModuleType("sana_evaluation")
     fake_pkg.__path__ = [str(module_path.parent)]
 
-    fake_base_eval = types.ModuleType("strands_evaluation.run_eval")
+    fake_base_eval = types.ModuleType("sana_evaluation.run_eval")
     fake_base_eval.BatchRunner = object
     fake_base_eval._display_name = lambda agent_config: "openai_gpt-5.2-xhigh"
     fake_base_eval._results_dir = lambda run_config, agent_config: "unused"
     fake_base_eval.find_all_task_dirs = lambda *_args, **_kwargs: []
 
-    fake_agent_with_mode = types.ModuleType("strands_evaluation.agent_with_mode")
+    fake_agent_with_mode = types.ModuleType("sana_evaluation.agent_with_mode")
     fake_agent_with_mode.BatchRunner = object
 
-    fake_config = types.ModuleType("strands_evaluation.config")
+    fake_config = types.ModuleType("sana_evaluation.config")
     fake_config.AgentConfig = object
     fake_config.ConditionConfig = object
     fake_config.RunConfig = object
 
     saved = {
-        "strands_evaluation": sys.modules.get("strands_evaluation"),
-        "strands_evaluation.run_eval": sys.modules.get("strands_evaluation.run_eval"),
-        "strands_evaluation.agent_with_mode": sys.modules.get("strands_evaluation.agent_with_mode"),
-        "strands_evaluation.config": sys.modules.get("strands_evaluation.config"),
+        "sana_evaluation": sys.modules.get("sana_evaluation"),
+        "sana_evaluation.run_eval": sys.modules.get("sana_evaluation.run_eval"),
+        "sana_evaluation.agent_with_mode": sys.modules.get("sana_evaluation.agent_with_mode"),
+        "sana_evaluation.config": sys.modules.get("sana_evaluation.config"),
     }
-    sys.modules["strands_evaluation"] = fake_pkg
-    sys.modules["strands_evaluation.run_eval"] = fake_base_eval
-    sys.modules["strands_evaluation.agent_with_mode"] = fake_agent_with_mode
-    sys.modules["strands_evaluation.config"] = fake_config
+    sys.modules["sana_evaluation"] = fake_pkg
+    sys.modules["sana_evaluation.run_eval"] = fake_base_eval
+    sys.modules["sana_evaluation.agent_with_mode"] = fake_agent_with_mode
+    sys.modules["sana_evaluation.config"] = fake_config
     try:
         spec = importlib.util.spec_from_file_location("_test_run_mode_eval_module", module_path)
         module = importlib.util.module_from_spec(spec)
@@ -173,13 +173,13 @@ class RunModeEvalTests(unittest.TestCase):
     def test_kramabench_defaults_to_kramabench_task_set(self):
         self.assertEqual(
             run_mode_eval._default_task_set_for_benchmark("kramabench"),
-            "tasks-mini-kramabench",
+            "benchmarks/kramabench/tasks-mini/tasks",
         )
 
     def test_lakeqa_defaults_to_tasks_mini_task_set(self):
         self.assertEqual(
             run_mode_eval._default_task_set_for_benchmark("lakeqa"),
-            "tasks_mini",
+            "benchmarks/lakeqa/tasks-mini/tasks",
         )
 
     def test_skills_on_rejects_naive_plans_axis(self):

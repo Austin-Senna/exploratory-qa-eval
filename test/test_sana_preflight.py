@@ -3,12 +3,11 @@ import json
 import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from types import SimpleNamespace
 
-from strands_evaluation.config import RunConfig
-import strands_evaluation.preflight as preflight
-from strands_evaluation.tools.external.ideal import search_wrapper
-from sana_evaluation.flags import SanaFlags
-from sana_evaluation.sana_config import SanaRunConfig
+from sana_evaluation.config import RunConfig
+import sana_evaluation.preflight as preflight
+from sana_evaluation.tools.external.ideal import search_wrapper
 
 
 class SanaPreflightTests(unittest.TestCase):
@@ -95,13 +94,14 @@ class SanaPreflightTests(unittest.TestCase):
                 f.write("\n")
 
     def _run_config(self) -> RunConfig:
-        return SanaRunConfig(
+        run_config = RunConfig(
             search_tool_mode="standard",
             search_results_mode="naive",
             plan_mode="standard",
             search_db_path=str(self._db_path),
-            sana_flags=SanaFlags(results=True),
         )
+        run_config.sana_flags = SimpleNamespace(results=True)
+        return run_config
 
     def test_missing_profiles_file_is_warn_only(self):
         stream = io.StringIO()

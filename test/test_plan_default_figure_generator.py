@@ -1,6 +1,6 @@
 import unittest
 
-from analysis.plan_default_figure_generator import (
+from sana_analysis.plan_default_figure_generator import (
     CANONICAL_PLAN_D_MODE,
     CANONICAL_PLAN_I_MODE,
     _normalize_plan_similarity,

@@ -1,6 +1,6 @@
-from analysis.discovery_metrics import compute_discovery_metrics
-from strands_evaluation.helper import result as result_module
-from strands_evaluation.instrumentation import read_trace_plugin
+from sana_analysis.discovery_metrics import compute_discovery_metrics
+from sana_evaluation.helper import result as result_module
+from sana_evaluation.instrumentation import read_trace_plugin
 
 
 def test_read_trace_treats_query_ideal_as_dataset_read() -> None:

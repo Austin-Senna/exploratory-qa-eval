@@ -4,7 +4,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from analysis.export_paper_results import (
+from sana_analysis.export_paper_results import (
     build_canonical_mode_rows,
     build_main_ablation_table_rows,
     build_main_result_rows,

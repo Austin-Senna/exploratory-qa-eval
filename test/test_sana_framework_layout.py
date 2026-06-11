@@ -3,12 +3,20 @@ from pathlib import Path
 from sana_evaluation.artifacts import benchmark_artifacts
 
 
+ROOT = Path(__file__).resolve().parents[1]
+
+
 def test_runtime_and_analysis_packages_have_canonical_imports():
     import sana_analysis.run_mode_analysis_semantic as semantic_analysis
     import sana_evaluation.setup_run as setup_run
 
     assert callable(setup_run.run)
     assert callable(semantic_analysis.run_analysis)
+
+
+def test_legacy_package_shims_are_removed():
+    assert not (ROOT / "analysis").exists()
+    assert not (ROOT / "strands_evaluation").exists()
 
 
 def test_maintained_benchmarks_use_tasks_profiles_artifacts_layout():

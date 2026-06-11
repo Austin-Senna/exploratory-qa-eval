@@ -2,7 +2,7 @@ import csv
 import json
 from pathlib import Path
 
-from analysis.answer_failure_audit_runner import (
+from sana_analysis.answer_failure_audit_runner import (
     CURRENT_AUDIT_SCHEMA_VERSION,
     CURRENT_TRACE_SCHEMA_VERSION,
     DEFAULT_AUDITOR_MODEL,
@@ -38,9 +38,9 @@ from analysis.answer_failure_audit_runner import (
     run_model_validators,
     write_mirrored_outputs,
 )
-from analysis.answer_failure_taxonomy import ANSWER_FAILURE_FIGURE_GROUPS
-from analysis.answer_failure_validation import validate_answer_failure_row
-from analysis.combine_answer_failure_grouped_models import ANSWER_FAILURE_GROUPS
+from sana_analysis.answer_failure_taxonomy import ANSWER_FAILURE_FIGURE_GROUPS
+from sana_analysis.answer_failure_validation import validate_answer_failure_row
+from sana_analysis.combine_answer_failure_grouped_models import ANSWER_FAILURE_GROUPS
 
 
 def _write_csv(path: Path, fieldnames: list[str], rows: list[dict]) -> None:
@@ -436,7 +436,7 @@ def test_two_stage_row_audit_runs_trace_then_labeler_per_row(tmp_path, monkeypat
             }
         )
 
-    monkeypatch.setattr("analysis.answer_failure_audit_runner._call_model", fake_call_model)
+    monkeypatch.setattr("sana_analysis.answer_failure_audit_runner._call_model", fake_call_model)
 
     returned_task_id, audit = run_row_audit(
         layout=layout,
@@ -529,7 +529,7 @@ def test_two_stage_row_audit_ignores_stale_schema_cache(tmp_path, monkeypatch):
             }
         )
 
-    monkeypatch.setattr("analysis.answer_failure_audit_runner._call_model", fake_call_model)
+    monkeypatch.setattr("sana_analysis.answer_failure_audit_runner._call_model", fake_call_model)
 
     _, audit = run_row_audit(
         layout=layout,
@@ -632,7 +632,7 @@ def test_run_model_validators_calls_one_prompt_per_valid_row(tmp_path, monkeypat
         task_id = first_task if first_task in prompt else second_task
         return json.dumps({"task_id": task_id, "verdict": "pass", "problems": []})
 
-    monkeypatch.setattr("analysis.answer_failure_audit_runner._call_model", fake_call_model)
+    monkeypatch.setattr("sana_analysis.answer_failure_audit_runner._call_model", fake_call_model)
 
     validation_by_task, repaired_audits = run_model_validators(
         layout=layout,
@@ -717,7 +717,7 @@ def test_run_model_validators_can_limit_to_selected_stale_rows(tmp_path, monkeyp
         prompts.append(prompt)
         return json.dumps({"task_id": second_task, "verdict": "pass", "problems": []})
 
-    monkeypatch.setattr("analysis.answer_failure_audit_runner._call_model", fake_call_model)
+    monkeypatch.setattr("sana_analysis.answer_failure_audit_runner._call_model", fake_call_model)
 
     validation_by_task, _ = run_model_validators(
         layout=layout,
@@ -751,7 +751,7 @@ def test_run_model_validators_marks_malformed_validator_json_untrusted(tmp_path,
     def fake_call_model(prompt, **kwargs):
         return '{"task_id": "tasks_mini/k-1-d-1/task_1.json", "verdict": "pass" "problems": []}'
 
-    monkeypatch.setattr("analysis.answer_failure_audit_runner._call_model", fake_call_model)
+    monkeypatch.setattr("sana_analysis.answer_failure_audit_runner._call_model", fake_call_model)
 
     validation_by_task, repaired_audits = run_model_validators(
         layout=layout,

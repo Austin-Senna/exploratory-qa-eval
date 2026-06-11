@@ -2,7 +2,7 @@ import csv
 import sys
 from pathlib import Path
 
-from analysis import answer_failure_rerun_queue as queue
+from sana_analysis import answer_failure_rerun_queue as queue
 
 
 def _write_csv(path: Path, fieldnames: list[str], rows: list[dict[str, str]]) -> None:
