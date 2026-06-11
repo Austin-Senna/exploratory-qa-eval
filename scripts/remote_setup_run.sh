@@ -12,7 +12,7 @@ Options:
   --repo PATH        Remote repo path. Default: $REMOTE_REPO or ~/eval_eqa/exploratory-qa-eval
   --venv PATH        Remote venv activate path, relative to repo unless absolute.
                      Default: $REMOTE_VENV or .venv/bin/activate
-  --runner NAME      setup_run family: strands or sana. Default: strands
+  --runner NAME      setup_run family: sana. Default: sana
   --python BIN       Python executable on remote. Default: python3
   --session NAME     tmux session name. Default: eval-YYYYmmdd-HHMMSS
   --log PATH         Log path, relative to repo unless absolute.
@@ -26,7 +26,7 @@ Examples:
     --openai-prompt-cache-retention 24h --verbose --continue --timeout 600 \
     --submit-grace-seconds 30
 
-  scripts/remote_setup_run.sh --runner sana --session sana-sprint-k5 full \
+  scripts/remote_setup_run.sh --session sana-sprint-k5 full \
     --mode ideal --sana-feature sprint --sprint-mode commitment --k 5 --parallel 4 \
     --model gpt5.4-nano --db lance_data --openai-prompt-cache-retention 24h --verbose
 EOF
@@ -36,7 +36,7 @@ remote_host="${REMOTE_HOST:-ec2-user@ec2-18-191-139-16.us-east-2.compute.amazona
 identity_file="${REMOTE_IDENTITY:-asw2215.pem}"
 remote_repo="${REMOTE_REPO:-~/eval_eqa/exploratory-qa-eval}"
 remote_venv="${REMOTE_VENV:-.venv/bin/activate}"
-runner_name="strands"
+runner_name="sana"
 python_bin="python3"
 session_name="eval-$(date +%Y%m%d-%H%M%S)"
 log_path=""
@@ -106,14 +106,11 @@ if [[ -z "$log_path" ]]; then
 fi
 
 case "$runner_name" in
-  strands)
-    runner_path="strands_evaluation/setup_run.py"
-    ;;
   sana)
     runner_path="sana_evaluation/setup_run.py"
     ;;
   *)
-    echo "--runner must be strands or sana, got: $runner_name" >&2
+    echo "--runner must be sana, got: $runner_name" >&2
     exit 2
     ;;
 esac
