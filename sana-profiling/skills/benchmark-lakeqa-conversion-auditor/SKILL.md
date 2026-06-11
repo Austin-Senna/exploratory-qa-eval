@@ -31,6 +31,11 @@ count, hop shape, answer type, executable computation likelihood, and available
 raw code/data. Use split, domain, difficulty, or other metadata diversity only
 as a tie-breaker.
 
+Samples in the report must be structural and methodological. Do not paste
+terminal answers, intermediate answers, solution code, executable facts, or
+answer-bearing source rows into the report. When an inspected artifact contains
+answer fields, describe the field shape/type and redact the value.
+
 Run the helper when useful:
 
 ```bash
@@ -55,6 +60,10 @@ The report must cover:
 - fairness and leakage risks
 - validation strategy
 - recommended transform skill structure
+
+The report must not become an answer key. It may explain how answers should be
+derived and verified, but converted LakeQA task answers must be re-derived from
+benchmark source artifacts during the transform step.
 
 ## Handoff Contract
 

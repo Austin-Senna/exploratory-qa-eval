@@ -34,6 +34,8 @@ def test_conversion_auditor_skill_contract():
     assert "author-ideal-plans" in text
     assert "plan-verifier" in text
     assert "author-ideal-computations" in text
+    assert "Do not paste" in text
+    assert "answer key" in text
 
     assert template.is_file()
     template_text = template.read_text(encoding="utf-8")
@@ -191,6 +193,18 @@ def test_scaffold_benchmark_skill_creates_transform_skill(tmp_path):
     skill_text = skill.read_text(encoding="utf-8")
     assert "name: demo-benchmark-lakeqa-transform" in skill_text
     assert "Do not re-infer the conversion method" in skill_text
+    for section in [
+        "## Batch Flow",
+        "## Worker Assignment Template",
+        "## Final Task Shape",
+        "## k/d/s Rules",
+        "## Provenance",
+        "## Fairness And Leakage Requirements",
+        "## Validation Checklist",
+    ]:
+        assert section in skill_text
+    assert "Do not copy answers" in skill_text
+    assert "no answer-bearing shortcuts" in skill_text
 
 
 def test_scaffold_benchmark_skill_rejects_missing_headings(tmp_path):
@@ -251,3 +265,40 @@ def test_scaffold_benchmark_skill_refuses_existing_destination(tmp_path):
 
     assert result.returncode != 0
     assert "Skill directory already exists" in result.stderr
+
+
+def test_scaffold_benchmark_skill_generated_prompt_does_not_embed_report_answers(tmp_path):
+    report = tmp_path / "demo-report.md"
+    report.write_text(
+        "# Demo LakeQA Conversion Report\n\n"
+        "## Benchmark artifact inventory\n\n"
+        "Example terminal answer: SECRET_FINAL_ANSWER\n\n"
+        "## Recommended benchmark-specific transform skill structure\n\n"
+        "Intermediate answer: SECRET_INTERMEDIATE_ANSWER\n\n",
+        encoding="utf-8",
+    )
+    output_root = tmp_path / "skills"
+
+    script = SCAFFOLDER / "scripts" / "scaffold_benchmark_skill.py"
+    subprocess.run(
+        [
+            sys.executable,
+            str(script),
+            str(report),
+            "--benchmark",
+            "demo",
+            "--output-root",
+            str(output_root),
+        ],
+        check=True,
+        text=True,
+        capture_output=True,
+    )
+
+    generated = (output_root / "demo-lakeqa-transform" / "SKILL.md").read_text(
+        encoding="utf-8"
+    )
+    assert "SECRET_FINAL_ANSWER" not in generated
+    assert "SECRET_INTERMEDIATE_ANSWER" not in generated
+    assert "Do not copy answers" in generated
+    assert "The report is a conversion-method artifact, not an answer key" in generated
