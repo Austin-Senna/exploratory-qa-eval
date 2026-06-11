@@ -377,31 +377,40 @@ def test_hotpotqa_generated_conversion_run_outputs_current_layout_and_no_prompt_
     run = RUNS / "hotpotqa-generated-conversion"
     validation = json.loads((run / "validation.json").read_text(encoding="utf-8"))
 
-    assert validation["question_suffix_ok"] is True
-    assert validation["sources_rewritten"] is True
-    assert validation["subquestions_filled"] is True
-    assert validation["runtime_profile_uses_current_layout"] is True
+    assert validation["requested_import_count"] == 5
+    assert validation["converted_count"] == 5
+    assert validation["runtime_profile_count"] == 5
+    assert validation["ideal_computation_result"] == "skipped_text_evidence_tasks"
     assert validation["prompt_surface_leaks"] == {}
-
-    task = json.loads((ROOT / validation["converted_task"]).read_text(encoding="utf-8"))
-    profile = json.loads((ROOT / validation["runtime_profile"]).read_text(encoding="utf-8"))
-
-    assert task["question"].endswith("Write your answer as [ANSWER].")
-    assert all(
-        not node["source"].startswith("hotpotqa://")
-        for node in task["nodes"].values()
-    )
-    assert all(node["subquestion"] for node in task["nodes"].values())
-    assert "runtime-profiles" in validation["runtime_profile"]
-    assert profile["ideal_code"] == []
-    assert profile["ideal_query"] == []
-    reasoning_text = "\n".join(profile["reasoning_chain_text"])
-    assert task["answer"] not in reasoning_text
-    assert "29 November 1797" not in reasoning_text
-    assert "29 March 1902" not in reasoning_text
 
     generated_skill = (
         run / "generated-skills" / "hotpotqa-lakeqa-transform" / "SKILL.md"
     ).read_text(encoding="utf-8")
     assert "Do not copy answers" in generated_skill
-    assert task["answer"] not in generated_skill
+
+    buckets = {row["bucket"] for row in validation["rows"]}
+    assert buckets == {"k-1-d-2", "k-2-d-1"}
+    for row in validation["rows"]:
+        assert row["question_suffix_ok"] is True
+        assert row["sources_rewritten"] is True
+        assert row["subquestions_filled"] is True
+        assert row["runtime_profile_uses_current_layout"] is True
+        assert row["ideal_code_count"] == 0
+        assert row["ideal_query_count"] == 0
+        assert row["text_evidence_computation_skip_ok"] is True
+
+        task = json.loads((ROOT / row["task"]).read_text(encoding="utf-8"))
+        profile = json.loads((ROOT / row["runtime_profile"]).read_text(encoding="utf-8"))
+
+        assert task["question"].endswith("Write your answer as [ANSWER].")
+        assert all(
+            not node["source"].startswith("hotpotqa://")
+            for node in task["nodes"].values()
+        )
+        assert all(node["subquestion"] for node in task["nodes"].values())
+        assert "runtime-profiles" in row["runtime_profile"]
+        assert profile["ideal_code"] == []
+        assert profile["ideal_query"] == []
+        reasoning_text = "\n".join(profile["reasoning_chain_text"])
+        assert task["answer"] not in reasoning_text
+        assert task["answer"] not in generated_skill

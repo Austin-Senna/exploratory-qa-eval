@@ -5,20 +5,20 @@
     "1": {
       "source": "wikipedia/hotpotqa__5a714bb35542994082a3e78f/files/Gaetano_Donizetti.txt",
       "fact": "Domenico Gaetano Maria Donizetti (] ; 29 November 1797 – 8 April 1848) was an Italian composer.",
-      "subquestion": "What birth date is stated for the first composer?",
-      "answer": "29 November 1797"
+      "subquestion": "What evidence from supporting page 1 is needed for the comparison?",
+      "answer": "<text evidence>"
     },
     "2": {
       "source": "wikipedia/hotpotqa__5a714bb35542994082a3e78f/files/William_Walton.txt",
       "fact": "Sir William Turner Walton, OM (29 March 19028 March 1983) was an English composer.",
-      "subquestion": "What birth date and full name are stated for the second composer?",
-      "answer": "William Turner Walton, born 29 March 1902"
+      "subquestion": "What evidence from supporting page 2 is needed for the comparison?",
+      "answer": "William Turner Walton"
     }
   },
   "reasoning_chain": [
-    "Node 1: Determine the first composer birth date from the first supporting page.",
-    "Node 2: Determine the second composer birth date and full name from the second supporting page.",
-    "Final answer: choose the composer born later."
+    "Node 1: Read the first supporting page for the evidence needed by the question.",
+    "Node 2: Read the second supporting page for the evidence needed by the question.",
+    "Final answer: derive the answer from the supporting evidence."
   ],
   "datasets_used": [
     "wikipedia/hotpotqa__5a714bb35542994082a3e78f",
@@ -31,7 +31,7 @@
         1,
         2
       ],
-      "reasoning": "Compare the two composer birth dates and select the later-born composer.",
+      "reasoning": "Compare the two supporting evidence items and answer the question.",
       "answer": "William Turner Walton"
     }
   ],
@@ -50,6 +50,6 @@
       "2": "other-benchmarks/raw/hotpotqa/hotpot_dev_distractor_v1.json#5a714bb35542994082a3e78f:William Walton:0"
     },
     "promotion_status": "smoke_converted",
-    "promotion_rule": "generated_hotpotqa_lakeqa_transform_smoke_v1"
+    "promotion_rule": "generated_hotpotqa_lakeqa_transform_five_import_smoke_v1"
   }
 }

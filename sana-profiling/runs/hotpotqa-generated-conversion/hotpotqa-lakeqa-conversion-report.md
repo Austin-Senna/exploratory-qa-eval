@@ -11,7 +11,7 @@ This report records structure and conversion method only. Terminal answers, inte
 
 ## Auto-sampled examples and rationale
 
-The sampler selected both comparison and bridge HotpotQA examples by bucket and provenance type. Use this to test that a conversion skill sees both parallel comparison and sequential bridge patterns before repeating same-bucket examples.
+The sampler selected both comparison and bridge HotpotQA examples by bucket and provenance type. This run converts five examples: three comparison examples and two bridge examples, enough to exercise both parallel comparison and sequential evidence patterns.
 
 ## Evidence/source model
 
@@ -23,7 +23,7 @@ Map each promotable example into `question`, `answer`, `nodes`, `reasoning_chain
 
 ## k/d/s bucket proposal
 
-Use LakeQA topology: `k = len(reasoning_hops)` and `d = max(len(hop.node_ids))`. For the smoke conversion in this run, the comparison example is represented as `k-1-d-2` because both composer pages support one parallel comparison hop.
+Use LakeQA topology: `k = len(reasoning_hops)` and `d = max(len(hop.node_ids))`. Comparison examples in this smoke run are represented as `k-1-d-2`; bridge examples are represented as `k-2-d-1`.
 
 ## Source mirroring convention
 
@@ -35,11 +35,11 @@ Executable facts are not required for this text-evidence benchmark. Validate tha
 
 ## Ideal artifact feasibility
 
-Cover both `ideal_query` and `ideal_code`. For this smoke conversion, both arrays remain empty because the task is text evidence, not data computation. A runtime profile is still authored with safe, non-answer reasoning text.
+Cover both `ideal_query` and `ideal_code`. For this smoke conversion, both arrays remain empty because the tasks are text evidence, not data computation. Runtime profiles are still authored with safe, non-answer reasoning text.
 
 ## Fairness and leakage risks
 
-This report is not an answer key. Converted tasks contain answer fields by schema, but the report, generated skill, run log, and runtime-profile reasoning text must not reveal the final answer or intermediate answer strings.
+This report is not an answer key. Converted tasks contain answer fields by schema, but the report, generated skill, run log, and runtime-profile reasoning text must not reveal final answers or intermediate answer strings.
 
 ## Validation strategy
 
