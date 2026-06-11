@@ -2,8 +2,8 @@ import os
 import unittest
 from unittest.mock import patch
 
-from strands_evaluation.config import AgentConfig
-from strands_evaluation.llm.llm_factory import build_model
+from sana_evaluation.config import AgentConfig
+from sana_evaluation.llm.llm_factory import build_model
 
 
 class OpenAILlmFactoryTests(unittest.TestCase):
@@ -17,7 +17,7 @@ class OpenAILlmFactoryTests(unittest.TestCase):
             max_tokens=1000,
         )
 
-        with patch("strands_evaluation.llm.openai_cached_model.OpenAICachedUsageModel") as mock_model:
+        with patch("sana_evaluation.llm.openai_cached_model.OpenAICachedUsageModel") as mock_model:
             build_model(config)
 
         _, kwargs = mock_model.call_args
@@ -44,7 +44,7 @@ class OpenAILlmFactoryTests(unittest.TestCase):
             },
             clear=False,
         ):
-            with patch("strands_evaluation.llm.openai_cached_model.OpenAICachedUsageModel") as mock_model:
+            with patch("sana_evaluation.llm.openai_cached_model.OpenAICachedUsageModel") as mock_model:
                 build_model(config)
 
         _, kwargs = mock_model.call_args
@@ -67,7 +67,7 @@ class OpenAILlmFactoryTests(unittest.TestCase):
             },
         )
 
-        with patch("strands_evaluation.llm.openai_cached_model.OpenAICachedUsageModel") as mock_model:
+        with patch("sana_evaluation.llm.openai_cached_model.OpenAICachedUsageModel") as mock_model:
             build_model(config)
 
         _, kwargs = mock_model.call_args

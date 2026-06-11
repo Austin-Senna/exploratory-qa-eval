@@ -86,7 +86,7 @@ def compute_reasoning_density_curve(
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--results-dir", default="results")
-    parser.add_argument("--tasks-dir", default="tasks_mini")
+    parser.add_argument("--tasks-dir", default="benchmarks/lakeqa/tasks-mini/tasks")
     args = parser.parse_args()
 
     records = []

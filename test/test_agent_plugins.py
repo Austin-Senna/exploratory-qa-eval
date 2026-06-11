@@ -8,10 +8,10 @@ from strands.hooks.events import (
     AgentInitializedEvent,
     BeforeModelCallEvent,
 )
-from strands_evaluation.config import AgentConfig
-from strands_evaluation.instrumentation.agent_plugins import LoggingPlugin, ToolLimitSteeringHandler
-from strands_evaluation.instrumentation.search_call_budget_plugin import SearchCallBudgetHandler
-from strands_evaluation.tools import agent_tools, agent_tools_v2
+from sana_evaluation.config import AgentConfig
+from sana_evaluation.instrumentation.agent_plugins import LoggingPlugin, ToolLimitSteeringHandler
+from sana_evaluation.instrumentation.search_call_budget_plugin import SearchCallBudgetHandler
+from sana_evaluation.tools import agent_tools, agent_tools_v2
 
 
 class FakeModel:
@@ -221,7 +221,7 @@ class TestLoggingPlugin(unittest.TestCase):
             ),
         )
 
-        with self.assertLogs("strands_evaluation.instrumentation.agent_plugins", level="DEBUG") as logs:
+        with self.assertLogs("sana_evaluation.instrumentation.agent_plugins", level="DEBUG") as logs:
             plugin.on_after_model(event)
 
         output = "\n".join(logs.output)
@@ -254,7 +254,7 @@ class TestLoggingPlugin(unittest.TestCase):
             ),
         )
 
-        with self.assertLogs("strands_evaluation.instrumentation.agent_plugins", level="DEBUG") as logs:
+        with self.assertLogs("sana_evaluation.instrumentation.agent_plugins", level="DEBUG") as logs:
             plugin.on_after_model(event)
 
         output = "\n".join(logs.output)

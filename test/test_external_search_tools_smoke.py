@@ -1,8 +1,8 @@
-"""Smoke-test the parent wrappers around external-tools hybrid_search/api.py.
+"""Smoke-test the parent wrappers around dataindexing.hybrid_search.api.
 
 This is intentionally lighter than ``test_search_matrix.py``: it does not open
 LanceDB or load embedding/reranker models. Instead, it monkeypatches the
-external API module imported by the parent search tools and verifies that the
+runtime API module imported by the parent search tools and verifies that the
 new search-tool split routes to the expected setup/search functions.
 
 Usage from the repo root:
@@ -15,16 +15,36 @@ from __future__ import annotations
 
 import sys
 import unittest
+import importlib.util
 from pathlib import Path
 from unittest.mock import patch
 
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+_REPO_ROOT = Path(__file__).resolve().parent.parent
+
+
+def _load_wrapper(module_name: str):
+    path = _REPO_ROOT / "sana_evaluation" / "tools" / "external" / f"{module_name}.py"
+    spec = importlib.util.spec_from_file_location(f"test_{module_name}", path)
+    module = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module
+
 
 class ExternalSearchToolsSmokeTest(unittest.TestCase):
+    def test_wrappers_import_dataindexing_runtime_api(self) -> None:
+        search_naive_tools = _load_wrapper("search_naive_tools")
+        search_standard_tools = _load_wrapper("search_standard_tools")
+
+        self.assertEqual(search_standard_tools._api.__name__, "dataindexing.hybrid_search.api")
+        self.assertEqual(search_naive_tools._api.__name__, "dataindexing.hybrid_search.api")
+
     def test_standard_setup_uses_hybrid_setup_without_sparse_or_legacy_setup(self) -> None:
-        from sana_evaluation.tools.external import search_standard_tools
+        search_standard_tools = _load_wrapper("search_standard_tools")
 
         with (
             patch.object(search_standard_tools._api, "setup_hybrid") as setup_hybrid,
@@ -38,7 +58,7 @@ class ExternalSearchToolsSmokeTest(unittest.TestCase):
         legacy_setup.assert_not_called()
 
     def test_naive_setup_uses_sparse_setup_without_hybrid_or_legacy_setup(self) -> None:
-        from sana_evaluation.tools.external import search_naive_tools
+        search_naive_tools = _load_wrapper("search_naive_tools")
 
         with (
             patch.object(search_naive_tools._api, "setup_sparse") as setup_sparse,
@@ -52,7 +72,7 @@ class ExternalSearchToolsSmokeTest(unittest.TestCase):
         legacy_setup.assert_not_called()
 
     def test_standard_tools_route_to_hybrid_rrf_searches(self) -> None:
-        from sana_evaluation.tools.external import search_standard_tools
+        search_standard_tools = _load_wrapper("search_standard_tools")
 
         with (
             patch.object(
@@ -83,7 +103,7 @@ class ExternalSearchToolsSmokeTest(unittest.TestCase):
         sparse_search_schema.assert_not_called()
 
     def test_naive_tools_route_to_sparse_searches(self) -> None:
-        from sana_evaluation.tools.external import search_naive_tools
+        search_naive_tools = _load_wrapper("search_naive_tools")
 
         with (
             patch.object(

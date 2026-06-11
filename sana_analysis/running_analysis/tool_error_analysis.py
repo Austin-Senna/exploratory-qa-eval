@@ -154,7 +154,7 @@ def compute_tool_error_rates_by_task_difficulty(
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--results-dir", default="results")
-    parser.add_argument("--tasks-dir", default="tasks_mini")
+    parser.add_argument("--tasks-dir", default="benchmarks/lakeqa/tasks-mini/tasks")
     parser.add_argument("--output-dir", default="analysis_results")
     args = parser.parse_args()
 

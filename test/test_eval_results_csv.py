@@ -9,27 +9,27 @@ from pathlib import Path
 
 def _load_write_main_csv():
     repo_root = Path(__file__).resolve().parents[1]
-    module_path = repo_root / "strands_evaluation" / "run_eval.py"
+    module_path = repo_root / "sana_evaluation" / "run_eval.py"
 
-    fake_pkg = types.ModuleType("strands_evaluation")
+    fake_pkg = types.ModuleType("sana_evaluation")
     fake_pkg.__path__ = [str(module_path.parent)]
 
-    fake_agent = types.ModuleType("strands_evaluation.agent")
+    fake_agent = types.ModuleType("sana_evaluation.agent")
     fake_agent.BatchRunner = object
 
-    fake_config = types.ModuleType("strands_evaluation.config")
+    fake_config = types.ModuleType("sana_evaluation.config")
     fake_config.AgentConfig = object
     fake_config.ConditionConfig = object
     fake_config.RunConfig = object
 
     saved = {
-        "strands_evaluation": sys.modules.get("strands_evaluation"),
-        "strands_evaluation.agent": sys.modules.get("strands_evaluation.agent"),
-        "strands_evaluation.config": sys.modules.get("strands_evaluation.config"),
+        "sana_evaluation": sys.modules.get("sana_evaluation"),
+        "sana_evaluation.agent": sys.modules.get("sana_evaluation.agent"),
+        "sana_evaluation.config": sys.modules.get("sana_evaluation.config"),
     }
-    sys.modules["strands_evaluation"] = fake_pkg
-    sys.modules["strands_evaluation.agent"] = fake_agent
-    sys.modules["strands_evaluation.config"] = fake_config
+    sys.modules["sana_evaluation"] = fake_pkg
+    sys.modules["sana_evaluation.agent"] = fake_agent
+    sys.modules["sana_evaluation.config"] = fake_config
     try:
         spec = importlib.util.spec_from_file_location("_test_run_eval_module", module_path)
         module = importlib.util.module_from_spec(spec)

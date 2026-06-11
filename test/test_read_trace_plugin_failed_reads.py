@@ -12,10 +12,10 @@ _MODULE_NAMES = [
     "strands",
     "strands.hooks",
     "strands.plugins",
-    "strands_evaluation",
-    "strands_evaluation.instrumentation",
-    "strands_evaluation.instrumentation.trace_plugin",
-    "strands_evaluation.instrumentation.read_trace_plugin",
+    "sana_evaluation",
+    "sana_evaluation.instrumentation",
+    "sana_evaluation.instrumentation.trace_plugin",
+    "sana_evaluation.instrumentation.read_trace_plugin",
 ]
 
 
@@ -49,21 +49,21 @@ def _load_trace_modules():
     fake_plugins.hook = lambda func: func
     sys.modules["strands.plugins"] = fake_plugins
 
-    package = types.ModuleType("strands_evaluation")
-    package.__path__ = [str(repo_root / "strands_evaluation")]
-    sys.modules["strands_evaluation"] = package
+    package = types.ModuleType("sana_evaluation")
+    package.__path__ = [str(repo_root / "sana_evaluation")]
+    sys.modules["sana_evaluation"] = package
 
-    instrumentation_package = types.ModuleType("strands_evaluation.instrumentation")
-    instrumentation_package.__path__ = [str(repo_root / "strands_evaluation" / "instrumentation")]
-    sys.modules["strands_evaluation.instrumentation"] = instrumentation_package
+    instrumentation_package = types.ModuleType("sana_evaluation.instrumentation")
+    instrumentation_package.__path__ = [str(repo_root / "sana_evaluation" / "instrumentation")]
+    sys.modules["sana_evaluation.instrumentation"] = instrumentation_package
 
     trace_module = _load_module(
-        "strands_evaluation.instrumentation.trace_plugin",
-        repo_root / "strands_evaluation" / "instrumentation" / "trace_plugin.py",
+        "sana_evaluation.instrumentation.trace_plugin",
+        repo_root / "sana_evaluation" / "instrumentation" / "trace_plugin.py",
     )
     read_trace_module = _load_module(
-        "strands_evaluation.instrumentation.read_trace_plugin",
-        repo_root / "strands_evaluation" / "instrumentation" / "read_trace_plugin.py",
+        "sana_evaluation.instrumentation.read_trace_plugin",
+        repo_root / "sana_evaluation" / "instrumentation" / "read_trace_plugin.py",
     )
 
     def restore():

@@ -78,7 +78,7 @@ _ARTIFACT_REGISTRY = {
         log_root=Path("logs"),
         default_smoke_task_dir=benchmark_tasks_root("lakeqa") / "k-5-d-4",
         default_db_hint=Path("lance_data"),
-        docs=Path("documentation/maintained-examples.md"),
+        docs=Path("benchmarks/README.md"),
     ),
     "kramabench": BenchmarkArtifacts(
         name="kramabench",
@@ -91,8 +91,8 @@ _ARTIFACT_REGISTRY = {
         analysis_output_root=Path("analysis_results_mode_kramabench_semantic"),
         log_root=Path("log-kramabench"),
         default_smoke_task_dir=benchmark_tasks_root("kramabench") / "k-2-d-1-s-1",
-        default_db_hint=Path("lance_data"),
-        docs=Path("documentation/maintained-examples.md"),
+        default_db_hint=Path("lance_kramabench_infused"),
+        docs=Path("benchmarks/README.md"),
     ),
 }
 
@@ -149,13 +149,11 @@ def format_artifact_report(
 
     smoke_command = (
         f"python -m sana_evaluation.setup_run smoke --benchmark {artifacts.name} "
-        "--search ideal --results ideal --profile ideal --compute ideal "
-        "--k 5 --db lance_data --model openai/gpt-5.4-nano"
+        f"--k 5 --db {artifacts.default_db_hint} --model openai/gpt-5.4-nano"
     )
     full_command = (
         f"python -m sana_evaluation.setup_run full --benchmark {artifacts.name} "
-        "--search ideal --results ideal --profile ideal --compute ideal "
-        "--k 5 --db lance_data --model openai/gpt-5.4-nano --continue"
+        f"--k 5 --db {artifacts.default_db_hint} --model openai/gpt-5.4-nano"
     )
     analysis_command = (
         "python -m sana_analysis.run_mode_analysis_semantic "

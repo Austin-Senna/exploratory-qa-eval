@@ -1,7 +1,7 @@
 from types import SimpleNamespace
 import unittest
 
-from strands_evaluation.llm.openai_cached_model import (
+from sana_evaluation.llm.openai_cached_model import (
     OpenAICachedUsageModel,
     OpenAIResponsesCachedUsageModel,
     extract_chat_cached_input_tokens,

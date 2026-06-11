@@ -744,7 +744,7 @@ def load_task_gold_source_ids_for_traces(tasks_dir: str, traces: dict) -> dict[s
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--traces-dir", default="results/traces")
-    parser.add_argument("--tasks-dir", default="tasks_mini")
+    parser.add_argument("--tasks-dir", default="benchmarks/lakeqa/tasks-mini/tasks")
     args = parser.parse_args()
 
     traces = load_traces(args.traces_dir)

@@ -46,6 +46,10 @@ _CRIME_DATASET_IDS = {
 }
 
 
+def _live_openai_enabled() -> bool:
+    return bool(os.getenv("OPENAI_API_KEY") and os.getenv("RUN_LIVE_OPENAI_TESTS") == "1")
+
+
 def _reset_wrapper_caches() -> None:
     search_wrapper._DESC_CACHE_LOADED = False
     search_wrapper._DESC_BY_URI = {}
@@ -728,7 +732,7 @@ class TestSearchIdealFlagMatrix(unittest.TestCase):
             "".join(json.dumps(row, sort_keys=True) + "\n" for row in rows)
         )
 
-    @unittest.skipUnless(os.getenv("OPENAI_API_KEY"), "OPENAI_API_KEY not set")
+    @unittest.skipUnless(_live_openai_enabled(), "set RUN_LIVE_OPENAI_TESTS=1 and OPENAI_API_KEY")
     def test_live_gpt54_nano_core_quality_four_flag_runs_and_log_results(self):
         try:
             import openai  # noqa: F401
@@ -815,7 +819,7 @@ def _capture_builder_calls(captured_calls: list[dict]):
 
     return _wrapped
 
-@unittest.skipUnless(os.getenv("OPENAI_API_KEY"), "OPENAI_API_KEY not set")
+@unittest.skipUnless(_live_openai_enabled(), "set RUN_LIVE_OPENAI_TESTS=1 and OPENAI_API_KEY")
 class TestSearchIdealJudgeLive(unittest.TestCase):
     def tearDown(self) -> None:
         search_ideal.set_runtime_profiles_root("runtime-profiles")

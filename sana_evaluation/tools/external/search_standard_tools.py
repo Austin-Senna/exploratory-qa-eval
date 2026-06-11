@@ -1,12 +1,8 @@
 """Search tools for standard mode: hybrid RRF, schema, and reranked."""
-import sys
-from pathlib import Path
 
 from strands import tool
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent.parent / "external-tools" / "hybrid_search"))
-
-import api as _api  # noqa: E402
+from dataindexing.hybrid_search import api as _api
 
 
 def set_db_path(path: str) -> None:

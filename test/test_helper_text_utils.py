@@ -1,6 +1,6 @@
 import unittest
 
-from strands_evaluation.helper.text_utils import _clean_answer
+from sana_evaluation.helper.text_utils import _clean_answer
 
 
 class CleanAnswerTests(unittest.TestCase):

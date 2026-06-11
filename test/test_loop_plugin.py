@@ -1,8 +1,8 @@
 import asyncio
 import unittest
 
-from strands_evaluation.instrumentation.loop_plugin import CategoryStagnationHandler
-from strands_evaluation.tools import agent_tools
+from sana_evaluation.instrumentation.loop_plugin import CategoryStagnationHandler
+from sana_evaluation.tools import agent_tools
 
 
 class TestCategoryStagnationHandler(unittest.TestCase):

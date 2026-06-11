@@ -2,8 +2,8 @@ import json
 from types import SimpleNamespace
 from unittest.mock import patch
 
-from strands_evaluation.instrumentation.read_trace_plugin import ReadTracePlugin
-from strands_evaluation.instrumentation.trace_plugin import TracePlugin, set_trace_context
+from sana_evaluation.instrumentation.read_trace_plugin import ReadTracePlugin
+from sana_evaluation.instrumentation.trace_plugin import TracePlugin, set_trace_context
 
 
 def _event(tool_name: str, tool_input: dict, tool_use_id: str = "tool-1", result: dict | None = None):
@@ -27,7 +27,7 @@ def test_trace_plugin_tracks_search_state_per_tool_use_id(tmp_path):
     plugin = TracePlugin()
 
     with patch(
-        "strands_evaluation.instrumentation.trace_plugin.time.time",
+        "sana_evaluation.instrumentation.trace_plugin.time.time",
         side_effect=[10, 20, 30, 31, 35, 36],
     ):
         plugin.on_before_tool(_event("search_value", {"query": "first query"}, "search-a"))
@@ -61,7 +61,7 @@ def test_read_trace_plugin_tracks_latency_per_tool_use_id(tmp_path):
     plugin = ReadTracePlugin()
 
     with patch(
-        "strands_evaluation.instrumentation.read_trace_plugin.time.time",
+        "sana_evaluation.instrumentation.read_trace_plugin.time.time",
         side_effect=[5, 7, 11, 12, 13, 14],
     ):
         plugin.on_before_tool(

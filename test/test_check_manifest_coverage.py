@@ -40,9 +40,15 @@ class CheckManifestCoverageTests(unittest.TestCase):
     def test_cli_defaults_target_tasks_mini_manifest(self):
         args = coverage_script._parse_args([])
 
-        self.assertEqual(args.manifest, "tasks_mini_file_manifest.jsonl")
+        self.assertEqual(
+            args.manifest,
+            "benchmarks/lakeqa/tasks-mini/artifacts/task_file_manifest.jsonl",
+        )
         self.assertIsNone(args.descriptions)
-        self.assertEqual(coverage_script.default_description_paths(args), [Path("table_descriptions.jsonl")])
+        self.assertEqual(
+            coverage_script.default_description_paths(args),
+            [Path("benchmarks/lakeqa/tasks-mini/artifacts/descriptions.jsonl")],
+        )
 
     def test_audit_manifest_coverage_counts_missing_rows(self):
         uri1 = "s3://lakeqa-yc4103-datalake/datagov/ds/files/rows.csv"

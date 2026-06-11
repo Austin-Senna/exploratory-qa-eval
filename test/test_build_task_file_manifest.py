@@ -62,8 +62,11 @@ class BuildTaskFileManifestTests(unittest.TestCase):
     def test_cli_defaults_target_tasks_mini_artifact(self):
         args = manifest_builder._parse_args([])
 
-        self.assertEqual(args.task_root, "tasks_mini")
-        self.assertEqual(args.output, "tasks_mini_file_manifest.jsonl")
+        self.assertEqual(args.task_root, "benchmarks/lakeqa/tasks-mini/tasks")
+        self.assertEqual(
+            args.output,
+            "benchmarks/lakeqa/tasks-mini/artifacts/task_file_manifest.jsonl",
+        )
 
     def test_build_manifest_expands_dataset_ids_to_files(self):
         fake_s3 = FakeS3Client(

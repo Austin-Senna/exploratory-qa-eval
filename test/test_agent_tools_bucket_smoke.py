@@ -93,18 +93,18 @@ class AgentToolsBucketSmokeTests(unittest.TestCase):
         smoke = load_smoke_module()
         original_modules = {
             name: sys.modules.get(name)
-            for name in ("strands_evaluation", "strands_evaluation.tools")
+            for name in ("sana_evaluation", "sana_evaluation.tools")
         }
         for name in original_modules:
             sys.modules.pop(name, None)
         try:
             smoke.install_lightweight_package_stubs()
 
-            self.assertIn("strands_evaluation", sys.modules)
-            self.assertIn("strands_evaluation.tools", sys.modules)
+            self.assertIn("sana_evaluation", sys.modules)
+            self.assertIn("sana_evaluation.tools", sys.modules)
             self.assertEqual(
-                sys.modules["strands_evaluation"].__path__,
-                [str(REPO_ROOT / "strands_evaluation")],
+                sys.modules["sana_evaluation"].__path__,
+                [str(REPO_ROOT / "sana_evaluation")],
             )
         finally:
             for name in original_modules:
@@ -117,8 +117,15 @@ class AgentToolsBucketSmokeTests(unittest.TestCase):
         smoke = load_smoke_module()
         smoke.install_dependency_stubs(["strands"])
         smoke.install_lightweight_package_stubs()
-        sys.modules.pop("strands_evaluation.tools.agent_tools", None)
-        agent_tools = importlib.import_module("strands_evaluation.tools.agent_tools")
+        original_agent_tools = sys.modules.get("sana_evaluation.tools.agent_tools")
+        sys.modules.pop("sana_evaluation.tools.agent_tools", None)
+        try:
+            agent_tools = importlib.import_module("sana_evaluation.tools.agent_tools")
+        finally:
+            if original_agent_tools is not None:
+                sys.modules["sana_evaluation.tools.agent_tools"] = original_agent_tools
+            else:
+                sys.modules.pop("sana_evaluation.tools.agent_tools", None)
         fake_s3 = Mock()
 
         def list_objects_v2(**kwargs):
@@ -138,8 +145,15 @@ class AgentToolsBucketSmokeTests(unittest.TestCase):
         smoke = load_smoke_module()
         smoke.install_dependency_stubs(["strands"])
         smoke.install_lightweight_package_stubs()
-        sys.modules.pop("strands_evaluation.tools.agent_tools", None)
-        agent_tools = importlib.import_module("strands_evaluation.tools.agent_tools")
+        original_agent_tools = sys.modules.get("sana_evaluation.tools.agent_tools")
+        sys.modules.pop("sana_evaluation.tools.agent_tools", None)
+        try:
+            agent_tools = importlib.import_module("sana_evaluation.tools.agent_tools")
+        finally:
+            if original_agent_tools is not None:
+                sys.modules["sana_evaluation.tools.agent_tools"] = original_agent_tools
+            else:
+                sys.modules.pop("sana_evaluation.tools.agent_tools", None)
 
         with patch.dict("os.environ", {}, clear=True):
             bucket = agent_tools.configure_benchmark("kramabench")

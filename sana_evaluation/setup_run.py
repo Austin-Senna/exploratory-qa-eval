@@ -42,14 +42,25 @@ def _build_parser() -> argparse.ArgumentParser:
     subparsers = parser.add_subparsers(dest="subcommand", required=True)
 
     common = argparse.ArgumentParser(add_help=False)
-    common.add_argument("--search", choices=_SEARCH_MODE_CHOICES, default=None)
-    common.add_argument("--results", choices=_RESULT_MODE_CHOICES, default=None)
+    common.add_argument(
+        "--search",
+        choices=_SEARCH_MODE_CHOICES,
+        default=None,
+        help="Search-tool axis. Default: ideal.",
+    )
+    common.add_argument(
+        "--results",
+        choices=_RESULT_MODE_CHOICES,
+        default=None,
+        help="Search-results axis. Default: ideal.",
+    )
     common.add_argument(
         "--profile",
+        "--plans",
         dest="profile",
         choices=_MANAGEMENT_MODE_CHOICES,
         default=None,
-        help="Profile axis: naive, standard, or ideal.",
+        help="Planning/profile axis: naive, standard, or ideal. Default: ideal.",
     )
     common.add_argument(
         "--skills",
@@ -57,7 +68,12 @@ def _build_parser() -> argparse.ArgumentParser:
         default=None,
         help="Enable or disable the Strands AgentSkills planning/discovery skills plugin.",
     )
-    common.add_argument("--compute", choices=_COMPUTATION_MODE_CHOICES, default=None)
+    common.add_argument(
+        "--compute",
+        choices=_COMPUTATION_MODE_CHOICES,
+        default=None,
+        help="Data-analysis/compute axis. Default: ideal.",
+    )
     common.add_argument(
         "--benchmark",
         choices=_BENCHMARK_CHOICES,
@@ -96,7 +112,13 @@ def _build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Hide search_ideal plan_exhausted guidance fields from tool payloads.",
     )
-    common.add_argument("--verbose", "-v", action="store_true")
+    common.add_argument(
+        "--verbose",
+        "-v",
+        action="store_true",
+        default=True,
+        help="Print verbose per-task runtime logs. Enabled by default.",
+    )
 
     smoke = subparsers.add_parser("smoke", parents=[common], help="Run a lightweight smoke eval.")
     smoke.add_argument(
@@ -106,12 +128,20 @@ def _build_parser() -> argparse.ArgumentParser:
     )
 
     full = subparsers.add_parser("full", parents=[common], help="Run the full default task-set eval.")
-    full.add_argument(
+    full_continue = full.add_mutually_exclusive_group()
+    full_continue.add_argument(
         "--task-continue",
         "--continue",
         dest="task_continue",
         action="store_true",
+        default=True,
         help="Resume: skip tasks already recorded in this variant's CSV.",
+    )
+    full_continue.add_argument(
+        "--no-continue",
+        dest="task_continue",
+        action="store_false",
+        help="Run every task even if this variant's CSV already contains rows.",
     )
     return parser
 
@@ -218,16 +248,17 @@ def _default_output_roots(benchmark: str, *, smoke: bool) -> tuple[str, str]:
     return "logs", "results"
 
 
-_LEGACY_AXIS_DEFAULTS = {
-    "search": "standard",
-    "results": "naive",
-    "profile": "standard",
+_AXIS_DEFAULTS = {
+    "search": "ideal",
+    "results": "ideal",
+    "profile": "ideal",
+    "compute": "ideal",
 }
 
 
 def _resolve_axes(args: argparse.Namespace) -> None:
     """Fill axis defaults. Explicit user args always win."""
-    for axis, fallback in _LEGACY_AXIS_DEFAULTS.items():
+    for axis, fallback in _AXIS_DEFAULTS.items():
         if getattr(args, axis) is None:
             setattr(args, axis, fallback)
 

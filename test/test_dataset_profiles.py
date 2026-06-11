@@ -3,14 +3,14 @@ import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-import strands_evaluation.helper.peek_profile as peek_profile
+import sana_evaluation.helper.peek_profile as peek_profile
 
 
 class DatasetProfilesTests(unittest.TestCase):
     def setUp(self) -> None:
         self._tmp = TemporaryDirectory()
         self._root = Path(self._tmp.name)
-        self._profiles_path = self._root / "datagov_tables_profiles.jsonl"
+        self._profiles_path = self._root / "table_profiles.jsonl"
 
         self._orig_peek_state = {
             "profiles_path": peek_profile._PROFILES_PATH,

@@ -20,9 +20,10 @@ class SanaPreflightTests(unittest.TestCase):
         self._desc_path = self._root / "table_descriptions.jsonl"
         self._snippet_path = self._root / "snippet.jsonl"
         self._schemas_path = self._root / "datagov_tables_schemas_full.jsonl"
-        self._profiles_path = self._root / "datagov_tables_profiles.jsonl"
+        self._profiles_path = self._root / "table_profiles.jsonl"
 
         self._orig_profiles_path = preflight._PROFILES_PATH
+        self._orig_artifact_paths = preflight.artifact_paths
         self._orig_search_wrapper_state = {
             "desc_path": search_wrapper._TABLE_DESCRIPTIONS_PATH,
             "snippet_path": search_wrapper._SNIPPETS_PATH,
@@ -36,6 +37,12 @@ class SanaPreflightTests(unittest.TestCase):
         }
 
         preflight._PROFILES_PATH = self._profiles_path
+        preflight.artifact_paths = lambda _benchmark=None: SimpleNamespace(
+            descriptions=self._desc_path,
+            snippets=self._snippet_path,
+            schemas=self._schemas_path,
+            profiles=self._profiles_path,
+        )
         search_wrapper._TABLE_DESCRIPTIONS_PATH = self._desc_path
         search_wrapper._SNIPPETS_PATH = self._snippet_path
         search_wrapper._SCHEMAS_PATH = self._schemas_path
@@ -68,6 +75,7 @@ class SanaPreflightTests(unittest.TestCase):
 
     def tearDown(self) -> None:
         preflight._PROFILES_PATH = self._orig_profiles_path
+        preflight.artifact_paths = self._orig_artifact_paths
         search_wrapper._TABLE_DESCRIPTIONS_PATH = self._orig_search_wrapper_state["desc_path"]
         search_wrapper._SNIPPETS_PATH = self._orig_search_wrapper_state["snippet_path"]
         search_wrapper._SCHEMAS_PATH = self._orig_search_wrapper_state["schemas_path"]
@@ -108,7 +116,7 @@ class SanaPreflightTests(unittest.TestCase):
 
         checks = preflight.run_preflight(self._run_config(), [], stream=stream)
 
-        profile_check = next(c for c in checks if c.name == "datagov_tables_profiles.jsonl")
+        profile_check = next(c for c in checks if c.name == "table_profiles.jsonl")
         self.assertTrue(profile_check.ok)
         self.assertIn("peek_file omits profile", profile_check.detail)
         self.assertIn("Preflight OK", stream.getvalue())
@@ -122,10 +130,10 @@ class SanaPreflightTests(unittest.TestCase):
 
         checks = preflight.run_preflight(self._run_config(), [], stream=stream)
 
-        profile_check = next(c for c in checks if c.name == "datagov_tables_profiles.jsonl")
+        profile_check = next(c for c in checks if c.name == "table_profiles.jsonl")
         self.assertTrue(profile_check.ok)
         self.assertEqual(profile_check.detail, f"found: 1 entries")
-        self.assertIn("[OK  ] datagov_tables_profiles.jsonl", stream.getvalue())
+        self.assertIn("[OK  ] table_profiles.jsonl", stream.getvalue())
 
 
 if __name__ == "__main__":

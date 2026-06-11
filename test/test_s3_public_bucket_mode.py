@@ -4,8 +4,8 @@ from unittest.mock import Mock, patch
 
 from botocore.exceptions import ClientError
 
-from strands_evaluation.tools import agent_tools
-from strands_evaluation.tools.external.ideal.benchmark_paths import canonical_source_uri
+from sana_evaluation.tools import agent_tools
+from sana_evaluation.tools.external.ideal.benchmark_paths import canonical_source_uri
 
 
 class TestS3PublicBucketMode(unittest.TestCase):

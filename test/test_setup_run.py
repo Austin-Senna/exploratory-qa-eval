@@ -156,6 +156,7 @@ class SetupRunTests(unittest.TestCase):
                 command = setup_run.run(
                     [
                         "full",
+                        "--no-continue",
                         "--search",
                         "ideal",
                         "--results",
@@ -220,6 +221,7 @@ class SetupRunTests(unittest.TestCase):
                 command = setup_run.run(
                     [
                         "full",
+                        "--no-continue",
                         "--benchmark",
                         "kramabench",
                         "--search",
@@ -274,6 +276,104 @@ class SetupRunTests(unittest.TestCase):
             self.assertEqual(command[command.index("--timeout") + 1], "600")
             self.assertEqual(command[command.index("--submit-grace-seconds") + 1], "15")
 
+    def test_full_defaults_to_ideal_results_verbose_and_continue_with_plans_alias(self):
+        with TemporaryDirectory() as tmpdir:
+            repo_root = Path(tmpdir)
+            (repo_root / "lance_kramabench_infused").mkdir(parents=True, exist_ok=True)
+            fake_runner = _FakeRunner()
+
+            stdout = io.StringIO()
+            with contextlib.redirect_stdout(stdout):
+                command = setup_run.run(
+                    [
+                        "full",
+                        "--benchmark",
+                        "kramabench",
+                        "--search",
+                        "ideal",
+                        "--plans",
+                        "standard",
+                        "--compute",
+                        "ideal",
+                        "--k",
+                        "5",
+                        "--parallel",
+                        "4",
+                        "--model",
+                        "openai/gpt-5-mini",
+                        "--db",
+                        "lance_kramabench_infused",
+                        "--timeout",
+                        "600",
+                        "--submit-grace-seconds",
+                        "30",
+                    ],
+                    runner=fake_runner,
+                    cwd=repo_root,
+                )
+
+            self.assertEqual(command[command.index("--search_tool") + 1], "ideal")
+            self.assertEqual(command[command.index("--search_results") + 1], "ideal")
+            self.assertEqual(command[command.index("--profile") + 1], "standard")
+            self.assertEqual(command[command.index("--computation_tool") + 1], "ideal")
+            self.assertIn("--verbose", command)
+            self.assertIn("--task-continue", command)
+            self.assertNotIn("--all-tasks", command)
+            self.assertEqual(command[command.index("--parallel") + 1], "4")
+            self.assertEqual(command[command.index("--timeout") + 1], "600")
+            self.assertEqual(command[command.index("--submit-grace-seconds") + 1], "30")
+            self.assertIn(
+                "Task scope: resume pending tasks under benchmarks/kramabench/tasks-mini/tasks",
+                stdout.getvalue(),
+            )
+
+    def test_full_no_continue_runs_all_tasks_when_resume_default_is_not_wanted(self):
+        with TemporaryDirectory() as tmpdir:
+            repo_root = Path(tmpdir)
+            (repo_root / "lance_data").mkdir(parents=True, exist_ok=True)
+
+            command = setup_run.run(
+                [
+                    "full",
+                    "--no-continue",
+                    "--model",
+                    "openai/gpt-5-mini",
+                    "--db",
+                    "lance_data",
+                ],
+                runner=_FakeRunner(),
+                cwd=repo_root,
+            )
+
+            self.assertIn("--all-tasks", command)
+            self.assertNotIn("--task-continue", command)
+
+    def test_smoke_defaults_to_ideal_axes_and_verbose(self):
+        with TemporaryDirectory() as tmpdir:
+            repo_root = Path(tmpdir)
+            self._write_kramabench_smoke_fixture(repo_root)
+            (repo_root / "lance_kramabench_infused").mkdir(parents=True, exist_ok=True)
+
+            command = setup_run.run(
+                [
+                    "smoke",
+                    "--benchmark",
+                    "kramabench",
+                    "--model",
+                    "openai/gpt-5-mini",
+                    "--db",
+                    "lance_kramabench_infused",
+                ],
+                runner=_FakeRunner(),
+                cwd=repo_root,
+            )
+
+            self.assertEqual(command[command.index("--search_tool") + 1], "ideal")
+            self.assertEqual(command[command.index("--search_results") + 1], "ideal")
+            self.assertEqual(command[command.index("--profile") + 1], "ideal")
+            self.assertEqual(command[command.index("--computation_tool") + 1], "ideal")
+            self.assertIn("--verbose", command)
+
     def test_smoke_normalizes_new_openai_model_alias(self):
         with TemporaryDirectory() as tmpdir:
             repo_root = Path(tmpdir)
@@ -326,7 +426,7 @@ class SetupRunTests(unittest.TestCase):
 
             self.assertEqual(command[command.index("--model-name") + 1], "openai/gpt-5-nano")
 
-    def test_ideal_search_and_plan_use_default_compute_when_not_explicit(self):
+    def test_ideal_search_and_plan_default_compute_is_ideal_when_not_explicit(self):
         with TemporaryDirectory() as tmpdir:
             repo_root = Path(tmpdir)
             (repo_root / "lance_data").mkdir(parents=True, exist_ok=True)
@@ -350,7 +450,7 @@ class SetupRunTests(unittest.TestCase):
                 cwd=repo_root,
             )
 
-            self.assertNotIn("--computation_tool", command)
+            self.assertEqual(command[command.index("--computation_tool") + 1], "ideal")
 
     def test_explicit_standard_compute_is_passed_through(self):
         with TemporaryDirectory() as tmpdir:

@@ -271,7 +271,7 @@ def parse_args() -> argparse.Namespace:
         help="Skip the grouped turn-waste join entirely (no turn_waste_* outputs).",
     )
     parser.add_argument("--traces-dir", default="results-ec2/traces/modes")
-    parser.add_argument("--tasks-dir", default="tasks_mini")
+    parser.add_argument("--tasks-dir", default="benchmarks/lakeqa/tasks-mini/tasks")
     parser.add_argument("--output-dir", default="analysis_results_mode_semantic")
     parser.add_argument(
         "--no-figures",

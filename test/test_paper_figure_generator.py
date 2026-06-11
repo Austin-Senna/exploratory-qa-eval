@@ -170,14 +170,14 @@ class TestPaperFigureGenerator(unittest.TestCase):
         self.assertEqual(lakeqa.results_dir, Path("results_semantic/modes"))
         self.assertEqual(lakeqa.base_results_dir, Path("results/modes"))
         self.assertEqual(lakeqa.traces_dir, Path("results/traces/modes"))
-        self.assertEqual(lakeqa.tasks_dir, Path("tasks_mini"))
+        self.assertEqual(lakeqa.tasks_dir, Path("benchmarks/lakeqa/tasks-mini/tasks"))
         self.assertEqual(lakeqa.analysis_dir, Path("analysis_results_mode_semantic"))
         self.assertEqual(lakeqa.answer_failure_combined_dir, Path("results_semantic_answer_failures_combined"))
 
         self.assertEqual(kramabench.results_dir, Path("results-kramabench_semantic/modes"))
         self.assertEqual(kramabench.base_results_dir, Path("results-kramabench/modes"))
         self.assertEqual(kramabench.traces_dir, Path("results-kramabench/traces/modes"))
-        self.assertEqual(kramabench.tasks_dir, Path("tasks-mini-kramabench"))
+        self.assertEqual(kramabench.tasks_dir, Path("benchmarks/kramabench/tasks-mini/tasks"))
         self.assertEqual(kramabench.analysis_dir, Path("analysis_results_mode_kramabench_semantic"))
         self.assertEqual(
             kramabench.answer_failure_combined_dir,

@@ -9,7 +9,7 @@ from unittest.mock import patch
 
 def _load_logger_module():
     repo_root = Path(__file__).resolve().parents[1]
-    module_path = repo_root / "strands_evaluation" / "helper" / "logger.py"
+    module_path = repo_root / "sana_evaluation" / "helper" / "logger.py"
     spec = importlib.util.spec_from_file_location("_test_logger_module", module_path)
     module = importlib.util.module_from_spec(spec)
     assert spec and spec.loader
@@ -29,7 +29,7 @@ def _close_handlers(name):
 
 class LoggerOutputDirTests(unittest.TestCase):
     def tearDown(self):
-        _close_handlers("strands_evaluation")
+        _close_handlers("sana_evaluation")
         _close_handlers("strands")
 
     def test_configure_worker_logging_uses_run_config_log_root(self):
@@ -99,7 +99,7 @@ class LoggerOutputDirTests(unittest.TestCase):
                 model="openai/gpt-5.2-xhigh",
                 task_id="tasks_mini/k-1-d-1/task_1.json",
             )
-            first_handlers = list(logging.getLogger("strands_evaluation").handlers)
+            first_handlers = list(logging.getLogger("sana_evaluation").handlers)
             first_file_handler = next(
                 handler for handler in first_handlers if isinstance(handler, logging.FileHandler)
             )

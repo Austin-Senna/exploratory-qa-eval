@@ -36,7 +36,7 @@ class BuildTaskManifestDescriptionsTests(unittest.TestCase):
 
     def test_audit_writes_exact_missing_manifest_rows_from_layered_sources(self):
         manifest = self._root / "manifest.jsonl"
-        table_desc = self._root / "table_descriptions.jsonl"
+        table_desc = self._root / "descriptions.jsonl"
         core_desc = self._root / "tasks_core_quality_file_manifest_descriptions.jsonl"
         missing = self._root / "missing.jsonl"
         uri1 = "s3://bucket/datagov/ds1/files/rows.csv"
@@ -67,7 +67,7 @@ class BuildTaskManifestDescriptionsTests(unittest.TestCase):
 
     def test_merge_writes_manifest_order_normal_schema_and_first_seed_wins(self):
         manifest = self._root / "manifest.jsonl"
-        table_desc = self._root / "table_descriptions.jsonl"
+        table_desc = self._root / "descriptions.jsonl"
         core_desc = self._root / "tasks_core_quality_file_manifest_descriptions.jsonl"
         generated_desc = self._root / "generated.jsonl"
         output = self._root / "tasks_mini_file_manifest_descriptions.jsonl"

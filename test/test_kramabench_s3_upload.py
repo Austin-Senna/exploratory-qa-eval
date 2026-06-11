@@ -126,7 +126,7 @@ class KramabenchS3UploadTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmpdir:
             uploads = upload.materialize_corpus_uploads(
                 bucket_uri="s3://sana-kramabench",
-                candidates_dir=REPO / "tasks-mini-kramabench" / "candidates",
+                candidates_dir=REPO / "benchmarks/kramabench/tasks-mini/tasks/candidates",
                 staging_dir=Path(tmpdir),
                 source_ids=("archeology-easy-10",),
             )

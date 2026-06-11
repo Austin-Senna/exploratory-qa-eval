@@ -72,7 +72,7 @@ def _load_agent_tools_module():
     try:
         module_path = (
             Path(__file__).resolve().parents[1]
-            / "strands_evaluation"
+            / "sana_evaluation"
             / "tools"
             / "agent_tools.py"
         )

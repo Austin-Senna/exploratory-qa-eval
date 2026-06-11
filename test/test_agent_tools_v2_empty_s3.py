@@ -17,12 +17,12 @@ _MODULE_NAMES = [
     "duckdb",
     "dotenv",
     "requests",
-    "strands_evaluation",
-    "strands_evaluation.tools",
-    "strands_evaluation.tools.helper",
-    "strands_evaluation.tools.helper.detect",
-    "strands_evaluation.tools.agent_tools",
-    "strands_evaluation.tools.agent_tools_v2",
+    "sana_evaluation",
+    "sana_evaluation.tools",
+    "sana_evaluation.tools.helper",
+    "sana_evaluation.tools.helper.detect",
+    "sana_evaluation.tools.agent_tools",
+    "sana_evaluation.tools.agent_tools_v2",
 ]
 
 
@@ -80,29 +80,29 @@ def _load_agent_tools_v2_module():
     fake_requests = types.ModuleType("requests")
     sys.modules["requests"] = fake_requests
 
-    package = types.ModuleType("strands_evaluation")
-    package.__path__ = [str(repo_root / "strands_evaluation")]
-    sys.modules["strands_evaluation"] = package
+    package = types.ModuleType("sana_evaluation")
+    package.__path__ = [str(repo_root / "sana_evaluation")]
+    sys.modules["sana_evaluation"] = package
 
-    tools_package = types.ModuleType("strands_evaluation.tools")
-    tools_package.__path__ = [str(repo_root / "strands_evaluation" / "tools")]
-    sys.modules["strands_evaluation.tools"] = tools_package
+    tools_package = types.ModuleType("sana_evaluation.tools")
+    tools_package.__path__ = [str(repo_root / "sana_evaluation" / "tools")]
+    sys.modules["sana_evaluation.tools"] = tools_package
 
-    helper_package = types.ModuleType("strands_evaluation.tools.helper")
-    helper_package.__path__ = [str(repo_root / "strands_evaluation" / "tools" / "helper")]
-    sys.modules["strands_evaluation.tools.helper"] = helper_package
+    helper_package = types.ModuleType("sana_evaluation.tools.helper")
+    helper_package.__path__ = [str(repo_root / "sana_evaluation" / "tools" / "helper")]
+    sys.modules["sana_evaluation.tools.helper"] = helper_package
 
     _load_module(
-        "strands_evaluation.tools.helper.detect",
-        repo_root / "strands_evaluation" / "tools" / "helper" / "detect.py",
+        "sana_evaluation.tools.helper.detect",
+        repo_root / "sana_evaluation" / "tools" / "helper" / "detect.py",
     )
     _load_module(
-        "strands_evaluation.tools.agent_tools",
-        repo_root / "strands_evaluation" / "tools" / "agent_tools.py",
+        "sana_evaluation.tools.agent_tools",
+        repo_root / "sana_evaluation" / "tools" / "agent_tools.py",
     )
     module = _load_module(
-        "strands_evaluation.tools.agent_tools_v2",
-        repo_root / "strands_evaluation" / "tools" / "agent_tools_v2.py",
+        "sana_evaluation.tools.agent_tools_v2",
+        repo_root / "sana_evaluation" / "tools" / "agent_tools_v2.py",
     )
 
     def restore():

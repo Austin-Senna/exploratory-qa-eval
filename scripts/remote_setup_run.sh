@@ -21,14 +21,14 @@ Options:
   -h, --help         Show this help
 
 Examples:
-	  scripts/remote_setup_run.sh full --search ideal --results ideal \
-	    --profile standard --k 5 --parallel 4 --model openai/gpt-5.4-nano --db lance_data \
-    --openai-prompt-cache-retention 24h --verbose --continue --timeout 600 \
-    --submit-grace-seconds 30
+  scripts/remote_setup_run.sh full \
+    --benchmark kramabench --search ideal --plans standard --compute ideal \
+    --k 5 --parallel 4 --model openai/gpt-5-mini --db lance_kramabench_infused \
+    --timeout 600 --submit-grace-seconds 30
 
   scripts/remote_setup_run.sh --session sana-sprint-k5 full \
     --mode ideal --sana-feature sprint --sprint-mode commitment --k 5 --parallel 4 \
-    --model gpt5.4-nano --db lance_data --openai-prompt-cache-retention 24h --verbose
+    --model gpt5.4-nano --db lance_data
 EOF
 }
 

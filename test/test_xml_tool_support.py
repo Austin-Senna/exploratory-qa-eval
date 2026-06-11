@@ -3,8 +3,8 @@ import unittest
 from pathlib import Path
 from unittest.mock import Mock, patch
 
-from strands_evaluation.tools import agent_tools_v2
-from strands_evaluation.tools.helper.detect import detect_family
+from sana_evaluation.tools import agent_tools_v2
+from sana_evaluation.tools.helper.detect import detect_family
 
 
 class TestDetectFamilyXml(unittest.TestCase):

@@ -133,8 +133,8 @@ def install_dependency_stubs(names: Iterable[str]) -> List[str]:
 def install_lightweight_package_stubs() -> None:
     """Let this script import tool modules without executing package __init__."""
     package_specs = {
-        "strands_evaluation": REPO_ROOT / "strands_evaluation",
-        "strands_evaluation.tools": REPO_ROOT / "strands_evaluation" / "tools",
+        "sana_evaluation": REPO_ROOT / "sana_evaluation",
+        "sana_evaluation.tools": REPO_ROOT / "sana_evaluation" / "tools",
     }
     for name, path in package_specs.items():
         if name in sys.modules:
@@ -409,8 +409,8 @@ def import_tool_modules(module_names: Iterable[str]) -> tuple[Dict[str, Any], Li
     records: List[Dict[str, Any]] = []
     install_lightweight_package_stubs()
     import_paths = {
-        "agent_tools": "strands_evaluation.tools.agent_tools",
-        "agent_tools_v2": "strands_evaluation.tools.agent_tools_v2",
+        "agent_tools": "sana_evaluation.tools.agent_tools",
+        "agent_tools_v2": "sana_evaluation.tools.agent_tools_v2",
     }
     for module_name in module_names:
         started = time.monotonic()

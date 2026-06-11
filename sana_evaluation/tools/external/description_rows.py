@@ -5,7 +5,10 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any, Dict, Optional
 
-FORBIDDEN_DESCRIPTION_SOURCES = {"task_manifest_fallback"}
+FORBIDDEN_DESCRIPTION_SOURCES = {
+    "task_manifest_fallback",
+    "tasks_mini_manifest_fallback",
+}
 
 DESCRIPTION_FIELDS = (
     "dataset_uri",
