@@ -1,4 +1,4 @@
-"""Search tools for Condition B (planning-rich): sparse FTS only."""
+"""Search tools for naive mode: sparse FTS only."""
 import sys
 from pathlib import Path
 

@@ -1,5 +1,5 @@
 """
-Planning tool for Condition B.
+Planning tool for standard profile mode.
 
 plan — save a research plan to the agent's working context so it persists
        across turns. The agent writes the plan itself; this tool just injects

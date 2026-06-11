@@ -1,4 +1,4 @@
-"""Search tools for Condition A (tools-rich): hybrid RRF, schema, and reranked."""
+"""Search tools for standard mode: hybrid RRF, schema, and reranked."""
 import sys
 from pathlib import Path
 

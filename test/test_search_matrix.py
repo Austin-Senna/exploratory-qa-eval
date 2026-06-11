@@ -28,9 +28,9 @@ from typing import Any, Dict, List, Optional, Sequence
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from strands_evaluation.tools.agent_tools import search_prefix
-from strands_evaluation.tools.external.ideal import search_ideal as ideal_search
-from strands_evaluation.tools.external.ideal.search_wrapper import build_search_tools
+from sana_evaluation.tools.agent_tools import search_prefix
+from sana_evaluation.tools.external.ideal import search_ideal as ideal_search
+from sana_evaluation.tools.external.ideal.search_wrapper import build_search_tools
 
 SEARCH_TOOL_MODES = ("naive", "standard", "ideal")
 SEARCH_RESULT_MODES = ("naive", "ideal")
@@ -39,16 +39,16 @@ SEARCH_RESULT_MODES = ("naive", "ideal")
 def _build_base_tools(search_tool_mode: str, db_path: str, task_file: Optional[str]) -> List:
     """Return the un-wrapped base search tools for a given search_tool mode."""
     if search_tool_mode == "naive":
-        from strands_evaluation.tools.external import search_b_tools
-        search_b_tools.set_db_path(db_path)
-        search_b_tools.setup()
-        return [search_b_tools.search_value, search_b_tools.search_schema, search_prefix]
+        from sana_evaluation.tools.external import search_naive_tools
+        search_naive_tools.set_db_path(db_path)
+        search_naive_tools.setup()
+        return [search_naive_tools.search_value, search_naive_tools.search_schema, search_prefix]
 
     if search_tool_mode == "standard":
-        from strands_evaluation.tools.external import search_a_tools
-        search_a_tools.set_db_path(db_path)
-        search_a_tools.setup()
-        return [search_a_tools.search_value, search_a_tools.search_schema, search_prefix]
+        from sana_evaluation.tools.external import search_standard_tools
+        search_standard_tools.set_db_path(db_path)
+        search_standard_tools.setup()
+        return [search_standard_tools.search_value, search_standard_tools.search_schema, search_prefix]
 
     if search_tool_mode == "ideal":
         if not task_file:

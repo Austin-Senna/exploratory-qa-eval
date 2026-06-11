@@ -72,7 +72,7 @@ def _extract_dataset_ids(result_text: str) -> List[str]:
     results_list = data.get("results", [])
     ids: List[str] = []
     for item in results_list:
-        # Condition A/B tools: dataset_uri or uri field
+        # Search tools: dataset_uri or uri field.
         raw = item.get("dataset_uri") or item.get("uri")
         if raw:
             ids.append(_normalize_dataset_id(raw))

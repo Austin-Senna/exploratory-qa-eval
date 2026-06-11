@@ -97,26 +97,26 @@ from sana_evaluation.tools.external.search_eval_tools import (
 
 logger = logging.getLogger(__name__)
 
-# Condition A search tools
-_CONDITION_A_TOOLS_AVAILABLE = False
+# Standard hybrid search tools
+_STANDARD_SEARCH_TOOLS_AVAILABLE = False
 try:
-    from sana_evaluation.tools.external.search_a_tools import (
-        search_value as search_value_a,
+    from sana_evaluation.tools.external.search_standard_tools import (
+        search_value as search_value_standard,
         search_schema,
         search_reranked,
     )
-    _CONDITION_A_TOOLS_AVAILABLE = True
+    _STANDARD_SEARCH_TOOLS_AVAILABLE = True
 except ImportError:
     pass
 
-# Condition B search tools
-_CONDITION_B_TOOLS_AVAILABLE = False
+# Naive sparse search tools
+_NAIVE_SEARCH_TOOLS_AVAILABLE = False
 try:
-    from sana_evaluation.tools.external.search_b_tools import (
-        search_value as search_value_b,
-        search_schema as search_schema_b,
+    from sana_evaluation.tools.external.search_naive_tools import (
+        search_value as search_value_naive,
+        search_schema as search_schema_naive,
     )
-    _CONDITION_B_TOOLS_AVAILABLE = True
+    _NAIVE_SEARCH_TOOLS_AVAILABLE = True
 except ImportError:
     pass
 
@@ -175,9 +175,9 @@ def build_search(
     search_mode = _normalize_mode(mode, "standard", "search_tool")
 
     if search_mode == "naive":
-        if not _CONDITION_B_TOOLS_AVAILABLE:
-            raise RuntimeError("Condition B search tools are unavailable (import failed).")
-        from sana_evaluation.tools.external.search_b_tools import (
+        if not _NAIVE_SEARCH_TOOLS_AVAILABLE:
+            raise RuntimeError("Naive sparse search tools are unavailable (import failed).")
+        from sana_evaluation.tools.external.search_naive_tools import (
             search_schema as search_schema_sparse,
             search_value as search_value_sparse,
         )
@@ -185,9 +185,9 @@ def build_search(
         return [search_value_sparse, search_schema_sparse, search_prefix]
 
     if search_mode == "standard":
-        if not _CONDITION_A_TOOLS_AVAILABLE:
-            raise RuntimeError("Condition A search tools are unavailable (import failed).")
-        from sana_evaluation.tools.external.search_a_tools import (
+        if not _STANDARD_SEARCH_TOOLS_AVAILABLE:
+            raise RuntimeError("Standard hybrid search tools are unavailable (import failed).")
+        from sana_evaluation.tools.external.search_standard_tools import (
             search_schema as search_schema_hybrid,
             search_value as search_value_hybrid,
         )
@@ -622,8 +622,8 @@ class DataLakeAgent:
         )
 
         if not mode_overrides_enabled:
-            if condition in {"baseline", "b"} and not _CONDITION_B_TOOLS_AVAILABLE:
-                raise RuntimeError("Condition B/Baseline search tools are unavailable (import failed).")
+            if condition in {"baseline", "b"} and not _NAIVE_SEARCH_TOOLS_AVAILABLE:
+                raise RuntimeError("Naive sparse search tools are unavailable (import failed).")
 
         # Core data-manipulation tools shared across all conditions
         _data_tools = [
@@ -657,9 +657,9 @@ class DataLakeAgent:
                 mode_bundle.modes["plan_skills"],
             )
         else:
-            if condition == "b" and _CONDITION_B_TOOLS_AVAILABLE:
-                # Condition B (planning-rich): sparse search + prefix + plan tool + skills
-                raw_search_tools = [search_value_b, search_schema_b, search_prefix]
+            if condition == "b" and _NAIVE_SEARCH_TOOLS_AVAILABLE:
+                # Legacy managed path: sparse search + prefix + plan tool + skills.
+                raw_search_tools = [search_value_naive, search_schema_naive, search_prefix]
                 system_prompt = compose_managed_prompt(
                     "naive",
                     include_skills=bool(self.run_config.plan_skills_enabled),
@@ -675,8 +675,8 @@ class DataLakeAgent:
                 skill_paths = skill_paths_for_modes("naive", "standard")
 
             else:
-                # Baseline: Condition B search tools (BM25 + schema + prefix) without any context tools
-                raw_search_tools = [search_value_b, search_schema_b, search_prefix]
+                # Baseline: Naive sparse search tools (BM25 + schema + prefix) without any context tools
+                raw_search_tools = [search_value_naive, search_schema_naive, search_prefix]
                 system_prompt = compose_baseline_prompt("naive")
                 search_tools = build_search_tools(
                     raw_search_tools,
@@ -997,23 +997,23 @@ def _run_task_worker(
     if mode_computation_tool is None:
         mode_computation_tool = "standard"
 
-    if mode_search_tool == "standard" and _CONDITION_A_TOOLS_AVAILABLE:
+    if mode_search_tool == "standard" and _STANDARD_SEARCH_TOOLS_AVAILABLE:
         try:
-            import sana_evaluation.tools.external.search_a_tools as _sa
+            import sana_evaluation.tools.external.search_standard_tools as _sa
             if run_config.search_db_path:
                 _sa.set_db_path(run_config.search_db_path)
             _sa.setup()
         except Exception as e:
             logger.warning(f"Hybrid search setup failed: {e}")
 
-    if mode_search_tool == "naive" and _CONDITION_B_TOOLS_AVAILABLE:
-        # NOTE: do not call search_b_tools.setup() for naive mode.
+    if mode_search_tool == "naive" and _NAIVE_SEARCH_TOOLS_AVAILABLE:
+        # NOTE: do not call search_naive_tools.setup() for naive mode.
         # setup() triggers external-tools/hybrid_search/api.setup(), which eagerly
         # loads embedding/reranker models that are unnecessary for sparse-only
         # search paths and can heavily impact worker startup and memory.
         if run_config.search_db_path:
             try:
-                import sana_evaluation.tools.external.search_b_tools as _sb
+                import sana_evaluation.tools.external.search_naive_tools as _sb
 
                 _sb.set_db_path(run_config.search_db_path)
             except Exception as e:

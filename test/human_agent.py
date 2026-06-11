@@ -5,7 +5,7 @@ Interactive human-agent REPL.
 Lets you manually run a benchmark task using the same tools the LLM agent has:
   search, search_keyword, list_files, peek_file, peek_multiple, read_file,
   grep_file, query_file, download, execute_code, submit_answer
-  sparse, hybrid, graph  (new search backends from Condition A/B)
+  sparse, hybrid, graph  (search backends)
 
 Usage:
     python human_agent.py                        # pick a random task
@@ -24,12 +24,12 @@ import time
 from pathlib import Path
 
 # ---------------------------------------------------------------------------
-# Bootstrap path so we can import from repo-local strands_evaluation/
+# Bootstrap path so we can import from repo-local sana_evaluation/
 # ---------------------------------------------------------------------------
 _ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(_ROOT))
 
-from strands_evaluation.tools.agent_tools_v2 import (  # noqa: E402
+from sana_evaluation.tools.agent_tools_v2 import (  # noqa: E402
     search,
     search_keyword,
     list_files,
@@ -251,8 +251,8 @@ def cmd_search_sparse():
     top_k_raw = input("  top_k [10]: ").strip()
     top_k = int(top_k_raw) if top_k_raw.isdigit() else 10
     try:
-        # Condition B sparse backend
-        from strands_evaluation.tools.external.search_b_tools import search_value as search_sparse
+        # Naive sparse backend.
+        from sana_evaluation.tools.external.search_naive_tools import search_value as search_sparse
     except Exception as e:
         print(
             "  [ERROR] sparse backend unavailable "
@@ -274,8 +274,8 @@ def cmd_search_hybrid():
     top_k_raw = input("  top_k [10]: ").strip()
     top_k = int(top_k_raw) if top_k_raw.isdigit() else 10
     try:
-        # Condition A hybrid backend
-        from strands_evaluation.tools.external.search_a_tools import search_value as search_hybrid
+        # Standard hybrid backend.
+        from sana_evaluation.tools.external.search_standard_tools import search_value as search_hybrid
     except Exception as e:
         print(
             "  [ERROR] hybrid backend unavailable "
@@ -296,11 +296,11 @@ def cmd_search_graph():
         return
     try:
         # Legacy optional backend; not present in all checkouts.
-        from strands_evaluation.tools.external.search_tools import search_graph
+        from sana_evaluation.tools.external.search_tools import search_graph
     except Exception as e:
         print(
             "  [ERROR] graph backend unavailable "
-            "(legacy module strands_evaluation.tools.external.search_tools is missing): "
+            "(legacy module sana_evaluation.tools.external.search_tools is missing): "
             f"{e}"
         )
         return
