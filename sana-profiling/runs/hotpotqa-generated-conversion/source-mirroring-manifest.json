@@ -1,0 +1,17 @@
+{
+  "source_mirroring_required": true,
+  "mirror_prefix": "wikipedia/hotpotqa__5a714bb35542994082a3e78f/files/",
+  "sources": [
+    {
+      "title": "Gaetano Donizetti",
+      "target": "wikipedia/hotpotqa__5a714bb35542994082a3e78f/files/Gaetano_Donizetti.txt",
+      "raw_sentence_index": 0
+    },
+    {
+      "title": "William Walton",
+      "target": "wikipedia/hotpotqa__5a714bb35542994082a3e78f/files/William_Walton.txt",
+      "raw_sentence_index": 0
+    }
+  ],
+  "note": "This smoke run records source mappings only; it does not copy answer-bearing paragraph text into the run folder."
+}

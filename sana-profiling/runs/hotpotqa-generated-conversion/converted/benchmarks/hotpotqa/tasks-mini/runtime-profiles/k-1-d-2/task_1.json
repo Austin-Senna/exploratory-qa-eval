@@ -1,0 +1,22 @@
+{
+  "dataset_sequence": [
+    "wikipedia/hotpotqa__5a714bb35542994082a3e78f",
+    "wikipedia/hotpotqa__5a714bb35542994082a3e78f"
+  ],
+  "source_sequence": [
+    "wikipedia/hotpotqa__5a714bb35542994082a3e78f/files/Gaetano_Donizetti.txt",
+    "wikipedia/hotpotqa__5a714bb35542994082a3e78f/files/William_Walton.txt"
+  ],
+  "reasoning_chain_text": [
+    "1. Read the two supporting composer pages and determine each composer birth date.",
+    "2. Compare the two birth dates and return the composer born later."
+  ],
+  "original_final_question": "Which composer was born later, Gaetano Donizetti or William Walton? Write your answer as [ANSWER].",
+  "original_reasoning_chain": [
+    "Node 1: Determine the first composer birth date from the first supporting page.",
+    "Node 2: Determine the second composer birth date and full name from the second supporting page.",
+    "Final answer: choose the composer born later."
+  ],
+  "ideal_code": [],
+  "ideal_query": []
+}

@@ -20,6 +20,7 @@ def test_sana_profiling_folder_has_public_index():
 
 AUDITOR = SANA_PROFILING / "skills" / "benchmark-lakeqa-conversion-auditor"
 SCAFFOLDER = SANA_PROFILING / "skills" / "benchmark-lakeqa-skill-scaffolder"
+RUNS = SANA_PROFILING / "runs"
 
 
 def test_conversion_auditor_skill_contract():
@@ -338,3 +339,72 @@ def test_scaffold_benchmark_skill_generated_prompt_does_not_embed_report_answers
     assert "SECRET_INTERMEDIATE_ANSWER" not in generated
     assert "Do not copy answers" in generated
     assert "The report is a conversion-method artifact, not an answer key" in generated
+
+
+def test_sana_profiling_ideal_artifact_skills_use_runtime_profile_convention():
+    skill_names = ["author-ideal-plans", "author-ideal-code", "plan-verifier"]
+
+    for name in skill_names:
+        skill = SANA_PROFILING / "skills" / name / "SKILL.md"
+        assert skill.is_file()
+        text = skill.read_text(encoding="utf-8")
+        assert f"name: {name}" in text
+        assert "runtime-profiles" in text
+        assert "benchmarks/<benchmark>/tasks-mini/tasks" in text
+        assert (
+            "Do not create new `plans_mini`" in text
+            or "Do not create or verify new artifacts there" in text
+        )
+
+    ideal_plans = (
+        SANA_PROFILING / "skills" / "author-ideal-plans" / "SKILL.md"
+    ).read_text(encoding="utf-8")
+    assert "reasoning_chain_text" in ideal_plans
+    assert "no final answers" in ideal_plans
+
+    ideal_code = (
+        SANA_PROFILING / "skills" / "author-ideal-code" / "SKILL.md"
+    ).read_text(encoding="utf-8")
+    assert "ideal_code" in ideal_code
+    assert "ideal_query" in ideal_code
+    assert "HotpotQA-style text evidence tasks" in ideal_code
+
+    verifier = (
+        SANA_PROFILING / "skills" / "plan-verifier" / "SKILL.md"
+    ).read_text(encoding="utf-8")
+    assert "Judge prompt leakage only in `reasoning_chain_text`" in verifier
+    assert "metadata/audit fields" in verifier
+
+
+def test_hotpotqa_generated_conversion_run_outputs_current_layout_and_no_prompt_leaks():
+    run = RUNS / "hotpotqa-generated-conversion"
+    validation = json.loads((run / "validation.json").read_text(encoding="utf-8"))
+
+    assert validation["question_suffix_ok"] is True
+    assert validation["sources_rewritten"] is True
+    assert validation["subquestions_filled"] is True
+    assert validation["runtime_profile_uses_current_layout"] is True
+    assert validation["prompt_surface_leaks"] == {}
+
+    task = json.loads((ROOT / validation["converted_task"]).read_text(encoding="utf-8"))
+    profile = json.loads((ROOT / validation["runtime_profile"]).read_text(encoding="utf-8"))
+
+    assert task["question"].endswith("Write your answer as [ANSWER].")
+    assert all(
+        not node["source"].startswith("hotpotqa://")
+        for node in task["nodes"].values()
+    )
+    assert all(node["subquestion"] for node in task["nodes"].values())
+    assert "runtime-profiles" in validation["runtime_profile"]
+    assert profile["ideal_code"] == []
+    assert profile["ideal_query"] == []
+    reasoning_text = "\n".join(profile["reasoning_chain_text"])
+    assert task["answer"] not in reasoning_text
+    assert "29 November 1797" not in reasoning_text
+    assert "29 March 1902" not in reasoning_text
+
+    generated_skill = (
+        run / "generated-skills" / "hotpotqa-lakeqa-transform" / "SKILL.md"
+    ).read_text(encoding="utf-8")
+    assert "Do not copy answers" in generated_skill
+    assert task["answer"] not in generated_skill

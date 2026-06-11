@@ -1,0 +1,11 @@
+{
+  "input_task": "other-benchmarks/tasks-hotpotqa-mini/k-2-d-1/task_1.json",
+  "converted_task": "sana-profiling/runs/hotpotqa-generated-conversion/converted/benchmarks/hotpotqa/tasks-mini/tasks/k-1-d-2/task_1.json",
+  "runtime_profile": "sana-profiling/runs/hotpotqa-generated-conversion/converted/benchmarks/hotpotqa/tasks-mini/runtime-profiles/k-1-d-2/task_1.json",
+  "question_suffix_ok": true,
+  "sources_rewritten": true,
+  "subquestions_filled": true,
+  "bucket": "k-1-d-2",
+  "runtime_profile_uses_current_layout": true,
+  "prompt_surface_leaks": {}
+}
