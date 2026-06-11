@@ -3,8 +3,8 @@
 Semantic-first mode analysis runner.
 
 This is the current mode-analysis entrypoint. Compatibility code in this file
-is limited to loading adjacent raw/turn-waste result trees and preserving a few
-legacy output shapes for downstream notebooks.
+is limited to loading adjacent raw result trees and preserving a few output
+shapes for downstream paper-generation scripts.
 
 Reads semantic-audited eval_results.csv files from:
   results-ec2_semantic/modes/{model}/{variant}/eval_results.csv
@@ -34,15 +34,12 @@ Outputs (default: analysis_results_mode_semantic/):
   search_tool_efficiency.json
   search_depth_buckets.json
   reasoning_density_buckets.json
-  turn_waste_global_groups.json
   summary.json
   variant_summary.json
   per_task_semantic.csv
   per_task_retrieval.csv
   per_task_search_bottleneck.csv
   per_task_search_tool_bottleneck.csv
-  turn_waste_global_groups.csv
-  turn_waste_grouped_failures_joined.csv
   figures/ (unless --no-figures)
 """
 
@@ -86,7 +83,6 @@ from analysis.search_depth import _BINS as _SEARCH_DEPTH_BINS
 from analysis.search_depth import _assign_bin as _assign_search_depth_bin
 from analysis.tool_error_analysis import _DATA_TOOLS
 from analysis.run_mode_delta_figures import generate_delta_figures
-from analysis.combine_turn_waste_grouped_models import reconcile_global_group
 
 
 SEMANTIC_BUCKETS = [
@@ -3648,13 +3644,7 @@ def run_analysis(
     print("Loading semantic eval results...")
     by_key_records, source_field_order = load_semantic_results_grouped(results_dir, model_filters=model_filters)
 
-    include_turn_waste = turn_waste_grouped_dir is not None
-    if include_turn_waste:
-        print("Loading grouped turn-waste results...")
-        grouped_turn_waste_by_key = load_turn_waste_grouped_results(turn_waste_grouped_dir, model_filters=model_filters)
-    else:
-        print("Skipping grouped turn-waste load (disabled).")
-        grouped_turn_waste_by_key = {}
+    print("Skipping grouped turn-waste load (legacy analysis removed).")
 
     print("Loading base agent results...")
     base_by_key_records = load_base_agent_results_grouped(base_results_dir, model_filters=model_filters)
@@ -3694,19 +3684,8 @@ def run_analysis(
     variant_rows = build_variant_summary(summary_rows)
     semantic_match, discovery, runtime, semantic_buckets, log_error_buckets = build_metric_mappings(summary_rows)
     crosstab_rows = build_semantic_error_crosstab(by_key_records, variant_rows)
-    if include_turn_waste:
-        turn_waste_global_groups, turn_waste_global_group_rows, turn_waste_joined_failed_rows = build_turn_waste_global_groups(
-            by_key_records,
-            grouped_turn_waste_by_key,
-            variant_rows,
-        )
-        turn_waste_condition_model_groups = _build_turn_waste_condition_model_summary(
-            summary_rows,
-            turn_waste_joined_failed_rows,
-        )
-    else:
-        turn_waste_global_groups, turn_waste_global_group_rows, turn_waste_joined_failed_rows = {}, [], []
-        turn_waste_condition_model_groups = {}
+    turn_waste_global_groups, turn_waste_global_group_rows, turn_waste_joined_failed_rows = {}, [], []
+    turn_waste_condition_model_groups = {}
     per_task_rows, per_task_fieldnames = build_per_task_rows(by_key_records, task_metrics_by_key, source_field_order)
     per_task_retrieval_rows, per_task_retrieval_fieldnames = build_per_task_retrieval_rows(task_metrics_by_key)
 
@@ -3732,10 +3711,6 @@ def run_analysis(
         "summary.json": summary_rows,
         "variant_summary.json": variant_rows,
     }
-
-    if include_turn_waste:
-        files["turn_waste_global_groups.json"] = turn_waste_global_groups
-        files["turn_waste_global_groups_by_condition_model.json"] = turn_waste_condition_model_groups
 
     for filename, data in files.items():
         path = out_dir / filename
@@ -3936,96 +3911,7 @@ def run_analysis(
         search_call_cumulative_fieldnames,
     )
 
-    if include_turn_waste:
-        turn_waste_groups_csv_path = out_dir / "turn_waste_global_groups.csv"
-        turn_waste_groups_fieldnames = [
-            "variant",
-            "turn_waste_global_group",
-            "n",
-            "pct_within_grouped_failed_rows",
-            "n_failed_rows",
-            "n_grouped_failed_rows",
-            "n_unassigned_failed_rows",
-            "n_total_rows",
-        ]
-        write_csv(
-            turn_waste_groups_csv_path,
-            turn_waste_global_group_rows,
-            turn_waste_groups_fieldnames,
-        )
-        print(f"  Wrote {turn_waste_groups_csv_path} ({len(turn_waste_global_group_rows)} rows)")
-        csv_outputs["turn_waste_global_groups.csv"] = (
-            turn_waste_global_group_rows,
-            turn_waste_groups_fieldnames,
-        )
-
-        turn_waste_condition_rows = []
-        for key in sorted(turn_waste_condition_model_groups.keys(), key=_condition_model_sort_key):
-            entry = turn_waste_condition_model_groups[key]
-            for family, display in TURN_WASTE_FAMILY_DISPLAY.items():
-                payload = entry.get("families", {}).get(family, {})
-                count = int(payload.get("n", 0) or 0)
-                if count <= 0:
-                    continue
-                turn_waste_condition_rows.append(
-                    {
-                        "condition_model": key,
-                        "model": entry.get("model", ""),
-                        "variant": entry.get("variant", ""),
-                        "turn_waste_family": family,
-                        "turn_waste_family_display": display,
-                        "n": count,
-                        "pct_within_grouped_failed_rows": payload.get("pct_within_grouped_failed_rows", 0.0),
-                        "n_failed_rows": entry.get("n_failed_rows", 0),
-                        "n_grouped_failed_rows": entry.get("n_grouped_failed_rows", 0),
-                        "n_unassigned_failed_rows": entry.get("n_unassigned_failed_rows", 0),
-                        "n_total_rows": entry.get("n_total_rows", 0),
-                    }
-                )
-        turn_waste_condition_path = out_dir / "turn_waste_global_groups_by_condition_model.csv"
-        turn_waste_condition_fieldnames = [
-            "condition_model",
-            "model",
-            "variant",
-            "turn_waste_family",
-            "turn_waste_family_display",
-            "n",
-            "pct_within_grouped_failed_rows",
-            "n_failed_rows",
-            "n_grouped_failed_rows",
-            "n_unassigned_failed_rows",
-            "n_total_rows",
-        ]
-        write_csv(turn_waste_condition_path, turn_waste_condition_rows, turn_waste_condition_fieldnames)
-        print(f"  Wrote {turn_waste_condition_path} ({len(turn_waste_condition_rows)} rows)")
-        csv_outputs["turn_waste_global_groups_by_condition_model.csv"] = (
-            turn_waste_condition_rows,
-            turn_waste_condition_fieldnames,
-        )
-
-        turn_waste_joined_path = out_dir / "turn_waste_grouped_failures_joined.csv"
-        turn_waste_joined_fieldnames = [
-            "condition_model",
-            "variant",
-            "task_id",
-            "semantic_bucket",
-            "log_error_bucket",
-            "turn_waste_global_group",
-            "turn_waste_global_group_reason",
-            "estimated_wasted_turns",
-        ]
-        write_csv(
-            turn_waste_joined_path,
-            turn_waste_joined_failed_rows,
-            turn_waste_joined_fieldnames,
-        )
-        print(f"  Wrote {turn_waste_joined_path} ({len(turn_waste_joined_failed_rows)} rows)")
-        csv_outputs["turn_waste_grouped_failures_joined.csv"] = (
-            turn_waste_joined_failed_rows,
-            turn_waste_joined_fieldnames,
-        )
-    else:
-        print("Skipping turn_waste_global_groups.csv and turn_waste_grouped_failures_joined.csv (disabled).")
+    print("Skipping turn-waste CSV outputs (legacy analysis removed).")
 
     print("Writing per-model outputs...")
     write_per_model_outputs(out_dir, files, csv_outputs)
@@ -4076,10 +3962,6 @@ def run_analysis(
         "tool_errors": tool_errors,
         "semantic_buckets": semantic_buckets,
         "log_error_buckets": log_error_buckets,
-        "turn_waste_global_groups": turn_waste_global_groups,
-        "turn_waste_global_groups_by_condition_model": turn_waste_condition_model_groups,
-        "turn_waste_global_group_rows": turn_waste_global_group_rows,
-        "turn_waste_joined_failed_rows": turn_waste_joined_failed_rows,
         "search_bottleneck": search_bottleneck,
         "search_depth": search_depth_curve,
         "reasoning_density": reasoning_density_curve,
@@ -4094,21 +3976,9 @@ def run_analysis(
 def main() -> None:
     args = parse_args()
     base_results_dir = args.base_results_dir or _default_base_results_dir(args.results_dir)
-    if args.no_turn_waste:
-        turn_waste_grouped_dir: Optional[str] = None
-    elif args.turn_waste_grouped_dir:
-        turn_waste_grouped_dir = args.turn_waste_grouped_dir
-    else:
-        inferred = _default_turn_waste_grouped_dir(args.results_dir)
-        if inferred and Path(inferred).exists():
-            turn_waste_grouped_dir = inferred
-        else:
-            print(
-                "No grouped turn-waste dir available "
-                f"(inferred={inferred!r}); skipping turn_waste_* outputs. "
-                "Pass --turn-waste-grouped-dir <path> to enable, or --no-turn-waste to silence."
-            )
-            turn_waste_grouped_dir = None
+    if args.turn_waste_grouped_dir and not args.no_turn_waste:
+        print("Ignoring --turn-waste-grouped-dir because turn-waste analysis was removed.")
+    turn_waste_grouped_dir: Optional[str] = None
     run_analysis(
         results_dir=args.results_dir,
         base_results_dir=base_results_dir,

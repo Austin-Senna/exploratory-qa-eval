@@ -158,8 +158,18 @@ def main() -> None:
     parser.add_argument("--output-dir", default="analysis_results")
     args = parser.parse_args()
 
-    from analysis.compute_em import load_results
-    records = load_results(args.results_dir)
+    records = []
+    for path in Path(args.results_dir).glob("*/*/agent_results.jsonl"):
+        condition = path.parent.parent.name
+        model = path.parent.name
+        with path.open() as handle:
+            for line in handle:
+                if not line.strip():
+                    continue
+                record = json.loads(line)
+                record.setdefault("condition", condition)
+                record.setdefault("model_label", model)
+                records.append(record)
 
     if not records:
         print("No records found. Skipping tool error analysis.")

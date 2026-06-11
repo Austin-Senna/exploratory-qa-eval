@@ -109,8 +109,6 @@ def _benchmark_defaults(benchmark: str) -> BenchmarkDefaults:
 def _selected_existing_figures(benchmark: str) -> list[str]:
     defaults = _benchmark_defaults(benchmark)
     return [
-        "fig05_turn_waste_groups_by_model.pdf",
-        "fig05b_turn_waste_groups_by_condition.pdf",
         "fig06_answer_failure_groups_by_model.pdf",
         "fig06b_answer_failure_groups_by_condition.pdf",
         defaults.fig21b_name,
@@ -494,6 +492,12 @@ def export_paper_figures(
 
 AGENT_ANALYSIS_EXPORT_SUFFIXES = {".csv", ".json", ".pdf", ".md"}
 AGENT_ANALYSIS_SKIP_DIRS = {"tmp", "logs", "log-kramabench", "__pycache__"}
+AGENT_ANALYSIS_EXPORT_DIRS = {
+    "follow_plan_analysis",
+    "plan_default_analysis",
+    "trajectory_ideal_context_analysis",
+    "trajectory_pair_analysis",
+}
 
 
 def _is_agent_analysis_export(path: Path, root: Path) -> bool:
@@ -502,6 +506,8 @@ def _is_agent_analysis_export(path: Path, root: Path) -> bool:
     if path.suffix not in AGENT_ANALYSIS_EXPORT_SUFFIXES:
         return False
     rel_parts = path.relative_to(root).parts
+    if not rel_parts or rel_parts[0] not in AGENT_ANALYSIS_EXPORT_DIRS:
+        return False
     if any(part in AGENT_ANALYSIS_SKIP_DIRS for part in rel_parts[:-1]):
         return False
     if path.suffix == ".json" and path.name.endswith("_journal.json"):
@@ -541,7 +547,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--model-filter", default=None)
     parser.add_argument("--paper-dir", default="sana_framework_paper/figures")
     parser.add_argument("--mirror-dir", default="paper_figures")
-    parser.add_argument("--agent-analysis-dir", default="agent_analysis")
+    parser.add_argument("--agent-analysis-dir", default="analysis")
     return parser.parse_args()
 
 
@@ -577,19 +583,10 @@ def ensure_analysis_outputs(config: GeneratorConfig) -> None:
         return
 
     print(f"Running semantic mode analysis for {config.benchmark}...")
-    turn_waste_grouped_dir = None
-    if config.turn_waste_grouped_dir.exists() and _turn_waste_scope_complete(
-        config.results_dir,
-        config.turn_waste_grouped_dir,
-        config.model_filter,
-    ):
-        turn_waste_grouped_dir = str(config.turn_waste_grouped_dir)
-    if turn_waste_grouped_dir is None:
-        print(f"Grouped turn-waste scope incomplete; skipping turn-waste join: {config.turn_waste_grouped_dir}")
     run_analysis(
         results_dir=str(config.results_dir),
         base_results_dir=str(config.base_results_dir),
-        turn_waste_grouped_dir=turn_waste_grouped_dir,
+        turn_waste_grouped_dir=None,
         traces_dir=str(config.traces_dir),
         tasks_dir=str(config.tasks_dir),
         output_dir=str(config.analysis_dir),

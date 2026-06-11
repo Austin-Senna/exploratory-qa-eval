@@ -10,13 +10,8 @@ Usage:
 """
 import argparse
 import json
-import sys
 from collections import defaultdict
 from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).parent.parent))
-
-from analysis.compute_em import load_results, _count_search_calls
 
 _BINS = [
     ("1", lambda n: n == 1),
@@ -32,6 +27,18 @@ def _assign_bin(search_calls: int) -> str:
         if pred(search_calls):
             return label
     return "11-30"
+
+
+def _count_search_calls(record: dict) -> int:
+    total = 0
+    for tool in record.get("tool_counts", []) or []:
+        name = str(tool.get("tool", ""))
+        if name.startswith("search"):
+            try:
+                total += int(tool.get("call_count", 0) or 0)
+            except (TypeError, ValueError):
+                continue
+    return total
 
 
 def compute_search_depth_curve(records: list[dict]) -> dict:
@@ -69,7 +76,18 @@ def main() -> None:
     parser.add_argument("--results-dir", default="results")
     args = parser.parse_args()
 
-    records = load_results(args.results_dir)
+    records = []
+    for path in Path(args.results_dir).glob("*/*/agent_results.jsonl"):
+        condition = path.parent.parent.name
+        model = path.parent.name
+        with path.open() as handle:
+            for line in handle:
+                if not line.strip():
+                    continue
+                record = json.loads(line)
+                record.setdefault("condition", condition)
+                record.setdefault("model_label", model)
+                records.append(record)
     if not records:
         print(f"No agent_results.jsonl files found under {args.results_dir}")
         return

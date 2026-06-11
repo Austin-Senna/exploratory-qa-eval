@@ -8,6 +8,8 @@ D_acc: access gold recall per task = |read_gold ∩ gold| / |gold|
 Usage:
     python analysis/discovery_metrics.py [--traces-dir results/traces] [--tasks-dir tasks_mini]
 """
+from __future__ import annotations
+
 import argparse
 import json
 from collections import defaultdict
