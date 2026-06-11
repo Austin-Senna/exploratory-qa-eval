@@ -8,9 +8,9 @@
     "datagov/kramabench-environment-hard-17/files/water-body-testing-2006.csv"
   ],
   "reasoning_chain_text": [
-    "1. Chatham's wettest summer from 2002 through 2020 is [computed value] after median imputation and summing June, July, and August precipitation.",
-    "2. In the [computed value] beach testing records, Bucks Creek Beach has 9 yes violations among 19 total samples.",
-    "3. The exceedance percentage is 9 divided by 19 times 100, rounded to [computed value]."
+    "1. For Chatham, impute missing monthly precipitation values with month medians and identify the wettest June-through-August summer.",
+    "2. In the water-body testing records for that wettest summer, count Bucks Creek Beach samples and samples marked as violations.",
+    "3. Convert the violation count over the total sample count to a percentage and round to two decimal places."
   ],
   "original_final_question": "What is the seasonal exceedance rate (in percentage, to 2 decimal places) of Chatham's Bucks Creek Beach in the summer (June, July, August) with the most rainfall in its area? Impute missing values with median of the month in non-missing years. Write your answer as [ANSWER].",
   "original_reasoning_chain": [

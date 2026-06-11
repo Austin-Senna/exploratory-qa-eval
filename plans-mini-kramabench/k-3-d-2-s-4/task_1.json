@@ -9,9 +9,10 @@
     "datagov/kramabench-environment-hard-10/files/wollaston_beach_datasheet.csv"
   ],
   "reasoning_chain_text": [
-    "1. Normalize the Boston Harbor beach list and identify communities with more than ninety percent environmental-justice population share.",
-    "2. Filter 2023 marine beach testing records to beaches that are both in those communities and on the Boston Harbor list.",
-    "3. For the remaining beach records, apply the Enterococcus tag rules and compute the Pearson correlation between three-day rainfall and Enterococcus levels, rounded to three decimals."
+    "1. Normalize the Boston Harbor beach list.",
+    "2. Identify communities with more than ninety percent environmental-justice population share.",
+    "3. Filter 2023 marine beach testing records, then intersect beaches in those communities with the Boston Harbor list.",
+    "4. For the qualifying beach records, apply the Enterococcus tag rules and correlate three-day rainfall with Enterococcus levels."
   ],
   "original_final_question": "For Boston Harbor beaches located in communities with more than 90% environmental justice (EJ) populations, what is the Pearson correlation (to 3 decimal places) between rainfall in the past 3 days and Enterococcus levels? Estimate Enterococcus levels labeled as less than x as x/2, and those labeled as greater than x as x. Write your answer as [ANSWER].",
   "original_reasoning_chain": [

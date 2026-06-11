@@ -11,9 +11,10 @@
     "datagov/kramabench-environment-hard-20/files/water-body-testing-2015.csv"
   ],
   "reasoning_chain_text": [
-    "1. Compute 2015 summer rainfall totals for the relevant cities from their precipitation station files.",
-    "2. Select the city with the lowest June-through-August rainfall total.",
-    "3. For that city, rank beaches by their 2015 violation rate and return the three highest-rate beaches."
+    "1. Compute each candidate city's 2015 June-through-August rainfall total from the precipitation station files.",
+    "2. Compare the candidate-city summer rainfall totals and select the city with the lowest total.",
+    "3. Filter the 2015 beach testing records to beaches for the selected city.",
+    "4. Rank that city's beaches by violation rate and return the three highest-rate beaches."
   ],
   "original_final_question": "In 2015, what are the three most polluted beaches of the city that had the least rainfall in the summer months June, July, and August?. Write your answer as [ANSWER].",
   "original_reasoning_chain": [

@@ -7,8 +7,8 @@
     "datagov/kramabench-biomedical-hard-3/files/1-s2.0-S0092867420301070-mmc1.xlsx"
   ],
   "reasoning_chain_text": [
-    "1. The APM subtype table shows patient identifier [computed value] has the lowest APP-Z score.",
-    "2. The clinical metadata lists the age for the non-excluded endometrioid patient identified in the prior step."
+    "1. Read patient APP-Z scores from the APM subtype table.",
+    "2. Use the clinical metadata to restrict to non-excluded endometrioid or serous patients, select the restricted patient with the lowest APP-Z score, and return that patient's age."
   ],
   "original_final_question": "What is the age of the non-excluded endometrioid or serous patient whose APP-Z score is the lowest? Write your answer as [ANSWER].",
   "original_reasoning_chain": [

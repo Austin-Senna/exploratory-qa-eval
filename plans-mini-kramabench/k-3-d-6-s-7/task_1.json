@@ -14,8 +14,13 @@
   ],
   "reasoning_chain_text": [
     "1. Read the New England state list.",
-    "2. Read the metropolitan-area identity-theft report tables for each New England state.",
-    "3. Combine the metropolitan-area rows, sort by report count, remove duplicate metropolitan areas, and return the five highest-report metropolitan areas."
+    "2. Read the metropolitan-area identity-theft report table for the first New England state.",
+    "3. Read the metropolitan-area identity-theft report table for the second New England state.",
+    "4. Read the metropolitan-area identity-theft report table for the third New England state.",
+    "5. Read the metropolitan-area identity-theft report table for the fourth New England state.",
+    "6. Read the metropolitan-area identity-theft report table for the fifth New England state.",
+    "7. Read the metropolitan-area identity-theft report table for the sixth New England state.",
+    "8. Combine the metropolitan-area rows, sort by report count, remove duplicate metropolitan areas, and return the five highest-report metropolitan areas."
   ],
   "original_final_question": "What are the top 5 distinct Metropolitan areas in New England that have the most Identity Theft reports in 2024? Write your answer as [ANSWER].",
   "original_reasoning_chain": [

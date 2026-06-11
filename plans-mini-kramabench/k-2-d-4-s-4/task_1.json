@@ -10,11 +10,11 @@
     "datagov/kramabench-environment-easy-5/files/monthly_precipitations_ashburnham.csv"
   ],
   "reasoning_chain_text": [
-    "1. Boston's June-through-August 2020 rainfall total is [computed value].",
-    "2. Chatham's June-through-August 2020 rainfall total is [computed value].",
-    "3. Amherst's June-through-August 2020 rainfall total is [computed value].",
-    "4. Ashburnham's June-through-August 2020 rainfall total is [computed value].",
-    "5. Ashburnham has the largest total rainfall among the four regions."
+    "1. Calculate Boston's total rainfall across June, July, and August in 2020.",
+    "2. Calculate Chatham's total rainfall across June, July, and August in 2020.",
+    "3. Calculate Amherst's total rainfall across June, July, and August in 2020.",
+    "4. Calculate Ashburnham's total rainfall across June, July, and August in 2020.",
+    "5. Compare the four summer rainfall totals and return the region with the largest total."
   ],
   "original_final_question": "Among Boston, Chatham, Amherst, and Ashburnham, which region had the largest total rainfall across June, July, and August in 2020? Write your answer as [ANSWER].",
   "original_reasoning_chain": [

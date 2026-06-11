@@ -10,8 +10,11 @@
     "datagov/kramabench-environment-hard-15/files/water-body-testing-2020.csv"
   ],
   "reasoning_chain_text": [
-    "1. : For each year from 2020 through 2023, filter to freshwater beach testing records, normalize beach names by removing sampling-point suffixes after '@', restrict to beaches present in all four years, and identify the highest annual exceedance-rate beach or beaches.",
-    "2. Recompute annual exceedance rates for all common freshwater beaches, average each beach's four annual rates, and select the beach with the highest average."
+    "1. For 2020, filter to freshwater beach testing records, normalize beach names, and compute each beach's annual exceedance rate.",
+    "2. For 2021, apply the same freshwater beach filtering, name normalization, and annual exceedance-rate calculation.",
+    "3. For 2022, apply the same freshwater beach filtering, name normalization, and annual exceedance-rate calculation.",
+    "4. For 2023, apply the same freshwater beach filtering, name normalization, and annual exceedance-rate calculation.",
+    "5. Keep beaches measured in all four years, average each beach's annual exceedance rates, and return the beach with the highest average."
   ],
   "original_final_question": "Which fresh-water beach is the most polluted since 2020, inclusive? Most polluted means the highest average annual exceedance rate across 2020, 2021, 2022, and 2023, considering only beaches measured in every one of those years. Write your answer as [ANSWER].",
   "original_reasoning_chain": [

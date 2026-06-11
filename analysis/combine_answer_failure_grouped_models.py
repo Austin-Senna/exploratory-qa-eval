@@ -34,33 +34,50 @@ MODEL_COLORS = {
     "gpt-5.4-nano": "#F58518",
 }
 GROUP_COLORS = {
-    "Source/dataset errors": "#4C78A8",
-    "Scope/filter errors": "#B279A2",
-    "Computation/aggregation errors": "#9D755D",
-    "Incomplete evidence": "#72B7B2",
-    "Turn-waste loops": "#F58518",
-    "Extraction/parsing errors": "#ECA82C",
-    "Answer/finalization failures": "#54A24B",
-    "Tool/data blockers": "#E45756",
-    "Task interpretation / planning": "#8E6C8A",
-    "Evaluation/gold issues": "#7F7F7F",
-    "Ungroundable": "#BAB0AC",
-    "Other/unclear": "#7F7F7F",
+    "Task/planning failures": "#7A5C7E",
+    "Wrong source target failures": "#4E79A7",
+    "Execution/computation failures": "#9C755F",
+    "Incomplete evidence failures": "#E15759",
+    "Turn-waste failures": "#F28E2B",
+    "Finalization failures": "#59A14F",
+    "Tool blocker failures": "#76B7B2",
 }
 PREFERRED_GROUP_ORDER = [
-    "Task interpretation / planning",
-    "Source/dataset errors",
-    "Scope/filter errors",
-    "Computation/aggregation errors",
-    "Incomplete evidence",
-    "Turn-waste loops",
-    "Extraction/parsing errors",
-    "Answer/finalization failures",
-    "Tool/data blockers",
-    "Evaluation/gold issues",
-    "Ungroundable",
-    "Other/unclear",
+    "Task/planning failures",
+    "Wrong source target failures",
+    "Execution/computation failures",
+    "Incomplete evidence failures",
+    "Turn-waste failures",
+    "Finalization failures",
+    "Tool blocker failures",
 ]
+MODEL_GROUP_TITLE_FONTSIZE = 22.0
+MODEL_GROUP_AXIS_FONTSIZE = 17.0
+MODEL_GROUP_LABEL_FONTSIZE = 16.0
+MODEL_GROUP_TICK_FONTSIZE = 15.0
+MODEL_GROUP_VALUE_FONTSIZE = 15.0
+MODEL_GROUP_LEGEND_FONTSIZE = 15.0
+CONDITION_FIGURE_BAR_LABEL_FONTSIZE = 14.0
+CONDITION_FIGURE_TOTAL_FONTSIZE = 14.5
+CONDITION_FIGURE_MODEL_LABEL_FONTSIZE = 14.0
+CONDITION_FIGURE_CONDITION_LABEL_FONTSIZE = 17.0
+CONDITION_FIGURE_YLABEL_FONTSIZE = 17.0
+CONDITION_FIGURE_YTICK_FONTSIZE = 15.0
+CONDITION_FIGURE_LEGEND_FONTSIZE = 14.0
+CONDITION_FIGURE_LEGEND_COLUMNS = 2
+CONDITION_FIGURE_BAR_WIDTH = 0.78
+CONDITION_FIGURE_SEGMENT_LABEL_MIN_FRACTION = 0.055
+CONDITION_FIGURE_YMAX = 260
+CONDITION_FIGURE_LEGEND_Y_ANCHOR = 0.925
+CONDITION_FIGURE_LEGEND_LABELS = {
+    "Task/planning failures": "Task/planning",
+    "Wrong source target failures": "Wrong source target",
+    "Execution/computation failures": "Execution/computation",
+    "Incomplete evidence failures": "Incomplete evidence",
+    "Turn-waste failures": "Turn-waste",
+    "Finalization failures": "Finalization",
+    "Tool blocker failures": "Tool blocker",
+}
 CONDITION_FIGURE_ORDER = [
     ("No Plan", "search_i_results_i_plann_computei_k5_skills_off"),
     ("Standard Plan", "search_i_results_i_pland_computei_k5_skills_off"),
@@ -68,6 +85,7 @@ CONDITION_FIGURE_ORDER = [
     ("Pneuma Hybrid", "search_d_results_i_plani_computei_k5_skills_off"),
     ("Standard Computation", "search_i_results_i_plani_k5_skills_off"),
     ("Ideal", "search_i_results_i_plani_computei_k5_skills_off"),
+    ("Preloaded", "search_p_results_i_plani_computei_k5_skills_off"),
 ]
 CONDITION_FIGURE_MODEL_ORDER = ["openai_gpt-5.4-nano", "openai_gpt-5-mini", "gpt-5.4-nano", "gpt-5-mini"]
 CONDITION_FIGURE_MODEL_LABELS = {
@@ -79,13 +97,12 @@ CONDITION_FIGURE_MODEL_LABELS = {
 CONDITION_FIGURE_LABELS = {
     "No Plan": "No\nPlan",
     "Standard Plan": "Standard\nPlan",
-    "BM25": "BM25",
-    "Pneuma Hybrid": "Pneuma\nHybrid",
-    "Standard Computation": "Standard\nComputation",
+    "BM25": "BM25\nSearch",
+    "Pneuma Hybrid": "Pneuma\nSearch",
+    "Standard Computation": "Standard\nData An.",
     "Ideal": "Ideal",
+    "Preloaded": "Preloaded\nSources",
 }
-
-
 @dataclass(frozen=True)
 class SourceFile:
     path: Path
@@ -240,7 +257,7 @@ def write_model_group_figure(path: Path, rows: list[dict]) -> bool:
     y_positions = list(range(len(ordered_groups)))
     bar_height = 0.34 if len(ordered_models) <= 2 else max(0.18, 0.72 / max(1, len(ordered_models)))
     max_count = max(max(counter.values(), default=0) for counter in counts_by_group_model.values())
-    fig, ax = plt.subplots(figsize=(10.5, max(3.4, 0.72 * len(ordered_groups) + 1.4)))
+    fig, ax = plt.subplots(figsize=(11.2, max(4.4, 0.88 * len(ordered_groups) + 1.8)))
 
     for model_index, model in enumerate(ordered_models):
         offset = (model_index - (len(ordered_models) - 1) / 2) * bar_height
@@ -261,17 +278,18 @@ def write_model_group_figure(path: Path, rows: list[dict]) -> bool:
                 str(value),
                 ha="left",
                 va="center",
-                fontsize=8,
+                fontsize=MODEL_GROUP_VALUE_FONTSIZE,
             )
 
     ax.set_yticks(y_positions)
-    ax.set_yticklabels(ordered_groups, fontsize=9)
+    ax.set_yticklabels(ordered_groups, fontsize=MODEL_GROUP_LABEL_FONTSIZE)
     ax.invert_yaxis()
-    ax.set_xlabel("Answer-failure events")
-    ax.set_title("Answer-Failure Groups by Model")
+    ax.set_xlabel("Answer-failure events", fontsize=MODEL_GROUP_AXIS_FONTSIZE)
+    ax.set_title("Answer-Failure Groups by Model", fontsize=MODEL_GROUP_TITLE_FONTSIZE, pad=10)
     ax.grid(axis="x", alpha=0.22, linestyle="--", linewidth=0.7)
     ax.set_xlim(0, max(1, max_count + max(4, max_count * 0.16)))
-    ax.legend(loc="lower right", frameon=True, framealpha=0.95, fontsize=9)
+    ax.tick_params(axis="x", labelsize=MODEL_GROUP_TICK_FONTSIZE)
+    ax.legend(loc="upper right", frameon=True, framealpha=0.95, fontsize=MODEL_GROUP_LEGEND_FONTSIZE)
     fig.tight_layout()
     path.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(path)
@@ -346,6 +364,7 @@ def write_condition_group_figure(path: Path, rows: list[dict]) -> bool:
         return False
 
     gap = 1.55
+    model_step = 1.0
     x_positions: list[float] = []
     current_x = 0.0
     previous_variant = None
@@ -353,7 +372,7 @@ def write_condition_group_figure(path: Path, rows: list[dict]) -> bool:
         if previous_variant is not None and variant != previous_variant:
             current_x += gap
         x_positions.append(current_x)
-        current_x += 1.0
+        current_x += model_step
         previous_variant = variant
 
     totals = [
@@ -361,7 +380,8 @@ def write_condition_group_figure(path: Path, rows: list[dict]) -> bool:
         for _, variant, model in condition_models
     ]
     ymax = max(totals, default=0)
-    fig, ax = plt.subplots(figsize=(15.8, 7.4))
+    ylimit = max(1, CONDITION_FIGURE_YMAX)
+    fig, ax = plt.subplots(figsize=(14.2, 7.2))
     bottoms = [0 for _ in condition_models]
 
     for group_name in ordered_groups:
@@ -370,30 +390,60 @@ def write_condition_group_figure(path: Path, rows: list[dict]) -> bool:
             for _, variant, model in condition_models
         ]
         color = GROUP_COLORS.get(group_name, "#7F7F7F")
-        bars = ax.bar(x_positions, values, bottom=bottoms, color=color, label=group_name, width=0.74)
+        bars = ax.bar(
+            x_positions,
+            values,
+            bottom=bottoms,
+            color=color,
+            label=CONDITION_FIGURE_LEGEND_LABELS.get(group_name, group_name),
+            width=CONDITION_FIGURE_BAR_WIDTH,
+        )
         label_color = _label_text_color(color)
         for bar, value, bottom in zip(bars, values, bottoms):
             if value <= 0:
                 continue
-            if value >= max(2, ymax * 0.08):
+            if value >= max(2, ymax * CONDITION_FIGURE_SEGMENT_LABEL_MIN_FRACTION):
                 ax.text(
                     bar.get_x() + bar.get_width() / 2,
                     bottom + value / 2,
                     str(value),
                     ha="center",
                     va="center",
-                    fontsize=12,
+                    fontsize=CONDITION_FIGURE_BAR_LABEL_FONTSIZE,
+                    fontweight="medium",
                     color=label_color,
                 )
         bottoms = [bottom + value for bottom, value in zip(bottoms, values)]
 
-    for x_pos, total in zip(x_positions, totals):
-        ax.text(x_pos, total + max(0.25, ymax * 0.025), str(total), ha="center", va="bottom", fontsize=13)
+    run_ids: dict[tuple[str, str], set[str]] = defaultdict(set)
+    for row in rows:
+        run_ids[(str(row.get("mode_variant", "")), row["model_variant"])].add(str(row.get("task_id", "")))
+    for x_pos, total, (_, variant, model) in zip(x_positions, totals, condition_models):
+        n_runs = len(run_ids.get((variant, model), set()))
+        base_y = min(ylimit - 4.0, total + max(0.25, ylimit * 0.025))
+        ax.text(
+            x_pos,
+            base_y,
+            str(total),
+            ha="center",
+            va="bottom",
+            fontsize=CONDITION_FIGURE_TOTAL_FONTSIZE,
+            fontweight="medium",
+        )
+        ax.text(
+            x_pos,
+            base_y + ylimit * 0.052,
+            f"n={n_runs}",
+            ha="center",
+            va="bottom",
+            fontsize=CONDITION_FIGURE_TOTAL_FONTSIZE - 2.0,
+            color="#555555",
+        )
 
     ax.set_xticks(x_positions)
     ax.set_xticklabels(
         [CONDITION_FIGURE_MODEL_LABELS.get(model, pretty_model(model).replace("gpt-", "gpt\n")) for _, _, model in condition_models],
-        fontsize=12,
+        fontsize=CONDITION_FIGURE_MODEL_LABEL_FONTSIZE,
     )
     for label, variant in active_conditions:
         variant_positions = [x for x, (_, observed_variant, _) in zip(x_positions, condition_models) if observed_variant == variant]
@@ -406,15 +456,22 @@ def write_condition_group_figure(path: Path, rows: list[dict]) -> bool:
             CONDITION_FIGURE_LABELS.get(label, label),
             ha="center",
             va="top",
-            fontsize=15,
+            fontsize=CONDITION_FIGURE_CONDITION_LABEL_FONTSIZE,
             transform=ax.get_xaxis_transform(),
         )
-    ax.set_ylabel("Answer-failure events", fontsize=15)
-    ax.set_title("Answer-Failure Groups by SANA Condition and Model", fontsize=20, pad=12)
+    ax.set_ylabel("Answer-failure events", fontsize=CONDITION_FIGURE_YLABEL_FONTSIZE)
     ax.grid(axis="y", alpha=0.22, linestyle="--", linewidth=0.7)
-    ax.set_ylim(0, max(1, ymax + max(3, ymax * 0.18)))
-    ax.tick_params(axis="y", labelsize=13)
-    ax.legend(loc="upper right", frameon=True, framealpha=0.94, fontsize=12)
+    ax.set_ylim(0, ylimit)
+    ax.tick_params(axis="y", labelsize=CONDITION_FIGURE_YTICK_FONTSIZE)
+    ax.legend(
+        loc="upper right",
+        frameon=True,
+        framealpha=0.94,
+        fontsize=CONDITION_FIGURE_LEGEND_FONTSIZE,
+        ncol=CONDITION_FIGURE_LEGEND_COLUMNS,
+        columnspacing=1.1,
+        handlelength=1.7,
+    )
     fig.tight_layout(rect=(0, 0.085, 1, 1))
     path.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(path, bbox_inches="tight", pad_inches=0.04)

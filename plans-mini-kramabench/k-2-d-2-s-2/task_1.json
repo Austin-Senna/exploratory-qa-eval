@@ -8,8 +8,8 @@
     "datagov/kramabench-astronomy-easy-6/files/space-track/58214_quiet.csv"
   ],
   "reasoning_chain_text": [
-    "1. Read and filter the May 1-4 quiet-period TLE records, derive semi-major axis from mean motion with the given Kepler-law constants, and compute the average km/day change across the valid endpoint records.",
-    "2. Read and filter the May 10-13 storm-period TLE records, then use the same semi-major-axis calculation and endpoint-rate method.",
+    "1. Read and filter the May 1-4 quiet-period TLE records, then compute the semi-major-axis change rate from mean motion using the provided constants.",
+    "2. Read and filter the May 10-13 storm-period TLE records, then compute the same semi-major-axis change rate.",
     "3. Report only the two rounded rates as an ordered pair in quiet-period, storm-period order."
   ],
   "original_final_question": "Using TLE data fetched for Starlink satellites 58214, calculate the average rate of semi-major axis decay (km/day) for the Gannon storm (May 10-13, 2024) and the preceding quiet period (May 1-4, 2024). Use earth's gravitational paremeter mu = 398600.4418 km^3/s^2, earth radius 6371.0 km, and Kepler's law as a rough estimate of the semi-major axis length. Report in a pair of numbers: (average_quiet_rate_km_day, average_storm_rate_km_day). The tle files are located in input/space-track/, with format <NORAD_ID>_storm.csv and <NORAD_ID>_quiet.csv. Write your answer as [ANSWER].",

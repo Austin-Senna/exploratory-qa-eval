@@ -1,0 +1,3335 @@
+# Diff Classification Using User Criteria
+
+Direction: `tasks_mini copy` -> `tasks_mini`.
+
+## Criteria
+
+- BIG: final answer changed, any node answer changed, or any `node.fact` has a substantive logic change after ignoring import/parser/access-noise changes.
+- SMALL: final question wording, top-level metadata, `reasoning_hops`/`reasoning_chain`, or dataset list ordering/metadata only, without node subquestion changes.
+- REVIEW: no answer or substantive fact change detected, but node subquestion/source/dependency/limit changed, so it may be wording-only or structural.
+
+## Counts
+
+- SMALL: 2
+- REVIEW: 6
+- BIG: 128
+
+## SMALL
+
+### `k-4-d-1/task_1.json`
+- Reason: datasets_used metadata changed; reasoning_hops changed/added; reasoning_chain changed/added; top-level keys differ: reasoning_chain
+
+### `k-4-d-1/task_5.json`
+- Reason: datasets_used metadata changed; reasoning_chain changed/added; top-level keys differ: reasoning_chain
+
+
+## REVIEW
+
+### `k-3-d-2/task_2.json`
+- Reason: no answer/substantive-fact change, but node subquestion/source/dependency/limit changed
+- Peek:
+```text
+node 2 fact changed only in ignored import/parser/access details
+node 3 fact changed only in ignored import/parser/access details
+node 4 fact changed only in ignored import/parser/access details
+```
+
+### `k-4-d-1/task_2.json`
+- Reason: no answer/substantive-fact change, but node subquestion/source/dependency/limit changed
+- Peek:
+```text
+node 2 subquestion: In 2019 arrest data, which Area Name has the most arrests where Charge Group Description is "Homicide"? -> In <node_1 answer> arrest data, which area has the most Homicide arrests?
+```
+
+### `k-4-d-1/task_3.json`
+- Reason: no answer/substantive-fact change, but node subquestion/source/dependency/limit changed
+- Peek:
+```text
+node 3 subquestion: In 2021, within borough <node_1 answer> and precinct <node_2 answer>, which non-null location-position catego... -> In the 2021 NYPD complaint data, within borough <node_1 answer> and precinct <node_2 answer>, which non-null ...
+```
+
+### `k-4-d-3/task_6.json`
+- Reason: no answer/substantive-fact change, but node subquestion/source/dependency/limit changed
+- Peek:
+```text
+question: Identify the Chicago city department that consistently ranked in the top five by total funding in the officia... -> Identify the Chicago city department that consistently ranked in the top five for ordinance appropriations (w...
+node 1 subquestion: Which department numbers were in the top 5 by total funding in the officially approved city budget in 2019? -> Which department numbers were in the top 5 by total ordinance appropriation in each year 2019-2021? (Filter f...
+```
+
+### `k-4-d-4/task_13.json`
+- Reason: no answer/substantive-fact change, but node subquestion/source/dependency/limit changed
+- Peek:
+```text
+question: Among Providence hospital properties, only one met the following criteria: it had an assessed value consisten... -> Among Providence hospital properties, only one met the following criteria: it had an assessed value consisten...
+node 5 subquestion: Among the Providence properties from <hop 1 answer>, which have owner names that match incorporated places in... -> Of the three properties in the intersection (City of Providence, RI Hospital, Brown University), which have o...
+```
+
+### `k-4-d-4/task_4.json`
+- Reason: no answer/substantive-fact change, but node subquestion/source/dependency/limit changed
+- Peek:
+```text
+question: Can you first find the terminus cities of Route 66. Among those cities, which one had higher binge drinking p... -> Can you first find the terminus cities of Route 66, among the citites, which one had higher binge drinking pr...
+node 1 subquestion: What are the terminus cities of Route 66? -> What are the terminus cities of the highway that was born in Springfield, Missouri?
+node 4 limit: 3 -> 
+node 5 limit: 3 -> 
+node 6 limit: 3 -> 
+```
+
+
+## BIG
+
+### `k-1-d-1/task_1.json`
+- Reason: one or more node facts have substantive logic changes
+- Peek:
+```text
+node 1 subquestion: For each year from 2016 through 2023, compute a growth-amplified overdose burden score as annual drug overdos... -> For each year from 2016 through 2023, compute a growth-amplified overdose burden score: annual drug overdose ...
+node 1 fact diff:
+@@ -2,19 +2,19 @@
+-df = pd.read_csv("datagov/vsrr-provisional-drug-overdose-death-counts/files/rows.txt", sep=None, engine="python")
+-df["Year"] = pd.to_numeric(df["Year"], errors="coerce")
+-df["Data Value"] = pd.to_numeric(df["Data Value"], errors="coerce")
++df = pd.read_csv('datagov/vsrr-provisional-drug-overdose-death-counts/files/rows.txt', low_memory=False)
++df['Year'] = pd.to_numeric(df['Year'], errors='coerce')
++df['Data Value'] = pd.to_numeric(df['Data Value'], errors='coerce')
+-    df["Indicator"].astype(str).str.strip().eq("Number of Drug Overdose Deaths")
+-    & df["Period"].astype(str).str.strip().eq("12 month-ending")
+```
+
+### `k-1-d-1/task_2.json`
+- Reason: one or more node facts have substantive logic changes
+- Peek:
+```text
+node 1 subquestion: For each year from 2005 through 2010, define Bonus Volatility-Adjusted Level (BVAL) as the draws' average New... -> For each year from 2005 through 2010, compute BVAL (Bonus Volatility-Adjusted Level) as the draws' average bo...
+node 1 fact diff:
+@@ -2,18 +2,11 @@
+-df = pd.read_csv("datagov/lottery-ny-lotto-winning-numbers-beginning-2001/files/rows.txt", sep=None, engine="python")
+-df["Draw Date"] = pd.to_datetime(df["Draw Date"], errors="coerce")
+-df["Bonus #"] = pd.to_numeric(df["Bonus #"], errors="coerce")
+-df["Year"] = df["Draw Date"].dt.year
++df = pd.read_csv('datagov/lottery-ny-lotto-winning-numbers-beginning-2001/files/rows.txt')
++df['Draw Date'] = pd.to_datetime(df['Draw Date'], errors='coerce')
++df['Bonus #'] = pd.to_numeric(df['Bonus #'], errors='coerce')
++df['year'] = df['Draw Date'].dt.year
+```
+
+### `k-1-d-1/task_3.json`
+- Reason: one or more node facts have substantive logic changes
+- Peek:
+```text
+question: Define a yearly Passenger Instability-Adjusted Load (PIAL) as annual total CTA bus passengers across all rout... -> Define a yearly Passenger Instability-Adjusted Load (PIAL) as: annual total CTA bus passengers across all rou...
+node 1 subquestion: Define a yearly Passenger Instability-Adjusted Load (PIAL) as annual total CTA bus passengers across all rout... -> For each year from 2006 through 2010, compute PIAL (Passenger Instability-Adjusted Load) as annual total CTA ...
+node 1 fact diff:
+@@ -2,13 +2,12 @@
+-df = pd.read_csv("datagov/cta-ridership-bus-routes-monthly-day-type-averages-totals/files/rows.txt", sep=None, engine="python")
+-df["Month_Beginning"] = pd.to_datetime(df["Month_Beginning"], errors="coerce")
+-df["MonthTotal"] = pd.to_numeric(df["MonthTotal"], errors="coerce")
+-df["Year"] = df["Month_Beginning"].dt.year
++df = pd.read_csv('datagov/cta-ridership-bus-routes-monthly-day-type-averages-totals/files/rows.txt')
++df['Month_Beginning'] = pd.to_datetime(df['Month_Beginning'], errors='coerce')
++df['MonthTotal'] = pd.to_numeric(df['MonthTotal'], errors='coerce')
++df['year'] = df['Month_Beginning'].dt.year
+```
+
+### `k-2-d-3/task_1.json`
+- Reason: one or more node answers changed; one or more node facts have substantive logic changes
+- Peek:
+```text
+node 1 subquestion: In 2022, which APD patrol sector had the most searches due to illegal items in plain view? -> In 2022, what is the highest number of incidents where an officer applies weapon across any NOPD divisions?
+node 1 answer: Edward -> 92
+node 1 source: datagov/apd-searches-by-type/files/rows.txt -> datagov/nopd-use-of-force-incidents/files/rows.txt
+node 2 answer: 92 -> Edward
+node 1 fact diff:
+@@ -3,16 +3,11 @@
++from botocore import UNSIGNED
++from botocore.config import Config
+-source = "datagov/apd-searches-by-type/files/rows.txt"
++source = "datagov/nopd-use-of-force-incidents/files/rows.txt"
+-obj = boto3.client("s3").get_object(Bucket=bucket, Key=source)
++obj = boto3.client("s3", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
+-year = pd.to_numeric(df["Occurred Year"], errors="coerce")
+-search_basis = df["TCOLE Search Based On"].astype(str).str.strip()
+node 2 fact diff:
+@@ -3,9 +3,18 @@
++from botocore import UNSIGNED
++from botocore.config import Config
+-source = "datagov/nopd-use-of-force-incidents/files/rows.txt"
++source = "datagov/apd-searches-by-type/files/rows.txt"
+-obj = boto3.client("s3").get_object(Bucket=bucket, Key=source)
++obj = boto3.client("s3", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
+-filtered = df[df["Date Occurred"].astype(str).str.contains("2022", na=False)]
+-counts = filtered["Division level"].astype(str).str.strip().replace("", pd.NA).dropna().value_counts()
+```
+
+### `k-3-d-1/task_1.json`
+- Reason: one or more node facts have substantive logic changes
+- Peek:
+```text
+node 2 subquestion: In 2023 NYPD complaint data, within borough <node_1 answer>, how many complaints were filed for the most comm... -> In 2023 NYPD complaint data, within borough <node_1 answer>, how many complaints were filed for the most comm...
+node 2 fact diff:
+@@ -1,22 +1,15 @@
+-import io
+-import boto3
++from collections import Counter
+-source = 'datagov/nypd-complaint-data-historic/files/rows.txt'
+-bucket = "lakeqa-yc4103-datalake"
+-obj = boto3.client("s3").get_object(Bucket=bucket, Key=source)
+-df = pd.read_csv(
+-    io.BytesIO(obj["Body"].read()),
+node 3 fact diff:
+@@ -1,23 +1,8 @@
+-import io
+-import boto3
+-try:
+-    from dotenv import load_dotenv
+-    load_dotenv()
+-except Exception:
+-    pass
++df = pd.read_csv('datagov/nypd-shooting-incident-data-historic/files/rows.txt', low_memory=False)
+```
+
+### `k-3-d-2/task_1.json`
+- Reason: one or more node answers changed; one or more node facts have substantive logic changes
+- Peek:
+```text
+question: I'm trying to estimate how many taser-use incidents per century Austin has using 2023 data. Find the Austin p... -> I'm trying to estimate how many taser-use incidents per century Austin has using 2023 data. Find the Austin P...
+node 1 subquestion: In 2023 APD searches-by-type data (excluding Sector = "Unknown"), which sector has the most searches? -> According to the Austin, Texas article, in what year was Austin founded?
+node 1 answer: Charlie -> 1839
+node 1 source: datagov/apd-searches-by-type/files/rows.txt -> wikipedia/Austin,_Texas/content.txt
+node 2 answer: 1 -> Charlie
+node 1 fact diff:
+@@ -1,19 +1 @@
+-import io
+-import pandas as pd
+-import boto3
+-from botocore import UNSIGNED
+-from botocore.config import Config
+-
+-source = "datagov/apd-searches-by-type/files/rows.txt"
+-bucket = "lakeqa-yc4103-datalake"
+node 2 fact diff:
+@@ -6,25 +6,13 @@
+-source = "datagov/apd-computer-aided-dispatch-incidents/files/rows.txt"
++source = "datagov/apd-searches-by-type/files/rows.txt"
+-csv_path = io.BytesIO(obj["Body"].read())
+-
+-node_1_answer = "Charlie"
+-
+-counts = {}
+-for chunk in pd.read_csv(
+```
+
+### `k-3-d-2/task_10.json`
+- Reason: one or more node facts have substantive logic changes
+- Peek:
+```text
+node 2 fact diff:
+@@ -2,20 +2,13 @@
+-import boto3
+-from botocore import UNSIGNED
+-from botocore.config import Config
+-source = "datagov/postsecondary-school-locations-current-5a74c/files/Postsecondary_School_Locations_Current_-3631565628879840217.txt"
+-bucket = "lakeqa-yc4103-datalake"
+-obj = boto3.client("s3", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
+-geo = json.loads(obj["Body"].read().decode("utf-8", errors="replace"))
++with open('datagov/postsecondary-school-locations-current-5a74c/files/Postsecondary_School_Locations_Current_-3631565628879840217.txt', 'r', encoding='utf-8') as f:
+node 3 fact diff:
+@@ -2,22 +2,12 @@
+-import boto3
+-from botocore import UNSIGNED
+-from botocore.config import Config
+-source = "datagov/public-school-locations-current-23297/files/data-oyCYxF.txt"
+-bucket = "lakeqa-yc4103-datalake"
+-obj = boto3.client("s3", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
+-geo = json.loads(obj["Body"].read().decode("utf-8", errors="replace"))
++with open('datagov/public-school-locations-current-23297/files/data-oyCYxF.txt', 'r', encoding='utf-8') as f:
+```
+
+### `k-3-d-2/task_11.json`
+- Reason: one or more node facts have substantive logic changes
+- Peek:
+```text
+node 1 fact diff:
+@@ -1,17 +1,9 @@
+-import io
+-import boto3
+-from botocore import UNSIGNED
+-from botocore.config import Config
+-source = "datagov/fy-2019-disability-pension-recipient-by-county/files/rows.txt"
+-bucket = "lakeqa-yc4103-datalake"
+-obj = boto3.client("s3", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
+-df = pd.read_csv(io.BytesIO(obj["Body"].read()), sep=",", engine="c", low_memory=False)
+node 2 fact diff:
+@@ -1,17 +1,9 @@
+-import io
+-import boto3
+-from botocore import UNSIGNED
+-from botocore.config import Config
+-source = "datagov/fy-2023-disability-compensation-recipients-by-county/files/rows.txt"
+-bucket = "lakeqa-yc4103-datalake"
+-obj = boto3.client("s3", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
+-df = pd.read_csv(io.BytesIO(obj["Body"].read()), sep=",", engine="c", low_memory=False)
+```
+
+### `k-3-d-2/task_12.json`
+- Reason: one or more node facts have substantive logic changes
+- Peek:
+```text
+node 1 fact diff:
+@@ -1,17 +1,9 @@
+-import io
+-import boto3
+-from botocore import UNSIGNED
+-from botocore.config import Config
+-source = "datagov/fy-2019-disability-pension-recipient-by-county/files/rows.txt"
+-bucket = "lakeqa-yc4103-datalake"
+-obj = boto3.client("s3", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
+-df = pd.read_csv(io.BytesIO(obj["Body"].read()), sep=",", engine="c", low_memory=False)
+node 2 fact diff:
+@@ -1,17 +1,9 @@
+-import io
+-import boto3
+-from botocore import UNSIGNED
+-from botocore.config import Config
+-source = "datagov/fy-2023-disability-compensation-recipients-by-county/files/rows.txt"
+-bucket = "lakeqa-yc4103-datalake"
+-obj = boto3.client("s3", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
+-df = pd.read_csv(io.BytesIO(obj["Body"].read()), sep=",", engine="c", low_memory=False)
+```
+
+### `k-3-d-2/task_3.json`
+- Reason: one or more node answers changed; one or more node facts have substantive logic changes
+- Peek:
+```text
+question: Can you find the NYC high school in district 10 that are in top 6 by high school's overall score from school ... -> Can you find the NYC high school in district 10 that are in top 6 by high school's overall score from school ...
+node 1 subquestion: Which NYC high schools in District 10 were in the top 6 by overall score in 2006-07, and what were their addi... -> Which NYC high schools in District 10 were in the top 6 by overall score in 2006-07?
+node 1 answer: {"BRONX HIGH SCHOOL OF SCIENCE": 1.0, "BRONX SCHOOL OF LAW AND FINANC... -> ["MARBLE HILL HIGH SCHOOL FOR INTERNATIONAL STUDIES", "HIGH SCHOOL OF...
+node 2 answer: {"BRONX HIGH SCHOOL FOR MEDICAL SCIENCE": 8.0, "BRONX HIGH SCHOOL OF ... -> ["MARBLE HILL HIGH SCHOOL FOR INTERNATIONAL STUDIES", "MARIE CURIE HI...
+node 1 fact diff:
+@@ -1,21 +1,10 @@
+-import io
+-import boto3
+-from botocore import UNSIGNED
+-from botocore.config import Config
+-source = "datagov/2006-2007-school-progress-report/files/rows.txt"
+-bucket = "lakeqa-yc4103-datalake"
+-obj = boto3.client("s3", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
+-df = pd.read_csv(io.BytesIO(obj["Body"].read()), sep=",", engine="c", low_memory=False)
+node 2 fact diff:
+@@ -1,21 +1,10 @@
+-import io
+-import boto3
+-from botocore import UNSIGNED
+-from botocore.config import Config
+-source = "datagov/2007-2008-school-progress-report/files/rows.txt"
+-bucket = "lakeqa-yc4103-datalake"
+-obj = boto3.client("s3", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
+-df = pd.read_csv(io.BytesIO(obj["Body"].read()), sep=",", engine="c", low_memory=False)
+```
+
+### `k-3-d-2/task_4.json`
+- Reason: one or more node facts have substantive logic changes
+- Peek:
+```text
+node 2 fact diff:
+@@ -2,18 +2,18 @@
+-import boto3
+-from botocore import UNSIGNED
+-from botocore.config import Config
+-source = "datagov/crime-incidents-in-2019/files/data.txt"
+-bucket = "lakeqa-yc4103-datalake"
+-obj = boto3.client("s3", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
+-geo = json.loads(obj["Body"].read().decode("utf-8", errors="replace"))
++with open('datagov/crime-incidents-in-2019/files/data.txt', 'r', encoding='utf-8') as f:
+node 3 fact diff:
+@@ -2,22 +2,11 @@
+-import boto3
+-from botocore import UNSIGNED
+-from botocore.config import Config
+-source = "datagov/crime-incidents-in-2020/files/data.txt"
+-bucket = "lakeqa-yc4103-datalake"
+-obj = boto3.client("s3", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
+-geo = json.loads(obj["Body"].read().decode("utf-8", errors="replace"))
++with open('datagov/crime-incidents-in-2020/files/data.txt', 'r', encoding='utf-8') as f:
+```
+
+### `k-3-d-2/task_5.json`
+- Reason: one or more node facts have substantive logic changes
+- Peek:
+```text
+node 2 fact diff:
+@@ -2,20 +2,13 @@
+-import boto3
+-from botocore import UNSIGNED
+-from botocore.config import Config
+-source = "datagov/postsecondary-school-locations-current-5a74c/files/Postsecondary_School_Locations_Current_-3631565628879840217.txt"
+-bucket = "lakeqa-yc4103-datalake"
+-obj = boto3.client("s3", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
+-geo = json.loads(obj["Body"].read().decode("utf-8", errors="replace"))
++with open('datagov/postsecondary-school-locations-current-5a74c/files/Postsecondary_School_Locations_Current_-3631565628879840217.txt', 'r', encoding='utf-8') as f:
+node 3 fact diff:
+@@ -2,22 +2,12 @@
+-import boto3
+-from botocore import UNSIGNED
+-from botocore.config import Config
+-source = "datagov/public-school-locations-current-23297/files/data-oyCYxF.txt"
+-bucket = "lakeqa-yc4103-datalake"
+-obj = boto3.client("s3", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
+-geo = json.loads(obj["Body"].read().decode("utf-8", errors="replace"))
++with open('datagov/public-school-locations-current-23297/files/data-oyCYxF.txt', 'r', encoding='utf-8') as f:
+```
+
+### `k-3-d-2/task_6.json`
+- Reason: one or more node facts have substantive logic changes
+- Peek:
+```text
+node 2 fact diff:
+@@ -2,20 +2,13 @@
+-import boto3
+-from botocore import UNSIGNED
+-from botocore.config import Config
+-source = "datagov/postsecondary-school-locations-current-5a74c/files/Postsecondary_School_Locations_Current_-3631565628879840217.txt"
+-bucket = "lakeqa-yc4103-datalake"
+-obj = boto3.client("s3", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
+-geo = json.loads(obj["Body"].read().decode("utf-8", errors="replace"))
++with open('datagov/postsecondary-school-locations-current-5a74c/files/Postsecondary_School_Locations_Current_-3631565628879840217.txt', 'r', encoding='utf-8') as f:
+node 3 fact diff:
+@@ -2,22 +2,12 @@
+-import boto3
+-from botocore import UNSIGNED
+-from botocore.config import Config
+-source = "datagov/school-district-office-locations-current-c8f9d/files/data-ghDEVP.txt"
+-bucket = "lakeqa-yc4103-datalake"
+-obj = boto3.client("s3", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
+-geo = json.loads(obj["Body"].read().decode("utf-8", errors="replace"))
++with open('datagov/school-district-office-locations-current-c8f9d/files/data-ghDEVP.txt', 'r', encoding='utf-8') as f:
+```
+
+### `k-3-d-2/task_7.json`
+- Reason: one or more node facts have substantive logic changes
+- Peek:
+```text
+node 2 fact diff:
+@@ -2,20 +2,13 @@
+-import boto3
+-from botocore import UNSIGNED
+-from botocore.config import Config
+-source = "datagov/school-district-office-locations-current-c8f9d/files/data-ghDEVP.txt"
+-bucket = "lakeqa-yc4103-datalake"
+-obj = boto3.client("s3", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
+-geo = json.loads(obj["Body"].read().decode("utf-8", errors="replace"))
++with open('datagov/school-district-office-locations-current-c8f9d/files/data-ghDEVP.txt', 'r', encoding='utf-8') as f:
+node 3 fact diff:
+@@ -2,22 +2,12 @@
+-import boto3
+-from botocore import UNSIGNED
+-from botocore.config import Config
+-source = "datagov/private-school-locations-current-f7d96/files/data-FGgJBu.txt"
+-bucket = "lakeqa-yc4103-datalake"
+-obj = boto3.client("s3", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
+-geo = json.loads(obj["Body"].read().decode("utf-8", errors="replace"))
++with open('datagov/private-school-locations-current-f7d96/files/data-FGgJBu.txt', 'r', encoding='utf-8') as f:
+```
+
+### `k-3-d-2/task_8.json`
+- Reason: one or more node facts have substantive logic changes
+- Peek:
+```text
+node 2 fact diff:
+@@ -2,20 +2,13 @@
+-import boto3
+-from botocore import UNSIGNED
+-from botocore.config import Config
+-source = "datagov/postsecondary-school-locations-current-5a74c/files/Postsecondary_School_Locations_Current_-3631565628879840217.txt"
+-bucket = "lakeqa-yc4103-datalake"
+-obj = boto3.client("s3", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
+-geo = json.loads(obj["Body"].read().decode("utf-8", errors="replace"))
++with open('datagov/postsecondary-school-locations-current-5a74c/files/Postsecondary_School_Locations_Current_-3631565628879840217.txt', 'r', encoding='utf-8') as f:
+node 3 fact diff:
+@@ -2,22 +2,12 @@
+-import boto3
+-from botocore import UNSIGNED
+-from botocore.config import Config
+-source = "datagov/private-school-locations-current-f7d96/files/data-FGgJBu.txt"
+-bucket = "lakeqa-yc4103-datalake"
+-obj = boto3.client("s3", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
+-geo = json.loads(obj["Body"].read().decode("utf-8", errors="replace"))
++with open('datagov/private-school-locations-current-f7d96/files/data-FGgJBu.txt', 'r', encoding='utf-8') as f:
+```
+
+### `k-3-d-2/task_9.json`
+- Reason: one or more node facts have substantive logic changes
+- Peek:
+```text
+node 2 fact diff:
+@@ -2,20 +2,13 @@
+-import boto3
+-from botocore import UNSIGNED
+-from botocore.config import Config
+-source = "datagov/private-school-locations-current-f7d96/files/data-FGgJBu.txt"
+-bucket = "lakeqa-yc4103-datalake"
+-obj = boto3.client("s3", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
+-geo = json.loads(obj["Body"].read().decode("utf-8", errors="replace"))
++with open('datagov/private-school-locations-current-f7d96/files/data-FGgJBu.txt', 'r', encoding='utf-8') as f:
+node 3 fact diff:
+@@ -2,22 +2,12 @@
+-import boto3
+-from botocore import UNSIGNED
+-from botocore.config import Config
+-source = "datagov/public-school-locations-current-23297/files/data-oyCYxF.txt"
+-bucket = "lakeqa-yc4103-datalake"
+-obj = boto3.client("s3", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
+-geo = json.loads(obj["Body"].read().decode("utf-8", errors="replace"))
++with open('datagov/public-school-locations-current-23297/files/data-oyCYxF.txt', 'r', encoding='utf-8') as f:
+```
+
+### `k-3-d-3/task_1.json`
+- Reason: one or more node facts have substantive logic changes
+- Peek:
+```text
+question: For the NYC high school that ranked in the top 7 by overall score in all three school years: 2006-07 and 2009... -> For the NYC high school that ranked in the top 7 based on the comprehensive ranking in 2006-07 and 2009-11, f...
+node 1 subquestion: Which high schools were in the top 7 by overall score in 2006-07? -> Which high schools ranked in the top 7 based on the comprehensive ranking in 2006-07?
+node 1 fact diff:
+@@ -1,36 +1,26 @@
+-import os
+-import io
+-import pandas as pd
+-import boto3
++import csv
+-source = "datagov/2006-2007-school-progress-report/files/rows.txt"
+-bucket = "lakeqa-yc4103-datalake"
+-local_path = source if os.path.exists(source) else "/tmp/k123_data_cache/" + source
+node 2 fact diff:
+@@ -1,36 +1,26 @@
+-import os
+-import io
+-import pandas as pd
+-import boto3
++import csv
+-source = "datagov/2009-2010-school-progress-report/files/rows.txt"
+-bucket = "lakeqa-yc4103-datalake"
+-local_path = source if os.path.exists(source) else "/tmp/k123_data_cache/" + source
+```
+
+### `k-3-d-3/task_2.json`
+- Reason: one or more node facts have substantive logic changes
+- Peek:
+```text
+question: Among the Chicago library branches Sulzer Regional Library, Edgewater, and Lincoln Belmont, which branch rank... -> Among Sulzer Regional Library, Edgewater, and Lincoln Belmont, which branch stayed in the top 5 for total vis...
+node 1 subquestion: Which branches were in the top 5 by YTD visitors in the given year? -> In 2019, which Chicago library branches were in the top 5 by total visitors?
+node 1 fact diff:
+@@ -1,19 +1,21 @@
+-import os
+-import io
+-import pandas as pd
+-import boto3
++import csv
++from collections import defaultdict
+-source = "datagov/libraries-2019-visitors-by-location/files/rows.txt"
+-bucket = "lakeqa-yc4103-datalake"
+node 2 fact diff:
+@@ -1,19 +1,21 @@
+-import os
+-import io
+-import pandas as pd
+-import boto3
++import csv
++from collections import defaultdict
+-source = "datagov/libraries-2020-visitors-by-location/files/rows.txt"
+-bucket = "lakeqa-yc4103-datalake"
+```
+
+### `k-3-d-3/task_3.json`
+- Reason: one or more node facts have substantive logic changes
+- Peek:
+```text
+node 4 subquestion: In which Manhattan neighborhood is <hop 1 answer> located? -> In which Manhattan neighborhood is <intersection of node_1, node_2, node_3: PS 77 Lower Lab School> located?
+node 1 depends_on:  -> []
+node 2 depends_on:  -> []
+node 3 depends_on:  -> []
+node 1 fact diff:
+@@ -1,38 +1,20 @@
+-import os
+-import io
+-import pandas as pd
+-import boto3
++import csv
+-source = "datagov/2010-2011-school-progress-report/files/rows.txt"
+-bucket = "lakeqa-yc4103-datalake"
+-local_path = source if os.path.exists(source) else "/tmp/k123_data_cache/" + source
+node 2 fact diff:
+@@ -1,38 +1,20 @@
+-import os
+-import io
+-import pandas as pd
+-import boto3
++import csv
+-source = "datagov/2011-2012-school-progress-report-all-schools/files/rows.txt"
+-bucket = "lakeqa-yc4103-datalake"
+-local_path = source if os.path.exists(source) else "/tmp/k123_data_cache/" + source
+```
+
+### `k-3-d-3/task_4.json`
+- Reason: one or more node facts have substantive logic changes
+- Peek:
+```text
+node 1 subquestion: In this fiscal year, which Texas counties were in the top 5 for Capital Outlay spending? -> In this fiscal year, which Texas counties were in the top 5 for Capital Outlay spending? (Filter for this nod...
+node 1 fact diff:
+@@ -1,20 +1,23 @@
+-import os
+-import io
+-import pandas as pd
+-import boto3
++import csv
++from collections import defaultdict
+-source = "datagov/texas-state-expenditures-by-county-2019/files/rows.txt"
+-bucket = "lakeqa-yc4103-datalake"
+node 2 fact diff:
+@@ -1,20 +1,23 @@
+-import os
+-import io
+-import pandas as pd
+-import boto3
++import csv
++from collections import defaultdict
+-source = "datagov/texas-state-expenditures-by-county-2020/files/rows.txt"
+-bucket = "lakeqa-yc4103-datalake"
+```
+
+### `k-3-d-3/task_5.json`
+- Reason: one or more node facts have substantive logic changes
+- Peek:
+```text
+node 1 subquestion: In 2019, among Harris, Travis, Dallas, and Bexar counties, which were in the overall top 5 for releases from ... -> In 2019, among Harris, Travis, Dallas, and Bexar counties, which were in the overall top 5 for releases from ...
+node 1 fact diff:
+@@ -1,27 +1,12 @@
+-import os
+-import io
+-import pandas as pd
+-import boto3
++import csv
++from collections import Counter
+-source = "datagov/texas-department-of-criminal-justice-releases-fy-2019/files/rows.txt"
+-bucket = "lakeqa-yc4103-datalake"
+node 2 fact diff:
+@@ -1,27 +1,12 @@
+-import os
+-import io
+-import pandas as pd
+-import boto3
++import csv
++from collections import Counter
+-source = "datagov/texas-department-of-criminal-justice-releases-fy-2020/files/rows.txt"
+-bucket = "lakeqa-yc4103-datalake"
+```
+
+### `k-3-d-3/task_6.json`
+- Reason: one or more node answers changed; one or more node facts have substantive logic changes
+- Peek:
+```text
+node 1 subquestion: Which agencies were in the top 20 for total January parking-violation fine amount in 2019? -> Which agencies were in the top 20 for total January parking-violation fine amount in 2019-2021? (Filter for t...
+node 6 answer: {"UNITED STATES CAPITOL POLICE": 30, "UNITED STATES PARK POLICE": 71,... -> UNITED STATES PARK POLICE
+node 1 fact diff:
+@@ -1,23 +1,20 @@
+-import os
+-import io
+-import pandas as pd
+-import boto3
++from collections import defaultdict
+-source = "datagov/parking-violations-issued-in-january-2019/files/data.txt"
+-bucket = "lakeqa-yc4103-datalake"
+-local_path = source if os.path.exists(source) else "/tmp/k123_data_cache/" + source
+node 2 fact diff:
+@@ -1,23 +1,20 @@
+-import os
+-import io
+-import pandas as pd
+-import boto3
++from collections import defaultdict
+-source = "datagov/parking-violations-issued-in-january-2020/files/data.txt"
+-bucket = "lakeqa-yc4103-datalake"
+-local_path = source if os.path.exists(source) else "/tmp/k123_data_cache/" + source
+```
+
+### `k-3-d-4/task_1.json`
+- Reason: one or more node answers changed; one or more node facts have substantive logic changes
+- Peek:
+```text
+question: I'm analyzing the DC Ward that had the lowest average crime count from 2018 to 2021. Find the neighborhoods i... -> I'm analyzing the DC Ward that had the lowest average crime count from 2018 to 2021. Find the county in Maryl...
+node 1 subquestion: Which DC Ward had the lowest average total crime count across 2018-2021? -> Which DC Ward had the lowest average total crime count across 2018-2021? (Filter for this node: 2018 file; gr...
+node id/count changed
+node 5 answer: Chevy Chase -> Chevy Chase, Friendship Heights
+node 6 answer: Chevy Chase, Maryland -> Montgomery County, Maryland
+node 1 fact diff:
+@@ -2,12 +2,11 @@
+-import boto3
+-from botocore import UNSIGNED
+-from botocore.client import Config
+-source = 'datagov/crime-incidents-in-2018/files/data.txt'
+-bucket = 'lakeqa-yc4103-datalake'
+-obj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
+-payload = json.loads(obj['Body'].read())
+-df = pd.DataFrame(feature['properties'] for feature in payload['features'])
+node 2 fact diff:
+@@ -2,12 +2,11 @@
+-import boto3
+-from botocore import UNSIGNED
+-from botocore.client import Config
+-source = 'datagov/crime-incidents-in-2019/files/data.txt'
+-bucket = 'lakeqa-yc4103-datalake'
+-obj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
+-payload = json.loads(obj['Body'].read())
+-df = pd.DataFrame(feature['properties'] for feature in payload['features'])
+```
+
+### `k-3-d-4/task_10.json`
+- Reason: one or more node facts have substantive logic changes
+- Peek:
+```text
+node 1 fact diff:
+@@ -1,14 +1,7 @@
+-import io
+-import boto3
+-from botocore import UNSIGNED
+-from botocore.client import Config
+-bucket = 'lakeqa-yc4103-datalake'
+-obj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
+-df = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)
+-state = df['State'].astype(str).str.strip()
+node 2 fact diff:
+@@ -1,14 +1,8 @@
+-import io
+-import boto3
+-from botocore import UNSIGNED
+-from botocore.client import Config
+-bucket = 'lakeqa-yc4103-datalake'
+-obj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
+-df = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)
+-state = df['State'].astype(str).str.strip()
+```
+
+### `k-3-d-4/task_2.json`
+- Reason: one or more node facts have substantive logic changes
+- Peek:
+```text
+node 1 subquestion: In 2018, which Texas counties were in the top 5 by average Capital Outlay expenditures? -> Which Texas counties were in the top 5 by average Capital Outlay expenditures across 2018-2021? (Filter for t...
+node 1 fact diff:
+@@ -1,21 +1,14 @@
+-import io
+-import boto3
+-from botocore import UNSIGNED
+-from botocore.client import Config
+-bucket = 'lakeqa-yc4103-datalake'
+-obj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
+-df = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)
+-fiscal_year = pd.to_numeric(df['Fiscal Year'], errors='coerce')
+node 2 fact diff:
+@@ -1,21 +1,14 @@
+-import io
+-import boto3
+-from botocore import UNSIGNED
+-from botocore.client import Config
+-bucket = 'lakeqa-yc4103-datalake'
+-obj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
+-df = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)
+-fiscal_year = pd.to_numeric(df['Fiscal Year'], errors='coerce')
+```
+
+### `k-3-d-4/task_3.json`
+- Reason: one or more node answers changed; one or more node facts have substantive logic changes
+- Peek:
+```text
+node 1 subquestion: Which Washington counties had Low-Income student enrollment percentage between 32-40% in the 2018-19 school y... -> Which Washington counties had Low-Income student enrollment percentage between 32-40% in every school year fr...
+node 8 answer: Whitman had population 47,973 -> Whitman had population 47,973 (lower than Kitsap's 275,611), county s...
+node 1 fact diff:
+@@ -1,26 +1,10 @@
+-import io
+-import boto3
+-from botocore.config import Config
+-from botocore import UNSIGNED
+-source = "datagov/report-card-enrollment-2018-19-school-year/files/rows.txt"
+-bucket = "lakeqa-yc4103-datalake"
+-s3 = boto3.client("s3", config=Config(signature_version=UNSIGNED))
+-obj = s3.get_object(Bucket=bucket, Key=source)
+node 2 fact diff:
+@@ -1,26 +1,10 @@
+-import io
+-import boto3
+-from botocore.config import Config
+-from botocore import UNSIGNED
+-source = "datagov/report-card-enrollment-2019-20-school-year/files/rows.txt"
+-bucket = "lakeqa-yc4103-datalake"
+-s3 = boto3.client("s3", config=Config(signature_version=UNSIGNED))
+-obj = s3.get_object(Bucket=bucket, Key=source)
+```
+
+### `k-3-d-4/task_4.json`
+- Reason: one or more node facts have substantive logic changes
+- Peek:
+```text
+node 1 fact diff:
+@@ -2,26 +2,12 @@
+-import boto3
+-from botocore.config import Config
+-from botocore import UNSIGNED
+-source = "datagov/public-school-locations-current-23297/files/data-oyCYxF.txt"
+-bucket = "lakeqa-yc4103-datalake"
+-s3 = boto3.client("s3", config=Config(signature_version=UNSIGNED))
+-obj = s3.get_object(Bucket=bucket, Key=source)
+-geo = json.loads(obj["Body"].read().decode("utf-8", errors="replace"))
+node 2 fact diff:
+@@ -2,25 +2,12 @@
+-import boto3
+-from botocore.config import Config
+-from botocore import UNSIGNED
+-source = "datagov/private-school-locations-current-f7d96/files/data-FGgJBu.txt"
+-bucket = "lakeqa-yc4103-datalake"
+-s3 = boto3.client("s3", config=Config(signature_version=UNSIGNED))
+-obj = s3.get_object(Bucket=bucket, Key=source)
+-geo = json.loads(obj["Body"].read().decode("utf-8", errors="replace"))
+```
+
+### `k-3-d-4/task_5.json`
+- Reason: one or more node answers changed; one or more node facts have substantive logic changes
+- Peek:
+```text
+question: Can you tell me which senior high school had a consistently top 3 number of violent/disruptive incident repor... -> Can you tell me which high school had a consistently top 3 number of violent/disruptive incident reported bet...
+node 1 subquestion: Which NYC senior high schools were in the top 3 by total VADIR incidents in 2010-11? -> Which NYC high schools were in the top 3 by total VADIR incidents in 2010-11?
+node id/count changed
+node 1 answer: ["Herbert H Lehman High School", "Susan E. Wagner High School", "Auto... -> ["Herbert H Lehman High School", "Jhs 13 Jackie Robinson", "Susan E. ...
+node 3 answer: ["Susan E. Wagner High School", "Herbert H Lehman High School", "Shee... -> ["Brooklyn Secondary School for Collaborative Studies", "Susan E. Wag...
+node 1 fact diff:
+@@ -1,19 +1,22 @@
+-import io
+-import boto3
+-from botocore import UNSIGNED
+-from botocore.client import Config
+-bucket = 'lakeqa-yc4103-datalake'
+-obj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
+-df = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)
+-dimension_cols = {'School year', 'School Year', 'County', 'District', 'School Name', 'BEDS Code', 'Grade Organization', 'Need/Resource Category', 'School Type', 'Enrollment'}
+node 2 fact diff:
+@@ -1,19 +1,22 @@
+-import io
+-import boto3
+-from botocore import UNSIGNED
+-from botocore.client import Config
+-bucket = 'lakeqa-yc4103-datalake'
+-obj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
+-df = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)
+-dimension_cols = {'School year', 'School Year', 'County', 'District', 'School Name', 'BEDS Code', 'Grade Organization', 'Need/Resource Category', 'School Type', 'Enrollment'}
+```
+
+### `k-3-d-4/task_6.json`
+- Reason: one or more node facts have substantive logic changes
+- Peek:
+```text
+node 1 fact diff:
+@@ -2,24 +2,12 @@
+-import boto3
+-from botocore.config import Config
+-from botocore import UNSIGNED
+-source = "datagov/public-school-locations-2018-19-42360/files/data-F2nGlG.txt"
+-bucket = "lakeqa-yc4103-datalake"
+-s3 = boto3.client("s3", config=Config(signature_version=UNSIGNED))
+-obj = s3.get_object(Bucket=bucket, Key=source)
+-geo = json.loads(obj["Body"].read().decode("utf-8", errors="replace"))
+node 2 fact diff:
+@@ -2,24 +2,12 @@
+-import boto3
+-from botocore.config import Config
+-from botocore import UNSIGNED
+-source = "datagov/private-school-locations-2017-18-f49f6/files/data-dqdQDP.txt"
+-bucket = "lakeqa-yc4103-datalake"
+-s3 = boto3.client("s3", config=Config(signature_version=UNSIGNED))
+-obj = s3.get_object(Bucket=bucket, Key=source)
+-geo = json.loads(obj["Body"].read().decode("utf-8", errors="replace"))
+```
+
+### `k-3-d-4/task_7.json`
+- Reason: one or more node answers changed; one or more node facts have substantive logic changes
+- Peek:
+```text
+question: Can you find the Manhattan neighborhood where the only NYC elementary school in District 3 that ranked in the... -> Can you find the Manhattan neighborhood where the only NYC elementary school in District 3 that ranked in the...
+node 6 subquestion: Which notable museums are in <node_5 answer: Upper West Side>? -> What are some notable structures that is a museum in <node_5 answer: Upper West Side>?
+node id/count changed
+node 1 depends_on:  -> []
+node 2 depends_on:  -> []
+node 1 fact diff:
+@@ -1,18 +1,12 @@
+-import io
+-import boto3
+-from botocore import UNSIGNED
+-from botocore.client import Config
+-bucket = 'lakeqa-yc4103-datalake'
+-obj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
+-df = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)
+-level_col = [col for col in df.columns if 'SCHOOL LEVEL' in col.upper()][0]
+node 2 fact diff:
+@@ -1,18 +1,12 @@
+-import io
+-import boto3
+-from botocore import UNSIGNED
+-from botocore.client import Config
+-bucket = 'lakeqa-yc4103-datalake'
+-obj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
+-df = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)
+-level_col = [col for col in df.columns if 'SCHOOL LEVEL' in col.upper()][0]
+```
+
+### `k-3-d-4/task_8.json`
+- Reason: one or more node answers changed; one or more node facts have substantive logic changes
+- Peek:
+```text
+node 1 answer: ["P.S. 005 Ellen Lurie", "P.S. 008 Luis Belliard", "P.S. 028 Wright B... -> ["P.S. 005 ELLEN LURIE", "P.S. 008 LUIS BELLIARD", "P.S. 028 WRIGHT B...
+node 2 answer: ["Hamilton Heights School", "Muscota", "P.S. 004 Duke Ellington", "P.... -> ["P.S. 153 Adam Clayton Powell", "..."]
+node 3 answer: ["P.S. 008 Luis Belliard", "P.S. 028 Wright Brothers", "P.S. 153 Adam... -> ["P.S. 153 Adam Clayton Powell", "..."]
+node 1 fact diff:
+@@ -1,37 +1,7 @@
+-import io
+-import boto3
+-from botocore import UNSIGNED
+-from botocore.client import Config
+-bucket = 'lakeqa-yc4103-datalake'
+-obj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
+-df = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)
+-level_col = next(col for col in df.columns if 'SCHOOL LEVEL' in col.upper())
+node 2 fact diff:
+@@ -1,46 +1,8 @@
+-import io
+-import boto3
+-from botocore import UNSIGNED
+-from botocore.client import Config
+-bucket = 'lakeqa-yc4103-datalake'
+-obj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
+-df = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)
+-level_col = next(col for col in df.columns if 'SCHOOL LEVEL' in col.upper())
+```
+
+### `k-3-d-4/task_9.json`
+- Reason: one or more node answers changed; one or more node facts have substantive logic changes
+- Peek:
+```text
+node 4 answer: ["Alabama", "Arizona", "Louisiana", "Missouri", "Oregon", "South Caro... -> ["Arizona", "Alabama", "Louisiana", "Tennessee", "Missouri", "Oregon"...
+node 4 fact diff:
+@@ -1,28 +1,8 @@
+-import io
+-import boto3
+-from botocore import UNSIGNED
+-from botocore.client import Config
+-bucket = 'lakeqa-yc4103-datalake'
+-obj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
+-df = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)
+-us_states = {
+node 5 fact diff:
+@@ -1 +1,8 @@
+-In FY 2023, Maricopa County, Arizona had 69,974 VA disability compensation recipients, the most of any county in Arizona. Pima County was second with 25,745, and Pinal County was third with 10,403.
++import pandas as pd
++
++source = 'datagov/fy-2023-disability-compensation-recipients-by-county/files/rows.txt'
++df = pd.read_csv(source)
++df['Total: Disability Compensation Recipients'] = pd.to_numeric(df['Total: Disability Compensation Recipients'], errors='coerce')
++filtered = df[df['State'] == 'Arizona'].copy()
++ranked = filtered.sort_values(['Total: Disability Compensation Recipients', 'County Name'], ascending=[False, True])
+```
+
+### `k-3-d-5/task_1.json`
+- Reason: final answer changed: 1693 -> Friesland; one or more node answers changed; one or more node facts have substantive logic changes
+- Peek:
+```text
+question: Find the NYC high schools that were in the top 8 by overall score every year from 2006-07 through 2010-11. De... -> Can you first find the neighborhood after which the only NYC high school that was in the top 8 by overall sco...
+node 6 subquestion: Which neighborhoods are <intersection of node_1, node_2, node_3, node_4, node_5> located in? -> Who built the first bridge at <intersection of node_1, node_2, node_3, node_4, node_5> neighborhood in 1693?
+node id/count changed
+node 1 answer: ["MANHATTAN BRIDGES HIGH SCHOOL", "BEDFORD ACADEMY HIGH SCHOOL", "MAR... -> ["Manhattan Bridges High School", "Bedford Academy High School", "Mar...
+node 2 answer: ["BROOKLYN INTERNATIONAL HIGH SCHOOL", "GREGORIO LUPERON HIGH SCHOOL ... -> ["Brooklyn International High School", "Gregorio Luperon High School"...
+node 1 fact diff:
+@@ -1,17 +1,27 @@
+-import io
+-import pandas as pd
+-import boto3
+-from botocore import UNSIGNED
+-from botocore.config import Config
++import csv
+-source = "datagov/2006-2007-school-progress-report/files/rows.txt"
+-bucket = "lakeqa-yc4103-datalake"
+node 2 fact diff:
+@@ -1,17 +1,27 @@
+-import io
+-import pandas as pd
+-import boto3
+-from botocore import UNSIGNED
+-from botocore.config import Config
++import csv
+-source = "datagov/2007-2008-school-progress-report/files/rows.txt"
+-bucket = "lakeqa-yc4103-datalake"
+```
+
+### `k-4-d-1/task_4.json`
+- Reason: one or more node answers changed; one or more node facts have substantive logic changes
+- Peek:
+```text
+question: Using the 2010 USGS survey of Assateague Island National Seashore, identify the NASA facility where the surve... -> Can you first idenity the system that was used to survey Assateague Island National Seashore in the 2010 USGS...
+node 1 subquestion: Which NASA facility developed the system used to survey Assateague Island National Seashore in the 2010 USGS ... -> What system was used to survey Assateague Island National Seashore in the 2010 USGS survey?
+node id/count changed
+node 1 answer: Wallops Flight Facility -> EAARL (Experimental Advanced Airborne Research Lidar)
+node 2 answer: Accomack County -> Wallops Flight Facility
+node 1 fact diff:
+@@ -1 +1,57 @@
+-Elevation measurements were collected over Assateague Island National Seashore on March 19 and 24, 2010, using the Experimental Advanced Airborne Research Lidar (EAARL), a pulsed laser ranging system mounted onboard an aircraft. The EAARL, developed originally by the National Aeronautics and Space Administration (NASA) at Wallops Flight Facility in Virginia, measures ground elevation with a vertical resolution of +/-15 centimeters.
++import os
++import re
++import pandas as pd
++import boto3
++from botocore import UNSIGNED
++from botocore.config import Config
++
+node 2 fact diff:
+@@ -1 +1,77 @@
+-Wallops Flight Facility is a NASA rocket launch site on Wallops Island on the Eastern Shore of Virginia, located in Accomack County.
++import os
++import re
++import pandas as pd
++import boto3
++from botocore import UNSIGNED
++from botocore.config import Config
++
+```
+
+### `k-4-d-1/task_6.json`
+- Reason: one or more node facts have substantive logic changes
+- Peek:
+```text
+question: In Pittsburgh, identify the airport that most directly serves it for commercial passenger travel; in its Marc... -> In Pittsburgh, identify the largest airport; in its March 2019 scheduled traffic report, find the destination...
+node 1 subquestion: Which airport most directly serves Pittsburgh for commercial passenger travel? -> What is the largest airport in Pittsburgh?
+node 1 fact diff:
+@@ -1 +1 @@
+-Pittsburgh International Airport provides commercial passenger service from over 15 airlines to the Pittsburgh metropolitan area. Arnold Palmer Regional Airport also provides limited commercial passenger service and is east of Pittsburgh.
++Pittsburgh International Airport is the largest airport in Pittsburgh.
+node 2 fact diff:
+@@ -1 +1,22 @@
+-In the March 2019 Pittsburgh International scheduled traffic report, Atlanta (ATL) has 44,912 total seats, the highest of any destination (next highest is Chicago O'Hare with 35,699).
++import csv
++from collections import defaultdict
++
++with open('datagov/pittsburgh-international-airport-scheduled-passenger-traffic/files/pittsburgh-international-traffic-report-march-2019.txt', 'r', encoding='utf-8', newline='') as f:
++    rows = list(csv.DictReader(f))
++
++totals = defaultdict(float)
+```
+
+### `k-4-d-2/task_1.json`
+- Reason: one or more node facts have substantive logic changes
+- Peek:
+```text
+node 3 subquestion: Which schools in <hop 1 answer> had an A grade in the 2010-11 Progress Report? -> Which schools from <intersection of node_1, node_2> had an A grade in the 2010-11 Progress Report?
+node 4 fact diff:
+@@ -38 +38,2 @@
++answer = str(answer)
+```
+
+### `k-4-d-2/task_10.json`
+- Reason: one or more node facts have substantive logic changes
+- Peek:
+```text
+node 1 depends_on:  -> []
+node 2 depends_on:  -> ["node_1"]
+node 3 depends_on:  -> ["intersection_of_1_2"]
+node 1 fact diff:
+@@ -18 +18,9 @@
++name_map = {
++    "ELEANOR ROOSEVELT HIGH SCHOOL": "Eleanor Roosevelt High School",
++    "YOUNG WOMEN'S LEADERSHIP SCHOOL": "Young Women's Leadership School",
++    "HIGH SCHOOL OF AMERICAN STUDIES AT LEHMAN COLLEGE": "High School of American Studies at Lehman College",
++    "TOWNSEND HARRIS HIGH SCHOOL": "Townsend Harris High School",
++    "SCHOLARS' ACADEMY": "Scholars' Academy",
++}
++answer = [name_map.get(str(name).strip(), str(name).strip()) for name in answer]
+node 2 fact diff:
+@@ -18 +18,10 @@
++name_map = {
++    "BARUCH COLLEGE CAMPUS HIGH SCHOOL": "Baruch College Campus High School",
++    "ELEANOR ROOSEVELT HIGH SCHOOL": "Eleanor Roosevelt High School",
++    "BROOKLYN COLLEGE ACADEMY": "Brooklyn College Academy",
++    "TOWNSEND HARRIS HIGH SCHOOL": "Townsend Harris High School",
++    "SCHOLARS' ACADEMY": "Scholars' Academy",
++    "QUEENS HIGH SCHOOL FOR THE SCIENCES AT YORK COLLEGE": "Queens High School for the Sciences at York College",
++}
+```
+
+### `k-4-d-2/task_11.json`
+- Reason: one or more node facts have substantive logic changes
+- Peek:
+```text
+question: In 2015, which New York county named after a king had a population over 900,000, a firearm rate under 35 per ... -> In 2015, which New York county named after a king had a population over 900,000, a firearm rate under 35 per ...
+node 2 subquestion: Which of <node_1 answer> had total state payments for homeowners' school taxes greater than $100 million in 2... -> Which of <node_1 answer> had STAR tax relief reimbursement greater than $100 million in 2015?
+node 1 depends_on:  -> []
+node 2 depends_on:  -> ["node_1"]
+node 3 depends_on:  -> ["intersection_of_1_2"]
+node 1 fact diff:
+@@ -17,2 +17,3 @@
++answer = [f"{county} County" for county in answer]
+node 2 fact diff:
+@@ -16,5 +16,6 @@
+-    & (df["Total Amount of Reimbursement "] > 100000000),
++    & (df["Total Amount of Reimbursement"] > 100000000),
++answer = [f"{county} County" for county in answer]
+```
+
+### `k-4-d-2/task_12.json`
+- Reason: one or more node facts have substantive logic changes
+- Peek:
+```text
+question: Among New York counties with violent crime rates over 300 per 100,000 in 2020 and more than 100 youth sent to... -> Among New York counties with violent crime rates over 300 per 100,000 in 2020 and more than 100 secure juveni...
+node 2 subquestion: Which New York counties had more than 100 youth sent to jail in 2015? -> Which New York counties had more than 100 secure or mixed juvenile detention admissions in 2015?
+node 2 fact diff:
+@@ -11,3 +11,3 @@
+-df[" Year "] = pd.to_numeric(df[" Year "], errors="coerce")
++df["Year"] = pd.to_numeric(df["Year"], errors="coerce")
+@@ -16,3 +16,3 @@
+-        (df[" Year "] == 2015)
++        (df["Year"] == 2015)
+node 3 fact diff:
+@@ -12,3 +12,3 @@
+-df["Total Amount of Reimbursement "] = pd.to_numeric(df["Total Amount of Reimbursement "], errors="coerce")
++df["Total Amount of Reimbursement"] = pd.to_numeric(df["Total Amount of Reimbursement"], errors="coerce")
+@@ -17,4 +17,4 @@
+-        & (df["Total Amount of Reimbursement "] >= 60000000)
+-        & (df["Total Amount of Reimbursement "] <= 90000000),
++        & (df["Total Amount of Reimbursement"] >= 60000000)
++        & (df["Total Amount of Reimbursement"] <= 90000000),
+```
+
+### `k-4-d-2/task_13.json`
+- Reason: one or more node facts have substantive logic changes
+- Peek:
+```text
+node 3 fact diff:
+@@ -14 +14,2 @@
++answer = str(answer)
+node 4 fact diff:
+@@ -14 +14,2 @@
++answer = str(answer)
+```
+
+### `k-4-d-2/task_14.json`
+- Reason: one or more node facts have substantive logic changes
+- Peek:
+```text
+question: Start by finding the Chicago city department with a budget of $400 million to $700 million in 2018 and $600 m... -> Start by finding the Chicago city department with a budget of $400 million to $700 million in 2018 and $600 m...
+node 1 subquestion: Which Chicago city departments had 2018 budgets between $400 million and $700 million? -> Which Chicago city department had a budget between $400 million and $700 million in 2018 AND between $600 mil...
+node 1 fact diff:
+@@ -1 +1,20 @@
+-In the 2018 Chicago Budget Ordinance totals by department, CFD ($642,620,615) and CDOT ($459,129,158) are the only departments with total appropriations between $400 million and $700 million.
++import io
++import pandas as pd
++import boto3
++from botocore import UNSIGNED
++from botocore.config import Config
++
++source = "datagov/budget-2018-budget-ordinance-appropriations/files/rows.txt"
+node 2 fact diff:
+@@ -1 +1,20 @@
+-In the 2019 Chicago Budget Ordinance totals by department, CFD ($652,282,316) and DFSS ($633,571,744) are the only departments with total appropriations between $600 million and $700 million.
++import io
++import pandas as pd
++import boto3
++from botocore import UNSIGNED
++from botocore.config import Config
++
++source = "datagov/budget-2019-budget-ordinance-appropriations/files/rows.txt"
+```
+
+### `k-4-d-2/task_15.json`
+- Reason: one or more node answers changed; one or more node facts have substantive logic changes
+- Peek:
+```text
+question: Consider the counties King, Clark, Pierce, Whitman, Thurston, and Spokane. Among these, identify the Eastern ... -> Consider the counties King, Clark, Pierce, Whitman, Thurston, and Spokane. Among these, identify the Eastern ...
+node 2 subquestion: Does Whitman County border Idaho, and what was its 2020 census population? -> Among counties from <hop 1 answer: Whitman, Spokane>, which county borders Idaho AND has 2020 census populati...
+node 2 answer: Whitman County borders Idaho and had a 2020 population of 47,973, so ... -> Whitman County: borders Idaho (YES, per adjacent counties list), popu...
+node 3 answer: Spokane County borders Idaho, but its 2020 population was 539,339, so... -> Spokane County: borders Idaho (YES, per adjacent counties list), popu...
+node 1 fact diff:
+@@ -1,4 +1 @@
+-Spokane
+- Stevens
+- Walla Walla
+- Whitman
++The Eastern Washington article lists Whitman and Spokane among the counties in Eastern Washington.
+node 2 fact diff:
+@@ -1,14 +1 @@
+-Whitman County is a county located in the U.S. state of Washington. As of the 2020 census, the population was 47,973. The county seat is Colfax, and its largest city is Pullman.
+-
+-Adjacent counties
+-
+-Spokane County - north
+-Benewah County, Idaho - northeast
+-Latah County, Idaho - east
+-Nez Perce County, Idaho - southeast
+```
+
+### `k-4-d-2/task_2.json`
+- Reason: one or more node facts have substantive logic changes
+- Peek:
+```text
+question: I'm analyzing identity theft trends in Los Angeles. First, identify the year between 2010 and 2019 that had t... -> I'm analyzing identity theft trends in Los Angeles. First, identify the year between 2010 and 2019 that had t...
+node 1 fact diff:
+@@ -21 +21,2 @@
++answer = str(answer)
+node 3 fact diff:
+@@ -15 +15,2 @@
++answer = str(answer)
+```
+
+### `k-4-d-2/task_3.json`
+- Reason: one or more node answers changed; one or more node facts have substantive logic changes
+- Peek:
+```text
+question: Identify the first civilian superintendent of the Chicago Police Department. In the city where that person pr... -> Identify the first civilian superintendent of the Chicago Police Department. In the city where that person pr...
+node 2 subquestion: In which cities did <hop 1 answer> serve as police chief before coming to Chicago? -> In which cities did <node_1 answer: O. W. Wilson> hold leadership positions before coming to Chicago?
+node 5 answer: 7871 -> 7871
+node 6 answer: 8701 -> 8701
+node 1 fact diff:
+@@ -1 +1 @@
+-In 1960, the municipal government created a five-member police board charged with nominating a superintendent to be the chief authority over police officers, drafting and adopting rules and regulations governing the police system, submitting budget requests to the city council, and hearing and deciding disciplinary cases involving police officers. Criminologist O. W. Wilson was brought on as Superintendent of Police, and served until 1967 when he retired.
++According to the Wikipedia article for Chicago Police Department, 'Orlando W. Wilson, the first civilian superintendent, was appointed by the mayor in 1960.' Wilson served as Superintendent of Police until 1967.
+node 2 fact diff:
+@@ -1 +1 @@
+-In 1925, Wilson became chief of police of the Fullerton Police Department for two years.  He then spent two years as an investigator with the Pacific Finance Corporation.  In 1928, at age 28, he became chief of police of the Wichita Police Department, where he served until 1939.
++According to the Wikipedia article for O. W. Wilson, 'In 1925, Wilson became chief of police of the Fullerton Police Department for two years... In 1928, at age 28, he became chief of police of the Wichita Police Department, where he served until 1939.'
+```
+
+### `k-4-d-2/task_4.json`
+- Reason: one or more node answers changed; one or more node facts have substantive logic changes
+- Peek:
+```text
+question: I'm analyzing data for the Austin City Council district represented by Zohaib Qadri. Starting from the year w... -> I’m analyzing data for the Austin City Council district represented by Zohaib 'Zo' Qadri. Starting from the y...
+node 1 subquestion: Zohaib Qadri represents which Austin City Council district? -> Zohaib "Zo" Qadri represents which Austin City Council district?
+node 1 fact changed only in ignored import/parser/access details
+node 2 answer: 2023-02-23T00:00:00 -> 2023-01-06T00:00:00
+node 2 fact diff:
+@@ -36,3 +36,3 @@
+-text_match = "Approve a settlement in Claudia Ford v. City of Austin, Cause No. D-1-GN-19-004771 in the 250th District Court, Travis County, Texas."
+-answer = records.loc[records["item_text"] == text_match, "meeting_date"].min().isoformat()
++filtered = records[records["council_district"].astype(str).str.strip() == "9"]
++answer = filtered["meeting_date"].min().isoformat()
+node 4 fact diff:
+@@ -14 +14,2 @@
++answer = str(answer)
+```
+
+### `k-4-d-2/task_5.json`
+- Reason: one or more node facts have substantive logic changes
+- Peek:
+```text
+question: I am analyzing the LAPD division that covers Echo Park and Silver Lake. After identifying the most common arr... -> I am analyzing the LAPD division that covers Echo Park and Silver Lake. After identifying the most common arr...
+node 2 subquestion: In 2019 arrest records, within area <node_1 answer>, identify the most common arrest charge; then, for that c... -> In 2019 arrest records, within area <node_1 answer>, identify the most common charge group; then, for that ch...
+node 3 fact diff:
+@@ -13 +13,2 @@
++answer = str(answer)
+node 5 fact diff:
+@@ -17 +17,2 @@
++answer = str(answer)
+```
+
+### `k-4-d-2/task_6.json`
+- Reason: one or more node facts have substantive logic changes
+- Peek:
+```text
+question: I'm analyzing simple battery assault trends in Los Angeles. First, identify the year between 2010 and 2019 th... -> I'm analyzing simple battery assault trends in Los Angeles. First, identify the year between 2010 and 2019 th...
+node 2 subquestion: In <node_1 answer> Los Angeles arrest records, which area has the most arrests in the catch-all charge catego... -> In <node_1 answer> Los Angeles arrest records, which area has the most arrests in the charge group "Miscellan...
+node 1 fact diff:
+@@ -22 +22,2 @@
++answer = str(answer)
+node 3 fact diff:
+@@ -17 +17,2 @@
++answer = str(answer)
+```
+
+### `k-4-d-2/task_7.json`
+- Reason: one or more node facts have substantive logic changes
+- Peek:
+```text
+node 3 fact diff:
+@@ -20 +20,2 @@
++answer = str(answer)
+node 4 fact diff:
+@@ -16 +16,2 @@
++answer = str(answer)
+```
+
+### `k-4-d-2/task_8.json`
+- Reason: one or more node facts have substantive logic changes
+- Peek:
+```text
+node 1 fact diff:
+@@ -22 +22,2 @@
++answer = str(answer)
+node 3 fact diff:
+@@ -17 +17,2 @@
++answer = str(answer)
+```
+
+### `k-4-d-2/task_9.json`
+- Reason: one or more node facts have substantive logic changes
+- Peek:
+```text
+node 1 fact diff:
+@@ -16 +16,2 @@
++answer = str(answer)
+node 3 fact diff:
+@@ -14 +14,2 @@
++answer = str(answer)
+```
+
+### `k-4-d-3/task_1.json`
+- Reason: one or more node answers changed; one or more node facts have substantive logic changes
+- Peek:
+```text
+question: Can you find me the NYC elementary school in District 15 that ranked 2nd by average performance category scor... -> Can you find me the NYC elementary school in District 15 that ranked in the top 2 by performance category sco...
+node 1 subquestion: Which NYC elementary schools in District 15 and their performance category scores in 2010-11? -> Which NYC elementary schools in District 15 ranked in the top 2 by performance category score in 2010-11?
+node 1 answer: {"Magnet School for Science & Technology": 14, "PS 130 The Parkside":... -> ["PS 321 William Penn", "PS 107 John W Kimball"]
+node 1 depends_on:  -> []
+node 1 limit: 5 -> 
+node 1 fact diff:
+@@ -1,5 +1,6 @@
+-import os
++import boto3
+-import boto3
++from botocore import UNSIGNED
++from botocore.config import Config
+@@ -7,35 +8,9 @@
+-local_path = source if os.path.exists(source) else "/tmp/k123_data_cache/" + source
+-
+-if os.path.exists(local_path):
+node 2 fact diff:
+@@ -1,5 +1,6 @@
+-import os
++import boto3
+-import boto3
++from botocore import UNSIGNED
++from botocore.config import Config
+@@ -7,35 +8,9 @@
+-local_path = source if os.path.exists(source) else "/tmp/k123_data_cache/" + source
+-
+-if os.path.exists(local_path):
+```
+
+### `k-4-d-3/task_10.json`
+- Reason: one or more node answers changed; one or more node facts have substantive logic changes
+- Peek:
+```text
+question: Find the New York counties outside of NYC having (1) over 90 youth sent to jail in 2015, (2) a total jail cen... -> Only two New York counties outside of NYC had over 90 youth detention admissions in 2015, a jail census under...
+node 1 subquestion: Which non-NYC New York counties had over 90 youth sent to jail in 2015? -> Which Non-NYC NY counties had over 90 youth detention secure/mixed admissions in 2015?
+node 1 answer: ["Erie", "Monroe", "Westchester", "Onondaga", "Nassau"] -> ["Erie County", "Monroe County", "Westchester County", "Onondaga Coun...
+node 2 answer: ["Monroe", "Suffolk", "Erie", "Westchester", "Onondaga", "Orange", "B... -> ["Erie County", "Monroe County", "Westchester County", "Onondaga Coun...
+node 2 limit: 10 -> 
+node 1 fact diff:
+@@ -19 +19,2 @@
++answer = [str(x) + " County" for x in answer]
+node 2 fact diff:
+@@ -16,4 +16,4 @@
+-df = df[df["Census"] < 750].copy()
+-df = df.sort_values("Census", ascending=False)
+-answer = df["County"].head(10).tolist()
++order = ["Erie", "Monroe", "Westchester", "Onondaga", "Suffolk"]
++qualifying = set(df[df["Census"] < 750]["County"].astype(str))
++answer = [county + " County" for county in order if county in qualifying]
+```
+
+### `k-4-d-3/task_11.json`
+- Reason: one or more node answers changed; one or more node facts have substantive logic changes
+- Peek:
+```text
+question: Find the Iowa counties that met the following criteria in 2019: a December unemployment rate above 2.9%, more... -> Find the Iowa counties met the following criteria in 2019: unemployment above 2.9%, biofuel distribution abov...
+node 2 subquestion: Which Iowa counties had more than 12% of their motor-fuel sales coming from biofuels in 2019? -> Which Iowa counties had biofuel distribution above 12% in 2019?
+node 1 answer: ["Marshall County", "Floyd County", "Clayton County", "Crawford Count... -> ["Allamakee County", "Appanoose County", "Benton County", "Black Hawk...
+node 1 limit: 10 -> 
+node 2 answer: ["Fremont", "Poweshiek", "Guthrie", "Clarke", "Floyd", "Hamilton", "P... -> ["Adair County", "Allamakee County", "Audubon County", "Benton County...
+node 1 fact diff:
+@@ -18,6 +18,2 @@
+-df = df.sort_values("UNEMPLOYMENT RATE", ascending=False)
+-top = df["AREA NAME"].tolist()
+-priority = top[:8]
+-extras = [x for x in ["Scott County", "Black Hawk County"] if x in top and x not in priority]
+-answer = (priority + extras)[:10]
++answer = sorted(df["AREA NAME"].dropna().astype(str).tolist())
+node 2 fact diff:
+@@ -11,10 +11,3 @@
+-df = df[
+-    (df["Calendar Year"] == 2019)
+-    & (df["Biofuel Distribution Percentage"] > 12)
+-].copy()
+-df = df.sort_values("Biofuel Distribution Percentage", ascending=False)
+-top = df["County"].tolist()
+-priority = top[:8]
+-extras = [x for x in ["Scott", "Black Hawk"] if x in top and x not in priority]
+```
+
+### `k-4-d-3/task_12.json`
+- Reason: one or more node answers changed; one or more node facts have substantive logic changes
+- Peek:
+```text
+node 1 subquestion: For 2021, how many employees were there for each of CORRECTIONS, SOCIAL SERVICES, and TRANSPORTATION? -> Among CORRECTIONS, SOCIAL SERVICES, and TRANSPORTATION, which had the highest average employee count across 2...
+node 3 answer: {"CORRECTIONS": 13107, "SOCIAL SERVICES": 8932, "TRANSPORTATION": 695... -> CORRECTIONS
+node 3 fact diff:
+@@ -9,2 +9,7 @@
++prior_counts = {
++    "CORRECTIONS": [12530, 12380],
++    "SOCIAL SERVICES": [8362, 8723],
++    "TRANSPORTATION": [7170, 6917],
++}
+@@ -12,3 +17,3 @@
+-answer = (
++counts_2023 = (
+@@ -16,4 +21,5 @@
+-    .sort_values(ascending=False)
+```
+
+### `k-4-d-3/task_2.json`
+- Reason: one or more node answers changed; one or more node facts have substantive logic changes
+- Peek:
+```text
+node 3 subquestion: Which schools from <node_2 answer> had kindergarten class size at most 10 in 2008-09? -> Which schools from <node_2 answer> had kindergarten class size <= 10 in 2008-09?
+node 2 answer: ["PS 003", "PS 009", "PS 011", "PS 016", "PS 020", "PS 046", "PS 054"... -> ["PS 003", "PS 009", "PS 011", "PS 046", "PS 056", "PS 067", "PS 270"...
+node 3 answer: ["PS 003", "PS 009", "PS 011", "PS 016", "PS 020", "PS 046", "PS 054"... -> ["PS 003", "PS 009", "PS 011", "PS 046", "PS 056", "PS 067", "PS 270"...
+node 4 answer: ["PS 003", "PS 009", "PS 011", "PS 016", "PS 020", "PS 054", "PS 056"... -> ["PS 003", "PS 009", "PS 011", "PS 046", "PS 056", "PS 067", "PS 270"...
+node 2 fact diff:
+@@ -1,4 +1,5 @@
++import re
++import boto3
+-import boto3
+@@ -11,39 +12,11 @@
+-node_1_answer = [
+-    "Clinton Hill",
+-    "Bedford-Stuyvesant",
+-    "Fort Greene",
+-    "Prospect Heights",
+node 3 fact diff:
+@@ -2,4 +2,4 @@
++import boto3
+-import boto3
+@@ -12,41 +12,15 @@
+-node_2_answer = [
+-    "PS 003",
+-    "PS 009",
+-    "PS 011",
+-    "PS 016",
+-    "PS 020",
+```
+
+### `k-4-d-3/task_3.json`
+- Reason: one or more node facts have substantive logic changes
+- Peek:
+```text
+question: In which Virginia county is the NASA facility where the equipment used to collect the bare earth elevation da... -> In which Virginia county is the NASA facility of a system developed? This system was used in the 2007 USGS to...
+node 5 subquestion: At which NASA facility was equipment used collect the bare earth elevation data for <node_4 answer> in USGS's... -> At which NASA facility was the EAARL system used in the 2007 USGS survey of <node_4 answer> developed?
+node 1 fact diff:
+@@ -1,3 +1 @@
+-Eight: Virginia
+-
+-PresidentImageHistoric siteGeorge WashingtonGeorge Washington Birthplace National Monument, Colonial Beach, VirginiaJohn AdamsJohn Adams Birthplace, Quincy, MassachusettsJames MadisonBelle Grove Plantation, Port Conway, VirginiaJames MonroeJames Monroe Birthplace Park & Museum, Colonial Beach, VirginiaJohn Quincy AdamsJohn Quincy Adams Birthplace, Quincy, MassachusettsWilliam Henry HarrisonBerkeley Plantation, Charles City County, VirginiaZachary Taylor100pxHare Forest Farm, Orange County, VirginiaZachary Taylor House, Louisville, KentuckyJohn TylerGreenway Plantation, Charles City County, Virginia
++Eight U.S. presidents were born in Virginia: George Washington, Thomas Jefferson, James Madison, James Monroe, William Henry Harrison, John Tyler, Zachary Taylor, and Woodrow Wilson.
+node 5 fact diff:
+@@ -1 +1,44 @@
+-In 2007, USGS published Open File Report 1179 containing bare earth elevation data for George Washington Birthplace National Monument, collected using the NASA EAARL (Experimental Advanced Airborne Research Lidar) system. The EAARL was developed by NASA at Wallops Flight Facility in Virginia.
++import os
++import re
++import pandas as pd
++import boto3
++from botocore import UNSIGNED
++from botocore.config import Config
++
+```
+
+### `k-4-d-3/task_4.json`
+- Reason: one or more node answers changed; one or more node facts have substantive logic changes
+- Peek:
+```text
+question: Across January 2019-2021, identify the agencies that consistently issued the largest total amount of parking ... -> Across January 2019-2021, identify the issuing agencies that consistently ranked in the top 20 by total parki...
+node 1 subquestion: Which agencies issued the largest total amount of parking fines in January 2019? -> Which agencies were in the top 20 for total January parking-violation fine amount in 2019-2021? (Filter for t...
+node 1 answer: ["DEPARTMENT OF PUBLIC WORKS", "METROPOLITAN POLICE DPT-DISTRICT 2", ... -> ["DEPARTMENT OF PUBLIC WORKS", "METROPOLITAN POLICE DPT-DISTRICT 2", ...
+node 1 limit: 10 -> 
+node 2 answer: ["DEPARTMENT OF PUBLIC WORKS", "METROPOLITAN POLICE DPT-DISTRICT 2", ... -> ["DEPARTMENT OF PUBLIC WORKS", "METROPOLITAN POLICE DPT-DISTRICT 2", ...
+node 1 fact diff:
+@@ -1,2 +1,2 @@
+-import boto3
++import os
+@@ -4,19 +4,20 @@
+-from botocore import UNSIGNED
+-from botocore.config import Config
++import boto3
+-bucket_name = "lakeqa-yc4103-datalake"
+-object_key = "datagov/parking-violations-issued-in-january-2019/files/data.txt"
+-s3 = boto3.client("s3", config=Config(signature_version=UNSIGNED))
+node 2 fact diff:
+@@ -1,2 +1,2 @@
+-import boto3
++import os
+@@ -4,19 +4,20 @@
+-from botocore import UNSIGNED
+-from botocore.config import Config
++import boto3
+-bucket_name = "lakeqa-yc4103-datalake"
+-object_key = "datagov/parking-violations-issued-in-january-2020/files/data.txt"
+-s3 = boto3.client("s3", config=Config(signature_version=UNSIGNED))
+```
+
+### `k-4-d-3/task_5.json`
+- Reason: one or more node answers changed; one or more node facts have substantive logic changes
+- Peek:
+```text
+question: Among the United States Park Police, United States Capitol Police, and U.S. Secret Service Uniform Division, ... -> Among the United States Park Police, United States Capitol Police, and U.S. Secret Service Uniform Division, ...
+node 1 subquestion: In January 2019, how many driving-related violations did each of the United States Park Police, United States... -> Among the United States Park Police, United States Capitol Police, and U.S. Secret Service Uniform Division, ...
+node 3 answer: {"UNITED STATES CAPITOL POLICE": 30, "UNITED STATES PARK POLICE": 71,... -> UNITED STATES PARK POLICE
+node 1 fact diff:
+@@ -1,2 +1,2 @@
+-import boto3
++import os
+@@ -4,19 +4,42 @@
+-from botocore import UNSIGNED
+-from botocore.config import Config
++import boto3
+-bucket_name = "lakeqa-yc4103-datalake"
+-object_key = "datagov/moving-violations-issued-in-january-2019/files/data.txt"
+-target_agencies = ["UNITED STATES CAPITOL POLICE", "US. SECRET SERVICE UNIFORM DIVISION", "UNITED STATES PARK POLICE"]
+node 2 fact diff:
+@@ -1,2 +1,2 @@
+-import boto3
++import os
+@@ -4,19 +4,42 @@
+-from botocore import UNSIGNED
+-from botocore.config import Config
++import boto3
+-bucket_name = "lakeqa-yc4103-datalake"
+-object_key = "datagov/moving-violations-issued-in-january-2020/files/data.txt"
+-target_agencies = ["UNITED STATES CAPITOL POLICE", "US. SECRET SERVICE UNIFORM DIVISION", "UNITED STATES PARK POLICE"]
+```
+
+### `k-4-d-3/task_7.json`
+- Reason: one or more node answers changed; one or more node facts have substantive logic changes
+- Peek:
+```text
+question: Among Washington, DC wards 2 and 5, identify which ward had more scheduled street-cleaning events from 2022 t... -> Among Washington, DC wards 2 and 5, identify which ward had the more frequent street sweeping schedule from 2...
+node 1 subquestion: For Wards 2 and 5, how many scheduled street-cleaning events were listed in 2022? -> Among the wards 2 and 5, which ward had the higher average number of street-sweeping schedule entries across ...
+node 1 source: datagov/street-sweeping-schedule-2022/files/rows.txt -> datagov/street-sweeping-schedule-2022/files/data.txt
+node 2 source: datagov/street-sweeping-schedule-2023/files/rows.txt -> datagov/street-sweeping-schedule-2023/files/data.txt
+node 3 source: datagov/street-sweeping-schedule-2024/files/rows.txt -> datagov/street-sweeping-schedule-2024/files/data.txt
+node 1 fact diff:
+@@ -1,3 +1,3 @@
++import json
+-import io
+@@ -6,15 +6,22 @@
+-bucket_name = "lakeqa-yc4103-datalake"
+-object_key = "datagov/street-sweeping-schedule-2022/files/rows.txt"
+-s3 = boto3.client("s3", config=Config(signature_version=UNSIGNED))
+-obj = s3.get_object(Bucket=bucket_name, Key=object_key)
+-df = pd.read_csv(io.BytesIO(obj["Body"].read()))
+-ward_numeric = pd.to_numeric(df["WARD"], errors="coerce")
+node 2 fact diff:
+@@ -1,3 +1,3 @@
++import json
+-import io
+@@ -6,15 +6,22 @@
+-bucket_name = "lakeqa-yc4103-datalake"
+-object_key = "datagov/street-sweeping-schedule-2023/files/rows.txt"
+-s3 = boto3.client("s3", config=Config(signature_version=UNSIGNED))
+-obj = s3.get_object(Bucket=bucket_name, Key=object_key)
+-df = pd.read_csv(io.BytesIO(obj["Body"].read()))
+-ward_numeric = pd.to_numeric(df["WARD"], errors="coerce")
+```
+
+### `k-4-d-3/task_8.json`
+- Reason: one or more node answers changed; one or more node facts have substantive logic changes
+- Peek:
+```text
+question: Can you find out the Manhattan neighborhoods containing the top 7 high schools from 2007-2010 by a comprehens... -> Can you find out the Manhattan neighborhood containing a top 7 high school from 2007-2010 by overall score. T...
+node 1 subquestion: Which NYC high schools were in the top 7 by the school's comprehensive score in 2007-08? -> Which NYC high schools were in the top 7 by overall score in 2007-08?
+node 1 answer: ["BROOKLYN INTERNATIONAL HIGH SCHOOL", "GREGORIO LUPERON HIGH SCHOOL ... -> ["Brooklyn International High School", "Gregorio Luperon High School"...
+node 2 answer: ["HIGH SCHOOL OF HOSPITALITY MANAGEMENT", "BEDFORD ACADEMY HIGH SCHOO... -> ["High School of Hospitality Management", "Bedford Academy High Schoo...
+node 3 answer: ["Theatre Arts Production Company School", "Brooklyn International Hi... -> ["Theatre Arts Production Company School", "Brooklyn International Hi...
+node 1 fact diff:
+@@ -1 +1,3 @@
++import io
++import re
+@@ -4,12 +6,20 @@
+-from io import StringIO
++source = "datagov/2007-2008-school-progress-report/files/rows.txt"
+-key = "datagov/2007-2008-school-progress-report/files/rows.txt"
+-s3 = boto3.client("s3", config=Config(signature_version=UNSIGNED))
+-body = s3.get_object(Bucket=bucket, Key=key)["Body"].read().decode("utf-8")
+-df = pd.read_csv(StringIO(body))
+node 2 fact diff:
+@@ -1 +1,3 @@
++import io
++import re
+@@ -4,12 +6,21 @@
+-from io import StringIO
++source = "datagov/2008-2009-school-progress-report/files/rows.txt"
+-key = "datagov/2008-2009-school-progress-report/files/rows.txt"
+-s3 = boto3.client("s3", config=Config(signature_version=UNSIGNED))
+-body = s3.get_object(Bucket=bucket, Key=key)["Body"].read().decode("utf-8")
+-df = pd.read_csv(StringIO(body))
+```
+
+### `k-4-d-3/task_9.json`
+- Reason: one or more node answers changed; one or more node facts have substantive logic changes
+- Peek:
+```text
+question: I am analyzing a specific New York State county that had between 29,000 and 75,000 households enrolled in the... -> I am analyzing a specific New York State county which supports a significant population, reporting between 29...
+node 1 subquestion: Which NY counties had between 29,000 and 75,000 households enrolled in the federal program that provides elig... -> Which NY counties had SNAP households between 29,000 and 75,000 in February 2023?
+node 1 answer: ["Suffolk", "Monroe", "Westchester", "Onondaga", "Nassau"] -> ["Suffolk County", "Monroe County", "Westchester County", "Onondaga C...
+node 2 answer: ["ERIE", "ONONDAGA", "SUFFOLK", "ONEIDA", "MONROE"] -> ["Erie County", "Onondaga County", "Suffolk County", "Oneida County",...
+node 3 answer: ["Monroe", "Erie", "Westchester", "Suffolk", "Nassau", "Onondaga"] -> ["Monroe County", "Erie County", "Westchester County", "Suffolk Count...
+node 1 fact diff:
+@@ -7,3 +7,3 @@
+-key = "datagov/supplemental-nutrition-assistance-program-snap-caseloads-and-expenditures-beginning-2002/files/rows.txt"
++key = "datagov/annual-youth-detention-admissions-by-county-beginning-2006/files/rows.txt"
+@@ -11,8 +11,10 @@
++df.columns = [c.strip() for c in df.columns]
+-    (df["Year"] == 2023)
+-    & (df["Month"] == "February")
+-    & (df["Total SNAP Households"].between(29000, 75000))
++    (df["Year"] == 2015)
++    & (df["County"] != "New York City")
+node 2 fact diff:
+@@ -7,3 +7,3 @@
+-key = "datagov/children-in-foster-care-annually-beginning-1994/files/rows.txt"
++key = "datagov/jail-population-by-county-beginning-1997/files/rows.txt"
+@@ -11,7 +11,10 @@
+-df = df[
+-    (df["Year"] == 2023)
+-    & (df["Children In Care"].between(350, 600))
+-].copy()
+-df = df.sort_values("Children In Care", ascending=False)
+-answer = df["County"].tolist()
+```
+
+### `k-4-d-4/task_1.json`
+- Reason: one or more node answers changed; one or more node facts have substantive logic changes
+- Peek:
+```text
+question: Can you find the NYC elementary schools that appear in the top 5 by the schools' learning environment in at l... -> Can you find the NYC elementary school that appears in the top 5 by environment category rating in at least t...
+node 1 subquestion: Which NYC elementary schools were in the top 5 by their learning environments in 2006-07? -> Which NYC elementary schools were in the top 5 by environment category score in 2006-07? (Filter SCHOOL LEVEL...
+node id/count changed
+node 5 answer: P.S. 380 John Wayne Elementary -> ["P.S. 380 John Wayne Elementary", "P.S. 172 Beacon School of Excelle...
+node 5 source: datagov/2013-2014-school-locations/files/rows.txt -> datagov/2006-2007-school-progress-report/files/rows.txt
+node 5 fact diff:
+@@ -1,2 +1,3 @@
++import re
+@@ -6,13 +7,35 @@
+-candidate_schools = [
+-    "P.S. 380 John Wayne Elementary",
+-    "P.S. 172 Beacon School of Excellence",
++bucket = "lakeqa-yc4103-datalake"
++sources = [
++    "datagov/2006-2007-school-progress-report/files/rows.txt",
++    "datagov/2007-2008-school-progress-report/files/rows.txt",
+node 6 fact diff:
+@@ -1 +1,18 @@
+-John Wayne Elementary School Day is on October 28
++import io
++import pandas as pd
++import boto3
++from botocore import UNSIGNED
++from botocore.config import Config
++
++candidate_schools = [
+```
+
+### `k-4-d-4/task_10.json`
+- Reason: one or more node answers changed; one or more node facts have substantive logic changes
+- Peek:
+```text
+question: Using school district office records for Iowa City in Johnson County, determine the two-digit state FIPS code... -> Using the school district office listings for CITY='Iowa City' and NMCNTY='Johnson County', determine the two...
+node 1 subquestion: In the school district office listings, entries with CITY equal to Iowa City and NMCNTY equal to Johnson Coun... -> In the school district office listings, entries with CITY='Iowa City' and NMCNTY='Johnson County' share what ...
+node 6 answer: 130 -> 130
+node 7 answer: 19 -> 19
+node 8 answer: 12 -> 12
+node 6 fact diff:
+@@ -13 +13,2 @@
++answer = str(answer)
+node 7 fact diff:
+@@ -13 +13,2 @@
++answer = str(answer)
+```
+
+### `k-4-d-4/task_11.json`
+- Reason: one or more node answers changed; one or more node facts have substantive logic changes
+- Peek:
+```text
+question: Using school district office records for Princeton in Mercer County, determine the two-digit state FIPS code.... -> Using the school district office listings for CITY='Princeton' and NMCNTY='Mercer County', determine the two-...
+node 1 subquestion: In the school district office listings, entries with CITY equal to Princeton and NMCNTY equal to Mercer Count... -> In the school district office listings, entries with CITY='Princeton' and NMCNTY='Mercer County' share what t...
+node 6 answer: 288 -> 288
+node 7 answer: 91 -> 91
+node 8 answer: 81 -> 81
+node 6 fact diff:
+@@ -20 +20,2 @@
++answer = str(answer)
+node 7 fact diff:
+@@ -14 +14,2 @@
++answer = str(answer)
+```
+
+### `k-4-d-4/task_12.json`
+- Reason: one or more node answers changed; one or more node facts have substantive logic changes
+- Peek:
+```text
+node 1 subquestion: Which Texas counties had highway construction expenditures between $150 million and $500 million in fiscal ye... -> Which Texas counties had highway construction expenditures between $150 million and $500 million in fiscal ye...
+node id/count changed
+node 5 answer: ["Nueces", "Denton"] -> ["DENTON", "NUECES"]
+node 8 answer: Henry Lawrence Kinney -> Fort Worth
+node 5 fact diff:
+@@ -6,9 +6,13 @@
+-source = 'datagov/fy-2023-disability-compensation-recipients-by-county/files/rows.txt'
+-bucket = 'lakeqa-yc4103-datalake'
+-obj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
+-df = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)
+-
+-counties = ['Bexar', 'Denton', 'Nueces', 'Tarrant']
+-result = df[(df['State'] == 'Texas') & (df['County Name'].isin(counties)) & (df['Total: Disability Compensation Recipients'] < 15000)].sort_values('Total: Disability Compensation Recipients')
+-answer = result['County Name'].tolist()
+node 6 fact diff:
+@@ -1 +1 @@
+-The county seat is Denton.
++Denton County is located in the U.S. state of Texas. The county seat is Denton, which has the same name as the county itself.
+```
+
+### `k-4-d-4/task_14.json`
+- Reason: file exists only in tasks_mini copy
+
+### `k-4-d-4/task_2.json`
+- Reason: one or more node answers changed; one or more node facts have substantive logic changes
+- Peek:
+```text
+question: In Chicago elementary schools that are public school, find which school (1) received the top performance rati... -> In Chicago elementary schools that are public school, find which school (1) received the top performance rati...
+node 1 subquestion: Which CPS public elementary schools in the 2011-2012 progress report cards had CPS Performance Policy Level "... -> Which elementary schools had CPS Performance Policy Level "Level 1" in the 2011-2012 CPS Progress Report Card...
+node 1 answer: {"Abraham Lincoln Elementary School": "610038", "Alexander Graham Bel... -> {"Cleveland": "609857", "Hawthorne": "609974", "Poe": "610132", "Rein...
+node 1 limit: 10 -> 
+node 2 answer: {"Addams": "609772", "Armstrong, G": "609779", "Clissold": "609861", ... -> {"Cleveland": "609857", "Hawthorne": "609974", "Poe": "610132", "Rein...
+node 1 fact diff:
+@@ -6,3 +6,3 @@
+-source = "datagov/chicago-public-schools-progress-report-cards-2011-2012/files/rows.txt"
++source = 'datagov/chicago-public-schools-progress-report-cards-2011-2012/files/rows.txt'
+@@ -10,14 +10,13 @@
+-
+-mask = (
+-    (df["Elementary, Middle, or High School"] == "ES")
+-    & (df["CPS Performance Policy Level"] == "Level 1")
+-)
+-
+node 2 fact diff:
+@@ -6,3 +6,3 @@
+-source = "datagov/chicago-public-schools-elementary-school-progress-report-card-2012-2013/files/rows.txt"
++source = 'datagov/chicago-public-schools-elementary-school-progress-report-card-2012-2013/files/rows.txt'
+@@ -10,11 +10,12 @@
+-
+-mask = df["Growth Overall Level"] == "Above Average"
+-
+-answer = dict(
+-    zip(
+-        df.loc[mask, "School Short Name"],
+```
+
+### `k-4-d-4/task_3.json`
+- Reason: one or more node answers changed; one or more node facts have substantive logic changes
+- Peek:
+```text
+node 5 subquestion: Which of the schools with at least 50 specialized high school admissions test offers in all four years are lo... -> Which of the 21 schools with >= 50 SHSAT offers in all 4 years are located in Queens District 26?
+node id/count changed
+node 1 answer: {"EAST SIDE MIDDLE SCHOOL": "02M114", "J.H.S. 054 BOOKER T. WASHINGTO... -> {"J.H.S. 067 Louis Pasteur": "26Q067, 84 offers", "J.H.S. 074 Nathani...
+node 1 limit: 10 -> 
+node 1 fact diff:
+@@ -6,3 +6,3 @@
+-source = "datagov/2015-2016-shsat-admissions-test-offers-by-sending-school/files/rows.txt"
++source = 'datagov/2015-2016-shsat-admissions-test-offers-by-sending-school/files/rows.txt'
+@@ -10,7 +10,9 @@
+-
+-offers = pd.to_numeric(df["Count of Offers"], errors="coerce")
+-mask = offers >= 50
+-
+-answer = dict(zip(df.loc[mask, "Feeder School Name"], df.loc[mask, "Feeder School DBN"]))
+-print(answer)
+node 2 fact diff:
+@@ -6,3 +6,3 @@
+-source = "datagov/2016-2017-shsat-admissions-test-offers-by-sending-school/files/rows.txt"
++source = 'datagov/2016-2017-shsat-admissions-test-offers-by-sending-school/files/rows.txt'
+@@ -10,7 +10,9 @@
+-
+-offers = pd.to_numeric(df["Count of Offers"], errors="coerce")
+-mask = offers >= 50
+-
+-answer = dict(zip(df.loc[mask, "Feeder School Name"], df.loc[mask, "Feeder School DBN"]))
+-print(answer)
+```
+
+### `k-4-d-4/task_5.json`
+- Reason: one or more node answers changed; one or more node facts have substantive logic changes
+- Peek:
+```text
+question: Find the Missouri state agency that ranked third in average spending from 2007 to 2010. In which city is its ... -> Find the Missouri state agency that ranked third in average spending from 2007-10, for that agency, which cit...
+node 1 subquestion: What were the total expenditures by Missouri state agency in FY2007? -> Which Missouri state agency had the 3rd highest average expenditure from FY2007-FY2010? (Filter for this node...
+node 1 answer: {"CORRECTIONS": 279877976.24, "ELEMENTARY AND SECONDARY EDUCATION": 4... -> {"ELEMENTARY AND SECONDARY EDUCATION": 4893252163.41, "HIGHER EDUCATI...
+node 1 limit: 10 -> 
+node 2 answer: {"CORRECTIONS": 279260171.22, "ELEMENTARY AND SECONDARY EDUCATION": 5... -> {"ELEMENTARY AND SECONDARY EDUCATION": 5048553721.08, "HIGHER EDUCATI...
+node 5 fact diff:
+@@ -1 +1 @@
+-Southwest, based in Springfield
++According to the Wikipedia article for Missouri Department of Transportation, 'MoDOT operates seven districts throughout the state: Northwest, based in St. Joseph; Northeast, based in Hannibal; Kansas City, based in Lee's Summit; Central, based in Jefferson City; St. Louis, based in Chesterfield; Southwest, based in Springfield; and Southeast, based in Sikeston.'
+node 6 fact diff:
+@@ -1 +1 @@
+-Officially recognized as the birthplace of Route 66, it was in Springfield on April 30, 1926, that officials first proposed the name of the new Chicago-to-Los Angeles highway.
++According to the Wikipedia article for Springfield, Missouri, 'Springfield's nicknames include "Queen City of the Ozarks" and "The Birthplace of Route 66"...Officially recognized as the birthplace of Route 66, it was in Springfield on April 30, 1926, that officials first proposed the name of the new Chicago-to-Los Angeles highway.'
+```
+
+### `k-4-d-4/task_6.json`
+- Reason: one or more node answers changed; one or more node facts have substantive logic changes
+- Peek:
+```text
+node 2 subquestion: What were the FY2018 capital outlay expenditure totals by Texas county? -> Which Texas counties were in the top 5 by average Capital Outlay expenditures across 2018-2021? (Filter for t...
+node 2 answer: {"BEXAR": 269462082.97, "DALLAS": 838316444.65, "DENTON": 186170844.1... -> {"Bexar": 269462082.97, "Dallas": 838316444.65, "Harris": 1303630847....
+node 2 limit: 10 -> 
+node 3 answer: {"BEXAR": 302940592.72, "DALLAS": 827510409.8, "DENTON": 260841655.76... -> {"Bexar": 302940592.72, "Dallas": 827510409.8, "Harris": 1391779835.0...
+node 1 fact diff:
+@@ -1 +1 @@
+-In the Wikipedia county table, Austin, Bastrop, Bexar, Brazoria, Colorado, Fayette, Goliad, Gonzales, Harris, Jackson, Jasper, Jefferson, Liberty, Matagorda, Milam, Nacogdoches, Red River, Refugio, Sabine, San Augustine, San Patricio, Shelby, and Victoria are marked as one of the original 23 counties.
++The Republic of Texas created 23 original counties in 1836: Austin, Bastrop, Bexar, Brazoria, Colorado, Fayette, Goliad, Gonzales, Harris, Jackson, Jasper, Jefferson, Liberty, Matagorda, Milam, Nacogdoches, Red River, Refugio, Sabine, San Augustine, San Patricio, Shelby, and Victoria.
+node 2 fact diff:
+@@ -5,3 +5,4 @@
+-source = "datagov/texas-state-expenditures-by-county-2018/files/rows.txt"
++
++source = 'datagov/texas-state-expenditures-by-county-2018/files/rows.txt'
+@@ -9,3 +10,8 @@
+-mask = ((df["Fiscal Year"] == 2018) & df["County"].notna() & (df["County"].astype(str).str.strip() != "") & df["Major Spending Category"].astype(str).str.contains("CAPITAL OUTLAY", na=False))
+-answer = (df.loc[mask].groupby("County")["Amount"].sum().sort_values(ascending=False).round(2).to_dict())
++df["Fiscal Year"] = pd.to_numeric(df["Fiscal Year"], errors="coerce")
++df["Amount"] = pd.to_numeric(df["Amount"], errors="coerce")
++filtered = df[(df["Fiscal Year"] == 2018) & df["County"].notna() & (df["County"].astype(str).str.strip() != "") & df["Major Spending Category"].astype(str).str.contains("CAPITAL OUTLAY", case=False, na=False)].copy()
+```
+
+### `k-4-d-4/task_7.json`
+- Reason: one or more node answers changed; one or more node facts have substantive logic changes
+- Peek:
+```text
+node 1 subquestion: What was the total overtime for each Chicago department in 2018, so it can be combined with 2019-2021 to iden... -> What was the total overtime for each Chicago department in 2018?
+node 1 answer: {"Administrative Hearings": 4367.66, "Animal Care and Control": 46367... -> {"Administrative Hearings": 4367.66, "Animal Care and Control": 46367...
+node 2 answer: {"BOARD OF ELECTION COMMISSIONERS": 415998.4, "CHICAGO ANIMAL CARE AN... -> {"BOARD OF ELECTION COMMISSIONERS": 415998.4, "CHICAGO ANIMAL CARE AN...
+node 3 answer: {"BOARD OF ELECTION COMMISSIONERS": 721104.36, "CHICAGO ANIMAL CARE A... -> {"BOARD OF ELECTION COMMISSIONERS": 721104.36, "CHICAGO ANIMAL CARE A...
+node 5 fact diff:
+@@ -1 +1 @@
+-Orlando W. Wilson, the first civilian superintendent, was appointed by the mayor in 1960.
++According to the Wikipedia article for Chicago Police Department, 'Orlando W. Wilson, the first civilian superintendent, was appointed by the mayor in 1960.' Wilson served as Superintendent of Police until 1967.
+node 6 fact diff:
+@@ -1 +1 @@
+-In 1925, Wilson became chief of police of the Fullerton Police Department for two years.  He then spent two years as an investigator with the Pacific Finance Corporation.  In 1928, at age 28, he became chief of police of the Wichita Police Department, where he served until 1939.
++According to the Wikipedia article for O. W. Wilson, 'In 1925, Wilson became chief of police of the Fullerton Police Department for two years... In 1928, at age 28, he became chief of police of the Wichita Police Department, where he served until 1939.'
+```
+
+### `k-4-d-4/task_8.json`
+- Reason: one or more node answers changed; one or more node facts have substantive logic changes
+- Peek:
+```text
+question: Consider the engineering firm founded after 1914 that has no current NY State construction manager projects, ... -> Consider the only engineering firm founded after 1914 that has no current NY State construction manager proje...
+node 1 subquestion: Which contractors ranked in the top 20 by contract count in Washington State agency contracts in fiscal year ... -> Which contractors ranked in the top 20 by contract count in Washington State agency contracts in fiscal year ...
+node 1 answer: ["ARAMARK UNIFORM SERVICES, INC.", "McGranahan Architects", "Schreibe... -> ["ARAMARK UNIFORM SERVICES, INC.", "McGranahan Architects", "Schreibe...
+node 2 answer: ["A-1 Performance Inc", "Jacobs Engineering Group, Inc.", "Imagesourc... -> ["A-1 Performance Inc", "Jacobs Engineering Group, Inc.", "WSP USA In...
+node 3 answer: ["Sharp Electronics Corporation", "DOC Correctional Industries", "A-1... -> ["Sharp Electronics Corporation", "DOC Correctional Industries", "WSP...
+node 1 fact diff:
+@@ -6,15 +6,6 @@
+-ALIASES = {'WSP USA Inc.': ['WSP USA, Inc.', 'WSP USA Inc.'], 'HDR Engineering, Inc.': ['HDR Engineering, Inc.', 'HDR Engineering', 'HDR ENGINEERING INC', 'Hdr Engineering Inc', 'HDR, INC'], 'Jacobs Engineering Group, Inc.': ['Jacobs Engineering Group, Inc.', 'Jacobs Engineering Group Inc', 'Jacobs Engineering Group'], 'A-1 Performance Inc': ['A-1 Performance Inc', 'A-1 Performance INC', 'A-1 Performance', 'A-1 Performance Inc.', 'A-1 Performance, Inc.', 'A-1 PERFORMANCE'], 'Imagesource Inc': ['Imagesource Inc', 'ImageSource, Inc.', 'ImageSource, Inc', 'ImageSource Inc.', 'IMAGESOURCE INC', 'ImageSource'], 'CenturyLink': ['CenturyLink', 'Centurylink', 'CENTURYLINK'], 'Shi International Corp': ['Shi International Corp', 'SHI International Corp', 'SHI INTERNATIONAL CORP.', 'SHI International Corp.', 'Shi International Corporation', 'SHI INTERNATIONAL CORP'], 'CodeSmart Inc': ['Codesmart Inc', 'Codesmart INC', 'CodeSmart Inc', 'CodeSmart', 'Codesmart', 'CodeSmart, Inc.', 'CodeSmart, Inc', 'Codesmart, INC.', 'Codesmart, Inc.', 'CODESMART INC'], 'Ricoh USA Inc': ['Ricoh Usa Inc', 'Ricoh USA', 'Ricoh USA, Inc.', 'RICOH USA INC', 'Ricoh USA Inc', 'RICOH USA', 'RICOH'], 'SMS Cleaning Inc': ['SMS Cleaning Inc', 'SMS Cleaning INC', 'SMS Cleaning, Inc.', 'SMS Cleaning', 'SMS Cleaning Inc.', 'SMS Cleaning, INC'], 'Washington State University': ['Washington State Universit
+node 2 fact diff:
+@@ -6,15 +6,6 @@
+-ALIASES = {'WSP USA Inc.': ['WSP USA, Inc.', 'WSP USA Inc.'], 'HDR Engineering, Inc.': ['HDR Engineering, Inc.', 'HDR Engineering', 'HDR ENGINEERING INC', 'Hdr Engineering Inc', 'HDR, INC'], 'Jacobs Engineering Group, Inc.': ['Jacobs Engineering Group, Inc.', 'Jacobs Engineering Group Inc', 'Jacobs Engineering Group'], 'A-1 Performance Inc': ['A-1 Performance Inc', 'A-1 Performance INC', 'A-1 Performance', 'A-1 Performance Inc.', 'A-1 Performance, Inc.', 'A-1 PERFORMANCE'], 'Imagesource Inc': ['Imagesource Inc', 'ImageSource, Inc.', 'ImageSource, Inc', 'ImageSource Inc.', 'IMAGESOURCE INC', 'ImageSource'], 'CenturyLink': ['CenturyLink', 'Centurylink', 'CENTURYLINK'], 'Shi International Corp': ['Shi International Corp', 'SHI International Corp', 'SHI INTERNATIONAL CORP.', 'SHI International Corp.', 'Shi International Corporation', 'SHI INTERNATIONAL CORP'], 'CodeSmart Inc': ['Codesmart Inc', 'Codesmart INC', 'CodeSmart Inc', 'CodeSmart', 'Codesmart', 'CodeSmart, Inc.', 'CodeSmart, Inc', 'Codesmart, INC.', 'Codesmart, Inc.', 'CODESMART INC'], 'Ricoh USA Inc': ['Ricoh Usa Inc', 'Ricoh USA', 'Ricoh USA, Inc.', 'RICOH USA INC', 'Ricoh USA Inc', 'RICOH USA', 'RICOH'], 'SMS Cleaning Inc': ['SMS Cleaning Inc', 'SMS Cleaning INC', 'SMS Cleaning, Inc.', 'SMS Cleaning', 'SMS Cleaning Inc.', 'SMS Cleaning, INC'], 'Washington State University': ['Washington State Universit
+```
+
+### `k-4-d-4/task_9.json`
+- Reason: one or more node facts have substantive logic changes
+- Peek:
+```text
+node 1 subquestion: Which Washington counties had district-level All Grades Low-Income enrollment percentage between 32% and 40% ... -> Which Washington counties had Low-Income student enrollment percentage between 32-40% in every school year fr...
+node 6 fact diff:
+@@ -1 +1 @@
+-The population was 2,269,675 in the 2020 census, making it the most populous county in Washington
++According to the Wikipedia article for King County, Washington, 'The population was 2,269,675 in the 2020 census, making it the most populous county in Washington.'
+node 7 fact diff:
+@@ -1 +1 @@
+-As of the 2020 census, its population was 275,611.
++According to the Wikipedia article for Kitsap County, Washington, 'As of the 2020 census, its population was 275,611.'
+```
+
+### `k-4-d-5/task_1.json`
+- Reason: one or more node answers changed; one or more node facts have substantive logic changes
+- Peek:
+```text
+question: I'm researching upstate New York counties (excluding New York City and the Adirondack/Catskill preserves) tha... -> I'm researching upstate New York counties (excluding New York City and the Adirondack/Catskill preserves) tha...
+node 2 subquestion: For each non-NYC New York county, how many farmers markets are listed in this dataset? Keep the counties with... -> Which Non-NYC NY counties have at least 6 farmers markets?
+node 1 answer: ["Jefferson", "St. Lawrence", "Cayuga", "Otsego", "Suffolk", "Tompkin... -> ["Jefferson County", "St. Lawrence County", "Tompkins County", "Suffo...
+node 2 answer: ["Monroe", "Erie", "Nassau", "Westchester", "Niagara", "Sullivan", "C... -> ["Monroe County", "Erie County", "Nassau County", "Westchester County...
+node 2 limit: 10 -> 
+node 1 fact diff:
+@@ -1 +1,2 @@
++import os
+@@ -6,7 +7,15 @@
+-source = "datagov/campgrounds-by-county-outside-adirondack-catskill-forest-preserve/files/rows.txt"
++source = 'datagov/campgrounds-by-county-outside-adirondack-catskill-forest-preserve/files/rows.txt'
+-obj = boto3.client("s3", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
+-df = pd.read_csv(io.BytesIO(obj["Body"].read()), low_memory=False)
++local_path = source if os.path.exists(source) else "/tmp/k123_data_cache/" + source
++if os.path.exists(local_path):
++    csv_path = local_path
+node 2 fact diff:
+@@ -1 +1,2 @@
++import os
+@@ -6,16 +7,18 @@
+-source = "datagov/farmers-markets-in-new-york-state/files/rows.txt"
++source = 'datagov/farmers-markets-in-new-york-state/files/rows.txt'
+-obj = boto3.client("s3", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
+-df = pd.read_csv(io.BytesIO(obj["Body"].read()), low_memory=False)
++local_path = source if os.path.exists(source) else "/tmp/k123_data_cache/" + source
++if os.path.exists(local_path):
++    csv_path = local_path
+```
+
+### `k-4-d-5/task_2.json`
+- Reason: one or more node answers changed; one or more node facts have substantive logic changes
+- Peek:
+```text
+question: Among NYC municipal candidates who had total campaign spending between $103,000 and $251,000 in each of the f... -> Among NYC municipal candidates who filed campaign expenditures in all five election cycles (2001, 2003, 2005,...
+node 1 subquestion: Which candidates had total campaign spendings between $103,000 and $251,000 in the 2001 election cycle? -> Which NYC municipal candidates filed campaign expenditures between $103,000 and $251,000 in the 2001 election...
+node 1 answer: ["Salvatore Albanese", "Anthony Andrews, Jr.", "JoAnn Ariola", "Paul ... -> ["Domenic Recchia", "Leroy Comrie", "103 others"]
+node 1 limit: 10 -> 
+node 2 answer: ["Joseph Addabbo", "Tony Avella", "Maria Baez", "Ismael Betancourt Jr... -> ["Domenic Recchia", "Leroy Comrie", "45 others"]
+node 1 fact diff:
+@@ -1 +1,2 @@
++import os
+@@ -6,14 +7,25 @@
+-source = "datagov/2001-campaign-expenditures/files/rows.txt"
++source = 'datagov/2001-campaign-expenditures/files/rows.txt'
+-obj = boto3.client("s3", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
+-df = pd.read_csv(io.BytesIO(obj["Body"].read()), low_memory=False)
++local_path = source if os.path.exists(source) else "/tmp/k123_data_cache/" + source
++if os.path.exists(local_path):
++    csv_path = local_path
+node 2 fact diff:
+@@ -1 +1,2 @@
++import os
+@@ -6,14 +7,25 @@
+-source = "datagov/2003-campaign-expenditures/files/rows.txt"
++source = 'datagov/2003-campaign-expenditures/files/rows.txt'
+-obj = boto3.client("s3", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
+-df = pd.read_csv(io.BytesIO(obj["Body"].read()), low_memory=False)
++local_path = source if os.path.exists(source) else "/tmp/k123_data_cache/" + source
++if os.path.exists(local_path):
++    csv_path = local_path
+```
+
+### `k-4-d-5/task_3.json`
+- Reason: one or more node answers changed; one or more node facts have substantive logic changes
+- Peek:
+```text
+question: Among drugs with 5 to 10 million total annual Medicaid prescriptions across U.S. states, identify the one wit... -> Among drugs with 5 to 10 million total annual prescriptions in the US, identify the one with the highest aver...
+node 1 subquestion: Which drugs had between 5,000,000 and 10,000,000 total Medicaid prescriptions across U.S. states in 2018, and... -> What were the total prescriptions for drugs with between 5 and 10 million prescriptions across all US states ...
+node 1 answer: {"ACETAMINOP": 7414105, "ALPRAZOLAM": 9133057, "AMITRIPTYL": 5232115,... -> {"ACETAMINOP": 7414105, "ALPRAZOLAM": 9133057, "AMITRIPTYL": 5232115,...
+node 1 limit: 10 -> 
+node 2 answer: {"ALPRAZOLAM": 7934584, "AMITRIPTYL": 5072673, "ARIPIPRAZO": 6707069,... -> {"ALPRAZOLAM": 7934584, "AMITRIPTYL": 5072673, "ARIPIPRAZO": 6707069,...
+node 1 fact diff:
+@@ -1 +1,3 @@
++import os
++import io
+@@ -5,8 +7,17 @@
+-source = "datagov/state-drug-utilization-data-2018-b2fe5/files/StateDrugUtilizationData2018.txt"
++source = 'datagov/state-drug-utilization-data-2018-b2fe5/files/StateDrugUtilizationData2018.txt'
+-body = boto3.client("s3", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)["Body"]
++local_path = source if os.path.exists(source) else "/tmp/k123_data_cache/" + source
++
++if os.path.exists(local_path):
+node 2 fact diff:
+@@ -1 +1,3 @@
++import os
++import io
+@@ -5,8 +7,17 @@
+-source = "datagov/state-drug-utilization-data-2019/files/StateDrugUtilizationData2019.txt"
++source = 'datagov/state-drug-utilization-data-2019/files/StateDrugUtilizationData2019.txt'
+-body = boto3.client("s3", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)["Body"]
++local_path = source if os.path.exists(source) else "/tmp/k123_data_cache/" + source
++
++if os.path.exists(local_path):
+```
+
+### `k-4-d-5/task_4.json`
+- Reason: one or more node answers changed; one or more node facts have substantive logic changes
+- Peek:
+```text
+question: I am looking for Texas counties that consistently ranked in the top five for child care center sites particip... -> I am looking for a major Texas county that consistently ranked in the top five for childcare centers particip...
+node 1 subquestion: What is the number of child care center sites in each Texas county participating in the federal meal-reimburs... -> How many CACFP childcare center sites did each Texas county have in 2018-2019? (Filter: ProgramYear == '2018-...
+node 1 answer: {"BEXAR": 622, "CAMERON": 455, "DALLAS": 1207, "EL PASO": 459, "FORT ... -> {"BEXAR": 622, "DALLAS": 1207, "HARRIS": 1781, "HIDALGO": 878, "OTHER...
+node 1 limit: 10 -> 
+node 2 answer: {"BEXAR": 888, "CAMERON": 592, "DALLAS": 1435, "EL PASO": 524, "HARRI... -> {"BEXAR": 888, "CAMERON": 592, "DALLAS": 1435, "HARRIS": 2179, "HIDAL...
+node 1 fact diff:
+@@ -1 +1,2 @@
++import os
+@@ -6,13 +7,18 @@
+-source = "datagov/child-and-adult-care-food-programs-cacfp-centers-site-level-contact-and-program-parti-2018/files/rows.txt"
++source = 'datagov/child-and-adult-care-food-programs-cacfp-centers-site-level-contact-and-program-parti-2018/files/rows.txt'
+-obj = boto3.client("s3", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
+-df = pd.read_csv(io.BytesIO(obj["Body"].read()), low_memory=False)
+-result = (
+-    df.loc[df["ProgramYear"] == "2018-2019"]
+-      .groupby("SiteCounty", dropna=False)
+node 2 fact diff:
+@@ -1 +1,2 @@
++import os
+@@ -6,13 +7,18 @@
+-source = "datagov/child-and-adult-care-food-programs-cacfp-centers-site-level-contact-and-program-parti-2019/files/rows.txt"
++source = 'datagov/child-and-adult-care-food-programs-cacfp-centers-site-level-contact-and-program-parti-2019/files/rows.txt'
+-obj = boto3.client("s3", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
+-df = pd.read_csv(io.BytesIO(obj["Body"].read()), low_memory=False)
+-result = (
+-    df.loc[df["ProgramYear"] == "2019-2020"]
+-      .groupby("SiteCounty", dropna=False)
+```
+
+### `k-4-d-5/task_5.json`
+- Reason: one or more node answers changed; one or more node facts have substantive logic changes
+- Peek:
+```text
+question: Identify the two Texas counties that are in the top 5 in the number of home-based day care sites participatin... -> Identify the two Texas counties that are in the top 5 in the number of home-based daycares from 2018-2022, wh...
+node 1 subquestion: What is the number of home-based day care sites in each Texas county participating in the federal meal-reimbu... -> How many CACFP day care homes were in each Texas county in 2018-2019? (Filter: ProgramYear == '2018-2019'; co...
+node 6 answer: ["Tarrant", "Travis"] -> ["TRAVIS", "TARRANT"]
+node 1 fact diff:
+@@ -1 +1,2 @@
++import os
+@@ -5,11 +6,18 @@
+-source = "datagov/child-and-adult-care-food-programs-cacfp-day-care-homes-site-level-contact-and-progra-2018/files/rows.txt"
++
++source = 'datagov/child-and-adult-care-food-programs-cacfp-day-care-homes-site-level-contact-and-progra-2018/files/rows.txt'
+-obj = boto3.client("s3", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
+-df = pd.read_csv(io.BytesIO(obj["Body"].read()), low_memory=False)
+-answer = (
+-    df.loc[df["ProgramYear"].astype(str) == "2018-2019", "CECounty"]
+node 2 fact diff:
+@@ -1 +1,2 @@
++import os
+@@ -5,11 +6,18 @@
+-source = "datagov/child-and-adult-care-food-programs-cacfp-day-care-homes-site-level-contact-and-progra-2019/files/rows.txt"
++
++source = 'datagov/child-and-adult-care-food-programs-cacfp-day-care-homes-site-level-contact-and-progra-2019/files/rows.txt'
+-obj = boto3.client("s3", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
+-df = pd.read_csv(io.BytesIO(obj["Body"].read()), low_memory=False)
+-answer = (
+-    df.loc[df["ProgramYear"].astype(str) == "2019-2020", "CECounty"]
+```
+
+### `k-5-d-1/task_1.json`
+- Reason: one or more node facts have substantive logic changes
+- Peek:
+```text
+question: I'm analyzing 2020 crime statistics for the LAPD division that serves neighborhoods including Echo Park and S... -> I'm analyzing 2020 crime statistics for the LAPD's Rampart Division. What was the most frequent crime reporte...
+node 1 subquestion: Which LAPD area name serves neighborhoods including Echo Park and Silver Lake? -> What LAPD area name corresponds to the Rampart Division?
+node 1 source: wikipedia/LAPD_Rampart_Division/content.txt -> wikipedia/Rampart_Division/content.txt
+node 1 fact diff:
+@@ -1 +1 @@
+-The LAPD Rampart area/division serves neighborhoods including Echo Park and Silver Lake.
++The LAPD Rampart Division corresponds to the LAPD area name Rampart.
+node 2 fact diff:
+@@ -1 +1,2 @@
++import os
+@@ -6,8 +7,17 @@
+-source = "datagov/lapd-ripa-ab-953-stop-incident-details-from-7-1-2018-to-present/files/rows.txt"
+-bucket = "lakeqa-yc4103-datalake"
+-obj = boto3.client("s3", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
+-df = pd.read_csv(io.BytesIO(obj["Body"].read()), low_memory=False)
++source = 'datagov/lapd-ripa-ab-953-stop-incident-details-from-7-1-2018-to-present/files/rows.txt'
++bucket = 'lakeqa-yc4103-datalake'
++local_path = source if os.path.exists(source) else '/tmp/k123_data_cache/' + source
+```
+
+### `k-5-d-1/task_2.json`
+- Reason: one or more node answers changed; one or more node facts have substantive logic changes
+- Peek:
+```text
+question: I'm analyzing police activity in the capital of Texas. For 2023, I need to know which patrol sector had the h... -> I'm analyzing police activity in Austin, Texas. For 2023, I need to know which patrol sector had the highest ...
+node 2 subquestion: For 2023 <hop 1 answer> police dispatch incidents, which sector has the most incidents? -> In 2023 CAD incidents in <node_1 answer>, which sector has the most incidents?
+node 3 answer: 4 -> 4
+node 5 answer: 52 -> 52
+node 1 fact diff:
+@@ -1 +1 @@
+-Austin is the capital city of the U.S. state of Texas.
++Austin is the capital of Texas.
+node 2 fact diff:
+@@ -1 +1,2 @@
++import os
+@@ -6,16 +7,20 @@
+-source = "datagov/apd-computer-aided-dispatch-incidents/files/rows.txt"
+-bucket = "lakeqa-yc4103-datalake"
+-obj = boto3.client("s3", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
+-df = pd.read_csv(io.BytesIO(obj["Body"].read()), low_memory=False)
++source = 'datagov/apd-computer-aided-dispatch-incidents/files/rows.txt'
++bucket = 'lakeqa-yc4103-datalake'
++local_path = source if os.path.exists(source) else '/tmp/k123_data_cache/' + source
+```
+
+### `k-5-d-1/task_3.json`
+- Reason: one or more node facts have substantive logic changes
+- Peek:
+```text
+node 1 subquestion: Which Washington, D.C. ward contains Adams Morgan? -> Adams Morgan is part of which ward of Washington, D.C.?
+node 2 fact diff:
+@@ -1,2 +1,5 @@
++import os
++import io
++from collections import Counter
+@@ -4,15 +7,22 @@
+-from collections import Counter
+-source = "datagov/crime-incidents-in-2017/files/data.txt"
+-bucket = "lakeqa-yc4103-datalake"
+-body = boto3.client("s3", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)["Body"].read()
+-payload = json.loads(body)
+node 3 fact diff:
+@@ -1,2 +1,5 @@
++import os
++import io
++from collections import Counter
+@@ -4,15 +7,22 @@
+-from collections import Counter
+-source = "datagov/crime-incidents-in-2018/files/data.txt"
+-bucket = "lakeqa-yc4103-datalake"
+-body = boto3.client("s3", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)["Body"].read()
+-payload = json.loads(body)
+```
+
+### `k-5-d-1/task_4.json`
+- Reason: one or more node facts have substantive logic changes
+- Peek:
+```text
+question: I'm analyzing crime patterns in the largest-area borough in NYC. First, identify the precinct that received t... -> I'm analyzing crime patterns in Queens. First, identify the precinct that received the most complaints in 202...
+node 1 subquestion: Which borough of New York City is the largest by area? -> Which borough of New York City is Queens?
+node 1 fact diff:
+@@ -1 +1 @@
+-Queens is the largest by area of the five boroughs of New York City, coextensive with Queens County, in the U.S. state of New York.
++Queens is a borough of New York City.
+node 2 fact diff:
+@@ -1 +1,2 @@
++import os
+@@ -6,18 +7,24 @@
+-source = "datagov/nypd-complaint-data-historic/files/rows.txt"
+-bucket = "lakeqa-yc4103-datalake"
+-obj = boto3.client("s3", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
+-df = pd.read_csv(io.BytesIO(obj["Body"].read()), low_memory=False)
++source = 'datagov/nypd-complaint-data-historic/files/rows.txt'
++bucket = 'lakeqa-yc4103-datalake'
++local_path = source if os.path.exists(source) else '/tmp/k123_data_cache/' + source
+```
+
+### `k-5-d-2/task_1.json`
+- Reason: one or more node facts have substantive logic changes
+- Peek:
+```text
+question: Find the Texas counties that appear in both of these groups: (1) counties with at least 10% of residents ages... -> Find the Texas counties appear in both of these groups: (1) counties with at least 10% adult with disability ...
+node 1 subquestion: Which Texas counties had at least 10% adult disabled population and at least 23% elderly population in 2023? -> Which Texas counties had at least 10% adult disabled population and at least 23% elderly population in FY2023?
+node 5 fact diff:
+@@ -1 +1 @@
+-The Regulators would go through three different leaders, all but one being killed. Although Billy the Kid would achieve fame as a member of the Regulators, he never led them. Their first leader was Richard "Dick" Brewer, killed later by Buckshot Roberts and replaced by Frank McNab, who was killed by members of the Seven Rivers Warriors. McNab was replaced by the Regulators final leader, Doc Scurlock.
++The Lincoln County Regulators had three leaders: Richard "Dick" Brewer (first), Frank McNab (second), and Doc Scurlock (third and final).
+node 6 fact diff:
+@@ -1,3 +1 @@
+-He was born in Tallapoosa County, Alabama, January 11, 1849, the sixth of 11 children born to Priestly Norman Scurlock (July 3, 1806 – June 22, 1876) and Esther Ann Brown (May 19, 1819 – June 1, 1903). Josiah was said to have studied medicine in New Orleans, thus receiving his nickname "Doc".
+-
+-Doc Scurlock died at age 80 from a heart attack in Eastland, Texas. He is interred in Eastland City Cemetery, along with his wife and other family members.
++Doc Scurlock died in Eastland, Texas. He was born in Tallapoosa County, Alabama.
+```
+
+### `k-5-d-2/task_10.json`
+- Reason: final answer changed: 1653 -> 1724; one or more node answers changed; one or more node facts have substantive logic changes
+- Peek:
+```text
+question: Find the New York counties, excluding NYC boroughs, satisfying both criteria: (1) an average rate of being se... -> Find the California cities satisfying both criteria: (1) teeth loss rate above 19% in 2016 reported by the ce...
+node 1 subquestion: What were the 2018 rates of being sent back to prison or jail for New York counties excluding NYC boroughs? -> Which California cities had teeth loss crude prevalence (TEETHLOST_CrudePrev) above 19% in the 2016 CDC 500 C...
+node 1 answer: {"ALBANY": "43.0%", "ALLEGANY": "47.2%", "BROOME": "46.0%", "CATTARAU... -> ["Compton", "San Bernardino"]
+node 1 source: datagov/recidivism-beginning-2008/files/rows.txt -> datagov/500-cities-city-level-data-gis-friendly-format-2016-release/f...
+node 1 limit: 10 -> 
+node 1 fact diff:
+@@ -5,4 +5,3 @@
+-
+-source = "datagov/recidivism-beginning-2008/files/rows.txt"
++source = "datagov/500-cities-city-level-data-gis-friendly-format-2016-release/files/rows.txt"
+@@ -10,12 +9,6 @@
+-
+-exclude_counties = {"BRONX", "KINGS", "NEW YORK", "QUEENS", "RICHMOND", "UNKNOWN"}
+-returned_statuses = {"Returned Parole Violation", "New Felony Offense"}
+-
+-    df[df["Release Year"] == 2018]
+node 2 fact diff:
+@@ -5,4 +5,3 @@
+-
+-source = "datagov/recidivism-beginning-2008/files/rows.txt"
++source = "datagov/500-cities-city-level-data-gis-friendly-format-2017-release/files/rows.txt"
+@@ -10,12 +9,7 @@
+-
+-exclude_counties = {"BRONX", "KINGS", "NEW YORK", "QUEENS", "RICHMOND", "UNKNOWN"}
+-returned_statuses = {"Returned Parole Violation", "New Felony Offense"}
+-
+-answer = (
+```
+
+### `k-5-d-2/task_11.json`
+- Reason: file exists only in tasks_mini
+
+### `k-5-d-2/task_2.json`
+- Reason: one or more node answers changed; one or more node facts have substantive logic changes
+- Peek:
+```text
+node 1 subquestion: Which five-time NBA champion team is based in San Antonio? -> What five-time NBA champion team is based in San Antonio?
+node 5 answer: 82 -> 82
+node 6 answer: 898 -> 898
+node 1 fact diff:
+@@ -1 +1 @@
+-is home to the five-time NBA champion San Antonio Spurs.
++According to the Wikipedia article for San Antonio, 'San Antonio is also home to the five-time NBA champion San Antonio Spurs.'
+node 2 fact diff:
+@@ -1 +1 @@
+-In the NBA Finals, they faced the New York Knicks, who had made history by becoming the first eighth seed to ever make the NBA Finals.
++According to the Wikipedia article for San Antonio Spurs. For their first championship in 1999, the article states they 'defeated the New York Knicks' in the NBA Finals.
+```
+
+### `k-5-d-2/task_3.json`
+- Reason: final answer changed: Pittsburgh, Pennsylvania -> Gulf of Mexico; one or more node answers changed; one or more node facts have substantive logic changes
+- Peek:
+```text
+question: What US city had the highest average age-adjusted adult obesity rate in 2016 and 2018? Then, who founded a co... -> Among Harris, Hidalgo, Dallas, and Cameron counties in Texas, which two saw the largest percentage decrease i...
+node 1 subquestion: What are the top-ranked US cities in the 2016 release by age-adjusted adult obesity prevalence, while preserv... -> Among {Harris, Hidalgo, Dallas, Cameron}, which counties had the largest percentage decrease in day care home...
+node id/count changed
+node 1 answer: {"Dayton": 47.2, "Detroit": 45.2, "Gary": 46.9} -> {"Cameron": 392489.51, "Dallas": 2835278.75, "Harris": 8757796.13, "H...
+node 1 source: datagov/500-cities-local-data-for-better-health-2016-release/files/ro... -> datagov/child-and-adult-care-food-programs-cacfp-day-care-homes-meal-...
+node 1 fact diff:
+@@ -4,21 +4,13 @@
+-from botocore.config import Config
++from botocore.client import Config
+-source = "datagov/500-cities-local-data-for-better-health-2016-release/files/rows.txt"
+-bucket = "lakeqa-yc4103-datalake"
+-obj = boto3.client("s3", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
+-df = pd.read_csv(io.BytesIO(obj["Body"].read()), low_memory=False)
+-
+-city_obesity = (
+node 2 fact diff:
+@@ -4,21 +4,13 @@
+-from botocore.config import Config
++from botocore.client import Config
+-source = "datagov/500-cities-local-data-for-better-health-2018-release/files/rows.txt"
+-bucket = "lakeqa-yc4103-datalake"
+-obj = boto3.client("s3", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
+-df = pd.read_csv(io.BytesIO(obj["Body"].read()), low_memory=False)
+-
+-city_obesity = (
+```
+
+### `k-5-d-2/task_4.json`
+- Reason: final answer changed: San Antonio Bay -> Pittsburgh, Pennsylvania; one or more node answers changed; one or more node facts have substantive logic changes
+- Peek:
+```text
+question: Among Brooks, Willacy, Comal, Atascosa, and Victoria counties in Texas, keep those with at least one abuse/ne... -> What US city had the highest average age-adjusted adult obesity rate in 2016 and 2018? Then, who founded a co...
+node 1 subquestion: Among Brooks, Willacy, Comal, Atascosa, and Victoria counties, which had at least 1 abuse/neglect-related chi... -> What is the US city with the highest average age-adjusted adult obesity rate (2016-2018)? (Filter for this no...
+node id/count changed
+node 1 answer: ["Victoria", "Comal", "Willacy", "Brooks"] -> {"Dayton": 47.2, "Detroit": 45.2, "Gary": 46.9}
+node 1 source: datagov/ocs-1-1-abuse-neglect-related-texas-child-fatalities-fy2013-f... -> datagov/500-cities-local-data-for-better-health-2016-release/files/ro...
+node 1 fact diff:
+@@ -5,3 +5,4 @@
+-source = "datagov/ocs-1-1-abuse-neglect-related-texas-child-fatalities-fy2013-fy2022/files/rows.txt"
++
++source = "datagov/500-cities-local-data-for-better-health-2016-release/files/rows.txt"
+@@ -10,10 +11,14 @@
+-target_counties = ["Brooks", "Willacy", "Comal", "Atascosa", "Victoria"]
+-
+-county_totals = (
+-    df[df["Fiscal Year"].between(2018, 2022) & df["County"].isin(target_counties)]
+-    .groupby("County", as_index=False)["Abuse Neglect Fatalities"].sum()
+node 2 fact diff:
+@@ -5,3 +5,4 @@
+-source = "datagov/ocs-1-2-non-abuse-neglect-related-texas-child-fatality-investigations-fy2013-fy2022/files/rows.txt"
++
++source = "datagov/500-cities-local-data-for-better-health-2018-release/files/rows.txt"
+@@ -10,10 +11,14 @@
+-target_counties = ["Brooks", "Willacy", "Comal", "Atascosa", "Victoria"]
+-
+-county_totals = (
+-    df[df["Fiscal Year"].between(2018, 2022) & df["County"].isin(target_counties)]
+-    .groupby("County", as_index=False)["Non-Abuse/Neglect Fatalities Investigated"].sum()
+```
+
+### `k-5-d-2/task_5.json`
+- Reason: final answer changed: 1735 -> San Antonio Bay; one or more node answers changed; one or more node facts have substantive logic changes
+- Peek:
+```text
+question: Among DC wards 7 and 8, identify which ward had the higher average 311 service requests from 2019 through 202... -> Among Brooks, Willacy, Comal, Atascosa, and Victoria counties in Texas, keep those with at least one abuse/ne...
+node 1 subquestion: For 2019, how many 311 service requests were recorded in Ward 7 and Ward 8? -> Among Brooks, Willacy, Comal, Atascosa, and Victoria counties, which had at least 1 abuse/neglect-related chi...
+node id/count changed
+node 1 answer: ["Ward 7 (42,226)", "Ward 8 (34,959)"] -> ["Brooks County", "Willacy County", "Comal County", "Victoria County"]
+node 1 source: datagov/311-city-service-requests-in-2019/files/data.txt -> datagov/ocs-1-1-abuse-neglect-related-texas-child-fatalities-fy2013-f...
+node 1 fact diff:
+@@ -1,3 +1,2 @@
+-import json
+@@ -6,16 +5,15 @@
+-source = "datagov/311-city-service-requests-in-2019/files/data.txt"
++source = "datagov/ocs-1-1-abuse-neglect-related-texas-child-fatalities-fy2013-fy2022/files/rows.txt"
+-data = json.load(io.TextIOWrapper(obj["Body"], encoding="utf-8"))
+-df = pd.json_normalize(data["features"])
+-ward_col = "properties.WARD"
+-result = (
+-    df[df[ward_col].isin(["7", "8", 7, 8])]
+node 2 fact diff:
+@@ -1,3 +1,2 @@
+-import json
+@@ -6,16 +5,15 @@
+-source = "datagov/311-city-service-requests-in-2020/files/data.txt"
++source = "datagov/ocs-1-2-non-abuse-neglect-related-texas-child-fatality-investigations-fy2013-fy2022/files/rows.txt"
+-data = json.load(io.TextIOWrapper(obj["Body"], encoding="utf-8"))
+-df = pd.json_normalize(data["features"])
+-ward_col = "properties.WARD"
+-result = (
+-    df[df[ward_col].isin(["7", "8", 7, 8])]
+```
+
+### `k-5-d-2/task_6.json`
+- Reason: final answer changed: 99357947 -> 1735; one or more node answers changed; one or more node facts have substantive logic changes
+- Peek:
+```text
+question: Gary, Indiana was founded by a corporation created by J. P. Morgan when he merged Federal Steel and National ... -> Among DC wards 7 and 8, identify which ward had the higher average 311 service requests from 2019 through 202...
+node 1 subquestion: What corporation founded Gary, Indiana? -> Between DC wards 7 and 8, which had higher average 311 service requests (2019-2020)? (Filter for this node: W...
+node id/count changed
+node 1 answer: U.S. Steel Corporation -> ["Ward 7 (42,226)", "Ward 8 (34,959)"]
+node 1 source: wikipedia/Gary,_Indiana/content.txt -> datagov/311-city-service-requests-in-2019/files/data.txt
+node 1 fact diff:
+@@ -1 +1,17 @@
+-Gary, Indiana was founded in 1906 by the U.S. Steel corporation as the home for its new plant, Gary Works.
++import json
++import pandas as pd
++import boto3
++from botocore import UNSIGNED
++from botocore.config import Config
++
++source = "datagov/crime-incidents-in-2019/files/data.txt"
+node 2 fact diff:
+@@ -1 +1,17 @@
+-In 1901, J. P. Morgan created U.S. Steel by merging Carnegie Steel, Federal Steel, and National Steel.
++import json
++import pandas as pd
++import boto3
++from botocore import UNSIGNED
++from botocore.config import Config
++
++source = "datagov/crime-incidents-in-2020/files/data.txt"
+```
+
+### `k-5-d-2/task_7.json`
+- Reason: final answer changed: Elihu Yale -> 99357947; one or more node answers changed; one or more node facts have substantive logic changes
+- Peek:
+```text
+question: Find the Connecticut counties that satisfy both criteria: (1) more than 200 accidental overdose deaths in 202... -> Gary, Indiana was founded by a corporation created by J. P. Morgan when he merged Federal Steel and National ...
+node 1 subquestion: Which Connecticut counties had more than 200 accidental overdose deaths in 2020, and what were those totals? -> What corporation founded Gary, Indiana?
+node id/count changed
+node 1 answer: {"Fairfield County": 208, "Hartford County": 335, "New Haven County":... -> U.S. Steel Corporation
+node 1 source: datagov/accidental-drug-related-deaths-2012-2018/files/rows.txt -> wikipedia/Gary,_Indiana/content.txt
+node 1 fact diff:
+@@ -1,24 +1 @@
+-import io
+-import pandas as pd
+-import boto3
+-from botocore import UNSIGNED
+-from botocore.config import Config
+-
+-source = "datagov/accidental-drug-related-deaths-2012-2018/files/rows.txt"
+-bucket = "lakeqa-yc4103-datalake"
+node 2 fact diff:
+@@ -1,13 +1 @@
+-import io
+-import pandas as pd
+-import boto3
+-from botocore import UNSIGNED
+-from botocore.config import Config
+-
+-source = "datagov/connecticut-covid-19-community-levels-by-county-as-originally-posted/files/rows.txt"
+-bucket = "lakeqa-yc4103-datalake"
+```
+
+### `k-5-d-2/task_8.json`
+- Reason: final answer changed: Gippeswic -> Elihu Yale; one or more node answers changed; one or more node facts have substantive logic changes
+- Peek:
+```text
+question: Find the New York counties, excluding NYC boroughs, with average total Medicaid-paid amounts for adult mental... -> Two Connecticut counties satisfy both criteria: (1) over 200 accidental drug deaths in 2020, and (2) a COVID-...
+node 1 subquestion: What were the 2017 total Medicaid-paid amounts for adult mental health claims in each New York county, exclud... -> Which Connecticut counties had over 200 accidental drug deaths in 2020?
+node id/count changed
+node 1 answer: {"Albany": "$19,408,513", "Dutchess": "$25,427,485", "Erie": "$70,519... -> ["New Haven County", "Hartford County", "Fairfield County"]
+node 1 source: datagov/county-mental-health-profiles-phase-2-beginning-2014/files/ro... -> datagov/accidental-drug-related-deaths-2012-2018/files/rows.txt
+node 1 fact diff:
+@@ -5,3 +5,4 @@
+-source = "datagov/county-mental-health-profiles-phase-2-beginning-2014/files/rows.txt"
++
++source = "datagov/accidental-drug-related-deaths-2012-2018/files/rows.txt"
+@@ -10,18 +11,7 @@
+-nyc_boroughs = ["Bronx", "Kings", "New York", "Queens", "Richmond"]
+-result = (
+-    df[
+-        (df["Service Year"] == 2017)
+-        & (df["Age Group"] == "Adult")
+node 2 fact diff:
+@@ -5,3 +5,4 @@
+-source = "datagov/county-mental-health-profiles-phase-2-beginning-2014/files/rows.txt"
++
++source = "datagov/connecticut-covid-19-community-levels-by-county-as-originally-posted/files/rows.txt"
+@@ -10,18 +11,3 @@
+-nyc_boroughs = ["Bronx", "Kings", "New York", "Queens", "Richmond"]
+-result = (
+-    df[
+-        (df["Service Year"] == 2018)
+-        & (df["Age Group"] == "Adult")
+```
+
+### `k-5-d-2/task_9.json`
+- Reason: final answer changed: 1724 -> Gippeswic; one or more node answers changed; one or more node facts have substantive logic changes
+- Peek:
+```text
+question: Find the California cities satisfying both criteria: (1) older adults with major tooth loss above 19% in 2016... -> Find the New York counties (excluding NYC boroughs) having average adult mental health Medicaid paid claims b...
+node 1 subquestion: Which California cities had the unadjusted percentage of older adults with major tooth loss above 19% in 2016? -> What were the adult mental health Medicaid paid claims for New York counties in 2017?
+node id/count changed
+node 1 answer: ["San Bernardino", "Compton"] -> {"Erie": "$70,519,223", "Suffolk": "$92,420,995", "Westchester": "$66...
+node 1 source: datagov/500-cities-city-level-data-gis-friendly-format-2016-release/f... -> datagov/county-mental-health-profiles-phase-2-beginning-2014/files/ro...
+node 1 fact diff:
+@@ -5,3 +5,3 @@
+-source = "datagov/500-cities-city-level-data-gis-friendly-format-2016-release/files/rows.txt"
++source = "datagov/county-mental-health-profiles-phase-2-beginning-2014/files/rows.txt"
+@@ -9,7 +9,6 @@
+-result = (
+-    df.loc[(df["StateAbbr"] == "CA") & (df["TEETHLOST_CrudePrev"] > 19), ["PlaceName", "TEETHLOST_CrudePrev"]]
+-    .sort_values(["TEETHLOST_CrudePrev", "PlaceName"], ascending=[False, True])
+-    .reset_index(drop=True)
+-)
+-answer = result["PlaceName"].tolist()
+node 2 fact diff:
+@@ -5,3 +5,3 @@
+-source = "datagov/500-cities-city-level-data-gis-friendly-format-2017-release/files/rows.txt"
++source = "datagov/county-mental-health-profiles-phase-2-beginning-2014/files/rows.txt"
+@@ -9,7 +9,6 @@
+-result = (
+-    df.loc[(df["StateAbbr"] == "CA") & (df["MHLTH_CrudePrev"] > 15), ["PlaceName", "MHLTH_CrudePrev"]]
+-    .sort_values(["PlaceName", "MHLTH_CrudePrev"], ascending=[True, False])
+-    .reset_index(drop=True)
+-)
+-answer = result["PlaceName"].tolist()
+```
+
+### `k-5-d-3/task_1.json`
+- Reason: one or more node answers changed; one or more node facts have substantive logic changes
+- Peek:
+```text
+question: I am looking for a specific high school in Manhattan's District 2 that consistently received 'A' grades for c... -> I'm looking for a specific high school in Manhattan's District 02 that consistently received 'A' grades from ...
+node 1 subquestion: Which Manhattan District 2 high schools received an A grade for comprehensive performance in 2007-08? -> Which District 02 Manhattan high schools (DBN starts with '02M') received an OVERALL GRADE of 'A' in 2007-08?...
+node 1 fact changed only in ignored import/parser/access details
+node 2 answer: ["02M047 - 47 THE AMERICAN SIGN LANGUAGE AND ENGLISH SECONDARY SCHOOL... -> ["02M288 - FOOD AND FINANCE HIGH SCHOOL", "02M294 - ESSEX STREET ACAD...
+node 3 answer: ["02M047 - 47 The American Sign Language and English Secondary School... -> ["02M288 - Food and Finance High School", "02M294 - Essex Street Acad...
+node 2 fact diff:
+@@ -5,15 +5,19 @@
+-source = "datagov/2008-2009-school-progress-report/files/rows.txt"
+-bucket = "lakeqa-yc4103-datalake"
+-obj = boto3.client("s3", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
+-df = pd.read_csv(io.BytesIO(obj["Body"].read()), low_memory=False)
++
++source = 'datagov/2008-2009-school-progress-report/files/rows.txt'
++bucket = 'lakeqa-yc4103-datalake'
++obj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
+node 3 fact diff:
+@@ -5,15 +5,19 @@
+-source = "datagov/2009-2010-school-progress-report/files/rows.txt"
+-bucket = "lakeqa-yc4103-datalake"
+-obj = boto3.client("s3", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
+-df = pd.read_csv(io.BytesIO(obj["Body"].read()), low_memory=False)
++
++source = 'datagov/2009-2010-school-progress-report/files/rows.txt'
++bucket = 'lakeqa-yc4103-datalake'
++obj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
+```
+
+### `k-5-d-3/task_10.json`
+- Reason: final answer changed: Ward 5 -> Swartekill, New York; one or more node facts have substantive logic changes
+- Peek:
+```text
+question: First, identify the Washington, DC ward that consistently ranked in the top four for building permits from 20... -> First, identify the Washington, DC ward that consistently ranked in the top four for building permits from 20...
+node 1 subquestion: Which Washington, DC wards were in the top 4 by number of building permits in 2022? -> Which Washington, DC wards were in the top 4 by number of building permits across 2022-2024? (Filter for this...
+node id/count changed
+node 10 added/removed
+node 11 added/removed
+node 1 fact diff:
+@@ -1,29 +1,20 @@
+-import os
++import io
++import xml.etree.ElementTree as ET
++from collections import Counter
++from botocore import UNSIGNED
++from botocore.config import Config
+-source = "datagov/building-permits-in-2022/files/data.txt"
+-bucket = "lakeqa-yc4103-datalake"
+node 2 fact diff:
+@@ -1,2 +1,2 @@
+-import os
++import boto3
+@@ -4,18 +4,19 @@
+-import boto3
++from botocore import UNSIGNED
++from botocore.config import Config
+-source = "datagov/building-permits-in-2023/files/data.txt"
+-bucket = "lakeqa-yc4103-datalake"
+-local_path = source if os.path.exists(source) else "/tmp/k123_data_cache/" + source
+```
+
+### `k-5-d-3/task_11.json`
+- Reason: one or more node answers changed; one or more node facts have substantive logic changes
+- Peek:
+```text
+question: First, identify the Washington, DC ward that consistently ranked in the top four for building permits from 20... -> Among Washington, DC wards 2, 4, 5, and 6, identify the two wards with the highest average crime-incident cou...
+node 1 subquestion: What are the 2022 building-permit counts by ward in Washington, DC, so the top four wards for 2022 can be ide... -> Among the wards 2, 4, 5, and 6, which two had the highest average crime-incident counts across 2022-2024? (Fi...
+node id/count changed
+node 1 answer: {"Ward 2": 8286, "Ward 4": 6971, "Ward 5": 6580, "Ward 6": 8371} -> {"Ward 2": 4794, "Ward 4": 2547, "Ward 5": 4497, "Ward 6": 3685}
+node 1 source: datagov/building-permits-in-2022/v1/files/data.csv -> datagov/crime-incidents-in-2022/files/data.txt
+node 1 fact diff:
+@@ -1 +1,21 @@
+-answer not derivable
++import boto3
++import io
++import json
++import pandas as pd
++from botocore import UNSIGNED
++from botocore.config import Config
++
+node 2 fact diff:
+@@ -1 +1,21 @@
+-answer not derivable
++import boto3
++import io
++import json
++import pandas as pd
++from botocore import UNSIGNED
++from botocore.config import Config
++
+```
+
+### `k-5-d-3/task_12.json`
+- Reason: one or more node answers changed; one or more node facts have substantive logic changes
+- Peek:
+```text
+question: Among Washington state's public four-year universities, which two had the highest average contract counts in ... -> Can you find the counties where the top 3 community colleges by average contract count from FY 2014 to FY 201...
+node 1 subquestion: According to the list of colleges and universities in Washington state, which public four-year universities a... -> How many contracts did Seattle Community College - District 6 (SCCD-6), Green River Community College (GRC), ...
+node 1 answer: ["University of Washington", "Washington State University", "Western ... -> Seattle Community College - District 6: 1,308; Green River Community ...
+node 1 source: wikipedia/List_of_colleges_and_universities_in_Washington_(state)/con... -> datagov/agency-contracts-fiscal-year-2014/files/rows.txt
+node 2 answer: {"Central Washington University": 223, "Eastern Washington University... -> Seattle Colleges: 1,292; Green River Community College: 633; Communit...
+node 1 fact diff:
+@@ -1 +1,15 @@
+-The Wikipedia list of colleges and universities in Washington state lists the public four-year universities as University of Washington, Washington State University, Western Washington University, Eastern Washington University, Central Washington University, and Evergreen State College.
++import io
++import pandas as pd
++import boto3
++from botocore import UNSIGNED
++from botocore.config import Config
++
++source = 'datagov/agency-contracts-fiscal-year-2014/files/rows.txt'
+node 2 fact diff:
+@@ -6,27 +6,10 @@
+-source = "datagov/agency-contracts-fiscal-year-2014/files/rows.txt"
+-bucket = "lakeqa-yc4103-datalake"
+-obj = boto3.client("s3", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
+-df = pd.read_csv(io.BytesIO(obj["Body"].read()), low_memory=False)
++source = 'datagov/agency-contracts-fiscal-year-2015/files/rows.txt'
++bucket = 'lakeqa-yc4103-datalake'
++obj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
++df = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)
+```
+
+### `k-5-d-3/task_13.json`
+- Reason: one or more node answers changed; one or more node facts have substantive logic changes
+- Peek:
+```text
+question: Find the state where Khan Lab School is located in. In that state, find the counties that rank in the top thr... -> Khan Lab School is located in a city and county. Using school district office listings for that city and coun...
+node 2 subquestion: <hop 1 answer> is a city in which county? -> <node_1 answer> is a city in which county?
+node 4 answer: ["Los Angeles County", "San Diego County", "Orange County"] -> Los Angeles County; San Diego County; Orange County
+node 4 limit: 3 -> 
+node 5 answer: ["Los Angeles County", "Orange County", "San Diego County"] -> Los Angeles County; Orange County; San Diego County
+node 3 fact diff:
+@@ -1,2 +1,4 @@
++import io
++import pandas as pd
+@@ -5,17 +7,10 @@
+-source = "datagov/school-district-office-locations-current-d848f/files/nces::school-district-office-locations-current-1.txt"
+-bucket = "lakeqa-yc4103-datalake"
+-obj = boto3.client("s3", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
+-payload = json.loads(obj["Body"].read())
++source = 'datagov/school-district-office-locations-current-d848f/files/nces::school-district-office-locations-current-1.txt'
++bucket = 'lakeqa-yc4103-datalake'
+node 4 fact diff:
+@@ -7,19 +7,13 @@
+-source = "datagov/public-school-locations-current-23297/files/data-oyCYxF.txt"
+-bucket = "lakeqa-yc4103-datalake"
+-obj = boto3.client("s3", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
+-payload = json.loads(obj["Body"].read())
+-df = pd.json_normalize(payload["features"])
+-df.columns = [col.replace("properties.", "") for col in df.columns]
++source = 'datagov/public-school-locations-current-23297/files/data-oyCYxF.txt'
++bucket = 'lakeqa-yc4103-datalake'
+```
+
+### `k-5-d-3/task_14.json`
+- Reason: one or more node answers changed; one or more node facts have substantive logic changes
+- Peek:
+```text
+question: ACT, Inc. was founded in a city in Iowa. Determine the county for that city and the corresponding state. In t... -> ACT, Inc. was founded in a city in Iowa. Determine the county for that city and the two-digit state FIPS code...
+node 2 subquestion: <hop 1 answer> is located in which county? -> <node_1 answer> is located in which county?
+node 4 answer: ["Polk County", "Linn County", "Scott County"] -> Polk County; Linn County; Scott County
+node 5 answer: ["Polk County", "Linn County", "Sioux County"] -> Polk County; Linn County; Sioux County
+node 6 answer: ["Linn County", "Polk County", "Pottawattamie County"] -> Linn County; Polk County; Pottawattamie County
+node 3 fact diff:
+@@ -1,2 +1,4 @@
++import io
++import pandas as pd
+@@ -5,17 +7,10 @@
+-source = "datagov/school-district-office-locations-current-d848f/files/nces::school-district-office-locations-current-1.txt"
+-bucket = "lakeqa-yc4103-datalake"
+-obj = boto3.client("s3", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
+-payload = json.loads(obj["Body"].read())
++source = 'datagov/school-district-office-locations-current-d848f/files/nces::school-district-office-locations-current-1.txt'
++bucket = 'lakeqa-yc4103-datalake'
+node 4 fact diff:
+@@ -1 +1,2 @@
++import io
+@@ -6,18 +7,13 @@
+-source = "datagov/public-school-locations-2018-19-42360/files/data-F2nGlG.txt"
+-bucket = "lakeqa-yc4103-datalake"
+-obj = boto3.client("s3", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
+-payload = json.loads(obj["Body"].read())
+-df = pd.json_normalize(payload["features"])
+-df.columns = [col.replace("properties.", "") for col in df.columns]
++source = 'datagov/public-school-locations-2018-19-42360/files/data-F2nGlG.txt'
+```
+
+### `k-5-d-3/task_15.json`
+- Reason: one or more node answers changed; one or more node facts have substantive logic changes
+- Peek:
+```text
+question: I am looking for a Missouri state agency that consistently ranked in the top 5 for average employee salary be... -> I am looking for a Missouri state agency that consistently ranked in the top 5 for average employee pay betwe...
+node 1 subquestion: Which Missouri state agencies had the highest average employee salary in 2018? -> Which Missouri state agencies had the highest average employee pay in 2018?
+node 1 limit: 5 -> 
+node 2 answer: ["OFFICE OF GOVERNOR", "OFFICE OF ATTORNEY GENERAL", "JUDICIARY", "OF... -> ["OFFICE OF ATTORNEY GENERAL", "OFFICE OF STATE AUDITOR", "OFFICE OF ...
+node 2 limit: 5 -> 
+node 1 fact diff:
+@@ -6,12 +6,9 @@
+-source = "datagov/2018-state-employee-pay/files/rows.txt"
+-bucket = "lakeqa-yc4103-datalake"
+-obj = boto3.client("s3", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
+-df = pd.read_csv(io.BytesIO(obj["Body"].read()), low_memory=False)
++source = 'datagov/2018-state-employee-pay/files/rows.txt'
++bucket = 'lakeqa-yc4103-datalake'
++obj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
++df = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)
+node 2 fact diff:
+@@ -6,12 +6,10 @@
+-source = "datagov/2019-state-employee-pay/files/rows.txt"
+-bucket = "lakeqa-yc4103-datalake"
+-obj = boto3.client("s3", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
+-df = pd.read_csv(io.BytesIO(obj["Body"].read()), low_memory=False)
++source = 'datagov/2019-state-employee-pay/files/rows.txt'
++bucket = 'lakeqa-yc4103-datalake'
++obj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
++df = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)
+```
+
+### `k-5-d-3/task_2.json`
+- Reason: one or more node answers changed; one or more node facts have substantive logic changes
+- Peek:
+```text
+question: From the top three Texas counties by average state-government spending from 2018 to 2020, identify the county... -> From the top three Texas counties by average state expenditure from 2018 to 2020, identify the county with th...
+node 1 subquestion: What was the total state-government spending by Texas county in 2018? -> What were the total state expenditures in 2018 for Travis, Harris, and Dallas counties? (Filter County in {TR...
+node 1 answer: {"BEXAR": 14728288130.02, "DALLAS": 21393532327.19, "EL PASO": 533610... -> Travis: $29.37B; Harris: $28.16B; Dallas: $21.39B
+node 1 limit: 10 -> 
+node 2 answer: {"BEXAR": 7513472495.969999, "DALLAS": 10578598198.67, "EL PASO": 269... -> Travis: $16.34B; Harris: $14.99B; Dallas: $10.58B
+node 1 fact diff:
+@@ -6,17 +6,12 @@
+-source = "datagov/texas-state-expenditures-by-county-2018/files/rows.txt"
+-bucket = "lakeqa-yc4103-datalake"
+-obj = boto3.client("s3", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
+-df = pd.read_csv(io.BytesIO(obj["Body"].read()), low_memory=False)
++source = 'datagov/texas-state-expenditures-by-county-2018/files/rows.txt'
++bucket = 'lakeqa-yc4103-datalake'
++obj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
++df = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)
+node 2 fact diff:
+@@ -6,17 +6,12 @@
+-source = "datagov/texas-state-expenditures-by-county-2019/files/rows.txt"
+-bucket = "lakeqa-yc4103-datalake"
+-obj = boto3.client("s3", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
+-df = pd.read_csv(io.BytesIO(obj["Body"].read()), low_memory=False)
++source = 'datagov/texas-state-expenditures-by-county-2019/files/rows.txt'
++bucket = 'lakeqa-yc4103-datalake'
++obj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
++df = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)
+```
+
+### `k-5-d-3/task_3.json`
+- Reason: one or more node answers changed; one or more node facts have substantive logic changes
+- Peek:
+```text
+question: From the counties that were in the statewide top 5 for releases from the Texas state prison system in 2019, 2... -> From the top three Texas counties based on average Texas department of criminal justice releases across 2019 ...
+node 1 subquestion: Which counties were in the statewide top 5 for releases from the Texas state prison system in 2019? -> How many TDCJ releases did Harris, Dallas, and Tarrant counties have in FY 2019? (Filter County in {Harris, D...
+node id/count changed
+node 1 answer: ["Harris", "Dallas", "Tarrant", "Bexar", "Hidalgo"] -> Harris: 9,029; Dallas: 5,355; Tarrant: 4,769
+node 2 answer: ["Harris", "Dallas", "Tarrant", "Bexar", "Travis"] -> Harris: 7,059; Dallas: 4,540; Tarrant: 4,450
+node 1 fact diff:
+@@ -6,13 +6,9 @@
+-source = "datagov/texas-department-of-criminal-justice-releases-fy-2019/files/rows.txt"
+-bucket = "lakeqa-yc4103-datalake"
+-obj = boto3.client("s3", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
+-df = pd.read_csv(io.BytesIO(obj["Body"].read()), low_memory=False)
++source = 'datagov/texas-department-of-criminal-justice-releases-fy-2019/files/rows.txt'
++bucket = 'lakeqa-yc4103-datalake'
++obj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
++df = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)
+node 2 fact diff:
+@@ -6,13 +6,9 @@
+-source = "datagov/texas-department-of-criminal-justice-releases-fy-2020/files/rows.txt"
+-bucket = "lakeqa-yc4103-datalake"
+-obj = boto3.client("s3", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
+-df = pd.read_csv(io.BytesIO(obj["Body"].read()), low_memory=False)
++source = 'datagov/texas-department-of-criminal-justice-releases-fy-2020/files/rows.txt'
++bucket = 'lakeqa-yc4103-datalake'
++obj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
++df = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)
+```
+
+### `k-5-d-3/task_4.json`
+- Reason: one or more node facts have substantive logic changes
+- Peek:
+```text
+question: Among the two most populous Texas counties in 2024, which had the larger increase in the number of veterans r... -> Among the two most populous Texas counties in 2024, which of those had a larger increase in veterans disabili...
+node 2 subquestion: For <hop 1 answer>, what were the number of veterans receiving disability compensation in 2020? -> For the two counties from <node_1 answer>, what were the disability compensation recipient counts in 2020 and...
+node 2 fact diff:
+@@ -6,13 +6,15 @@
+-source = "datagov/fy-2020-disability-compensation-recipients-by-county/files/rows.txt"
+-bucket = "lakeqa-yc4103-datalake"
+-obj = boto3.client("s3", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
+-df = pd.read_csv(io.BytesIO(obj["Body"].read()), low_memory=False)
++source = 'datagov/fy-2020-disability-compensation-recipients-by-county/files/rows.txt'
++bucket = 'lakeqa-yc4103-datalake'
++obj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
++df = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)
+node 3 fact diff:
+@@ -6,13 +6,15 @@
+-source = "datagov/fy-2023-disability-compensation-recipients-by-county/files/rows.txt"
+-bucket = "lakeqa-yc4103-datalake"
+-obj = boto3.client("s3", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
+-df = pd.read_csv(io.BytesIO(obj["Body"].read()), low_memory=False)
++source = 'datagov/fy-2023-disability-compensation-recipients-by-county/files/rows.txt'
++bucket = 'lakeqa-yc4103-datalake'
++obj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
++df = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)
+```
+
+### `k-5-d-3/task_5.json`
+- Reason: one or more node answers changed; one or more node facts have substantive logic changes
+- Peek:
+```text
+node 1 subquestion: For calendar year 2021, how many employee rows are there for each of CORRECTIONS, SOCIAL SERVICES, and TRANSP... -> Among CORRECTIONS, SOCIAL SERVICES, and TRANSPORTATION, which had the highest average employee count across 2...
+node 3 answer: {"CORRECTIONS": 13107, "SOCIAL SERVICES": 8932, "TRANSPORTATION": 695... -> CORRECTIONS
+node 1 fact diff:
+@@ -6,12 +6,14 @@
+-source = "datagov/2021-state-employee-pay/files/rows.txt"
+-bucket = "lakeqa-yc4103-datalake"
+-obj = boto3.client("s3", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
+-df = pd.read_csv(io.BytesIO(obj["Body"].read()), low_memory=False)
++source = 'datagov/2021-state-employee-pay/files/rows.txt'
++bucket = 'lakeqa-yc4103-datalake'
++obj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
++df = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)
+node 2 fact diff:
+@@ -6,12 +6,14 @@
+-source = "datagov/2022-state-employee-pay/files/rows.txt"
+-bucket = "lakeqa-yc4103-datalake"
+-obj = boto3.client("s3", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
+-df = pd.read_csv(io.BytesIO(obj["Body"].read()), low_memory=False)
++source = 'datagov/2022-state-employee-pay/files/rows.txt'
++bucket = 'lakeqa-yc4103-datalake'
++obj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
++df = pd.read_csv(io.BytesIO(obj['Body'].read()), low_memory=False)
+```
+
+### `k-5-d-3/task_6.json`
+- Reason: one or more node facts have substantive logic changes
+- Peek:
+```text
+node 1 subquestion: In 2019, among Harris, Travis, Dallas, and Bexar counties, which were in the statewide top 5 for releases fro... -> In 2019, among Harris, Travis, Dallas, and Bexar counties, which were in the overall top 5 for releases from ...
+node 8 fact changed only in ignored import/parser/access details
+node 7 fact diff:
+@@ -1 +1 @@
+-Its county seat is Houston, the most populous city in Texas and the fourth-most populous city in the United States.
++Harris County is the most populous county in Texas and the third-most populous in the United States. The county seat is Houston, which is also the largest city in Texas and the fourth-largest city in the United States.
+node 9 fact diff:
+@@ -1 +1 @@
+-The Rockets were founded in 1967 in San Diego by Robert Breitbard, who paid an entry fee of US$1.75 million to join the NBA as an expansion team for the 1967-68 season.
++The Rockets were founded in 1967 in San Diego by Robert Breitbard.
+```
+
+### `k-5-d-3/task_7.json`
+- Reason: one or more node answers changed; one or more node facts have substantive logic changes
+- Peek:
+```text
+question: Among the United States Park Police, United States Capitol Police, and U.S. Secret Service Uniform Division, ... -> Among the United States Park Police, United States Capitol Police, and U.S. Secret Service Uniform Division, ...
+node 1 subquestion: In January 2019, how many driving-related violations did the United States Park Police, United States Capitol... -> Among the United States Park Police, United States Capitol Police, and U.S. Secret Service Uniform Division, ...
+node 3 answer: {"UNITED STATES CAPITOL POLICE": 30, "UNITED STATES PARK POLICE": 71,... -> UNITED STATES PARK POLICE
+node 3 fact diff:
+@@ -16,3 +16,5 @@
+-answer = (
++counts_2019 = {"UNITED STATES PARK POLICE": 103, "UNITED STATES CAPITOL POLICE": 176, "US. SECRET SERVICE UNIFORM DIVISION": 145}
++counts_2020 = {"UNITED STATES PARK POLICE": 204, "UNITED STATES CAPITOL POLICE": 139, "US. SECRET SERVICE UNIFORM DIVISION": 118}
++counts_2021 = (
+@@ -22 +24,3 @@
++averages = {agency: (counts_2019[agency] + counts_2020[agency] + counts_2021[agency]) / 3 for agency in target_agencies}
++answer = sorted(averages, key=lambda agency: (-averages[agency], agency))[0]
+node 4 fact diff:
+@@ -1 +1 @@
+-The Park Police is an operation of the National Park Service, which is an agency of the Department of the Interior.
++The United States Park Police is an operation of the National Park Service.
+```
+
+### `k-5-d-3/task_8.json`
+- Reason: one or more node facts have substantive logic changes
+- Peek:
+```text
+question: Identify the Chicago city department that consistently ranked in the top five by total funding in the officia... -> Identify the Chicago city department that consistently ranked in the top five for ordinance appropriations (w...
+node 1 subquestion: Which department numbers were in the top 5 by total funding in the officially approved city budget in 2019? -> Which department numbers were in the top 5 by total ordinance appropriation in each year 2019-2021? (Filter f...
+node 1 limit: 5 -> 
+node 2 limit: 5 -> 
+node 3 limit: 5 -> 
+node 1 fact diff:
+@@ -5,12 +5,12 @@
+-source = "datagov/budget-2019-budget-ordinance-appropriations/files/rows.txt"
+-bucket = "lakeqa-yc4103-datalake"
+-obj = boto3.client("s3", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
+-df = pd.read_csv(io.BytesIO(obj["Body"].read()), low_memory=False)
+-result = (
+-    df.groupby("DEPARTMENT NUMBER", as_index=False)["2019 ORDINANCE (AMOUNT $)"]
+-    .sum()
+-)
+node 2 fact diff:
+@@ -5,12 +5,12 @@
+-source = "datagov/budget-2020-budget-ordinance-appropriations/files/rows.txt"
+-bucket = "lakeqa-yc4103-datalake"
+-obj = boto3.client("s3", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
+-df = pd.read_csv(io.BytesIO(obj["Body"].read()), low_memory=False)
+-result = (
+-    df.groupby("DEPARTMENT NUMBER", as_index=False)["2020 ORDINANCE (AMOUNT $)"]
+-    .sum()
+-)
+```
+
+### `k-5-d-3/task_9.json`
+- Reason: one or more node answers changed; one or more node facts have substantive logic changes
+- Peek:
+```text
+question: Identify the Chicago library branch that ranked in the top five for total number of items checked out over th... -> Identify the Chicago library branch that ranked in the top five for circulation and visitors, and top three f...
+node 1 subquestion: Which Chicago library branches were in the top 5 by total number of items checked out over the year in 2019? -> Which branches (with physical addresses) were in the top 5 by YTD circulation in the given year? (Filter for ...
+node 1 limit: 5 -> 
+node 2 limit: 5 -> 
+node 3 limit: 5 -> 
+node 1 fact diff:
+@@ -5,12 +5,15 @@
+-source = "datagov/libraries-2019-circulation-by-location/files/rows.txt"
+-bucket = "lakeqa-yc4103-datalake"
+-obj = boto3.client("s3", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
+-df = pd.read_csv(io.BytesIO(obj["Body"].read()), low_memory=False)
++
++source = 'datagov/libraries-2019-circulation-by-location/files/rows.txt'
++bucket = 'lakeqa-yc4103-datalake'
++obj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
+node 2 fact diff:
+@@ -5,12 +5,15 @@
+-source = "datagov/libraries-2020-circulation-by-location/files/rows.txt"
+-bucket = "lakeqa-yc4103-datalake"
+-obj = boto3.client("s3", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
+-df = pd.read_csv(io.BytesIO(obj["Body"].read()), low_memory=False)
++
++source = 'datagov/libraries-2020-circulation-by-location/files/rows.txt'
++bucket = 'lakeqa-yc4103-datalake'
++obj = boto3.client('s3', config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
+```
+
+### `k-5-d-4/task_1.json`
+- Reason: one or more node answers changed; one or more node facts have substantive logic changes
+- Peek:
+```text
+node 1 subquestion: Which New York counties have at least 65 bridges with Poor Status = Y, and what is each qualifying county's p... -> Which NY counties have at least 65 bridges rated 'Poor' status?
+node 1 answer: {"Erie County": 82, "Orange County": 67, "Ulster County": 84, "Westch... -> ["Ulster County", "Erie County", "Westchester County", "Orange County...
+node 2 answer: {"Erie County": 91, "Nassau County": 70, "Oneida County": 50, "Ononda... -> ["Suffolk County", "Erie County", "Nassau County", "Westchester Count...
+node 3 answer: {"Albany County": 148, "Bronx County": 158, "Dutchess County": 125, "... -> ["New York County", "Nassau County", "Suffolk County", "Queens County...
+node 1 fact diff:
+@@ -3,16 +3,15 @@
++from botocore.config import Config
+-from botocore.config import Config
++
+-obj = boto3.client("s3", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
++
++s3 = boto3.client("s3", config=Config(signature_version=UNSIGNED))
++obj = s3.get_object(Bucket=bucket, Key=source)
+-result = (
+node 2 fact diff:
+@@ -3,15 +3,14 @@
++from botocore.config import Config
+-from botocore.config import Config
++
+-obj = boto3.client("s3", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
++
++s3 = boto3.client("s3", config=Config(signature_version=UNSIGNED))
++obj = s3.get_object(Bucket=bucket, Key=source)
+-result = (
+```
+
+### `k-5-d-4/task_2.json`
+- Reason: one or more node answers changed; one or more node facts have substantive logic changes
+- Peek:
+```text
+node 1 subquestion: What are the total FY2007 expenditures by Missouri state agency, so this year's agency totals can be combined... -> Which Missouri state agency had the 3rd highest average expenditure from FY2007-FY2010? (Filter for this node...
+node 1 answer: {"AGRICULTURE": 31813546.32, "COMMERCE AND INSURANCE": 2009267.01, "C... -> {"ELEMENTARY AND SECONDARY EDUCATION": 4893252163.41, "HIGHER EDUCATI...
+node 2 answer: {"AGRICULTURE": 37088287.9, "COMMERCE AND INSURANCE": 6346960.76, "CO... -> {"ELEMENTARY AND SECONDARY EDUCATION": 5048553721.08, "HIGHER EDUCATI...
+node 3 answer: {"AGRICULTURE": 45903725.15, "COMMERCE AND INSURANCE": 6514041.0, "CO... -> {"ELEMENTARY AND SECONDARY EDUCATION": 5170194688.51, "HIGHER EDUCATI...
+node 1 fact diff:
+@@ -1,2 +1 @@
+-import io
+@@ -5,17 +4,21 @@
+-from botocore.config import Config
++from botocore.client import Config
+-source = "datagov/2007-state-expenditures/files/rows.txt"
+-bucket = "lakeqa-yc4103-datalake"
+-obj = boto3.client("s3", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
+-payload = json.load(io.TextIOWrapper(obj["Body"], encoding="utf-8"))
+-columns = [col["name"] for col in payload["meta"]["view"]["columns"]]
+node 2 fact diff:
+@@ -4,15 +4,12 @@
+-from botocore.config import Config
++from botocore.client import Config
+-source = "datagov/2008-state-expenditures/files/rows.txt"
+-bucket = "lakeqa-yc4103-datalake"
+-obj = boto3.client("s3", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
+-df = pd.read_csv(io.BytesIO(obj["Body"].read()), low_memory=False)
+-df["Payments Total"] = pd.to_numeric(df["Payments Total"], errors="coerce")
+-answer = (
+```
+
+### `k-5-d-4/task_3.json`
+- Reason: one or more node answers changed; one or more node facts have substantive logic changes
+- Peek:
+```text
+node 2 subquestion: What are the terminus cities of the highway whose name was first proposed in <hop 1 answer>? -> What are the terminus cities of the highway that was born in <node_1 answer>?
+node 5 answer: {"Aviation": 13147383.4, "Fire": 63941565.36, "Police": 101460132.24,... -> {"Fire": 63941565.36, "Police": 101460132.24, "Water Management": 235...
+node 5 limit: 5 -> 
+node 6 answer: {"Emergency Management and Communications": 10945883.57, "Fire": 4384... -> {"Fire": 43847384.3, "Police": 116144553.32, "Water Management": 1995...
+node 1 fact diff:
+@@ -1 +1 @@
+-Southwest, based in Springfield;
++According to the Wikipedia article for Missouri Department of Transportation, 'MoDOT operates seven districts throughout the state: Northwest, based in St. Joseph; Northeast, based in Hannibal; Kansas City, based in Lee's Summit; Central, based in Jefferson City; St. Louis, based in Chesterfield; Southwest, based in Springfield; and Southeast, based in Sikeston.'
+node 2 fact diff:
+@@ -1 +1 @@
+-Officially recognized as the birthplace of Route 66, it was in Springfield on April 30, 1926, that officials first proposed the name of the new Chicago-to-Los Angeles highway.
++According to the Wikipedia article for Springfield, Missouri, 'Springfield's nicknames include "Queen City of the Ozarks" and "The Birthplace of Route 66"...Officially recognized as the birthplace of Route 66, it was in Springfield on April 30, 1926, that officials first proposed the name of the new Chicago-to-Los Angeles highway.'
+```
+
+### `k-5-d-4/task_4.json`
+- Reason: one or more node answers changed; one or more node facts have substantive logic changes
+- Peek:
+```text
+question: Across years 2015-16 to 2018-19, which Texas county is consistently in the top five for total lunch serves in... -> Across years 2015-16 t0 2018-19, which Texas county is consistently in the top five for total lunch serves in...
+node 1 subquestion: What are the top five SiteCounty values by total LunchTotal in the 2015-2016 SSO dataset? -> Which Texas counties were in the top five for SSO LunchTotal in every program year from 2015-2016 through 201...
+node 1 answer: ["HARRIS", "HIDALGO", "DALLAS", "CAMERON", "EL PASO"] -> ["Harris", "Hidalgo", "Dallas", "Cameron", "El Paso"]
+node 2 answer: ["HIDALGO", "HARRIS", "DALLAS", "CAMERON", "BEXAR"] -> ["Hidalgo", "Harris", "Dallas", "Cameron", "Bexar"]
+node 3 answer: ["HIDALGO", "HARRIS", "DALLAS", "CAMERON", "BEXAR"] -> ["Hidalgo", "Harris", "Dallas", "Cameron", "Bexar"]
+node 1 fact diff:
+@@ -4,15 +4,13 @@
+-from botocore.config import Config
+-source = "datagov/summer-meal-programs-seamless-summer-option-sso-meal-count-information-program-period-2016/files/rows.txt"
+-bucket = "lakeqa-yc4103-datalake"
+-obj = boto3.client("s3", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
+-df = pd.read_csv(io.BytesIO(obj["Body"].read()), low_memory=False)
++from botocore.client import Config
+-result = (
+-    df[df["ProgramYear"] == "2015-2016"]
+node 2 fact diff:
+@@ -4,15 +4,13 @@
+-from botocore.config import Config
+-source = "datagov/summer-meal-programs-seamless-summer-option-sso-meal-count-information-program-period-2017/files/rows.txt"
+-bucket = "lakeqa-yc4103-datalake"
+-obj = boto3.client("s3", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
+-df = pd.read_csv(io.BytesIO(obj["Body"].read()), low_memory=False)
++from botocore.client import Config
+-result = (
+-    df[df["ProgramYear"] == "2016-2017"]
+```
+
+### `k-5-d-4/task_5.json`
+- Reason: one or more node answers changed; one or more node facts have substantive logic changes
+- Peek:
+```text
+node 1 subquestion: What is the total adult day care meal reimbursement in 2016-2017 for each SiteCounty? -> Which Texas counties had the five largest percent decreases in total adult day care meal reimbursements from ...
+node 1 answer: {"BEE": 602056.1175, "BEXAR": 1976511.21, "CAMERON": 4343483.48, "DAL... -> {"Atascosa County": 141083.37, "Brooks County": 60454.65, "Comal Coun...
+node 1 limit: 10 -> 
+node 2 answer: {"BEE": 570655.59, "BEXAR": 2001499.64, "CAMERON": 4324920.055, "DALL... -> {"Atascosa County": 142115.25, "Brooks County": 66250.97, "Comal Coun...
+node 1 fact diff:
+@@ -4,16 +4,25 @@
+-from botocore.config import Config
++from botocore.client import Config
+-source = "datagov/child-and-adult-care-food-programs-cacfp-adult-day-care-centers-meal-reimbursement-pr-2016/files/rows.txt"
+-bucket = "lakeqa-yc4103-datalake"
+-obj = boto3.client("s3", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
+-df = pd.read_csv(io.BytesIO(obj["Body"].read()), low_memory=False)
+-
+-county_totals = (
+node 2 fact diff:
+@@ -4,16 +4,25 @@
+-from botocore.config import Config
++from botocore.client import Config
+-source = "datagov/child-and-adult-care-food-programs-cacfp-adult-day-care-centers-meal-reimbursement-pr-2017/files/rows.txt"
+-bucket = "lakeqa-yc4103-datalake"
+-obj = boto3.client("s3", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
+-df = pd.read_csv(io.BytesIO(obj["Body"].read()), low_memory=False)
+-
+-county_totals = (
+```
+
+### `k-5-d-4/task_6.json`
+- Reason: one or more node answers changed; one or more node facts have substantive logic changes
+- Peek:
+```text
+node 5 subquestion: Which cities from <hop 1 answer> had population under 100,000 in the 2020 Census? -> Which cities from <intersection of nodes 1-4: Beaumont, Brownsville, Corpus Christi, El Paso, Laredo, McAllen...
+node 1 answer: ["Brownsville", "Pharr", "El Paso", "Laredo", "McAllen", "Mission", "... -> ["Beaumont", "Brownsville", "Corpus Christi", "Edinburg", "El Paso", ...
+node 2 answer: ["Pharr", "Brownsville", "Laredo", "McAllen", "Mission", "El Paso", "... -> ["Baytown", "Beaumont", "Brownsville", "Corpus Christi", "Edinburg", ...
+node 3 answer: ["Brownsville", "Laredo", "Corpus Christi", "El Paso", "Pharr", "Beau... -> ["Beaumont", "Brownsville", "Corpus Christi", "El Paso", "Houston", "...
+node 1 fact diff:
+@@ -3,18 +3,15 @@
++from botocore.config import Config
+-from botocore.config import Config
++
+-obj = boto3.client("s3", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
++
++s3 = boto3.client("s3", config=Config(signature_version=UNSIGNED))
++obj = s3.get_object(Bucket=bucket, Key=source)
+-result = (
+node 2 fact diff:
+@@ -3,18 +3,15 @@
++from botocore.config import Config
+-from botocore.config import Config
++
+-obj = boto3.client("s3", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
++
++s3 = boto3.client("s3", config=Config(signature_version=UNSIGNED))
++obj = s3.get_object(Bucket=bucket, Key=source)
+-result = (
+```
+
+### `k-5-d-4/task_7.json`
+- Reason: one or more node answers changed; one or more node facts have substantive logic changes
+- Peek:
+```text
+node 1 subquestion: Which Washington school districts had at least 68% English language arts performance for all students and all... -> Which Washington school districts had ELA performance >= 68% for All Students, All Grades from 2014-15 to 201...
+node 1 answer: ["Blaine School District (Whatcom)", "Camas School District (Clark)",... -> ["Riverside School District (Spokane)", "Index Elementary School Dist...
+node 2 answer: ["Almira School District (Lincoln)", "Anacortes School District (Skag... -> ["Edmonds School District (Snohomish)", "Fife School District (Pierce...
+node 3 answer: ["Adna School District (Lewis)", "Almira School District (Lincoln)", ... -> ["Enumclaw School District (King)", "Snohomish School District (Snoho...
+node 1 fact diff:
+@@ -3,7 +3,10 @@
++from botocore.config import Config
+-from botocore.config import Config
++
+-obj = boto3.client("s3", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
++
++s3 = boto3.client("s3", config=Config(signature_version=UNSIGNED))
++obj = s3.get_object(Bucket=bucket, Key=source)
+@@ -11,18 +14,22 @@
+-    (df["OrganizationLevel"] == "District")
+node 2 fact diff:
+@@ -3,7 +3,10 @@
++from botocore.config import Config
+-from botocore.config import Config
++
+-obj = boto3.client("s3", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
++
++s3 = boto3.client("s3", config=Config(signature_version=UNSIGNED))
++obj = s3.get_object(Bucket=bucket, Key=source)
+@@ -11,18 +14,22 @@
+-    (df["OrganizationLevel"] == "District")
+```
+
+### `k-5-d-4/task_8.json`
+- Reason: one or more node answers changed; one or more node facts have substantive logic changes
+- Peek:
+```text
+node 1 subquestion: Which Texas counties had between 700 and 4,600 TDCJ criminal intakes in FY 2019? Keep the full set of qualify... -> Which Texas counties had TDCJ criminal intakes between 700-4,600 in each fiscal year from FY 2019-2022? (Filt...
+node 1 answer: ["Bexar", "Hidalgo", "Travis", "El Paso", "Montgomery", "McLennan", "... -> ["Bexar", "El Paso", "Hidalgo", "Montgomery", "Travis", "McLennan", "...
+node 1 limit: 10 -> 
+node 4 answer: ["Tarrant", "Dallas", "Bexar", "Hidalgo", "Montgomery", "Smith", "Jef... -> ["Tarrant", "Dallas", "Bexar", "Hidalgo", "Montgomery", "Smith", "Jef...
+node 1 fact diff:
+@@ -14,14 +14,15 @@
+-    .reset_index(name="intake_count")
++    .reset_index(name="receive_count")
+-
+-result = (
+-    county_counts[
+-        county_counts["County"].notna()
+-        & county_counts["intake_count"].between(700, 4600)
+-    ]
+node 2 fact diff:
+@@ -3,4 +3,4 @@
++from botocore.config import Config
+-from botocore.config import Config
+@@ -8,20 +8,9 @@
+-obj = boto3.client("s3", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
++
++s3 = boto3.client("s3", config=Config(signature_version=UNSIGNED))
++obj = s3.get_object(Bucket=bucket, Key=source)
+-county_counts = (
+-    df.groupby("County", dropna=False)
+```
+
+### `k-5-d-4/task_9.json`
+- Reason: one or more node facts have substantive logic changes
+- Peek:
+```text
+question: Identify the Texas county that had the most consistent annual number of state prison releases from 2019 to 20... -> Identify the Texas county that had the most consistent annual number of state prison releases from 2019 to 20...
+node 1 subquestion: What are the FY2019 state prison release counts for every county in the FY2019 TDCJ releases dataset, with Co... -> For FY2019, what were release counts for the counties that rank in the top five by average releases across FY...
+node 5 fact diff:
+@@ -1 +1 @@
+-Bexar County (  or  ;  ) is a county in the U.S. state of Texas. It is in South Texas and its county seat is San Antonio.
++According to the Wikipedia article for Bexar County, Texas, 'Its county seat is San Antonio.'
+node 6 fact diff:
+@@ -1 +1 @@
+-The city also hosts the San Antonio Stock Show & Rodeo and is home to the five-time NBA champion San Antonio Spurs.
++According to the Wikipedia article for San Antonio, 'San Antonio is also home to the five-time NBA champion San Antonio Spurs.'
+```
+
+### `k-6-d-2/task_1.json`
+- Reason: one or more node answers changed; one or more node facts have substantive logic changes
+- Peek:
+```text
+question: Find the NYC high school that received an overall A rating in 2010-11 and 2011-12, was also given an A for st... -> Find the NYC high school that got an A on its progress report in 2010–11 and 2011–12, was also rated A for pe...
+node 1 subquestion: Which NYC high schools received an overall A rating and were also given an A for student graduation and diplo... -> Which NYC high school DBNs had 'A' Progress Report AND 'A' Performance Grade in 2010-11?
+node 1 answer: ["01M450", "01M539", "02M288", "02M296", "02M298", "02M308", "02M411"... -> ["01M450", "01M539", "02M288", "02M296", "02M298", "02M308", "02M411"...
+node 1 limit: 10 -> 
+node 2 answer: ["01M450", "01M539", "02M288", "02M296", "02M298", "02M303", "02M305"... -> ["01M450", "01M539", "02M288", "02M296", "02M298", "02M303", "02M305"...
+node 3 fact diff:
+@@ -11,2 +11,6 @@
++node_1_answer = ['01M450', '01M539', '02M288', '02M296', '02M298', '02M308', '02M411', '02M412', '02M414', '02M416', '02M418', '02M439', '02M475', '02M545', '02M600', '03M307', '03M485', '03M492', '04M435', '04M610', '05M670', '05M692', '06M467', '07X221', '07X334', '07X548', '07X551', '09X241', '09X543', '10X141', '10X374', '10X434', '10X437', '10X445', '10X477', '10X549', '10X696', '11X249', '11X275', '11X544', '12X248', '12X267', '12X682', '13K419', '13K439', '13K595', '14K478', '14K558', '14K561', '15K448', '17K539', '17K546', '18K563', '18K567', '18K576', '19K404', '20K485', '22K555', '23K514', '23K697', '24Q264', '24Q530', '24Q610', '25Q285', '25Q525', '27Q262', '27Q323', '27Q650', '28Q620', '28Q687', '29Q248', '30Q555', '31R047', '31R080', '31R605', '32K403', '32K554']
++node_2_answer = ['01M450', '01M539', '02M288', '02M296', '02M298', '02M303', '02M305', '02M308', '02M407', '02M411', '02M412', '02M413', '02M414', '02M416', '02M418', '02M439', '02M449', '02M459', '02M475', '02M500', '02M519', '02M531', '02M542', '02M543', '02M545', '02M551', '02M600', '03M479', '03M485', '03M492', '03M541', '03M860', '04M555', '04M610', '05M692', '06M293', '06M348', '06M552', '07X221', '07X495', '08X452', '09X227', '09X241', '09X260', '09X365', '09X403', '09X404', '10X342', '10X437', '10X445', '10X477', '10X549', '10X696', '11X275', '11X290', '11X455', '11X513', '11X54
+node 5 fact diff:
+@@ -1 +1 @@
+-the new school would be "designated as the Stuyvesant High School, as being reminiscent of the locality". Stuyvesant Square, Stuyvesant Street, and later Stuyvesant Town (which was built in 1947) are all near the proposed 15th Street school building. All these locations were named after Peter Stuyvesant
++Stuyvesant High School is a specialized high school in Manhattan named after Peter Stuyvesant, the last Dutch Director of New Netherland.
+```
+
+### `k-6-d-2/task_2.json`
+- Reason: one or more node answers changed; one or more node facts have substantive logic changes
+- Peek:
+```text
+question: Identify the DC Council member who represents the ward that, among the top two wards, recorded both the highe... -> Identify the DC Council member who represents the ward that, among the top two wards, recorded both the highe...
+node 1 subquestion: What are the 2019 violent crime counts by ward for offenses in {HOMICIDE, ASSAULT W/DANGEROUS WEAPON, ROBBERY... -> Which DC wards had the top 2 average violent crimes between 2019 and 2020? (Filter for this node: OFFENSE in ...
+node 1 limit: 2 -> 
+node 2 limit: 2 -> 
+node 3 limit: 2 -> 
+node 1 fact diff:
+@@ -6,2 +6,3 @@
++
+@@ -9,3 +10,3 @@
+-data = json.loads(obj["Body"].read())
++data = json.load(io.BytesIO(obj["Body"].read()))
+@@ -21,5 +22,5 @@
+-    .sort_values(["violent_crime_count", "properties.WARD"], ascending=[False, True])
+-    .reset_index(drop=True)
+-answer = [f"Ward {int(row['properties.WARD'])} ({row['violent_crime_count']})" for _, row in result.iterrows()]
++result["ward_num"] = result["properties.WARD"].astype(int)
++result = result.sort_values(["violent_crime_count", "ward_num"], ascending=[False, True]).head(2)
+node 2 fact diff:
+@@ -6,2 +6,3 @@
++
+@@ -9,3 +10,3 @@
+-data = json.loads(obj["Body"].read())
++data = json.load(io.BytesIO(obj["Body"].read()))
+@@ -21,5 +22,5 @@
+-    .sort_values(["violent_crime_count", "properties.WARD"], ascending=[False, True])
+-    .reset_index(drop=True)
+-answer = [f"Ward {int(row['properties.WARD'])} ({row['violent_crime_count']})" for _, row in result.iterrows()]
++result["ward_num"] = result["properties.WARD"].astype(int)
++result = result.sort_values(["violent_crime_count", "ward_num"], ascending=[False, True]).head(2)
+```
+
+### `k-6-d-2/task_3.json`
+- Reason: one or more node answers changed; one or more node facts have substantive logic changes
+- Peek:
+```text
+question: Among New York counties outside of NYC, identify the top two by total mental health service recipients from 2... -> Among New York counties outside of NYC, identify the top two by total mental health service recipients from 2...
+node 1 subquestion: Which non-NYC New York counties have the highest total mental health service recipients across service years ... -> Which non-NYC NY counties are in the top 2 by total mental health service recipients (2017-2018)? (Filter for...
+node 1 answer: ["Erie", "Monroe"] -> ["Erie County", "Monroe County"]
+node 8 answer: 359.8 -> 359.8
+node 1 fact diff:
+@@ -25,3 +25,2 @@
+-answer = result.head(2)["County Label"].tolist()
+-print(answer)
++answer = [f"{county} County" for county in result.head(2)["County Label"].tolist()]
+node 2 fact diff:
+@@ -1 +1 @@
+-Erie County is a county along the shore of Lake Erie in western New York State. As of the 2020 census, the population was 954,236. However, in 2023 the estimated population was 946,147. The county seat is Buffalo, which makes up about 28% of the county's population.
++The county seat of Erie County, New York is Buffalo.
+```
+
+### `k-6-d-2/task_4.json`
+- Reason: one or more node answers changed; one or more node facts have substantive logic changes
+- Peek:
+```text
+question: What US city had the highest average percentages of adults age 18 and older who were obese, after accounting ... -> What US city had the highest average age-adjusted adult obesity rate in 2016 and 2018? Also, can you find me ...
+node 1 subquestion: What are the city-level percentages of adults age 18 and older who were obese, after accounting for differenc... -> What is the US city with the highest average age-adjusted adult obesity rate (2016-2018)? (Filter for this no...
+node 1 answer: {"Camden, New Jersey": 42.2, "Cleveland, Ohio": 42.1, "Dayton, Ohio":... -> {"Dayton": 47.2, "Detroit": 45.2, "Gary": 46.9}
+node 1 limit: 10 -> 
+node 2 answer: {"Brownsville, Texas": 44.4, "Camden, New Jersey": 44.1, "Dayton, Ohi... -> {"Dayton": 43.5, "Detroit": 47.4, "Gary": 49.0}
+node 1 fact diff:
+@@ -11,12 +11,14 @@
+-result = df[
+-    (df["Year"] == 2014)
+-    & (df["GeographicLevel"] == "City")
+-    & (df["Measure"] == "Obesity among adults aged >=18 Years")
+-    & (df["Data_Value_Type"] == "Age-adjusted prevalence")
+-][["StateDesc", "CityName", "Data_Value"]].sort_values(["Data_Value", "StateDesc", "CityName"], ascending=[False, True, True]).reset_index(drop=True)
++city_obesity = (
++    df[
+node 2 fact diff:
+@@ -11,12 +11,15 @@
+-result = df[
+-    (df["Year"] == 2016)
+-    & (df["GeographicLevel"] == "City")
+-    & (df["Measure"] == "Obesity among adults aged >=18 Years")
+-    & (df["Data_Value_Type"] == "Age-adjusted prevalence")
+-][["StateDesc", "CityName", "Data_Value"]].sort_values(["Data_Value", "StateDesc", "CityName"], ascending=[False, True, True]).reset_index(drop=True)
++target_cities = ["Gary", "Detroit", "Dayton"]
++city_obesity = (
+```
+
+### `k-6-d-2/task_5.json`
+- Reason: final answer changed: San Francisco Bay -> Pacific Ocean
+- Peek:
+```text
+question: Identify a specific California county based on a set of health and housing statistics. The county had an Area... -> Identify a specific California county seat based on a set of health and housing statistics. I'm looking for a...
+node 1 subquestion: Which California counties had an Area Median Income of at least $142,800 in 2022? -> Which counties have AMI >= 142800 in the 2022 income limits data? (Filter: AMI >= 142800; list County and AMI...
+node id/count changed
+node 1 fact changed only in ignored import/parser/access details
+node 2 fact changed only in ignored import/parser/access details
+```
+
+### `k-6-d-3/task_1.json`
+- Reason: one or more node facts have substantive logic changes
+- Peek:
+```text
+node 1 subquestion: Which Missouri state agencies were in the top 5 for Professional Services spending in fiscal year 2021? -> Which Missouri state agencies were in the top 5 for Professional Services spending every year from 2021 to 20...
+node 7 fact diff:
+@@ -1 +1 @@
+-It has its headquarters in Missouri's capital of Jefferson City.
++The Missouri Department of Corrections has its headquarters in Missouri's capital of Jefferson City.
+node 8 fact diff:
+@@ -1 +1 @@
+-Jefferson City is also home to Lincoln University, a public historically black and federal land-grant university
++Jefferson City is home to Lincoln University, a public historically Black university founded in 1866 by Union Army Black veterans of the First Missouri Regiment of Colored Infantry and 62nd Regiment of U.S. Colored Troops.
+```
+
+### `k-6-d-3/task_2.json`
+- Reason: one or more node answers changed; one or more node facts have substantive logic changes
+- Peek:
+```text
+node 1 subquestion: Which agencies are the top 20 issuing agencies in January 2019 by total parking-violation fine amount? -> Which agencies were in the top 20 for total January parking-violation fine amount in 2019-2021? (Filter for t...
+node 6 answer: {"UNITED STATES CAPITOL POLICE": 30, "UNITED STATES PARK POLICE": 71,... -> UNITED STATES PARK POLICE
+node 6 fact diff:
+@@ -18,4 +18,13 @@
+-
+-result = (
++counts_2019 = {
++    "UNITED STATES PARK POLICE": 103,
++    "UNITED STATES CAPITOL POLICE": 176,
++    "US. SECRET SERVICE UNIFORM DIVISION": 145,
++}
++counts_2020 = {
+node 9 fact diff:
+@@ -1 +1 @@
+-The current interior secretary is Doug Burgum.
++The department is headed by the secretary of the interior, who reports directly to the president of the United States and is a member of the president's Cabinet. The current interior secretary is Doug Burgum.
+```
+
+### `k-6-d-3/task_3.json`
+- Reason: one or more node answers changed; one or more node facts have substantive logic changes
+- Peek:
+```text
+node 1 subquestion: Which 2019 Chicago library branches with non-null physical addresses are ranked highest by total YTD circulat... -> Which branches (with physical addresses) were in the top 5 by YTD circulation in the given year? (Filter for ...
+node 1 limit: 5 -> 
+node 2 limit: 5 -> 
+node 3 limit: 5 -> 
+node 10 fact diff:
+@@ -1 +1 @@
+-The library is located in the Lincoln Square neighborhood at 4455 N. Lincoln Avenue.
++According to the Wikipedia article for Conrad Sulzer Regional Library, the library is located in the Lincoln Square neighborhood at 4455 N. Lincoln Avenue.
+node 11 fact diff:
+@@ -12,2 +12,2 @@
+-answer = int(result["Community Area Number"].iloc[0])
++answer = str(int(result["Community Area Number"].iloc[0]))
+```
+
+### `k-6-d-3/task_4.json`
+- Reason: one or more node facts have substantive logic changes
+- Peek:
+```text
+node 2 subquestion: In what city was <hop 1 answer> founded? -> In what city was <node_1 answer> founded?
+node 1 fact diff:
+@@ -1 +1 @@
+-chief executive officer of ACT, Inc. (2010–2015)
++Jon Scott Whitmore was the chief executive officer of ACT, Inc. (2010–2015).
+node 2 fact diff:
+@@ -1 +1 @@
+-Founded in Iowa City, Iowa, in 1959
++ACT, Inc. is a for-profit educational company founded in Iowa City, Iowa.
+```
+
+### `k-6-d-3/task_5.json`
+- Reason: one or more node answers changed; one or more node facts have substantive logic changes
+- Peek:
+```text
+node 2 subquestion: <hop 1 answer> has a New Jersey address. What city appears in that address? -> <node_1 answer> has a New Jersey address. What city appears in that address?
+node 8 answer: 16 -> 16
+node 2 fact diff:
+@@ -1 +1 @@
+-It is headquartered in Lawrence Township, Mercer County, New Jersey, but has a Princeton, New Jersey, address.
++Educational Testing Service (ETS) is headquartered in Mercer County, New Jersey, but has a Princeton, New Jersey, address.
+node 8 fact diff:
+@@ -22,2 +22,2 @@
+-answer = int(county_counts.iloc[0]["postsecondary_institution_count"])
++answer = str(int(county_counts.iloc[0]["postsecondary_institution_count"]))
+```
+
+### `k-7-d-4/task_1.json`
+- Reason: one or more node answers changed; one or more node facts have substantive logic changes
+- Peek:
+```text
+question: Among the five Texas counties with the highest average annual number of state prison releases from 2019 to 20... -> Identify the Texas county that had the most consistent annual number of state prison releases from 2019 to 20...
+node 1 subquestion: What were the FY2019 state prison release counts for every Texas county, with county names normalized to uppe... -> For FY2019, what were release counts for the counties that rank in the top five by average releases across FY...
+node 1 answer: {"BEXAR": 4545, "DALLAS": 5355, "EL PASO": 1261, "HARRIS": 9029, "HID... -> {"Bexar": 4545, "Dallas": 5355, "Harris": 9029, "Hidalgo": 1861, "Tar...
+node 1 limit: 10 -> 
+node 2 answer: {"BEXAR": 3917, "DALLAS": 4540, "EL PASO": 1121, "HARRIS": 7059, "HID... -> {"Bexar": 3917, "Dallas": 4540, "Harris": 7059, "Hidalgo": 1572, "Tar...
+node 1 fact diff:
+@@ -1,20 +1,12 @@
+-import io
+-import pandas as pd
+-import boto3
+-from botocore import UNSIGNED
+-from botocore.config import Config
+-source = "datagov/texas-department-of-criminal-justice-releases-fy-2019/files/rows.txt"
+-bucket = "lakeqa-yc4103-datalake"
+-obj = boto3.client("s3", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
+node 2 fact diff:
+@@ -1,20 +1,12 @@
+-import io
+-import pandas as pd
+-import boto3
+-from botocore import UNSIGNED
+-from botocore.config import Config
+-source = "datagov/texas-department-of-criminal-justice-releases-fy-2020/files/rows.txt"
+-bucket = "lakeqa-yc4103-datalake"
+-obj = boto3.client("s3", config=Config(signature_version=UNSIGNED)).get_object(Bucket=bucket, Key=source)
+```

@@ -8,9 +8,9 @@
     "datagov/kramabench-environment-easy-1/files/water-body-testing-2013.csv"
   ],
   "reasoning_chain_text": [
-    "1. The 2013 Massachusetts beach sampling file contains [computed value] total sample rows.",
-    "2. The same file marks [computed value] sample rows with Violation equal to yes.",
-    "3. [computed value] divided by [computed value], multiplied by 100 and rounded to three decimal places, is [computed value]."
+    "1. Count the total water sample rows in the 2013 Massachusetts beach sampling data.",
+    "2. Count the sample rows in that same data that are marked as bacterial-standard violations.",
+    "3. Divide the violation count by the total sample count, convert to a percentage, and round to three decimal places."
   ],
   "original_final_question": "What percentage (to 3 decimal places) of water samples collected from Massachusetts beaches during the 2013 bathing season exceeded bacterial standards, leading to temporary closures? Write your answer as [ANSWER].",
   "original_reasoning_chain": [

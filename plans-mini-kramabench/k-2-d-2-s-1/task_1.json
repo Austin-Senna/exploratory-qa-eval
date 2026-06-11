@@ -8,9 +8,9 @@
     "datagov/kramabench-biomedical-easy-9/files/1-s2.0-S0092867420301070-mmc3.xlsx"
   ],
   "reasoning_chain_text": [
-    "1. In the F-SS-phospho sheet, the mean FDR.phos for CBX3 rows is [computed value].",
-    "2. In the same sheet, the mean FDR.phos for non-CBX3 rows is [computed value].",
-    "3. Subtracting the non-CBX3 mean from the CBX3 mean gives [computed value]."
+    "1. In the phospho significance sheet, calculate the mean FDR for rows where the gene is CBX3.",
+    "2. In the same sheet, calculate the mean FDR for all other gene rows.",
+    "3. Subtract the non-CBX3 mean from the CBX3 mean and return the difference."
   ],
   "original_final_question": "What is the difference between the average false discovery rate (FDR) for CBX3 rows and the average FDR for all other genes in the phospho significance sheet? Write your answer as [ANSWER].",
   "original_reasoning_chain": [

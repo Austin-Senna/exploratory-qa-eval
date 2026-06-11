@@ -16,8 +16,15 @@
   ],
   "reasoning_chain_text": [
     "1. Read and normalize the Boston Harbor beach list.",
-    "2. For each relevant beach datasheet, flatten the measurement headers, keep samples with no rainfall in the preceding three days, and count samples that fail the Enterococcus swimming standard.",
-    "3. Compare the per-beach failure counts and return the beach with the largest count."
+    "2. For the first relevant beach datasheet, keep samples with no rainfall in the preceding three days and count swimming-standard failures.",
+    "3. For the second relevant beach datasheet, keep samples with no rainfall in the preceding three days and count swimming-standard failures.",
+    "4. For the third relevant beach datasheet, keep samples with no rainfall in the preceding three days and count swimming-standard failures.",
+    "5. For the fourth relevant beach datasheet, keep samples with no rainfall in the preceding three days and count swimming-standard failures.",
+    "6. For the fifth relevant beach datasheet, keep samples with no rainfall in the preceding three days and count swimming-standard failures.",
+    "7. For the sixth relevant beach datasheet, keep samples with no rainfall in the preceding three days and count swimming-standard failures.",
+    "8. For the seventh relevant beach datasheet, keep samples with no rainfall in the preceding three days and count swimming-standard failures.",
+    "9. For the eighth relevant beach datasheet, keep samples with no rainfall in the preceding three days and count swimming-standard failures.",
+    "10. Compare the per-beach failure counts and return the beach with the largest count."
   ],
   "original_final_question": "Which Boston Harbor beach had the highest number of samples that failed to meet swimming standards when there was no rainfall in the preceding three days? A sample meets the standard if it contains fewer than 104 counts of Enterococcus per 100 milliliters of water. Write your answer as [ANSWER].",
   "original_reasoning_chain": [

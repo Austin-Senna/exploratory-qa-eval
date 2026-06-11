@@ -13,9 +13,12 @@
     "datagov/kramabench-environment-hard-14/files/water-body-testing-2007.csv"
   ],
   "reasoning_chain_text": [
-    "1. For each water-body testing year from 2007 through 2009, compute summer exceedance rates separately for marine and freshwater beaches.",
-    "2. For each precipitation station, impute missing June, July, and August values from month medians and compute summer rainfall totals for 2007 through 2009.",
-    "3. Average rainfall totals over the specified marine and freshwater station sets, correlate each rainfall vector with the matching exceedance-rate vector, and return the beach type with the higher correlation."
+    "1. For 2007, compute summer exceedance rates separately for marine and freshwater beaches.",
+    "2. For 2008, compute summer exceedance rates separately for marine and freshwater beaches.",
+    "3. For 2009, compute summer exceedance rates separately for marine and freshwater beaches.",
+    "4. For each specified precipitation station, impute missing June, July, and August values from month medians and compute summer rainfall totals for 2007 through 2009.",
+    "5. Average rainfall totals over the specified marine and freshwater station sets.",
+    "6. Correlate each rainfall vector with the matching exceedance-rate vector and return the beach type with the higher correlation."
   ],
   "original_final_question": "From 2007 to 2009 inclusive, between fresh water beaches and marine beaches, which had the higher Pearson correlation between monthly summer rainfall and beach-water exceedance rate? Use June, July, and August rainfall; use Boston, Chatham, Amherst, and Ashburnham for fresh water beaches; use Boston and Chatham for marine beaches; and impute missing rainfall values with the median for that month across non-missing years. Answer with either Freshwater or Marine. Write your answer as [ANSWER].",
   "original_reasoning_chain": [

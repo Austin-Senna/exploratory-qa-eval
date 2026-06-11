@@ -7,8 +7,8 @@
     "datagov/kramabench-biomedical-hard-7/files/1-s2.0-S0092867420301070-mmc3.xlsx"
   ],
   "reasoning_chain_text": [
-    "1. The README sheet maps the acetylproteomics description to worksheet [computed value].",
-    "2. Worksheet [computed value] contains [computed value] non-empty gene rows."
+    "1. Use the workbook metadata to identify the worksheet corresponding to significant genes for acetylproteomics.",
+    "2. In that worksheet, count the non-empty significant-gene rows and return the count."
   ],
   "original_final_question": "How many significant genes are listed for acetylproteomics? Write your answer as [ANSWER].",
   "original_reasoning_chain": [

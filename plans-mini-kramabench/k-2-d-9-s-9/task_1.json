@@ -15,9 +15,16 @@
     "datagov/kramabench-environment-hard-8/files/boston-harbor-beaches.txt"
   ],
   "reasoning_chain_text": [
-    "1. Reads the Boston Harbor beach list.",
-    "2. Compute, for each Boston Harbor datasheet, the number of failed samples and the number of failed samples with positive 1-Day Rain.",
-    "3. -9 and aggregates the counts into a percentage."
+    "1. Read the Boston Harbor beach list to establish the beach datasheets to inspect.",
+    "2. For the Constitution Beach datasheet, count failed swimming-standard samples and failed samples with positive one-day rainfall.",
+    "3. For the Pleasure Bay and Castle Island datasheet, count failed swimming-standard samples and failed samples with positive one-day rainfall.",
+    "4. For the City Point Beach datasheet, count failed swimming-standard samples and failed samples with positive one-day rainfall.",
+    "5. For the M Street Beach datasheet, count failed swimming-standard samples and failed samples with positive one-day rainfall.",
+    "6. For the Carson Beach datasheet, count failed swimming-standard samples and failed samples with positive one-day rainfall.",
+    "7. For the Malibu Beach datasheet, count failed swimming-standard samples and failed samples with positive one-day rainfall.",
+    "8. For the Tenean Beach datasheet, count failed swimming-standard samples and failed samples with positive one-day rainfall.",
+    "9. For the Wollaston Beach datasheet, count failed swimming-standard samples and failed samples with positive one-day rainfall.",
+    "10. Aggregate the failed-sample counts across beaches, calculate the percentage with positive one-day rainfall, and round to two decimals."
   ],
   "original_final_question": "What percentage of samples to two decimal places that failed to meet the swimming standard at Boston Harbor beaches had rainfall within 24 hours prior to sampling, where a sample meets the standard if it contains fewer than or equal to 104 counts of Enterococcus per 100 milliliters of water?. Write your answer as [ANSWER].",
   "original_reasoning_chain": [

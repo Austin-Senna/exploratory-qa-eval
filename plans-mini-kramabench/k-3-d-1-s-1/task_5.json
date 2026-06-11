@@ -8,9 +8,9 @@
     "datagov/kramabench-biomedical-easy-2/files/1-s2.0-S0092867420301070-mmc1.xlsx"
   ],
   "reasoning_chain_text": [
-    "1. The clinical metadata identifies 12 included cases with Serous histologic type.",
-    "2. The Age values for those Serous included cases are [computed value], [computed value], [computed value], [computed value], [computed value], [computed value], [computed value], [computed value], [computed value], [computed value], [computed value], and [computed value].",
-    "3. The arithmetic mean of those ages is [computed value]."
+    "1. Filter the clinical metadata to included cases with Serous histologic type.",
+    "2. Extract the age values for those included serous cases.",
+    "3. Compute the arithmetic mean of those ages and return it."
   ],
   "original_final_question": "What is the average age of patients with serous tumor samples analyzed in the study? Write your answer as [ANSWER].",
   "original_reasoning_chain": [

@@ -8,9 +8,9 @@
     "datagov/kramabench-environment-hard-11/files/pleasure_bay_and_castle_island_beach_datasheet.csv"
   ],
   "reasoning_chain_text": [
-    "1. After reshaping the multi-location datasheet, [computed value] rows are Pleasure Bay samples rather than Castle Island Playground samples.",
-    "2. Of those Pleasure Bay samples, [computed value] exceeded 104 Enterococcus counts per 100 milliliters and therefore failed the swimming standard.",
-    "3. The mean of 1-Day Rain for the [computed value] failed Pleasure Bay samples is [computed value] when rounded to two decimal places."
+    "1. Reshape the multi-location beach datasheet to isolate Pleasure Bay samples.",
+    "2. From the Pleasure Bay samples, keep the rows whose Enterococcus counts fail the swimming standard.",
+    "3. Average the one-day rainfall values for the failed Pleasure Bay samples and round to two decimal places."
   ],
   "original_final_question": "What was the average rainfall (to 2 decimal places) in the one-day period before sampling when water samples from Pleasure Bay Beach failed to meet swimming standards? A sample meets the standard if it contains fewer than or equal to 104 counts of Enterococcus per 100 milliliters of water. Write your answer as [ANSWER].",
   "original_reasoning_chain": [

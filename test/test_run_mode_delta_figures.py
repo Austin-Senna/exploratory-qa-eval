@@ -7,6 +7,12 @@ from tempfile import TemporaryDirectory
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from analysis.run_mode_delta_figures import (
+    SEMANTIC_DELTA_COMPACT_AXIS_LABEL_FONTSIZE,
+    SEMANTIC_DELTA_COMPACT_LABEL_FONTSIZE,
+    SEMANTIC_DELTA_COMPACT_MODEL_FONTSIZE,
+    SEMANTIC_DELTA_COMPACT_TITLE_FONTSIZE,
+    SEMANTIC_DELTA_COMPACT_VALUE_FONTSIZE,
+    _delta_value_label,
     _comparison_models,
     _paired_condition_axis_label,
     build_paired_mode_metric_rows,
@@ -17,6 +23,18 @@ from analysis.run_mode_delta_figures import (
 
 
 class TestRunModeDeltaFigures(unittest.TestCase):
+    def test_compact_semantic_delta_figure_uses_paper_readable_type(self):
+        self.assertGreaterEqual(SEMANTIC_DELTA_COMPACT_TITLE_FONTSIZE, 14.0)
+        self.assertLessEqual(SEMANTIC_DELTA_COMPACT_TITLE_FONTSIZE, 17.0)
+        self.assertGreaterEqual(SEMANTIC_DELTA_COMPACT_LABEL_FONTSIZE, 12.5)
+        self.assertGreaterEqual(SEMANTIC_DELTA_COMPACT_VALUE_FONTSIZE, 11.5)
+        self.assertGreaterEqual(SEMANTIC_DELTA_COMPACT_MODEL_FONTSIZE, 14.0)
+        self.assertLessEqual(SEMANTIC_DELTA_COMPACT_AXIS_LABEL_FONTSIZE, 9.0)
+
+    def test_delta_value_label_wraps_delta_in_parentheses(self):
+        self.assertEqual(_delta_value_label(34.1, 0.0), "34.1% (+0.0%)")
+        self.assertEqual(_delta_value_label(31.1, -3.0), "31.1% (-3.0%)")
+
     def test_paired_condition_axis_labels_are_compact_for_plotting(self):
         self.assertEqual(_paired_condition_axis_label("nns"), "BM25 / No Plan / Std DA")
         self.assertEqual(_paired_condition_axis_label("sss"), "Pneuma / Plan / Std DA")

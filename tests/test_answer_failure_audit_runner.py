@@ -16,9 +16,11 @@ from analysis.answer_failure_audit_runner import (
     _build_trace_labeler_prompt,
     _expand_trace_labeler_output,
     _append_journal_record,
+    _answer_failure_output_summary,
     _audit_json_path,
     _default_journal_path,
     _load_journal_audits,
+    _model_validator_stale_task_ids,
     _load_prompt_artifacts,
     _normalized_events,
     _openai_api_key,
@@ -652,12 +654,129 @@ def test_run_model_validators_calls_one_prompt_per_valid_row(tmp_path, monkeypat
     assert repaired_audits == audits_by_task
 
 
+def test_model_validator_stale_task_ids_only_selects_usable_blank_or_untrusted_rows():
+    audits_by_task = {
+        "valid_pass": {},
+        "valid_blank": {},
+        "valid_untrusted": {},
+        "warning_repaired": {},
+        "invalid_untrusted": {},
+    }
+    deterministic_by_task = {
+        "valid_pass": {"status": "valid"},
+        "valid_blank": {"status": "valid"},
+        "valid_untrusted": {"status": "valid"},
+        "warning_repaired": {"status": "valid_with_warnings"},
+        "invalid_untrusted": {"status": "invalid"},
+    }
+    model_validation_by_task = {
+        "valid_pass": {"status": "pass"},
+        "valid_blank": {"status": ""},
+        "valid_untrusted": {"status": "invalid_untrusted"},
+        "warning_repaired": {"status": "repaired_pass"},
+        "invalid_untrusted": {"status": "invalid_untrusted"},
+    }
+
+    assert _model_validator_stale_task_ids(
+        audits_by_task=audits_by_task,
+        deterministic_by_task=deterministic_by_task,
+        existing_model_validation_by_task=model_validation_by_task,
+    ) == ["valid_blank", "valid_untrusted"]
+    assert _model_validator_stale_task_ids(
+        audits_by_task=audits_by_task,
+        deterministic_by_task=deterministic_by_task,
+        existing_model_validation_by_task=model_validation_by_task,
+        only_task_ids={"valid_untrusted", "warning_repaired"},
+    ) == ["valid_untrusted"]
+
+
+def test_run_model_validators_can_limit_to_selected_stale_rows(tmp_path, monkeypatch):
+    eval_path = tmp_path / "results_semantic" / "modes" / "model" / "mode" / "eval_results.csv"
+    first_task = "tasks_mini/k-1-d-1/task_1.json"
+    second_task = "tasks_mini/k-1-d-1/task_2.json"
+    _write_csv(
+        eval_path,
+        ["task_id", "semantic_bucket", "semantic_match"],
+        [
+            {"task_id": first_task, "semantic_bucket": "semantic_incorrect", "semantic_match": "0"},
+            {"task_id": second_task, "semantic_bucket": "semantic_incorrect", "semantic_match": "0"},
+        ],
+    )
+    layout = infer_layout(eval_path)
+    audits_by_task = {
+        first_task: {"task_id": first_task, "answer_failure_summary": "first", "events": [{"event_index": 1}]},
+        second_task: {"task_id": second_task, "answer_failure_summary": "second", "events": [{"event_index": 1}]},
+    }
+    deterministic_by_task = {
+        first_task: {"status": "valid", "notes": ""},
+        second_task: {"status": "valid", "notes": ""},
+    }
+    prompts: list[str] = []
+
+    def fake_call_model(prompt, **kwargs):
+        prompts.append(prompt)
+        return json.dumps({"task_id": second_task, "verdict": "pass", "problems": []})
+
+    monkeypatch.setattr("analysis.answer_failure_audit_runner._call_model", fake_call_model)
+
+    validation_by_task, _ = run_model_validators(
+        layout=layout,
+        tmp_root=tmp_path / ".tmp",
+        audits_by_task=audits_by_task,
+        deterministic_by_task=deterministic_by_task,
+        backend="codex",
+        model="gpt-test",
+        reasoning_effort="low",
+        timeout=30,
+        allow_downgrade=True,
+        concurrency=1,
+        task_ids_to_validate={second_task},
+    )
+
+    assert len(prompts) == 1
+    assert first_task not in validation_by_task
+    assert validation_by_task[second_task]["status"] == "pass"
+
+
+def test_run_model_validators_marks_malformed_validator_json_untrusted(tmp_path, monkeypatch):
+    eval_path = tmp_path / "results_semantic" / "modes" / "model" / "mode" / "eval_results.csv"
+    task_id = "tasks_mini/k-1-d-1/task_1.json"
+    _write_csv(
+        eval_path,
+        ["task_id", "semantic_bucket", "semantic_match"],
+        [{"task_id": task_id, "semantic_bucket": "semantic_incorrect", "semantic_match": "0"}],
+    )
+    layout = infer_layout(eval_path)
+
+    def fake_call_model(prompt, **kwargs):
+        return '{"task_id": "tasks_mini/k-1-d-1/task_1.json", "verdict": "pass" "problems": []}'
+
+    monkeypatch.setattr("analysis.answer_failure_audit_runner._call_model", fake_call_model)
+
+    validation_by_task, repaired_audits = run_model_validators(
+        layout=layout,
+        tmp_root=tmp_path / ".tmp",
+        audits_by_task={task_id: {"task_id": task_id, "answer_failure_summary": "summary", "events": [{"event_index": 1}]}},
+        deterministic_by_task={task_id: {"status": "valid", "notes": ""}},
+        backend="codex",
+        model="gpt-test",
+        reasoning_effort="low",
+        timeout=30,
+        allow_downgrade=True,
+        concurrency=1,
+    )
+
+    assert validation_by_task[task_id]["status"] == "invalid_untrusted"
+    assert "JSONDecodeError" in validation_by_task[task_id]["notes"]
+    assert repaired_audits[task_id]["answer_failure_summary"] == "summary"
+
+
 def test_combiner_uses_shared_answer_failure_figure_group_mapping():
     assert ANSWER_FAILURE_GROUPS is ANSWER_FAILURE_FIGURE_GROUPS
-    assert ANSWER_FAILURE_GROUPS["wrong_source_or_dataset"] == "Source/dataset errors"
-    assert ANSWER_FAILURE_GROUPS["wrong_scope_or_filter"] == "Scope/filter errors"
-    assert ANSWER_FAILURE_GROUPS["computation_or_aggregation_error"] == "Computation/aggregation errors"
-    assert ANSWER_FAILURE_GROUPS["query_execution_error_loop"] == "Turn-waste loops"
+    assert ANSWER_FAILURE_GROUPS["wrong_source_or_dataset"] == "Wrong source target failures"
+    assert ANSWER_FAILURE_GROUPS["wrong_scope_or_filter"] == "Execution/computation failures"
+    assert ANSWER_FAILURE_GROUPS["computation_or_aggregation_error"] == "Execution/computation failures"
+    assert ANSWER_FAILURE_GROUPS["query_execution_error_loop"] == "Turn-waste failures"
 
 
 def test_load_prompt_artifacts_reads_task_plan_and_log_text(tmp_path):
@@ -1043,7 +1162,7 @@ def test_openai_api_key_falls_back_to_dotenv(tmp_path, monkeypatch):
     assert _openai_api_key(tmp_path) == "test-key"
 
 
-def test_validation_rejects_non_turn_anchored_evidence_for_existing_logs(tmp_path):
+def test_validation_warns_on_non_turn_anchored_evidence_for_existing_logs(tmp_path):
     log_path = tmp_path / "task.log"
     log_path.write_text("--- Turn 1 ---\nTool result: grounded evidence\n")
     row = {
@@ -1065,8 +1184,34 @@ def test_validation_rejects_non_turn_anchored_evidence_for_existing_logs(tmp_pat
 
     result = validate_answer_failure_row(row, events, log_path)
 
-    assert result["status"] == "invalid"
+    assert result["status"] == "valid_with_warnings"
     assert "failure_evidence must start with `Turn N |`" in result["notes"]
+
+
+def test_validation_warns_on_exact_snippet_mismatch_for_existing_logs(tmp_path):
+    log_path = tmp_path / "task.log"
+    log_path.write_text("--- Turn 1 ---\nTool result: grounded evidence\n")
+    row = {
+        "task_id": "tasks_mini/k-1-d-1/task_1.json",
+        "semantic_bucket": "semantic_incorrect",
+        "semantic_match": "0",
+    }
+    events = [
+        {
+            "event_index": 1,
+            "answer_failure_type": "wrong_source_or_dataset",
+            "answer_failure_subtype": "wrong_dataset",
+            "failure_stage": "source_selection",
+            "failure_summary": "The source was wrong.",
+            "failure_evidence": "Turn 1 | Tool result: paraphrased evidence",
+            "confidence": "high",
+        }
+    ]
+
+    result = validate_answer_failure_row(row, events, log_path)
+
+    assert result["status"] == "valid_with_warnings"
+    assert "exact evidence snippet for turn 1 does not match the raw log" in result["notes"]
 
 
 def test_normalized_events_maps_common_model_shortlabels_to_taxonomy():
@@ -1222,3 +1367,88 @@ def test_write_mirrored_outputs_preserves_source_rows_and_writes_events(tmp_path
             "confidence": "high",
         }
     ]
+
+
+def test_answer_failure_output_summary_reports_selected_file_counts(tmp_path):
+    eval_path = tmp_path / "results_semantic_answer_failures" / "modes" / "model" / "mode" / "eval_results.csv"
+    events_path = eval_path.parent / "answer_failure_events.csv"
+    _write_csv(
+        eval_path,
+        [
+            "task_id",
+            "semantic_bucket",
+            "semantic_match",
+            "answer_failure_event_count",
+            "answer_failure_validation_status",
+            "answer_failure_model_validation_status",
+        ],
+        [
+            {
+                "task_id": "task_1",
+                "semantic_bucket": "semantic_incorrect",
+                "semantic_match": "0",
+                "answer_failure_event_count": "2",
+                "answer_failure_validation_status": "valid",
+                "answer_failure_model_validation_status": "pass",
+            },
+            {
+                "task_id": "task_2",
+                "semantic_bucket": "semantic_incorrect",
+                "semantic_match": "0",
+                "answer_failure_event_count": "1",
+                "answer_failure_validation_status": "valid",
+                "answer_failure_model_validation_status": "",
+            },
+            {
+                "task_id": "task_3",
+                "semantic_bucket": "semantic_incorrect",
+                "semantic_match": "0",
+                "answer_failure_event_count": "1",
+                "answer_failure_validation_status": "invalid",
+                "answer_failure_model_validation_status": "invalid_untrusted",
+            },
+            {
+                "task_id": "task_4",
+                "semantic_bucket": "semantic_correct",
+                "semantic_match": "1",
+                "answer_failure_event_count": "",
+                "answer_failure_validation_status": "",
+                "answer_failure_model_validation_status": "",
+            },
+        ],
+    )
+    _write_csv(
+        events_path,
+        [
+            "task_id",
+            "model_variant",
+            "mode_variant",
+            "event_index",
+            "answer_failure_type",
+            "answer_failure_subtype",
+            "failure_stage",
+            "failure_summary",
+            "failure_evidence",
+            "confidence",
+        ],
+        [
+            {"task_id": "task_1", "event_index": "1", "answer_failure_type": "wrong_scope_or_filter"},
+            {"task_id": "task_1", "event_index": "2", "answer_failure_type": "tool_or_data_blocker"},
+            {"task_id": "task_2", "event_index": "1", "answer_failure_type": "wrong_source_or_dataset"},
+            {"task_id": "task_3", "event_index": "1", "answer_failure_type": "extraction_or_parsing_error"},
+        ],
+    )
+
+    summary = _answer_failure_output_summary(eval_path, events_path)
+
+    assert summary == {
+        "selected_eval_rows": 4,
+        "selected_eligible_rows": 3,
+        "selected_rows_with_events": 3,
+        "selected_event_rows": 4,
+        "selected_invalid_rows": 1,
+        "selected_missing_log_rows": 0,
+        "selected_valid_missing_model_validation_rows": 1,
+        "selected_trusted_rows": 1,
+        "selected_trusted_event_rows": 2,
+    }

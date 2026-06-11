@@ -133,26 +133,26 @@ BOUNDARY_RULES = [
 ]
 
 ANSWER_FAILURE_FIGURE_GROUPS = {
-    "wrong_source_or_dataset": "Source/dataset errors",
-    "wrong_scope_or_filter": "Scope/filter errors",
-    "computation_or_aggregation_error": "Computation/aggregation errors",
-    "incomplete_evidence_budget_exhausted": "Incomplete evidence",
-    "incomplete_evidence_early_answer": "Incomplete evidence",
-    "query_execution_error_loop": "Turn-waste loops",
-    "low_yield_search_loop": "Turn-waste loops",
-    "schema_or_shape_inspection_loop": "Turn-waste loops",
-    "extraction_or_parsing_error": "Extraction/parsing errors",
-    "evidence_available_answer_error": "Answer/finalization failures",
-    "question_or_constraint_misread": "Task interpretation / planning",
-    "tool_or_data_blocker": "Tool/data blockers",
-    "planning_decomposition_mismatch": "Task interpretation / planning",
-    "semantic_or_gold_label_issue": "Evaluation/gold issues",
-    "other_or_unclear": "Other/unclear",
-    "ungroundable": "Ungroundable",
+    "question_or_constraint_misread": "Task/planning failures",
+    "planning_decomposition_mismatch": "Task/planning failures",
+    "wrong_source_or_dataset": "Wrong source target failures",
+    "wrong_scope_or_filter": "Execution/computation failures",
+    "computation_or_aggregation_error": "Execution/computation failures",
+    "extraction_or_parsing_error": "Execution/computation failures",
+    "incomplete_evidence_budget_exhausted": "Incomplete evidence failures",
+    "incomplete_evidence_early_answer": "Incomplete evidence failures",
+    "query_execution_error_loop": "Turn-waste failures",
+    "low_yield_search_loop": "Turn-waste failures",
+    "schema_or_shape_inspection_loop": "Turn-waste failures",
+    "same_hop_repetition": "Turn-waste failures",
+    "evidence_available_answer_error": "Finalization failures",
+    "tool_or_data_blocker": "Tool blocker failures",
 }
 
 OMITTED_ANSWER_FAILURE_TYPES = {
-    "same_hop_repetition",
+    "semantic_or_gold_label_issue",
+    "other_or_unclear",
+    "ungroundable",
 }
 
 

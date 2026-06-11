@@ -7,6 +7,24 @@ from analysis.combine_answer_failure_grouped_models import (
     COMBINED_CONDITION_FIGURE_NAME,
     COMBINED_CSV_NAME,
     COMBINED_FIGURE_NAME,
+    CONDITION_FIGURE_BAR_LABEL_FONTSIZE,
+    CONDITION_FIGURE_BAR_WIDTH,
+    CONDITION_FIGURE_CONDITION_LABEL_FONTSIZE,
+    CONDITION_FIGURE_LEGEND_LABELS,
+    CONDITION_FIGURE_LEGEND_Y_ANCHOR,
+    CONDITION_FIGURE_LEGEND_FONTSIZE,
+    CONDITION_FIGURE_LEGEND_COLUMNS,
+    CONDITION_FIGURE_MODEL_LABEL_FONTSIZE,
+    CONDITION_FIGURE_SEGMENT_LABEL_MIN_FRACTION,
+    CONDITION_FIGURE_TOTAL_FONTSIZE,
+    CONDITION_FIGURE_YMAX,
+    CONDITION_FIGURE_YLABEL_FONTSIZE,
+    CONDITION_FIGURE_YTICK_FONTSIZE,
+    MODEL_GROUP_AXIS_FONTSIZE,
+    MODEL_GROUP_LABEL_FONTSIZE,
+    MODEL_GROUP_LEGEND_FONTSIZE,
+    MODEL_GROUP_TITLE_FONTSIZE,
+    MODEL_GROUP_VALUE_FONTSIZE,
     combine_answer_failures,
     condition_group_counts,
     discover_source_files,
@@ -15,6 +33,31 @@ from analysis.combine_answer_failure_grouped_models import (
 
 
 class TestCombineAnswerFailureGroupedModels(unittest.TestCase):
+    def test_model_group_figure_uses_paper_readable_type(self):
+        self.assertGreaterEqual(MODEL_GROUP_TITLE_FONTSIZE, 20.0)
+        self.assertGreaterEqual(MODEL_GROUP_AXIS_FONTSIZE, 16.0)
+        self.assertGreaterEqual(MODEL_GROUP_LABEL_FONTSIZE, 15.0)
+        self.assertGreaterEqual(MODEL_GROUP_VALUE_FONTSIZE, 14.0)
+        self.assertGreaterEqual(MODEL_GROUP_LEGEND_FONTSIZE, 14.0)
+
+    def test_condition_group_figure_uses_large_two_column_type(self):
+        self.assertGreaterEqual(CONDITION_FIGURE_BAR_LABEL_FONTSIZE, 14.0)
+        self.assertGreaterEqual(CONDITION_FIGURE_TOTAL_FONTSIZE, 14.0)
+        self.assertGreaterEqual(CONDITION_FIGURE_MODEL_LABEL_FONTSIZE, 14.0)
+        self.assertGreaterEqual(CONDITION_FIGURE_CONDITION_LABEL_FONTSIZE, 17.0)
+        self.assertGreaterEqual(CONDITION_FIGURE_YLABEL_FONTSIZE, 17.0)
+        self.assertGreaterEqual(CONDITION_FIGURE_YTICK_FONTSIZE, 15.0)
+        self.assertGreaterEqual(CONDITION_FIGURE_LEGEND_FONTSIZE, 14.0)
+
+    def test_condition_group_figure_uses_wide_bars_and_compact_legend_labels(self):
+        self.assertGreaterEqual(CONDITION_FIGURE_BAR_WIDTH, 0.74)
+        self.assertLessEqual(CONDITION_FIGURE_SEGMENT_LABEL_MIN_FRACTION, 0.06)
+        self.assertNotIn("failures", " ".join(CONDITION_FIGURE_LEGEND_LABELS.values()).lower())
+
+    def test_condition_group_figure_caps_y_axis_and_keeps_legend_in_header_band(self):
+        self.assertGreaterEqual(CONDITION_FIGURE_YMAX, 250)
+        self.assertEqual(CONDITION_FIGURE_LEGEND_COLUMNS, 2)
+
     def _write_events(
         self,
         root: Path,
@@ -61,23 +104,23 @@ class TestCombineAnswerFailureGroupedModels(unittest.TestCase):
     def test_figure_group_for_type_maps_expected_buckets(self):
         self.assertEqual(
             figure_group_for_type("wrong_source_or_dataset"),
-            "Source/dataset errors",
+            "Wrong source target failures",
         )
         self.assertEqual(
             figure_group_for_type("query_execution_error_loop"),
-            "Turn-waste loops",
+            "Turn-waste failures",
         )
         self.assertEqual(
             figure_group_for_type("schema_or_shape_inspection_loop"),
-            "Turn-waste loops",
+            "Turn-waste failures",
         )
         self.assertEqual(
             figure_group_for_type("wrong_scope_or_filter"),
-            "Scope/filter errors",
+            "Execution/computation failures",
         )
         self.assertEqual(
             figure_group_for_type("computation_or_aggregation_error"),
-            "Computation/aggregation errors",
+            "Execution/computation failures",
         )
         self.assertEqual(figure_group_for_type("new_label"), "new_label")
 
@@ -156,6 +199,33 @@ class TestCombineAnswerFailureGroupedModels(unittest.TestCase):
                     }
                 ],
             )
+            self._write_events(
+                source_root,
+                "openai_gpt-5-mini",
+                "search_p_results_i_plani_computei_k5_skills_off",
+                rows=[
+                    {
+                        "task_id": "tasks_mini/k-2-d-2/task_3.json",
+                        "model_variant": "openai_gpt-5-mini",
+                        "mode_variant": "search_p_results_i_plani_computei_k5_skills_off",
+                        "event_index": "1",
+                        "answer_failure_type": "evidence_available_answer_error",
+                        "answer_failure_subtype": "wrong_final_value",
+                        "failure_stage": "finalization",
+                        "failure_summary": "wrong final answer",
+                        "failure_evidence": "evidence",
+                        "confidence": "0.8",
+                    }
+                ],
+                eval_rows=[
+                    {
+                        "task_id": "tasks_mini/k-2-d-2/task_3.json",
+                        "semantic_match": "0",
+                        "answer_failure_validation_status": "valid",
+                        "answer_failure_model_validation_status": "pass",
+                    }
+                ],
+            )
 
             outputs = combine_answer_failures(source_root=source_root, output_root=output_root)
 
@@ -165,14 +235,18 @@ class TestCombineAnswerFailureGroupedModels(unittest.TestCase):
             self.assertTrue((output_root / COMBINED_CONDITION_FIGURE_NAME).exists())
             with outputs["csv_path"].open(newline="") as handle:
                 rows = list(csv.DictReader(handle))
-            self.assertEqual(len(rows), 2)
-            self.assertEqual(rows[0]["answer_failure_figure_group"], "Source/dataset errors")
+            self.assertEqual(len(rows), 3)
+            self.assertEqual(rows[0]["answer_failure_figure_group"], "Wrong source target failures")
             active_conditions, ordered_groups, counts = condition_group_counts(rows)
             self.assertIn(("Pneuma Hybrid", "search_d_results_i_plani_computei_k5_skills_off"), active_conditions)
-            self.assertIn("Computation/aggregation errors", ordered_groups)
+            self.assertLess(
+                [label for label, _ in active_conditions].index("Ideal"),
+                [label for label, _ in active_conditions].index("Preloaded"),
+            )
+            self.assertIn("Execution/computation failures", ordered_groups)
             self.assertEqual(
                 counts[("search_d_results_i_plani_computei_k5_skills_off", "openai_gpt-5.4-nano")][
-                    "Computation/aggregation errors"
+                    "Execution/computation failures"
                 ],
                 1,
             )

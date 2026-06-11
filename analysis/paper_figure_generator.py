@@ -16,6 +16,13 @@ from typing import Iterable, Optional
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from analysis.run_mode_analysis_semantic import run_analysis
+from analysis.combine_answer_failure_grouped_models import (
+    COMBINED_CSV_NAME,
+    COMBINED_CONDITION_FIGURE_NAME,
+    COMBINED_FIGURE_NAME,
+    write_condition_group_figure,
+    write_model_group_figure,
+)
 
 
 SEARCH_VARIANTS = {
@@ -27,6 +34,18 @@ SEARCH_ORDER = ["NII", "DII", "III"]
 SEARCH_COLORS = {"NII": "#4C78A8", "DII": "#F58518", "III": "#54A24B"}
 SEARCH_DISPLAY_LABELS = {"NII": "BM25", "DII": "PNEUMA", "III": "Ideal"}
 SEARCH_LABEL_OFFSETS = {"NII": (8, -16), "DII": (8, 0), "III": (8, 12)}
+
+
+def _search_label_offset(model: str, label: str) -> tuple[int, int]:
+    if label == "DII" and "gpt-5-mini" in model.lower():
+        return (-10, 0)
+    return SEARCH_LABEL_OFFSETS.get(label, (7, 7))
+
+
+def _search_label_alignment(model: str, label: str) -> str:
+    if label == "DII" and "gpt-5-mini" in model.lower():
+        return "right"
+    return "left"
 
 
 @dataclass(frozen=True)
@@ -332,7 +351,7 @@ def render_search_efficiency_figure(analysis_dir: Path, benchmark: str, output_p
     fig, axes = plt.subplots(
         nrows=1,
         ncols=len(models),
-        figsize=(5.2 * len(models), 3.8),
+        figsize=(4.35 * len(models), 3.25),
         squeeze=False,
     )
     for col_index, model in enumerate(models):
@@ -348,11 +367,11 @@ def render_search_efficiency_figure(analysis_dir: Path, benchmark: str, output_p
             d_ret_pct = float(item["d_ret"]) * 100.0
             d_acc_pct = float(item["d_acc"]) * 100.0
             ring_size = 320.0 + 1600.0 * max(0.0, min(1.0, float(item["d_acc"])))
-            scatter_ax.scatter([x], [d_ret_pct], s=110, color=color, zorder=4)
+            scatter_ax.scatter([x], [d_ret_pct], s=125, color=color, zorder=4)
             scatter_ax.scatter(
                 [x],
                 [d_ret_pct],
-                s=ring_size,
+                s=ring_size * 1.08,
                 facecolors="none",
                 edgecolors=color,
                 linewidths=1.8,
@@ -363,9 +382,9 @@ def render_search_efficiency_figure(analysis_dir: Path, benchmark: str, output_p
                 f"{display_label}\nD_ret {d_ret_pct:.0f}%\nD_acc {d_acc_pct:.0f}%",
                 (x, d_ret_pct),
                 textcoords="offset points",
-                xytext=SEARCH_LABEL_OFFSETS.get(label, (7, 7)),
-                fontsize=8,
-                ha="left",
+                xytext=_search_label_offset(model, label),
+                fontsize=9.5,
+                ha=_search_label_alignment(model, label),
             )
 
         # Cumulative recall panel intentionally disabled. The previous version
@@ -384,9 +403,10 @@ def render_search_efficiency_figure(analysis_dir: Path, benchmark: str, output_p
         scatter_ax.set_xlim(*_search_panel_xlim(model, scatter_x_values, scatter_xlim))
         scatter_ax.set_ylim(*scatter_ylim)
         scatter_ax.grid(True, alpha=0.25, linewidth=0.6)
-        scatter_ax.set_title(f"{_pretty_model(model)}: Retrieval Coverage", fontsize=11)
-        scatter_ax.set_xlabel("Avg search calls / task")
-        scatter_ax.set_ylabel("Avg D_ret (%)")
+        scatter_ax.set_title(f"{_pretty_model(model)}: Retrieval Coverage", fontsize=12, pad=7)
+        scatter_ax.set_xlabel("Avg search calls / task", fontsize=11)
+        scatter_ax.set_ylabel("Avg D_ret (%)", fontsize=11)
+        scatter_ax.tick_params(axis="both", labelsize=10)
 
         # Cumulative recall axis setup intentionally disabled with the plot.
         # curve_xmax = max(model_curve_calls, default=1)
@@ -406,13 +426,34 @@ def render_search_efficiency_figure(analysis_dir: Path, benchmark: str, output_p
         # curve_ax.set_ylabel("Mean cumulative D_ret (%)")
         # curve_ax.legend(loc="lower right", fontsize=8, frameon=True)
 
-    display_name = "LakeQA" if benchmark == "lakeqa" else "Kramabench"
-    fig.suptitle(f"{display_name} Search Calls, Retrieval, and Access", fontsize=14)
-    fig.tight_layout(rect=(0, 0, 1, 0.95))
+    fig.tight_layout()
     output_path.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(output_path)
     plt.close(fig)
     return output_path
+
+
+def refresh_answer_failure_figures(answer_failure_combined_dir: Path) -> list[Path]:
+    combined_csv_path = answer_failure_combined_dir / COMBINED_CSV_NAME
+    if not combined_csv_path.exists():
+        print(f"Missing optional answer-failure CSV: {combined_csv_path}")
+        return []
+
+    with combined_csv_path.open(newline="") as handle:
+        rows = list(csv.DictReader(handle))
+    if not rows:
+        print(f"No rows in optional answer-failure CSV: {combined_csv_path}")
+        return []
+
+    refreshed: list[Path] = []
+    figure_path = answer_failure_combined_dir / COMBINED_FIGURE_NAME
+    if write_model_group_figure(figure_path, rows):
+        refreshed.append(figure_path)
+
+    condition_figure_path = answer_failure_combined_dir / COMBINED_CONDITION_FIGURE_NAME
+    if write_condition_group_figure(condition_figure_path, rows):
+        refreshed.append(condition_figure_path)
+    return refreshed
 
 
 def export_paper_figures(
@@ -565,6 +606,11 @@ def main() -> None:
         / f"search_efficiency_cumulative_retrieval_{config.benchmark}.pdf"
     )
     render_search_efficiency_figure(config.analysis_dir, config.benchmark, search_figure_path)
+    refreshed = refresh_answer_failure_figures(config.answer_failure_combined_dir)
+    if refreshed:
+        print("Refreshed answer-failure figures:")
+        for path in refreshed:
+            print(f"  {path}")
     copied = export_paper_figures(
         benchmark=config.benchmark,
         analysis_dir=config.analysis_dir,

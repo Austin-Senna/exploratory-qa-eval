@@ -10,6 +10,7 @@ import re
 import subprocess
 import sys
 import urllib.request
+from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -710,6 +711,61 @@ def write_mirrored_outputs(
         "events_path": layout.mirrored_events_path,
         "row_count": len(output_rows),
         "event_count": len(event_rows),
+    }
+
+
+def _answer_failure_output_summary(eval_path: Path, events_path: Path) -> dict[str, int]:
+    with eval_path.open(newline="") as handle:
+        rows = list(csv.DictReader(handle))
+
+    events: list[dict[str, str]] = []
+    if events_path.exists():
+        with events_path.open(newline="") as handle:
+            events = list(csv.DictReader(handle))
+
+    event_counts_by_task: dict[str, int] = defaultdict(int)
+    for event in events:
+        event_counts_by_task[str(event.get("task_id", ""))] += 1
+
+    eligible_rows = [row for row in rows if is_non_correct_row(row)]
+    invalid_rows = [
+        row
+        for row in eligible_rows
+        if str(row.get(VALIDATION_STATUS_FIELD, "")) == "invalid"
+    ]
+    missing_log_rows = [
+        row
+        for row in eligible_rows
+        if str(row.get(VALIDATION_STATUS_FIELD, "")) == "missing_log"
+    ]
+    valid_missing_model_validation_rows = [
+        row
+        for row in eligible_rows
+        if str(row.get(VALIDATION_STATUS_FIELD, "")) in {"valid", "valid_with_warnings"}
+        and not str(row.get(MODEL_VALIDATION_STATUS_FIELD, "")).strip()
+    ]
+    trusted_rows = [
+        row
+        for row in eligible_rows
+        if str(row.get(VALIDATION_STATUS_FIELD, "")) in {"valid", "valid_with_warnings"}
+        and str(row.get(MODEL_VALIDATION_STATUS_FIELD, "")) in {"pass", "repaired_pass"}
+    ]
+
+    return {
+        "selected_eval_rows": len(rows),
+        "selected_eligible_rows": len(eligible_rows),
+        "selected_rows_with_events": sum(
+            1
+            for row in eligible_rows
+            if str(row.get("task_id", "")) in event_counts_by_task
+            or str(row.get("answer_failure_event_count", "")).strip()
+        ),
+        "selected_event_rows": len(events),
+        "selected_invalid_rows": len(invalid_rows),
+        "selected_missing_log_rows": len(missing_log_rows),
+        "selected_valid_missing_model_validation_rows": len(valid_missing_model_validation_rows),
+        "selected_trusted_rows": len(trusted_rows),
+        "selected_trusted_event_rows": sum(event_counts_by_task.get(str(row.get("task_id", "")), 0) for row in trusted_rows),
     }
 
 
@@ -1465,6 +1521,40 @@ def _deterministic_status_by_task(layout: AuditLayout) -> dict[str, dict[str, st
         }
 
 
+def _model_validation_status_by_task(layout: AuditLayout) -> dict[str, dict[str, str]]:
+    if not layout.mirrored_eval_path.exists():
+        return {}
+    with layout.mirrored_eval_path.open(newline="") as handle:
+        return {
+            str(row.get("task_id", "")): {
+                "status": str(row.get(MODEL_VALIDATION_STATUS_FIELD, "")),
+                "notes": str(row.get(MODEL_VALIDATION_NOTES_FIELD, "")),
+            }
+            for row in csv.DictReader(handle)
+        }
+
+
+def _model_validator_stale_task_ids(
+    *,
+    audits_by_task: dict[str, dict[str, Any]],
+    deterministic_by_task: dict[str, dict[str, str]],
+    existing_model_validation_by_task: dict[str, dict[str, str]],
+    only_task_ids: set[str] | None = None,
+) -> list[str]:
+    stale_statuses = {"", "invalid_untrusted"}
+    task_ids: list[str] = []
+    for task_id in sorted(audits_by_task):
+        if only_task_ids is not None and task_id not in only_task_ids:
+            continue
+        deterministic_status = deterministic_by_task.get(task_id, {}).get("status")
+        if deterministic_status not in {"valid", "valid_with_warnings"}:
+            continue
+        model_status = existing_model_validation_by_task.get(task_id, {}).get("status", "")
+        if model_status in stale_statuses:
+            task_ids.append(task_id)
+    return task_ids
+
+
 def _task_ids_for_deterministic_repair(validation_outputs: dict[str, Any]) -> list[str]:
     task_ids: list[str] = []
     for row in validation_outputs.get("invalid_rows", []):
@@ -1606,6 +1696,7 @@ def run_model_validators(
     timeout: int,
     allow_downgrade: bool,
     concurrency: int = 2,
+    task_ids_to_validate: set[str] | None = None,
 ) -> tuple[dict[str, dict[str, str]], dict[str, dict[str, Any]]]:
     print(
         f"row model validators start: model={layout.model_variant} mode={layout.mode_variant} "
@@ -1618,6 +1709,7 @@ def run_model_validators(
         task_id
         for task_id in sorted(audits_by_task)
         if deterministic_by_task.get(task_id, {}).get("status") in {"valid", "valid_with_warnings"}
+        and (task_ids_to_validate is None or task_id in task_ids_to_validate)
     ]
     validation_by_task: dict[str, dict[str, str]] = {}
     repaired_audits = dict(audits_by_task)
@@ -1664,11 +1756,18 @@ def run_model_validators(
         futures = {pool.submit(validate_one, task_id): task_id for task_id in task_ids}
         for future in as_completed(futures):
             task_id = futures[future]
-            task_id, validation, repaired = future.result()
+            try:
+                task_id, validation, repaired = future.result()
+            except Exception as exc:
+                validation = {
+                    "status": "invalid_untrusted",
+                    "notes": f"row model validator failed: {type(exc).__name__}: {exc}",
+                }
+                repaired = None
             validation_by_task[task_id] = validation
             if repaired is not None:
                 repaired_audits[task_id] = repaired
-            print(f"row model validator complete: {task_id}")
+            print(f"row model validator complete: {task_id} status={validation.get('status', '')}")
 
     for task_id, status in deterministic_by_task.items():
         if status.get("status") in {"invalid", "missing_log"}:
@@ -1676,7 +1775,11 @@ def run_model_validators(
                 "status": "invalid_untrusted",
                 "notes": status.get("notes", ""),
             }
-        elif status.get("status") in {"valid", "valid_with_warnings"} and task_id not in validation_by_task:
+        elif (
+            task_ids_to_validate is None
+            and status.get("status") in {"valid", "valid_with_warnings"}
+            and task_id not in validation_by_task
+        ):
             validation_by_task[task_id] = {
                 "status": "invalid_untrusted" if allow_downgrade else "pass",
                 "notes": "row model validator did not return a verdict for this row",
@@ -1781,7 +1884,7 @@ def run_audit_file(args: argparse.Namespace) -> dict[str, Any]:
         eligible_rows = eligible_rows[: args.limit]
 
     print(f"Source eval: {layout.eval_path}")
-    print(f"Eligible rows: {len(eligible_rows)}")
+    print(f"Eligible failed task rows in selected file: {len(eligible_rows)}")
     print(f"Temp JSON dir: {_temp_dir_for_layout(tmp_root, layout)}")
     print(f"JSONL journal: {journal_path}")
 
@@ -1846,7 +1949,9 @@ def run_audit_file(args: argparse.Namespace) -> dict[str, Any]:
         logs_dir=layout.logs_root,
         rewrite=True,
     )
+    selected_initial_summary = _answer_failure_output_summary(layout.mirrored_eval_path, layout.mirrored_events_path)
     row_by_task = {str(row.get("task_id", "")): row for row in eligible_rows}
+    repaired_task_ids: set[str] = set()
     if selected_stats.invalid_rows:
         print(f"Selected file has invalid_rows={selected_stats.invalid_rows}; repair mode will target those rows.")
     for repair_round in range(1, args.repair_invalid_rounds + 1):
@@ -1874,12 +1979,14 @@ def run_audit_file(args: argparse.Namespace) -> dict[str, Any]:
             repair_notes_by_task=repair_notes_by_task,
         )
         audits_by_task.update(repaired)
+        repaired_task_ids.update(repaired)
         write_mirrored_outputs(layout, audits_by_task)
         validation_outputs = validate_answer_failure_root(
             source_root=layout.output_root,
             logs_dir=layout.logs_root,
             rewrite=True,
         )
+        selected_initial_summary = _answer_failure_output_summary(layout.mirrored_eval_path, layout.mirrored_events_path)
     deterministic_by_task = _deterministic_status_by_task(layout)
 
     if args.no_batch_auditor:
@@ -1893,7 +2000,31 @@ def run_audit_file(args: argparse.Namespace) -> dict[str, Any]:
         }
         final_audits = audits_by_task
     else:
-        model_validation_by_task, final_audits = run_model_validators(
+        existing_model_validation_by_task = _model_validation_status_by_task(layout)
+        task_ids_to_validate = None
+        if args.model_validator_stale_only or args.model_validator_repaired_only:
+            only_task_ids = repaired_task_ids if args.model_validator_repaired_only else None
+            task_ids_to_validate = set(
+                _model_validator_stale_task_ids(
+                    audits_by_task=audits_by_task,
+                    deterministic_by_task=deterministic_by_task,
+                    existing_model_validation_by_task=existing_model_validation_by_task,
+                    only_task_ids=only_task_ids,
+                )
+            )
+            if args.model_validator_repaired_only:
+                print(
+                    "Model-validator repaired-only mode: "
+                    f"repaired valid/valid-with-warnings rows needing validator={len(task_ids_to_validate)}",
+                    flush=True,
+                )
+            else:
+                print(
+                    "Model-validator stale-only mode: "
+                    f"valid/valid-with-warnings rows needing validator rerun={len(task_ids_to_validate)}",
+                    flush=True,
+                )
+        updated_model_validation_by_task, final_audits = run_model_validators(
             layout=layout,
             tmp_root=tmp_root,
             audits_by_task=audits_by_task,
@@ -1904,7 +2035,13 @@ def run_audit_file(args: argparse.Namespace) -> dict[str, Any]:
             timeout=args.timeout,
             allow_downgrade=args.strict_batch_auditor,
             concurrency=args.concurrency,
+            task_ids_to_validate=task_ids_to_validate,
         )
+        if args.model_validator_stale_only or args.model_validator_repaired_only:
+            model_validation_by_task = dict(existing_model_validation_by_task)
+            model_validation_by_task.update(updated_model_validation_by_task)
+        else:
+            model_validation_by_task = updated_model_validation_by_task
 
     write_mirrored_outputs(
         layout,
@@ -1916,6 +2053,7 @@ def run_audit_file(args: argparse.Namespace) -> dict[str, Any]:
         logs_dir=layout.logs_root,
         rewrite=True,
     )
+    selected_final_summary = _answer_failure_output_summary(layout.mirrored_eval_path, layout.mirrored_events_path)
     report_outputs = build_answer_failure_report(
         source_root=layout.output_root,
         events_path=layout.mirrored_events_path,
@@ -1924,9 +2062,14 @@ def run_audit_file(args: argparse.Namespace) -> dict[str, Any]:
     return {
         "layout": layout,
         "eligible_rows": len(eligible_rows),
-        "initial_invalid_rows": len(validation_outputs["invalid_rows"]),
-        "final_invalid_rows": len(final_validation_outputs["invalid_rows"]),
+        "initial_invalid_rows": selected_initial_summary["selected_invalid_rows"]
+        + selected_initial_summary["selected_missing_log_rows"],
+        "final_invalid_rows": selected_final_summary["selected_invalid_rows"]
+        + selected_final_summary["selected_missing_log_rows"],
+        "root_initial_invalid_rows": len(validation_outputs["invalid_rows"]),
+        "root_final_invalid_rows": len(final_validation_outputs["invalid_rows"]),
         "event_count": report_outputs["event_count"],
+        **selected_final_summary,
         "eval_path": layout.mirrored_eval_path,
         "events_path": layout.mirrored_events_path,
         "report_path": layout.mirrored_report_path,
@@ -1962,6 +2105,19 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument("--journal-path", help="Append/resume row audit JSONL journal; defaults to /tmp/answer_failure_audits_{source_root}_{model}_{mode}.jsonl")
     parser.add_argument("--force", action="store_true", help="Rerun row audits even when temp JSON exists")
     parser.add_argument("--no-batch-auditor", action="store_true", help="Skip row model validation and trust deterministic validation")
+    parser.add_argument(
+        "--model-validator-stale-only",
+        action="store_true",
+        help=(
+            "Run row model validators only for deterministic-valid rows whose existing "
+            "model-validator status is blank or invalid_untrusted"
+        ),
+    )
+    parser.add_argument(
+        "--model-validator-repaired-only",
+        action="store_true",
+        help="Run row model validators only for deterministic-invalid rows repaired during this invocation.",
+    )
     parser.add_argument("--strict-batch-auditor", action="store_true", help="Allow row model validators to downgrade deterministic-valid rows to invalid_untrusted")
     parser.add_argument("--repair-invalid-rounds", type=int, default=1, help="Rerun deterministic-invalid rows this many times before model validation")
     parser.add_argument("--limit", type=int, help="Audit only the first N eligible rows and stop before mirrored output writes")
@@ -2013,9 +2169,20 @@ def main() -> None:
         print(f"Wrote {outputs['eval_path']}")
         print(f"Wrote {outputs['events_path']}")
         print(f"Wrote {outputs['report_path']}")
-    print(f"Eligible rows: {outputs['eligible_rows']}")
-    print(f"Event rows: {outputs['event_count']}")
-    print(f"Final invalid rows: {outputs['final_invalid_rows']}")
+    print(f"Selected file eval rows: {outputs.get('selected_eval_rows', '')}")
+    print(f"Selected file eligible failed task rows: {outputs['eligible_rows']}")
+    print(f"Selected file rows with answer-failure events: {outputs.get('selected_rows_with_events', '')}")
+    print(f"Selected file answer-failure event rows: {outputs['event_count']}")
+    print(f"Selected file invalid/missing-log rows before repair: {outputs['initial_invalid_rows']}")
+    print(f"Selected file invalid/missing-log rows after validation: {outputs['final_invalid_rows']}")
+    print(
+        "Selected file valid rows still missing model-validator status: "
+        f"{outputs.get('selected_valid_missing_model_validation_rows', '')}"
+    )
+    print(f"Selected file trusted rows for combiner: {outputs.get('selected_trusted_rows', '')}")
+    print(f"Selected file trusted event rows for combiner: {outputs.get('selected_trusted_event_rows', '')}")
+    if "root_final_invalid_rows" in outputs:
+        print(f"Whole answer-failure root invalid/missing-log rows: {outputs['root_final_invalid_rows']}")
     print(f"JSONL journal: {outputs['journal_path']}")
 
 

@@ -10,9 +10,11 @@
     "datagov/kramabench-environment-hard-7/files/water-body-testing-2023.csv"
   ],
   "reasoning_chain_text": [
-    "1. Identify municipalities with more than fifty percent and less than twenty-five percent environmental-justice population share.",
-    "2. For 2023 marine beach samples, compute bacterial exceedance rates separately for those two municipality groups.",
-    "3. Subtract the lower-environmental-justice group rate from the higher-environmental-justice group rate and round to two decimals."
+    "1. Identify municipalities with more than fifty percent environmental-justice population share.",
+    "2. Identify municipalities with less than twenty-five percent environmental-justice population share.",
+    "3. For 2023 marine beach samples, compute the bacterial exceedance rate for the higher environmental-justice group.",
+    "4. For 2023 marine beach samples, compute the bacterial exceedance rate for the lower environmental-justice group.",
+    "5. Subtract the lower-group exceedance rate from the higher-group exceedance rate and round to two decimals."
   ],
   "original_final_question": "What was the difference in bacterial exceedance rates to two decimal places for marine beach samples collected in 2023 between communities with more than 50% environmental justice populations and those with less than 25% environmental justice populations?. Write your answer as [ANSWER].",
   "original_reasoning_chain": [

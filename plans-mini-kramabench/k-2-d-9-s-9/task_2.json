@@ -15,9 +15,16 @@
     "datagov/kramabench-environment-hard-9/files/boston-harbor-beaches.txt"
   ],
   "reasoning_chain_text": [
-    "1. Reads the ordered Boston Harbor beach list.",
-    "2. Inspect each Boston Harbor datasheet and identify listed beaches with no samples above 104 Enterococcus counts from 2020 through 2024.",
-    "3. -9 and combines the qualifying beaches in datasheet order."
+    "1. Read the ordered Boston Harbor beach list to establish the datasheet order.",
+    "2. Filter the first beach datasheet to 2020 through 2024 and identify any listed beach with no samples above the Enterococcus threshold.",
+    "3. Filter the second beach datasheet to 2020 through 2024 and identify any listed beach with no samples above the Enterococcus threshold.",
+    "4. Filter the third beach datasheet to 2020 through 2024 and identify any listed beach with no samples above the Enterococcus threshold.",
+    "5. Filter the fourth beach datasheet to 2020 through 2024 and identify any listed beach with no samples above the Enterococcus threshold.",
+    "6. Filter the fifth beach datasheet to 2020 through 2024 and identify any listed beach with no samples above the Enterococcus threshold.",
+    "7. Filter the sixth beach datasheet to 2020 through 2024 and identify any listed beach with no samples above the Enterococcus threshold.",
+    "8. Filter the seventh beach datasheet to 2020 through 2024 and identify any listed beach with no samples above the Enterococcus threshold.",
+    "9. Filter the eighth beach datasheet to 2020 through 2024 and identify any listed beach with no samples above the Enterococcus threshold.",
+    "10. Combine the qualifying beaches in the ordered Boston Harbor datasheet sequence."
   ],
   "original_final_question": "Which Boston Harbor beaches met swimming standards 100 percent of the time between 2020 and 2024 inclusive, where a sample meets the standard if it contains fewer than 104 counts of Enterococcus per 100 milliliters of water?. Write your answer as [ANSWER].",
   "original_reasoning_chain": [

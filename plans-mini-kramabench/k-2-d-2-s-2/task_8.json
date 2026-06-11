@@ -8,9 +8,9 @@
     "datagov/kramabench-wildfire-hard-14/files/annual_aqi_by_county_2024.csv"
   ],
   "reasoning_chain_text": [
-    "1. Computes state-level proportions of generally unsafe AQI days.",
-    "2. Reads state wildfire acres.",
-    "3. -2 and computes the requested correlation rounded to two decimals."
+    "1. Aggregate the air-quality data to each state's proportion of generally unsafe days.",
+    "2. Read the 2024 wildfire acreage totals by state.",
+    "3. Join the state-level air-quality proportions with wildfire acreage totals and compute the correlation rounded to two decimals."
   ],
   "original_final_question": "What is the correlation between the proportion of generally unsafe air quality days according to the EPA and the amount of land affected by fires in 2024? Round to 2 decimal places. Write your answer as [ANSWER].",
   "original_reasoning_chain": [

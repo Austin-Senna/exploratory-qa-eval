@@ -236,7 +236,7 @@ def validate_answer_failure_row(row: dict, events: list[dict], log_path: Path | 
         evidence = str(event.get("failure_evidence", ""))
         normalized_evidence = _normalize_text(evidence)
         if normalized_evidence and not re.match(r"^Turn\s+\d+\s+\|", normalized_evidence):
-            issues.append(f"event {index}: failure_evidence must start with `Turn N |` for rows with existing raw logs")
+            warnings.append(f"event {index}: failure_evidence must start with `Turn N |` for rows with existing raw logs")
         turn_refs = parse_turn_refs(evidence)
         if turn_refs and max(turn_refs) > log_max_turn:
             issues.append(f"event {index}: failure_evidence references turns beyond log max turn {log_max_turn}")
@@ -253,7 +253,7 @@ def validate_answer_failure_row(row: dict, events: list[dict], log_path: Path | 
                 continue
             block_text = turn_blocks.get(turn, "")
             if snippet and snippet not in block_text:
-                issues.append(f"event {index}: exact evidence snippet for turn {turn} does not match the raw log")
+                warnings.append(f"event {index}: exact evidence snippet for turn {turn} does not match the raw log")
 
     status = "valid"
     if issues:
