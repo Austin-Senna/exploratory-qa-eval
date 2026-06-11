@@ -987,7 +987,7 @@ def print_summary(inventory_rows: list[dict[str, str]]) -> None:
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--input-root", default=".", help="Repository/input root containing logs and plans.")
-    parser.add_argument("--output-dir", default="agent_analysis/execution_inventory_analysis")
+    parser.add_argument("--output-dir", default="analysis/execution_inventory_analysis")
     parser.add_argument("--benchmark", choices=["all", *BENCHMARK_LOG_ROOTS.keys()], default="all")
     parser.add_argument("--model", default="", help="Optional model folder, e.g. openai_gpt-5-mini.")
     parser.add_argument("--mode", default="", help="Optional mode folder, e.g. search_i_results_i_plani_k5_skills_off.")
@@ -1006,7 +1006,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--max-retries", type=int, default=2)
     parser.add_argument(
         "--tmp-root",
-        default="agent_analysis/execution_inventory_analysis/tmp",
+        default="analysis/execution_inventory_analysis/tmp",
         help="Directory for per-command prompt, raw response, and parsed judge JSON files.",
     )
     parser.add_argument(

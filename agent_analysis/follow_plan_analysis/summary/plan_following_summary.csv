@@ -1,9 +1,0 @@
-benchmark,model_variant,runner_model,mode,plan_family,n_total,n_complete,n_comparable,n_not_comparable,n_followed_strict,followed_strict_pct_all,followed_strict_pct_comparable,n_followed_or_mostly,followed_or_mostly_pct_all,followed_or_mostly_pct_comparable,mean_semantic_match,n_followed,followed_pct_all,n_mostly_followed,mostly_followed_pct_all,n_partially_followed,partially_followed_pct_all,n_did_not_follow,did_not_follow_pct_all,not_comparable_pct_all
-kramabench,openai_gpt-5-mini,gpt-5-mini,search_i_results_i_pland_computei_k5_skills_off,dii,83,83,62,21,30,36.1,48.4,59,71.1,95.2,0.8916,30,36.1,29,34.9,3,3.6,0,0.0,25.3
-kramabench,openai_gpt-5-mini,gpt-5-mini,search_i_results_i_plani_computei_k5_skills_off,iii,83,83,74,9,46,55.4,62.2,67,80.7,90.5,0.9036,46,55.4,21,25.3,7,8.4,0,0.0,10.8
-kramabench,openai_gpt-5.4-nano,gpt-5.4-nano,search_i_results_i_pland_computei_k5_skills_off,dii,83,83,82,1,47,56.6,57.3,70,84.3,85.4,0.8554,47,56.6,23,27.7,6,7.2,6,7.2,1.2
-kramabench,openai_gpt-5.4-nano,gpt-5.4-nano,search_i_results_i_plani_computei_k5_skills_off,iii,83,83,83,0,29,34.9,34.9,73,88.0,88.0,0.8795,29,34.9,44,53.0,10,12.0,0,0.0,0.0
-lakeqa,openai_gpt-5-mini,gpt-5-mini,search_i_results_i_pland_computei_k5_skills_off,dii,135,135,130,5,24,17.8,18.5,108,80.0,83.1,0.6667,24,17.8,84,62.2,16,11.9,6,4.4,3.7
-lakeqa,openai_gpt-5-mini,gpt-5-mini,search_i_results_i_plani_computei_k5_skills_off,iii,135,135,126,9,22,16.3,17.5,109,80.7,86.5,0.763,22,16.3,87,64.4,13,9.6,4,3.0,6.7
-lakeqa,openai_gpt-5.4-nano,gpt-5.4-nano,search_i_results_i_pland_computei_k5_skills_off,dii,135,135,130,5,42,31.1,32.3,81,60.0,62.3,0.3111,42,31.1,39,28.9,41,30.4,8,5.9,3.7
-lakeqa,openai_gpt-5.4-nano,gpt-5.4-nano,search_i_results_i_plani_computei_k5_skills_off,iii,135,135,131,4,19,14.1,14.5,91,67.4,69.5,0.3704,19,14.1,72,53.3,37,27.4,3,2.2,3.0

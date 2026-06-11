@@ -204,12 +204,12 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--input-root",
-        default="agent_analysis/follow_plan_analysis",
+        default="analysis/follow_plan_analysis",
         help="Root containing follow_plan.csv files.",
     )
     parser.add_argument(
         "--output-dir",
-        default="agent_analysis/follow_plan_analysis/summary",
+        default="analysis/follow_plan_analysis/summary",
         help="Directory for summary CSV/JSON outputs.",
     )
     return parser.parse_args()

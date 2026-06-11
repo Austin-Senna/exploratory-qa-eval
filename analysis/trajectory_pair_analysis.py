@@ -1008,7 +1008,7 @@ def print_summary(rows: list[dict[str, str]]) -> None:
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--input-root", default=".", help="Repository/input root containing logs and log-kramabench.")
-    parser.add_argument("--output-dir", default="agent_analysis/trajectory_pair_analysis")
+    parser.add_argument("--output-dir", default="analysis/trajectory_pair_analysis")
     parser.add_argument("--benchmark", choices=["all", *BENCHMARK_LOG_ROOTS.keys()], default="all")
     parser.add_argument("--pair", choices=["all", *PAIR_MODES.keys()], default="all")
     parser.add_argument("--model", default="", help="Optional model folder, e.g. openai_gpt-5-mini.")
@@ -1027,7 +1027,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--max-retries", type=int, default=2, help="Retry invalid judge JSON this many times.")
     parser.add_argument(
         "--tmp-root",
-        default="agent_analysis/trajectory_pair_analysis/tmp",
+        default="analysis/trajectory_pair_analysis/tmp",
         help="Directory for per-row prompt, raw response, and parsed judge JSON files.",
     )
     parser.add_argument(
