@@ -32,6 +32,6 @@ answers must be re-derived from benchmark source artifacts.
 
 ## Handoff contract to adjacent ideal-artifact skills
 
-- `author-ideal-plans`:
-- `plan-verifier`:
-- `author-ideal-computations`:
+- `author-ideal-profiles`:
+- `profile-verifier`:
+- `author-ideal-code`:

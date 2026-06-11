@@ -32,9 +32,9 @@ def test_conversion_auditor_skill_contract():
     assert "name: benchmark-lakeqa-conversion-auditor" in text
     assert "docs/benchmark-conversions/<benchmark>-lakeqa-conversion.md" in text
     assert "structural diversity first" in text
-    assert "author-ideal-plans" in text
-    assert "plan-verifier" in text
-    assert "author-ideal-computations" in text
+    assert "author-ideal-profiles" in text
+    assert "profile-verifier" in text
+    assert "author-ideal-code" in text
     assert "Do not paste" in text
     assert "answer key" in text
 
@@ -342,7 +342,7 @@ def test_scaffold_benchmark_skill_generated_prompt_does_not_embed_report_answers
 
 
 def test_sana_profiling_ideal_artifact_skills_use_runtime_profile_convention():
-    skill_names = ["author-ideal-plans", "author-ideal-code", "plan-verifier"]
+    skill_names = ["author-ideal-profiles", "author-ideal-code", "profile-verifier"]
 
     for name in skill_names:
         skill = SANA_PROFILING / "skills" / name / "SKILL.md"
@@ -351,16 +351,13 @@ def test_sana_profiling_ideal_artifact_skills_use_runtime_profile_convention():
         assert f"name: {name}" in text
         assert "runtime-profiles" in text
         assert "benchmarks/<benchmark>/tasks-mini/tasks" in text
-        assert (
-            "Do not create new `plans_mini`" in text
-            or "Do not create or verify new artifacts there" in text
-        )
+        assert "runtime_profile_root" in text or "runtime-profile layout" in text
 
-    ideal_plans = (
-        SANA_PROFILING / "skills" / "author-ideal-plans" / "SKILL.md"
+    ideal_profiles = (
+        SANA_PROFILING / "skills" / "author-ideal-profiles" / "SKILL.md"
     ).read_text(encoding="utf-8")
-    assert "reasoning_chain_text" in ideal_plans
-    assert "no final answers" in ideal_plans
+    assert "reasoning_chain_text" in ideal_profiles
+    assert "no final answers" in ideal_profiles
 
     ideal_code = (
         SANA_PROFILING / "skills" / "author-ideal-code" / "SKILL.md"
@@ -370,7 +367,7 @@ def test_sana_profiling_ideal_artifact_skills_use_runtime_profile_convention():
     assert "HotpotQA-style text evidence tasks" in ideal_code
 
     verifier = (
-        SANA_PROFILING / "skills" / "plan-verifier" / "SKILL.md"
+        SANA_PROFILING / "skills" / "profile-verifier" / "SKILL.md"
     ).read_text(encoding="utf-8")
     assert "Judge prompt leakage only in `reasoning_chain_text`" in verifier
     assert "metadata/audit fields" in verifier

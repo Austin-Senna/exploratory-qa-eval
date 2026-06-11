@@ -1,13 +1,13 @@
 ---
-name: author-ideal-plans
-description: Use when Codex needs to create, rewrite, or review ideal planning runtime profiles for LakeQA-style benchmark tasks in the current benchmark artifact layout.
+name: author-ideal-profiles
+description: Use when Codex needs to create, rewrite, or review ideal runtime profiles for LakeQA-style benchmark tasks in the current benchmark artifact layout.
 ---
 
-# Author Ideal Plans
+# Author Ideal Profiles
 
 ## Current Artifact Layout
 
-In this repo, ideal plan artifacts are runtime profiles, not `plans_mini` files.
+In this repo, ideal artifacts are runtime profiles.
 
 Use this mirror:
 
@@ -16,13 +16,9 @@ benchmarks/<benchmark>/tasks-mini/tasks/<bucket>/task_N.json
   -> benchmarks/<benchmark>/tasks-mini/runtime-profiles/<bucket>/task_N.json
 ```
 
-`BenchmarkArtifacts.plan_root` is a compatibility alias for
-`runtime_profile_root`; prefer the explicit name `runtime_profile_root` in new
-docs, scripts, and reports.
-
-Legacy paths such as `plans_mini`, `plans-mini-kramabench`, and
-`plans_core_quality` are historical names. Do not create new `plans_mini`
-artifacts or any new legacy plan-root artifacts there.
+Prefer the explicit name `runtime_profile_root` in new docs, scripts, and
+reports. Do not create new legacy profile-root artifacts outside
+`benchmarks/<benchmark>/tasks-mini/runtime-profiles`.
 
 ## Batch Limit
 
@@ -50,7 +46,7 @@ in first-appearance node order.
 `source_sequence` is derived from task node `source` values in node/use order.
 Do not deduplicate repeated source uses; `search_ideal` depends on source order.
 
-`reasoning_chain_text` is prompt scaffolding for `plan_ideal`. Store it as a
+`reasoning_chain_text` is prompt scaffolding for the ideal profile runtime. Store it as a
 JSON list of short numbered strings.
 
 ## Reasoning Text Rules

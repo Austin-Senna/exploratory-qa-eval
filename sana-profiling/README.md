@@ -9,17 +9,17 @@ benchmarks into LakeQA-style tasks and ideal-mode artifacts.
   benchmark-to-LakeQA conversion recipe.
 - `skills/benchmark-lakeqa-skill-scaffolder/`: turn an approved conversion
   report into a benchmark-specific transform skill.
-- `skills/author-ideal-plans/`: author clean ideal planning runtime profiles
+- `skills/author-ideal-profiles/`: author clean ideal runtime profiles
   under `benchmarks/<benchmark>/tasks-mini/runtime-profiles`.
 - `skills/author-ideal-code/`: author `ideal_code` and `ideal_query` records
   inside runtime profiles.
-- `skills/plan-verifier/`: check runtime-profile fidelity and leakage safety.
+- `skills/profile-verifier/`: check runtime-profile fidelity and leakage safety.
 
 The intended handoff is:
 
 ```text
 raw benchmark -> conversion report -> transform skill -> LakeQA tasks
-  -> runtime profiles -> author-ideal-plans -> plan-verifier -> author-ideal-code
+  -> runtime profiles -> author-ideal-profiles -> profile-verifier -> author-ideal-code
 ```
 
 ## Example runs

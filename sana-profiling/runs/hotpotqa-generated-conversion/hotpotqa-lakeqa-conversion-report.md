@@ -35,7 +35,7 @@ Executable facts are not required for this text-evidence benchmark. Validate tha
 
 ## Ideal artifact feasibility
 
-Cover both `ideal_query` and `ideal_code`. For this smoke conversion, both arrays remain empty because the task is text evidence, not data computation. A runtime profile is still authored for `plan_ideal` with safe, non-answer reasoning text.
+Cover both `ideal_query` and `ideal_code`. For this smoke conversion, both arrays remain empty because the task is text evidence, not data computation. A runtime profile is still authored with safe, non-answer reasoning text.
 
 ## Fairness and leakage risks
 
@@ -51,6 +51,6 @@ Use the generated transform skill scaffold with batch flow, worker prompt, final
 
 ## Handoff contract to adjacent ideal-artifact skills
 
-- `author-ideal-plans`: author runtime profiles only after converted LakeQA tasks exist.
-- `plan-verifier`: verify runtime-profile reasoning text for answer leakage and fidelity.
+- `author-ideal-profiles`: author runtime profiles only after converted LakeQA tasks exist.
+- `profile-verifier`: verify runtime-profile reasoning text for answer leakage and fidelity.
 - `author-ideal-code`: add `ideal_code`/`ideal_query` only for computation-feasible tasks; leave text-evidence HotpotQA tasks empty unless an extraction computation is intentionally designed.

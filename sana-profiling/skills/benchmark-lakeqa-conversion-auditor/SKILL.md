@@ -8,7 +8,7 @@ description: Use when Codex needs to infer how an arbitrary benchmark can be con
 ## Scope
 
 Infer and document a conversion recipe. Do not write converted task JSON, do not
-scaffold a transform skill, and do not author ideal plans or computation records.
+scaffold a transform skill, and do not author ideal profiles or computation records.
 
 Write the report to:
 
@@ -69,8 +69,8 @@ benchmark source artifacts during the transform step.
 
 After converted LakeQA tasks exist, use:
 
-- `author-ideal-plans` to create or rewrite mirrored ideal plans
-- `plan-verifier` to check fidelity and leakage
-- `author-ideal-computations` to fill `ideal_query` and `ideal_code`
+- `author-ideal-profiles` to create or rewrite mirrored ideal runtime profiles
+- `profile-verifier` to check fidelity and leakage
+- `author-ideal-code` to fill `ideal_query` and `ideal_code`
 
 Do not duplicate those workflows in this skill.

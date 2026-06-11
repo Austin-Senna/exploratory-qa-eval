@@ -1,13 +1,13 @@
 ---
-name: plan-verifier
-description: Use when Codex needs to verify ideal planning runtime profiles for fidelity, metadata integrity, and answer-leakage safety in the current benchmark artifact layout.
+name: profile-verifier
+description: Use when Codex needs to verify ideal runtime profiles for fidelity, metadata integrity, and answer-leakage safety in the current benchmark artifact layout.
 ---
 
-# Plan Verifier
+# Profile Verifier
 
 ## Current Artifact Layout
 
-Verify runtime profiles, not legacy `plans_mini` files:
+Verify runtime profiles:
 
 ```text
 benchmarks/<benchmark>/tasks-mini/runtime-profiles/<bucket>/task_N.json
@@ -19,9 +19,8 @@ against mirrored tasks:
 benchmarks/<benchmark>/tasks-mini/tasks/<bucket>/task_N.json
 ```
 
-`plans_mini`, `plans-mini-kramabench`, and `plans_core_quality` are legacy path
-names. Do not create or verify new artifacts there unless the user explicitly
-asks for a legacy migration check.
+Do not create or verify new artifacts outside the current runtime-profile layout
+unless the user explicitly asks for a legacy migration check.
 
 ## Two Gates
 
@@ -50,7 +49,7 @@ ideal_code and ideal_query fields are present, even if empty
 Treat `dataset_sequence`, `source_sequence`, and `original_reasoning_chain` as
 metadata/audit fields. They may contain exact source ids, page titles, or file
 paths. Judge prompt leakage only in `reasoning_chain_text` for normal
-`plan_ideal` behavior.
+ideal-profile behavior.
 
 ## Gate 2: Semantic Review
 
@@ -99,4 +98,3 @@ blocked
 Use `blocked` only when the runtime profile cannot be validated because source
 mirroring or metadata is incomplete. Use `needs_revision` for leakage, fidelity,
 or field-shape issues that can be fixed.
-

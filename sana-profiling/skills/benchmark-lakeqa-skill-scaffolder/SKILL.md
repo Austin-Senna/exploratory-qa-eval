@@ -53,5 +53,5 @@ maps to LakeQA unless the report is explicitly revised and re-approved.
 ## Handoff Boundary
 
 The generated transform skill should convert benchmark artifacts into LakeQA
-tasks first. It must defer `author-ideal-plans`, `plan-verifier`, and
-`author-ideal-computations` handoff until LakeQA tasks exist.
+tasks first. It must defer `author-ideal-profiles`, `profile-verifier`, and
+`author-ideal-code` handoff until LakeQA tasks exist.

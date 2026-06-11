@@ -19,13 +19,12 @@ They mirror source tasks under:
 benchmarks/<benchmark>/tasks-mini/tasks/<bucket>/task_N.json
 ```
 
-Do not create new `plans_mini` files. In current repo code, `plan_root` is only a
-compatibility alias for `runtime_profile_root`.
+Do not create new legacy profile-root files. Use `runtime_profile_root`.
 
 ## Scope
 
 Edit only `ideal_code` and `ideal_query` records unless the user explicitly asks
-to repair the source task or ideal plan text. Use `author-ideal-plans` first if
+to repair the source task or ideal profile text. Use `author-ideal-profiles` first if
 the runtime profile is missing, not mirrored, or has leaky `reasoning_chain_text`.
 
 ## Record Contract
@@ -99,4 +98,3 @@ blocker records omit sql and explain the real query limitation
 
 Independent reviewers should receive only the source task path, runtime profile
 path, and the record contract. They should not solve unrelated task steps.
-

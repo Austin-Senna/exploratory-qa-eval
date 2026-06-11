@@ -29,7 +29,7 @@ and verify it from the recorded source path.
    naming, bucketing, and validation guidance.
 5. Validate the generated LakeQA tasks against the report's validation strategy.
 6. Maintain a structured skipped/error log for unpromotable examples.
-7. Defer ideal plan, ideal code, and verifier handoff until LakeQA tasks exist.
+7. Defer ideal profile, ideal code, and verifier handoff until LakeQA tasks exist.
 
 ## Batch Flow
 
@@ -160,11 +160,11 @@ facts do not hard-code final or intermediate answers
 facts execute and reproduce node.answer when executable facts are required
 terminal answer equals task.answer
 _provenance contains source mapping but no answer-bearing shortcuts
-no ideal plan, ideal query, or ideal code is authored before LakeQA tasks exist
+no ideal profile, ideal query, or ideal code is authored before LakeQA tasks exist
 ```
 
 ## Handoff Boundary
 
-After converted LakeQA tasks exist, use `author-ideal-plans`,
-`plan-verifier`, and `author-ideal-computations` as appropriate. Do not duplicate
+After converted LakeQA tasks exist, use `author-ideal-profiles`,
+`profile-verifier`, and `author-ideal-code` as appropriate. Do not duplicate
 those workflows inside this transform skill.
